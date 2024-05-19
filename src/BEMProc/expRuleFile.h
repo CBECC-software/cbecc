@@ -1,8 +1,8 @@
 // expRuleFile.h - header file for RuleFile class definition
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -59,12 +59,12 @@ public:
    enum { DataTypeList, RangesList, SymbolList, MaxChildList, ResetList, UniqueList, NListTypes };
 
 public:
-   RuleFile( QString& fileName );
+   RuleFile( QString& fileName, QStringList* pslAltPaths=NULL );
    ~RuleFile();
 
    bool Read( QFile& errorFile );
    bool ReadRuleList( int ruleListIndex, QFile& errorFile, int iFileStructVer, int i1RuleFileIndex=0,
-   							BEMTextIO* pFile=NULL, const char* pszFileName=NULL );
+   							BEMTextIO* pFile=NULL, const char* pszFileName=NULL, int iHardwireEnumStrVal=-1 );
    bool ReadTableList( QFile& errorFile );
    bool ReadListFile( QString sFileName, QFile& errorFile, int iListType );
 	bool ReadRuleFile( const char* pszRulePathFile, QStringList& saReservedStrs,
@@ -75,9 +75,11 @@ public:
 
    void ReadRuleID( QString& sId, int ruleListIndex, int ruleIndex,
    							BEMTextIO* pFile=NULL, const char* pszRuleFileName=NULL );
+   void EnsureValidPath_AltPaths( QString sFileWithPath, QString& sFileToCheck );
 
 private:
    BEMTextIO  m_file;
 //   CPathName m_fileName;
 	QString    m_fileName;
+   QStringList  m_slFilePaths;    // SAC 08/06/21 (MFam)
 };

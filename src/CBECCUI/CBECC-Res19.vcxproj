@@ -23,26 +23,27 @@
     <ProjectGuid>{E18291F4-F66C-45A6-BE33-275FC8BF4192}</ProjectGuid>
     <RootNamespace>CBECC-Res19</RootNamespace>
     <Keyword>MFCProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -69,22 +70,26 @@
     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>../../bin/Release_VC12/</OutDir>
-    <IntDir>../../bin/CBECC-Res19_VC12/Release/</IntDir>
+    <OutDir>../../bin/Release_VC142/</OutDir>
+    <IntDir>../../bin/CBECCUI_VC142/Res/19/x86/Release/</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>CBECC-Res19</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>../../bin/Release_VC142x64/</OutDir>
+    <IntDir>../../bin/CBECCUI_VC142/Res/19/x64/Release/</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>CBECC-Res19</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>../../bin/Debug_VC12/</OutDir>
-    <IntDir>../../bin/CBECC-Res19_VC12/Debug/</IntDir>
+    <OutDir>../../bin/Debug_VC142/</OutDir>
+    <IntDir>../../bin/CBECCUI_VC142/Res/19/x86/Debug/</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetName>CBECC-Res19</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>../../bin/Debug_VC142x64/</OutDir>
+    <IntDir>../../bin/CBECCUI_VC142/Res/19/x64/Debug/</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetName>CBECC-Res19</TargetName>
   </PropertyGroup>
@@ -100,7 +105,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2019;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -119,9 +124,9 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;Qt5WinExtras.lib;..\..\bin\Release_VC12\BEMProc19r.lib;..\..\bin\Release_VC12\BEMCmpMgr19r.lib;..\..\bin\Release_VC12\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;Qt5WinExtras.lib;..\..\bin\Release_VC142\BEMProc19r.lib;..\..\bin\Release_VC142\BEMCmpMgr19r.lib;..\..\bin\Release_VC142\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(IntDir)CBECC-Res19.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(IntDir)CBECC-Res19.map</MapFileName>
@@ -131,7 +136,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\vendor\qt_5.3\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
+      <Command>..\..\vendor\qt_5.15.0\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>generate moc_ source for BEMGridDialog Q_OBJECT</Message>
@@ -161,7 +166,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2019;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -180,9 +185,9 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;..\..\bin\Release_VC12\BEMProc19r.lib;..\..\bin\Release_VC12\BEMCmpMgr19r.lib;..\..\bin\Release_VC12\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;..\..\bin\Release_VC142x64\BEMProc19r.lib;..\..\bin\Release_VC142x64\BEMCmpMgr19r.lib;..\..\bin\Release_VC142x64\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(IntDir)CBECC-Res19.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(IntDir)CBECC-Res19.map</MapFileName>
@@ -192,7 +197,7 @@
       </DataExecutionPrevention>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\vendor\qt_5.3\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
+      <Command>..\..\vendor\qt_5.15.0\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>generate moc_ source for BEMGridDialog Q_OBJECT</Message>
@@ -221,7 +226,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2019;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -240,9 +245,9 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;Qt5WinExtrasd.lib;..\..\bin\Debug_VC12\BEMProc19r.lib;..\..\bin\Debug_VC12\BEMCmpMgr19r.lib;..\..\bin\Debug_VC12\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;Qt5WinExtrasd.lib;..\..\bin\Debug_VC142\BEMProc19r.lib;..\..\bin\Debug_VC142\BEMCmpMgr19r.lib;..\..\bin\Debug_VC142\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)CBECC-Res19.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -253,7 +258,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\vendor\qt_5.3\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
+      <Command>..\..\vendor\qt_5.15.0\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>generate moc_ source for BEMGridDialog Q_OBJECT</Message>
@@ -280,7 +285,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2019;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -298,9 +303,9 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;..\..\bin\Debug_VC12\BEMProc19r.lib;..\..\bin\Debug_VC12\BEMCmpMgr19r.lib;..\..\bin\Debug_VC12\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;..\..\bin\Debug_VC142x64\BEMProc19r.lib;..\..\bin\Debug_VC142x64\BEMCmpMgr19r.lib;..\..\bin\Debug_VC142x64\BEMProcUI19r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)CBECC-Res19.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -311,7 +316,7 @@
       </DataExecutionPrevention>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\vendor\qt_5.3\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
+      <Command>..\..\vendor\qt_5.15.0\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19r.cpp</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>generate moc_ source for BEMGridDialog Q_OBJECT</Message>

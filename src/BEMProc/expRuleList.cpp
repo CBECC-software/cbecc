@@ -56,6 +56,7 @@
 #include "BEMProperty.h"
 #include "BEMClass.h"
 #include "BEMProcI.h"
+#include "BEMProc_FileIO.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/assert.hpp> 
@@ -68,6 +69,7 @@ using namespace boost::posix_time;
 
 #include "memLkRpt.h"
 
+static bool ebLogRulelistEvals = false;   // SAC 10/27/21 (MFam)
 
 static inline void ExpSetErr( ExpError* pError, ExpErrorCode code, const char* text )
 {
@@ -212,7 +214,7 @@ bool BEMP_PopulateRulesetErrorMessage(      int i1ErrMsgIdx, QString& sErrMsg, b
 			sErrMsg = ruleSet.getErrorMessage(i1ErrMsgIdx-1);
 			if (!bVerbose)
 			{	// if verbose flag NOT set, then strip off details of where (in rule source) error occurred
-				int iRuleDetailIdx = sErrMsg.indexOf( " evaluating rule: " );
+				int iRuleDetailIdx = sErrMsg.indexOf( " evaluating " );
 				if (iRuleDetailIdx > 0)
 					sErrMsg = sErrMsg.left( iRuleDetailIdx );
 			}
@@ -298,6 +300,76 @@ bool BEMPX_RulelistExists( LPCSTR listName )		// SAC 2/27/17
 void BEMPX_DeleteTrailingRuleLists( int iNumListsToDelete /*=1*/ )	// SAC 1/29/18
 {	ruleSet.deleteTrailingRuleLists( iNumListsToDelete );
 	return;
+}
+
+int BEMPX_GetRulesetTableNames( QVector<QString>& sRulesetTableNames )		// SAC 12/12/20
+{	int i=0, iGTRetVal=1;
+	QString qsTblName;
+	do
+	{	iGTRetVal = ruleSet.getTableName( ++i, qsTblName );
+		if (iGTRetVal > 0)
+			sRulesetTableNames.push_back( qsTblName );
+	} 	while (iGTRetVal > 0);
+	return sRulesetTableNames.size();
+}
+
+bool BEMPX_ReplaceRulesetTable( int i0TblIdx, QString sTblFileName, QString& sErrMsg )		// SAC 12/14/20
+{	int  iRetVal = 0;
+	BEMTable* pCurTbl = ruleSet.getTablePtr( i0TblIdx );
+	if (pCurTbl == NULL)
+		sErrMsg = QString( "Error replacing ruleset table @ idx=%1: table not found" ).arg( QString::number(i0TblIdx) );
+	else
+	{
+		int iNumOrigTables = ruleSet.numTables();
+		int iNumParams = pCurTbl->getNParams();
+		int iNumCols   = pCurTbl->getNCols();
+		QString sTblName = pCurTbl->getName();
+
+		QString sTblLogFilename = sTblFileName;
+		int iLogFileExtIdx = sTblLogFilename.lastIndexOf('.');
+		if (iLogFileExtIdx > 0)		// need to alter log filename since BEMPX_ParseRuleListFile() will always overwrite it - SAC 11/14/20
+			sTblLogFilename = QString( "%1-ParseTbl.txt" ).arg( sTblLogFilename.left( iLogFileExtIdx ) );
+		bool bTblLogFileExists = FileExists( sTblLogFilename.toLocal8Bit().constData() );
+		//int iNumInitTables = ruleSet.numTables();
+		QFile fileTblLog( sTblLogFilename );
+		try
+		{
+			if (fileTblLog.open( QIODevice::Text | QIODevice::WriteOnly | QIODevice::Append ))
+			{	if (bTblLogFileExists)
+					fileTblLog.write( "\n---------\n" );
+				fileTblLog.write( QString("parsing table file:  %1\n" ).arg( sTblFileName ).toLocal8Bit().constData() );
+
+				if ( (iNumParams == 0 && !ruleSet.addTable( sTblFileName.toLocal8Bit().constData(), fileTblLog )) ||  // new style table
+					  (iNumParams >  0 && !ruleSet.addTable( sTblName.toLocal8Bit().constData(), sTblFileName.toLocal8Bit().constData(), iNumParams, iNumCols, fileTblLog )) )  // old style table
+				{	iRetVal = -22;
+					sErrMsg = QString( "Error: TablePathFile parsing error occurred, refer to log file:  %1" ).arg( sTblLogFilename );
+				}
+				else if (ruleSet.numTables() > iNumOrigTables)
+				{	ruleSet.replaceTableIndex( iNumOrigTables, i0TblIdx );
+					delete pCurTbl;
+					iRetVal = 1;
+				}
+
+				fileTblLog.close();                  // close log file
+			}
+			else
+				iRetVal = -21;
+		}
+		catch (std::exception& e)
+		{	iRetVal = -21;
+			sErrMsg = QString( "Error: TablePathFile parsing error occurred - cause: %1\n" ).arg( e.what() );
+		}
+	 	catch (...)
+	  	{	iRetVal = -21;
+	  	}
+	  	if (iRetVal == -21 && sErrMsg.isEmpty())
+			sErrMsg = QString( "Error: TablePathFile parsing error occurred, refer to log file:  %1" ).arg( sTblLogFilename );
+	//	else if (iRetVal >= 0)
+	//	{	int iNumTablesAdded = ruleSet.numTables() - iNumInitTables;
+	//		BEMPX_WriteLogFile( QString( "batch TablePathFile successful, %1 table(s) parsed, file:  %2" ).arg( QString::number(iNumTablesAdded), sTblFileName ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	//	}
+	}
+	return (iRetVal > 0);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -895,6 +967,15 @@ BEMTable* RuleSet::getTablePtr( const char* tableName )
 	}
 	return pTbl;
 }
+
+BEMTable* RuleSet::getTablePtr( int idx )		// SAC 12/14/20
+{
+	BEMTable* pTbl = NULL;
+	if (idx >= 0 && idx < (int) m_tables.size())
+		pTbl = m_tables[idx];
+	return pTbl;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2041,15 +2122,15 @@ bool Rule::Write( CryptoFile& file, QFile& errorFile, const char* pszRLName )
 					case EXP_Value		:	if (node->fValue > BEM_COMP_MULT)
 														dbgMsg = QString( "         node%1:  type %2 fValue %3\n" ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QString::number( node->fValue, 'f', 0 ) );
 												else	dbgMsg = QString( "         node%1:  type %2 fValue%3\n"  ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QString::number( node->fValue, 'e' ), 13 );
-				//	case EXP_Value		:	dbgMsg.sprintf( "         node%3d:  type %s fValue%14e\n", ++iNodeIdx, pszNodeTypes[node->type], node->fValue );
+				//	case EXP_Value		:	dbgMsg = QString::asprintf( "         node%3d:  type %s fValue%14e\n", ++iNodeIdx, pszNodeTypes[node->type], node->fValue );
 															break;
-				//	case EXP_String	:	dbgMsg.sprintf( "         node%3d:  type %s pValue '%s'\n", ++iNodeIdx, pszNodeTypes[node->type], (char*) node->pValue );
+				//	case EXP_String	:	dbgMsg = QString::asprintf( "         node%3d:  type %s pValue '%s'\n", ++iNodeIdx, pszNodeTypes[node->type], (char*) node->pValue );
 					case EXP_String	:	dbgMsg = QString( "         node%1:  type %2 pValue '%3'\n" ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QLatin1String( (const char*) node->pValue ) );
 															break;
-					case EXP_Function	:	dbgMsg.sprintf( "         node%3d:  type %s                       function%3d  op%5d  nArgs%2d\n", ++iNodeIdx,
+					case EXP_Function	:	dbgMsg = QString::asprintf( "         node%3d:  type %s                       function%3d  op%5d  nArgs%2d\n", ++iNodeIdx,
 															pszNodeTypes[node->type], node->fn.function, node->fn.op, node->fn.nArgs );
 															break;
-					default  			:	dbgMsg.sprintf( "         node%3d:  type %s \n", ++iNodeIdx, pszNodeTypes[node->type] );
+					default  			:	dbgMsg = QString::asprintf( "         node%3d:  type %s \n", ++iNodeIdx, pszNodeTypes[node->type] );
 															break;
 				}
 	         errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
@@ -2202,13 +2283,14 @@ void Rule::Read( CryptoFile& file )
 /////////////////////////////////////////////////////////////////////////////
 // SAC 5/26/03 - added int iLineNumber & const char* pszFileName arguments
 RuleList::RuleList( LPCSTR name, bool bSetAllData, bool bAllowMultipleEvaluations, bool bTagAllDataAsUserDefined,
-                      int iLineNumber, const char* pszFileName, bool bPerformSetBEMDataResets )  // SAC 9/18/05
+                      int iLineNumber, const char* pszFileName, bool bPerformSetBEMDataResets, int iHardwireEnumStrVal /*=-1*/ )  // SAC 9/18/05
 {
    m_name = name;
    m_setAllData = bSetAllData;
    m_allowMultipleEvaluations = bAllowMultipleEvaluations;
    m_tagAllDataAsUserDefined = bTagAllDataAsUserDefined;  // SAC 4/2/01
    m_performSetBEMDataResets = bPerformSetBEMDataResets;  // SAC 9/18/05
+   m_hardwireEnumStrVal      = iHardwireEnumStrVal;       // SAC 09/24/21 (MFam)
 
    m_lineNumber = iLineNumber;  // SAC 5/26/03 - Added to enable reporting of rulelist line number & filename in compiler output
    if (pszFileName)
@@ -2240,6 +2322,7 @@ RuleList::RuleList()
    m_allowMultipleEvaluations = TRUE;
    m_tagAllDataAsUserDefined = FALSE;
    m_performSetBEMDataResets = TRUE;  // SAC 9/18/05 - added to facilitate no-reset data setting
+   m_hardwireEnumStrVal = -1;         // (-1 ruleset default / 0 Value / 1 String) - SAC 09/24/21 (MFam)
 
    m_lineNumber = 0;  // SAC 5/26/03 - Added to enable reporting of rulelist line number & filename in compiler output
    m_fileName.clear();
@@ -2364,6 +2447,9 @@ bool RuleList::Write( CryptoFile& file, QFile& errorFile )
    // SAC 9/18/05 - added new m_performSetBEMDataResets member to facilitate no-reset data setting
    file.Write( &m_performSetBEMDataResets, sizeof( bool ) );
 
+   // m_hardwireEnumStrVal (-1 ruleset default / 0 Value / 1 String) - SAC 09/24/21 (MFam)
+   file.Write( &m_hardwireEnumStrVal, sizeof( int ) );
+
    // then write the number of rules contained in the rulelist
    int size = (int) m_rules.size();
    file.Write( &size, sizeof( int ) );
@@ -2464,6 +2550,12 @@ void RuleList::Read( CryptoFile& file, int iFileStructVer )
    else
       m_performSetBEMDataResets = TRUE;
 
+   // SAC 09/24/21- Struct Version 19 -> 20:  addition to class RuleList of m_hardwireEnumStrVal (-1 ruleset default / 0 Value / 1 String) (MFam)
+   if (iFileStructVer >= 20)
+      file.Read( &m_hardwireEnumStrVal, sizeof( int ) );
+   else
+      m_hardwireEnumStrVal = -1;
+
    file.Read( &nRules, sizeof( int ) );		assert( nRules >= 0 );  // get the number of rules from file
    m_rules.resize( nRules );
    while ( size < nRules )  // create and read each rule, then add to the rulelist
@@ -2502,10 +2594,10 @@ void RuleList::Read( CryptoFile& file, int iFileStructVer )
 /////////////////////////////////////////////////////////////////////////////
 // SAC 5/26/03 - added int iLineNumber & const char* pszFileName arguments
 void RuleListList::NewList( LPCSTR name, bool bSetAllData, bool bAllowMultipleEvaluations, bool bTagAllDataAsUserDefined,
-                             int iLineNumber, const char* pszFileName, bool bPerformSetBEMDataResets )  // SAC 9/18/05
+                             int iLineNumber, const char* pszFileName, bool bPerformSetBEMDataResets, int iHardwireEnumStrVal /*=-1*/ )  // SAC 9/18/05
 {
    RuleList* newList = new RuleList( name, bSetAllData, bAllowMultipleEvaluations, bTagAllDataAsUserDefined,
-                                       iLineNumber, pszFileName, bPerformSetBEMDataResets );			assert( newList );	// create new rulelist
+                                       iLineNumber, pszFileName, bPerformSetBEMDataResets, iHardwireEnumStrVal );			assert( newList );	// create new rulelist
 	m_rules.push_back( newList );
    m_currentList = (int) m_rules.size()-1;  // set current rulelistlist position
 }
@@ -2731,14 +2823,21 @@ bool RuleListList::EvalList( LPCSTR listName, BOOL bTagDataAsUserDefined,
 
       // SAC 9/25/02 - added code to implement verbose debug output
       QString sDebug, sDebug2;
-      if (bVerboseOutput)
+      if (bVerboseOutput || ebLogRulelistEvals)   // SAC 10/22/21
       {
          sDebug  = "   EVALUATING RULELIST:  " + QString(listName);
          if (piaEvalOnlyObjs  &&  piaEvalOnlyObjs->size() > 0)
          {
             int iError;
             BEMClass* pDbgClass = (iEvalOnlyClass < 1 ? NULL : BEMPX_GetClass( iEvalOnlyClass, iError ));
-            if (pDbgClass && !pDbgClass->getShortName().isEmpty())
+            if (pDbgClass && !pDbgClass->getShortName().isEmpty() && piaEvalOnlyObjs->size() == 1)     // added special echo when evaluating list on a particular object - SAC 10/22/21
+            {  BEMObject* pObj = BEMPX_GetObjectByClass( iEvalOnlyClass, iError, (int) piaEvalOnlyObjs->at( 0 ), (BEM_ObjType) eEvalOnlyObjType );
+               if (pObj && !pObj->getName().isEmpty())
+                  sDebug2 = QString( "  (on %1 '%2')" ).arg( pDbgClass->getShortName(), pObj->getName() );
+               else
+                  sDebug2 = QString( "  (on %1 specific %2 components)" ).arg( QString::number(piaEvalOnlyObjs->size()), pDbgClass->getShortName() );
+            }
+            else if (pDbgClass && !pDbgClass->getShortName().isEmpty())
                sDebug2 = QString( "  (on %1 specific %2 components)" ).arg( QString::number(piaEvalOnlyObjs->size()), pDbgClass->getShortName() );
             else
                sDebug2 = QString( "  (on %1 specific components)" ).arg( QString::number(piaEvalOnlyObjs->size()) );
@@ -2803,6 +2902,7 @@ bool RuleListList::EvalList( LPCSTR listName, BOOL bTagDataAsUserDefined,
                eval.iNumTargetedDebugItems = (pTargetedDebugInfo == NULL ? 0 : pTargetedDebugInfo->getCompNameTypePropCount());
                eval.pRuleBeingEvaled = rule;
                eval.sRuleListName = listName;
+               eval.bGetEnumString = (list->getHardwireEnumValue() ? FALSE : (list->getHardwireEnumString() ? TRUE : ruleSet.IsDataModel()));    // SAC 09/24/21 (MFam)
 
                // loop over all object types
                // SAC 5/26/00 - added code to implement rulelist evaluation for only a subset of components

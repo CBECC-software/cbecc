@@ -272,7 +272,7 @@ private:
 #define BEM_MODEL_MULT 1000000000   // added MODEL multiplier to facilitate longlong DBID (MDBID) values to identify which model to set/retrieve data to/from
 #define BEM_COMP_MULT     1000000
 #define BEM_PARAM_MULT       1000
-#define BEM_MAX_COMP_ID       300  // SAC 4/13/19 - was:  214	// SAC 5/11/16
+#define BEM_MAX_COMP_ID       600  // 300->600 - SAC 04/26/21   // SAC 4/13/19 - was:  214   // SAC 5/11/16
 #define BEMPX_GetModelID(    lDBID )  (int)  (lDBID / BEM_MODEL_MULT)
 #define BEMPX_GetClassID(    lDBID )  (int)  ((lDBID - ((lDBID / BEM_MODEL_MULT) * BEM_MODEL_MULT)) / BEM_COMP_MULT )
 #define BEMPX_GetPropertyID( lDBID )  (int)  ((lDBID - ((lDBID / BEM_COMP_MULT ) * BEM_COMP_MULT )) / BEM_PARAM_MULT)
@@ -330,7 +330,7 @@ bool BEMPROC_API __cdecl BEMPX_GetRuleToolTipData( int i0TTIdx, QString& sTTText
 #define  BEMDMX_SIM    0  // SAC 8/23/12 - added export of simulation data model to facilitate synchronization of data model w/ other program modules
 #define  BEMDMX_INP    1  // SAC 2/26/13 - added input version of DM export
 #define  BEMDMX_INPMP  2  // SAC 10/31/13 - added input version of DM export that EXCLUDES Prescribed properties (MP-minus precribed)
-bool BEMPROC_API __cdecl BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFile );
+bool BEMPROC_API __cdecl BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFile, bool bWritePrevNames=false );
 
 int  BEMPROC_API __cdecl BEMPX_SetPropertiesToUserDefined( int iBEMProcIdx=-1 );
 
@@ -358,10 +358,12 @@ bool BEMPROC_API __cdecl BEMPX_ReadProjectFile(  const char* fileName, int iFile
 #define  BEMFT_HPXML2  4    // SAC 12/2/15
 #define  BEMFT_CF1RXML 5    // SAC 3/6/18
 #define  BEMFT_RNXML   6    // SAC 5/20/20 - RESNET ResXSD
+#define  BEMFT_NRCCXML 7    // NRCCPRF01E.XSD (CBECC-Com T24N) - SAC 11/23/20
 #define BEMPX_IsHPXML(     iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2)
 #define BEMPX_IsCF1RXML(   iFileType )  (int)  (iFileType == BEMFT_CF1RXML)
 #define BEMPX_IsRESNETXML( iFileType )  (int)  (iFileType == BEMFT_RNXML)
-#define BEMPX_IsXML(       iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2 || iFileType == BEMFT_CF1RXML || iFileType == BEMFT_RNXML || iFileType == BEMFT_XML)
+#define BEMPX_IsNRCCXML(   iFileType )  (int)  (iFileType == BEMFT_NRCCXML)
+#define BEMPX_IsXML(       iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2 || iFileType == BEMFT_CF1RXML || iFileType == BEMFT_RNXML || iFileType == BEMFT_XML || iFileType == BEMFT_NRCCXML)
 #define  BEMF_ClassIDMult  1000    // SAC 12/14/18
 bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInputMode*/, bool bUseLogFileName=false, bool bWriteAllProperties=false,
                                                           BOOL bSupressAllMessageBoxes=FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
@@ -371,7 +373,7 @@ bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFile
 																			 bool bAllowCreateDateReset=true,		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
 																			 int iPropertyCommentOption=0, 			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 																			 std::vector<long>* plaClsObjIndices=NULL,		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
-																			 bool bReportInvalidEnums=true );		// SAC 5/20/19 - prevent logging errors associated w/ invalid enums (for writing of .ribd##i inputs during analysis)
+																			 bool bReportInvalidEnums=true ); 		// SAC 5/20/19 - prevent logging errors associated w/ invalid enums (for writing of .ribd##i inputs during analysis)
 
 BEMObject*       __cdecl BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx=-1 );
 bool BEMPROC_API __cdecl BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iBEMProcIdx=-1, bool bWriteAllProperties=false,
@@ -432,7 +434,8 @@ BEMObject*       __cdecl BEMPX_CreateObject( int i1Class, LPCSTR lpszName = NULL
 																int i0ChildIdx =-1 );  // SAC 5/29/14 - added i0ChildIdx in place of BOOL bMakeFirstChild = FALSE );
       // BEMPX_CopyComponent does not touch parent/child stuff, only local properties
 bool BEMPROC_API __cdecl BEMPX_CopyComponent( BEMObject* pDestObj, BEMObject* pSrcObj, int iBEMProcIdx=-1,
-																bool bCopyPrimaryDefaultDataAsUserDefined=false );		// SAC 6/8/15 - CBECC issue 1061
+																bool bCopyPrimaryDefaultDataAsUserDefined=false, 		// SAC 6/8/15 - CBECC issue 1061
+                                                bool bCopyChildren=false );      // added bCopyChildren to both make this object a child of the original object's parent + copy its children - SAC 01/28/21 (Com tic #3232)
 
 //		0 - ImportOnlyIfUnique - only import object if no user object contains the same data as that which describes the library item
 //		1 - ImportAlways - always import library object, regardless of whether duplicate objects already exist in the user model
@@ -490,7 +493,8 @@ long long BEMPROC_API __cdecl BEMPX_GetModelDatabaseID( int i1ModelIdx, const ch
 																BOOL bTreatParentAsObject=FALSE, int* piRefCompID=NULL, int* piNumRefComps=NULL );
 int  BEMPROC_API __cdecl BEMPX_GetDBComponentID( const char* psDBComp );
 long BEMPROC_API __cdecl BEMPX_GetDBParameterID( const char* psDBParam, long iCompID );
-void BEMPROC_API __cdecl BEMPX_DBIDToDBCompParamString( long lDBID, QString& sCompParam, bool bLongNames=false );
+void BEMPROC_API __cdecl BEMPX_DBIDToDBCompParamString( long lDBID, QString& sCompParam, bool bLongNames=false,
+                                                        int iPrevClassNameIdx=-1 );
 
 bool BEMPROC_API __cdecl BEMPX_AddModel( int iBEMProcIdxToCopy=0, long* plDBIDsToBypass=NULL, bool bSetActiveBEMProcToNew=true );	// SAC 3/13/13 - added multiple model support
 bool BEMPROC_API __cdecl BEMPX_SetActiveModel( int i0ActiveBEMProcIdx );		// SAC 3/13/13 - added multiple model support
@@ -695,10 +699,16 @@ bool   BEMPROC_API __cdecl BEMPX_WriteFileFromRulelist( LPCSTR sFileName, LPCSTR
 void   BEMPROC_API __cdecl BEMPX_SetDurationMark( int i1MarkIdx );													// was: RuleProcSetDurationMark()
 double BEMPROC_API __cdecl BEMPX_GetDurationSinceMark( int i1SinceMarkIdx, bool bResetMark=false );		// was: RuleProcGetDurationSinceMark()
 
+int    BEMPROC_API __cdecl BEMPX_OpenSimInputExportFile( const char* pszSimPathFileName, QString& sErrorMsg );    // SAC 04/23/21
+void   BEMPROC_API __cdecl BEMPX_CloseSimInputExportFile( int iSimInputExpFileIdx );
+
 // SAC 5/27/00 - added to retrieve the names of each rulelist in the ruleset
 int    BEMPROC_API __cdecl BEMPX_GetRulelistNames( QVector<QString>& sRulelistNames );		// was: RuleProcGetRulelistNames()
 bool   BEMPROC_API __cdecl BEMPX_RulelistExists( LPCSTR listName );		// SAC 2/27/17
 void   BEMPROC_API __cdecl BEMPX_DeleteTrailingRuleLists( int iNumListsToDelete=1 );	// SAC 1/29/18
+
+int    BEMPROC_API __cdecl BEMPX_GetRulesetTableNames( QVector<QString>& sRulesetTableNames );		// SAC 12/12/20
+bool   BEMPROC_API __cdecl BEMPX_ReplaceRulesetTable( int i0TblIdx, QString sTblFileName, QString& sErrMsg );		// SAC 12/14/20
 
 /* called to evaluate rule lists */
 bool   BEMPROC_API __cdecl BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined=FALSE, int iEvalOnlyClass=0,		// was: RuleProcEvalList()
@@ -819,12 +829,13 @@ class  QXmlStreamWriter;
 class BEMPROC_API BEMXMLWriter
 {
 public:
-   BEMXMLWriter( const char* pszFileName=NULL, int iBEMProcIdx=-1, int iFileType=-1 );
+   BEMXMLWriter( const char* pszFileName=NULL, int iBEMProcIdx=-1, int iFileType=-1, bool bWritePrevNames=false );
    ~BEMXMLWriter();
 
 public:
 	QFile					*mp_file;
 	QXmlStreamWriter	*mp_stream;
+   bool m_bWritePrevNames;    // enable writing of previous class/property names when writing 2019 project files - SAC 08/06/21 (MFam)
 
 public:
 	bool WriteModel(	bool bWriteAllProperties, BOOL bSupressAllMessageBoxes, const char* pszModelName, int iBEMProcIdx=-1, bool bOnlyValidInputs=false,

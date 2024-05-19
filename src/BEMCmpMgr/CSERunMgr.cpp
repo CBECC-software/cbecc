@@ -1072,13 +1072,13 @@ int CSE_PerformHPWHSizing_3Run( QString sCSEexe, QString sCSEWthr, QString sMode
 		//long lRunNumber = 1;  //(lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
 		int iCSERetVal = cseRun.GetExitCode();
 		if (bVerbose)  // SAC 1/31/13
-		{	sLogMsg.sprintf( "      %s simulation returned %d (HPWH sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
+		{	sLogMsg = QString::asprintf( "      %s simulation returned %d (HPWH sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
 			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 
 		if (iCSERetVal != 0)
-		{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d (HPWH sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
+		{	sErrMsg = QString::asprintf( "ERROR:  %s simulation returned %d (HPWH sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
 			iCSESimRetVal = BEMAnal_CECRes_CSESimError;
 			BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
@@ -1468,7 +1468,8 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 //						1  T24-Com
 // SAC 1/27/20 - version of sizing that involves 1 sizing run (w/ 2 DHW-only 'pre-runs' included) w/ fit to calculate size expected to be (roughly) linear
 int CSE_PerformDHWSolarSysSizing( QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, double* pdSSFResults,
-											/*std::vector<double>& daRunMults, int iSysIdx, QString sStdHPWHSzTDVTbl, long lStdHPWHSzTDVCol,*/ bool bVerbose, int iModelType )
+											/*std::vector<double>& daRunMults, int iSysIdx, QString sStdHPWHSzTDVTbl, long lStdHPWHSzTDVCol,*/ bool bVerbose, int iModelType,
+				                     std::vector<std::string>* pasAutoszdCHPWHs, std::vector<double>* padAutoszdCHPWHCaps, std::vector<double>* padAutoszdCHPWHVols )    // SAC 07/09/21 (Res tic #1275)
 // returns 0 iff success
 //         1 fail (CSE error, ...)
 {
@@ -1506,14 +1507,14 @@ int CSE_PerformDHWSolarSysSizing( QString sCSEexe, QString sCSEWthr, QString sMo
 		const QString& sRunAbbrev = cseRun.GetRunAbbrev();
 		//long lRunNumber = 1;  //(lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
 		int iCSERetVal = cseRun.GetExitCode();
-		if (bVerbose)  // SAC 1/31/13
-		{	sLogMsg.sprintf( "      %s simulation returned %d (DHW solar sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
+		if (bVerbose || ebLogAnalysisMsgs)    // SAC 1/31/13    // SAC 10/22/21
+		{	sLogMsg = QString::asprintf( "      %s simulation returned %d (DHW solar sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
 			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 
 		if (iCSERetVal != 0)
-		{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d (DHW solar sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
+		{	sErrMsg = QString::asprintf( "ERROR:  %s simulation returned %d (DHW solar sizing of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
 			iCSESimRetVal = BEMAnal_CECRes_CSESimError;
 			BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
@@ -1531,40 +1532,68 @@ int CSE_PerformDHWSolarSysSizing( QString sCSEexe, QString sCSEWthr, QString sMo
 //BEMMessageBox( sDbgMsg );
 			std::ifstream in( sResFile.toLocal8Bit().constData() );
 			if (!in.is_open())
-				sErrMsg.sprintf( "ERROR:  unable to open sizing run results file %s", sResFile.toLocal8Bit().constData() );
+				sErrMsg = QString::asprintf( "ERROR:  unable to open sizing run results file %s", sResFile.toLocal8Bit().constData() );
 
 			if (sErrMsg.isEmpty())
 			{
 				std::string line;
+				std::vector<std::vector<std::string> > lines;
 				getline( in, line );		// first ver #
 				getline( in, line );		//  hdr 1
 				getline( in, line );		//  hdr 2
 				getline( in, line );		//  hdr 3
 
-				std::vector<std::vector<std::string> > lines;
-				getline( in, line );		// DATA #1
-				ParseCSV( line, lines );
-				assert( lines.size()==1 );
-				if (lines[0].size() > 6)
-				{	pdSSFResults[0] = atof( lines[0][6].c_str() );
-					if (pdSSFResults[0] < 0.0001)
-						sErrMsg.sprintf( "ERROR:  invalid %s solar sizing run result #1:  %g", sRunID.toLocal8Bit().constData(), pdSSFResults[0] );
-				}
-				else
-					sErrMsg.sprintf( "ERROR:  unable to parse %s solar sizing run result record #1", sRunID.toLocal8Bit().constData() );
+            // parse final header line for autosized cseDHWHEATER names (w/ cap & vol results) - SAC 07/08/21 (tic #1275)
+				ParseCSV( line, lines );      assert( lines.size()==1 );
+            if (lines[0].size() > 8 && pasAutoszdCHPWHs)
+            {  for (int iAH=7; (sErrMsg.isEmpty() && iAH < (int) lines[0].size()); iAH+=2)
+               {  std::string sCHPWHName = lines[0][iAH].substr( 0, lines[0][iAH].length()-4 );
+                  if (sCHPWHName.length() < 1)
+   						sErrMsg = QString::asprintf( "ERROR:  unable to parse %s solar sizing run autosized CHPWH name from header '%s'", sRunID.toLocal8Bit().constData(), lines[0][iAH].c_str() );
+                  else
+                     pasAutoszdCHPWHs->push_back( sCHPWHName );
+            }  }
 
 				if (sErrMsg.isEmpty())
-				{
-					getline( in, line );		// DATA #2
-					ParseCSV( line, lines );
-					assert( lines.size()==1 );
-					if (lines[0].size() > 6)
-					{	pdSSFResults[1] = atof( lines[0][6].c_str() );
-						if (pdSSFResults[1] < 0.0001)
-							sErrMsg.sprintf( "ERROR:  invalid %s solar sizing run result #2:  %g", sRunID.toLocal8Bit().constData(), pdSSFResults[1] );
-					}
-					else
-						sErrMsg.sprintf( "ERROR:  unable to parse %s solar sizing run result record #2", sRunID.toLocal8Bit().constData() );
+				{	getline( in, line );		// DATA #1
+   				ParseCSV( line, lines );
+   				assert( lines.size()==1 );
+   				if (lines[0].size() > 6)
+   				{	pdSSFResults[0] = atof( lines[0][6].c_str() );
+   					if (pdSSFResults[0] < 0.0001)
+   						sErrMsg = QString::asprintf( "ERROR:  invalid %s solar sizing run result #1:  %g", sRunID.toLocal8Bit().constData(), pdSSFResults[0] );
+   				}
+   				else
+   					sErrMsg = QString::asprintf( "ERROR:  unable to parse %s solar sizing run result record #1", sRunID.toLocal8Bit().constData() );
+            }
+
+            // for record #1 only - retrieve autosized CHPWH caps & vols
+      		if (sErrMsg.isEmpty() && pasAutoszdCHPWHs && padAutoszdCHPWHCaps && padAutoszdCHPWHVols && pasAutoszdCHPWHs->size() > 0)
+      			for (int iAH=0; (sErrMsg.isEmpty() && iAH < (int) pasAutoszdCHPWHs->size()); iAH++)
+               {  if ((int) lines[0].size() > (8+(2*iAH)))
+                  {  double dAHval = atof( lines[0][7+(2*iAH)].c_str() );
+                     padAutoszdCHPWHCaps->push_back( dAHval );
+                     dAHval = atof( lines[0][8+(2*iAH)].c_str() );
+                     padAutoszdCHPWHVols->push_back( dAHval );
+                     if (padAutoszdCHPWHCaps->at(iAH) <= 0 || padAutoszdCHPWHVols->at(iAH) <= 0)
+         					sErrMsg = QString::asprintf( "ERROR:  unable to parse %s solar sizing run autosized CHPWH #%d capacity (%g) and/or volume (%g) from record #1",
+                                                         sRunID.toLocal8Bit().constData(), (iAH+1), padAutoszdCHPWHCaps->at(iAH), padAutoszdCHPWHVols->at(iAH) );
+                  }
+                  else
+      					sErrMsg = QString::asprintf( "ERROR:  unable to parse %s solar sizing run autosized CHPWH #%d results from record #1", sRunID.toLocal8Bit().constData(), (iAH+1) );
+               }
+
+   			if (sErrMsg.isEmpty())
+   			{	getline( in, line );		// DATA #2
+   				ParseCSV( line, lines );
+   				assert( lines.size()==1 );
+   				if (lines[0].size() > 6)
+   				{	pdSSFResults[1] = atof( lines[0][6].c_str() );
+   					if (pdSSFResults[1] < 0.0001)
+   						sErrMsg = QString::asprintf( "ERROR:  invalid %s solar sizing run result #2:  %g", sRunID.toLocal8Bit().constData(), pdSSFResults[1] );
+   				}
+   				else
+   					sErrMsg = QString::asprintf( "ERROR:  unable to parse %s solar sizing run result record #2", sRunID.toLocal8Bit().constData() );
 			}	}
 		}
 
@@ -1591,7 +1620,7 @@ int CSE_PerformDHWSolarSysSizing( QString sCSEexe, QString sCSEWthr, QString sMo
 //			}
 		}
 
-		if (bVerbose || iCSESimRetVal != 0 || !sErrMsg.isEmpty())
+		if (bVerbose || iCSESimRetVal != 0 || !sErrMsg.isEmpty() || ebLogAnalysisMsgs)    // SAC 10/22/21
 	//	if (1)  // temporarily always log each sizing run
 		{	if (iCSESimRetVal != 0)
 				sLogMsg = QString( "   %1 DHWSolarSys Sizing system run %2, failed (returned %3)" ).arg(
@@ -1637,7 +1666,7 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 					sErrorMsg = QString( "Error evaluating 'CSE_Project_SetupSolarSysSizingExport' rulelist on %1 run during DHWSolarSys Sizing process" ).arg( sRunID );
 			}
 
-		// store flags for each object to be written to DHWSolarSys Sizing CSE input
+   		// store flags for each object to be written to DHWSolarSys Sizing CSE input
 			std::vector<long> laClsObjIndicesToWrite;		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
 			laClsObjIndicesToWrite.push_back( BEMF_ClassIDMult );  // Proj object
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseTOP" ) * BEMF_ClassIDMult) );  // cseTOP object
@@ -1657,8 +1686,8 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR" ) * BEMF_ClassIDMult) );
 
-		//	laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
-		// SAC 4/7/20 - revision to write only DHWSYS objects that reference a DHWSOLARSYS (or are a slave of central system w/ solarsys reference)
+   		//	laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
+	   	// SAC 4/7/20 - revision to write only DHWSYS objects that reference a DHWSOLARSYS (or are a slave of central system w/ solarsys reference)
 			for (int iS2Idx=0; (sErrorMsg.isEmpty() && iS2Idx < iNumCSEDHWSystems); iS2Idx++)
 			{	BEMObject* pCentralSys2 = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsCentralDHWSYS" ), iSV, iErr, iS2Idx );
 				BEMObject* pSolarSys2   = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsSolarSys"      ), iSV, iErr, iS2Idx );
@@ -1702,12 +1731,15 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 
 					int iSolarSzRetVal = -1;
 					double dSSFResults[2] = {0,0};
+				   std::vector<std::string> asAutoszdCHPWHs;
+               std::vector<double> adAutoszdCHPWHCaps, adAutoszdCHPWHVols;  // SAC 07/09/21 (Res tic #1275)
 					if (sErrorMsg.isEmpty())
 					{	iSolarSzRetVal = CSE_PerformDHWSolarSysSizing( m_sCSEexe /*"CSE"*/, m_sCSEWthr, m_sModelPathOnly, sModelFileOnlyNoExt, m_sProcessPath, dSSFResults,
-																					/*daRunMults, iSIdx+1, sStdHPWHSzTDVTbl, lStdHPWHSzTDVCol,*/ m_bVerbose, iModelType );		// sErrorMsg   // SAC 1/1/19 - version of sizing that involves 3 parallel sizing runs w/ fit to parabola to calculate optimum size
+																					/*daRunMults, iSIdx+1, sStdHPWHSzTDVTbl, lStdHPWHSzTDVCol,*/ m_bVerbose, iModelType, 		// sErrorMsg   // SAC 1/1/19 - version of sizing that involves 3 parallel sizing runs w/ fit to parabola to calculate optimum size
+				                                                   &asAutoszdCHPWHs, &adAutoszdCHPWHCaps, &adAutoszdCHPWHVols );     // SAC 07/09/21 (Res tic #1275)
 					}
 
-				// set results back to BEMBase
+				   // set results back to BEMBase
 					int iSpecVal, iError;
 					BEMObject* pStdDHWSolarSys = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" ), iSpecVal, iError );		assert( pStdDHWSolarSys );
 					long lDBID_StdDsgnSSFCalced = BEMPX_GetDatabaseID( "DHWSolarSys:StdDsgnSSFCalced[1]" );		assert( lDBID_StdDsgnSSFCalced > 0 );
@@ -1717,6 +1749,23 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 						BEMPX_SetBEMData( lDBID_StdDsgnSSFCalced+1, BEMP_Flt, (void*) &dSSFResults[1], BEMO_User, iStdDHWSolarSysIdx );
 					}
 
+               // set autosized CHPWH caps and vols to BEMBase - SAC 07/09/21 (Res tic #1275)
+               int iCID_cseDHWHTR = BEMPX_GetDBComponentID( "cseDHWHEATER" );
+					long lDBID_AutoSzCap = BEMPX_GetDatabaseID( "AutoSzCap", iCID_cseDHWHTR );	
+					long lDBID_AutoSzVol = BEMPX_GetDatabaseID( "AutoSzVol", iCID_cseDHWHTR );	
+               if (lDBID_AutoSzCap > 0 && lDBID_AutoSzVol > 0 && (int) asAutoszdCHPWHs.size() > 0)
+               {  assert( asAutoszdCHPWHs.size() == adAutoszdCHPWHCaps.size() == adAutoszdCHPWHVols.size() );
+                  for (int iAH=0; iAH < (int) asAutoszdCHPWHs.size(); iAH++)
+                  {  BEMObject* pHtrObj = BEMPX_GetObjectByName( iCID_cseDHWHTR, iError, asAutoszdCHPWHs[iAH].c_str() );   assert( pHtrObj );  //, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1, BOOL bNameIsPrefix=FALSE );
+                     if (pHtrObj)
+                     {  int iHtrObjIdx = BEMPX_GetObjectIndex( pHtrObj->getClass(), pHtrObj );  assert( iHtrObjIdx >= 0 );  //, int iBEMProcIdx=-1 );
+                        if (iHtrObjIdx >= 0)
+                        {  double dAutoszVal = adAutoszdCHPWHCaps[iAH];
+         						BEMPX_SetBEMData( lDBID_AutoSzCap, BEMP_Flt, (void*) &dAutoszVal, BEMO_User, iHtrObjIdx );
+                           dAutoszVal = adAutoszdCHPWHVols[iAH];
+         						BEMPX_SetBEMData( lDBID_AutoSzVol, BEMP_Flt, (void*) &dAutoszVal, BEMO_User, iHtrObjIdx );
+                     }  }
+               }  }
 				}
 			}
 		if (!sErrorMsg.isEmpty())		// write details file if SolarSize run error encountered
@@ -1765,14 +1814,14 @@ int CSE_PerformDHWMinusSolarSys( QString& sErrMsg, QString sCSEexe, QString sCSE
 		const QString& sRunAbbrev = cseRun.GetRunAbbrev();
 		//long lRunNumber = 1;  //(lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
 		int iCSERetVal = cseRun.GetExitCode();
-		if (bVerbose)  // SAC 1/31/13
-		{	sLogMsg.sprintf( "      %s (DHW minus SolarSys) simulation returned %d", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal );
+		if (bVerbose || ebLogAnalysisMsgs)    // SAC 1/31/13    // SAC 10/22/21
+		{	sLogMsg = QString::asprintf( "      %s (DHW minus SolarSys) simulation returned %d", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal );
 			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 
 		if (iCSERetVal != 0)
-		{	sErrMsg.sprintf( "ERROR:  %s (DHW minus SolarSys) simulation returned %d", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal );
+		{	sErrMsg = QString::asprintf( "ERROR:  %s (DHW minus SolarSys) simulation returned %d", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal );
 			iCSESimRetVal = (iModelType == 0 ? BEMAnal_CECRes_CSESimError : 41);
 		}
 
@@ -1819,6 +1868,12 @@ int CSE_PerformDHWMinusSolarSys( QString& sErrMsg, QString sCSEexe, QString sCSE
 							{	for (int i=0;i<8760;i++)
 									dAnnUse += dHrlyRes[iMtr][i];
 								dAnnUse *= daMtrMults[iMtr];
+
+							// fix bug where EUseSummary doesn't exist at this point - SAC 01/24/21
+								int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
+								if (BEMPX_GetNumObjects( iCID_EUseSummary ) < 1)
+									/*BEMObject* pPolyLpObj =*/ BEMPX_CreateObject( iCID_EUseSummary, "EUSummary-temp" );
+
 								// store annual use for this Meter
 								iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysEnergy+iMtr, BEMP_Flt, (void*) &dAnnUse );
 								if (iSetRetVal < 0)
@@ -2040,7 +2095,7 @@ int CSE_PerformDHWMinusSolarSys( QString& sErrMsg, QString sCSEexe, QString sCSE
 		if (!sErrMsg.isEmpty())
 			BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
-		if (bVerbose || iCSESimRetVal != 0 || !sErrMsg.isEmpty())	// SAC 09/04/20 - trimmed logging to verbose or error occurrence
+		if (bVerbose || iCSESimRetVal != 0 || !sErrMsg.isEmpty() || ebLogAnalysisMsgs)	// SAC 09/04/20 - trimmed logging to verbose or error occurrence     // SAC 10/22/21
 		{	if (iCSESimRetVal != 0)
 				sLogMsg = QString( "   %1 DHW minus SolarSys run %2, failed (returned %3)" ).arg(
 														sRunID, QString::number(iR+1), QString::number(iCSESimRetVal) );
@@ -2603,7 +2658,7 @@ static int LocStringInArray( QStringList& saStrs, QString& sStr )
 
 int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
 											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/,
-											bool bRemovePVBatt /*=false*/ )
+											bool bRemovePVBatt /*=false*/, bool bPerformFullCSESim /*=false*/ )
 {
 	int iRetVal = 0;
 	QString sLogMsg;
@@ -2641,11 +2696,15 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 //           "CompType",                          BEMP_Sym,  1,  0,  0,   Req,  "",                 0,  0,                           1003, "ComplianceType",  ""
 
 	long lRunNumber = (iRunType == CRM_User ? 0 : iRunIdx+1 );
-//	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunNumber" ), BEMP_Int, (void*) &lRunNumber );
-//
+	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ResProj:RunNumber" ), BEMP_Int, (void*) &lRunNumber );
+   const char* pszCSERunAbbrev = (iRunType == CRM_User ? pszRunAbbrev_u : (iRunType == CRM_Prop ? pszRunAbbrev_p : (iRunType == CRM_StdDesign ? pszRunAbbrev_s : pszRunAbbrev)));   // SAC 10/28/21 (MFam)
+	if (pszCSERunAbbrev && strlen( pszCSERunAbbrev ) > 0)
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ResProj:RunAbbrev" ), BEMP_Str, (void*) pszCSERunAbbrev );
+
 //	QString sOrientLtr, sOrientName;
-//	if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
-//		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
+	if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0 && bPerformFullCSESim)
+		iRetVal = LocalEvaluateRuleset( sErrorMsg, 83, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );    // SAC 10/26/21 (MFam)
+               //											83 : Error evaluating ProposedCompliance residential rules
 //	else if (iRunType >= CRM_StdDesign)	// SAC 3/27/15 - was:  bIsStdDesign)
 //	{	// SAC 3/27/15 - SET 
 //		if (iRunType == CRM_DesignRating)
@@ -2654,8 +2713,8 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 //
 //		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalStdConvError, "BudgetConversion", m_bVerbose, m_pCompRuleDebugInfo );
 //	}
-//	if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-//		iRetVal = BEMAnal_CECRes_RuleProcAbort;
+	if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+		iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
 	pCSERun->SetRunNumber( lRunNumber);
 	pCSERun->SetRunID( sRunID);
@@ -2690,20 +2749,26 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 	if (iRetVal == 0)
 	{
-//		// try evaluating prop & postprop rulelists EVERY time
-//		iRetVal = LocalEvaluateRuleset(		sErrorMsg, BEMAnal_CECRes_EvalPropInp3Error, "ProposedInput", m_bVerbose, m_pCompRuleDebugInfo );		// generic project defaulting
-//		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-//			iRetVal = BEMAnal_CECRes_RuleProcAbort;
-//
-//		if (iRetVal == 0) // && iRunIdx == 0)
-//			iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimChkError, "ProposedModelSimulationCheck", m_bVerbose, m_pCompRuleDebugInfo );		// check user input model for simulation-related errors
-//		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-//			iRetVal = BEMAnal_CECRes_RuleProcAbort;
-//
-//		if (iRetVal == 0)
-//			iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPostPropError, "PostProposedInput", m_bVerbose, m_pCompRuleDebugInfo );		// setup for Proposed run
-//		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-//			iRetVal = BEMAnal_CECRes_RuleProcAbort;
+   	if (m_lAnalysisType > 0 && bPerformFullCSESim)     // SAC 10/26/21 (MFam)
+      {
+   		// try evaluating prop & postprop rulelists EVERY time
+   		iRetVal = LocalEvaluateRuleset(		sErrorMsg, 84, "ProposedInput_MFam", m_bVerbose, m_pCompRuleDebugInfo );		// generic project defaulting
+                                                   //		84	: Error evaluating ProposedInput_MFam residential rules  (BEMAnal_CECRes_EvalPropInp3Error)
+   		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+   			iRetVal = BEMAnal_CECRes_RuleProcAbort;
+   
+   		if (iRetVal == 0) // && iRunIdx == 0)
+   			iRetVal = LocalEvaluateRuleset(	sErrorMsg, 85, "ProposedModelSimulationCheck", m_bVerbose, m_pCompRuleDebugInfo );		// check user input model for simulation-related errors
+                                                   //		85	: Error evaluating ProposedModelSimulationCheck residential rules  (BEMAnal_CECRes_EvalSimChkError)
+   		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+   			iRetVal = BEMAnal_CECRes_RuleProcAbort;
+   
+   		if (iRetVal == 0)
+   			iRetVal = LocalEvaluateRuleset(	sErrorMsg, 86, "PostProposedInput", m_bVerbose, m_pCompRuleDebugInfo );		// setup for Proposed run
+                                                   //		86	: Error evaluating PostProposedInput residential rules  (BEMAnal_CECRes_EvalPostPropError)
+   		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+   			iRetVal = BEMAnal_CECRes_RuleProcAbort;
+      }
 
 		if (bRemovePVBatt)		// SAC 4/3/19 - added code to remove all 
 		{	const char* pszClassesToDel[] = { "Batt", "PVArray", NULL };
@@ -3121,7 +3186,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 							{	fprintf( fp_CSV, "\"E+ Electric Use (kWh) - %s\",1\n", qsVer.toLocal8Bit().constData() );
 								fprintf( fp_CSV, "\"%s\"\n", timeStamp.toLocal8Bit().constData() );
 							//	fprintf( fp_CSV, "\"%s\",Hour\n", qsVer.toLocal8Bit().constData() );
-								fprintf( fp_CSV, "\"EplusElecUse\",Hour\n", qsVer.toLocal8Bit().constData() );	// first column string must be consistent w/ cseIMPORTFILE:imTitle in CSE input
+								fprintf( fp_CSV, "\"EplusElecUse\",Hour\n" );	// first column string must be consistent w/ cseIMPORTFILE:imTitle in CSE input
 								fprintf( fp_CSV, "\"EplusTotalKWH\"\n" );
 								double dVal;
 								for (int hr=0; hr<8760; hr++)

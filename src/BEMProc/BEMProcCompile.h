@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -37,9 +37,11 @@
 
 // Functions to compile BEMBase and ruleset source files to binary CryptoFiles
 BOOL BEMPROC_API __cdecl BEMPX_CompileDataModel( const char* sBEMFileName, const char* sEnumsFileName,
-																 const char* sBEMBinFileName=NULL, QString* psClassPropMsg=NULL ); 
+																 const char* sBEMBinFileName=NULL, QString* psClassPropMsg=NULL,
+                                                 QStringList* pslAltPaths=NULL );      // pslAltPaths - SAC 07/29/21 (MFam) 
 
 BOOL BEMPROC_API __cdecl BEMPX_CompileRuleset(	const char* sBEMBinFileName, const char* sPrimRuleFileName, const char* sCompiledRuleFileName,
-																const char* sLogFileName=NULL, QString* psRuleCompileMsg=NULL ); 
+																const char* sLogFileName=NULL, QString* psRuleCompileMsg=NULL,
+                                                QStringList* pslAltPaths=NULL );      // pslAltPaths - SAC 08/06/21 (MFam) 
 
 #endif // __BEMPROCCompile_H__

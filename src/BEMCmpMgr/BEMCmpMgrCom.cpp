@@ -557,12 +557,12 @@ void ProcessNonResAnalysisAbort( int iCodeType, int iProgressStep, QString& sErr
 	if (spAnalProgCallbackFunc != NULL && slAnalysisProgressCallbackRetVal > 0)
 	{	//											52 : Analysis aborted via callback function in calling application
 		iErrorID = 52;
-		sErrMsg.sprintf( "Analysis aborted by calling application during%s analysis step (callback function returned %d)", sMsg.toLocal8Bit().constData(), slAnalysisProgressCallbackRetVal );
+		sErrMsg = QString::asprintf( "Analysis aborted by calling application during%s analysis step (callback function returned %d)", sMsg.toLocal8Bit().constData(), slAnalysisProgressCallbackRetVal );
 	}
 	else
 	{	//											33 : User aborted analysis via progress dialog 'Cancel' button
 		iErrorID = 33;
-		sErrMsg.sprintf( "User aborted analysis via progress dialog 'Cancel' button during%s analysis step", sMsg.toLocal8Bit().constData() );
+		sErrMsg = QString::asprintf( "User aborted analysis via progress dialog 'Cancel' button during%s analysis step", sMsg.toLocal8Bit().constData() );
 	}
 	ProcessAnalysisError( sErrMsg, bAbort, iRetVal, iErrorID /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 }
@@ -579,7 +579,7 @@ int CMX_WindowDoorOverlaps_CECNonRes( bool /*bVerbose*/, bool /*bStoreBEMDetails
 	int iCID_Dr        = GetBEMBaseCompID( sBEMErr, "Dr"        );
 	if (sBEMErr.length() > 0)
 	{	iRetVal = -1;
-		sErrMsg.sprintf( "Error retrieving BEMBase object ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
+		sErrMsg = QString::asprintf( "Error retrieving BEMBase object ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
 	}
 	else
 	{
@@ -599,7 +599,7 @@ int CMX_WindowDoorOverlaps_CECNonRes( bool /*bVerbose*/, bool /*bStoreBEMDetails
 		long lDBID_Dr_Y                    = GetBEMBaseDBID( sBEMErr, "Y",               iCID_Dr );
 		if (sBEMErr.length() > 0)
 		{	iRetVal = -2;
-			sErrMsg.sprintf( "Error retrieving BEMBase property ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
+			sErrMsg = QString::asprintf( "Error retrieving BEMBase property ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
 		}
 		else
 		{	int iError, iNumSpcs = BEMPX_GetNumObjects( iCID_Spc );
@@ -655,7 +655,7 @@ int CMX_WindowDoorOverlaps_CECNonRes( bool /*bVerbose*/, bool /*bStoreBEMDetails
 													iNumOverlapsThisWinDr++;
 													if (!sOverlappingWinsDrs.isEmpty())
 														sOverlappingWinsDrs += ", ";
-													sLogMsg.sprintf( "%s '%s'", (bWinObj2 ? "Win" : "Door"), pWinDoorObj2->getName().toLocal8Bit().constData() );
+													sLogMsg = QString::asprintf( "%s '%s'", (bWinObj2 ? "Win" : "Door"), pWinDoorObj2->getName().toLocal8Bit().constData() );
 													sOverlappingWinsDrs += sLogMsg;
 										}	}	}
 
@@ -664,7 +664,7 @@ int CMX_WindowDoorOverlaps_CECNonRes( bool /*bVerbose*/, bool /*bStoreBEMDetails
 											iNumWallErrors++;
 											if (!sOverlapsOnThisExtWall.isEmpty())
 												sOverlapsOnThisExtWall += " | ";
-											sLogMsg.sprintf( "%s '%s' overlaps %s", (bWinObj ? "Win" : "Door"), pWinDoorObj->getName().toLocal8Bit().constData(), sOverlappingWinsDrs.toLocal8Bit().constData() );
+											sLogMsg = QString::asprintf( "%s '%s' overlaps %s", (bWinObj ? "Win" : "Door"), pWinDoorObj->getName().toLocal8Bit().constData(), sOverlappingWinsDrs.toLocal8Bit().constData() );
 											sOverlapsOnThisExtWall += sLogMsg;
 									}	}
 								}	// end of loop over children of wall
@@ -672,7 +672,7 @@ int CMX_WindowDoorOverlaps_CECNonRes( bool /*bVerbose*/, bool /*bStoreBEMDetails
 								if (iNumWallErrors > 0)
 								{	// record all overlaps between this ExtWall's child wins/doors
 									iRetVal++;
-									sLogMsg.sprintf( "ExtWall '%s' has overlapping windows/doors as follows:  %s", pChildObj->getName().toLocal8Bit().constData(), sOverlapsOnThisExtWall.toLocal8Bit().constData() );
+									sLogMsg = QString::asprintf( "ExtWall '%s' has overlapping windows/doors as follows:  %s", pChildObj->getName().toLocal8Bit().constData(), sOverlapsOnThisExtWall.toLocal8Bit().constData() );
 									BEMPX_AddRulesetError( sLogMsg.toLocal8Bit().constData() );	// log individual ExtWall errors to ruleset error list
 				// ALWAYS write error message (per wall) to log ??
 								//	if (bVerbose)
@@ -850,7 +850,7 @@ void AddChildPolyLoops( int& iRetVal, BEMObject* pChildObj, bool bWinShadeMode, 
 									if (bIsSurface)
 									{	if (!sSurfErrMsg.isEmpty())
 										{	iRetVal = -3;
-											sErrMsg.sprintf( "Error gathering data to create PolyLp object:  %s '%s' %s",
+											sErrMsg = QString::asprintf( "Error gathering data to create PolyLp object:  %s '%s' %s",
 																		pGChildObj->getClass()->getShortName().toLocal8Bit().constData(), pGChildObj->getName().toLocal8Bit().constData(),
 																		sSurfErrMsg.right( sSurfErrMsg.length()-2 ).toLocal8Bit().constData() );
 										}
@@ -860,24 +860,24 @@ void AddChildPolyLoops( int& iRetVal, BEMObject* pChildObj, bool bWinShadeMode, 
 											if (iPolyLpObjIdx < 0)
 											{	if (fArea > fParentArea)
 												{	iRetVal = -6;
-													sErrMsg.sprintf( "Error generating building geometry: %s '%s' area (%g) exceeds parent %s '%s' area (%g)", pGChildObj->getClass()->getLongName().toLocal8Bit().constData(),  
+													sErrMsg = QString::asprintf( "Error generating building geometry: %s '%s' area (%g) exceeds parent %s '%s' area (%g)", pGChildObj->getClass()->getLongName().toLocal8Bit().constData(),  
 																				pGChildObj->getName().toLocal8Bit().constData(), fArea, pChildObj->getClass()->getLongName().toLocal8Bit().constData(),
 																				pChildObj->getName().toLocal8Bit().constData(), fParentArea );
 												}
 												else
 												{	iRetVal = -4;
-													sErrMsg.sprintf( "Error creating PolyLp object:  %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, WallHt %g, WallArea %g)",
+													sErrMsg = QString::asprintf( "Error creating PolyLp object:  %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, WallHt %g, WallArea %g)",
 																				pGChildObj->getClass()->getShortName().toLocal8Bit().constData(), pGChildObj->getName().toLocal8Bit().constData(),
 																				fArea, fAz, fTilt, fZ, iPolyType, fParentDZ, fParentArea );
 											}	}
 											else if (BEMPX_SetBEMData( lDBID_PolyLp_Parent, BEMP_QStr, (void*) &pGChildObj->getName(), BEMO_User, iPolyLpObjIdx ) < 0)
 											{	iRetVal = -5;
-												sErrMsg.sprintf( "Error adding PolyLp child to %s '%s'", pGChildObj->getClass()->getShortName().toLocal8Bit().constData(), pGChildObj->getName().toLocal8Bit().constData() );
+												sErrMsg = QString::asprintf( "Error adding PolyLp child to %s '%s'", pGChildObj->getClass()->getShortName().toLocal8Bit().constData(), pGChildObj->getName().toLocal8Bit().constData() );
 											}
 											else
 											{	iRetVal++;
 												if (bVerbose)
-												{	sLogMsg.sprintf( "         PolyLp created for %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, WallHt %g, WallArea %g)", 
+												{	sLogMsg = QString::asprintf( "         PolyLp created for %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, WallHt %g, WallArea %g)", 
 																				pGChildObj->getClass()->getShortName().toLocal8Bit().constData(), pGChildObj->getName().toLocal8Bit().constData(), 
 																				fArea, fAz, fTilt, fZ, iPolyType, fParentDZ, fParentArea );
 													BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
@@ -914,7 +914,7 @@ int CMX_GeneratePolyLoops_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/, b
 	int iCID_UndgrWall = GetBEMBaseCompID( sBEMErr, "UndgrWall" );
 	if (sBEMErr.length() > 0)
 	{	iRetVal = -1;
-		sErrMsg.sprintf( "Error retrieving BEMBase object ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
+		sErrMsg = QString::asprintf( "Error retrieving BEMBase object ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
 	}
 	else
 	{
@@ -975,7 +975,7 @@ int CMX_GeneratePolyLoops_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/, b
 		long lDBID_PolyLp_Parent           = GetBEMBaseDBID( sBEMErr, "Parent",          iCID_PolyLp );
 		if (sBEMErr.length() > 0)
 		{	iRetVal = -2;
-			sErrMsg.sprintf( "Error retrieving BEMBase property ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
+			sErrMsg = QString::asprintf( "Error retrieving BEMBase property ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
 		}
 		else
 		{	int iError, iNumSpcs = BEMPX_GetNumObjects( iCID_Spc );
@@ -1115,7 +1115,7 @@ int CMX_GeneratePolyLoops_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/, b
 							if (bIsSurface)
 							{	if (!sSurfErrMsg.isEmpty())
 								{	iRetVal = -3;
-									sErrMsg.sprintf( "Error gathering data to create PolyLp object:  %s '%s' %s", pChildObj->getClass()->getShortName().toLocal8Bit().constData(),
+									sErrMsg = QString::asprintf( "Error gathering data to create PolyLp object:  %s '%s' %s", pChildObj->getClass()->getShortName().toLocal8Bit().constData(),
 																							pChildObj->getName().toLocal8Bit().constData(), sSurfErrMsg.right( sSurfErrMsg.length()-2 ).toLocal8Bit().constData() );
 								}
 								else if (bProcessSurface)
@@ -1123,18 +1123,18 @@ int CMX_GeneratePolyLoops_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/, b
 									iPolyLpObjIdx = BEMPX_CreatePolyLoop( fArea, fAz, fTilt, fZ, iPolyType, fArg6, fArg7, -1 /*iBEMProcIdx*/, &dFurthestInteriorFromXYOrig );
 									if (iPolyLpObjIdx < 0)
 									{	iRetVal = -4;
-										sErrMsg.sprintf( "Error creating PolyLp object:  %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g) - BEMPX_CreatePolyLoop() returned %d",
+										sErrMsg = QString::asprintf( "Error creating PolyLp object:  %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g) - BEMPX_CreatePolyLoop() returned %d",
 																		pChildObj->getClass()->getShortName().toLocal8Bit().constData(),
 																		pChildObj->getName().toLocal8Bit().constData(), fArea, fAz, fTilt, fZ, iPolyType, fArg6, fArg7, iPolyLpObjIdx );
 									}
 									else if (BEMPX_SetBEMData( lDBID_PolyLp_Parent, BEMP_QStr, (void*) &pChildObj->getName(), BEMO_User, iPolyLpObjIdx ) < 0)
 									{	iRetVal = -5;
-										sErrMsg.sprintf( "Error adding PolyLp child to %s '%s'", pChildObj->getClass()->getShortName().toLocal8Bit().constData(), pChildObj->getName().toLocal8Bit().constData() );
+										sErrMsg = QString::asprintf( "Error adding PolyLp child to %s '%s'", pChildObj->getClass()->getShortName().toLocal8Bit().constData(), pChildObj->getName().toLocal8Bit().constData() );
 									}
 									else
 									{	iRetVal++;
 										if (bVerbose)
-										{	sLogMsg.sprintf( "      PolyLp created for %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g)", 
+										{	sLogMsg = QString::asprintf( "      PolyLp created for %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g)", 
 																		pChildObj->getClass()->getShortName().toLocal8Bit().constData(),
 																		pChildObj->getName().toLocal8Bit().constData(), fArea, fAz, fTilt, fZ, iPolyType, fArg6, fArg7 );
 											BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
@@ -1288,18 +1288,18 @@ int CMX_GeneratePolyLoops_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/, b
 									bFirstSurfaceProcessed = true;
 									if (iPolyLpObjIdx < 0)
 									{	iRetVal = -4;
-										sErrMsg.sprintf( "Error creating PolyLp object:  %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g)", 
+										sErrMsg = QString::asprintf( "Error creating PolyLp object:  %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g)", 
 																		pChildObj->getClass()->getShortName().toLocal8Bit().constData(), pChildObj->getName().toLocal8Bit().constData(),
 																		(*itp)->m_fArea, (*itp)->m_fAz, (*itp)->m_fTilt, (*itp)->m_fZ, (*itp)->m_iPolyType, (*itp)->m_fArg6, (*itp)->m_fArg7 );
 									}
 									else if (BEMPX_SetBEMData( lDBID_PolyLp_Parent, BEMP_QStr, (void*) &pChildObj->getName(), BEMO_User, iPolyLpObjIdx ) < 0)
 									{	iRetVal = -5;
-										sErrMsg.sprintf( "Error adding PolyLp child to %s '%s'", pChildObj->getClass()->getShortName().toLocal8Bit().constData(), pChildObj->getName().toLocal8Bit().constData() );
+										sErrMsg = QString::asprintf( "Error adding PolyLp child to %s '%s'", pChildObj->getClass()->getShortName().toLocal8Bit().constData(), pChildObj->getName().toLocal8Bit().constData() );
 									}
 									else
 									{	iRetVal++;
 										if (bVerbose)
-										{	sLogMsg.sprintf( "      PolyLp created for %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g)", pChildObj->getClass()->getShortName().toLocal8Bit().constData(),
+										{	sLogMsg = QString::asprintf( "      PolyLp created for %s '%s' (Area %g, Az %g, Tilt %g, Z %g, PolyType %d, Arg6 %g, Arg7 %g)", pChildObj->getClass()->getShortName().toLocal8Bit().constData(),
 																		pChildObj->getName().toLocal8Bit().constData(), (*itp)->m_fArea, (*itp)->m_fAz, (*itp)->m_fTilt, (*itp)->m_fZ, (*itp)->m_iPolyType, (*itp)->m_fArg6, (*itp)->m_fArg7 );
 											BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
 									}	}
@@ -1341,7 +1341,7 @@ int CMX_GeneratePolyLoops_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/, b
 	if (!sErrMsg.isEmpty())
 		BEMPX_WriteLogFile( sErrMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
 	else if (bVerbose)
-	{	sLogMsg.sprintf( "   %d PolyLp objects created by CMX_GeneratePolyLoops_CECNonRes()", iRetVal );
+	{	sLogMsg = QString::asprintf( "   %d PolyLp objects created by CMX_GeneratePolyLoops_CECNonRes()", iRetVal );
 		BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
 	}
 
@@ -1433,7 +1433,7 @@ int CreateWindowShadeObject( BEMObject* pWinObj, int iWin, BEMObject* pGParentSp
 	long lDBID_ExtShdgObj_WinRef       = (iCID_ExtShdgObj > 0 ? GetBEMBaseDBID( sBEMErr, "WinRef",      iCID_ExtShdgObj ) : 0);	// SAC 9/14/16 - added to enable ExtShdgObj rules to reference the Win they shade
 	if (sBEMErr.length() > 0)
 	{	iRetVal = -2;
-		sErrMsg.sprintf( "Error retrieving BEMBase CreateWindowShadeObject ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
+		sErrMsg = QString::asprintf( "Error retrieving BEMBase CreateWindowShadeObject ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
 	}
 	else
 	{	QString sShadeName = (pWinObj ? pWinObj->getName() : "Window");
@@ -1441,7 +1441,7 @@ int CreateWindowShadeObject( BEMObject* pWinObj, int iWin, BEMObject* pGParentSp
 		BEMObject* pShdObj = BEMPX_CreateObject( iCID_ExtShdgObj, sShadeName.toLocal8Bit().constData(), pGParentSpcObj );  // , BEM_ObjType objType = BEMO_User, bool bDefaultParent = TRUE, bool bAutoCreate = TRUE, int iBEMProcIdx=-1, BOOL bIgnoreMaxDefinable=FALSE, int i0ChildIdx =-1 );
 		if (pShdObj == NULL)
 		{	iRetVal = -3;
-			sErrMsg.sprintf( "Error creating %s ExtShdgObj for window '%s'", pszShadeDescrip, (pWinObj ? pWinObj->getName().toLocal8Bit().constData() : "unknown") );
+			sErrMsg = QString::asprintf( "Error creating %s ExtShdgObj for window '%s'", pszShadeDescrip, (pWinObj ? pWinObj->getName().toLocal8Bit().constData() : "unknown") );
 		}
 		else
 		{	// set reference to this ExtShdgObj to Win
@@ -1479,7 +1479,7 @@ int CreateWindowShadeObject( BEMObject* pWinObj, int iWin, BEMObject* pGParentSp
 			BEMObject* pPolyLpObj = BEMPX_CreateObject( iCID_PolyLp, NULL, pShdObj );
 			if (pPolyLpObj == NULL)
 			{	iRetVal = -4;
-				sErrMsg.sprintf( "Error creating PolyLp to store geometry for %s '%s' of window '%s'", pszShadeDescrip, pShdObj->getName().toLocal8Bit().constData(), 
+				sErrMsg = QString::asprintf( "Error creating PolyLp to store geometry for %s '%s' of window '%s'", pszShadeDescrip, pShdObj->getName().toLocal8Bit().constData(), 
 																(pWinObj ? pWinObj->getName().toLocal8Bit().constData() : "unknown") );
 			}
 			else
@@ -1488,7 +1488,7 @@ int CreateWindowShadeObject( BEMObject* pWinObj, int iWin, BEMObject* pGParentSp
 				{	BEMObject* pCoordObj = BEMPX_CreateObject( iCID_CartesianPt, NULL, pPolyLpObj );
 					if (pCoordObj == NULL)
 					{	iRetVal = -5;
-						sErrMsg.sprintf( "Error creating CartesianPt #%d to store geometry for %s '%s' of window '%s'", iCoord+1, pszShadeDescrip, 
+						sErrMsg = QString::asprintf( "Error creating CartesianPt #%d to store geometry for %s '%s' of window '%s'", iCoord+1, pszShadeDescrip, 
 																pShdObj->getName().toLocal8Bit().constData(), (pWinObj ? pWinObj->getName().toLocal8Bit().constData() : "unknown") );
 					}
 					else
@@ -1525,7 +1525,7 @@ int CMX_GenerateWindowShades_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/
 //	int iCID_CartesianPt	= GetBEMBaseCompID( sBEMErr, "CartesianPt" );
 	if (sBEMErr.length() > 0)
 	{	iRetVal = -1;
-		sErrMsg.sprintf( "Error retrieving BEMBase CMX_GenerateWindowShades object ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
+		sErrMsg = QString::asprintf( "Error retrieving BEMBase CMX_GenerateWindowShades object ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
 	}
 	else
 	{	//long lDBID_Win_Area                   = GetBEMBaseDBID( sBEMErr, "Area", iCID_Win );
@@ -1583,7 +1583,7 @@ int CMX_GenerateWindowShades_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/
 //   	long lDBID_CartesianPt_Coord = GetBEMBaseDBID( sBEMErr, "Coord", iCID_CartesianPt );
 		if (sBEMErr.length() > 0)
 		{	iRetVal = -2;
-			sErrMsg.sprintf( "Error retrieving BEMBase CMX_GenerateWindowShades property ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
+			sErrMsg = QString::asprintf( "Error retrieving BEMBase CMX_GenerateWindowShades property ID(s):  %s", sBEMErr.toLocal8Bit().constData() );
 		}
 		else
 		{	int iError, iNumWins = BEMPX_GetNumObjects( iCID_Win );
@@ -1608,7 +1608,7 @@ int CMX_GenerateWindowShades_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/
 					int iPolyIdx = BEMPX_GetChildObjectIndex( iCID_Win, iCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, iWin );  // , BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 					if (iPolyIdx < 0)
 					{	iNumWinsMissingPolyLp++;
-						sTemp.sprintf( "%s'%s' (#%d)", (sMissingPolyLpWins.isEmpty() ? "" : ", "), sWinName.toLocal8Bit().constData(), iWin+1 );
+						sTemp = QString::asprintf( "%s'%s' (#%d)", (sMissingPolyLpWins.isEmpty() ? "" : ", "), sWinName.toLocal8Bit().constData(), iWin+1 );
 						sMissingPolyLpWins += sTemp;
 					}
 					else
@@ -1623,12 +1623,12 @@ int CMX_GenerateWindowShades_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/
 							 !BEMPX_GetFloat( lDBID_PolyLp_UnitVectorOj, fUnitVectorOj, -1, BEMP_Flt, iPolyIdx ) ||
 							 !BEMPX_GetFloat( lDBID_PolyLp_UnitVectorOk, fUnitVectorOk, -1, BEMP_Flt, iPolyIdx ) )
 						{	iNumWinsBadPolyLpData++;
-							sTemp.sprintf( "%s'%s' (#%d)", (sBadPolyLpDataWins.isEmpty() ? "" : ", "), sWinName.toLocal8Bit().constData(), iWin+1 );
+							sTemp = QString::asprintf( "%s'%s' (#%d)", (sBadPolyLpDataWins.isEmpty() ? "" : ", "), sWinName.toLocal8Bit().constData(), iWin+1 );
 							sBadPolyLpDataWins += sTemp;
 						}
 						else if (fXYLen < 0.0001 || (WithinMargin( fUnitVectorOi, 0.0, 0.0001 ) && WithinMargin( fUnitVectorOj, 0.0, 0.0001 )))
 						{	iNumHorizWins++;
-							sTemp.sprintf( "%s'%s' (#%d)", (sHorizWins.isEmpty() ? "" : ", "), sWinName.toLocal8Bit().constData(), iWin+1 );
+							sTemp = QString::asprintf( "%s'%s' (#%d)", (sHorizWins.isEmpty() ? "" : ", "), sWinName.toLocal8Bit().constData(), iWin+1 );
 							sHorizWins += sTemp;
 						}
 						else
@@ -1856,9 +1856,7 @@ int CMX_GenerateWindowShades_CECNonRes( bool bVerbose, bool /*bStoreBEMDetails*/
 	if (!sErrMsg.isEmpty())
 		BEMPX_WriteLogFile( sErrMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
 	else if (bVerbose)
-	{	sLogMsg.sprintf( "   %d window shade (and child PolyLp) object(s) created for %d windows by CMX_GenerateWindowShades_CECNonRes()", iRetVal, iNumWinsProcessed );
-		BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
-	}
+		BEMPX_WriteLogFile( QString::asprintf( "   %d window shade (and child PolyLp) object(s) created for %d windows by CMX_GenerateWindowShades_CECNonRes()", iRetVal, iNumWinsProcessed ) );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
 
 	return iRetVal;
 }
@@ -1882,7 +1880,7 @@ void DefaultModel_CECNonRes( int& iPrevRuleErrs, QString& sUIVersionString, int&
 	BEMPX_SetAbortRuleEvaluationFlag( false );		// SAC 8/6/13 - set flag indicating that rule processing should be aborted
 
 	iPrevRuleErrs = BEMPX_GetRulesetErrorCount();			assert( iPrevRuleErrs < 1 );
-							if (bVerbose)
+							if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 								BEMPX_WriteLogFile( "  PerfAnal_CECNRes - Defaulting model", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 	// SAC 3/6/14 - added code to set UIVersionString to BEMBase
@@ -1957,9 +1955,12 @@ static const char* pszMeters[Com_NumCSEMeters+1]			= { "MtrElec",     "MtrNatGas
 static const char* pszMeters_ComMap[Com_NumCSEMeters+1]	= { "Electricity", "NaturalGas", "OtherFuel", NULL };		// SAC 5/31/16 - added to enable retrieval of CSE results to -Com analysis
 double         sdaMeterMults_ComMap[Com_NumCSEMeters+1]	= {    0.293,         0.01,         0.01,     0.0  };		// SAC 6/1/16 - added to convert units of CSE results to -Com analysis (1/3.412 for elec)  // SAC 6/29/16 - inc NG & Oth fuel mults by 10 fixing MBtu->therms
 
-static const char* pszCSEDHWEnduseList[] = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook",*/ "User2",              /*"User2", "PV",            "BT",*/      NULL };	// added to facilitate retrieval of Res DHW separate from other enduses - SAC 10/8/20 (tic #3218)
-static const char* pszCSEEnduseList[]    = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook",*/ "User2",              /*"User2",*/ "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
-static const char* pszCSEEUList_ComMap[] = { /* NULL,  NULL,  NULL,   NULL ,*/ "Domestic Hot Water", "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,*/ "Domestic Hot Water", /*  NULL ,*/ "Photovoltaics", "Battery", NULL }; 				// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
+//static const char* pszCSEDHWEnduseList[] = { /*"Tot", "Clg", "Htg", "HPBU",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook", "User1",*/ "User2",            /* "PV",            "BT",*/    NULL };	// added to facilitate retrieval of Res DHW separate from other enduses - SAC 10/8/20 (tic #3218)
+static const char* pszCSEEnduseList19[]    = { /*"Tot", "Clg", "Htg", "HPBU",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook", "User1",*/ "User2",               "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
+static const char* pszCSEEUList_ComMap19[] = { /* NULL,  NULL,  NULL,   NULL,*/ "Domestic Hot Water", "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,   NULL ,*/ "Domestic Hot Water",  "Photovoltaics", "Battery", NULL }; 				// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
+// created separate 22+ CSE results mapping (below) to cover ALL enduses - SAC 10/28/21 (MFam)
+static const char* pszCSEEnduseList[]      = { /*"Tot",*/ "Clg",           "Htg",           "HPBU",          "Dhw",                "DhwBU",              "DhwMFL",             "FanC",        "FanH",        "FanV",        "Fan",         "Aux",           "Proc",    "Lit",       "Rcp",        "Ext",     "Refr",    "Dish",    "Dry",     "Wash",    "Cook",    /*"User2",*/ "User2",              "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
+static const char* pszCSEEUList_ComMap[]   = { /* NULL,*/ "Space Cooling", "Space Heating", "Space Heating", "Domestic Hot Water", "Domestic Hot Water", "Domestic Hot Water", "Indoor Fans", "Indoor Fans", "Indoor Fans", "Indoor Fans", "Pumps & Misc.", "Process", "Other Ltg", "Receptacle", "Process", "Process", "Process", "Process", "Process", "Process", /*  NULL ,*/ "Domestic Hot Water", "Photovoltaics", "Battery", NULL }; 		// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
 
 static int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, long lDBID_ReportFileAppend, int iObjIdx, bool /*bProcessCurrentSelection*/,
 									QVector<QString>& saModelReportOptions, bool bVerbose, bool bSilent );
@@ -2051,6 +2052,13 @@ static QString sDbgFileName;
 //											77 : Error applying AnalysisAction(s) to building model
 //											78	: Error in sizing standard design DHW solar system using CSE
 //											79	: Error in determining TDV of DHWSolarSys system(s) using CSE
+//											80 : Analysis aborted - user chose not to overwrite NRCCPRF XML reporting file
+//											81 : Error(s) encountered performing NRCCPRF XML export prep rules
+//											82 : Error evaluating PreSim (sim input editing) rules
+//											83 : Error evaluating ProposedCompliance residential rules
+//											84	: Error evaluating ProposedInput_MFam residential rules  (BEMAnal_CECRes_EvalPropInp3Error)
+//											85	: Error evaluating ProposedModelSimulationCheck residential rules  (BEMAnal_CECRes_EvalSimChkError)
+//											86	: Error evaluating PostProposedInput residential rules  (BEMAnal_CECRes_EvalPostPropError)
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2136,6 +2144,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bReportAllUMLHZones    		=  (GetCSVOptionValue( "ReportAllUMLHZones"         ,   0,  saCSVOptions ) > 0);	// SAC 11/11/19
 	bool bSimulateCSEOnly	   		=  (GetCSVOptionValue( "SimulateCSEOnly"            ,   0,  saCSVOptions ) > 0);	// SAC 3/10/20
 	bool bReportGenVerbose	   		=  (GetCSVOptionValue( "ReportGenVerbose"           ,   0,  saCSVOptions ) > 0);	// SAC 3/20/20
+   long lIsBatchProcessing          =   GetCSVOptionValue( "IsBatchProcessing"          ,   0,  saCSVOptions );		// SAC 03/19/21
+	bool bReportGenNRCCPRFXML	 		=  (GetCSVOptionValue( "ReportGenNRCCPRFXML"        ,   0,  saCSVOptions ) > 0);	// SAC 04/10/21
 	bool bAllowAnalysisAbort			=  true;		//(GetCSVOptionValue( "AllowAnalysisAbort"         ,   1,  saCSVOptions ) > 0);	// SAC 4/5/15
 	if (bPromptUserUMLHWarning && (bSilent || iDontAbortOnErrorsThruStep > 6))
 		bPromptUserUMLHWarning = false;		// SAC 3/19/15 - toggle OFF PromptUserUMLHWarning if 'silent' flag set or DontAbortOnErrorsThruStep includes UMLH check step
@@ -2188,8 +2198,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	QString sIDFToSimulate;
 	GetCSVOptionString( "IDFToSimulate", sIDFToSimulate, saCSVOptions );		// SAC 1/25/14 - added new INI option to force simulation of a certain IDF file, regardless of the model/OSM(s) generated during analysis
 	if (!sIDFToSimulate.isEmpty() && !FileExists( sIDFToSimulate.toLocal8Bit().constData() ))
-	{	sLogMsg.sprintf( "File specified in IDFToSimulate option not found:  %s", sIDFToSimulate.toLocal8Bit().constData() );
-		BEMPX_WriteLogFile( sLogMsg );
+	{	BEMPX_WriteLogFile( QString::asprintf( "File specified in IDFToSimulate option not found:  %s", sIDFToSimulate.toLocal8Bit().constData() ) );
 		sIDFToSimulate.clear();
 	}
 
@@ -2199,14 +2208,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	BEMCompNameTypePropArray compRuleDebugInfo;
 	void* pCompRuleDebugInfo = NULL;
 	if (!sDebugRuleEvalCSV.isEmpty() && FileExists( sDebugRuleEvalCSV.toLocal8Bit().constData() ))
-	{	sLogMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+	{	sLogMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 						 "(once the file is closed), or \n'Abort' to ignore this file.", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
 		if (!OKToWriteOrDeleteFile( sDebugRuleEvalCSV.toLocal8Bit().constData(), sLogMsg, bSilent ))
 		{	if (bSilent)
-				sLogMsg.sprintf( "ERROR:  Unable to open %s file:  %s", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
+				sLogMsg = QString::asprintf( "ERROR:  Unable to open %s file:  %s", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
 			else
-				sLogMsg.sprintf( "ERROR:  User chose not to use/reference %s file:  %s", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
+				sLogMsg = QString::asprintf( "ERROR:  User chose not to use/reference %s file:  %s", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
 			BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
 		}
       else
@@ -2296,6 +2305,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		sXMLResultsFileName  = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
 	sXMLResultsFileName += " - AnalysisResults.xml";
 
+	QString sNRCCXMLFileName = sModelPathFile;	// SAC 11/26/20
+	if (sNRCCXMLFileName.lastIndexOf('.'))
+		sNRCCXMLFileName  = sNRCCXMLFileName.left( sNRCCXMLFileName.lastIndexOf('.') );
+	sNRCCXMLFileName += " - NRCCPRF.xml";
+	int iNRCCXMLClassID = 0;
+
 	// UMLH check stuff
 	QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));		// enables Locale-specific formatted numeric strings
 	QString sUMLHTextFileMsg, sUMLHTextFileName = sModelPathFile;
@@ -2342,6 +2357,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{	assert( FALSE );	// what ruleset is this ??
 	}	}
 
+   QVector<QString> saCopyAcrossModelClassPrefixes;      // added to copy NRCCPRF objects into each subsequent model - SAC 11/24/20
+	if (iCodeType == CT_T24N)
+      saCopyAcrossModelClassPrefixes.push_back( QString( "nrcc" ) );
+
 	// initialize progress dialog settings
 	if (iCodeType == CT_T24N)
 	{	if (bParallelSimulations)
@@ -2353,10 +2372,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				SetS901GProgressVal_Parallel( true, true, true );
 		else	SetS901GProgressVal_Serial( true, true, true, true );
 	}
+   int iDbgOutFileIdx=1;  // variable to ensure unique debug output filenames - SAC 11/25/20
 
-// SAC 5/5/15 - ResultSummary Logging
-			if (bVerbose || !bVerbose)
-			//					if (bVerbose)
+                        // SAC 5/5/15 - ResultSummary Logging
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 								{	BEMPX_WriteLogFile( "  PerfAnal_NRes - starting, w/ arguments:", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									QString sOptsCSV = pszOptionsCSV;
 								// prevent logging sensitive info contained in OptionsCSV string
@@ -2382,30 +2401,34 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 									for (int iArg=0; iArg<17; iArg++)
 									{	switch (iArg)
-										{	case  0 :	sLogMsg.sprintf( "       BEMBasePathFile    = %s", (pszBEMBasePathFile == NULL ? "(null)" : (strlen( pszBEMBasePathFile ) < 1 ? "(empty)" : pszBEMBasePathFile)) );	  break;
-											case  1 :	sLogMsg.sprintf( "       RulesetPathFile    = %s", (pszRulesetPathFile == NULL ? "(null)" : (strlen( pszRulesetPathFile ) < 1 ? "(empty)" : pszRulesetPathFile)) );     break;
-											case  2 :	sLogMsg.sprintf( "       SimWeatherPath     = %s", (pszSimWeatherPath  == NULL ? "(null)" : (strlen( pszSimWeatherPath  ) < 1 ? "(empty)" : pszSimWeatherPath )) );     break;
-											case  3 :	sLogMsg.sprintf( "       CompMgrDLLPath     = %s", (pszCompMgrDLLPath  == NULL ? "(null)" : (strlen( pszCompMgrDLLPath  ) < 1 ? "(empty)" : pszCompMgrDLLPath )) );     break;
-											case  4 :	sLogMsg.sprintf( "       DHWWeatherPath     = %s", (pszDHWWeatherPath  == NULL ? "(null)" : (strlen( pszDHWWeatherPath  ) < 1 ? "(empty)" : pszDHWWeatherPath )) );     break;
-											case  5 :	sLogMsg.sprintf( "       ProcessingPath     = %s", (pszProcessingPath  == NULL ? "(null)" : (strlen( pszProcessingPath  ) < 1 ? "(empty)" : pszProcessingPath )) );     break;
-											case  6 :	sLogMsg.sprintf( "       ModelPathFile      = %s", (pszModelPathFile   == NULL ? "(null)" : (strlen( pszModelPathFile   ) < 1 ? "(empty)" : pszModelPathFile  )) );     break;
-											case  7 :	sLogMsg.sprintf( "       LogPathFile        = %s", (pszLogPathFile     == NULL ? "(null)" : (strlen( pszLogPathFile     ) < 1 ? "(empty)" : pszLogPathFile    )) );     break;
-											case  8 :	sLogMsg.sprintf( "       UIVersionString    = %s", (pszUIVersionString == NULL ? "(null)" : (strlen( pszUIVersionString ) < 1 ? "(empty)" : pszUIVersionString)) );     break;
-											case  9 :	sLogMsg.sprintf( "       LoadModelFile      = %s", (bLoadModelFile   ? "true" : "false") );		break;
-											case 10 :	sLogMsg.sprintf( "       OptionsCSV         = %s", (pszOptionsCSV      == NULL ? "(null)" : (strlen( pszOptionsCSV      ) < 1 ? "(empty)" : sOptsCSV.toLocal8Bit().constData() )) );     break;
-											case 11 :	sLogMsg.sprintf( "       ErrorMsg           = %s", (pszErrorMsg        == NULL ? "(null)" : (iErrorMsgLen > 0 ? "(assumed to be initialized)" : "(unused)"    )) );     break;
-											case 12 :	sLogMsg.sprintf( "       ErrorMsgLen        = %d", iErrorMsgLen );										break;
-											case 13 :	sLogMsg.sprintf( "       DisplayProgress    = %s", (bDisplayProgress ? "true" : "false") );     break;
-											case 14 :	sLogMsg.sprintf( "       ResultsSummary     = %s", (pszResultsSummary  == NULL ? "(null)" : (strlen( pszResultsSummary  ) < 1 ? "(empty)" : pszResultsSummary )) );     break;
-											case 15 :	sLogMsg.sprintf( "       ResultsSummaryLen  = %d", iResultsSummaryLen );     break;
-											case 16 :	sLogMsg.sprintf( "       pProgCallbackFunc  = %s", (pAnalProgCallbackFunc == NULL ? "(null)" : "(assumed to be initialized)") );     break;
+										{	case  0 :	sLogMsg = QString::asprintf( "       BEMBasePathFile    = %s", (pszBEMBasePathFile == NULL ? "(null)" : (strlen( pszBEMBasePathFile ) < 1 ? "(empty)" : pszBEMBasePathFile)) );	  break;
+											case  1 :	sLogMsg = QString::asprintf( "       RulesetPathFile    = %s", (pszRulesetPathFile == NULL ? "(null)" : (strlen( pszRulesetPathFile ) < 1 ? "(empty)" : pszRulesetPathFile)) );     break;
+											case  2 :	sLogMsg = QString::asprintf( "       SimWeatherPath     = %s", (pszSimWeatherPath  == NULL ? "(null)" : (strlen( pszSimWeatherPath  ) < 1 ? "(empty)" : pszSimWeatherPath )) );     break;
+											case  3 :	sLogMsg = QString::asprintf( "       CompMgrDLLPath     = %s", (pszCompMgrDLLPath  == NULL ? "(null)" : (strlen( pszCompMgrDLLPath  ) < 1 ? "(empty)" : pszCompMgrDLLPath )) );     break;
+											case  4 :	sLogMsg = QString::asprintf( "       DHWWeatherPath     = %s", (pszDHWWeatherPath  == NULL ? "(null)" : (strlen( pszDHWWeatherPath  ) < 1 ? "(empty)" : pszDHWWeatherPath )) );     break;
+											case  5 :	sLogMsg = QString::asprintf( "       ProcessingPath     = %s", (pszProcessingPath  == NULL ? "(null)" : (strlen( pszProcessingPath  ) < 1 ? "(empty)" : pszProcessingPath )) );     break;
+											case  6 :	sLogMsg = QString::asprintf( "       ModelPathFile      = %s", (pszModelPathFile   == NULL ? "(null)" : (strlen( pszModelPathFile   ) < 1 ? "(empty)" : pszModelPathFile  )) );     break;
+											case  7 :	sLogMsg = QString::asprintf( "       LogPathFile        = %s", (pszLogPathFile     == NULL ? "(null)" : (strlen( pszLogPathFile     ) < 1 ? "(empty)" : pszLogPathFile    )) );     break;
+											case  8 :	sLogMsg = QString::asprintf( "       UIVersionString    = %s", (pszUIVersionString == NULL ? "(null)" : (strlen( pszUIVersionString ) < 1 ? "(empty)" : pszUIVersionString)) );     break;
+											case  9 :	sLogMsg = QString::asprintf( "       LoadModelFile      = %s", (bLoadModelFile   ? "true" : "false") );		break;
+											case 10 :	sLogMsg = QString::asprintf( "       OptionsCSV         = %s", (pszOptionsCSV      == NULL ? "(null)" : (strlen( pszOptionsCSV      ) < 1 ? "(empty)" : sOptsCSV.toLocal8Bit().constData() )) );     break;
+											case 11 :	sLogMsg = QString::asprintf( "       ErrorMsg           = %s", (pszErrorMsg        == NULL ? "(null)" : (iErrorMsgLen > 0 ? "(assumed to be initialized)" : "(unused)"    )) );     break;
+											case 12 :	sLogMsg = QString::asprintf( "       ErrorMsgLen        = %d", iErrorMsgLen );										break;
+											case 13 :	sLogMsg = QString::asprintf( "       DisplayProgress    = %s", (bDisplayProgress ? "true" : "false") );     break;
+											case 14 :	sLogMsg = QString::asprintf( "       ResultsSummary     = %s", (pszResultsSummary  == NULL ? "(null)" : (strlen( pszResultsSummary  ) < 1 ? "(empty)" : pszResultsSummary )) );     break;
+											case 15 :	sLogMsg = QString::asprintf( "       ResultsSummaryLen  = %d", iResultsSummaryLen );     break;
+											case 16 :	sLogMsg = QString::asprintf( "       pProgCallbackFunc  = %s", (pAnalProgCallbackFunc == NULL ? "(null)" : "(assumed to be initialized)") );     break;
 											default :	sLogMsg.clear();		break;
 										}
 										if (!sLogMsg.isEmpty())
 											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								}	}
 
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+	SetOSWrapLogFlag( true );
+#else
 	SetOSWrapLogFlag( bVerbose );
+#endif 
 	int iProgressType = (siNumProgressRuns > 1 ? BCM_NRP_Type_Batch : BCM_NRP_Type_Comp);
 	// SAC 5/28/15 - callback mechanism - initialize static function pointer
 	assert( spAnalProgCallbackFunc == NULL && slAnalysisProgressCallbackRetVal == 0 );
@@ -2503,17 +2526,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								if (bVerbose)
 									BEMPX_WriteLogFile( "  PerfAnal_NRes - Initializing BEMBase", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			if (!FileExists( sBEMBasePathFile.toLocal8Bit().constData() ))
-			{	sErrMsg.sprintf( "ERROR:  BEMBase (building data model) definitions file not found:  %s", sBEMBasePathFile.toLocal8Bit().constData() );
+			{	sErrMsg = QString::asprintf( "ERROR:  BEMBase (building data model) definitions file not found:  %s", sBEMBasePathFile.toLocal8Bit().constData() );
 //											 1 : pszBEMBasePathFile doesn't exist
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 1 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 			}
 			else if (sRulesetPathFile.isEmpty() || !FileExists( sRulesetPathFile.toLocal8Bit().constData() ))
-			{	sErrMsg.sprintf( "ERROR:  BEM ruleset file not found:  %s", (!sRulesetPathFile.isEmpty() ? sRulesetPathFile.toLocal8Bit().constData() : "(not specified)") );
+			{	sErrMsg = QString::asprintf( "ERROR:  BEM ruleset file not found:  %s", (!sRulesetPathFile.isEmpty() ? sRulesetPathFile.toLocal8Bit().constData() : "(not specified)") );
 //											 2 : pszRulesetPathFile doesn't exist
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 2 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 			}
 			else if (!CMX_LoadDataModel( sBEMBasePathFile.toLocal8Bit().constData(), BEMT_CBECC ))	// was: CMX__ReInitBEMProc( sBEMBasePathFile, BEMT_CBECC ))
-			{	sErrMsg.sprintf( "ERROR:  BEMBase (building data model) (re)initialization:  %s", sBEMBasePathFile.toLocal8Bit().constData() );
+			{	sErrMsg = QString::asprintf( "ERROR:  BEMBase (building data model) (re)initialization:  %s", sBEMBasePathFile.toLocal8Bit().constData() );
 //											31 : Error initializing building model database
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 31 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 			}
@@ -2523,12 +2546,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{						if (bVerbose)
 									BEMPX_WriteLogFile( "  PerfAnal_NRes - Initializing ruleset", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			if (!FileExists( sRulesetPathFile.toLocal8Bit().constData() ))
-			{	sErrMsg.sprintf( "ERROR:  BEM ruleset file not found:  %s", sRulesetPathFile.toLocal8Bit().constData() );
+			{	sErrMsg = QString::asprintf( "ERROR:  BEM ruleset file not found:  %s", sRulesetPathFile.toLocal8Bit().constData() );
 //											 2 : pszRulesetPathFile doesn't exist
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 2 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 			}
 			else if (!CMX_LoadRuleset( sRulesetPathFile.toLocal8Bit().constData() ))
-			{	sErrMsg.sprintf( "ERROR:  Ruleset loading error encountered:  %s", sRulesetPathFile.toLocal8Bit().constData() );
+			{	sErrMsg = QString::asprintf( "ERROR:  Ruleset loading error encountered:  %s", sRulesetPathFile.toLocal8Bit().constData() );
 //											32 : Error loading analysis ruleset
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 32 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 			}
@@ -2559,12 +2582,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			// 
 			if (!sLogPathFile.isEmpty())
 			{	if (sLogPathFile.length() > BEMDEF_MAXLOGFILELINE)
-				{	sErrMsg.sprintf( "ERROR:  Processing log path/file exceeds maximum length of %d:  %s", BEMDEF_MAXLOGFILELINE, sLogPathFile.toLocal8Bit().constData() );
+				{	sErrMsg = QString::asprintf( "ERROR:  Processing log path/file exceeds maximum length of %d:  %s", BEMDEF_MAXLOGFILELINE, sLogPathFile.toLocal8Bit().constData() );
 //											 5 : Invalid project log file name (too long)
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 5 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 				}
 				else if (!BEMPX_WriteLogFile( "checking log write", sLogPathFile.toLocal8Bit().constData(), FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
-				{	sErrMsg.sprintf( "ERROR:  Error encountered writing message to log file:  %s", sLogPathFile.toLocal8Bit().constData() );
+				{	sErrMsg = QString::asprintf( "ERROR:  Error encountered writing message to log file:  %s", sLogPathFile.toLocal8Bit().constData() );
 //											 6 : Error writing to project log file
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 6 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 				}
@@ -2572,7 +2595,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			if (iRetVal == 0)
 			{	// assumes BEMBase cleared out and ruleset re-loaded
 				if (sModelPathFile.isEmpty() || !FileExists( sModelPathFile.toLocal8Bit().constData() ))
-				{	sErrMsg.sprintf( "ERROR:  Building model (project) file not found:  %s", (!sModelPathFile.isEmpty() ? sModelPathFile.toLocal8Bit().constData() : "(not specified)") );
+				{	sErrMsg = QString::asprintf( "ERROR:  Building model (project) file not found:  %s", (!sModelPathFile.isEmpty() ? sModelPathFile.toLocal8Bit().constData() : "(not specified)") );
 //											 7 : Building model input/project file not found
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 7 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 				}
@@ -2601,7 +2624,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				   }
 				   QStringList saFailedBEMBaseData;  // facilitate more informative error reporting
 
-								if (bVerbose)
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 									BEMPX_WriteLogFile( "  PerfAnal_NRes - Loading SDD model", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 					bool bKeepLogFileOpen = false;	// SAC 5/20/14
@@ -2615,7 +2638,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					if (CMX_LoadModel( NULL, NULL, sModelPathFile.toLocal8Bit().constData(), MAX_BEMBASE_DATA_SET_ERRORS, iaFailedBEMBaseDBIDs, true /*bSupressAllMsgBoxes*/,	// SAC 5/1/14 - supress msgboxes
 												iaFailedBEMBaseObjIdxs, &saFailedBEMBaseData, false /*bLogDurations*/, sLogPathFile.toLocal8Bit().constData(), bKeepLogFileOpen, &saWarningsForUser ) != 0)
 					{	// deal with or simply report failure of model file open
-						sErrMsg.sprintf( "ERROR:  Error encountered reading building model (project) file:  %s", sModelPathFile.toLocal8Bit().constData() );
+						sErrMsg = QString::asprintf( "ERROR:  Error encountered reading building model (project) file:  %s", sModelPathFile.toLocal8Bit().constData() );
 //											 8 : Error reading/initializing model input/project file
 						ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 8 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 					}
@@ -2626,7 +2649,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								iNumBEMBaseErrors++;
 						}
 						if (iNumBEMBaseErrors > 0)
-						{	sErrMsg.sprintf( "ERROR:  %d Error(s) encountered reading building model (input/project) file:  %s", iNumBEMBaseErrors, sModelPathFile.toLocal8Bit().constData() );
+						{	sErrMsg = QString::asprintf( "ERROR:  %d Error(s) encountered reading building model (input/project) file:  %s", iNumBEMBaseErrors, sModelPathFile.toLocal8Bit().constData() );
 //												37 : Error(s) encountered reading building model (input/project) file
 							ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 37 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 						}
@@ -2724,11 +2747,22 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					assert( iRulesetCodeYear >= 2000 );
 				}
 										if (bVerbose)
-										{	sLogMsg.sprintf( "  PerfAnal_NRes - Analysis DLL CodeYear %d / Ruleset CodeYear %d", iDLLCodeYear, iRulesetCodeYear );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Analysis DLL CodeYear %d / Ruleset CodeYear %d", iDLLCodeYear, iRulesetCodeYear ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			}
 		}
+
+   bool bPerformFullCSESim = false;    // SAC 10/26/21 (MFam)
+   if (!bAbort && !BEMPX_AbortRuleEvaluation())
+   {  long lSimMFamUnits = 0;
+      BEMPX_GetInteger( BEMPX_GetDatabaseID( "SimMFamUnits", iCID_Proj ), lSimMFamUnits );
+      bPerformFullCSESim = (lSimMFamUnits > 0);
+   }
+   bool bPerformComSim = false;        // SAC 10/29/21 (MFam)
+   if (!bAbort && !BEMPX_AbortRuleEvaluation())
+   {  long lSimComFlag = 0;
+      BEMPX_GetInteger( BEMPX_GetDatabaseID( "SimComFlag", iCID_Proj ), lSimComFlag );
+      bPerformComSim = (lSimComFlag > 0);
+   }
 
 #ifdef CM_QTGUI
 							if (!bAbort && bDisplayProgress)
@@ -2750,6 +2784,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			if (lDBID_ProjFileNameNoExt > 0 && !sModelFileOnly.isEmpty())
 				BEMPX_SetBEMData( lDBID_ProjFileNameNoExt, BEMP_QStr, (void*) &sModelFileOnly, BEMO_User, 0, BEMS_ProgDefault );
 	}
+
+  // added storage of IsBatchProcessing to enable suppression of message boxes within ruleset - SAC 03/19/21
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && lIsBatchProcessing > 0)
+   {  long lDBID_IsBatchProcessing = BEMPX_GetDatabaseID( "IsBatchProcessing", iCID_Proj );
+      if (lDBID_IsBatchProcessing > 0)
+   	   BEMPX_SetBEMData( lDBID_IsBatchProcessing, BEMP_Int, (void*) &lIsBatchProcessing, BEMO_User, 0, BEMS_ProgDefault );     // -> BEMS_ProgDefault - SAC 03/25/21
+   }
 
   // SAC 8/23/18 - moved up from below initial defaulting for newly opened model to ensure certain properties (CSE_Name) are defauted before being retrieved/referenced
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && bLoadModelFile)
@@ -2814,9 +2855,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							QString sDOObjName, sTemp;
 							BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iCID ), sDOObjName, FALSE /*bAddCommas*/, 0 /*iPrecision*/, -1 /*iDispDataType*/, iDOO );
 							if (iColonIdx < 1)
-								sTemp.sprintf( "\n          %s", saDevOptsObjProps[iDOOPIdx].toLocal8Bit().constData() );
+								sTemp = QString::asprintf( "\n          %s", saDevOptsObjProps[iDOOPIdx].toLocal8Bit().constData() );
 							else
-								sTemp.sprintf( "\n          %s '%s' %s", saDevOptsObjProps[iDOOPIdx].left(iColonIdx).toLocal8Bit().constData(), sDOObjName.toLocal8Bit().constData(), 
+								sTemp = QString::asprintf( "\n          %s '%s' %s", saDevOptsObjProps[iDOOPIdx].left(iColonIdx).toLocal8Bit().constData(), sDOObjName.toLocal8Bit().constData(), 
 																						saDevOptsObjProps[iDOOPIdx].right( saDevOptsObjProps[iDOOPIdx].length() - iColonIdx - 1 ).toLocal8Bit().constData() );
 							sDevOptsNotDefaulted += sTemp;
 						// SAC 7/6/16 - added for improved user prompting
@@ -2828,9 +2869,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								sDevOptsNotDefaultedAbbrev += saDevOptsObjProps[iDOOPIdx].right( saDevOptsObjProps[iDOOPIdx].length() - iColonIdx - 1 );
 							else // if (iLastDevOptClassIdx != iCID)
 							{	if (iCID==1)
-									sTemp.sprintf( "project %s", saDevOptsObjProps[iDOOPIdx].right( saDevOptsObjProps[iDOOPIdx].length() - iColonIdx - 1 ).toLocal8Bit().constData() );
+									sTemp = QString::asprintf( "project %s", saDevOptsObjProps[iDOOPIdx].right( saDevOptsObjProps[iDOOPIdx].length() - iColonIdx - 1 ).toLocal8Bit().constData() );
 								else
-									sTemp.sprintf( "%s %s", saDevOptsObjProps[iDOOPIdx].left(iColonIdx).toLocal8Bit().constData(), 
+									sTemp = QString::asprintf( "%s %s", saDevOptsObjProps[iDOOPIdx].left(iColonIdx).toLocal8Bit().constData(), 
 																	saDevOptsObjProps[iDOOPIdx].right( saDevOptsObjProps[iDOOPIdx].length() - iColonIdx - 1 ).toLocal8Bit().constData() );
 								sDevOptsNotDefaultedAbbrev += sTemp;
 							}
@@ -2863,7 +2904,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	}	//}
 
 // Check fairly wide variety of file hashes for supporting files - some required, some not - if inconcistencies found, log them and turn OFF report signature use
-#define  MAX_FileHashID  50
+#define  MAX_FileHashID  32      // 50->32 - SAC 04/14/21
 	int iNumFileHashErrs = 0;
 	if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
 		bBypassValidFileChecks = true;	// SAC 12/23/14 - turn OFF file hash checks for S901G analyses
@@ -2871,63 +2912,49 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	{	if (bBypassValidFileChecks)
 			BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing file validity checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		else
-		{	QString sFHPathFile, sFHErrMsg; 
+		{	QString sCSE_DHWUseIncFile;
+			BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseIncFile", iCID_Proj ), sCSE_DHWUseIncFile );   // SAC 03/19/21
+			if (sCSE_DHWUseIncFile.isEmpty())
+				sCSE_DHWUseIncFile = "DHWDU2.txt"; 
+         QString sFHPathFile, sFHErrMsg; 
 			bool bLogEachFileHashError = (bVerbose);
 			bool bRequiredForCodeYear = true;
 			for (long iFHID=1; (iRetVal == 0 && iFHID <= MAX_FileHashID); iFHID++)
 			{	bRequiredForCodeYear = true;
 			// SAC 1/14/17 - updated file hash table for 2016/19 analysis (using new open source exes)
 				switch (iFHID)
-				{	case  1 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-					case  2 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr16c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths
-					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMProc16c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-					case  4 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap16.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-					case  5 :	sFHPathFile = sCompMgrDLLPath + "libeay32.dll";   				      bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
-					case  6 :	sFHPathFile = sCompMgrDLLPath + "ssleay32.dll";     				   bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
-					case  7 :	sFHPathFile = sCompMgrDLLPath + "openstudio_analysis.dll";        break;
-					case  8 :	sFHPathFile = sCompMgrDLLPath + "openstudio_analysisdriver.dll";  break;
-					case  9 :	sFHPathFile = sCompMgrDLLPath + "openstudio_energyplus.dll";      break;
-					case 10 :	sFHPathFile = sCompMgrDLLPath + "openstudio_gbxml.dll";           break;  // SAC 12/3/14 - added
-					case 11 :	sFHPathFile = sCompMgrDLLPath + "openstudio_isomodel.dll";        break;  // SAC 11/11/13 - added
-					case 12 :	sFHPathFile = sCompMgrDLLPath + "openstudio_model.dll";           break;
-					case 13 :	sFHPathFile = sCompMgrDLLPath + "openstudio_osversion.dll";       break;
-					case 14 :	sFHPathFile = sCompMgrDLLPath + "openstudio_project.dll";         break;
-					case 15 :   sFHPathFile = sCompMgrDLLPath + "openstudio_radiance.dll";        break;
-					case 16 :   sFHPathFile = sCompMgrDLLPath + "openstudio_ruleset.dll";         break;
-					case 17 :   sFHPathFile = sCompMgrDLLPath + "openstudio_runmanager.dll";      break;
-					case 18 :   sFHPathFile = sCompMgrDLLPath + "openstudio_sdd.dll";             break;
-					case 19 :   sFHPathFile = sCompMgrDLLPath + "openstudio_utilities.dll";       break;
-					case 20 :   sFHPathFile = sCompMgrDLLPath + "qtwinmigrate.dll";               break;
-					case 21 :   sFHPathFile = sCompMgrDLLPath + "zkexpat.dll";                    break;
-					case 22 :	sFHPathFile = sCompMgrDLLPath + "qwt.dll";                        bRequiredForCodeYear = false;  							break;	// SAC 8/27/17 - removed (not req'd for analysis)
-					case 23 :	sFHPathFile = sCompMgrDLLPath + "Qt5Cored.dll";                   break;  // SAC 12/3/14 - revised for Qt5
-					case 24 :	sFHPathFile = sCompMgrDLLPath + "Qt5Guid.dll";                    break;
-					case 25 :	sFHPathFile = sCompMgrDLLPath + "Qt5Networkd.dll";                break;
-					case 26 :	sFHPathFile = sCompMgrDLLPath + "Qt5Sqld.dll";                    break;
-					case 27 :	sFHPathFile = sCompMgrDLLPath + "Qt5WebKitd.dll";                 break;
-					case 28 :	sFHPathFile = sCompMgrDLLPath + "Qt5Widgetsd.dll";                break;
-					case 29 :	sFHPathFile = sCompMgrDLLPath + "Qt5Xmld.dll";                    break;
-					case 30 :	sFHPathFile = sCompMgrDLLPath + "Qt5Core.dll";                    break;
-					case 31 :	sFHPathFile = sCompMgrDLLPath + "Qt5Gui.dll";                     break;
-					case 32 :   sFHPathFile = sCompMgrDLLPath + "Qt5Network.dll";                 break;
-					case 33 :   sFHPathFile = sCompMgrDLLPath + "Qt5Sql.dll";                     break;
-					case 34 :   sFHPathFile = sCompMgrDLLPath + "Qt5WebKit.dll";                  break;
-					case 35 :   sFHPathFile = sCompMgrDLLPath + "Qt5Widgets.dll";                 break;
-					case 36 :   sFHPathFile = sCompMgrDLLPath + "Qt5Xml.dll";                     break;
-					case 37 :   sFHPathFile = sEPlusPath + "EnergyPlus.exe";          				break;
-					case 38 :   sFHPathFile = sEPlusPath + "Energy+.idd";             				break;
-					case 39 :   sFHPathFile = sEPlusPath + "energyplusapi.dll";        				break;
-					case 40 :   sFHPathFile = sEPlusPath + "EPMacro.exe";               				break;
-					case 41 :   sFHPathFile = sEPlusPath + "ExpandObjects.exe";        				break;
-					case 42 :   sFHPathFile = sEPlusPath + "ReadVarsESO.exe";	        				break;
-					case 43 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr19c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 44 :	sFHPathFile = sCompMgrDLLPath + "BEMProc19c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 45 :	BEMPX_GetBEMBaseFile( sFHPathFile );			                     bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 46 :   sFHPathFile = sCSEEXEPath + "cse19.exe";	             				bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;	// SAC 5/24/16
-					case 47 :   sFHPathFile = sCSEEXEPath + "cse.exe";				       				bRequiredForCodeYear = (iDLLCodeYear <= 2016);		break;
-					case 48 :   sFHPathFile = sCSEEXEPath + "calc_bt_control.exe";      				bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 49 :   sFHPathFile = sCSEEXEPath + "DHWDU.txt";	           					break;
-					case 50 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap19.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+				{	case  1 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case  2 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr22c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths
+					case  4 :	sFHPathFile = sCompMgrDLLPath + "BEMProc22c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case  5 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap22.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case  6 :	sFHPathFile = sCompMgrDLLPath + "libcrypto-1_1-x64.dll";  	      bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
+					case  7 :	sFHPathFile = sCompMgrDLLPath + "libssl-1_1-x64.dll"; 			   bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
+					case  8 :	sFHPathFile = sCompMgrDLLPath + "openstudiolib.dll";              break;
+					case  9 :	sFHPathFile = sCompMgrDLLPath + "Qt5Cored.dll";                   break;  // SAC 12/3/14 - revised for Qt5
+					case 10 :	sFHPathFile = sCompMgrDLLPath + "Qt5Guid.dll";                    break;
+					case 11 :	sFHPathFile = sCompMgrDLLPath + "Qt5Networkd.dll";                break;
+					case 12 :	sFHPathFile = sCompMgrDLLPath + "Qt5Sqld.dll";                    break;
+					case 13 :	sFHPathFile = sCompMgrDLLPath + "Qt5Widgetsd.dll";                break;
+					case 14 :	sFHPathFile = sCompMgrDLLPath + "Qt5Xmld.dll";                    break;
+					case 15 :	sFHPathFile = sCompMgrDLLPath + "Qt5Core.dll";                    break;
+					case 16 :   sFHPathFile = sCompMgrDLLPath + "Qt5Gui.dll";                     break;
+					case 17 :   sFHPathFile = sCompMgrDLLPath + "Qt5Network.dll";                 break;
+					case 18 :   sFHPathFile = sCompMgrDLLPath + "Qt5Sql.dll";                     break;
+					case 19 :   sFHPathFile = sCompMgrDLLPath + "Qt5Widgets.dll";                 break;
+					case 20 :   sFHPathFile = sCompMgrDLLPath + "Qt5Xml.dll";                     break;
+					case 21 :   sFHPathFile = sEPlusPath + "EnergyPlus.exe";          				break;
+					case 22 :   sFHPathFile = sEPlusPath + "Energy+.idd";             				break;
+					case 23 :	sFHPathFile = sEPlusPath + "energyplusapi.dll";        				break;
+					case 24 :	sFHPathFile = sEPlusPath + "EPMacro.exe";               				break;
+					case 25 :	sFHPathFile = sEPlusPath + "ExpandObjects.exe";        				break;
+					case 26 :	sFHPathFile = sEPlusPath + "ReadVarsESO.exe";	        				break;
+					case 27 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr19c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case 28 :	sFHPathFile = sCompMgrDLLPath + "BEMProc19c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case 29 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap19.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case 30 :	sFHPathFile = sCSEEXEPath + "cse19d.exe";	             				break;	// SAC 5/24/16
+					case 31 :	sFHPathFile = sCSEEXEPath + "cse19.exe";			       				break;
+					case 32 :	sFHPathFile = sCSEEXEPath + sCSE_DHWUseIncFile;	     					break;     
 					default :			assert( FALSE );                                      		break;
 				}
 				if (!bRequiredForCodeYear)
@@ -2937,14 +2964,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				{	// DO NOTHING - some files expected to be missing - others will prevent success when missing...
 										if (bVerbose &&	// SAC 3/6/14 - added verbose logging of this condition
 #ifdef _DEBUG
-												((iFHID < 30 || iFHID > 36) && iFHID != 47))
+												((iFHID < 15 || iFHID > 20) && iFHID != 31))
 #else
-												((iFHID < 23 || iFHID > 29) && iFHID != 46))
+												((iFHID <  9 || iFHID > 14) && iFHID != 30))
 #endif
 										{	if (sFHPathFile.isEmpty())
-												sLogMsg.sprintf( "    File to perform hash check on not specified (iFHID = %d)", iFHID );
+												sLogMsg = QString::asprintf( "    File to perform hash check on not specified (iFHID = %d)", iFHID );
 											else
-												sLogMsg.sprintf( "    File to perform hash check on missing (iFHID = %d):  %s", iFHID, sFHPathFile.toLocal8Bit().constData() );
+												sLogMsg = QString::asprintf( "    File to perform hash check on missing (iFHID = %d):  %s", iFHID, sFHPathFile.toLocal8Bit().constData() );
 											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										}
 				}
@@ -2955,9 +2982,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					if (iSHA256_RetVal != 0)
 					{	bSendRptSignature	= false;			iNumFileHashErrs++;
 						if (bLogEachFileHashError)
-						{	sLogMsg.sprintf( "Error computing file hash (analysis continuing w/ report signature disabled) - ComputeSHA256_File() returned %d for file:  %s", iSHA256_RetVal, sFHPathFile.toLocal8Bit().constData() );
-							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					}	}
+							BEMPX_WriteLogFile( QString::asprintf( "Error computing file hash (analysis continuing w/ report signature disabled) - ComputeSHA256_File() returned %d for file:  %s", iSHA256_RetVal, sFHPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
 					else
 					{	long lFileHashStatus = 0;
 					   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "FileHashID"     , iCID_Proj ), BEMP_Int, (void*) &iFHID     , BEMO_User, 0, BEMS_ProgDefault );
@@ -2966,32 +2992,26 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						if (iFHRetVal > 0)
 						{	bSendRptSignature	= false;			iNumFileHashErrs++;
 							if (bLogEachFileHashError)
-							{	sLogMsg.sprintf( "Error evaluating file hash checking rules (analysis continuing w/ report signature disabled) - for file:  %s", sFHPathFile.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}	}
+								BEMPX_WriteLogFile( QString::asprintf( "Error evaluating file hash checking rules (analysis continuing w/ report signature disabled) - for file:  %s", sFHPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
 						else if (iFHRetVal == 0 && !BEMPX_GetInteger( BEMPX_GetDatabaseID( "FileHashStatus", iCID_Proj ), lFileHashStatus ))
 						{	bSendRptSignature	= false;			iNumFileHashErrs++;
 							if (bLogEachFileHashError)
-							{	sLogMsg.sprintf( "    File hash check error - invalid Proj:FileHashStatus (%ld) (analysis continuing w/ report signature disabled) - for file:  %s", lFileHashStatus, sFHPathFile.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}	}
+								BEMPX_WriteLogFile( QString::asprintf( "    File hash check error - invalid Proj:FileHashStatus (%ld) (analysis continuing w/ report signature disabled) - for file:  %s", lFileHashStatus, sFHPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
 						else if (iFHRetVal == 0 && lFileHashStatus != 0)
 						{	bSendRptSignature	= false;			iNumFileHashErrs++;
 							if (bLogEachFileHashError)
-							{	sLogMsg.sprintf( "    File hash check error - failed consistency check (%ld) (analysis continuing w/ report signature disabled) - for file:  %s", lFileHashStatus, sFHPathFile.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}	}
+								BEMPX_WriteLogFile( QString::asprintf( "    File hash check error - failed consistency check (%ld) (analysis continuing w/ report signature disabled) - for file:  %s", lFileHashStatus, sFHPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
 						else if (bVerbose)
 						{	if (bLogEachFileHashError)
-							{	sLogMsg.sprintf( "    File hash check passed for file:  %s", sFHPathFile.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}	}
+								BEMPX_WriteLogFile( QString::asprintf( "    File hash check passed for file:  %s", sFHPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
 				}	}
 			}
 			if (iNumFileHashErrs > 0 && !bLogEachFileHashError)
-			{	sLogMsg.sprintf( "   %d file hash check(s) failed on executable and/or analysis support files (analysis continuing w/ report signature disabled)", iNumFileHashErrs );
-				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}
+				BEMPX_WriteLogFile( QString::asprintf( "   %d file hash check(s) failed on executable and/or analysis support files (analysis continuing w/ report signature disabled)", iNumFileHashErrs ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "FileHashID"     , iCID_Proj ), iError );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "FileHashToCheck", iCID_Proj ), iError );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "FileHashStatus" , iCID_Proj ), iError );
@@ -3032,7 +3052,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	{	sErrMsg.clear();
 		if (sProcessingPath.length() > (_MAX_PATH - std::max( (sModelFileOnly.length() + 20),		// sPFB + 20  used to represent the max length likely used for file appended to run path
 																						38 )))										// 38 => length of probable max OS/E+ processing path addition:  'ModelToIdf\EnergyPlus-0\eplusout.audit'
-		{	sErrMsg.sprintf( "Error: Analysis processing path too long:  ", sProcessingPath.toLocal8Bit().constData() );
+		{	sErrMsg = QString::asprintf( "Error: Analysis processing path too long:  ", sProcessingPath.toLocal8Bit().constData() );
 //											14 : Error encountered initializing weather file locations and/or names
 			ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 14 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 		}
@@ -3040,7 +3060,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{	if (!DirectoryExists( sProcessingPath ))
 				CreateAndChangeDirectory( sProcessingPath.toLocal8Bit().constData(), FALSE );
 			if (!DirectoryExists( sProcessingPath ))
-			{	sErrMsg.sprintf( "Error: Unable to create or access the analysis processing directory:  ", sProcessingPath.toLocal8Bit().constData() );
+			{	sErrMsg = QString::asprintf( "Error: Unable to create or access the analysis processing directory:  ", sProcessingPath.toLocal8Bit().constData() );
 //												15 : Error creating or accessing the analysis processing directory
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 15 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 			}
@@ -3058,7 +3078,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			{	if (sCr8PolyLpErrMsg.isEmpty())
 					sErrMsg = "ERROR:  Building geometry DBID initialization failed";
 				else
-					sErrMsg.sprintf( "ERROR:  Building geometry DBID initialization failed:  %s", sCr8PolyLpErrMsg.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "ERROR:  Building geometry DBID initialization failed:  %s", sCr8PolyLpErrMsg.toLocal8Bit().constData() );
 //											43 : Error encountered initializing building geometry DBIDs
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 43 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 			}
@@ -3066,7 +3086,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			{	// start by deleting ALL existing PolyLp objects
 				int iNumPolyLps = BEMPX_GetNumObjects( iCID_PolyLp /*, BEMO_User, iBEMProcIdx*/ );
 				if (iNumPolyLps > 0)
-				{	sLogMsg.sprintf( "Warning:  Simplified geometry model includes %d PolyLp objects (expecting none)", iNumPolyLps );			assert( FALSE );  // shouldn't ever get here unless user model includes PolyLp objects
+				{	sLogMsg = QString::asprintf( "Warning:  Simplified geometry model includes %d PolyLp objects (expecting none)", iNumPolyLps );			assert( FALSE );  // shouldn't ever get here unless user model includes PolyLp objects
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 				for (int iDelObj = iNumPolyLps-1; iDelObj >= 0; iDelObj--)
@@ -3083,7 +3103,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				int iCr8PolyLpRetVal = CMX_GeneratePolyLoops_CECNonRes( bVerbose, bStoreBEMDetails, bSilent, sCr8PolyLpErrMsg );
 				if (iCr8PolyLpRetVal < 0)
 				{
-					sErrMsg.sprintf( "%s  - Unable to generate building geometry for simulation (return code %d)", sCr8PolyLpErrMsg.toLocal8Bit().constData(), iCr8PolyLpRetVal );
+					sErrMsg = QString::asprintf( "%s  - Unable to generate building geometry for simulation (return code %d)", sCr8PolyLpErrMsg.toLocal8Bit().constData(), iCr8PolyLpRetVal );
 //												42 : Error encountered in creating building geometry
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 42 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 				}
@@ -3102,15 +3122,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	{	long lNumWinsHavingShades=0;
 		if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumWinsHavingShades", iCID_Proj ), lNumWinsHavingShades ) && lNumWinsHavingShades > 0)
 		{						if (bVerbose)
-								{	sLogMsg.sprintf( "  PerfAnal_NRes - Generating shades for %d model windows", lNumWinsHavingShades );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								}
+									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Generating shades for %d model windows", lNumWinsHavingShades ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			QString sGenWinShadesErrMsg;
 			if (!BEMPX_InitGeometryIDs( sGenWinShadesErrMsg ))
 			{	if (sGenWinShadesErrMsg.isEmpty())
 					sErrMsg = "ERROR:  Building geometry DBID initialization failed (prior to CMX_GenerateWindowShades)";
 				else
-					sErrMsg.sprintf( "ERROR:  Building geometry DBID initialization failed (prior to CMX_GenerateWindowShades):  %s", sGenWinShadesErrMsg.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "ERROR:  Building geometry DBID initialization failed (prior to CMX_GenerateWindowShades):  %s", sGenWinShadesErrMsg.toLocal8Bit().constData() );
 //											43 : Error encountered initializing building geometry DBIDs
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 43 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 			}
@@ -3119,12 +3137,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		// before further processing, check all ExtWalls w/ window shades for overlapping windows/doors
 				int iWinDoorOverlaps = CMX_WindowDoorOverlaps_CECNonRes( bVerbose, bStoreBEMDetails, bSilent, sGenWinShadesErrMsg );
 				if (iWinDoorOverlaps > 0)
-				{	sErrMsg.sprintf( "ERROR:  Window(s) and/or Door(s) are overlapping on %d ExtWalls with window shades defined", iWinDoorOverlaps );
+				{	sErrMsg = QString::asprintf( "ERROR:  Window(s) and/or Door(s) are overlapping on %d ExtWalls with window shades defined", iWinDoorOverlaps );
 //											51 : Window(s) and/or Door(s) are overlapping on ExtWalls with window shades defined
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 51 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 				}
 				else if (!sGenWinShadesErrMsg.isEmpty())
-				{	sErrMsg.sprintf( "%s  - Checking for window/door overlaps", sGenWinShadesErrMsg.toLocal8Bit().constData() );
+				{	sErrMsg = QString::asprintf( "%s  - Checking for window/door overlaps", sGenWinShadesErrMsg.toLocal8Bit().constData() );
 //											43 : Error encountered initializing building geometry DBIDs
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 43 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 				}
@@ -3152,7 +3170,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					int iGenWinShadesRetVal = CMX_GenerateWindowShades_CECNonRes( bVerbose, bStoreBEMDetails, bSilent, sGenWinShadesErrMsg );
 					if (iGenWinShadesRetVal < 0)
 					{
-						sErrMsg.sprintf( "%s  - Unable to generate window shade (return code %d)", sGenWinShadesErrMsg.toLocal8Bit().constData(), iGenWinShadesRetVal );
+						sErrMsg = QString::asprintf( "%s  - Unable to generate window shade (return code %d)", sGenWinShadesErrMsg.toLocal8Bit().constData(), iGenWinShadesRetVal );
 //													47 : Error encountered in generating window shades
 						ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 47 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 					}
@@ -3193,11 +3211,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 //				BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 	if (!bAbort && !sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName ))
-	{	sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+	{	sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 	                "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 						 "(once the file is closed), or \n'Abort' to abort the %s.", "analysis results XML", sXMLResultsFileName.toLocal8Bit().constData(), "analysis" );
 		if (!OKToWriteOrDeleteFile( sXMLResultsFileName.toLocal8Bit().constData(), sMsg ))
-		{	sErrMsg.sprintf( "Analysis aborting - user chose not to overwrite analysis results XML file:  %s", sXMLResultsFileName.toLocal8Bit().constData() );
+		{	sErrMsg = QString::asprintf( "Analysis aborting - user chose not to overwrite analysis results XML file:  %s", sXMLResultsFileName.toLocal8Bit().constData() );
 //											15 : Error creating or accessing the analysis processing directory
 			ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 15 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 	}	}
@@ -3208,6 +3226,18 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		// SAC 4/16/14 - modified call to WriteModel() to cause only valid INPUTs to be written to user input model
 		BOOL bXMLInputWriteOK = xmlResultsFile.WriteModel( FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, "User Input" /*pszModelName*/, -1 /*iBEMProcIdx*/, true /*bOnlyValidInputs*/ );		assert( bXMLInputWriteOK );
 	}
+
+	iNRCCXMLClassID = (iCodeType != CT_T24N ? 0 : BEMPX_GetDBComponentID("nrccComplianceDocumentPackage"));
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && FileExists( sNRCCXMLFileName ))	// SAC 11/26/20
+	{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+	  	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+						 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "NRCCPRF report XML", sNRCCXMLFileName.toLocal8Bit().constData(), "analysis" );
+		if (!OKToWriteOrDeleteFile( sNRCCXMLFileName.toLocal8Bit().constData(), sLogMsg, bSilent ))
+		{	sErrMsg = QString( "ERROR:  Analysis aborting - user chose not to overwrite the NRCCPRF report XML file:  %1" ).arg( sNRCCXMLFileName );
+//											80 : Analysis aborted - user chose not to overwrite NRCCPRF XML reporting file
+			ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 80 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+	}	}
+	BEMXMLWriter xmlNRCCPRFFile( ((!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty()) ? sNRCCXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_NRCCXML );
 
 	bool bResearchMode = false;
 	bool bProposedOnly = false;		// SAC 9/6/13
@@ -3245,8 +3275,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			bProposedOnly = (sAT.indexOf("proposedonly") >= 0);      // SAC 9/6/13
 			if ((bProposedOnly || bResearchMode) && iAnalysisThruStep > 7)
 			{	iAnalysisThruStep = 7;
-											sLogMsg.sprintf( "  PerfAnal_NRes - AnalysisThruStep being set to #%d due to Proj:AnalysisType = %s", iAnalysisThruStep, sATcopy.toLocal8Bit().constData() );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - AnalysisThruStep being set to #%d due to Proj:AnalysisType = %s", iAnalysisThruStep, sATcopy.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			}
 
 		// further defaulting/setup of CompReport* booleans
@@ -3272,9 +3301,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 		if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "QuickAnalysis", iCID_Proj ), lQuickAnalysis ) && lQuickAnalysisOption >= 0 && lQuickAnalysisOption != lQuickAnalysis)	// SAC 11/8/14
 		{						if (bVerbose)
-								{	sLogMsg.sprintf( "  PerfAnal_NRes - Forcing QuickAnalysis setting to %d", lQuickAnalysisOption );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								}
+									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Forcing QuickAnalysis setting to %d", lQuickAnalysisOption ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			lQuickAnalysis = lQuickAnalysisOption;
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "QuickAnalysis", iCID_Proj ), BEMP_Int, (void*) &lQuickAnalysis );
 			bReDefaultModel = TRUE;
@@ -3296,7 +3323,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				sReadVarsESOrvi = sProcessingPath + QString("SimOutVarsToCSV.rvi");
 				if (!CopyFile( sReadVarsESOrviFrom.toLocal8Bit().constData(), sReadVarsESOrvi.toLocal8Bit().constData(), FALSE ))
 				{	bRVErviPresent = false;
-					sLogMsg.sprintf( "SimOutputVariablesToCSV option(s) disabled due to error copying RVI file: '%s' to '%s'", sReadVarsESOrviFrom.toLocal8Bit().constData(), sReadVarsESOrvi.toLocal8Bit().constData() );
+					sLogMsg = QString::asprintf( "SimOutputVariablesToCSV option(s) disabled due to error copying RVI file: '%s' to '%s'", sReadVarsESOrviFrom.toLocal8Bit().constData(), sReadVarsESOrvi.toLocal8Bit().constData() );
 			}	}
 			if (!bRVEexePresent || !bRVErviPresent)
 			{	if (sLogMsg.isEmpty())
@@ -3328,7 +3355,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				else if (!FileExists( sExcptDsgnModelFile.toLocal8Bit().constData() ))
 				{	iLocalErr = 49;
 //											49 : IDF path/filename specified by Proj:UseExcptDsgnModel not found
-					sErrMsg.sprintf( "Exceptional Design IDF Error:  IDF path/filename specified by UseExcptDsgnModel not found:  %s", sExcptDsgnModelFile.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "Exceptional Design IDF Error:  IDF path/filename specified by UseExcptDsgnModel not found:  %s", sExcptDsgnModelFile.toLocal8Bit().constData() );
 				}
 				else if (lQuickAnalysis > 0)
 				{	iLocalErr = 50;
@@ -3342,7 +3369,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			}
 			else
 			{	QString sExcptDsgnModelFileMsg;
-				sExcptDsgnModelFileMsg.sprintf( "Exceptional Design simulation input used in analysis:  ", sExcptDsgnModelFile.toLocal8Bit().constData() );
+				sExcptDsgnModelFileMsg = QString::asprintf( "Exceptional Design simulation input used in analysis:  ", sExcptDsgnModelFile.toLocal8Bit().constData() );
 				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ExcptDsgnModelFileMsg", iCID_Proj ), BEMP_QStr, (void*) &sExcptDsgnModelFileMsg, BEMO_User, 0, BEMS_ProgDefault );
 			}
 		}
@@ -3372,7 +3399,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
 										(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()) ) != 0)		// SAC 3/8/13 - added weather file prep routine
 			{	BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				sErrMsg.sprintf( "Error encountered initializing weather file locations and/or names for path:  %s", sSimWeatherPath.toLocal8Bit().constData() );
+				sErrMsg = QString::asprintf( "Error encountered initializing weather file locations and/or names for path:  %s", sSimWeatherPath.toLocal8Bit().constData() );
 //											14 : Error encountered initializing weather file locations and/or names
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 14 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 		}	}
@@ -3427,9 +3454,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				else if (sDDWeatherFile.isEmpty())
 					sErrMsg = "Error:  Simulation design day (DDY) file not defined (setting up check of weather & design day file hashes)";
 				else if (iSHA256_AnnWthr_RetVal != 0)
-					sErrMsg.sprintf( "Error:  Unable to compute hash of simulation annual weather (EPW) on:  %s", sAnnualWeatherFile.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "Error:  Unable to compute hash of simulation annual weather (EPW) on:  %s", sAnnualWeatherFile.toLocal8Bit().constData() );
 				else if (iSHA256_DDYWthr_RetVal != 0)
-					sErrMsg.sprintf( "Error:  Unable to compute hash of simulation design day (DDY) on:  %s", sDDWeatherFile.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "Error:  Unable to compute hash of simulation design day (DDY) on:  %s", sDDWeatherFile.toLocal8Bit().constData() );
 				else
 					sErrMsg = "Error:  Unknown error encountered setting up check of weather & design day file hashes";
 //												40 : Error setting up check of weather & design day file hashes
@@ -3497,7 +3524,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												qsErrTmp = QString( "\n(%1)  %2" ).arg( QString::number(iErrCount), pszRuleErr );
 											if (!bVerbose)
 											{	// if verbose flag NOT set, then strip off details of rule where error occurred
-												int iRuleDetailIdx = qsErrTmp.indexOf( "evaluating rule: " );
+												int iRuleDetailIdx = qsErrTmp.indexOf( "evaluating " );
 												if (iRuleDetailIdx > 0)
 													qsErrTmp = qsErrTmp.left( iRuleDetailIdx );
 											}
@@ -3563,7 +3590,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					if (iRptGenAvail > -10)
 						// rpt gen NOT available
 						bCantGenRpt[ (iRptGenAvail < 0 ? 2 : 1) ] = true;
-					//	sLogMsg.sprintf( "Compliance report(s) called for but bypassed due to %s.", (iRptGenAvail<0 ? "report generation being offline" : "report generator website not accessible") );
+					//	sLogMsg = QString::asprintf( "Compliance report(s) called for but bypassed due to %s.", (iRptGenAvail<0 ? "report generation being offline" : "report generator website not accessible") );
 					//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 				int iRF;
@@ -3587,7 +3614,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								qsRptIssueListing = "Unable to generate compliance report due to:";
 		//						qsRptIssueListing = "<a>Unable to generate compliance report due to:<br></a>";
 							switch (iRF)
-							{	case  0 :	sLogMsg.sprintf( "      XML results file not found:  %s", sXMLResultsFileName.toLocal8Bit().constData() );						break;
+							{	case  0 :	sLogMsg = QString::asprintf( "      XML results file not found:  %s", sXMLResultsFileName.toLocal8Bit().constData() );						break;
 								case  1 :	sLogMsg =       "      report generator website not accessible";											break;
 								case  2 :	sLogMsg =       "      report generator offline";																break;
 								case  3 :	sLogMsg =       "      IDF file specified in analysis options overriding compliance models";		break;
@@ -3612,9 +3639,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					long lDisableMandUFacChecks;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandUFacChecks", iCID_Proj ), lDisableMandUFacChecks ))		// SAC 2/7/17 - new cause for disabling report security
 						lDisableMandUFacChecks = 0;
-					long lResBaseSysChange;
-					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResBaseSysChange", iCID_Proj ), lResBaseSysChange ))		// SAC 10/30/19 - new cause for disabling report security
-						lResBaseSysChange = 0;
+					//long lResBaseSysChange;         - REMOVED due to changes to ACM - SAC 04/14/21
+					//if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResBaseSysChange", iCID_Proj ), lResBaseSysChange ))		// SAC 10/30/19 - new cause for disabling report security
+					//	lResBaseSysChange = 0;
 					long lDisableMandOccSensorCtrl;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandOccSensorCtrl", iCID_Proj ), lDisableMandOccSensorCtrl ))		// SAC 11/1/19 - new cause for disabling report security
 						lDisableMandOccSensorCtrl = 0;
@@ -3638,7 +3665,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 													(lDisableMandUFacChecks > 0),  			// mandatory U-factor checks disabled by the user - SAC 2/7/17
 													(iNumFileOpenDefaultingRounds != 3),	// number of model defaulting rounds overridden by user - SAC 4/11/18 
 													(lNumPVArraysChk > 0 && bEnablePVBattSim), 		// model includes PV array(s) (and possibly battery) which are not yet allowed in permit analysis  - SAC 4/3/19
-													(lResBaseSysChange > 0) ,					// flag (Proj:ResBaseSysChange) causing high-rise res baseline system type change for >8 stories set  - SAC 10/30/19
+											      false,   //		(lResBaseSysChange > 0) ,					// flag (Proj:ResBaseSysChange) causing high-rise res baseline system type change for >8 stories set  - SAC 10/30/19     // restored array value as causing indexing issues below - SAC 08/28/21
 													(lDisableMandOccSensorCtrl > 0),			// flag (Proj:DisableMandOccSensorCtrl) disabling mandatory occupancy control sensor checks  - SAC 11/1/19
 													(bSimulateCSEOnly) };						// causes analysis to skip past EPlus simulations
 					for (iRF=0; iRF < NumRptSecOff; iRF++)
@@ -3661,8 +3688,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									qsRptIssueListing = "Compliance report will be watermarked (cannot serve as compliance documentation) due to:";
 		//							qsRptIssueListing = "<a>Compliance report will be watermarked (cannot serve as compliance documentation) due to:<br></a>";
 								switch (iRF)
-								{	case  0 :	sLogMsg.sprintf( "      %d file hash check(s) failed on executable and/or analysis support files (see log file for details)", iNumFileHashErrs );		break;
-									case  1 :	sLogMsg.sprintf( "      inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );		break;
+								{	case  0 :	sLogMsg = QString::asprintf( "      %d file hash check(s) failed on executable and/or analysis support files (see log file for details)", iNumFileHashErrs );		break;
+									case  1 :	sLogMsg = QString::asprintf( "      inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );		break;
 									case  2 :	sLogMsg =        "      input checks being bypassed";		break;
 									case  3 :	sLogMsg =        "      unmet load hour checks being bypassed";		break;
 									case  4 :	sLogMsg =        "      pre-analysis check rules being bypassed";		break;		// SAC 1/25/19 (tic #2924)
@@ -3672,19 +3699,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									case  8 :	sLogMsg =        "      the QuickAnalysis option being activated";		break;
 									case  9 :	sLogMsg =        "      file read errors being ignored";		break;
 									case 10 :	sLogMsg =        "      file validity (hash) checks being bypassed";		break;
-									case 11 :	sLogMsg.sprintf( "      developer options being activated: %s (see log file for details)", sDevOptsNotDefaultedAbbrev.toLocal8Bit().constData() );		break;
+									case 11 :	sLogMsg = QString::asprintf( "      developer options being activated: %s (see log file for details)", sDevOptsNotDefaultedAbbrev.toLocal8Bit().constData() );		break;
 //	QString sDevOptsNotDefaulted;
 //	QString saDevOptsObjProps[] = {	"Proj:DisableDayltgCtrls", "Proj:DefaultDayltgCtrls", "Proj:AutoHardSize", "Proj:AutoEffInput", " " };		// SAC 8/12/14 - updated w/ latest dayltg flags
 //	double faDevOptsPropOKVals[] = {               0,                         0,                      0,                      0           };
 									case 12 :	sLogMsg =        "      user specification of alternative proposed simulation IDF file";		break;
-									case 13 :	sLogMsg.sprintf( "      user specification of %s include file(s): %s", qsCSEName.toLocal8Bit().constData(), sCSEIncludeFileDBID.toLocal8Bit().constData() );		break;
-									case 14 :	sLogMsg.sprintf( "      %d dwelling unit space(s) with defaulted information in the Dwelling Unit Data tab", lNumSpaceWithDefaultedDwellingUnitArea );		break;
-							//		case 14 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
-//	case 12 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
+									case 13 :	sLogMsg = QString::asprintf( "      user specification of %s include file(s): %s", qsCSEName.toLocal8Bit().constData(), sCSEIncludeFileDBID.toLocal8Bit().constData() );		break;
+									case 14 :	sLogMsg = QString::asprintf( "      %d dwelling unit space(s) with defaulted information in the Dwelling Unit Data tab", lNumSpaceWithDefaultedDwellingUnitArea );		break;
+							//		case 14 :	sLogMsg = QString::asprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
+//	case 12 :	sLogMsg = QString::asprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
 									case 15 :	sLogMsg =        "      mandatory U-factor checks disabled";		break;	// SAC 2/7/17
-									case 16 :	sLogMsg.sprintf( "      number of model defaulting rounds overridden by user (%d entered, 3 required)", iNumFileOpenDefaultingRounds );		break;	// SAC 4/11/18
+									case 16 :	sLogMsg = QString::asprintf( "      number of model defaulting rounds overridden by user (%d entered, 3 required)", iNumFileOpenDefaultingRounds );		break;	// SAC 4/11/18
 									case 17 :	sLogMsg =        "      model includes PV array(s) which are not yet allowed in permit analysis";		break;	// SAC 4/3/19
-									case 18 :	sLogMsg =        "      ResBaseSysChange flag causing high-rise residential baseline system type change for >8 stories set";		break;	// SAC 10/30/19
+							//		case 18 :	sLogMsg =        "      ResBaseSysChange flag causing high-rise residential baseline system type change for >8 stories set";		break;	// SAC 10/30/19
 									case 19 :	sLogMsg =        "      DisableMandOccSensorCtrl flag causing mandatory occupancy control sensor checks to be disabled";		break;	// SAC 11/1/19
 									case 20 :	sLogMsg =        "      SimulateCSEOnly flag causing EnergyPlus simulations to be skipped";		break;	// SAC 3/11/20
 									default :	sLogMsg.clear();		break;
@@ -3879,7 +3906,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
 			BOOL bRangeCheckOK, bChkEvalSuccessful;
 	      for (int iChk=(bBypassInputChecks ? 1 : 0); iChk < (bChkCode ? 3 : 2); iChk++)
-			{						if (bVerbose)
+			{						if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 										BEMPX_WriteLogFile( "  PerfAnal_NRes - Checking SDD model", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				if (iChk==0)
 					bRangeCheckOK = BEMPX_PerformErrorCheck( bChkCode /*bRequireRequiredData=TRUE*/, FALSE /*bReportSimDefaultErrors=TRUE*/,
@@ -3917,8 +3944,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 					if (iAnalysisThruStep < 2)
 					{	bCompletedAnalysisSteps = TRUE;
-											sLogMsg.sprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 		}
 	}
@@ -4010,7 +4036,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		// add formatted RunDate string -> RunDateFormatted property
 			QString sRunDateFmt;
 			BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -1 /*iPrecision*/ );
-			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunDateFormatted", iCID_Proj ), BEMP_QStr, (void*) &sRunDateFmt );
+			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunDateFmt", iCID_Proj ), BEMP_QStr, (void*) &sRunDateFmt );  // was: Proj:RunDateFormatted - SAC 10/28/21
 			BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -3 /*iPrecision*/ );	// SAC 5/16/18 - added new '-3' format to handle output as ISO (xsd:datetime) string  // SAC 9/10/18 - ported from Res
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunDateISO", iCID_Proj ), BEMP_QStr, (void*) &sRunDateFmt );
 		}
@@ -4026,7 +4052,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					//		  7   2-3  - Simulate ANNUAL_PROPOSED and ANNUAL_BASELINE models & retrieve results / UMLH check
 					//		  8    3   - Generation of compliance report
 
-								if (bVerbose)
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 									BEMPX_WriteLogFile( "  PerfAnal_NRes - starting run loop", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		int iRun = 0;
 		COSRunInfo osRunInfo[MultEPlusSim_MaxSims];	// SAC 4/18/14 - used to store simulation inputs for runs that are skipped and to be simulated w/ following run
@@ -4102,9 +4128,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 #endif
 
 			if (!bSimulateModel)
-			{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing %s model setup and simulation", sRunID.toLocal8Bit().constData() );
-				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}
+				BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Bypassing %s model setup and simulation", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			else
 			{
 //			bLastOSSimSkipped = bThisOSSimSkipped;		// SAC 4/18/14
@@ -4112,12 +4136,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			QString sProjFileAlone = sModelFileOnly;
 			BOOL bCallOpenStudio = TRUE;
 			bool bStoreHourlyResults = false;
-							assert( iSizingRunIdx < 5 );	// otherwise above bSizingRunSimulated array requires re-sizing
-
-								if (bVerbose)
-								{	sLogMsg.sprintf( "  PerfAnal_NRes - Preparing model %s", sRunID.toLocal8Bit().constData() );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								}
+                        							assert( iSizingRunIdx < 5 );	// otherwise above bSizingRunSimulated array requires re-sizing
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Preparing model %s", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			int iCurActiveBEMProcIdx = -1;
 			if (bResearchMode)
 			{	sProjFileAlone += " - run";
@@ -4148,21 +4169,20 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					BEMPX_PurgeUnreferencedComponents();
 				if (iAnalysisThruStep < iAnalStep)
 				{	bCompletedAnalysisSteps = TRUE;
-										sLogMsg.sprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep );
-										BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 				else if (iNumBypassItems > iRun && pbBypassOpenStudio && pbBypassOpenStudio[iRun])  // ReadProgInt( "options", "BypassOpenStudio_**", 0 ) > 0)
 					bCallOpenStudio = FALSE;
 
 				if (!bCopySizingResultsOK)
-				{	sErrMsg.sprintf( "Error copying equipment sizes/flows from %d to '%s' model", iBEMProcIdxToCopy, sRunID.toLocal8Bit().constData() );
+				{	sErrMsg = QString::asprintf( "Error copying equipment sizes/flows from %d to '%s' model", iBEMProcIdxToCopy, sRunID.toLocal8Bit().constData() );
 //											36 : Error copying equipment sizes/flows from source model
 					if (iDontAbortOnErrorsThruStep < iAnalStep)  // check flag to bypass errors
 						ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 36 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 				}
 				if (!bModelOK && iDontAbortOnErrorsThruStep < iAnalStep)  // check flag to bypass errors
 				{	assert( FALSE ); // shouldn't ever get here since we are no longer generating pz model
-					sErrMsg.sprintf( "Error generating %s model", sRunIDLong.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "Error generating %s model", sRunIDLong.toLocal8Bit().constData() );
 //											16 : Error generating Proposed Sizing model
 //											18 : Error generating Standard Sizing model
 //											17 : Error generating Proposed (final) model
@@ -4176,18 +4196,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				if (bCallOpenStudio && BEMPX_GetRulesetSimulateFlagValue( 1 /*fDefault*/ ) < 0.1)	// SAC 4/1/14 - added logic to check for simulate flag being set
 				{	bCallOpenStudio = FALSE;
 							if (bVerbose)
-							{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing OpenStudio due to Simulate flag in BEMBase toggled off (%s)", sRunID.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-							}
+								BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Bypassing OpenStudio due to Simulate flag in BEMBase toggled off (%s)", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 				else if (bCallOpenStudio && !bSimulateModel)
 					bCallOpenStudio = FALSE;	// SAC 11/22/16 - ensure no sim of models when in ProposedOnly mode
 
 			// check for any SUBSEQUENT transforms that initialize to this one and init them (w/out rule evaluation) PRIOR to performing simulation & retrieving results
 								if (bVerbose)
-								{	sLogMsg.sprintf( "  PerfAnal_NRes - Checking for subsequent model init (%s)", sRunID.toLocal8Bit().constData() );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								}
+									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Checking for subsequent model init (%s)", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				iCurActiveBEMProcIdx = BEMPX_GetActiveModel();
 				int iRunBEMProcIdx = BEMPX_GetTransformIndex( sRunID.toLocal8Bit().constData() );		assert( iRunBEMProcIdx > 0 );
 				for (int iRun2=iRun+1; (sErrMsg.isEmpty() && !bAbort && !BEMPX_AbortRuleEvaluation() && !bCompletedAnalysisSteps && iRun2 < iNumRuns); iRun2++)
@@ -4219,12 +4235,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						if (iBEMProcIdxToCopy <= iRunBEMProcIdx)
 						{	QString sDbgRun2FileName;
 							if (bStoreBEMDetails)
-								sDbgRun2FileName.sprintf( "%s%s - %s.ibd-Detail", sProcessingPath.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunID2.toLocal8Bit().constData() );
+								sDbgRun2FileName = QString::asprintf( "%s%s - %s.ibd-Detail", sProcessingPath.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunID2.toLocal8Bit().constData() );
 							bModelInitialized[iRun2] = CMX_TransformModel( sRunID2.toLocal8Bit().constData(), FALSE /*bEvalRules*/, bVerbose /*bLogRuleEvaluation*/, bVerbose /*bVerboseOutput*/, 
 																							sDbgRun2FileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo );
 
 							if (!bModelInitialized[iRun2])
-							{	sErrMsg.sprintf( "Error generating %s model", sRunID2Long.toLocal8Bit().constData() );
+							{	sErrMsg = QString::asprintf( "Error generating %s model", sRunID2Long.toLocal8Bit().constData() );
 //											44 : Error initializing Proposed model
 //											20 : Error initializing Standard Sizing model
 //											21 : Error initializing Standard (final) model
@@ -4238,14 +4254,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								BEMPX_GetString( BEMPX_GetDatabaseID( "ResDHWBaselineRulelistName", iCID_Proj ), sResDHWBaselineRulelistName );
 								if (sResDHWBaselineRulelistName.length() > 0)
 								{	if (!BEMPX_RulelistExists( sResDHWBaselineRulelistName.toLocal8Bit().constData() ))
-									{	sLogMsg.sprintf( "Warning:  ResDHWBaselineRulelist '%s' not found in ruleset.", sResDHWBaselineRulelistName.toLocal8Bit().constData() );
-										BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-									}
+										BEMPX_WriteLogFile( QString::asprintf( "Warning:  ResDHWBaselineRulelist '%s' not found in ruleset.", sResDHWBaselineRulelistName.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									else
 									{
 		// debugging
-		//sLogMsg.sprintf( "Evaluating ResDHWBaselineRulelist '%s' on model %d (iCurActiveBEMProcIdx %d).", sResDHWBaselineRulelistName.toLocal8Bit().constData(), BEMPX_GetActiveModel(), iCurActiveBEMProcIdx );
-		//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		//BEMPX_WriteLogFile( QString::asprintf( "Evaluating ResDHWBaselineRulelist '%s' on model %d (iCurActiveBEMProcIdx %d).", sResDHWBaselineRulelistName.toLocal8Bit().constData(), BEMPX_GetActiveModel(), iCurActiveBEMProcIdx ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										int iResDHWBaseRetVal = LocalEvaluateRuleset( sErrMsg, 69, sResDHWBaselineRulelistName.toLocal8Bit().constData(), bVerbose, pCompRuleDebugInfo );
 //											69 : Error evaluating rulelist that converts residential DHW systems to code baseline
 										if (iResDHWBaseRetVal != 0 || BEMPX_AbortRuleEvaluation())
@@ -4273,13 +4286,24 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				if (bStoreHourlyResults)
 				{	if (iLastHrlyStorModelIdx >= 0 && iLastHrlyStorModelIdx < iCurActiveBEMProcIdx)
 					{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+
+//			QString sDbgDetailPathFile = QString( "%1dbgCopyResObjs-fromModel%2-%3b4.ibd-Detail" ).arg( sProcessingPath, QString::number( iCurActiveBEMProcIdx), QString::number(iDbgOutFileIdx+1) );
+//      	BEMPX_WriteProjectFile( sDbgDetailPathFile.toLocal8Bit().constData(), BEMFM_DETAIL, false, false, FALSE, 0, false, NULL, true,  iCurActiveBEMProcIdx );
+
 						QString sResCopyErrMsg;
-						int iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunID.toLocal8Bit().constData(), iLastHrlyStorModelIdx, iCurActiveBEMProcIdx );
+						int iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunID.toLocal8Bit().constData(), iLastHrlyStorModelIdx, iCurActiveBEMProcIdx, NULL );  // don't copy nrcc* objects here - was: &saCopyAcrossModelClassPrefixes );  - SAC 11/26/20
 						assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
 						if (iResCopyRetVal > 0 &&
 							//	((iRun==0 && iDontAbortOnErrorsThruStep < 3) || (iRun==1 && iDontAbortOnErrorsThruStep < 3) || (iRun==2 && iDontAbortOnErrorsThruStep < 6) || (iRun==3 && iDontAbortOnErrorsThruStep < 6)) )  // check flag to bypass errors
 								iDontAbortOnErrorsThruStep < iAnalStep )  // check flag to bypass errors
 							iRetVal = (iRetVal > 0 ? iRetVal : iResCopyRetVal);		// DO abort
+
+//// debugging copying of results & NRCC objects from model to model
+//			sDbgDetailPathFile = QString( "%1dbgCopyResObjs-fromModel%2-%3.ibd-Detail" ).arg( sProcessingPath, QString::number(iLastHrlyStorModelIdx), QString::number(iDbgOutFileIdx++) );
+//      	BEMPX_WriteProjectFile( sDbgDetailPathFile.toLocal8Bit().constData(), BEMFM_DETAIL, false, false, FALSE, 0, false, NULL, true, iLastHrlyStorModelIdx );
+//			sDbgDetailPathFile = QString( "%1dbgCopyResObjs-fromModel%2-%3.ibd-Detail" ).arg( sProcessingPath, QString::number( iCurActiveBEMProcIdx), QString::number(iDbgOutFileIdx++) );
+//      	BEMPX_WriteProjectFile( sDbgDetailPathFile.toLocal8Bit().constData(), BEMFM_DETAIL, false, false, FALSE, 0, false, NULL, true,  iCurActiveBEMProcIdx );
+
 					}
 					iLastHrlyStorModelIdx = iCurActiveBEMProcIdx;
 				}
@@ -4305,17 +4329,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation())
 			{
 				QString sProjSDDFile = sProcessingPath + sProjFileAlone + " - " + sRunID + ".xml";
-				sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+				sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 			                "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 								 "(once the file is closed), or \n'Abort' to abort the %s.", "SDD XML", sProjSDDFile.toLocal8Bit().constData(), "analysis" );
 				if (!OKToWriteOrDeleteFile( sProjSDDFile.toLocal8Bit().constData(), sMsg ))
-				{	sErrMsg.sprintf( "Analysis aborting - user chose not to overwrite SDD XML file:  %s", sProjSDDFile.toLocal8Bit().constData() );
+				{	sErrMsg = QString::asprintf( "Analysis aborting - user chose not to overwrite SDD XML file:  %s", sProjSDDFile.toLocal8Bit().constData() );
 //										22 : Analysis aborted - user chose not to overwrite SDD XML file
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 22 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 				}
 				else if (!BEMPX_WriteProjectFile( sProjSDDFile.toLocal8Bit().constData(), BEMFM_SIM, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/,
 															FALSE /*bSupressAllMessageBoxes*/, BEMFT_XML /*iFileType*/ ))
-				{	sErrMsg.sprintf( "Error: Unable to write %s model SDD XML file:  %s", sRunIDLong.toLocal8Bit().constData(), sProjSDDFile.toLocal8Bit().constData() );
+				{	sErrMsg = QString::asprintf( "Error: Unable to write %s model SDD XML file:  %s", sRunIDLong.toLocal8Bit().constData(), sProjSDDFile.toLocal8Bit().constData() );
 //										23 : Error: Unable to write SDD XML file
 				//	if ((iRun==0 && iDontAbortOnErrorsThruStep < 3) || (iRun==1 && iDontAbortOnErrorsThruStep < 3) || (iRun==2 && iDontAbortOnErrorsThruStep < 6) || (iRun==3 && iDontAbortOnErrorsThruStep < 6))  // check flag to bypass errors
 					if (iDontAbortOnErrorsThruStep < iAnalStep)  // check flag to bypass errors
@@ -4327,19 +4351,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation())
 				{	if (lHVACAutoSizing == 0 || !bCallOpenStudio)
 					{
-//sLogMsg.sprintf( "about to process reports (prior to sim) for model:  %s", sProjSDDFile.toLocal8Bit().constData() );
-//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//BEMPX_WriteLogFile( QString::asprintf( "about to process reports (prior to sim) for model:  %s", sProjSDDFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						int iModelReportsRetVal = ProcessModelReports( sProjSDDFile.toLocal8Bit().constData(), lDBID_Proj_RuleReportType, BEMPX_GetDatabaseID( "RuleReportFileAppend", iCID_Proj ),
 																						-1, true /*bProcessCurrentSelection*/, saModelReportOptions, bVerboseReportRules /*bVerbose*/, bSilent );
 						if (iModelReportsRetVal > 0 && bVerbose)
-						{	sLogMsg.sprintf( "%d rule-based reports written for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() );
-							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}
+							BEMPX_WriteLogFile( QString::asprintf( "%d rule-based reports written for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						else if (iModelReportsRetVal < 0)
-						{	// DON'T ABORT ANALYSIS if model report writing fails ???  (just logging message)
-							sLogMsg.sprintf( "Error generating rule-based reports (%d) for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() );
-							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}
+							// DON'T ABORT ANALYSIS if model report writing fails ???  (just logging message)
+							BEMPX_WriteLogFile( QString::asprintf( "Error generating rule-based reports (%d) for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 					else
 						bEvalReportRulesFollowingSim = true;
@@ -4374,27 +4393,21 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 					bool baSimPassesUMLHLimits[] = { true, true };
 					if (!bCallOpenStudio)
-					{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing OpenStudio (and simulation) for %s model", sRunID.toLocal8Bit().constData() );
-						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					{	BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Bypassing OpenStudio (and simulation) for %s model", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 						// SAC 7/23/18 - additional message if bypassing OS will also result in CSE sim being bypassed
 						if (bSimulateModel && bStoreHourlyResults)
 						{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ) );
 							int iNumPVArrayObjs      = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray" ) );
 							if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || iNumPVArrayObjs > 0)
-							{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing CSE simulation as well (due to OpenStudio bypass) for %s model", sRunID.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}	}
+								BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Bypassing CSE simulation as well (due to OpenStudio bypass) for %s model", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
 					}
 					else
 					{			if (bVerbose)
-								{	sLogMsg.sprintf( "  PerfAnal_NRes - Calling PerfSim_E+ for %s model", sRunID.toLocal8Bit().constData() );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								}
+									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Calling PerfSim_E+ for %s model", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						if (!bSimulateModel)
-						{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing simulation of %s model", sRunID.toLocal8Bit().constData() );
-							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}
+							BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Bypassing simulation of %s model", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 						int iSimRetVal = 0;
               		QString sEPlusSimErrMsg;
@@ -4404,10 +4417,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					// ENERGYPLUS SIMULATION
 							if (!sIDFToSimulate.isEmpty())
 							{	if (sExcptDsgnModelFile.isEmpty())
-									sLogMsg.sprintf( "    SIMULATING FIXED IDF FILE:  %s", sIDFToSimulate.toLocal8Bit().constData() );
+									BEMPX_WriteLogFile( QString::asprintf( "    SIMULATING FIXED IDF FILE:  %s", sIDFToSimulate.toLocal8Bit().constData() ) );
 								else
-									sLogMsg.sprintf( "    SIMULATING FIXED IDF FILE (for runs other than annual proposed):  %s", sIDFToSimulate.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg );
+									BEMPX_WriteLogFile( QString::asprintf( "    SIMULATING FIXED IDF FILE (for runs other than annual proposed):  %s", sIDFToSimulate.toLocal8Bit().constData() ) );
 							}
 							QString sProjSDDFileNoPath = sProjSDDFile.right( sProjSDDFile.length() - sProjSDDFile.lastIndexOf('\\') - 1 );
 							dTimeToOther += DeltaTime( tmAnalOther );		// log time spent prior to this point to "other" bucket
@@ -4463,7 +4475,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 							osSimInfo[iSimRunIdx].iProgressModel = iProgressModel;
 							iProgressModelSum += iProgressModel;
-               
+
+// didn't work because actual sim & results retrieval done on DIFFERENT array of osRunInfo[] - SAC 10/29/21 (MFam)
+//BEMPX_WriteLogFile( QString( "  PerfAnal_NRes - iSimRunIdx %1, bPerformComSim %2, bPerformFullCSESim %3, bStoreHourlyResults %4" ).arg( QString::number(iSimRunIdx), (bPerformComSim ? "true" : "false"), (bPerformFullCSESim ? "true" : "false"), (bStoreHourlyResults ? "true" : "false") ), NULL, FALSE, TRUE, FALSE );
+//                     if (!bPerformComSim && bPerformFullCSESim && bStoreHourlyResults)
+//                        osRunInfo[iSimRunIdx].SetStoreHourlyResults( true );    // make sure HourlyResults toggled ON for runs where we are skipping E+ but simulating CSE - SAC 10/29/21 (MFam)
+//BEMPX_WriteLogFile( QString( "  PerfAnal_NRes - osRunInfo[%1].m_bStoreHourlyResults = %2" ).arg( QString::number(iSimRunIdx), (osRunInfo[iSimRunIdx].StoreHourlyResults() ? "true" : "false") ), NULL, FALSE, TRUE, FALSE );
+
 //							if (bThisOSSimSkipped)
 //							{ }	// do nothing here
 //							else
@@ -4487,14 +4505,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																					bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
 																					(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																					iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
-																					false /*bIncludeOutputDiagnostics*/, iProgressType, bUseEPlusRunMgr );		// SAC 5/27/15   // SAC 2/15/19
+																					false /*bIncludeOutputDiagnostics*/, iProgressType, bUseEPlusRunMgr, (!bPerformComSim) );		// SAC 5/27/15   // SAC 2/15/19    // SAC 10/29/21 (MFam)
 
 							// moved some post-E+ processing into if (bSimRunsNow) statement
 								tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
-										if (bVerbose)
-										{	sLogMsg.sprintf( "  PerfAnal_NRes - Back from PerfSim_E+ (%s model, %d return value)", sRunID.toLocal8Bit().constData(), iSimRetVal );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+										if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Back from PerfSim_E+ (%s model, %d return value)", sRunID.toLocal8Bit().constData(), iSimRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 								if (/*bSimRunsNow &&*/ iSimRetVal == 0 && bIsDsgnSim)		// SAC 4/1/14
 									for (iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
@@ -4505,64 +4521,35 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										saSimulatedRunIDs.push_back( osRunInfo[iSimRun].RunID() );
 
 
-// bailed on this mod as pre-population of EUseSummary objects get blasted during subsequent results object copying code - SAC 9/14/20
-// RESTORED this mod to setup EUseSummary objects before trying to store DHW SSF results to them
-//							// added code here based on portion of ProcessNonresSimulationResults() to create EUseSummary object(s) before needing them to be present - SAC 9/14/20
-//								int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
-//								for (int iSR2=0; iSR2 <= iSimRunIdx; iSR2++)	// loop over runs just simulated in E+ above
-//								{
-//// debugging PV-solar
-////	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), checking EUseSummary object existence:  %1 run, class ID %2, store hourly %3" ).arg( osRunInfo[iSR2].RunID(), QString::number( iCID_EUseSummary ), QString::number( osRunInfo[iSR2].StoreHourlyResults() ) ), NULL, FALSE, TRUE, FALSE );
-//									if (osSimInfo[iSR2].bSimulateModel && bStoreHourlyResults && iCID_EUseSummary > 0)
-//									{	long lNumResultsSets;
-//										BEMPX_GetInteger(BEMPX_GetDatabaseID( "Proj:NumResultsSets"), lNumResultsSets, 1, -1, -1, BEMO_User, osRunInfo[iSR2].BEMProcIdx());			assert( (lNumResultsSets > 0 && lNumResultsSets < 11) );
-//										int iNumEUseSummaryObjs = BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo[iSR2].BEMProcIdx() );
-//										for (int iResSet = iNumEUseSummaryObjs; iResSet < lNumResultsSets; iResSet++)		// SAC 11/3/19
-//										{		//  "NumResultsSets",          BEMP_Int,  1,  0,  0,  NInp,  "",             "NumberResultsSets",                 ""  ; number of SETS of results (first implemented for 2022 testing to include 6 sets of TDV & CO2 multiplier tables & results) - SAC 11/03/19
-//												//  "TDVMultTableName",        BEMP_Str, 10,  1,  0,  NInp,  "",             "TDVMultiplierTableName",            "" 
-//												//  "ElecDemMultTableName",    BEMP_Str, 10,  1,  0,  NInp,  "",             "ElectricDemandMultiplierTableName", "" 
-//												//  "CO2EmissionsElecTable",   BEMP_Str, 10,  1,  0,  NInp,  "",             "CO2EmissionsElecricTable",          "" 
-//												//  "CO2EmissionsNatGasMult",  BEMP_Flt, 10,  1,  0,  NInp,  "ton/MBtuh",    "CO2EmissionsNaturalGasMultiplier",  "" 
-//												//  "CO2EmissionsOtherMult",   BEMP_Flt, 10,  1,  0,  NInp,  "ton/MBtuh",    "CO2EmissionsOtherMultiplier",       "" 
-//												//  "SrcEngyMultTableName",    BEMP_Str, 10,  1,  0,  NInp,  "",             "SourceEnergyMultiplierTableName",   "" 
-//											QString sResultSetName;	
-//											BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResultSetName" )+iResSet, sResultSetName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo[iSR2].BEMProcIdx() );
-//// debugging PV-solar
-////	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), creating EUseSummary object %1 '%2' for run %3" ).arg( QString::number( iResSet ), sResultSetName, osRunInfo[iSR2].RunID() ), NULL, FALSE, TRUE, FALSE );
-//											BEMPX_CreateObject( iCID_EUseSummary, sResultSetName.toLocal8Bit().constData() /*szName*/, NULL /*pPar*/, BEMO_User, true /*bDfltPar*/, true /*bAutoCr8*/, osRunInfo[iSR2].BEMProcIdx() );
-//										}
-//								}	}
-
-
 						// CSE Simulation Loop -----
 								QString sStdDsgnCSEResultsPathFile;		// added to fix bug in Flexibility credit calcs - SAC 10/8/20 (tic #3218)
 								for (int iSR=0; iSR <= iSimRunIdx; iSR++)	// loop over runs just simulated in E+ above
 								{
-								// SAC 7/23/18 - CSE simulation moved down HERE so that CSE inputs can include E+ elec use hourly data that feeds into the Battery simulation
-								// SAC 5/27/16 - moved Recirc/Res DHW simulation outside code which gets bypassed due to bCallOpenStudio
+								   // SAC 7/23/18 - CSE simulation moved down HERE so that CSE inputs can include E+ elec use hourly data that feeds into the Battery simulation
+								   // SAC 5/27/16 - moved Recirc/Res DHW simulation outside code which gets bypassed due to bCallOpenStudio
 									if (osSimInfo[iSR].bSimulateModel && bStoreHourlyResults)
 									{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
 										int iNumPVArrayObjs      = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray"   ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
-										if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || (iNumPVArrayObjs > 0 && bEnablePVBattSim))		// SAC 4/3/19
+										if (bPerformFullCSESim || (!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || (iNumPVArrayObjs > 0 && bEnablePVBattSim))		// SAC 4/3/19
 										{
-								// CSE (DHW &/or PVArray/Battery) SIMULATION
+								         // CSE (DHW &/or PVArray/Battery) SIMULATION
 											BOOL bCSESimOK = TRUE;		QString sCSEErrMsg;
 												// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
-					// --- CSE DHW (&/or PVArray/Battery) simulation based on CECRes analysis ---
+					                  // --- CSE DHW (&/or PVArray/Battery) simulation based on CECRes analysis ---
 												QString sCSE_DHWUseMthd, sCSE_DHWUseIncFile;
 												BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd"   , iCID_Proj ), sCSE_DHWUseMthd   , FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx );
 												BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseIncFile", iCID_Proj ), sCSE_DHWUseIncFile, FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx );	// SAC 2/20/19
 												if (sCSE_DHWUseIncFile.isEmpty())
-													sCSE_DHWUseIncFile = "DHWDU.txt";
+													sCSE_DHWUseIncFile = "DHWDU2.txt";     // DHWDU.txt -> DHWDU2.txt - SAC 03/16/21
 												if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
-												{	sErrMsg.sprintf( "%s (residential DHW/PV/Battery simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
-//														54 : CSE (residential DHW & PV/Battery simulation engine) executable(s) not found
+												{	sErrMsg = QString::asprintf( "%s (residential DHW/PV/Battery simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
+                                       //				54 : CSE (residential DHW & PV/Battery simulation engine) executable(s) not found
 																// SAC 12/18/17 - replaced iDontAbortOnErrorsThruStep w/ '0' to prevent program crash when CSE exe not found
 													ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 54 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, iAnalStep /*iStepCheck*/ );
 												}
 												else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.isEmpty())
-												{	sErrMsg.sprintf( "%s (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid", qsCSEName.toLocal8Bit().constData() );
-//														56 : CSE (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
+												{	sErrMsg = QString::asprintf( "%s (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid", qsCSEName.toLocal8Bit().constData() );
+                                       //				56 : CSE (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
 													ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 56 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 												}
 												else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.compare("New (via wsDayUse)", Qt::CaseInsensitive)==0)
@@ -4570,15 +4557,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 													//QString sDHWUseIncFile = "DHWDU.txt";	// SAC 1/24/19 - updated from DHWDUMF.txt to DHWDU.txt
 													QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sCSE_DHWUseIncFile;
 													if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
-													{	sErrMsg.sprintf( "%s (residential DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
-//															55 : CSE (residential DHW simulation engine) use profile file not found
+													{	sErrMsg = QString::asprintf( "%s (residential DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
+                                          //			55 : CSE (residential DHW simulation engine) use profile file not found
 														ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 55 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 													}
 													else
 													{	sDHWUseTo = sProcessingPath + sCSE_DHWUseIncFile;
 														if (!CopyFile( sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData(), FALSE ))
-														{	sErrMsg.sprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
-//																57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
+														{	sErrMsg = QString::asprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
+                                          //			57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
 															ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 57 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 														}
 														assert( FileExists( sDHWUseTo.toLocal8Bit().constData() ) );
@@ -4588,13 +4575,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												int iCSESimRetVal = 0;
 												if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
 												{
-												// Check for specification of Report Include file - and if found, prevent secure report
+												   // Check for specification of Report Include file - and if found, prevent secure report
 													long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "CSE_RptIncFile", iCID_Proj );
 													QString sChkRptIncFile;
 													if (lProjReportIncludeFileDBID > 0 &&
 														 BEMPX_GetString( lProjReportIncludeFileDBID, sChkRptIncFile, FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx ) && !sChkRptIncFile.isEmpty())
 														sCSEIncludeFileDBID = "Proj:CSE_RptIncFile";
-												// DISABLE report include file use if all settings are conisistent w/ full secure report generation (to prevent invalid analysis)
+												   // DISABLE report include file use if all settings are conisistent w/ full secure report generation (to prevent invalid analysis)
 													bool bAllowReportIncludeFile = true;
 													if (!sCSEIncludeFileDBID.isEmpty() && iCodeType == CT_T24N && bSendRptSignature && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) &&
 															!sXMLResultsFileName.isEmpty() && iAnalysisThruStep >= 8 && sIDFToSimulate.isEmpty() && iDLLCodeYear == iRulesetCodeYear && !bBypassInputChecks &&
@@ -4604,8 +4591,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 															lNumSpaceWithDefaultedDwellingUnitArea < 1 && !bBypassPreAnalysisCheckRules)
 													{	bAllowReportIncludeFile = false;
 														sCSEIncludeFileDBID.clear();
-																			sLogMsg.sprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() );
-																			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+																			BEMPX_WriteLogFile( QString::asprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 													}
 
 													/*QString sT24DHWEnduse = "T24DHW", sT24DHWPumpEnduse = "T24DHWPmp";*/			assert( FileExists( sAnnualWeatherFile.toLocal8Bit().constData() ) );
@@ -4616,42 +4602,50 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, lAnalysisType, iRulesetCodeYear, 0 /*lDesignRatingRunID*/, bVerbose,
 																bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, pCompRuleDebugInfo, pszUIVersionString,
 																0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);		// SAC 11/7/16 - added sim report/error option arguments, disabled until/unless wanted for Com analysis
-									//								dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+									               //			dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-									//				QString sMsg;
 													int iRunType[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 													iRunType[0] = (lAnalysisType < 1 ? CRM_User :
 																		(((iCodeType == CT_T24N && osSimInfo[iSR].iRunIdx == 3) || (iCodeType != CT_T24N && osSimInfo[iSR].iRunIdx >  5)) ? CRM_StdDesign : CRM_Prop));
 
-									//				siNumProgressRuns = 1;
-									//				int iRunIdx = 0;
-									//				for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
-									//				{
-									//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
-									//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
-// debugging PV-solar
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call cseRunMgr.SetupRun_NonRes() for run %1" ).arg( osSimInfo[iSR].pszRunID ), NULL, FALSE, TRUE, FALSE );
+									            //	siNumProgressRuns = 1;
+									            //	int iRunIdx = 0;
+									            //	for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+									            //	{
+									            //		if (iRunIdx > 0 || !bFirstModelCopyCreated)
+									            //			BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
+                                             // debugging PV-solar
+                                             //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call cseRunMgr.SetupRun_NonRes() for run %1" ).arg( osSimInfo[iSR].pszRunID ), NULL, FALSE, TRUE, FALSE );
+                                             //BEMPX_WriteLogFile( QString( "   debugging, pre-cseRunMgr.SetupRun_NonRes() - lAnalysisType = %1 / RunType = %2" ).arg( QString::number( lAnalysisType ), QString::number( iRunType[0] ) ), NULL, FALSE, TRUE, FALSE );
 														iCSESimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
 																													osSimInfo[iSR].pszLongRunID, osSimInfo[iSR].pszRunID, &sCSEVersion,
-																													osSimInfo[iSR].iBEMProcIdx, (lNumPVArraysChk > 0 && !bEnablePVBattSim) );  // SAC 4/3/19 - added new arg to cause removal of PVArray & Battery objects
-// debugging PV-solar
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), back from cseRunMgr.SetupRun_NonRes() - returned %1: %2" ).arg( QString::number( iCSESimRetVal ), sErrMsg ), NULL, FALSE, TRUE, FALSE );
-									//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-									//				}
+																													osSimInfo[iSR].iBEMProcIdx, (lNumPVArraysChk > 0 && !bEnablePVBattSim), bPerformFullCSESim );  // SAC 4/3/19 - added new arg to cause removal of PVArray & Battery objects   // SAC 10/26/21 (MFam)
+                                             // debugging PV-solar
+                                             //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), back from cseRunMgr.SetupRun_NonRes() - returned %1: %2" ).arg( QString::number( iCSESimRetVal ), sErrMsg ), NULL, FALSE, TRUE, FALSE );
+									            //					dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+									            //	}
 
-				//	if (iRetVal == 0)
-				//	{
-				//				QMessageBox msgBox;
-				//				msgBox.setWindowTitle( "CSE" );
-				//				msgBox.setIcon( QMessageBox::Warning ); 
-				//				msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
-				//				msgBox.setText( "About to launch CSE simulation(s)" );
-				//		//		msgBox.setDetailedText( qsRptIssuesDlgDetails );
-				//				msgBox.setStandardButtons( QMessageBox::Ok );
-				//				msgBox.addButton( QMessageBox::Abort );
-				//				msgBox.setDefaultButton( QMessageBox::Ok );
-				//				msgBox.exec();
-				//	}
+				                                 //	if (iRetVal == 0)
+				                                 //	{
+				                                 //				QMessageBox msgBox;
+				                                 //				msgBox.setWindowTitle( "CSE" );
+				                                 //				msgBox.setIcon( QMessageBox::Warning ); 
+				                                 //				msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
+				                                 //				msgBox.setText( "About to launch CSE simulation(s)" );
+				                                 //		//		msgBox.setDetailedText( qsRptIssuesDlgDetails );
+				                                 //				msgBox.setStandardButtons( QMessageBox::Ok );
+				                                 //				msgBox.addButton( QMessageBox::Abort );
+				                                 //				msgBox.setDefaultButton( QMessageBox::Ok );
+				                                 //				msgBox.exec();
+				                                 //	}
+
+
+                                          // ---------------------------------------
+                                          // ---------------------------------------
+                                          //  TO DO - revise to perform BOTH CSE RUNS in PARALLEL (setup run loop, then execute, then loop to retrieve results...)
+                                          // ---------------------------------------
+                                          // ---------------------------------------
+
 
 													if (iRetVal == 0 && iCSESimRetVal == 0)		// && bPerformSimulations && !bBypassCSE)
 													{	bool bSaveFreezeProg = sbFreezeProgress;
@@ -4660,52 +4654,53 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 														sbFreezeProgress = bSaveFreezeProg;
 													}
 
-									//								dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+									            //				dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-									//				for (iRunIdx = 0; (iRetVal == 0 && iCSESimRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
-									//				{
-									//					// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
-									//					BEMPX_SetActiveModel( iRunIdx+1 );
+									            //	for (iRunIdx = 0; (iRetVal == 0 && iCSESimRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+									            //	{
+									            //		// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
+									            //		BEMPX_SetActiveModel( iRunIdx+1 );
 								
 														const CSERun& cseRun = cseRunMgr.GetRun(0/*iRunIdx*/);
 														const QString& sRunID = cseRun.GetRunID();
-									//					const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
+									            //	const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
 														const QString& sRunAbbrev = cseRun.GetRunAbbrev();
 														long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
 													//	BOOL bLastRun = cseRun.GetLastRun();
-									//					BOOL bIsStdDesign = cseRun.GetIsStdDesign();
-									//					BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
+									            //	BOOL bIsStdDesign = cseRun.GetIsStdDesign();
+									            //	BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
 								
 														if (iRetVal == 0 && iCSESimRetVal == 0)
 														{
 															int iCSERetVal = cseRun.GetExitCode();
-															if (bVerbose)  // SAC 1/31/13
-															{	sLogMsg.sprintf( "      %s simulation returned %d (%s, Run# %ld)", qsCSEName.toLocal8Bit().constData(), iCSERetVal, sRunAbbrev.toLocal8Bit().constData(), lRunNumber );
-																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-															}
+															if (bVerbose || ebLogAnalysisMsgs)    // SAC 1/31/13    // SAC 10/22/21
+																BEMPX_WriteLogFile( QString::asprintf( "      %s simulation returned %d (%s, Run# %ld)", qsCSEName.toLocal8Bit().constData(), iCSERetVal, sRunAbbrev.toLocal8Bit().constData(), lRunNumber ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 															BEMPX_RefreshLogFile();	// SAC 5/19/14
 
 															if (iCSERetVal != 0)
-															{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d (%s, Run# %ld)", qsCSEName.toLocal8Bit().constData(), iCSERetVal, sRunAbbrev.toLocal8Bit().constData(), lRunNumber );
+															{	sErrMsg = QString::asprintf( "ERROR:  %s simulation returned %d (%s, Run# %ld)", qsCSEName.toLocal8Bit().constData(), iCSERetVal, sRunAbbrev.toLocal8Bit().constData(), lRunNumber );
 																iCSESimRetVal = BEMAnal_CECRes_CSESimError;
 																BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 															}
-									//						if (iRetVal == 0 && iCSESimRetVal == 0 && BEMPX_AbortRuleEvaluation())
-									//							iCSESimRetVal = BEMAnal_CECRes_RuleProcAbort;
-								
+									                  //	if (iRetVal == 0 && iCSESimRetVal == 0 && BEMPX_AbortRuleEvaluation())
+									                  //		iCSESimRetVal = BEMAnal_CECRes_RuleProcAbort;
+
+                                             const char** ppCSEEnduses  = (bPerformFullCSESim ? pszCSEEnduseList    : pszCSEEnduseList19   );   // SAC 10/28/21 (MFam)
+                                             const char** ppCSEComEUMap = (bPerformFullCSESim ? pszCSEEUList_ComMap : pszCSEEUList_ComMap19);
+
 															// Retrieve CSE simulation results
 															if (iRetVal == 0 && iCSESimRetVal == 0)
 															{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
 																int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), -1 /*lRunNumber-1*/,
 																											sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData(), osSimInfo[iSR].iBEMProcIdx /*-1*/,
-																											pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap, false /*bInitResults*/ );	// SAC 5/31/16  // SAC 7/23/18
+																											pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, ppCSEEnduses, ppCSEComEUMap, false /*bInitResults*/ );	// SAC 5/31/16  // SAC 7/23/18
 
 																if (iHrlyResRetVal > 0 && iRunType[0] == CRM_StdDesign)		// SAC 10/8/20 (tic #3218)
 																	sStdDsgnCSEResultsPathFile = cseRun.GetOutFile( CSERun::OutFileCSV );
 
-		//	sLogMsg.sprintf( "      BEMPX_ReadCSEHourlyResults( %s, %d, %s, %s, BEMProc %d, ... ) returned %d", cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1,
-		//																									sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData(), osSimInfo[iSR].iBEMProcIdx, iHrlyResRetVal );
-		//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		                                          //	sLogMsg = QString::asprintf( "      BEMPX_ReadCSEHourlyResults( %s, %d, %s, %s, BEMProc %d, ... ) returned %d", cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1,
+		                                          //																									sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData(), osSimInfo[iSR].iBEMProcIdx, iHrlyResRetVal );
+		                                          //	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 																if (iHrlyResRetVal < 0)  // SAC 6/12/17
 																{	switch (iHrlyResRetVal)
 																	{	case -1 :  sLogMsg = QString( "Error retrieving hourly %1 results (-1) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
@@ -4743,11 +4738,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 																}
 																else if (bVerbose)  // SAC 1/31/13
-																{	sLogMsg.sprintf( "      Hourly %s results retrieval returned %d", qsCSEName.toLocal8Bit().constData(), iHrlyResRetVal );
-																	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-																}
+																	BEMPX_WriteLogFile( QString::asprintf( "      Hourly %s results retrieval returned %d", qsCSEName.toLocal8Bit().constData(), iHrlyResRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 															// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
-									//							BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
+									                  //		BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
 
 
 						bool bIsStdDesign = !sRunAbbrev.compare("ab");
@@ -4755,8 +4748,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						{	// revised to set data to Proj rather than EUseSummary due to how we blast & re-create EUseSummary objects later in analysis - SAC 9/17/20 (tic #3215)
 							long lDBID_SSFResult = BEMPX_GetDatabaseID( (bIsStdDesign ? "Proj:StdDHW_SSF" : "Proj:PropDHW_SSF") );
 							int iNumDHWSolarSys = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
-// debugging DHW-SSFreporting - SAC 9/17/20
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), run %1, iNumDHWSolarSys %2" ).arg( sRunAbbrev, QString::number( iNumDHWSolarSys ) ), NULL, FALSE, TRUE, FALSE );
+                        // debugging DHW-SSFreporting - SAC 9/17/20
+                        //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), run %1, iNumDHWSolarSys %2" ).arg( sRunAbbrev, QString::number( iNumDHWSolarSys ) ), NULL, FALSE, TRUE, FALSE );
 							if (lDBID_SSFResult > 0 && iNumDHWSolarSys > 0)
 							{	QString qsSSFPathFile = cseRun.GetOutFile( CSERun::OutFileCSV );				assert( qsSSFPathFile.length() > 6 );
 								qsSSFPathFile = qsSSFPathFile.left( qsSSFPathFile.length()-4 ) + QString("-SSF.csv");
@@ -4765,12 +4758,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								QString qsSSFError;
 								int iSSFNum = CMX_RetrieveCSEAnnualCSVResult( qsSSFPathFile, vqsSSFObjectNames, daSSFResults, qsSSFError );
 															//	int iResultColInGroup=2, int iNameColInGroup=1, int iNumColsInGroup=2, int iNumHdrCols=2, int iNumHdrRows=4 );		// SAC 1/29/20
-// debugging DHW-SSFreporting - SAC 9/17/20
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), CMX_RetrieveCSEAnnualCSVResult returned %1 for run %2 from CSV file: %3" ).arg( QString::number( iSSFNum ), sRunAbbrev, qsSSFPathFile ), NULL, FALSE, TRUE, FALSE );
+                           // debugging DHW-SSFreporting - SAC 9/17/20
+                           //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), CMX_RetrieveCSEAnnualCSVResult returned %1 for run %2 from CSV file: %3" ).arg( QString::number( iSSFNum ), sRunAbbrev, qsSSFPathFile ), NULL, FALSE, TRUE, FALSE );
 								if (iSSFNum < 0)
-								{	sLogMsg = QString( "      %1" ).arg( qsSSFError );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								}
+									BEMPX_WriteLogFile( QString( "      %1" ).arg( qsSSFError ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								else if (iSSFNum > 0)
 								{	if (bIsStdDesign)
 									{	// only store SSF result for model-wide Std design SolarSys
@@ -4782,8 +4773,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											{	if (vqsSSFObjectNames[iSSF] == sStdDHWSlrSys)
 												{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
 													BEMPX_SetBEMData( lDBID_SSFResult, BEMP_Flt, &dSSF, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE, osSimInfo[iSR].iBEMProcIdx );
-// debugging DHW-SSFreporting - SAC 9/17/20
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), just set std model SSF to %1 for DHWSolarSys '%2'" ).arg( QString::number( dSSF ), sStdDHWSlrSys ), NULL, FALSE, TRUE, FALSE );
+                                          // debugging DHW-SSFreporting - SAC 9/17/20
+                                          //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), just set std model SSF to %1 for DHWSolarSys '%2'" ).arg( QString::number( dSSF ), sStdDHWSlrSys ), NULL, FALSE, TRUE, FALSE );
 													bSSFFound = true;
 											}	}
 											if (!bSSFFound)
@@ -4793,15 +4784,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									{	// store results to first 10 Proposed SolarSystems
 										long lDBID_SSFNames = BEMPX_GetDatabaseID( "Proj:PropDHWNames_SSF" );		assert( lDBID_SSFNames > 0 );
 										int iMaxNumSSFs = std::min( iSSFNum, BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_SSFNames ) );
-// debugging DHW-SSFreporting - SAC 9/17/20
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to set prop model SSF... lDBID_SSFNames %1 / iSSFNum %2 / iMaxNumSSFs %3" ).arg( QString::number( lDBID_SSFNames ), QString::number( iSSFNum ), QString::number( iMaxNumSSFs ) ), NULL, FALSE, TRUE, FALSE );
+                                 // debugging DHW-SSFreporting - SAC 9/17/20
+                                 //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to set prop model SSF... lDBID_SSFNames %1 / iSSFNum %2 / iMaxNumSSFs %3" ).arg( QString::number( lDBID_SSFNames ), QString::number( iSSFNum ), QString::number( iMaxNumSSFs ) ), NULL, FALSE, TRUE, FALSE );
 										for (int iSSF=0; iSSF < iMaxNumSSFs; iSSF++)
 										{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
 											QString sSSFName = vqsSSFObjectNames[iSSF];
 											BEMPX_SetBEMData( lDBID_SSFResult+iSSF, BEMP_Flt,  &dSSF,             BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE, osSimInfo[iSR].iBEMProcIdx );
 											BEMPX_SetBEMData( lDBID_SSFNames +iSSF, BEMP_QStr, (void*) &sSSFName, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE, osSimInfo[iSR].iBEMProcIdx );
-// debugging DHW-SSFreporting - SAC 9/17/20
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), just set prop model SSF to %1 for DHWSolarSys '%2'" ).arg( QString::number( dSSF ), sSSFName ), NULL, FALSE, TRUE, FALSE );
+                                    // debugging DHW-SSFreporting - SAC 9/17/20
+                                    //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), just set prop model SSF to %1 for DHWSolarSys '%2'" ).arg( QString::number( dSSF ), sSSFName ), NULL, FALSE, TRUE, FALSE );
 										}
 								}	}
 						}	}
@@ -4810,16 +4801,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 															}
 														}
-									//				}
+									            //}
 
 												}
 												bCSESimOK = (iCSESimRetVal == 0);
 												if (sCSEErrMsg.isEmpty() && iCSESimRetVal != 0)
-													sCSEErrMsg.sprintf( "error code %d", iCSESimRetVal );
+													sCSEErrMsg = QString::asprintf( "error code %d", iCSESimRetVal );
 
 											if (!bCSESimOK)
-											{	sErrMsg.sprintf( "CSE (ResDHW/PV/Battery) simulation not successful:  %s", sCSEErrMsg.toLocal8Bit().constData() );
-//													41 : CSE (ResDHW/PV/Battery) simulation not successful
+											{	sErrMsg = QString::asprintf( "CSE (ResDHW/PV/Battery) simulation not successful:  %s", sCSEErrMsg.toLocal8Bit().constData() );
+                                    //				41 : CSE (ResDHW/PV/Battery) simulation not successful
 												ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 41 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 											}
 											BEMPX_RefreshLogFile();	// SAC 5/19/14
@@ -4827,7 +4818,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										else if (iNumRecircDHWSysObjs > 0 || iNumPVArrayObjs > 0)
 										{	if (bVerbose)
 												BEMPX_WriteLogFile( "      Skipping CSE ResDHW/PV/Battery simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//											CSE_MsgCallback( 0 /*level*/, "Skipping CSE ResDHW/PV/Battery simulation" );
+                                 //			CSE_MsgCallback( 0 /*level*/, "Skipping CSE ResDHW/PV/Battery simulation" );
 									}	}
 
 								}	// end of: for (iSR=0-iSimRunIdx)
@@ -4835,11 +4826,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 
 
-							// processing of analysis results foillowing ALL simulations - SAC 7/23/18
+							// processing of analysis results following ALL simulations - SAC 7/23/18
 								if (iSimRetVal == 0 && !bSimulateCSEOnly)
 								{
 // debugging PV-solar
-//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call ProcessSimulationResults_Multiple() for %1 run(s)" ).arg( QString::number( iSimRunIdx ) ), NULL, FALSE, TRUE, FALSE );
+//BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call ProcessSimulationResults_Multiple() for %1 run(s)" ).arg( QString::number( iSimRunIdx ) ), NULL, FALSE, TRUE, FALSE );
+BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call ProcessSimulationResults_Multiple()" ), NULL, FALSE, TRUE, FALSE );
 									iSimRetVal = ProcessSimulationResults_Multiple(	osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
 																				sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
 																		// remaining general arguments
@@ -4847,7 +4839,21 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
 																				false /*bIncludeOutputDiagnostics*/, iProgressType, &saEPlusProcDirsToBeRemoved, bReportAllUMLHZones,		// SAC 5/22/19   // SAC 11/11/19
-																				&sStdDsgnCSEResultsPathFile );	// SAC 10/8/20 (tic #3218)
+																				&sStdDsgnCSEResultsPathFile, &saCopyAcrossModelClassPrefixes, pCompRuleDebugInfo, 	// SAC 10/8/20 (tic #3218)   // SAC 11/24/20   // SAC 04/14/21
+                                                            bPerformComSim /*bRptMissingEPFiles*/ );    // SAC 10/29/21 (MFam)
+
+//// debugging copying of results & NRCC objects from model to model
+//	for (int iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
+//		if (osSimInfo[iSimRun].iRunIdx > -1 && osSimInfo[iSimRun].iRunIdx < 4 &&
+//				plExportHourlyResults[ osSimInfo[iSimRun].iRunIdx ] > 0)
+//		{	QString sDbgDetailPathFile = sProcessingPath;
+//			sDbgDetailPathFile += osRunInfo[iSimRun].SDDFile();								assert( sDbgDetailPathFile.lastIndexOf('.') > 0 );
+//			if (sDbgDetailPathFile.lastIndexOf('.') > 0)
+//				sDbgDetailPathFile = sDbgDetailPathFile.left( sDbgDetailPathFile.lastIndexOf('.') );
+//			sDbgDetailPathFile += QString(" - dbg-%1.ibd-Detail").arg( QString::number(iDbgOutFileIdx++) );
+//      	BEMPX_WriteProjectFile( sDbgDetailPathFile.toLocal8Bit().constData(), BEMFM_DETAIL, false, false, FALSE, 0, false, NULL, true, osSimInfo[iSimRun].iBEMProcIdx );
+//      }
+
 								}
 							}	// end of: if (bSimRunsNow)
 
@@ -4860,19 +4866,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									{
 										BEMPX_SetActiveModel( osSimInfo[iRptRun].iBEMProcIdx );
 										QString sSDDPathFile = sProcessingPath + osRunInfo[iRptRun].SDDFile();
-//sLogMsg.sprintf( "about to process reports (following sim) for model:  %s", sSDDPathFile.toLocal8Bit().constData() );
-//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//BEMPX_WriteLogFile( QString::asprintf( "about to process reports (following sim) for model:  %s", sSDDPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										int iModelReportsRetVal = ProcessModelReports( sSDDPathFile.toLocal8Bit().constData(), lDBID_Proj_RuleReportType, BEMPX_GetDatabaseID( "RuleReportFileAppend", iCID_Proj ),
 																										-1, true /*bProcessCurrentSelection*/, saModelReportOptions, bVerboseReportRules /*bVerbose*/, bSilent );
 										if (iModelReportsRetVal > 0 && bVerbose)
-										{	sLogMsg.sprintf( "%d rule-based reports written for model:  %s", iModelReportsRetVal, osRunInfo[iRptRun].SDDFile().toLocal8Bit().constData() );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+											BEMPX_WriteLogFile( QString::asprintf( "%d rule-based reports written for model:  %s", iModelReportsRetVal, osRunInfo[iRptRun].SDDFile().toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										else if (iModelReportsRetVal < 0)
-										{	// DON'T ABORT ANALYSIS if model report writing fails ???  (just logging message)
-											sLogMsg.sprintf( "Error generating rule-based reports (%d) for model:  %s", iModelReportsRetVal, osRunInfo[iRptRun].SDDFile().toLocal8Bit().constData() );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+											// DON'T ABORT ANALYSIS if model report writing fails ???  (just logging message)
+											BEMPX_WriteLogFile( QString::asprintf( "Error generating rule-based reports (%d) for model:  %s", iModelReportsRetVal, osRunInfo[iRptRun].SDDFile().toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 								BEMPX_SetActiveModel( iRptStoreActiveModel );
 							}
@@ -4893,17 +4894,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																									osRunInfo[iSimRun].LongRunID().toLocal8Bit().constData(), iCodeType, pszHrlyResErrMsgBuffer, 512, bSilent,
 																									osRunInfo[iSimRun].BEMProcIdx(), pszEPlusVerStr, pszOpenStudioVerStr );				assert( iHrlyResExportRetVal == 0 );
 													if (iHrlyResExportRetVal != 0)
-													{	sLogMsg.sprintf( "  PerfAnal_NRes - hourly results CSV export Failed for run %s -> return code %d: %s  (exporting to file:  %s)",
+   													BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - hourly results CSV export Failed for run %s -> return code %d: %s  (exporting to file:  %s)",
 																				osRunInfo[iSimRun].RunID().toLocal8Bit().constData(), iHrlyResExportRetVal, pszHrlyResErrMsgBuffer,
-																				sHrlyResExportPathFile.toLocal8Bit().constData() );
-														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-													}
-													else if (bVerbose)
-													{	sLogMsg.sprintf( "  PerfAnal_NRes - hourly results CSV export for run %s %s (return code %d):  %s",
+																				sHrlyResExportPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+													else if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+														BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - hourly results CSV export for run %s %s (return code %d):  %s",
 																				osRunInfo[iSimRun].RunID().toLocal8Bit().constData(), (iHrlyResExportRetVal==0 ? "successful" : "failed"), 
-																				iHrlyResExportRetVal, sHrlyResExportPathFile.toLocal8Bit().constData() );
-														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-													}
+																				iHrlyResExportRetVal, sHrlyResExportPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 
 								// SAC 9/6/18 - write ZERO code hourly results CSV file
@@ -4915,7 +4912,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											sZeroCdHrlyExportPathFile = sZeroCdHrlyExportPathFile.left( sZeroCdHrlyExportPathFile.lastIndexOf('.') );
 										sZeroCdHrlyExportPathFile += " - ZEROCode Hrly.csv";
 										QString sZeroCdHrlyMsg;
-										sZeroCdHrlyMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+										sZeroCdHrlyMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 										             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 														 "(once the file is closed), or \n'Abort' to abort the %s.", "ZERO Code hourly results", sZeroCdHrlyExportPathFile.toLocal8Bit().constData(), "hourly results export" );
 										if (OKToWriteOrDeleteFile( sZeroCdHrlyExportPathFile.toLocal8Bit().constData(), sZeroCdHrlyMsg, bSilent ))
@@ -4923,17 +4920,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											int iZeroCdExportRetVal = CMX_ExportCSVHourlyResults_A2030( sZeroCdHrlyExportPathFile.toLocal8Bit().constData(), osRunInfo[iSimRun].LongRunID().toLocal8Bit().constData(),
 																									pszZeroCdErrMsgBuffer, 512, bSilent, osRunInfo[iSimRun].BEMProcIdx() );				assert( iZeroCdExportRetVal == 0 );
 													if (iZeroCdExportRetVal != 0)
-													{	sLogMsg.sprintf( "  PerfAnal_NRes - ZERO Code hourly results CSV export Failed for run %s -> return code %d: %s  (exporting to file:  %s)",
+														BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - ZERO Code hourly results CSV export Failed for run %s -> return code %d: %s  (exporting to file:  %s)",
 																				osRunInfo[iSimRun].RunID().toLocal8Bit().constData(), iZeroCdExportRetVal, pszZeroCdErrMsgBuffer,
-																				sZeroCdHrlyExportPathFile.toLocal8Bit().constData() );
-														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-													}
+																				sZeroCdHrlyExportPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 													else if (bVerbose)
-													{	sLogMsg.sprintf( "  PerfAnal_NRes - ZERO Code hourly results CSV export for run %s %s (return code %d):  %s",
+														BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - ZERO Code hourly results CSV export for run %s %s (return code %d):  %s",
 																				osRunInfo[iSimRun].RunID().toLocal8Bit().constData(), (iZeroCdExportRetVal==0 ? "successful" : "failed"), 
-																				iZeroCdExportRetVal, sZeroCdHrlyExportPathFile.toLocal8Bit().constData() );
-														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-													}
+																				iZeroCdExportRetVal, sZeroCdHrlyExportPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 													if (iZeroCdExportRetVal == 0)
 														bZCHrlyFileWritten = true;
 									}	}
@@ -4946,7 +4939,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										if (pszEPlusVerStr && strlen( pszEPlusVerStr ) > 0)
 											sEPlusVer = pszEPlusVerStr;
 										else if (dEPlusVer > 0.1)
-											sEPlusVer.sprintf( "%g", dEPlusVer );
+											sEPlusVer = QString::asprintf( "%g", dEPlusVer );
 										if (!sEPlusVer.isEmpty())
 											BEMPX_SetBEMData( BEMPX_GetDatabaseID( "EngyPlusVersion", iCID_Proj ), BEMP_QStr, (void*) &sEPlusVer, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, iCurActiveBEMProcIdx /*osRunInfo[iR].BEMProcIdx()*/ );
 										if (!sCSEVersion.isEmpty())
@@ -4958,20 +4951,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									{	QString sZeroCdRptPathFile = sModelPathOnly + sModelFileOnly;
 										sZeroCdRptPathFile += " - ZEROCode Rpt.csv";
 										QString sZeroCdRptMsg;
-										sZeroCdRptMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+										sZeroCdRptMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 										             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 														 "(once the file is closed), or \n'Abort' to abort the %s.", "ZERO Code report", sZeroCdRptPathFile.toLocal8Bit().constData(), "report generation" );
 										if (OKToWriteOrDeleteFile( sZeroCdRptPathFile.toLocal8Bit().constData(), sZeroCdRptMsg, bSilent ))
 										{
 											if (!BEMPX_RulelistExists( "GenerateZEROCodeReport" ))
-											{	sLogMsg.sprintf( "Warning:  'GenerateZEROCodeReport' rulelist not found in ruleset." );
-												BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-											}
+												BEMPX_WriteLogFile( QString::asprintf( "Warning:  'GenerateZEROCodeReport' rulelist not found in ruleset." ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 											else
 											{
 				// debugging
-				sLogMsg.sprintf( "Evaluating 'GenerateZEROCodeReport' rulelist on model %d (iCurActiveBEMProcIdx %d).", BEMPX_GetActiveModel(), iCurActiveBEMProcIdx );
-				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				BEMPX_WriteLogFile( QString::asprintf( "Evaluating 'GenerateZEROCodeReport' rulelist on model %d (iCurActiveBEMProcIdx %d).", BEMPX_GetActiveModel(), iCurActiveBEMProcIdx ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 												int iCODEZeroRptRetVal = LocalEvaluateRuleset( sErrMsg, 70, "GenerateZEROCodeReport", bVerbose, pCompRuleDebugInfo );
 //													70 : Error evaluating 'GenerateZEROCodeReport' rulelist
 												if (iCODEZeroRptRetVal != 0 || BEMPX_AbortRuleEvaluation())
@@ -5019,14 +5009,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								assert( iErrantRunNum > 0 );
 								if (iErrantRunNum < 1)
 								{	if (sEPlusSimErrMsg.isEmpty())
-										sErrMsg.sprintf( "Error(s) encountered simulating multiple models (sim returned %d)", iSimRetVal );
+										sErrMsg = QString::asprintf( "Error(s) encountered simulating multiple models (sim returned %d)", iSimRetVal );
 									else
-										sErrMsg.sprintf( "Error(s) encountered simulating multiple models (sim returned %d):\n      %s", iSimRetVal, sEPlusSimErrMsg.toLocal8Bit().constData() );
+										sErrMsg = QString::asprintf( "Error(s) encountered simulating multiple models (sim returned %d):\n      %s", iSimRetVal, sEPlusSimErrMsg.toLocal8Bit().constData() );
 								}
 								else if (sEPlusSimErrMsg.isEmpty())
-									sErrMsg.sprintf( "Error(s) encountered simulating %s model (sim returned %d)", osRunInfo[iErrantRunNum-1].LongRunID().toLocal8Bit().constData(), iSimRetVal );
+									sErrMsg = QString::asprintf( "Error(s) encountered simulating %s model (sim returned %d)", osRunInfo[iErrantRunNum-1].LongRunID().toLocal8Bit().constData(), iSimRetVal );
 								else
-									sErrMsg.sprintf( "Error(s) encountered simulating %s model (sim returned %d):\n      %s", osRunInfo[iErrantRunNum-1].LongRunID().toLocal8Bit().constData(), 
+									sErrMsg = QString::asprintf( "Error(s) encountered simulating %s model (sim returned %d):\n      %s", osRunInfo[iErrantRunNum-1].LongRunID().toLocal8Bit().constData(), 
 																																									iSimRetVal, sEPlusSimErrMsg.toLocal8Bit().constData() );
 //												45 : Error(s) encountered simulating Proposed Sizing model
 //												24 : Error(s) encountered simulating Standard Sizing model
@@ -5043,7 +5033,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								{
 									int iBDBCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
 									if (iBDBCID_EUseSummary <= 0 || BEMPX_GetNumObjects( iBDBCID_EUseSummary ) < 1)
-									{	sErrMsg.sprintf( "Error(s) encountered retrieving %s model simulation results", sRunIDLong.toLocal8Bit().constData() );
+									{	sErrMsg = QString::asprintf( "Error(s) encountered retrieving %s model simulation results", sRunIDLong.toLocal8Bit().constData() );
 //													46 : Error(s) encountered retrieving Proposed Sizing model simulation results
 //													27 : Error(s) encountered retrieving Standard Sizing model simulation results
 //													28 : Error(s) encountered retrieving Proposed model simulation results
@@ -5055,9 +5045,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									}
 									else
 									{	if (bBypassUMLHChecks)
-										{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing UMLH check on %s model", sRunID.toLocal8Bit().constData() );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Bypassing UMLH check on %s model", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										else
 										{	int iCID_ThrmlZn = BEMPX_GetDBComponentID( "ThrmlZn" );																	assert( iCID_ThrmlZn > 0 );
 											long lDBID_ThrmlZn_ClgUMLHLimit = BEMPX_GetDatabaseID( "ClgUMLHLimit", iCID_ThrmlZn );							assert( iCID_ThrmlZn < 1 || lDBID_ThrmlZn_ClgUMLHLimit > 0 );
@@ -5070,9 +5058,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 													if (osRunInfo[iR].OSRunIdx() >= 0)
 													{													assert( sErrMsg.isEmpty() );	// confirm error message not populated yet - else code @ end of for loop likely needing some mods
 														if (bVerbose || bReportAllUMLHZones)	// SAC 11/11/19 - bReportAllUMLHZones
-														{	sLogMsg.sprintf( "  PerfAnal_NRes - UMLH check on %s model", osRunInfo[iR].RunID().toLocal8Bit().constData() );
-															BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-														}
+															BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - UMLH check on %s model", osRunInfo[iR].RunID().toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 											// Check for zones exceeding maxiumum number of cooling/heat load hours - SAC 8/31/13
 															int iNumZonesExceedClgUMLHs = 0, iNumZonesExceedHtgUMLHs = 0,  iMaxZoneExceedClgUMLHsIdx = -1, iMaxZoneExceedHtgUMLHsIdx = -1;
@@ -5144,7 +5130,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																{	QString sUMLHZoneName, sUMLHZoneLog;
 																	BEMPX_GetString( lDBID_ThrmlZn_Name, sUMLHZoneName, FALSE /*bAddCommas*/, 0 /*iPrecision*/, -1 /*iDispDataType*/, iZn,
 																									BEMO_User, NULL, 0, osRunInfo[iR].BEMProcIdx() );		assert( !sUMLHZoneName.isEmpty() );
-																	sUMLHZoneLog.sprintf( "          clg: %.0f  htg: %.0f  '%s'", fNumZoneClgUMLHs, fNumZoneHtgUMLHs, sUMLHZoneName.toLocal8Bit().constData() );
+																	sUMLHZoneLog = QString::asprintf( "          clg: %.0f  htg: %.0f  '%s'", fNumZoneClgUMLHs, fNumZoneHtgUMLHs, sUMLHZoneName.toLocal8Bit().constData() );
 																	BEMPX_WriteLogFile( sUMLHZoneLog, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 																}
 
@@ -5158,7 +5144,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																		fNumZoneHtgUMLHs = 0;
 																	BEMPX_GetString( lDBID_ThrmlZn_Name, sMaxZoneClgUMLHsName, FALSE /*bAddCommas*/, 0 /*iPrecision*/, -1 /*iDispDataType*/, iZn,
 																									BEMO_User, NULL, 0, osRunInfo[iR].BEMProcIdx() );		assert( !sMaxZoneClgUMLHsName.isEmpty() );
-																	sAppendToErrantZoneList.sprintf( "\n          clg: %.0f  htg: %.0f  '%s'", fNumZoneClgUMLHs, fNumZoneHtgUMLHs, sMaxZoneClgUMLHsName.toLocal8Bit().constData() );
+																	sAppendToErrantZoneList = QString::asprintf( "\n          clg: %.0f  htg: %.0f  '%s'", fNumZoneClgUMLHs, fNumZoneHtgUMLHs, sMaxZoneClgUMLHsName.toLocal8Bit().constData() );
 														// SAC 3/8/14 - added code to limit zones reported back to calling application so that error message doesn't exceed max length
 																	if (iMaxErrantZoneListToAppend > 0 && iNumZnsExcludedFromErrZoneList > 0)
 																		iNumZnsExcludedFromErrZoneList++;	// already to the point where we are excluding zones, so just increment the counter of skipped zones
@@ -5170,20 +5156,20 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	sErrantZoneList += sAppendToErrantZoneList;
 																			if (bReportStandardUMLHs || !osRunInfo[iR].IsStdRun())  //bVerbose)	// SAC 3/10/15 - added verbose logging of each UMLH errant zone inside zone loop to catch variation in UMLH limits (by zone)   // SAC 11/11/19 - added bReportStandardUMLHs
 																			{	if (fMaxUnmetClgLdHrs > -0.5 && fNumZoneClgUMLHs > (fMaxUnmetClgLdHrs + 0.1) && fMaxUnmetHtgLdHrs > -0.5 && fNumZoneHtgUMLHs > (fMaxUnmetHtgLdHrs + 0.1))
-																				{	sLogMsg.sprintf( "Simulation Warning:  %s model zone '%s' exceeds UMLH limits: cooling %.0f (%.0f max) and heating %.0f (%.0f max)", 
+																				{	sLogMsg = QString::asprintf( "Simulation Warning:  %s model zone '%s' exceeds UMLH limits: cooling %.0f (%.0f max) and heating %.0f (%.0f max)", 
 																											osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneClgUMLHs, fMaxUnmetClgLdHrs, fNumZoneHtgUMLHs, fMaxUnmetHtgLdHrs );
 																					//qstrUMLHWarningDetails.append( QString( "  '%1' cooling %L2 > %L3 and heating %L4 > %L5\n" ).arg( ((const char*) sMaxZoneClgUMLHsName) ).arg( fNumZoneClgUMLHs ).arg( fMaxUnmetClgLdHrs ).arg( fNumZoneHtgUMLHs ).arg( fMaxUnmetHtgLdHrs ) );
-																					sMsg.sprintf( "  '%s' cooling %g > %g and heating %g > %g\n", sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneClgUMLHs, fMaxUnmetClgLdHrs, fNumZoneHtgUMLHs, fMaxUnmetHtgLdHrs );
+																					sMsg = QString::asprintf( "  '%s' cooling %g > %g and heating %g > %g\n", sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneClgUMLHs, fMaxUnmetClgLdHrs, fNumZoneHtgUMLHs, fMaxUnmetHtgLdHrs );
 																				}
 																				else if (fMaxUnmetClgLdHrs > -0.5 && fNumZoneClgUMLHs > (fMaxUnmetClgLdHrs + 0.1))
-																				{	sLogMsg.sprintf( "Simulation Warning:  %s model zone '%s' exceeds UMLH limits: cooling %.0f (%.0f max)", osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneClgUMLHs, fMaxUnmetClgLdHrs );
+																				{	sLogMsg = QString::asprintf( "Simulation Warning:  %s model zone '%s' exceeds UMLH limits: cooling %.0f (%.0f max)", osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneClgUMLHs, fMaxUnmetClgLdHrs );
 																					//qstrUMLHWarningDetails.append( QString( "  '%1' cooling %L2 > %L3\n" ).arg( ((const char*) sMaxZoneClgUMLHsName) ).arg( fNumZoneClgUMLHs ).arg( fMaxUnmetClgLdHrs ) );
-																					sMsg.sprintf( "  '%s' cooling %g > %g\n", sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneClgUMLHs, fMaxUnmetClgLdHrs );
+																					sMsg = QString::asprintf( "  '%s' cooling %g > %g\n", sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneClgUMLHs, fMaxUnmetClgLdHrs );
 																				}
 																				else
-																				{	sLogMsg.sprintf( "Simulation Warning:  %s model zone '%s' exceeds UMLH limits: heating %.0f (%.0f max)", osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneHtgUMLHs, fMaxUnmetHtgLdHrs );
+																				{	sLogMsg = QString::asprintf( "Simulation Warning:  %s model zone '%s' exceeds UMLH limits: heating %.0f (%.0f max)", osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneHtgUMLHs, fMaxUnmetHtgLdHrs );
 																					//qstrUMLHWarningDetails.append( QString( "  '%1' heating %L2 > %L3\n" ).arg( ((const char*) sMaxZoneClgUMLHsName) ).arg( fNumZoneHtgUMLHs ).arg( fMaxUnmetHtgLdHrs ) );
-																					sMsg.sprintf( "  '%s' heating %g > %g\n", sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneHtgUMLHs, fMaxUnmetHtgLdHrs );
+																					sMsg = QString::asprintf( "  '%s' heating %g > %g\n", sMaxZoneClgUMLHsName.toLocal8Bit().constData(), fNumZoneHtgUMLHs, fMaxUnmetHtgLdHrs );
 																				}
 																				cstrUMLHWarningDetails += sMsg;
 																				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -5219,20 +5205,20 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 																QString sClgHoursStr = "hours", sHtgHoursStr = "hours";		// SAC 5/21/19 - include max UMLH limits in warning message
 																if (lConstantClgUMLHLimit > 0)
-																	sClgHoursStr.sprintf( "hours of %d", lConstantClgUMLHLimit );
+																	sClgHoursStr = QString::asprintf( "hours of %d", lConstantClgUMLHLimit );
 																if (lConstantHtgUMLHLimit > 0)
-																	sHtgHoursStr.sprintf( "hours of %d", lConstantHtgUMLHLimit );
+																	sHtgHoursStr = QString::asprintf( "hours of %d", lConstantHtgUMLHLimit );
 																if (iNumZonesExceedClgUMLHs > 0 && iNumZonesExceedHtgUMLHs > 0)
-																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s", iNumZonesExceedClgUMLHs, /*fMaxUnmetClgLdHrs,*/
+																	sErrMsg = QString::asprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s", iNumZonesExceedClgUMLHs, /*fMaxUnmetClgLdHrs,*/
 																								osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
 																else if (iNumZonesExceedClgUMLHs > 0)
-																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/, sClgHoursStr.toLocal8Bit().constData() );
+																	sErrMsg = QString::asprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/, sClgHoursStr.toLocal8Bit().constData() );
 																else  // if (iNumZonesExceedHtgUMLHs > 0)
-																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
+																	sErrMsg = QString::asprintf( "Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
 
 																if (iMaxErrantZoneListToAppend > 0 && !sReducedErrantZoneList.isEmpty())	// SAC 3/8/14
 																	// repeat same message but w/ shortened list of zones
-																	sErrMsgShortenedToFit.sprintf( "%s%s\n          (and %d other zone(s), as reported in project log file)", sErrMsg.toLocal8Bit().constData(), sReducedErrantZoneList.toLocal8Bit().constData(), iNumZnsExcludedFromErrZoneList );
+																	sErrMsgShortenedToFit = QString::asprintf( "%s%s\n          (and %d other zone(s), as reported in project log file)", sErrMsg.toLocal8Bit().constData(), sReducedErrantZoneList.toLocal8Bit().constData(), iNumZnsExcludedFromErrZoneList );
 																sErrMsg += sErrantZoneList;
 																bForceXMLFileWriteDespiteAbort = true;		// SAC 9/6/13 - added to ensure XML results file still written despite errors (to help diagnose problems in model...)
 //														30 : Model zone(s) exceed unmet load hours limits
@@ -5245,24 +5231,24 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	if (iNumZonesExceedClgUMLHs > 0 && iNumZonesExceedHtgUMLHs > 0)
 																	{	//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum cooling unmet load hours and %L3 zone(s) exceed maximum heating unmet load hours.<br><br></a>" )
     																	//											.arg( iNumZonesExceedClgUMLHs ).arg( ((const char*) osRunInfo[iR].LongRunID()) ).arg( iNumZonesExceedHtgUMLHs );
-																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s.<br><br></a>",
+																		cstrUMLHWarningMsg = QString::asprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s.<br><br></a>",
     																												iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs, sHtgHoursStr.toLocal8Bit().constData() );
-																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s:\n",
+																		sLogMsg = QString::asprintf( "%d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s:\n",
 																													iNumZonesExceedClgUMLHs, /*fMaxUnmetClgLdHrs,*/ osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
 																	}
 																	else if (iNumZonesExceedClgUMLHs > 0)
 																	{	//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum cooling unmet load hours.<br><br></a>" )
     																	//											.arg( iNumZonesExceedClgUMLHs ).arg( ((const char*) osRunInfo[iR].LongRunID()) );
-																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s.<br><br></a>",
+																		cstrUMLHWarningMsg = QString::asprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s.<br><br></a>",
     																												iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData() );
-																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum cooling unmet load %s:\n", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/, sClgHoursStr.toLocal8Bit().constData() );
+																		sLogMsg = QString::asprintf( "%d zone(s) in %s model exceed maximum cooling unmet load %s:\n", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/, sClgHoursStr.toLocal8Bit().constData() );
 																	}
 																	else  // if (iNumZonesExceedHtgUMLHs > 0)
 																	{	//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum heating unmet load hours.<br><br></a>" )
     																	//											.arg( iNumZonesExceedHtgUMLHs ).arg( ((const char*) osRunInfo[iR].LongRunID()) );
-																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s.<br><br></a>",
+																		cstrUMLHWarningMsg = QString::asprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s.<br><br></a>",
     																												iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sHtgHoursStr.toLocal8Bit().constData() );
-																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum heating unmet load %s:\n", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
+																		sLogMsg = QString::asprintf( "%d zone(s) in %s model exceed maximum heating unmet load %s:\n", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
 																	}
 																	sUMLHTextFileMsg = sLogMsg + sUMLHTextFileMsg;
 																	//qstrUMLHWarningDetails.prepend( "Zones exceeding unmet load hour limits:\n" );
@@ -5282,17 +5268,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																		sUMLHTextFileMsg += sUMLHFAQLink;
 																		sUMLHTextFileMsg += "\n";
 																		//qstrUMLHWarningMsg.append( QString( "<a><br></a><a href=%1>Click here for information on resolving unmet load hour issues.</a>" ).arg( ((const char*) sUMLHFAQLink) ) );
-																		sMsg.sprintf( "<a><br></a><a href=%s>Click here for information on resolving unmet load hour issues.</a>", sUMLHFAQLink.toLocal8Bit().constData() );
+																		sMsg = QString::asprintf( "<a><br></a><a href=%s>Click here for information on resolving unmet load hour issues.</a>", sUMLHFAQLink.toLocal8Bit().constData() );
 																		cstrUMLHWarningMsg += sMsg;
 																	}
 
 															// write text file w/ UMLH zone listing
 																	if (bWriteUMLHViolationsToFile && !sUMLHTextFileName.isEmpty())
 																	{	QString sUMLHOverwriteMsg;
-																		sUMLHOverwriteMsg.sprintf(	"The zone UMLH violations text file '%s' is opened in another application.  This file must be closed in that application before an updated file "
+																		sUMLHOverwriteMsg = QString::asprintf(	"The zone UMLH violations text file '%s' is opened in another application.  This file must be closed in that application before an updated file "
 																											"can be written.\n\nSelect 'Retry' to proceed (once the file is closed), or \n'Abort' to abort the file writing.", sUMLHTextFileName.toLocal8Bit().constData() );
 																		if (!OKToWriteOrDeleteFile( sUMLHTextFileName.toLocal8Bit().constData(), sUMLHOverwriteMsg, bSilent ))
-																			sUMLHOverwriteMsg.sprintf( "Unable to open and/or write zone UMLH violations text file:  %s", sUMLHTextFileName.toLocal8Bit().constData() );
+																			sUMLHOverwriteMsg = QString::asprintf( "Unable to open and/or write zone UMLH violations text file:  %s", sUMLHTextFileName.toLocal8Bit().constData() );
 																		else
 																		{	sUMLHOverwriteMsg.clear();
 																			FILE *fp_UMLH;
@@ -5300,21 +5286,21 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																			try
 																			{	iUMLHErrorCode = fopen_s( &fp_UMLH, sUMLHTextFileName.toLocal8Bit().constData(), "wb" );
 																				if (iUMLHErrorCode != 0 || fp_UMLH == NULL)
-																					sUMLHOverwriteMsg.sprintf( "Error encountered opening zone UMLH violations text file:  %s", sUMLHTextFileName.toLocal8Bit().constData() );
+																					sUMLHOverwriteMsg = QString::asprintf( "Error encountered opening zone UMLH violations text file:  %s", sUMLHTextFileName.toLocal8Bit().constData() );
 																				else
 																				{	long lUMLHRunDate = 0;
 																					if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RunDate" ), lUMLHRunDate ) && lUMLHRunDate > 0)
 																				   {	//CTime locTime = lUMLHRunDate;
 																						//fprintf( fp_UMLH, "Run Date/Time:  %s\n", locTime.Format("%Y-%b-%d %H:%M:%S") );
 																						QDateTime locTime = QDateTime::currentDateTime();
-																						fprintf( fp_UMLH, "Run Date/Time:  %s\n", locTime.toString("yyyy-MM-dd HH:mm:ss") );
+																						fprintf( fp_UMLH, "Run Date/Time:  %s\n", locTime.toString("yyyy-MM-dd HH:mm:ss").toLocal8Bit().constData() );
 																					}
 																					fprintf( fp_UMLH, sUMLHTextFileMsg.toLocal8Bit().constData() );
 																					fflush(  fp_UMLH );
 																					fclose(  fp_UMLH );
 																			}	}
 																			catch( ... )
-																			{	sUMLHOverwriteMsg.sprintf( "Unknown error writing zone UMLH violations text file:  %s", sUMLHTextFileName.toLocal8Bit().constData() );
+																			{	sUMLHOverwriteMsg = QString::asprintf( "Unknown error writing zone UMLH violations text file:  %s", sUMLHTextFileName.toLocal8Bit().constData() );
 																			}
 																		}
 																		if (!sUMLHOverwriteMsg.isEmpty())
@@ -5392,8 +5378,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								 BEMPX_RulelistExists( "AnalysisPostProcessing" ))
 							{
 				// debugging
-				//sLogMsg.sprintf( "Evaluating 'AnalysisPostProcessing' rulelist on model %d (iCurActiveBEMProcIdx %d).", BEMPX_GetActiveModel(), iCurActiveBEMProcIdx );
-				//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				//BEMPX_WriteLogFile( QString::asprintf( "Evaluating 'AnalysisPostProcessing' rulelist on model %d (iCurActiveBEMProcIdx %d).", BEMPX_GetActiveModel(), iCurActiveBEMProcIdx ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								int iPostProcRuleRetVal = LocalEvaluateRuleset( sErrMsg, 76, "AnalysisPostProcessing", bVerbose, pCompRuleDebugInfo );
 //											76 : Error evaluating 'AnalysisPostProcessing' rulelist
 								if (iPostProcRuleRetVal != 0 || BEMPX_AbortRuleEvaluation())
@@ -5418,8 +5403,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										//				(iRun == 3 && iAnalysisThruStep < 8) ) )
 												 &&  iAnalysisThruStep < (iAnalStep+2)  )
 					{	bCompletedAnalysisSteps = TRUE;
-											sLogMsg.sprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 				}
 
@@ -5452,9 +5436,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								{	// need to SWITCH this compliance result from PASS to FAIL-UMLH
 									sPassFailResult = "FAIL-UMLH";
 											if (bVerbose)		// SAC 4/23/20 - moved down INSIDE iR run loop
-											{	sLogMsg.sprintf( "  PerfAnal_NRes - Switching %s compliance result to '%s'", osRunInfo[iR].RunID().toLocal8Bit().constData(), sPassFailResult.toLocal8Bit().constData() );
-												BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-											}
+												BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Switching %s compliance result to '%s'", osRunInfo[iR].RunID().toLocal8Bit().constData(), sPassFailResult.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "EUseSummary:PassFail" ), BEMP_QStr, (void*) &sPassFailResult, BEMO_User, iEUS, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo[iR].BEMProcIdx() );
 						}		}
 				}
@@ -5468,18 +5450,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					{	for (int iR=0; iR <= iSimRunIdx; iR++)
 							if (osRunInfo[iR].OSRunIdx() >= 0 && osRunInfo[iR].RunID().length() > 0)
 							{			if (bVerbose)		// SAC 4/23/20 - moved down INSIDE iR run loop
-										{	sLogMsg.sprintf( "  PerfAnal_NRes - Exporting %s model details to results XML", osRunInfo[iR].RunID().toLocal8Bit().constData() );
-											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Exporting %s model details to results XML", osRunInfo[iR].RunID().toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								// SAC 1/6/15 - added args to prevent export of PolyLp objects (and in turn, also CartesianPts)
 								// SAC 1/11/15 - added new argument to prevent export of RULE NEW (ruleset-defined) properties to all models following User Model
 								BOOL bXMLWriteOK = xmlResultsFile.WriteModel( TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, osRunInfo[iR].LongRunID().toLocal8Bit().constData(),
 																								osRunInfo[iR].BEMProcIdx(), false /*bOnlyValidInputs*/, 1 /*iNumClassIDsToIgnore*/, &iCID_PolyLp /*piClassIDsToIgnore*/,
 																								bWriteRulePropsToResultsXML /*bWritePropertiesDefinedByRuleset*/, true /*bUseReportPrecisionSettings*/ );			assert( bXMLWriteOK );
 								if (bVerbose)  // SAC 1/31/13
-								{	sLogMsg.sprintf( "      Writing of %s model XML project data successful: %s", osRunInfo[iR].RunID().toLocal8Bit().constData(), (bXMLWriteOK ? "True" : "False") );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					}		}	}
+									BEMPX_WriteLogFile( QString::asprintf( "      Writing of %s model XML project data successful: %s", osRunInfo[iR].RunID().toLocal8Bit().constData(), (bXMLWriteOK ? "True" : "False") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}		}
 				}
 			}
 			BEMPX_RefreshLogFile();	// SAC 5/19/14
@@ -5495,6 +5474,54 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}	// end of:  for iRun = 0-iNumRuns
 		if (iRetVal == 0)
 			xmlResultsFile.Close();
+
+      // implemented final NRCCPRF XML output code based on Res analysis - SAC 11/26/20
+		//if (iRunIdx == iRunIdxFinalNRCC && ResRetVal_ContinueProcessing( iRetVal ) && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && lAnalysisType > 0)		// SAC 3/5/18 - NRCCPRF01E Final results storage  // SAC 4/15/20 - revise to use Std design for EAA runs
+		if (iRetVal == 0 && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty())  // && lAnalysisType > 0)	
+		{
+			iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
+   							if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+									BEMPX_WriteLogFile( "  PerfAnal_NRes - NRCCPRF XML prep rules", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   		BOOL bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_NRCCPRF" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );     // SAC 11/27/20    //, &saPreAnalChkWarningMsgs );
+			BEMPX_RefreshLogFile();
+			if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs && iDontAbortOnErrorsThruStep < 8)
+			{
+//											81 : Error(s) encountered performing NRCCPRF XML export prep rules
+					iRetVal = (iRetVal > 0 ? iRetVal : 81);
+					bAbort = true;
+			}
+         //iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_CF1RXMLFinalError, "CF1RPRF01E_Final",	bVerbose, pCompRuleDebugInfo );
+			//if (iRV2 > 0)
+			//	iRetVal = iRV2;
+			//// moved up here from after Run loop so that the CF1RPRF01EFile is written before switching over to subsequent (RESNET) models - SAC 4/12/20
+			//else
+			//{
+            //	sLogMsg.clear();
+				//	QString sEncodedInput;
+				//	long lEncInpRetVal = EncodeBase64FromFile( pszFullPath, sEncodedInput );
+				//	if (lEncInpRetVal < 0)
+				//		sLogMsg = QString( "   Error Encoding Input for inclusion in NRCC XML file (EncodeBase64FromFile returned %1)" ).arg( QString::number(lEncInpRetVal) );
+				//	else if (sEncodedInput.length() < 1)
+				//		sLogMsg = QString( "   Error Encoding Input for inclusion in NRCC XML file (nothing returned from EncodeBase64FromFile)" );
+				//	else
+				//	{	int iEncSetRetVal = BEMPX_SetBEMData( BEMPX_GetDatabaseID( "nrccComplianceDocumentPackage:afterchildren_Input" ), BEMP_QStr, (void*) &sEncodedInput );	// SAC 5/3/19 - InputData -> Input
+				//		if (iEncSetRetVal < 0)
+				//			sLogMsg = QString( "   Error setting encoded input file to BEMBase for NRCC XML export (BEMPX_SetBEMData returned %1)" ).arg( QString::number(iEncSetRetVal) );
+				//	}
+				//	if (!sLogMsg.isEmpty())
+				//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+				BOOL bXMLWriteOK = xmlNRCCPRFFile.WriteCF1RPRF01E( iNRCCXMLClassID, TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, -1 /*iBEMProcIdx*/,
+																					false /*bOnlyValidInputs*/, true /*bWritePropertiesDefinedByRuleset*/, false /*bUseReportPrecisionSettings*/, BEMFT_NRCCXML /*iFileType*/ );
+																	assert( bXMLWriteOK );
+				if (bVerbose || pCompRuleDebugInfo != NULL)  // SAC 1/31/13
+				{	sLogMsg = QString( "      Writing of NRCCPRF report XML file successful: %1" ).arg( (bXMLWriteOK ? "True" : "False") );
+					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				}
+				xmlNRCCPRFFile.Close();
+			//}
+         			dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();	
+		}
 
 		if (iRetVal == 0 && iCodeType == CT_T24N)
 		{	// SAC 8/28/17 - moved some results code up here to enable Pass/Fail result to impact bSendRptSignature
@@ -5582,8 +5609,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()) );
 						if (iRptGenAvail > -10)
 						{	// rpt gen NOT available
-							sLogMsg.sprintf( "Compliance report(s) called for but bypassed due to %s.", (iRptGenAvail<0 ? "report generation being offline" : "report generator website not accessible") );
-							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+							BEMPX_WriteLogFile( QString::asprintf( "Compliance report(s) called for but bypassed due to %s.", (iRptGenAvail<0 ? "report generation being offline" : "report generator website not accessible") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 							// iRetVal = 45;
 							bRptToGen = false;  // iRpt = 1;	iMaxRpt = 0;
 					}	}
@@ -5613,27 +5639,29 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									case  2 :  sRptChkExt = "PDF";  sRptChkFNAppend = "-BEES-Std.";	break;
 								}
 								sOutRptFN = QString( "%1%2%3" ).arg( sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') ), sRptChkFNAppend, sRptChkExt );
-								sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+								sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 								             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 												 "(once the file is closed), or \n'Abort' to abort the %s.", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData(), "overwriting of this file" );
 								if (!OKToWriteOrDeleteFile( sOutRptFN.toLocal8Bit().constData(), sMsg, bSilent ))
 								{	if (iRptChk==0)
 									{	if (bSilent)
-											sLogMsg.sprintf( "   Reporting disabled due to inability to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
+											sLogMsg = QString::asprintf( "   Reporting disabled due to inability to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
 										else
-											sLogMsg.sprintf( "   Reporting disabled due to user choosing not to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
+											sLogMsg = QString::asprintf( "   Reporting disabled due to user choosing not to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
 										lRptIDNum = 0;  // toggle off generation of ALL reports
 									}
 									else
 									{	if (bSilent)
-											sLogMsg.sprintf( "   Unable to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
+											sLogMsg = QString::asprintf( "   Unable to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
 										else
-											sLogMsg.sprintf( "   User chose not to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
+											sLogMsg = QString::asprintf( "   User chose not to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
 										lRptIDNum -= iRptBitChk;  // toggle off generation of this rpt, but still proceed w/ others
 									}
 									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									//iRetVal = 45;
 								}
+                        else if (FileExists( sOutRptFN ))      // added code to DELETE the old report file(s) prior to new report generation - SAC 10/01/21
+                           DeleteFile( sOutRptFN.toLocal8Bit().constData() );
 						}	}
 						if (lRptIDNum > 0 && lRptIDNum != iOrigRptIDNum)
 							// update RptIDNum in database to reflect report(s) removed from generation list in above loop
@@ -5665,12 +5693,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		//					QString sRptNameProp = (iRpt==2 ? "RptGenStdReport" : "RptGenCompReport");		// SAC 11/13/15
 							QString sRptNameProp = "RptGenCompReport";
 
-//sLogMsg.sprintf( "Pausing before %s report generation on:  %s", (iRpt==0 ? "pdf" : "full"), sResFN );
-//BEMMessageBox( sLogMsg, "" );
+//BEMMessageBox( QString::asprintf( "Pausing before %s report generation on:  %s", (iRpt==0 ? "pdf" : "full"), sResFN ), "" );
 
 									if (bVerbose)
-		//							{	sLogMsg2.sprintf( "      about to generate %s compliance report:  %s", (iRpt!=1 ? "pdf" : "full"), sXMLResultsFileName.toLocal8Bit().constData() );
-									{	sLogMsg2.sprintf( "      about to generate compliance report(s):  %s", sXMLResultsFileName.toLocal8Bit().constData() );
+		//							{	sLogMsg2 = QString::asprintf( "      about to generate %s compliance report:  %s", (iRpt!=1 ? "pdf" : "full"), sXMLResultsFileName.toLocal8Bit().constData() );
+									{	sLogMsg2 = QString::asprintf( "      about to generate compliance report(s):  %s", sXMLResultsFileName.toLocal8Bit().constData() );
 										BEMPX_WriteLogFile( sLogMsg2, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 
@@ -5703,12 +5730,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							iNumTimeToReport++; 
 							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
 										if (bVerbose || iRptGenRetVal != 0)
-		//								{	sLogMsg2.sprintf( "      generation of %s compliance report %s (returned %d)", (iRpt!=1 ? "pdf" : "full"), (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
-										{	sLogMsg2.sprintf( "      generation of compliance report(s) %s (returned %d)", (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
+		//								{	sLogMsg2 = QString::asprintf( "      generation of %s compliance report %s (returned %d)", (iRpt!=1 ? "pdf" : "full"), (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
+										{	sLogMsg2 = QString::asprintf( "      generation of compliance report(s) %s (returned %d)", (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
 											BEMPX_WriteLogFile( sLogMsg2, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										}
 							if (iRptGenRetVal != 0)
-							{	sLogMsg.sprintf( "   Error (%d) encountered generating compliance report file:  %s", iRptGenRetVal, sOutRptFN.toLocal8Bit().constData() );
+							{	sLogMsg = QString::asprintf( "   Error (%d) encountered generating compliance report file:  %s", iRptGenRetVal, sOutRptFN.toLocal8Bit().constData() );
 								//iRetVal = 46;
 							}
 							else
@@ -5749,6 +5776,163 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportPDFWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
 								if (lRptIDNum & 4 && bExtStdPdf)
 						      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportStdWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+							}
+						}
+						if (!sLogMsg.isEmpty())
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
+
+            // added PDF report generation based on NRCC-PRF XML otuput file - SAC 04/10/21
+					if (bRptToGen && bReportGenNRCCPRFXML && !sNRCCXMLFileName.isEmpty())
+					{
+						sLogMsg.clear();
+						QString sOutRptFN;
+						int iOrigRptIDNum = lRptIDNum;
+                  // reduced iRptChk loop end from 2 to 1 - no "Std" version of NRCC-PRF XML reporting - SAC 04/10/21
+						for (int iRptChk=0; iRptChk<2; iRptChk++)
+						{	int iRptBitChk = (iRptChk==0 ? 1 : (iRptChk==1 ? 2 : 4));
+							if (iRptChk==0 || lRptIDNum & iRptBitChk)
+							{	QString sRptChkExt, sRptChkFNAppend, sRptChkDescrip;
+								switch (iRptChk)
+								{	case  0 :  sRptChkExt = "XML";  sRptChkFNAppend = "-BEES.";			break;
+									case  1 :  sRptChkExt = "PDF";  sRptChkFNAppend = "-BEES.";			break;
+								//	case  2 :  sRptChkExt = "PDF";  sRptChkFNAppend = "-BEES-Std.";	break;
+								}
+								sOutRptFN = QString( "%1%2%3" ).arg( sNRCCXMLFileName.left( sNRCCXMLFileName.lastIndexOf('.') ), sRptChkFNAppend, sRptChkExt );
+								sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+								             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+												 "(once the file is closed), or \n'Abort' to abort the %s.", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData(), "overwriting of this file" );
+								if (!OKToWriteOrDeleteFile( sOutRptFN.toLocal8Bit().constData(), sMsg, bSilent ))
+								{	if (iRptChk==0)
+									{	if (bSilent)
+											sLogMsg = QString::asprintf( "   Reporting disabled due to inability to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
+										else
+											sLogMsg = QString::asprintf( "   Reporting disabled due to user choosing not to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
+										lRptIDNum = 0;  // toggle off generation of ALL reports
+									}
+									else
+									{	if (bSilent)
+											sLogMsg = QString::asprintf( "   Unable to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
+										else
+											sLogMsg = QString::asprintf( "   User chose not to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
+										lRptIDNum -= iRptBitChk;  // toggle off generation of this rpt, but still proceed w/ others
+									}
+									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									//iRetVal = 45;
+								}
+                        else if (FileExists( sOutRptFN ))      // added code to DELETE the old report file(s) prior to new report generation - SAC 10/01/21
+                           DeleteFile( sOutRptFN.toLocal8Bit().constData() );
+						}	}
+            // no mods to BEMBase for NRCC-PRF reporting - until it is the main report generated - SAC 04/10/21
+				//		if (lRptIDNum > 0 && lRptIDNum != iOrigRptIDNum)
+				//			// update RptIDNum in database to reflect report(s) removed from generation list in above loop
+				//      	BEMPX_SetBEMData( lDBID_RptIDNum, BEMP_Int, (void*) &lRptIDNum, BEMO_User, -1, BEMS_ProgDefault );
+
+            // restore once the NRCC-PRF report is the MAIN permit report - until then bSendRptSignature will be set above - SAC 04/10/21
+				//		if (lRptIDNum > 0 && bSendRptSignature && (!bHaveResult || !bResultIsPass ||		// toggle OFF report security if compliance result is undefined or 'Fail'
+				//																 iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0))		// prevent signature when UMLH limits exceeded
+				//		{	// SAC 8/28/17 - prevent report signature if compliance result NOT PASS
+				//			if (!bHaveResult)
+				//				sLogMsg = "Compliance report will be generated without security measures due to compliance result not calculated";
+				//			else if (!bResultIsPass)
+				//				sLogMsg = "Compliance report will be generated without security measures due to non-passing compliance result";
+				//			else if (iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0)		// SAC 4/6/20
+				//			{	if (iNumPropClgUMLHViolations > 0 && iNumPropHtgUMLHViolations > 0)
+				//					sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling and %2 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations), QString::number(iNumPropHtgUMLHViolations) );
+				//				else if (iNumPropClgUMLHViolations > 0)
+				//					sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations) );
+				//				else
+				//					sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropHtgUMLHViolations) );
+				//			}
+				//			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				//			bSendRptSignature = false;
+				//		}
+
+						if (lRptIDNum > 0)  // baDoRpt[iRpt])
+						{
+							QString sDebugRpt = (bVerbose ? "true" : "false");
+							QString sRptNameProp = "NRCC_RptGenCompReport";       // SAC 04/10/21
+                     //BEMMessageBox( QString::asprintf( "Pausing before %s report generation on:  %s", (iRpt==0 ? "pdf" : "full"), sResFN ), "" );
+									if (bVerbose)
+									{	sLogMsg2 = QString::asprintf( "      about to generate compliance report(s):  %s", sNRCCXMLFileName.toLocal8Bit().constData() );
+										BEMPX_WriteLogFile( sLogMsg2, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									}
+
+   					// SAC 6/2/14 - added several ruleset-based reporting variables and incorporated them into the GenerateReport_CEC() prototype
+							QString sRptGenUIApp, sRptGenUIVer, sRptGenCompReport, sRptGenCompRptID, sRptGenServer, sRptGenApp, sRptGenService, sSecKeyRLName;
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID( "RptGenUIApp"       , iCID_Proj ), sRptGenUIApp      );
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID( "RptGenUIVer"       , iCID_Proj ), sRptGenUIVer      );
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID(  sRptNameProp       , iCID_Proj ), sRptGenCompReport );
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID( "RptGenCompRptID"   , iCID_Proj ), sRptGenCompRptID  );
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID( "NRCC_RptGenServer" , iCID_Proj ), sRptGenServer     );   // SAC 04/10/21
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID( "NRCC_RptGenApp"    , iCID_Proj ), sRptGenApp        );   // SAC 04/10/21
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID( "NRCC_RptGenService", iCID_Proj ), sRptGenService    );   // SAC 04/11/21
+      	   			BEMPX_GetString( BEMPX_GetDatabaseID( "SecKeyRLName"      , iCID_Proj ), sSecKeyRLName     );
+
+							dTimeToOther += DeltaTime( tmAnalOther );		// log time spent prior to this point to "other" bucket
+							tmMark = boost::posix_time::microsec_clock::local_time();		// set timer for Report bucket
+
+						//	int iRptGenRetVal = GenerateReport_CEC( sNRCCXMLFileName /*sProjPath, sResFN*/, sCACertPath, "NRCC_PRF_01", "CBECC", "Com", "none" /*Signature*/,
+							int iRptGenRetVal = GenerateReport_CEC( sNRCCXMLFileName.toLocal8Bit().constData() /*sProjPath, sResFN*/, sCACertPath.toLocal8Bit().constData(), 
+																	sRptGenCompReport.toLocal8Bit().constData(), sRptGenUIApp.toLocal8Bit().constData(), sRptGenUIVer.toLocal8Bit().constData(),
+																	"none" /*Signature*/, "none" /*PublicKey*/, (pszSecurityKey ? pszSecurityKey : NULL) /*PrivateKey*/, 
+																	(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
+																	(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
+																	sRptIDStr.toLocal8Bit().constData(), sDebugRpt.toLocal8Bit().constData(), bRptVerbose, bSilent, bSendRptSignature,
+																	sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
+																	sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
+																	(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
+																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex,		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
+                                                   false /*bFinalPDFGeneration*/, true /*bSchemaBasedRptGen*/ );     // SAC 04/11/21
+							dTimeToReport += DeltaTime( tmMark );		// log time spent generating report
+							iNumTimeToReport++; 
+							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
+										if (bVerbose || iRptGenRetVal != 0)
+										{	sLogMsg2 = QString::asprintf( "      generation of compliance report(s) %s (returned %d)", (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
+											BEMPX_WriteLogFile( sLogMsg2, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										}
+							if (iRptGenRetVal != 0)
+							{	sLogMsg = QString::asprintf( "   Error (%d) encountered generating compliance report file:  %s", iRptGenRetVal, sOutRptFN.toLocal8Bit().constData() );
+								//iRetVal = 46;
+							}
+							else
+							{	bool bRetainXMLRptFile = (lRptIDNum & 1);		bool bExtCompPdf=true, bExtStdPdf=true;
+								sOutRptFN = QString( "%1-BEES.xml" ).arg( sNRCCXMLFileName.left( sNRCCXMLFileName.lastIndexOf('.') ) );
+								if (lRptIDNum & 2)	// PDF Comp Rpt
+								{	QString sOutPDFRptFN = QString( "%1-BEES.pdf" ).arg( sNRCCXMLFileName.left( sNRCCXMLFileName.lastIndexOf('.') ) );
+									if (!CMX_ExtractTitle24ReportFromXML( sOutRptFN.toLocal8Bit().constData(), sOutPDFRptFN.toLocal8Bit().constData(), "Report2", TRUE /*bSupressAllMessageBoxes*/ ))
+									{	QString sExtractRptErr = QString( "Error encountered extracting PDF %1 report (%2) from XML: %3" ).arg( "Compliance", "Report2", sOutRptFN );
+										BEMPX_WriteLogFile( sExtractRptErr, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										bRetainXMLRptFile = true;		bExtCompPdf = false;
+								}	}
+								if (lRptIDNum & 4)	// PDF Std Model Rpt
+								{	QString sOutPDFRptFN = QString( "%1-BEES-Std.pdf" ).arg( sNRCCXMLFileName.left( sNRCCXMLFileName.lastIndexOf('.') ) );
+									if (!CMX_ExtractTitle24ReportFromXML( sOutRptFN.toLocal8Bit().constData(), sOutPDFRptFN.toLocal8Bit().constData(), "Report3", TRUE /*bSupressAllMessageBoxes*/ ))
+									{	QString sExtractRptErr = QString( "Error encountered extracting PDF %1 report (%2) from XML: %3" ).arg( "Standard Model", "Report3", sOutRptFN );
+										BEMPX_WriteLogFile( sExtractRptErr, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										bRetainXMLRptFile = true;		bExtStdPdf = false;
+								}	}
+
+							// CHECK FOR ERRORS in XML returned from report generator
+								QString sRGErrs;
+								int iNumRptGenErrs = ExtractErrorsFromTitle24ReportXML( sOutRptFN.toLocal8Bit().constData(), sRGErrs, TRUE /*bPostToProjectLog*/,
+																											TRUE /*bPostToBEMProc*/, TRUE /*bSupressAllMessageBoxes*/ );
+            // don't alter the main PerfAnal return value until NRCC-PRF report is the MAIN permit report - SAC 04/10/21
+				//				if (iRetVal == 0 && iNumRptGenErrs > 0)
+				//					iRetVal = 68;				// One or more errors returned from Compliance Report Generator - already logged by above call
+
+								if (!bRetainXMLRptFile)
+									// DELETE Full (XML) compliance report (if XML (full) report not requested & no errors logged there)
+									DeleteFile( sOutRptFN.toLocal8Bit().constData() );
+
+            // don't alter BEMBase CompReport* properties until NRCC-PRF report is the MAIN permit report - SAC 04/10/21
+				//				long lOne = 1;
+				//				if (lRptIDNum & 1)	// SAC 8/24/17
+				//		      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportXMLWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+				//				if (lRptIDNum & 2 && bExtCompPdf)
+				//		      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportPDFWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+				//				if (lRptIDNum & 4 && bExtStdPdf)
+				//		      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportStdWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
 							}
 						}
 						if (!sLogMsg.isEmpty())
@@ -5824,7 +6008,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	else if (!bHaveResult)
 		sAnalResLogMsg = "Analysis result unknown";
 	else
-	{	sAnalResLogMsg.sprintf( "Analysis result:  %s  (TDV margin: %s)", sResTemp1.toLocal8Bit().constData(), sResTemp2.toLocal8Bit().constData() );
+	{	sAnalResLogMsg = QString::asprintf( "Analysis result:  %s  (TDV margin: %s)", sResTemp1.toLocal8Bit().constData(), sResTemp2.toLocal8Bit().constData() );
 		if (sResTemp2.indexOf(',') > 0)
 		{	sResTemp2  = '\"' + sResTemp2;
 			sResTemp2 += '\"';
@@ -5847,7 +6031,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		dTimeTotDsgn  /= iNumTimeToSimDsgn  ;
 	if (iNumTimeToSimAnn    > 1)  
 		dTimeTotAnn   /= iNumTimeToSimAnn   ;
-	sAnalTimeStats.sprintf( "  Processing time:  Overall %d:%.2d / SDD2IDF x%d%s%d:%.2d / SizSim x%d%s%d:%.2d / AnnSim x%d%s%d:%.2d / ReportGen x%d %d:%.2d / Other %d:%.2d",	// SAC 11/5/14 - 'SDD2OSM' -> 'SDD2IDF'
+	sAnalTimeStats = QString::asprintf( "  Processing time:  Overall %d:%.2d / SDD2IDF x%d%s%d:%.2d / SizSim x%d%s%d:%.2d / AnnSim x%d%s%d:%.2d / ReportGen x%d %d:%.2d / Other %d:%.2d",	// SAC 11/5/14 - 'SDD2OSM' -> 'SDD2IDF'
 						int(dTimeOverall/60), int(fmod(dTimeOverall, 60.0)),
 						iNumTimeToTranslate, (iNumTimeToTranslate > 1 ? " avg " : " "), int(dTimeTotTrans/60), int(fmod(dTimeTotTrans, 60.0)), 
 						iNumTimeToSimDsgn  , (iNumTimeToSimDsgn   > 1 ? " avg " : " "), int(dTimeTotDsgn /60), int(fmod(dTimeTotDsgn , 60.0)), 
@@ -5865,16 +6049,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	}
 
 	if (bVerbose)
-	{	sLogMsg.sprintf( "      Final return value from CMX_PerformAnalysis_CECNonRes():  %d", iRetVal );
-		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-	}
+		BEMPX_WriteLogFile( QString::asprintf( "      Final return value from CMX_PerformAnalysis_CECNonRes():  %d", iRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 	if (bRestoreBEMProcLogTimeStampSetting)		// SAC 11/17/13 - restore BEMProc log timestamp setting (if it was toggled during analysis)
 		BEMPX_EnableLogTimeStamps( bInitialBEMProcLogTimeStamp );
 
 
 // SAC 5/5/15 - ResultSummary Logging
-		sLogMsg.sprintf( "      ResultsSummary population:  bAbort = (%s) / RuleProcAbort = (%s) / iRetVal = %d / pszResultsSummary = %s / iResultsSummaryLen = %d", (bAbort ? "true" : "false"),
+		sLogMsg = QString::asprintf( "      ResultsSummary population:  bAbort = (%s) / RuleProcAbort = (%s) / iRetVal = %d / pszResultsSummary = %s / iResultsSummaryLen = %d", (bAbort ? "true" : "false"),
 				(BEMPX_AbortRuleEvaluation() ? "true" : "false"), iRetVal, (pszResultsSummary  == NULL ? "(null)" : (strlen( pszResultsSummary  ) < 1 ? "(empty)" : pszResultsSummary )), iResultsSummaryLen );
 		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
@@ -5884,8 +6066,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		int iCSVRes_RetVal = CMX_PopulateCSVResultSummary_NonRes( pszResultsSummary, iResultsSummaryLen, pszModelPathFile, pszSimWeatherPath /*, int iEUseSummaryIdx=0*/ );	// SAC 11/04/19
 
 // SAC 5/5/15 - ResultSummary Logging
-		sLogMsg.sprintf( "      ResultsSummary:  %s", pszResultsSummary );
-		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		BEMPX_WriteLogFile( QString::asprintf( "      ResultsSummary:  %s", pszResultsSummary ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 	}
 	BEMPX_RefreshLogFile();	// SAC 5/19/14
@@ -5908,9 +6089,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{	iRetVal = 52;
 //											52 : Analysis aborted via callback function in calling application
 			//if (TRUE)  // bVerbose)
-			{	sLogMsg.sprintf( "Analysis aborted due to callback function return value of %ld (value must be 0 to continue processing).", slAnalysisProgressCallbackRetVal );
-				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}
+				BEMPX_WriteLogFile( QString::asprintf( "Analysis aborted due to callback function return value of %ld (value must be 0 to continue processing).", slAnalysisProgressCallbackRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	}	}
 
 #ifdef CM_QTGUI
@@ -6117,9 +6296,9 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ), fPropMaxClgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Prop /*iBEMProcIdx*/ ) )
 			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName"   , iCID_Proj ), sPropMaxClgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Prop /*iBEMProcIdx*/ );
 				if (sPropMaxClgUMLHZnName.isEmpty())
-					sPropClgUMLHData.sprintf( "%g,,%d", fPropMaxClgUMLHs, lPropClgNumZonesExceed );
+					sPropClgUMLHData = QString::asprintf( "%g,,%d", fPropMaxClgUMLHs, lPropClgNumZonesExceed );
 				else
-					sPropClgUMLHData.sprintf( "%g,\"%s\",%d", fPropMaxClgUMLHs, sPropMaxClgUMLHZnName.toLocal8Bit().constData(), lPropClgNumZonesExceed );
+					sPropClgUMLHData = QString::asprintf( "%g,\"%s\",%d", fPropMaxClgUMLHs, sPropMaxClgUMLHZnName.toLocal8Bit().constData(), lPropClgNumZonesExceed );
 			}
 			else
 				sPropClgUMLHData = ",,";
@@ -6128,9 +6307,9 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ), fPropMaxHtgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Prop /*iBEMProcIdx*/ ) )
 			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName"   , iCID_Proj ), sPropMaxHtgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Prop /*iBEMProcIdx*/ );
 				if (sPropMaxHtgUMLHZnName.isEmpty())
-					sPropHtgUMLHData.sprintf( "%g,,%d", fPropMaxHtgUMLHs, lPropHtgNumZonesExceed );
+					sPropHtgUMLHData = QString::asprintf( "%g,,%d", fPropMaxHtgUMLHs, lPropHtgNumZonesExceed );
 				else
-					sPropHtgUMLHData.sprintf( "%g,\"%s\",%d", fPropMaxHtgUMLHs, sPropMaxHtgUMLHZnName.toLocal8Bit().constData(), lPropHtgNumZonesExceed );
+					sPropHtgUMLHData = QString::asprintf( "%g,\"%s\",%d", fPropMaxHtgUMLHs, sPropMaxHtgUMLHZnName.toLocal8Bit().constData(), lPropHtgNumZonesExceed );
 			}
 			else
 				sPropHtgUMLHData = ",,";
@@ -6144,9 +6323,9 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ), fStdMaxClgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Std /*iBEMProcIdx*/ ) )
 			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName"   , iCID_Proj ), sStdMaxClgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Std /*iBEMProcIdx*/ );
 				if (sStdMaxClgUMLHZnName.isEmpty())
-					sStdClgUMLHData.sprintf( "%g,,%d", fStdMaxClgUMLHs, lStdClgNumZonesExceed );
+					sStdClgUMLHData = QString::asprintf( "%g,,%d", fStdMaxClgUMLHs, lStdClgNumZonesExceed );
 				else
-					sStdClgUMLHData.sprintf( "%g,\"%s\",%d", fStdMaxClgUMLHs, sStdMaxClgUMLHZnName.toLocal8Bit().constData(), lStdClgNumZonesExceed );
+					sStdClgUMLHData = QString::asprintf( "%g,\"%s\",%d", fStdMaxClgUMLHs, sStdMaxClgUMLHZnName.toLocal8Bit().constData(), lStdClgNumZonesExceed );
 			}
 			else
 				sStdClgUMLHData = ",,";
@@ -6155,9 +6334,9 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ), fStdMaxHtgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Std /*iBEMProcIdx*/ ) )
 			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName"   , iCID_Proj ), sStdMaxHtgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Std /*iBEMProcIdx*/ );
 				if (sStdMaxHtgUMLHZnName.isEmpty())
-					sStdHtgUMLHData.sprintf( "%g,,%d", fStdMaxHtgUMLHs, lStdHtgNumZonesExceed );
+					sStdHtgUMLHData = QString::asprintf( "%g,,%d", fStdMaxHtgUMLHs, lStdHtgNumZonesExceed );
 				else
-					sStdHtgUMLHData.sprintf( "%g,\"%s\",%d", fStdMaxHtgUMLHs, sStdMaxHtgUMLHZnName.toLocal8Bit().constData(), lStdHtgNumZonesExceed );
+					sStdHtgUMLHData = QString::asprintf( "%g,\"%s\",%d", fStdMaxHtgUMLHs, sStdMaxHtgUMLHZnName.toLocal8Bit().constData(), lStdHtgNumZonesExceed );
 			}
 			else
 				sStdHtgUMLHData = ",,";
@@ -6165,7 +6344,7 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 
 		QString sElecDemandResults;
 		if (bHaveElecDemandResults && iCodeType == CT_T24N)	// SAC 10/11/16
-		{	sElecDemandResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+		{	sElecDemandResults = QString::asprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
 				// Proposed model electric demand
 						fEnergyResults[0][4][ 0], fEnergyResults[0][4][ 1], fEnergyResults[0][4][ 2], fEnergyResults[0][4][ 3], fEnergyResults[0][4][ 4], fEnergyResults[0][4][ 5], fEnergyResults[0][4][ 6], fEnergyResults[0][4][ 7],
 						fEnergyResults[0][4][ 8], fEnergyResults[0][4][ 9], fEnergyResults[0][4][10], fEnergyResults[0][4][11], fEnergyResults[0][4][12], fEnergyResults[0][4][13], fEnergyResults[0][4][14],
@@ -6178,7 +6357,7 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 
 		QString sC02EmissionResults;
 		if (iCodeType == CT_T24N && iRulesetCodeYear >= 2019)	// SAC 11/4/19
-		{	sC02EmissionResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",   // 56 floats 
+		{	sC02EmissionResults = QString::asprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",   // 56 floats 
 				// Proposed model electric C02 emissions
 						fEnergyResults[0][5][ 0], fEnergyResults[0][5][ 1], fEnergyResults[0][5][ 2], fEnergyResults[0][5][ 3], fEnergyResults[0][5][ 4], fEnergyResults[0][5][ 5], fEnergyResults[0][5][ 6], fEnergyResults[0][5][ 7],
 						fEnergyResults[0][5][ 8], fEnergyResults[0][5][ 9], fEnergyResults[0][5][10], fEnergyResults[0][5][11], fEnergyResults[0][5][12], fEnergyResults[0][5][13], fEnergyResults[0][5][14],
@@ -6199,8 +6378,8 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 
 		QString sSrcEnergyResults;
 		if (iCodeType == CT_T24N && iRulesetCodeYear >= 2022)	// SAC 6/29/19
-		{	//sSrcEnergyResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
-			sSrcEnergyResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",   // SAC 9/24/19
+		{	//sSrcEnergyResults = QString::asprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+			sSrcEnergyResults = QString::asprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",   // SAC 9/24/19
 				// Proposed model Source Energy
 						fEnergyResults[0][8][ 0], fEnergyResults[0][8][ 1], fEnergyResults[0][8][ 2], fEnergyResults[0][8][ 3], fEnergyResults[0][8][ 4], fEnergyResults[0][8][ 5], fEnergyResults[0][8][ 6], fEnergyResults[0][8][ 7],
 						fEnergyResults[0][8][ 8], fEnergyResults[0][8][ 9], fEnergyResults[0][8][10], fEnergyResults[0][8][11], fEnergyResults[0][8][12], fEnergyResults[0][8][13], fEnergyResults[0][8][14],
@@ -6230,19 +6409,19 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 			}
 			double dSSFtemp;
 			if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:ReqdPV_SolThrml" ), dSSFtemp, 0, -1, iEUseSummaryIdx /*iOccur*/ ) && dSSFtemp > 0)		// SAC 9/17/20 (tic #3215)
-				sFlexReqdPV.sprintf( "%g,", dSSFtemp );
+				sFlexReqdPV = QString::asprintf( "%g,", dSSFtemp );
 			if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:PropDHW_SSF"     ), dSSFtemp, 0, -1, iEUseSummaryIdx /*iOccur*/ ) && dSSFtemp > 0)
-				sPropSSF.sprintf(    "%g,", dSSFtemp );
+				sPropSSF = QString::asprintf(    "%g,", dSSFtemp );
 			if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:StdDHW_SSF"      ), dSSFtemp, 0, -1, iEUseSummaryIdx /*iOccur*/ ) && dSSFtemp > 0)
-				sStdSSF.sprintf(     "%g,", dSSFtemp );
+				sStdSSF = QString::asprintf(     "%g,", dSSFtemp );
 		}
 
 // SAC 5/5/15 - ResultSummary Logging
-	sLogMsg.sprintf( "      ResultsSummary components1:  %s / %s / %s / %s / %s / %d:%.2d / %s / %s", 
+	sLogMsg = QString::asprintf( "      ResultsSummary components1:  %s / %s / %s / %s / %s / %d:%.2d / %s / %s", 
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(),
 						sAnalType.toLocal8Bit().constData(), int(dTimeOverall/60), int(fmod(dTimeOverall, 60.0)), sResTemp1.toLocal8Bit().constData() /*PassFail*/, sResTemp2.toLocal8Bit().constData() /*CompMargin*/ );
 	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-	sLogMsg.sprintf( "      ResultsSummary components2:  %s / %s / %s / %s / %s / %s / %s / %s", 
+	sLogMsg = QString::asprintf( "      ResultsSummary components2:  %s / %s / %s / %s / %s / %s / %s / %s", 
 						sAppVer.toLocal8Bit().constData(), sCmpMgrVer.toLocal8Bit().constData(), sRuleVer.toLocal8Bit().constData(), sOSVer.toLocal8Bit().constData(), 
 						sEPlusVer.toLocal8Bit().constData(), sCSEVersion.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(), sModelPathOnly.toLocal8Bit().constData() );
 	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -6353,7 +6532,8 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 														const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
 														const char* /*pszLogPathFile*/, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
 														char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool /*bDisplayProgress=false*/, HWND hWnd /*=NULL*/, bool bOLDRules /*=false*/,
-														int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/, char* pszResultMsg /*=NULL*/, int iResultMsgLen /*=0*/ )   // SAC 1/10/17   // SAC 12/3/17
+														int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/, char* pszResultMsg /*=NULL*/, int iResultMsgLen /*=0*/,    // SAC 1/10/17   // SAC 12/3/17
+                                          const char* pszProxyOptionsCSV /*=NULL*/ )    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
 {
 	int iRetVal = 0;
 	si1ProgressRunNum = 1;
@@ -6386,7 +6566,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 												"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sBatchLogPathFile.c_str() );
 	if (!OKToWriteOrDeleteFile( sBatchLogPathFile.c_str(), sOverwriteProjFileMsg.c_str() ))
 	{	if (pszErrorMsg && iErrorMsgLen > 0)
-			sprintf_s( pszErrorMsg, iErrorMsgLen, "Unable to write to batch processing log file:  %s", sBatchLogPathFile );
+			sprintf_s( pszErrorMsg, iErrorMsgLen, "Unable to write to batch processing log file:  %s", sBatchLogPathFile.c_str() );
 									return -11;
 	}
 	else
@@ -6474,11 +6654,11 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 					if (lines[0].size() > 3)
 						sAnalActObjProp = lines[0][3];
 					else
-						sAnalActObjProp.empty();
+						sAnalActObjProp.clear();
 					if (lines[0].size() > 4)
 						sAnalActAlterObj = lines[0][4];
 					else
-						sAnalActAlterObj.empty();
+						sAnalActAlterObj.clear();
 
 					saAnalActType.push_back( sAnalActType );
 					saAnalActPhase.push_back( sAnalActPhase );
@@ -6703,8 +6883,11 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							}
 							if (lines[0][iFld].size() > 0)
 								sRecOptionCSV += lines[0][iFld++];
+                     sRecOptionCSV += "IsBatchProcessing,1,";     // SAC 03/19/21
 							if (iLenOptionsCSVArg > 0)
 								sRecOptionCSV += pszOptionsCSV;
+                     if (pszProxyOptionsCSV && strlen( pszProxyOptionsCSV ) > 0)    // SAC 10/09/21
+                        sRecOptionCSV += pszProxyOptionsCSV;
 						}
 
 					// store info about this run to be performed
@@ -6950,7 +7133,12 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						{	assert( FALSE );  // error reading model file BACK into memory
 						}
 						else
-						{
+						{  // added storage of IsBatchProcessing to enable suppression of message boxes within ruleset - SAC 03/25/21
+               	   long lIsBatchProcessing = 1;
+                     long lDBID_IsBatchProcessing = BEMPX_GetDatabaseID( "Proj:IsBatchProcessing" );
+                     if (lDBID_IsBatchProcessing > 0)
+                  	   BEMPX_SetBEMData( lDBID_IsBatchProcessing, BEMP_Int, (void*) &lIsBatchProcessing, BEMO_User, 0, BEMS_ProgDefault );     // -> BEMS_ProgDefault - SAC 03/25/21
+
 					// SAC 7/26/16 - fixed bug where lack of defaulting of building model was causing errors in final project file writing due to enum dependencies not being valid
 							bool bVerboseInputLogging = (GetCSVOptionValue( "VerboseInputLogging", 0, saCSVOptions ) > 0);
 							int iNumFileOpenDefaultingRounds = GetCSVOptionValue( "NumFileOpenDefaultingRounds", 3, saCSVOptions );
@@ -7219,16 +7407,12 @@ int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, lo
 				else
 				{	QString sRptPathFile = sRptPathFileBase + sRptFileAppend;
 							if (bVerbose)
-							{	sLogMsg.sprintf( "      about to generate '%s' model report:  %s", sRpt.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() );
-								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-							}
-// DEBUGGING
-//	sLogMsg.sprintf( "      about to generate '%s' model report #%d:  %s", sRpt.toLocal8Bit().constData(), iRpt, sRptPathFile.toLocal8Bit().constData() );
-//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+								BEMPX_WriteLogFile( QString::asprintf( "      about to generate '%s' model report:  %s", sRpt.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  // DEBUGGING
+                  //	BEMPX_WriteLogFile( QString::asprintf( "      about to generate '%s' model report #%d:  %s", sRpt.toLocal8Bit().constData(), iRpt, sRptPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					int iRptRetVal = Local_GenerateRulesetModelReport( sRptPathFile, "rl_REPORT", bVerbose, bSilent );
 					if (iRptRetVal > 0)
-					{	sLogMsg.sprintf( "Error:  Model report generation failed w/ error code %d - report: '%s' - file: '%s'", iRptRetVal, sRpt.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() );
-						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					{	BEMPX_WriteLogFile( QString::asprintf( "Error:  Model report generation failed w/ error code %d - report: '%s' - file: '%s'", iRptRetVal, sRpt.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						iThisRptRetVal = -5;
 					}
 					else
@@ -7283,7 +7467,7 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 		   BEMPX_GetString( lDBID_Proj_WeatherStation, sWeatherStation );
 		if (!DirectoryExists( sWthrPath ))
 		{	iRetVal = 2;
-			sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Path containing weather files not found:  '%s'", sWthrPath.toLocal8Bit().constData() );
+			sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Path containing weather files not found:  '%s'", sWthrPath.toLocal8Bit().constData() );
 		}
 		else if (sWeatherStation.isEmpty())
 		{	iRetVal = 3;
@@ -7310,12 +7494,12 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 			{	// attempt to download weather file(s) needed for simulation
 #ifndef CM_QTGUI
 				iRetVal = 11;
-				sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download not implemented when Qt GUI libraries not loaded:  %s", sWeatherFileDownloadURL.toLocal8Bit().constData() );
+				sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download not implemented when Qt GUI libraries not loaded:  %s", sWeatherFileDownloadURL.toLocal8Bit().constData() );
 				pszProxyAddress;		pszProxyCredentials;		pszProxyType;		// reference args not used in this mode to avoid compiler warnings
 //#else
 //#ifndef OSWRAPPER
 //				iRetVal = 12;
-//				sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download not implemented when OpenStudio not loaded:  %s", sWeatherFileDownloadURL.toLocal8Bit().constData() );
+//				sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download not implemented when OpenStudio not loaded:  %s", sWeatherFileDownloadURL.toLocal8Bit().constData() );
 //				pszProxyAddress;		pszProxyCredentials;		pszProxyType;		// reference args not used in this mode to avoid compiler warnings
 #else
 				QString sWthrZipPathFile = sWthrPath + sWeatherStation + sWeatherFileAppend + ".zip";
@@ -7336,21 +7520,21 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 					if (iDnldRetVal > 0)
 					{	iRetVal = 14 + iDnldRetVal;
 						switch (iDnldRetVal)
-						{	case  1 :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - invalid storage path:  %s", sWthrZipPathFile.toLocal8Bit().constData() );					break;
-							case  2 :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - error downloading file:  %s", sWeatherFileDownloadURL.toLocal8Bit().constData() );			break;		// this error occurs when NORESCO proxy not able to be negotiated
-							case  3 :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - user chose not to overwrite file:  %s  -->>  %s", sWeatherFileDownloadURL.toLocal8Bit().constData(), sWthrZipPathFile.toLocal8Bit().constData() );		break;
-							default :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed:  %s  -->>  %s", sWeatherFileDownloadURL.toLocal8Bit().constData(), sWthrZipPathFile.toLocal8Bit().constData() );	break;
+						{	case  1 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - invalid storage path:  %s", sWthrZipPathFile.toLocal8Bit().constData() );					break;
+							case  2 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - error downloading file:  %s", sWeatherFileDownloadURL.toLocal8Bit().constData() );			break;		// this error occurs when NORESCO proxy not able to be negotiated
+							case  3 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - user chose not to overwrite file:  %s  -->>  %s", sWeatherFileDownloadURL.toLocal8Bit().constData(), sWthrZipPathFile.toLocal8Bit().constData() );		break;
+							default :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed:  %s  -->>  %s", sWeatherFileDownloadURL.toLocal8Bit().constData(), sWthrZipPathFile.toLocal8Bit().constData() );	break;
 					}	}
 					else if (bAnnual && !FileExists( sAnnualWeatherFile.toLocal8Bit().constData() ) && !OSWX_UnzipFile( sWthrZipPathFile.toLocal8Bit().constData(),
 																																				sAnnualWeatherFileAlone.toLocal8Bit().constData(), sWthrPath.toLocal8Bit().constData() ))
 					{	iRetVal = 13;
-						sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Unable to extract hourly simulation weather file from download:  %s  -->>  %s/%s", sWeatherFileDownloadURL.toLocal8Bit().constData(), 
+						sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Unable to extract hourly simulation weather file from download:  %s  -->>  %s/%s", sWeatherFileDownloadURL.toLocal8Bit().constData(), 
 															sWthrZipPathFile.toLocal8Bit().constData(), sAnnualWeatherFileAlone.toLocal8Bit().constData() );
 					}
 					else if (bDDY && !FileExists( sDDWeatherFile.toLocal8Bit().constData() ) && !OSWX_UnzipFile( sWthrZipPathFile.toLocal8Bit().constData(),
 																																				sDDWeatherFileAlone.toLocal8Bit().constData(), sWthrPath.toLocal8Bit().constData() ))
 					{	iRetVal = 14;
-						sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Unable to extract design day simulation weather file from download:  %s  -->>  %s/%s", sWeatherFileDownloadURL.toLocal8Bit().constData(), 
+						sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Unable to extract design day simulation weather file from download:  %s  -->>  %s/%s", sWeatherFileDownloadURL.toLocal8Bit().constData(), 
 															sWthrZipPathFile.toLocal8Bit().constData(), sDDWeatherFileAlone.toLocal8Bit().constData() );
 				}	}
 #endif
@@ -7359,19 +7543,25 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 			if (bAnnual && !FileExists( sAnnualWeatherFile.toLocal8Bit().constData() ))
 			{	iRetVal = (iRetVal < 1 ? 4 : iRetVal);
 				if (sErrMsg.isEmpty())
-					sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file not found:  '%s'", sAnnualWeatherFile.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file not found:  '%s'", sAnnualWeatherFile.toLocal8Bit().constData() );
 			}
 			else if (bDDY && !FileExists( sDDWeatherFile.toLocal8Bit().constData() ))
 			{	iRetVal = (iRetVal < 1 ? 5 : iRetVal);
 				if (sErrMsg.isEmpty())
-					sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Design day simulation file not found:  '%s'", sDDWeatherFile.toLocal8Bit().constData() );
+					sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Design day simulation file not found:  '%s'", sDDWeatherFile.toLocal8Bit().constData() );
 			}
 		//	else		- modified to set wthr filename regardless of success or file presence
 		//	{
 				if (bAnnual)
 				{	sAnnualWeatherFile.replace( '\\', '/' );  // replace backslashes w/ slashes to provide more universal compatibility
 			      BEMPX_SetBEMData( lDBID_Proj_AnnualWeatherFile, BEMP_QStr, (void*) &sAnnualWeatherFile );
-				}
+               long lDBID_Proj_AnnualWeatherFileNoPath = BEMPX_GetDatabaseID( "Proj:AnnualWeatherFileNoPath" );   // added to facilitate NRCC-PRF XML reporting - SAC 04/13/21
+               if (lDBID_Proj_AnnualWeatherFileNoPath > 0)
+               {  int iLastSlashIdx = sAnnualWeatherFile.lastIndexOf('/');
+                  if (iLastSlashIdx > 0)
+                     sAnnualWeatherFile = sAnnualWeatherFile.right( sAnnualWeatherFile.length()-iLastSlashIdx-1 );
+   			      BEMPX_SetBEMData( lDBID_Proj_AnnualWeatherFileNoPath, BEMP_QStr, (void*) &sAnnualWeatherFile );
+				}  }
 				if (bDDY)
 				{	sDDWeatherFile.replace( '\\', '/' );  // replace backslashes w/ slashes to provide more universal compatibility
 			      BEMPX_SetBEMData( lDBID_Proj_DDWeatherFile, BEMP_QStr, (void*) &sDDWeatherFile );
@@ -7385,58 +7575,31 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 
 /////////////////////////////////////////////////////////////////////////////
 
-int CMX_ExportCSVHourlyResults_CECNonRes( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, char* pszErrMsgBuffer /*=NULL*/,
-														int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/, const char* pszEPlusVerStr /*=NULL*/,
-														const char* pszOpenStudioVerStr /*=NULL*/ )
-{	return CMX_ExportCSVHourlyResults_Com( pszHourlyResultsPathFile, pszModelPathFile, pszModelName, CT_T24N, pszErrMsgBuffer, iErrMsgBufferLen, bSilent, iBEMProcIdx, pszEPlusVerStr, pszOpenStudioVerStr );
-}
-//		Return Values:		0 =>	SUCCESS
-//							 > 0 =>	Error Code
-//											 1 : Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or Bldg:TotCondFlrArea
-//											 2 : Unable to open and/or write hourly CSV results file
-//											 3 : Error encountered opening hourly CSV results file
-//											 4 : Unknown error writing hourly CSV results file
-//											 5 : Unexpected enduse count or index
-//											 6 : 
-int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, int iCodeType /*=0*/, char* pszErrMsgBuffer /*=NULL*/,
-														int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/, const char* pszEPlusVerStr /*=NULL*/,
-														const char* pszOpenStudioVerStr /*=NULL*/ )
+int WriteCSVHourlyResultsHeader( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, int iCodeType /*=0*/,
+														bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/, const char* pszEPlusVerStr /*=NULL*/,
+														const char* pszOpenStudioVerStr /*=NULL*/, QString& sErrMsg, const char* pszFileDescrip )
 {	int iRetVal = 0;
-	QString sErrMsg;
-	long lCliZnNum=0;
 	double fCondFloorArea=0.0;
-	QString sAnalysisType, sWeatherStation, sRunTitle;
-	BOOL bExpectStdDesResults = TRUE;
-	if (	!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), sAnalysisType   , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) ||
-			!BEMPX_GetFloat(	 BEMPX_GetDatabaseID( "Bldg:TotCondFlrArea"  ), fCondFloorArea  ,       0, -1, 0, BEMO_User,          iBEMProcIdx ) ||
-			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"        ), lCliZnNum       ,       0, -1, 0, BEMO_User,          iBEMProcIdx ) ||
-			!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherStation"  ), sWeatherStation , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) )
-	{	iRetVal = 1;
+   QString sRunTitle;
+	if (!BEMPX_GetFloat(	 BEMPX_GetDatabaseID( "Bldg:TotCondFlrArea"  ), fCondFloorArea  ,       0, -1, 0, BEMO_User,          iBEMProcIdx ))
+   {  iRetVal = 1;
 		sErrMsg = "Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or Bldg:TotCondFlrArea";
-	}
-	else if (NUM_T24_NRES_EndUses != 15 || IDX_T24_NRES_EU_Total != 14)	// SAC 2/1/17 - added error check to prevent bomb below  // SAC 7/15/18 - updated expected total to 15 (for PV & Batt)
-	{	iRetVal = 5;
-		sErrMsg = QString("Unexpected enduse count (%1) or total index (%2) (expecting 15 and 14 respectively)").arg(QString::number(NUM_T24_NRES_EndUses), QString::number(IDX_T24_NRES_EU_Total));
-	}
-	else
-	{	bExpectStdDesResults = (sAnalysisType.indexOf( "Compl" ) >= 0);
-		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunTitle"     ), sRunTitle );
-		//BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:FuelTDVLabel" ), sFuelTDVLabel );
-	}
+   }
+   else
+	{  BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunTitle"     ), sRunTitle );
 
-	if (iRetVal == 0)
-	{	QString sOverwriteMsg;
-		sOverwriteMsg.sprintf(	"The hourly CSV results file '%s' is opened in another application.  This file must be closed in that "
+		QString sOverwriteMsg;
+		sOverwriteMsg = QString::asprintf(	"The hourly CSV results file '%s' is opened in another application.  This file must be closed in that "
 										"application before an updated file can be written.\n\nSelect 'Retry' to proceed "
 										"(once the file is closed), or \n'Abort' to abort the hourly export.", pszHourlyResultsPathFile );
 		if (!OKToWriteOrDeleteFile( pszHourlyResultsPathFile, sOverwriteMsg, bSilent ))
 		{	iRetVal = 2;
-			sErrMsg.sprintf( "Unable to open and/or write hourly CSV results file:  %s", pszHourlyResultsPathFile );
+			sErrMsg = QString::asprintf( "Unable to open and/or write hourly CSV results file:  %s", pszHourlyResultsPathFile );
 		}
-	}
+   }
 
-	if (iRetVal==0)
-	{	long lRunDate = 0;
+   if (iRetVal == 0)
+   {  long lRunDate = 0;
 	   QString timeStamp;
 	   //CTime locTime = CTime::GetCurrentTime();
 		if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RunDate" ), lRunDate, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lRunDate > 0)
@@ -7465,7 +7628,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 		if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSENme"  ),	qsCSEName  ))
 			qsCSEName = "CSE";
 
-		FILE *fp_CSV;
+   	FILE *fp_CSV;
 		int iErrorCode;
 		try
 		{
@@ -7473,11 +7636,11 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 			iErrorCode = fopen_s( &fp_CSV, pszHourlyResultsPathFile, "wb" );
 			if (iErrorCode != 0 || fp_CSV == NULL)
 			{	iRetVal = 3;
-				sErrMsg.sprintf( "Error encountered opening hourly CSV results file:  %s", pszHourlyResultsPathFile );
+				sErrMsg = QString::asprintf( "Error encountered opening hourly CSV results file:  %s", pszHourlyResultsPathFile );
 			}
 			else
 			{	fprintf( fp_CSV, "18,4,\"Row/Col hourly results data begin\"\n"   );
-				fprintf( fp_CSV, "\"Hourly Results of CEC Compliance Manager\"\n" );
+				fprintf( fp_CSV, "\"%s\"\n", pszFileDescrip );
 				fprintf( fp_CSV, ",Software:,,\"%s\"\n",   sUIVer.toLocal8Bit().constData()     );
 				fprintf( fp_CSV, ",CompMgr:,,\"%s\"\n",    sCmpMgrVer.toLocal8Bit().constData() );
 				fprintf( fp_CSV, ",OpenStudio:,,\"%s\"\n", sOSVer.toLocal8Bit().constData()     );
@@ -7492,6 +7655,80 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 		//		fprintf( fp_CSV,  "Fuel TDV Set:,,,\"%s\"\n", sFuelTDVLabel    );
 				fprintf( fp_CSV,    "Model File:,,,\"%s\"\n", pszModelPathFile );
 				fprintf( fp_CSV, "\n" );
+
+				fflush( fp_CSV );
+				fclose( fp_CSV );
+			}
+		}
+	//	catch(CException e) {
+	//		BEMMessageBox( "Unexpected error loading symbolic file list." );
+	//	}
+		catch( ... ) {
+			iRetVal = 4;
+			sErrMsg = QString::asprintf( "Unknown error writing hourly CSV results file header:  %s", pszHourlyResultsPathFile );
+			// if (!bSilent)
+			// 	BEMMessageBox( "Unknown error writing hourly CSV results file." );
+		}
+	}
+   return iRetVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+int CMX_ExportCSVHourlyResults_CECNonRes( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, char* pszErrMsgBuffer /*=NULL*/,
+														int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/, const char* pszEPlusVerStr /*=NULL*/,
+														const char* pszOpenStudioVerStr /*=NULL*/ )
+{	return CMX_ExportCSVHourlyResults_Com( pszHourlyResultsPathFile, pszModelPathFile, pszModelName, CT_T24N, pszErrMsgBuffer, iErrMsgBufferLen, bSilent, iBEMProcIdx, pszEPlusVerStr, pszOpenStudioVerStr );
+}
+//		Return Values:		0 =>	SUCCESS
+//							 > 0 =>	Error Code
+//											 1 : Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or Bldg:TotCondFlrArea
+//											 2 : Unable to open and/or write hourly CSV results file
+//											 3 : Error encountered opening hourly CSV results file
+//											 4 : Unknown error writing hourly CSV results file
+//											 5 : Unexpected enduse count or index
+//											 6 : 
+int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, int iCodeType /*=0*/, char* pszErrMsgBuffer /*=NULL*/,
+														int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/, const char* pszEPlusVerStr /*=NULL*/,
+														const char* pszOpenStudioVerStr /*=NULL*/ )
+{	int iRetVal = 0;
+	QString sErrMsg;
+	long lCliZnNum=0;
+	QString sAnalysisType, sWeatherStation;
+	BOOL bExpectStdDesResults = TRUE;
+	if (	!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), sAnalysisType   , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) ||
+			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"        ), lCliZnNum       ,       0, -1, 0, BEMO_User,          iBEMProcIdx ) ||
+			!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherStation"  ), sWeatherStation , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) )
+	{	iRetVal = 1;
+		sErrMsg = "Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or Bldg:TotCondFlrArea";
+	}
+	else if (NUM_T24_NRES_EndUses != 15 || IDX_T24_NRES_EU_Total != 14)	// SAC 2/1/17 - added error check to prevent bomb below  // SAC 7/15/18 - updated expected total to 15 (for PV & Batt)
+	{	iRetVal = 5;
+		sErrMsg = QString("Unexpected enduse count (%1) or total index (%2) (expecting 15 and 14 respectively)").arg(QString::number(NUM_T24_NRES_EndUses), QString::number(IDX_T24_NRES_EU_Total));
+	}
+	else
+	{	bExpectStdDesResults = (sAnalysisType.indexOf( "Compl" ) >= 0);
+		//BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:FuelTDVLabel" ), sFuelTDVLabel );
+	}
+
+	if (iRetVal==0)
+      iRetVal = WriteCSVHourlyResultsHeader( pszHourlyResultsPathFile, pszModelPathFile, pszModelName, iCodeType, bSilent, iBEMProcIdx,
+														   pszEPlusVerStr, pszOpenStudioVerStr, sErrMsg, "Hourly Results of CEC Compliance Manager" );
+	if (iRetVal==0)
+	{
+   	FILE *fp_CSV;
+		int iErrorCode;
+		try
+		{
+//			BEMPX_WriteHourlyResultsSummary( pszHourlyResultsPathFile, bSilent, iBEMProcIdx );
+			iErrorCode = fopen_s( &fp_CSV, pszHourlyResultsPathFile, "ab" );   // APPEND to header already written to file via WriteCSVHourlyResultsHeader() - SAC 10/03/21
+			if (iErrorCode != 0 || fp_CSV == NULL)
+			{	iRetVal = 3;
+				sErrMsg = QString::asprintf( "Error encountered opening hourly CSV results file:  %s", pszHourlyResultsPathFile );
+			}
+			else
+			{
 
 	// ASSUMES:  NUM_T24_NRES_EndUses = 15  -AND-  IDX_T24_NRES_EU_CompTot = 7  -AND-  IDX_T24_NRES_EU_Total = 14
 		int iEUO[2][NUM_T24_NRES_EndUses] = { { 0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 7, 14         },		// SAC 2/1/17 - updated to include Process Motors
@@ -7680,7 +7917,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 	//	}
 		catch( ... ) {
 			iRetVal = 4;
-			sErrMsg.sprintf( "Unknown error writing hourly CSV results file:  %s", pszHourlyResultsPathFile );
+			sErrMsg = QString::asprintf( "Unknown error writing hourly CSV results file:  %s", pszHourlyResultsPathFile );
 			// if (!bSilent)
 			// 	BEMMessageBox( "Unknown error writing hourly CSV results file." );
 		}
@@ -7738,12 +7975,12 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 
 	if (iRetVal == 0)
 	{	QString sOverwriteMsg;
-		sOverwriteMsg.sprintf(	"The ZERO Code hourly CSV results file '%s' is opened in another application.  This file must be closed in that "
+		sOverwriteMsg = QString::asprintf(	"The ZERO Code hourly CSV results file '%s' is opened in another application.  This file must be closed in that "
 										"application before an updated file can be written.\n\nSelect 'Retry' to proceed "
 										"(once the file is closed), or \n'Abort' to abort the hourly export.", pszHourlyResultsPathFile );
 		if (!OKToWriteOrDeleteFile( pszHourlyResultsPathFile, sOverwriteMsg, bSilent ))
 		{	iRetVal = 2;
-			sErrMsg.sprintf( "Unable to open and/or write ZERO Code hourly CSV results file:  %s", pszHourlyResultsPathFile );
+			sErrMsg = QString::asprintf( "Unable to open and/or write ZERO Code hourly CSV results file:  %s", pszHourlyResultsPathFile );
 		}
 	}
 
@@ -7755,7 +7992,7 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 			iErrorCode = fopen_s( &fp_CSV, pszHourlyResultsPathFile, "wb" );
 			if (iErrorCode != 0 || fp_CSV == NULL)
 			{	iRetVal = 3;
-				sErrMsg.sprintf( "Error encountered opening ZERO Code hourly CSV results file:  %s", pszHourlyResultsPathFile );
+				sErrMsg = QString::asprintf( "Error encountered opening ZERO Code hourly CSV results file:  %s", pszHourlyResultsPathFile );
 			}
 			else
 			{	fprintf( fp_CSV, "Hourly Results,\n" );
@@ -7905,7 +8142,7 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 		}
 		catch( ... ) {
 			iRetVal = 4;
-			sErrMsg.sprintf( "Unknown error writing ZERO Code hourly CSV results file:  %s", pszHourlyResultsPathFile );
+			sErrMsg = QString::asprintf( "Unknown error writing ZERO Code hourly CSV results file:  %s", pszHourlyResultsPathFile );
 		}
 	}
 

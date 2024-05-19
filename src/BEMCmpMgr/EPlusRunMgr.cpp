@@ -252,8 +252,8 @@ static int ExecuteNow( EPlusRunMgr* pRunMgr, QString sEXEFN, QString sEXEParams 
 
 
 int EPlusRunMgr::SetupRun(
-	int iRunIdx, QString sRunAbbrev, QString sIDFPathFile,
-	QString sEPlusWthr, bool bHourlySim, long lProgressModel, QString& sErrorMsg )
+	int iRunIdx, QString sRunAbbrev, QString sIDFPathFile, QString sEPlusWthr,
+	bool bHourlySim, long lProgressModel, QString& sErrorMsg, const char* pszEPlusIDDFN /*=NULL*/ )      // SAC 10/04/21
 //	int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 4/29/15 - add argument to DISABLE report include files
 //	const char* pszRunAbbrev /*=NULL*/ )
 {
@@ -368,14 +368,14 @@ int EPlusRunMgr::SetupRun(
 		}	}
 
 		if (iRetVal == 0)
-			iRetVal = SetupRunFinish( iRunIdx, sErrorMsg );
+			iRetVal = SetupRunFinish( iRunIdx, sErrorMsg, pszEPlusIDDFN );
 	}
 	return iRetVal;
 }		// EPlusRunMgr::SetupRun
 
 //-----------------------------------------------------------------------------
 int EPlusRunMgr::SetupRunFinish(
-	int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy /*=NULL*/ )
+	int iRunIdx, QString& sErrorMsg, const char* pszEPlusIDDFN /*=NULL*/ )
 {
 	int iRetVal = 0;
 	QString sMsg, sLogMsg;
@@ -396,12 +396,17 @@ int EPlusRunMgr::SetupRunFinish(
 
 		if (iRetVal == 0 && m_bPerformSimulations && !m_bBypassEPlus)
 		{
+         char pszIDDFN[64];
+         if (pszEPlusIDDFN && strlen( pszEPlusIDDFN ) > 0)     // SAC 10/04/21
+            strcpy_s( pszIDDFN, 64, pszEPlusIDDFN );
+         else
+            strcpy_s( pszIDDFN, 64, "Energy+.idd" );
 //			// remove trailing '.cse' file extension from path/file passed into CSE
 //			QString sProjCSEFileForArg = sProjCSEFile;
 //			if (!sProjCSEFileForArg.right(4).compare(".CSE", Qt::CaseInsensitive))
 //				sProjCSEFileForArg = sProjCSEFileForArg.left( sProjCSEFileForArg.length()-4 );
 
-//			// CSE SIMULATION
+//			// EPlus SIMULATION
 //			QString sParams;
 //			//	sParams = QString( "-b \"%s.cse\"" ).arg( sProjFileAlone );		// SAC 8/20/12 - added '-b' (batch) option to prevent user prompt in the event of sim error
 //			sParams = QString( "-b \"%1\"" ).arg( sProjCSEFileForArg );
@@ -409,16 +414,17 @@ int EPlusRunMgr::SetupRunFinish(
 			sProcessPath = sProcessPath.left( sProcessPath.length()-1 );
 			sProcessPath.replace( '\\', '/' );
 			QString sParams;
-			sParams = QString( "-d \"%1\" -i \"%2Energy+.idd\" -w \"%3/in.epw\" \"%4/in.idf\"" ).arg(
-											sProcessPath, m_sEPlusPath, sProcessPath, sProcessPath );
+			//sParams = QString( "-d \"%1\" -i \"%2Energy+.idd\" -w \"%3/in.epw\" \"%4/in.idf\"" ).arg(
+			sParams = QString( "-d \"%1\" -i \"%2%3\" -w \"%4/in.epw\" \"%5/in.idf\"" ).arg(
+											sProcessPath, m_sEPlusPath, pszIDDFN, sProcessPath, sProcessPath );
 // C:\dev\CBECC-dev\bin\Release_VC12\EPlus\energyplus -d "C:/dev/CBECC-dev/bin/Com/Projects/test/CmdLine/5" -i "C:\dev\CBECC-dev\bin\Release_VC12\EPlus\Energy+.idd" -w "C:/dev/CBECC-dev/bin/Com/Projects/test/CmdLine/5/in.epw" "C:/dev/CBECC-dev/bin/Com/Projects/test/CmdLine/5/in.idf" >>epout.txt
 
-#ifdef _DEBUG
+#ifdef _DEBUG  //VS19
 			sLogMsg = QString( "   EPlus exePath:  %1" ).arg( m_sEPlusPath );
 			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			sLogMsg = QString( "   EPlus cmdLine:  %1" ).arg( sParams );
 			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-#endif
+#endif  //VS19
 			pEPlusRun->SetArgs( sParams);
 		}
 
@@ -519,9 +525,9 @@ bool EPlusRunMgr::ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirst
 							pEPlusRun->WriteStdoutString( sOut );
 
 						bool bLogOut = m_bVerbose;
-#ifdef _DEBUG
+#ifdef _DEBUG  //VS19
 						bLogOut = true;  // always log when in debug mode ...?
-#endif
+#endif  //VS19
 						if (bLogOut)
 						{	QString sLog = QString( "run %1:  %2" ).arg( pEPlusRun->GetRunAbbrev(), sOut.c_str() );
 							BEMPX_WriteLogFile( sLog, NULL, FALSE, TRUE, FALSE );
@@ -571,7 +577,7 @@ bool EPlusRunMgr::ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirst
 							else if (sOut.find(" Simulation at 06") != std::string::npos)	iMo=6;
 							else if (sOut.find(" Simulation at 07") != std::string::npos)	iMo=7;
 							else if (sOut.find(" Simulation at 08") != std::string::npos)	iMo=8;
-							else if (sOut.find(" Simulation at 08") != std::string::npos)	iMo=9;
+							else if (sOut.find(" Simulation at 09") != std::string::npos)	iMo=9;
 							else if (sOut.find(" Simulation at 10") != std::string::npos)	iMo=10;
 							else if (sOut.find(" Simulation at 11") != std::string::npos)	iMo=11;
 							else if (sOut.find(" Simulation at 12") != std::string::npos)	iMo=12;

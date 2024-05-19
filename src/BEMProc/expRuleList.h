@@ -145,6 +145,8 @@ typedef struct
 
 // SAC 10/12/11 - facilitates nested rule evaluation counting
    long* plRuleEvalCount;
+
+   BOOL bGetEnumString;    // to enable more dynamic enumeration value vs. string retrieval - SAC 09/17/21 (MFam)
 } ExpEvalStruct;
 
 extern void CopyExpEvalStruct( ExpEvalStruct* pDest, ExpEvalStruct* pSrc );   // SAC 10/29/07
@@ -214,7 +216,7 @@ public:
    RuleList();
 // SAC 5/26/03 - added int iLineNumber & const char* pszFileName arguments
    RuleList( LPCSTR name, bool bSetAllData=TRUE, bool bAllowMultipleEvaluations=TRUE, bool bTagAllDataAsUserDefined=FALSE,
-              int iLineNumber=0, const char* pszFileName=NULL, bool bPerformSetBEMDataResets=TRUE );  // SAC 9/18/05 - added to facilitate no-reset data setting
+              int iLineNumber=0, const char* pszFileName=NULL, bool bPerformSetBEMDataResets=TRUE, int iHardwireEnumStrVal=-1 );  // SAC 9/18/05 - added to facilitate no-reset data setting
    ~RuleList();
 
    bool Write( CryptoFile& file, QFile& errorFile );
@@ -235,6 +237,11 @@ public:
 	bool		getTagAllDataAsUserDefined()		{	return m_tagAllDataAsUserDefined;	}
 	bool		getPerformSetBEMDataResets()		{	return m_performSetBEMDataResets;	}
 
+   bool     getHardwireEnumString()          {  return (m_hardwireEnumStrVal ==  1);  }   // SAC 09/24/21 (MFam)
+   bool     getHardwireEnumValue()           {  return (m_hardwireEnumStrVal ==  0);  }
+   bool     getRulesetDefaultEnums()         {  return (m_hardwireEnumStrVal == -1);  }
+   int      getHardwireEnumStrVal()          {  return  m_hardwireEnumStrVal;         }
+
    int   	getLineNumber()						{	return m_lineNumber;   }
 	QString	getFileName()							{	return m_fileName;	}
 
@@ -245,6 +252,7 @@ private:
    bool		m_allowMultipleEvaluations;
    bool		m_tagAllDataAsUserDefined;
    bool		m_performSetBEMDataResets;  // SAC 9/18/05 - added to facilitate no-reset data setting
+   int      m_hardwireEnumStrVal;       // -1 (ruleset default) / 0 Value / 1 String - SAC 09/24/21 (MFam)
 
    int		m_lineNumber;  // SAC 5/26/03 - Added to enable reporting of rulelist line number & filename in compiler output
    QString	m_fileName;
@@ -261,7 +269,8 @@ class RuleListList
 {
 public: 
    void NewList( LPCSTR name, bool bSetAllData=TRUE, bool bAllowMultipleEvaluations=TRUE, bool bTagAllDataAsUserDefined=FALSE,
-                 int iLineNumber=0, const char* pszFileName=NULL, bool bPerformSetBEMDataResets=TRUE );  // SAC 9/18/05
+                 int iLineNumber=0, const char* pszFileName=NULL, bool bPerformSetBEMDataResets=TRUE, int iHardwireEnumStrVal=-1 );  // SAC 9/18/05
+                 // iHardwireEnumStrVal = -1 (ruleset default) / 0 Value / 1 String - SAC 09/24/21 (MFam)
    void RemoveAll();
 	void RemoveTrailing( int iNumListsToDelete=1 );
    RuleList* getRuleList( LPCSTR name );
@@ -724,9 +733,10 @@ public:
    int  getNumRuleLists()												{	return m_ruleListList.getNumRuleLists();  }
 	void addNewRuleList( LPCSTR name, bool bSetAllData=TRUE, bool bAllowMultipleEvaluations=TRUE,
 						bool bTagAllDataAsUserDefined=FALSE, int iLineNumber=0, const char* pszFileName=NULL,
-						bool bPerformSetBEMDataResets=TRUE )		{	m_ruleListList.NewList( name, bSetAllData,
+						bool bPerformSetBEMDataResets=TRUE, int iHardwireEnumStrVal=-1 )   // iHardwireEnumStrVal = -1 (ruleset default) / 0 Value / 1 String - SAC 09/24/21 (MFam)
+                                                      		{	m_ruleListList.NewList( name, bSetAllData,
 																						bAllowMultipleEvaluations, bTagAllDataAsUserDefined,
-																						iLineNumber, pszFileName, bPerformSetBEMDataResets );  return;  }
+																						iLineNumber, pszFileName, bPerformSetBEMDataResets, iHardwireEnumStrVal );  return;  }
    RuleList* getRuleList( LPCSTR name )							{	return m_ruleListList.getRuleList( name );  }
    RuleList* getRuleList( int i )									{	return m_ruleListList.getRuleList( i );  }
 	int  getRulelistNames( QVector<QString>& sRulelistNames )	{	return m_ruleListList.getRulelistNames( sRulelistNames );  }
@@ -755,6 +765,7 @@ public:
 																					return;  }
 
 	BEMTable* getTablePtr( const char* tableName );
+	BEMTable* getTablePtr( int idx );		// SAC 12/14/20
 	bool  getTableValue( int tableID, double* paramArray, int col, double* pfValue, BOOL bVerboseOutput=FALSE );
 	int   getTableID( const char* tableName );
 	int   getTableDimension( int tableID, BOOL bParams=TRUE );
@@ -767,6 +778,8 @@ public:
 	bool  addTable( const char* fileName, QFile& errorFile );
 	void  addTable( BEMTable* pTable )					{	m_tables.push_back(pTable);  return;  }
 	int   numTables()											{	return (int) m_tables.size();  }		// SAC 11/16/20
+	void  replaceTableIndex( int iSrcIdx, int iDestIdx )	{	std::swap( m_tables[iDestIdx], m_tables[iSrcIdx] );	// SAC 12/14/20
+																				m_tables.resize( iSrcIdx );	return;  }
 
 	int               numRulesetProperties()			{	return (int) m_rulesetProperties.size();  }
 	RuleSetProperty*  getRuleSetProperty(int i)		{	return (i>=0 && i<numRulesetProperties()) ? m_rulesetProperties.at(i) : NULL;  }

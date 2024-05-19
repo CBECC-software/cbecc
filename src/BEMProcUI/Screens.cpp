@@ -64,11 +64,13 @@ static const int iToolTipLen = 13;
 #define  SCRNTOKEN_TAB   1
 #define  SCRNTOKEN_CTRL  2
 #define  SCRNTOKEN_VER   3  // SAC 5/21/01
-#define  SCRNTOKEN_END   4
+#define  SCRNTOKEN_INCL  4  // SAC 08/12/21 (MFam)
+#define  SCRNTOKEN_END   5
 static char BASED_CODE szTokenMain[] = "MAINSCREEN";
 static char BASED_CODE szTokenTab[]  = "TAB";
 static char BASED_CODE szTokenCtrl[] = "CTRL";
 static char BASED_CODE szTokenVer[]  = "VERSION";  // SAC 5/21/01
+static char BASED_CODE szTokenIncl[] = "INCLUDE";  // SAC 08/12/21 (MFam)
 
 static int ReadScreenToken( CTextIO& file )
 {
@@ -83,6 +85,8 @@ static int ReadScreenToken( CTextIO& file )
       return SCRNTOKEN_CTRL;
    else if (sToken == szTokenVer)  // SAC 5/21/01
       return SCRNTOKEN_VER;
+   else if (sToken == szTokenIncl)  // SAC 08/12/21 (MFam)
+      return SCRNTOKEN_INCL;
    else if (sToken.GetLength() > 0)
       file.ThrowTextIOException( CTextioException::xHeader );
 
@@ -450,6 +454,181 @@ BOOL CBEMPUIScreenData::ReadScreenControl( CTextIO& file, int iFileStructVersion
 }
 
 
+BOOL CBEMPUIScreenData::ReadScreenFile_Body( CTextIO& file, int& iFileStructVersion )     // SAC 08/17/21 (MFam)
+{  BOOL bRetVal = TRUE;
+         TRY
+         {
+            TRY
+            {
+                  int iToken = ReadScreenToken( file );
+
+                  if (iToken == SCRNTOKEN_VER)
+                  {
+                     iFileStructVersion = (int) file.ReadLong();
+                     file.PostReadToken();
+                     iToken = ReadScreenToken( file );
+                  }
+
+                  while (bRetVal && iToken != SCRNTOKEN_END) // EOF handled in catch block 
+                  {
+                     switch (iToken)
+                     {
+                        case SCRNTOKEN_MAIN : bRetVal = ( (ReadMainScreenInfo( file, iFileStructVersion )) && (bRetVal) );  break;
+                        case SCRNTOKEN_TAB  : bRetVal = ( (ReadScreenPage(     file, iFileStructVersion )) && (bRetVal) );  break;
+                        case SCRNTOKEN_CTRL : bRetVal = ( (ReadScreenControl(  file, iFileStructVersion )) && (bRetVal) );  break;
+                        case SCRNTOKEN_INCL : bRetVal = ( (ReadScreenInclude(  file, iFileStructVersion )) && (bRetVal) );  break;     // SAC 08/12/21 (MFam)
+                        default             : ASSERT( FALSE );  break;
+                     }
+                     iToken = ReadScreenToken( file );
+                  }
+            }
+            CATCH( CTextioException, err2 )
+            {
+               if ( err2->m_cause == CTextioException::endOfFile )
+                  ; // we're done, no problem
+               else
+                  THROW_LAST();
+            }
+            END_CATCH
+         }
+         CATCH( CTextioException, err )
+         {
+            bRetVal = FALSE;
+
+            CString msg = CString("Error Reading screen data\r\n");
+            msg += CString("From File: ") + file.FileName() + CString( "\r\n" );
+            msg += CString("\r\n\t") + CString( err->m_strError ) + CString("\r\n") + CString("\r\n");
+            // errorFile.Write( msg.GetBuffer( msg.GetLength() ), msg.GetLength() );
+            // msg.ReleaseBuffer();
+            // BEMMessageBox( msg, NULL, 2 /*warning*/ );
+            BEMMessageBox( msg );
+            THROW_LAST();
+         }
+         END_CATCH
+
+   return bRetVal;
+}
+
+
+BOOL CBEMPUIScreenData::ReadScreenInclude( CTextIO& file, int iFileStructVersion )
+{
+   BOOL bRetVal = FALSE;
+   CString sInclFileName = file.ReadString();
+   CString sCurFileName  = file.FileName();
+   if (sInclFileName.GetLength() <= 0)
+   {  // report missing include filename
+      CString msg;
+      msg.Format( _T("Error Reading screen data\r\nScreen include filename not specified on line %d of screen definitions file: \r\n%s"), file.GetLineCount(), (LPCTSTR) sCurFileName );
+      BEMMessageBox( msg );
+   }
+   else
+   {  if (!FileExists( sInclFileName ))
+      {  // find file in same directory as m_sScreenDataFileName
+         int iLastSlash = std::max( sCurFileName.ReverseFind('/'), sCurFileName.ReverseFind('\\') );
+         if (iLastSlash > 0)
+         {  CString sFileTemp = sCurFileName.Left( iLastSlash+1 ) + sInclFileName;
+            if (FileExists( sFileTemp ))
+               sInclFileName = sFileTemp;
+         }
+      }
+      if (!FileExists( sInclFileName ))
+      {  // report missing file
+         CString msg;
+         msg.Format( _T("Error Reading screen data\r\nScreen include file specified on line %d of screen definitions file not found: \r\n%s"), file.GetLineCount(), (LPCTSTR) sInclFileName );
+         BEMMessageBox( msg );
+      }
+      else
+      {  TRY
+         {
+            CTextIO file2( sInclFileName, CTextIO::load );
+            bRetVal = ReadScreenFile_Body( file2, iFileStructVersion );
+         }
+         CATCH( CFileException, error )
+         {
+            bRetVal = FALSE;
+            CString msg = CString( "Error opening file: " ) + sInclFileName;
+            BEMMessageBox( msg );
+         }
+         END_CATCH
+   }  }
+   return bRetVal;
+}
+
+
+BOOL CBEMPUIScreenData::ReadScreenFile( CString sScreenFile, int iFileStructVersion )     // SAC 08/12/21 (MFam)
+{  BOOL bRetVal = TRUE;
+      TRY
+      {
+         CTextIO file( sScreenFile, CTextIO::load );
+         sbReportErrors = TRUE;  // SAC 2/2/01
+         //TRY
+         //{
+         //   TRY
+         //   {
+
+               bRetVal = ReadScreenFile_Body( file, iFileStructVersion );
+               //int iToken = ReadScreenToken( file );
+               //
+               //if (iToken == SCRNTOKEN_VER)
+               //{
+               //   iFileStructVersion = (int) file.ReadLong();
+               //   file.PostReadToken();
+               //   iToken = ReadScreenToken( file );
+               //}
+               //
+               //while (bRetVal && iToken != SCRNTOKEN_END) // EOF handled in catch block 
+               //{
+               //   switch (iToken)
+               //   {
+               //      case SCRNTOKEN_MAIN : bRetVal = ( (ReadMainScreenInfo( file, iFileStructVersion )) && (bRetVal) );  break;
+               //      case SCRNTOKEN_TAB  : bRetVal = ( (ReadScreenPage(     file, iFileStructVersion )) && (bRetVal) );  break;
+               //      case SCRNTOKEN_CTRL : bRetVal = ( (ReadScreenControl(  file, iFileStructVersion )) && (bRetVal) );  break;
+               //      case SCRNTOKEN_INCL : bRetVal = ( (ReadScreenInclude(  file, iFileStructVersion )) && (bRetVal) );  break;     // SAC 08/12/21 (MFam)
+               //      default             : ASSERT( FALSE );  break;
+               //   }
+               //   iToken = ReadScreenToken( file );
+               //}
+         //   }
+         //   CATCH( CTextioException, err2 )
+         //   {
+         //      if ( err2->m_cause == CTextioException::endOfFile )
+         //         ; // we're done, no problem
+         //      else
+         //         THROW_LAST();
+         //   }
+         //   END_CATCH
+         //}
+         //CATCH( CTextioException, err )
+         //{
+         //   bRetVal = FALSE;
+         //
+         //   CString msg = CString("Error Reading screen data\r\n");
+         //   msg += CString("From File: ") + sScreenFile + CString( "\r\n" );
+         //   msg += CString("\r\n\t") + CString( err->m_strError ) + CString("\r\n") + CString("\r\n");
+         //   // errorFile.Write( msg.GetBuffer( msg.GetLength() ), msg.GetLength() );
+         //   // msg.ReleaseBuffer();
+         //   // BEMMessageBox( msg, NULL, 2 /*warning*/ );
+         //   BEMMessageBox( msg );
+         //   THROW_LAST();
+         //}
+         //END_CATCH
+      }
+      CATCH( CFileException, error )
+      {
+         bRetVal = FALSE;
+
+         CString msg = CString( "Error opening file: " ) + sScreenFile;
+         // BEMMessageBox( msg, NULL, 2 /*warning*/ );
+         BEMMessageBox( msg );
+
+         // errorFile.Write( msg.GetBuffer( msg.GetLength() ), msg.GetLength() );
+         // msg.ReleaseBuffer();
+      }
+      END_CATCH
+   return bRetVal;
+}
+
+
 BOOL CBEMPUIScreenData::Init( const char* pszScreenDataFileName, BOOL bReportResults )
 {
    BOOL bRetVal = TRUE;
@@ -468,72 +647,8 @@ BOOL CBEMPUIScreenData::Init( const char* pszScreenDataFileName, BOOL bReportRes
       m_sScreenDataFileName = sScreenFile;
       DeleteData();
 
-      TRY
-      {
-         CTextIO file( sScreenFile, CTextIO::load );
-         TRY
-         {
-            TRY
-            {
-               sbReportErrors = TRUE;  // SAC 2/2/01
-               int iToken = ReadScreenToken( file );
-
-               int iFileStructVersion = 1;  // SAc 5/21/01 - Added "VERSION, #" reading functionality
-               if (iToken == SCRNTOKEN_VER)
-               {
-                  iFileStructVersion = (int) file.ReadLong();
-                  file.PostReadToken();
-                  iToken = ReadScreenToken( file );
-               }
-
-               while (iToken != SCRNTOKEN_END) // EOF handled in catch block 
-               {
-                  switch (iToken)
-                  {
-                     case SCRNTOKEN_MAIN : bRetVal = ( (ReadMainScreenInfo( file, iFileStructVersion )) && (bRetVal) );  break;
-                     case SCRNTOKEN_TAB  : bRetVal = ( (ReadScreenPage(     file, iFileStructVersion )) && (bRetVal) );  break;
-                     case SCRNTOKEN_CTRL : bRetVal = ( (ReadScreenControl(  file, iFileStructVersion )) && (bRetVal) );  break;
-                     default             : ASSERT( FALSE );  break;
-                  }
-                  iToken = ReadScreenToken( file );
-               }
-            }
-            CATCH( CTextioException, err )
-            {
-               if ( err->m_cause == CTextioException::endOfFile )
-                  ; // we're done, no problem
-               else
-                  THROW_LAST();
-            }
-            END_CATCH
-         }
-         CATCH( CTextioException, err )
-         {
-            bRetVal = FALSE;
-
-            CString msg = CString("Error Reading screen data\r\n");
-            msg += CString("From File: ") + sScreenFile + CString( "\r\n" );
-            msg += CString("\r\n\t") + CString( err->m_strError ) + CString("\r\n") + CString("\r\n");
-            // errorFile.Write( msg.GetBuffer( msg.GetLength() ), msg.GetLength() );
-            // msg.ReleaseBuffer();
-            // BEMMessageBox( msg, NULL, 2 /*warning*/ );
-            BEMMessageBox( msg );
-            THROW_LAST();
-         }
-         END_CATCH
-      }
-      CATCH( CFileException, error )
-      {
-         bRetVal = FALSE;
-
-         CString msg = CString( "Error opening file: " ) + sScreenFile;
-         // BEMMessageBox( msg, NULL, 2 /*warning*/ );
-         BEMMessageBox( msg );
-
-         // errorFile.Write( msg.GetBuffer( msg.GetLength() ), msg.GetLength() );
-         // msg.ReleaseBuffer();
-      }
-      END_CATCH
+      int iFileStructVersion = 1;  // SAC 5/21/01 - Added "VERSION, #" reading functionality
+      bRetVal = ReadScreenFile( sScreenFile, iFileStructVersion );
    }
 
    if (bRetVal  &&  bReportResults)
@@ -699,10 +814,10 @@ void PostReadError( CBEMPUIPage* pPage, const char* psText1, const char* psText2
          CString sMsg;
          if (psText1)
             sMsg.Format( "Control Definition Error: Dialog Page '%s' for component type '%s' (%d) and %s '%s' on line %d.",
-                         pPage->m_sCaption, pPage->m_sBEMClass, pPage->m_iClassId, psText2, psText1, iLine );
+                         ((const char*) pPage->m_sCaption), ((const char*) pPage->m_sBEMClass), pPage->m_iClassId, psText2, psText1, iLine );
          else
             sMsg.Format( "Control Definition Error: Dialog Page '%s' for component type '%s' (%d) and %s on line %d.",
-                         pPage->m_sCaption, pPage->m_sBEMClass, pPage->m_iClassId, psText2, iLine );
+                         ((const char*) pPage->m_sCaption), ((const char*) pPage->m_sBEMClass), pPage->m_iClassId, psText2, iLine );
          sMsg += "\n\nWould you like further errors reported?";  // SAC 2/2/01
          sbReportErrors = (::MessageBox( NULL, sMsg, "Screen Data Read Error", MB_YESNO|MB_ICONSTOP ) == IDYES);  // SAC 2/2/01
       }

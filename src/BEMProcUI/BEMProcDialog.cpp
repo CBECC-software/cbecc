@@ -825,36 +825,36 @@ void CSACBEMProcDialog::PaintTabCtrlStuff( BOOL bUpdateLabelsOnly, BOOL bCallDis
                       (pCtrl->m_uiCtrlType == TDCT_Label || pCtrl->m_iLblDX != 0 || pCtrl->m_iLblDY != 0))
                   {
                      // Erase previous label and replace it with an updated label
-                     CRect rc;
-                     rc.top    = FontY(pCtrl->m_iY) + eiTabDlgCtrlDY - 1;
+                     CRect rc2;
+                     rc2.top    = FontY(pCtrl->m_iY) + eiTabDlgCtrlDY - 1;
 // SAC 6/20/03 - Add "max()" call to ensure bottom sliver of labels not left following refresh
-//                     rc.bottom = rc.top + FontY(GetWizFontHeight(pCtrl->m_iFont)) + eiTabDlgCtrlDY + 2;
-                     rc.bottom = rc.top + FontY( std::max( pCtrl->m_iHeight, GetWizFontHeight(pCtrl->m_iFont) ) ) + /*eiTabDlgCtrlDY +*/ 2;
+//                     rc2.bottom = rc2.top + FontY(GetWizFontHeight(pCtrl->m_iFont)) + eiTabDlgCtrlDY + 2;
+                     rc2.bottom = rc2.top + FontY( std::max( pCtrl->m_iHeight, GetWizFontHeight(pCtrl->m_iFont) ) ) + /*eiTabDlgCtrlDY +*/ 2;
                      if (pCtrl->m_uiLblJust == TA_LEFT)
                      {
-                        rc.left  = FontX(pCtrl->m_iX) - 1;
+                        rc2.left  = FontX(pCtrl->m_iX) - 1;
 // SAC 1/3/12 - revisions to left/right to use label's WIDTH when erasing label (as opposed to erasing a label associated with another type of UI control)
-//                        rc.right = rc.left + FontX(pCtrl->m_iLblDX) + 2;
-                        rc.right = rc.left + (pCtrl->m_uiCtrlType == TDCT_Label ? FontX(pCtrl->m_iWidth) : FontX(pCtrl->m_iLblDX)) + 2;
+//                        rc2.right = rc2.left + FontX(pCtrl->m_iLblDX) + 2;
+                        rc2.right = rc2.left + (pCtrl->m_uiCtrlType == TDCT_Label ? FontX(pCtrl->m_iWidth) : FontX(pCtrl->m_iLblDX)) + 2;
                      }
                      else if (pCtrl->m_uiLblJust == TA_RIGHT)
                      {
-                        rc.right = FontX(pCtrl->m_iX) + 1;
-//                        rc.left  = rc.right - FontX(pCtrl->m_iLblDX) - 2;
-                        rc.left  = rc.right - (pCtrl->m_uiCtrlType == TDCT_Label ? FontX(pCtrl->m_iWidth) : FontX(pCtrl->m_iLblDX)) - 2;
+                        rc2.right = FontX(pCtrl->m_iX) + 1;
+//                        rc2.left  = rc2.right - FontX(pCtrl->m_iLblDX) - 2;
+                        rc2.left  = rc2.right - (pCtrl->m_uiCtrlType == TDCT_Label ? FontX(pCtrl->m_iWidth) : FontX(pCtrl->m_iLblDX)) - 2;
                      }
                      else if (pCtrl->m_uiLblJust == TA_CENTER)
                      {
 //                        int iDX = (int) (0.5 * FontX(pCtrl->m_iLblDX));
                         int iDX = (int) (0.5 * (pCtrl->m_uiCtrlType == TDCT_Label ? FontX(pCtrl->m_iWidth) : FontX(pCtrl->m_iLblDX)));
-                        rc.left  = FontX(pCtrl->m_iX) - iDX - 1;
-                        rc.right = FontX(pCtrl->m_iX) + iDX + 1;
+                        rc2.left  = FontX(pCtrl->m_iX) - iDX - 1;
+                        rc2.right = FontX(pCtrl->m_iX) + iDX + 1;
                      }
                      pDC->SelectObject( GetWizFont( FNT_STD ) );
                      // SAC 7/3/00 - DON'T erase label rect when iUnitsDX == -1 (=> no erasure of label)
-                     if (pCtrl->m_iUnitDX != -1 && rc.right > (rc.left+2))
-							{	//ASSERT( (rc.right - rc.left) > 5 );  // check to confirm that we have a reasonable width area to erase
-                        pDC->ExtTextOut( rc.left+1, rc.top+1, ETO_OPAQUE, rc, " ", 1, NULL);
+                     if (pCtrl->m_iUnitDX != -1 && rc2.right > (rc2.left+2))
+							{	//ASSERT( (rc2.right - rc2.left) > 5 );  // check to confirm that we have a reasonable width area to erase
+                        pDC->ExtTextOut( rc2.left+1, rc2.top+1, ETO_OPAQUE, rc2, " ", 1, NULL);
 							}
                      
                      WriteLabelToDC( pDC, pCtrl, 0 /*m_lCtrlDBIDOffset*/, eiTabDlgCtrlDY );
@@ -963,7 +963,7 @@ void CSACBEMProcDialog::PostNcDestroy()
 BOOL CSACBEMProcDialog::OnToolTipNotify( UINT /*id*/, NMHDR* pNMHDR, LRESULT* /*pResult*/ )
 {
    TOOLTIPTEXT* pTTT = (TOOLTIPTEXT*) pNMHDR;
-   UINT nID = pNMHDR->idFrom;
+   UINT_PTR nID = pNMHDR->idFrom;
    if ((pTTT->uFlags & TTF_IDISHWND) && m_pTDPage)
    {  // idFrom is actually the HWND of the tool
       CBEMPUIControl* pTDCtrl = eScreenData.GetControlByPageAndID( m_pTDPage, ::GetDlgCtrlID((HWND)nID) );
@@ -1080,7 +1080,7 @@ INT_PTR CSACBEMProcDialog::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
                {
                   HWND hWndChild = pChildWnd->GetSafeHwnd();
          			pTI->hwnd = m_hWnd;
-         			pTI->uId = (UINT)hWndChild;
+         			pTI->uId = (UINT_PTR)hWndChild;
          			pTI->uFlags |= TTF_IDISHWND;
          			pTI->lpszText = LPSTR_TEXTCALLBACK;
 

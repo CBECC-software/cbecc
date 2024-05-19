@@ -63,7 +63,8 @@ static char szBEMRulPrcVersion[]      = "BEMRulPrc-3.00";
 // SAC 8/20/15 - Struct Version 16 -> 17:  switched CRuleSetTransformation long/short group names from single strings to arrays
 // SAC 8/5/16  - Struct Version 17 -> 18:  no structural change, just migration to open source dependent executables
 // SAC 12/29/16- Struct Version 18 -> 19:  addition of flag near beginning of file documenting whether ruleset was compiled by a "secure" version of code
-static int  siCurBEMRulPrcFileStructVersion = 19;  // this is what always gets written to newly created ruleset bin files
+// SAC 09/24/21- Struct Version 19 -> 20:  addition to class RuleList of m_hardwireEnumStrVal (-1 ruleset default / 0 Value / 1 String) (MFam)
+static int  siCurBEMRulPrcFileStructVersion = 20;  // this is what always gets written to newly created ruleset bin files
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1520,6 +1521,11 @@ BOOL BEMProcObject::decompileBinBEMProc( const char* pszBinFileName, BOOL bOnlyS
             }
 
             file.Read( &iData, sizeof( int ) );			pClass->setNumChildTypes( iData );
+
+            file.Read( &iData, sizeof( int ) );       // to facilitate data model backward compatibility by tracking re-named classes - SAC 07/29/21 (MFam)
+            for (j=0; j<iData; j++)
+            {  file.ReadQString( str );		pClass->addPreviousName( str );
+            }
          }
          //if (!bOnlySymbols)
          //   m_iNumClasses = iNumClasses;
@@ -1752,19 +1758,20 @@ BOOL BEMProcObject::decompileBinBEMProc( const char* pszBinFileName, BOOL bOnlyS
 
 /////////////////////////////////////////////////////////////////////////////
 
-static BOOL ReadBEMBaseText( const char* sBEMFileName );
-static BOOL ReadBEMEnumsText( std::vector<CASymLst*>& aSymLists, const char* sBEMFileName );
+static BOOL ReadBEMBaseText( const char* sBEMFileName, QStringList* pslAltPaths /*=NULL*/ );    // pslAltPaths - SAC 07/29/21 (MFam)
+static BOOL ReadBEMEnumsText( std::vector<CASymLst*>& aSymLists, const char* sBEMFileName, QStringList* pslAltPaths /*=NULL*/ );    // pslAltPaths - SAC 08/03/21 (MFam)
 static BOOL WriteCompiledBEMProc( const char* pszBEMBinFileName, std::vector<CASymLst*>& aSymLists );
 
 BOOL BEMPX_CompileDataModel(	const char* sBEMFileName, const char* sEnumsFileName,
-										const char* sBEMBinFileName /*=NULL*/, QString* psClassPropMsg /*=NULL*/ )
+										const char* sBEMBinFileName /*=NULL*/, QString* psClassPropMsg /*=NULL*/,
+                              QStringList* pslAltPaths /*=NULL*/ )      // pslAltPaths - SAC 07/29/21 (MFam)
 {
 	if (psClassPropMsg)
 		psClassPropMsg->clear();
 //	CASymLstList sllSymbols;
 //   if (ReadAsciiBEMProc( sBEMFileName ) && sllSymbols.ReadText( sSymFileName ))
    std::vector<CASymLst*> aSymLists;      // vector of CASymLst ptrs
-	BOOL bRetVal = (ReadBEMBaseText( sBEMFileName ) && ReadBEMEnumsText( aSymLists, sEnumsFileName ));
+	BOOL bRetVal = (ReadBEMBaseText( sBEMFileName, pslAltPaths ) && ReadBEMEnumsText( aSymLists, sEnumsFileName, pslAltPaths ));
 	if (bRetVal)
 	{
       int iError, iNumClasses = BEMPX_GetNumClasses();
@@ -1841,43 +1848,27 @@ BOOL BEMPX_CompileDataModel(	const char* sBEMFileName, const char* sEnumsFileNam
 
 /////////////////////////////////////////////////////////////////////////////
 
-BOOL ReadBEMBaseText( const char* sBEMFileName )
-{
-   BOOL bRetVal = TRUE;
+int ReadBEMBaseClasses( BEMProcObject* pBEMProc, BEMTextIO* pFile, QStringList* pslPaths, int iInitFileVer, int& iClassSize,
+                        int& iPropTypeSize, int& iClassIdx, int& iOverallPropIdx, BOOL& bRetVal )
+{  int iRecHdr = 0;
 
-//   // clear out BEMProc static arrays
-//   ClearBEMProcArrays();
-//   soaClasses.SetSize( 100, 20 );
-//   soaPropTypes.SetSize( 1000, 100 );
-   BEMProcObject* pBEMProc = getBEMProcPointer( -1 /*iBEMProcIdx*/ );		assert( pBEMProc );
-	int iClassSize=100, iPropTypeSize=1000;
-	pBEMProc->resizeClasses( iClassSize );
-	pBEMProc->resizePropertyTypes( iPropTypeSize );
-
-   try
-   {  // open file
-      BEMTextIO file( sBEMFileName, BEMTextIO::load );
-
-      try
-      {
          BEMClass* pClass = NULL;
          BEMPropertyType* pPT = NULL;
-         int iClassIdx = 0;
+         //int iClassIdx = 0;
          int iClassPropIdx = 0;
-         int iOverallPropIdx = 0;
-         int iRecHdr = (int) file.ReadLong();   // read first record header value
-
+         //int iOverallPropIdx = 0;
+         iRecHdr = (int) pFile->ReadLong();   // read first record header value
 			// interpret a first header value > 1000 as a version number vs. as a standard record header
-         int iFileVersion = 1;
+         int iFileVersion = iInitFileVer;
          if (iRecHdr > 1000)
          {
             iFileVersion = iRecHdr - 1000;
-            iRecHdr = (int) file.ReadLong();   // read next (first) record header value
+            iRecHdr = (int) pFile->ReadLong();   // read next (first) record header value
          }
 
          while (iRecHdr >= 0)
          {
-            file.PostReadToken();
+            pFile->PostReadToken();
             if (iRecHdr == 0)  // Class record
             {
                // incrament ClassIdx and reset ClassPropIdx
@@ -1894,7 +1885,7 @@ BOOL ReadBEMBaseText( const char* sBEMFileName )
                if (pClass)
                {	pClass->clear();
                   // read class data from text file
-                  pClass->ReadText( file, iFileVersion );
+                  pClass->ReadText( *pFile, iFileVersion );
 
                   // Set some Class data
                   pClass->set1BEMClassIdx( iClassIdx );
@@ -1992,7 +1983,11 @@ BOOL ReadBEMBaseText( const char* sBEMFileName )
 	               iOverallPropIdx++;
 
 						// read PropType data from text file
-                  pPT->ReadText( file, iFileVersion );
+                  QString qsPTErrMsg;     // SAC 06/30/21
+                  if (!pPT->ReadText( *pFile, iFileVersion, qsPTErrMsg ))
+                  {	BEMMessageBox( QString("Error reading/parsing class '%1' property '%2':  %3").arg(pClass->getShortName(), pPT->getShortName(), qsPTErrMsg), "", 2 /*warning*/ );
+							bRetVal = FALSE;
+                  }
 
                   // Set some PropType data
                   pPT->set1ClassIdx( iClassIdx );
@@ -2021,14 +2016,95 @@ BOOL ReadBEMBaseText( const char* sBEMFileName )
                   }
                }
             }
+            else if (iRecHdr == 2)  // BEMBase Include File record - SAC 07/29/21 (MFam)
+            {
+               QString qsBEMIncludeFN = pFile->ReadString();   pFile->PostReadToken();
+               QString qsBEMIncludeFNBase = qsBEMIncludeFN;
+               int iPathIdx=-1;
+               while (!FileExists( qsBEMIncludeFN.toLocal8Bit().constData() ) && ++iPathIdx < pslPaths->size())
+                  qsBEMIncludeFN = QString( "%1%2" ).arg( pslPaths->at(iPathIdx), qsBEMIncludeFNBase );
+               if (!FileExists( qsBEMIncludeFN.toLocal8Bit().constData() ))
+               {  BEMMessageBox( QString( "BEMBase include file '%1' not found" ).arg( qsBEMIncludeFNBase ), "", 2 /*warning*/ );
+                  bRetVal = FALSE;
+               }
+               else
+               {  try
+                  {  // open include file
+                     BEMTextIO incFile( qsBEMIncludeFN.toLocal8Bit().constData(), BEMTextIO::load );
+                     try
+                     {
+                        iRecHdr = ReadBEMBaseClasses( pBEMProc, &incFile, pslPaths, iFileVersion, iClassSize, iPropTypeSize, iClassIdx, iOverallPropIdx, bRetVal );     // recursive - SAC 07/30/21
+                        if (iRecHdr != -1)
+                           bRetVal = FALSE;
+                     }
+               		catch (std::exception& e)
+               		{
+               			QString msg = QString( "Error Reading BEM Data Model source data.\nFrom File: %1\n\t - cause: %2\n" ).arg( qsBEMIncludeFN.toLocal8Bit().constData(), e.what() );
+               			std::cout << msg.toLocal8Bit().constData();
+                        BEMMessageBox( msg, "", 2 /*warning*/ );
+                        bRetVal = FALSE;
+               		}
+               	 	catch (...)
+               	  	{
+               			QString msg = QString( "Error Reading BEM Data Model source data.\nFrom File: %1\n" ).arg( qsBEMIncludeFN.toLocal8Bit().constData() );
+               			std::cout << msg.toLocal8Bit().constData();
+                        BEMMessageBox( msg, "", 2 /*warning*/ );
+                        bRetVal = FALSE;
+                  } 	}
+               	catch (std::exception& e)
+               	{
+               		std::cout << "Error opening file: " << qsBEMIncludeFN.toLocal8Bit().constData() << "  - cause: " << e.what() << '\n';
+                     bRetVal = FALSE;
+               	}
+                	catch (...)
+                 	{
+               	   std::cout << "Error opening file: " << qsBEMIncludeFN.toLocal8Bit().constData() << '\n';
+                     bRetVal = FALSE;
+               	}
+            }  }
             else
                assert( FALSE );
 
-            iRecHdr = (int) file.ReadLong();   // read next record header value
+            iRecHdr = (int) pFile->ReadLong();   // read next record header value
          }
 //         // Set array sizes so that future GetSize() calls return the exact size
 //         soaClasses.SetSize( iClassIdx );
 //         soaPropTypes.SetSize( iOverallPropIdx );
+
+   return iRecHdr;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+BOOL ReadBEMBaseText( const char* sBEMFileName, QStringList* pslAltPaths /*=NULL*/ )      // pslAltPaths - SAC 07/29/21 (MFam)
+{
+   BOOL bRetVal = TRUE;
+
+//   // clear out BEMProc static arrays
+//   ClearBEMProcArrays();
+//   soaClasses.SetSize( 100, 20 );
+//   soaPropTypes.SetSize( 1000, 100 );
+   BEMProcObject* pBEMProc = getBEMProcPointer( -1 /*iBEMProcIdx*/ );		assert( pBEMProc );
+	int iClassSize=100, iPropTypeSize=1000;
+	pBEMProc->resizeClasses( iClassSize );
+	pBEMProc->resizePropertyTypes( iPropTypeSize );
+
+   try
+   {  // open file
+      BEMTextIO file( sBEMFileName, BEMTextIO::load );
+
+      QStringList qslPaths;
+      if (pslAltPaths == NULL)
+         pslAltPaths = &qslPaths;
+      QString qsBEMFName = sBEMFileName;
+      int iPathLen = std::max( qsBEMFName.lastIndexOf('\\'), qsBEMFName.lastIndexOf('/') );
+      if (iPathLen > 0)
+         pslAltPaths->insert( 0, qsBEMFName.left( iPathLen+1 ) );
+
+      try
+      {  int iClassIdx = 0;
+         int iOverallPropIdx = 0;
+         int iRecHdr = ReadBEMBaseClasses( pBEMProc, &file, pslAltPaths, 1 /*iInitFileVer*/, iClassSize, iPropTypeSize, iClassIdx, iOverallPropIdx, bRetVal );     // split out class reading routine to facilitate include file processing - SAC 07/28/21 (MFam)
 
          if (iRecHdr != -1)
             bRetVal = FALSE;
@@ -2084,14 +2160,47 @@ long ReadDBID( BEMTextIO& symFile )  //, CFile& errorFile )
    return lDBID;
 }
 
-BOOL ReadBEMEnumsText( std::vector<CASymLst*>& aSymLists, const char* sBEMFileName )
+bool FindIncludeFile( QString& sFilename, QStringList* pslPaths )    // SAC 08/03/21
+{  bool bRetVal = false;
+   if (FileExists( sFilename.toLocal8Bit().constData() ))
+      bRetVal = true;
+   else
+   {
+      QString qsFNBase = sFilename;
+               int iPathIdx=-1;
+               while (!FileExists( sFilename.toLocal8Bit().constData() ) && ++iPathIdx < pslPaths->size())
+                  sFilename = QString( "%1%2" ).arg( pslPaths->at(iPathIdx), qsFNBase );
+               if (FileExists( sFilename.toLocal8Bit().constData() ))
+                  bRetVal = true;
+               else
+               {  //BEMMessageBox( QString( "BEM? file '%1' not found" ).arg( qsFNBase ), "", 2 /*warning*/ );
+                  sFilename = qsFNBase;  // restore original filename
+   }           }
+   return bRetVal;
+}
+
+BOOL ReadBEMEnumsText( std::vector<CASymLst*>& aSymLists, const char* sBEMFileName, QStringList* pslAltPaths /*=NULL*/ )      // pslAltPaths - SAC 08/03/21 (MFam)
 {	BOOL bRetVal = TRUE;
+
+      QStringList qslPaths;
+      if (pslAltPaths == NULL)
+         pslAltPaths = &qslPaths;
+      QString qsBEMFName = sBEMFileName;
+      int iPathLen = std::max( qsBEMFName.lastIndexOf('\\'), qsBEMFName.lastIndexOf('/') );
+      if (iPathLen > 0)
+         pslAltPaths->insert( 0, qsBEMFName.left( iPathLen+1 ) );
 
 		// what used to be ReadBEMEnumsText( &aSymLists, sEnumsFileName ) function
 		QStringList saEnumFiles;
 		saEnumFiles.push_back( sBEMFileName );
 		for (int iEF=0; (bRetVal && iEF < (int) saEnumFiles.size()); iEF++)
 		{
+         if (!FindIncludeFile( saEnumFiles[iEF], pslAltPaths ))
+         {  assert( false );
+            BEMMessageBox( QString( "BEMEnums file '%1' not found" ).arg( saEnumFiles[iEF] ), "", 2 /*warning*/ );
+         }
+         else
+         {
    		try
    		{  // open file
    		   BEMTextIO file( saEnumFiles[iEF].toLocal8Bit().constData(), BEMTextIO::load );
@@ -2163,14 +2272,14 @@ BOOL ReadBEMEnumsText( std::vector<CASymLst*>& aSymLists, const char* sBEMFileNa
 								{	assert( FALSE );	// post error or just ignore blank enum filename ???
 								}
 								else
-								{	if (sEnumFile.indexOf(':') < 0 || sEnumFile.indexOf( '\\' ) != 0)
-									{	if (saEnumFiles[iEF].lastIndexOf('\\') > 0)
-											sEnumFile = saEnumFiles[iEF].left( saEnumFiles[iEF].lastIndexOf('\\')+1 ) + sEnumFile;
-									}
-									if (!FileExists( sEnumFile.toLocal8Bit().constData() ))
-									{	assert( FALSE );	// post error or just ignore missing enum file ???
-									}
-									else
+								{	//if (sEnumFile.indexOf(':') < 0 || sEnumFile.indexOf( '\\' ) != 0)   - removed path addition and existence check, now done later - SAC 08/03/21
+									//{	if (saEnumFiles[iEF].lastIndexOf('\\') > 0)
+									//		sEnumFile = saEnumFiles[iEF].left( saEnumFiles[iEF].lastIndexOf('\\')+1 ) + sEnumFile;
+									//}
+									//if (!FileExists( sEnumFile.toLocal8Bit().constData() ))
+									//{	assert( FALSE );	// post error or just ignore missing enum file ???
+									//}
+									//else
 										saEnumFiles.push_back( sEnumFile );
 								}
 							}
@@ -2240,6 +2349,7 @@ BOOL ReadBEMEnumsText( std::vector<CASymLst*>& aSymLists, const char* sBEMFileNa
    	      BEMMessageBox( msg, "", 2 /*warning*/ );
    	      bRetVal = FALSE;
 		  	}
+         }
 		}  // end of loop over each enumerations file
 
 	return bRetVal;
@@ -2376,7 +2486,8 @@ void WriteSymbolsToText( QString sFileName, std::vector<CASymLst*>& aSymLists )
 static bool WriteCompiledRuleset( LPCSTR fileName, QFile& errorFile );
 
 BOOL BEMPX_CompileRuleset(	const char* sBEMBinFileName, const char* sPrimRuleFileName, const char* sCompiledRuleFileName,
-									const char* sLogFileName /*=NULL*/, QString* psRuleCompileMsg/*=NULL*/ )
+									const char* sLogFileName /*=NULL*/, QString* psRuleCompileMsg /*=NULL*/,
+                           QStringList* pslAltPaths /*=NULL*/ )      // pslAltPaths - SAC 08/06/21 (MFam) 
 {
 	BOOL bRetVal = TRUE;
 
@@ -2395,7 +2506,7 @@ BOOL BEMPX_CompileRuleset(	const char* sBEMBinFileName, const char* sPrimRuleFil
 			fileLog.write( readMsg.toLocal8Bit().constData(), readMsg.length() );
 
 			QString fileNameString = sPrimRuleFileName;
-			RuleFile file( fileNameString );   // create and open ruleset file
+			RuleFile file( fileNameString, pslAltPaths );   // create and open ruleset file
 
 			fileNameString.replace('\\', '/');
 			int iPathLen = fileNameString.lastIndexOf('/');

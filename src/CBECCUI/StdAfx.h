@@ -45,6 +45,8 @@
 
 #include <assert.h> 
 
+#include <stdexcept>    // SAC 10/13/20
+
 #pragma warning(disable : 4127)
 #include <QtCore/QString.h>
 #include <QtCore/QStringList.h>

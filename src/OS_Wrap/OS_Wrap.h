@@ -132,6 +132,7 @@ typedef struct
 	bool bSimulateModel;
 	bool bStoreHourlyResults;
 	bool bWriteHourlyDebugCSV;
+	bool bWriteCustomMetersHourlyCSV;    // SAC 10/04/21
 	long lRptFuelUseAs;		// SAC 10/28/15
 	long lRunPeriodYear;				// SAC 3/1/19
 	QuickAnalysisInfo* pQuickAnalysisInfo;
@@ -501,8 +502,8 @@ namespace OS_Wrap {
 												OSWRAP_MSGCALLBACK* pMsgCallback=NULL, int iMsgCallbackType=0,
 												char* pszErrorMsg=NULL, int iErrorMsgLen=0, int iCodeType=0, double dEPlusVerNum=-1 );
 
-// TESTING/DEBUGGING
 		long HourlyResultsRetrieval( const char* pszOSMPathFile, const char* pszSQLPathFile );
+		long ExportHourlyCustomMeters( const char* pszOSMPathFile, const char* pszSQLPathFile );     // SAC 09/28/21
 
 	private:
       OSWrapLibData* pData[OSW_MaxNumSims];

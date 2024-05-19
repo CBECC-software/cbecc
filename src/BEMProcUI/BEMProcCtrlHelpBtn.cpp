@@ -145,7 +145,7 @@ void CBEMProcCtrlHelpBtn::OnLButtonUp( UINT nFlags, CPoint point )
    CButtonST::OnLButtonUp( nFlags, point );
 
    if (m_iHelpGroupIdx >= 0)
-      GetParentFrame()->SendMessage( WM_HELP_BTN_PRESSED, m_iHelpGroupIdx, (long) this );  // pPar );
+      GetParentFrame()->SendMessage( WM_HELP_BTN_PRESSED, m_iHelpGroupIdx, (ULONG_PTR) this );  // pPar );
 }
 
 void CBEMProcCtrlHelpBtn::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
@@ -154,5 +154,5 @@ void CBEMProcCtrlHelpBtn::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
    CButtonST::OnKeyUp( nChar, nRepCnt, nFlags );
 
    if (nChar == VK_SPACE  &&  m_iHelpGroupIdx >= 0)
-      GetParentFrame()->SendMessage( WM_HELP_BTN_PRESSED, m_iHelpGroupIdx, (long) this );  // pPar );
+      GetParentFrame()->SendMessage( WM_HELP_BTN_PRESSED, m_iHelpGroupIdx, (ULONG_PTR) this );  // pPar );
 }

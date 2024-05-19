@@ -612,8 +612,11 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 
 //#ifdef _DEBUG
 		if (!bRetVal && sErrMsg.isEmpty())
-		{	QString sErr = QObject::tr("%1\nLine %2, column %3")
-														.arg(stream.errorString())
+		{	QString sStrmErr = stream.errorString();
+         if (sStrmErr.isEmpty())
+            sStrmErr = QString( "Error encountered parsing Title24 report XML file:  %1" ).arg( sFileName );
+         QString sErr = QObject::tr("%1\nLine %2, column %3")
+														.arg(sStrmErr)
 														.arg(stream.lineNumber())
 														.arg(stream.columnNumber());
 			sErrMsg = sErr.toLocal8Bit().constData();
@@ -815,8 +818,11 @@ int ExtractErrorsFromTitle24ReportXML( const char* xmlFileName, QString& sErrors
 
 //#ifdef _DEBUG
 		if (iRetVal < 0 && sErrMsg.isEmpty())
-		{	QString sErr = QObject::tr("%1\nLine %2, column %3, return %4")
-														.arg(stream.errorString())
+		{	QString sStrmErr = stream.errorString();
+         if (sStrmErr.isEmpty())
+            sStrmErr = QString( "Error encountered extracting errors from Title24 report XML file:  %1" ).arg( sFileName );
+         QString sErr = QObject::tr("%1\nLine %2, column %3, return %4")
+														.arg(sStrmErr)
 														.arg(stream.lineNumber())
 														.arg(stream.columnNumber())
 														.arg(iRetVal);

@@ -701,7 +701,7 @@ void CButtonCtl::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
 // SAC 6/22/00 - replaced above w/ below to enable more flexible pushbutton processing
 //      GetParentFrame()->PostMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (long) pPar );
 // SAC 6/27/01 - revised button press message to return value indicating whether or not data was changed
-      int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (long) pPar );
+      int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (LPARAM) pPar );
       if (iBtnPressRetVal > 0)
       {
          // Post-processing following mods
@@ -807,7 +807,7 @@ void CButtonCtl::OnLButtonUp( UINT nFlags, CPoint point )
 // SAC 6/22/00 - replaced above w/ below to enable more flexible pushbutton processing
 //      GetParentFrame()->PostMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (long) pPar );
 // SAC 6/27/01 - revised button press message to return value indicating whether or not data was changed
-      int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (long) pPar );
+      int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (LPARAM) pPar );
       if (iBtnPressRetVal > 0)
       {
          // Post-processing following mods

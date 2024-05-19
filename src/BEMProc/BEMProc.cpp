@@ -1658,22 +1658,34 @@ int BEMPX_GetClassIndexByLongName(LPCSTR lpszName)
 }
 
 int BEMP_GetClassIndexByLongName( QString& sName )
-{
-  	for (int index = 0; index < eBEMProc.getNumClasses(); index++)
+{  int index;
+  	for (index = 0; index < eBEMProc.getNumClasses(); index++)
   	{	// check for matching long class name
   		if (sName.compare( eBEMProc.getClass( index )->getLongName(), Qt::CaseInsensitive ) == 0)		// SAC 7/10/12 - switched to NoCase comparison
   			return (index+1);
   	}
+  	for (index = 0; index < eBEMProc.getNumClasses(); index++)     // loop to check 'previous' names (if primary name match not found) - SAC 08/05/21 (MFam)
+  	{	int iNumPrevNames = eBEMProc.getClass( index )->getNumPreviousNames();
+      for (int iPN=0; iPN < iNumPrevNames; iPN++)
+     		if (sName.compare( eBEMProc.getClass( index )->getPreviousName( iPN ), Qt::CaseInsensitive ) == 0)	
+     			return (index+1);
+  	}
 	return -1;
 }
 
-static int GetClassIndexByShortName( QString& sName )
-{
-  	for (int index = 0; index < eBEMProc.getNumClasses(); index++)
+static int GetClassIndexByShortName( QString& sName, bool bCheckPrevNames )
+{  int index;
+  	for (index = 0; index < eBEMProc.getNumClasses(); index++)
   	{	// check for matching short class name
   		if (sName.compare( eBEMProc.getClass( index )->getShortName(), Qt::CaseInsensitive ) == 0)		// SAC 7/10/12 - switched to NoCase comparison
 //  		if (eBEMProc.getClass( index )->getShortName().CompareNoCase( lpszName ) == 0)		// SAC 7/10/12 - switched to NoCase comparison
   			return (index+1);
+  	}
+  	for (index = 0; (bCheckPrevNames && index < eBEMProc.getNumClasses()); index++)     // loop to check 'previous' names (if primary name match not found) - SAC 08/05/21 (MFam)
+  	{	int iNumPrevNames = eBEMProc.getClass( index )->getNumPreviousNames();
+      for (int iPN=0; iPN < iNumPrevNames; iPN++)
+     		if (sName.compare( eBEMProc.getClass( index )->getPreviousName( iPN ), Qt::CaseInsensitive ) == 0)	
+     			return (index+1);
   	}
 	return -1;
 }
@@ -1704,7 +1716,7 @@ int BEMPX_GetDBComponentID( const char* psDBComp )
 int BEMP_GetDBComponentID( QString& sDBComp )
 {
    // first try matching against short names
-   int iRetVal = GetClassIndexByShortName( sDBComp );
+   int iRetVal = GetClassIndexByShortName( sDBComp, false );
    if (iRetVal <= 0)  // check against long names only if short name match not found
       iRetVal = BEMP_GetClassIndexByLongName( sDBComp );
    return iRetVal;
@@ -1854,7 +1866,8 @@ long BEMP_GetDBParameterID( QString& sInputParam, long iCompID )
 // SAC - 3/12/98 - Added to enable RulPrc to access Comp:Param[Arr] strings
 //                 from a DBID
 /////////////////////////////////////////////////////////////////////////////
-void BEMPX_DBIDToDBCompParamString( long lDBID, QString& sCompParam, bool bLongNames /*=false*/ )	// SAC 8/13/13
+void BEMPX_DBIDToDBCompParamString( long lDBID, QString& sCompParam, bool bLongNames /*=false*/,	// SAC 8/13/13
+                                    int iPrevClassNameIdx /*=-1*/ )     // SAC 08/05/21
 {
    sCompParam.clear();
    int iClass = BEMPX_GetClassID(    lDBID );
@@ -1864,7 +1877,10 @@ void BEMPX_DBIDToDBCompParamString( long lDBID, QString& sCompParam, bool bLongN
       sCompParam = QString("DBID=%1 Not Found").arg(QString::number(lDBID));
    else
    {
-      sCompParam = (bLongNames ? eBEMProc.getClass( iClass-1 )->getLongName() : eBEMProc.getClass( iClass-1 )->getShortName());		// SAC 8/13/13
+      if (iPrevClassNameIdx >= 0 && eBEMProc.getClass( iClass-1 )->getNumPreviousNames() > iPrevClassNameIdx)     // SAC 08/05/21 (MFam)
+         sCompParam = eBEMProc.getClass( iClass-1 )->getPreviousName( iPrevClassNameIdx );
+      else
+         sCompParam = (bLongNames ? eBEMProc.getClass( iClass-1 )->getLongName() : eBEMProc.getClass( iClass-1 )->getShortName());		// SAC 8/13/13
       sCompParam += ':';
       if (iProp > 0)
       {
@@ -2136,8 +2152,9 @@ BEMObject* BEMPX_CreateObject( int i1Class, LPCSTR lpszName, BEMObject* pParent,
 //   
 /////////////////////////////////////////////////////////////////////////////
 bool BEMPX_CopyComponent( BEMObject* pDestObj, BEMObject* pSrcObj, int iBEMProcIdx /*=-1*/,
-									bool bCopyPrimaryDefaultDataAsUserDefined /*=false*/ )		// SAC 6/8/15 - CBECC issue 1061
-{	return (pDestObj && pDestObj->CopyObject( pSrcObj, (iBEMProcIdx < 0 ? eActiveBEMProcIdx : iBEMProcIdx), bCopyPrimaryDefaultDataAsUserDefined ));
+									bool bCopyPrimaryDefaultDataAsUserDefined /*=false*/, 		// SAC 6/8/15 - CBECC issue 1061
+                           bool bCopyChildren /*=false*/ )      // added bCopyChildren to both make this object a child of the original object's parent + copy its children - SAC 01/28/21 (Com tic #3232)
+{	return (pDestObj && pDestObj->CopyObject( pSrcObj, (iBEMProcIdx < 0 ? eActiveBEMProcIdx : iBEMProcIdx), bCopyPrimaryDefaultDataAsUserDefined, bCopyChildren ));
 }
 
 
@@ -3190,7 +3207,7 @@ double  BEMPX_GetFloatAndStatus(   long lDBID, int& iStatus, int& iSpecialVal, i
 												if (pObj && pObj->getClass())
 												{	iStatus = pProp->getDataStatus();
 													if (iStatus > 0)
-														dRetVal = (double) (BEMPX_GetObjectIndex( pObj->getClass(), pObj, iBEMProcIdx ) + 1);
+														dRetVal = ((double) BEMPX_GetObjectIndex( pObj->getClass(), pObj, iBEMProcIdx )) + 1.0;
 											}	}
 											break;
 					default			:	assert( false );		// invalid data type for retrieval of Float
@@ -3344,7 +3361,8 @@ QString BEMPX_GetStringAndStatus(  long lDBID, int& iStatus, int& iSpecialVal, i
 														QDateTime utc = dt.toUTC();
 														utc.setTimeSpec(Qt::LocalTime);
 														int utcOffset = utc.secsTo(dt);
-														dt.setUtcOffset(utcOffset);
+														//dt.setUtcOffset(utcOffset);
+                                          dt.setOffsetFromUtc(utcOffset);  //VS19 - SAC 10/27/20
 														sRetVal = dt.toString(Qt::ISODate);
 													}
 													else
@@ -3766,7 +3784,7 @@ int BEMPX_SetBEMData( long lDBID, int iDataType, void* pData, BEM_ObjType eObjFr
                else  // couldn't find parent object
                {	iRetVal = -11;
 						if (pszErrMsg && iErrMsgLen > 4)  // SAC 4/10/13 - error message return
-						{	if (_snprintf_s( pszErrMsg, iErrMsgLen, _TRUNCATE, "Unable to find parent object '%s' (class ID %d)", sObjName /*(const char*) pData*/, i1Class ) == -1)
+						{	if (_snprintf_s( pszErrMsg, iErrMsgLen, _TRUNCATE, "Unable to find parent object '%s' (class ID %d)", sObjName.toLocal8Bit().constData() /*(const char*) pData*/, i1Class ) == -1)
 								AppendEllipsis( pszErrMsg, iErrMsgLen );
 					}	}
             }

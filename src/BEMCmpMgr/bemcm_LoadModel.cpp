@@ -924,6 +924,28 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 			BEMPX_OpenLogFile( sLogFN.toLocal8Bit().constData() );
 		}
 
+		// SAC 12/12/20 - setup enum (symbol) list for Proj:ReplaceRuleTable
+		long lDBID_Proj_ReplaceRuleTable = BEMPX_GetDatabaseID( "ReplaceRuleTable", 1 /*eiBDBCID_Proj*/ );
+      if (lDBID_Proj_ReplaceRuleTable < 1)
+		   lDBID_Proj_ReplaceRuleTable = BEMPX_GetDatabaseID( "ResProj:ReplaceRuleTable" );
+		if (lDBID_Proj_ReplaceRuleTable > 0)
+		{
+			QVector<QString> svRulesetTableNames;
+			int iNumTbls = BEMPX_GetRulesetTableNames( svRulesetTableNames );
+			if (iNumTbls > 0)
+			{
+				int iNumReset = 0;
+				void* pBDBSL = BEMPX_OverwriteSymbolList( lDBID_Proj_ReplaceRuleTable );
+				if (pBDBSL)
+				{
+					void* pBDBSDL = BEMPX_AddSymbolDepList( pBDBSL, 0, 0, -1.0, 0, -1.0 );
+					if (pBDBSDL)
+					{	BEMPX_AddSymbol( pBDBSDL , 0, "- none -" );
+      				for (int iTbl=1; iTbl<=iNumTbls; iTbl++)
+      					BEMPX_AddSymbol( pBDBSDL , iTbl, svRulesetTableNames[iTbl-1].toLocal8Bit().constData() );
+			}	}	}
+		}
+
 		long lDBID_Proj_BEMVersion = BEMPX_GetDatabaseID( "BEMVersion", 1 /*eiBDBCID_Proj*/ );
 		if (lDBID_Proj_BEMVersion < 1)
 			lDBID_Proj_BEMVersion = BEMPX_GetDatabaseID( "BldgEngyModelVersion", 1 /*eiBDBCID_Proj*/ );  // same property, but using std non-res SDD abbreviations

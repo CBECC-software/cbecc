@@ -275,7 +275,7 @@ BOOL CToolTipMsg::Read( CTextIO& file )
 		{  CString sLine;
    	   sLine.Format( "%d", file.GetLineCount() );
    	   CString sErr;
-   	   sErr.Format( "\tParameter '%s' Not Found on line: ", sName );
+   	   sErr.Format( "\tParameter '%s' Not Found on line: ", ((const char*) sName) );
    	   sErr += sLine;
    	   sErr += CString("\r\n");
    	   ::MessageBox( NULL, sErr, NULL, MB_ICONEXCLAMATION );

@@ -96,6 +96,8 @@ public:
 //	void SetRuleText(     QString sRT ) 	{	sRuleText     = sRT ;  }
 //	void SetRuleBin(      QString sRB ) 	{	sRuleBin      = sRB ;  }
 //	void SetRuleLog(      QString sRL ) 	{	sRuleLog      = sRL ;  }
+	void SetSP1Text(      QString sSP ) 	{	sp1TextEdit->setPlainText(        sSP  );  }
+	void SetSP2Text(      QString sSP ) 	{	sp2TextEdit->setPlainText(        sSP  );  }
 	void SetBEMBaseText(  QString sBT ) 	{	dmDefsTextEdit->setPlainText(     sBT  );  }
 	void SetBEMEnumsText( QString sBET )	{	dmEnumsTextEdit->setPlainText(    sBET );  }
 	void SetBEMBaseBin(   QString sBB ) 	{	dmCompiledTextEdit->setPlainText( sBB  );  }
@@ -106,6 +108,8 @@ public:
 	int  compileAll( bool bDataModel=false, bool bRuleset=false, bool bCommandLine=false, int iGUIOption=2 );
 
 private slots:
+	void browseSP1();
+	void browseSP2();
 	void browseDMDefs();
 	void browseDMEnums();
 	void browseDMCompiled();
@@ -126,12 +130,17 @@ private:
 	QTextEdit *createTextEdit(const QString &text = QString());
 	QPushButton *createButton(const QString &text, const char *member);
 
+	QTextEdit *sp1TextEdit;
+	QTextEdit *sp2TextEdit;
 	QTextEdit *dmDefsTextEdit;
 	QTextEdit *dmEnumsTextEdit;
 	QTextEdit *dmCompiledTextEdit;
 	QTextEdit *rlPrimTextEdit;
 	QTextEdit *rlCompiledTextEdit;
 	QTextEdit *rlLogTextEdit;
+	QLabel *spSpacerLabel;
+	QLabel *spSpacer2Label;
+	QLabel *spLabel;
 	QLabel *dmCompilerLabel;
 	QLabel *dmDefsLabel;
 	QLabel *dmEnumsLabel;
@@ -142,6 +151,8 @@ private:
 	QLabel *rlCompiledLabel;
 	QLabel *rlLogLabel;
 	QLabel *rlSpacerLabel;
+	QPushButton *sp1BrowseButton;
+	QPushButton *sp2BrowseButton;
 	QPushButton *dmDefsBrowseButton;
 	QPushButton *dmEnumsBrowseButton;
 	QPushButton *dmCompiledBrowseButton;

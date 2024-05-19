@@ -54,7 +54,7 @@ struct CBEMPUIPage;
 // CBEMCondition
 ///////////////////////////////////////////////////////////////
 
-#define  MAX_BEM_CONDITIONS  5
+#define  MAX_BEM_CONDITIONS  10    // 5->10 - SAC 07/26/21
 
 struct CBEMCondition
 {

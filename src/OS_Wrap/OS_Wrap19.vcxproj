@@ -22,31 +22,32 @@
     <ProjectGuid>{F8C0FD47-9EBD-4A5B-ADEB-4BEC4D4F271C}</ProjectGuid>
     <RootNamespace>OS_Wrap19</RootNamespace>
     <Keyword>ManagedCProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
@@ -70,32 +71,32 @@
     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\..\bin\Debug_VC12\</OutDir>
-    <IntDir>..\..\bin\OS_Wrap19_VC12\Win32\Debug\</IntDir>
+    <OutDir>..\..\bin\Debug_VC142\</OutDir>
+    <IntDir>..\..\bin\OS_Wrap_VC142\19\x86\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>..\..\bin\OS_Wrap19_VC12\x64\Debug\</IntDir>
-    <OutDir>..\..\bin\Debug_VC12x64\</OutDir>
+    <IntDir>..\..\bin\OS_Wrap_VC142\19\x64\Debug\</IntDir>
+    <OutDir>..\..\bin\Debug_VC142x64\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>..\..\bin\Release_VC12\</OutDir>
-    <IntDir>..\..\bin\OS_Wrap19_VC12\Win32\Release\</IntDir>
+    <OutDir>..\..\bin\Release_VC142\</OutDir>
+    <IntDir>..\..\bin\OS_Wrap_VC142\19\x86\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>..\..\bin\OS_Wrap19_VC12\x64\Release\</IntDir>
-    <OutDir>..\..\bin\Release_VC12x64\</OutDir>
+    <IntDir>..\..\bin\OS_Wrap_VC142\19\x64\Release\</IntDir>
+    <OutDir>..\..\bin\Release_VC142x64\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;..\..\vendor\Qt_5.3\include\QtCore;..\..\vendor\Qt_5.3\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\OSCore-build\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.3\include;..\..\vendor\Qt_5.3\include\QtCore;..\..\vendor\Qt_5.3\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\OSCore-build\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;openstudio_utilities_EXPORTS;openstudio_runmanager_EXPORTS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_FILESYSTEM_VERSION=3;BOOST_LOG_NO_COMPILER_TLS;QT_DEBUG;CMAKE_INTDIR="Debug";COMPILE_OS_WRAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -104,11 +105,11 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_LOG_NO_COMPILER_TLS;QT_DEBUG;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Qt5WebKitd.lib;openstudio_model.lib;openstudio_utilities.lib;openstudio_sdd.lib;openstudio_energyplus.lib;openstudio_gbxml.lib;libboost_filesystem-vc120-mt-gd-1_55.lib;libboost_regex-vc120-mt-gd-1_55.lib;libboost_program_options-vc120-mt-gd-1_55.lib;libboost_system-vc120-mt-gd-1_55.lib;libboost_thread-vc120-mt-gd-1_55.lib;libboost_date_time-vc120-mt-gd-1_55.lib;sqlite.lib;miniziplibd.lib;qtwinmigrate.lib;qtmaind.lib;Qt5Cored.lib;ws2_32.lib;Qt5Guid.lib;imm32.lib;winmm.lib;Qt5Sqld.lib;Qt5Networkd.lib;Qt5Xmld.lib;Qt5XmlPatternsd.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.3\lib\;..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\OpenStudio\Products\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.3\lib\;..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\OpenStudio\Products\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -124,27 +125,29 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.6.1\include;..\..\vendor\Qt_5.6.1\include\QtCore;..\..\vendor\Qt_5.6.1\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\OSCore-build\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\Qt_5.15.0\include\QtCore;..\..\vendor\Qt_5.15.0\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\build-src;..\..\vendor\JsonCpp;..\..\vendor\sqlite3_33;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WIN32;_WIN64;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;openstudio_utilities_EXPORTS;openstudio_runmanager_EXPORTS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_FILESYSTEM_VERSION=3;BOOST_LOG_NO_COMPILER_TLS;QT_DEBUG;CMAKE_INTDIR="Debug";COMPILE_OS_WRAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_LOG_NO_COMPILER_TLS;QT_DEBUG;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;mpr.lib;openstudio_model.lib;openstudio_utilities.lib;openstudio_sdd.lib;openstudio_energyplus.lib;openstudio_gbxml.lib;libboost_filesystem-vc120-mt-gd-1_55.lib;libboost_regex-vc120-mt-gd-1_55.lib;libboost_program_options-vc120-mt-gd-1_55.lib;libboost_system-vc120-mt-gd-1_55.lib;libboost_thread-vc120-mt-gd-1_55.lib;libboost_date_time-vc120-mt-gd-1_55.lib;sqlite.lib;miniziplibd.lib;jsoncpp.lib;qtwinmigrate.lib;ws2_32.lib;imm32.lib;winmm.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib-x64;..\..\bin\vendor\OpenStudio\Products\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <DelayLoadDLLs>openstudio_model.dll;openstudio_utilities.dll;openstudio_sdd.dll;openstudio_energyplus.dll;openstudio_gbxml.dll</DelayLoadDLLs>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;mpr.lib;openstudiolib.lib;libboost_filesystem-vc142-mt-gd-x64-1_74.lib;libboost_regex-vc142-mt-gd-x64-1_74.lib;libboost_program_options-vc142-mt-gd-x64-1_74.lib;libboost_system-vc142-mt-gd-x64-1_74.lib;libboost_thread-vc142-mt-gd-x64-1_74.lib;libboost_date_time-vc142-mt-gd-x64-1_74.lib;sqlite_x64.lib;jsoncpp.lib;ws2_32.lib;imm32.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\OpenStudio\Products\Debug;..\..\bin\vendor\sqlite3_33;..\..\bin\vendor\jsoncpp\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <DelayLoadDLLs>openstudiolib.dll</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -155,10 +158,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;..\..\vendor\Qt_5.3\include\QtCore;..\..\vendor\Qt_5.3\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\OSCore-build\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.3\include;..\..\vendor\Qt_5.3\include\QtCore;..\..\vendor\Qt_5.3\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\OSCore-build\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;openstudio_utilities_EXPORTS;openstudio_runmanager_EXPORTS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_FILESYSTEM_VERSION=3;BOOST_LOG_NO_COMPILER_TLS;QT_NO_DEBUG;CMAKE_INTDIR="Release";COMPILE_OS_WRAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -167,11 +170,11 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_LOG_NO_COMPILER_TLS;QT_NO_DEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Qt5WebKit.lib;openstudio_model.lib;openstudio_utilities.lib;openstudio_sdd.lib;openstudio_energyplus.lib;openstudio_gbxml.lib;libboost_filesystem-vc120-mt-1_55.lib;libboost_regex-vc120-mt-1_55.lib;libboost_program_options-vc120-mt-1_55.lib;libboost_system-vc120-mt-1_55.lib;libboost_thread-vc120-mt-1_55.lib;libboost_date_time-vc120-mt-1_55.lib;sqlite.lib;miniziplib.lib;qtwinmigrate.lib;qtmain.lib;Qt5Core.lib;ws2_32.lib;Qt5Gui.lib;imm32.lib;winmm.lib;Qt5Sql.lib;Qt5Network.lib;Qt5Xml.lib;Qt5XmlPatterns.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.3\lib\;..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\OpenStudio\Products\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.3\lib\;..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\OpenStudio\Products\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -186,25 +189,27 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.6.1\include;..\..\vendor\Qt_5.6.1\include\QtCore;..\..\vendor\Qt_5.6.1\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\OSCore-build\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\Qt_5.15.0\include\QtCore;..\..\vendor\Qt_5.15.0\include\QtWidgets;..\..\vendor\OpenStudio\src;..\..\vendor\OpenStudio\build-src;..\..\vendor\JsonCpp;..\..\vendor\sqlite3_33;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WIN32;_WIN64;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;openstudio_utilities_EXPORTS;openstudio_runmanager_EXPORTS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_FILESYSTEM_VERSION=3;BOOST_LOG_NO_COMPILER_TLS;QT_NO_DEBUG;CMAKE_INTDIR="Release";COMPILE_OS_WRAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;QT_DLL;QT_WEBKIT_LIB;QT_GUI_LIB;QT_XML_LIB;QT_SQL_LIB;QT_NETWORK_LIB;QT_CORE_LIB;BOOST_LOG_NO_COMPILER_TLS;QT_NO_DEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\boost_1_55_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\boost_1_74_0;..\Qt\5.3\include;..\Qt\5.3\include\QtWebKit;..\Qt\5.3\include\QtGui;..\Qt\5.3\include\QtXml;..\Qt\5.3\include\QtSql;..\Qt\5.3\include\QtNetwork;..\Qt\5.3\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;mpr.lib;openstudio_model.lib;openstudio_utilities.lib;openstudio_sdd.lib;openstudio_energyplus.lib;openstudio_gbxml.lib;libboost_filesystem-vc120-mt-1_55.lib;libboost_regex-vc120-mt-1_55.lib;libboost_program_options-vc120-mt-1_55.lib;libboost_system-vc120-mt-1_55.lib;libboost_thread-vc120-mt-1_55.lib;libboost_date_time-vc120-mt-1_55.lib;sqlite.lib;miniziplib.lib;jsoncpp.lib;qtwinmigrate.lib;ws2_32.lib;imm32.lib;winmm.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib-x64;..\..\bin\vendor\OpenStudio\Products\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <DelayLoadDLLs>openstudio_model.dll;openstudio_utilities.dll;openstudio_sdd.dll;openstudio_energyplus.dll;openstudio_gbxml.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;mpr.lib;openstudiolib.lib;libboost_filesystem-vc142-mt-x64-1_74.lib;libboost_regex-vc142-mt-x64-1_74.lib;libboost_program_options-vc142-mt-x64-1_74.lib;libboost_system-vc142-mt-x64-1_74.lib;libboost_thread-vc142-mt-x64-1_74.lib;libboost_date_time-vc142-mt-x64-1_74.lib;sqlite_x64.lib;jsoncpp.lib;ws2_32.lib;imm32.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\OpenStudio\Products\Release;..\..\bin\vendor\sqlite3_33;..\..\bin\vendor\jsoncpp\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <DelayLoadDLLs>openstudiolib.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>

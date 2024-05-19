@@ -852,6 +852,7 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 		long lEnableHPAutosize    = ReadProgInt( "options", "EnableHPAutosize"  , 0 ),	lDBID_Proj_EnableHPAutosize   = BEMPX_GetDatabaseID( "EnableHPAutosize"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableHPAutosize > 0 );	// SAC 6/21/19
 		long lEnableRHERS         = ReadProgInt( "options", "EnableRHERS"       , 0 ),	lDBID_Proj_EnableRHERS        = BEMPX_GetDatabaseID( "EnableRHERS"       , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRHERS      > 0 );	// SAC 10/19/19
 		long lSimulateCentralDHWBranches = ReadProgInt( "options", "SimulateCentralDHWBranches", 1 ),	lDBID_Proj_SimulateCentralDHWBranches = BEMPX_GetDatabaseID( "SimulateCentralDHWBranches", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimulateCentralDHWBranches > 0 );	// SAC 10/30/19		// SAC 11/6/19 - default 0->1
+		long lShuffleSFamDHW      = ReadProgInt( "options", "ShuffleSFamDHW"    ,-1 ),	lDBID_Proj_ShuffleSFamDHW     = BEMPX_GetDatabaseID( "ShuffleSFamDHW"    , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_ShuffleSFamDHW > 0 );	// SAC 05/13/21
 		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
 		if (lEnableVarFlowOAV > 0 &&		lDBID_Proj_EnableVarFlowOAV   > 0)
@@ -872,6 +873,8 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableRHERS     , BEMP_Int, (void*) &lEnableRHERS     , BEMO_User, -1, BEMS_ProgDefault );
 		if (lSimulateCentralDHWBranches == 0 &&	lDBID_Proj_SimulateCentralDHWBranches > 0)		// SAC 11/6/19 - default 0->1
 	      				BEMPX_SetBEMData( lDBID_Proj_SimulateCentralDHWBranches, BEMP_Int, (void*) &lSimulateCentralDHWBranches, BEMO_User, -1, BEMS_ProgDefault );
+		if (lShuffleSFamDHW >= 0 &&	   lDBID_Proj_ShuffleSFamDHW > 0)      // SAC 05/13/21
+	      				BEMPX_SetBEMData( lDBID_Proj_ShuffleSFamDHW, BEMP_Int, (void*) &lShuffleSFamDHW, BEMO_User, -1, BEMS_ProgDefault );
 		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 - added
 		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
 	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );

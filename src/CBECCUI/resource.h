@@ -148,7 +148,9 @@
 #define IDB_TREEOPEN2                   261
 #define IDB_TREERESNET                  262
 #define IDB_TREERESNET2                 263
-#define IDB_TREELAST                    263
+#define IDB_TREERPROJ                   264
+#define IDB_TREERPROJ2                  265
+#define IDB_TREELAST                    265
 #define IDD_WIZARD                      301
 #define IDD_ANALYSISSTATUS              302
 #define IDD_BEMPROCERRORS               303

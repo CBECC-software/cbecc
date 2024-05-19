@@ -208,7 +208,7 @@ void CBEMProcCtrlIconBtn::OnLButtonUp( UINT nFlags, CPoint point )
          MessageBeep( MB_OK );
       else
       {
-         int iBtnPressRetVal = (int) GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lActionID, m_wSecNavID ), (long) this );  // PtrToLong( pPar ) );
+         int iBtnPressRetVal = (int) GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lActionID, m_wSecNavID ), (ULONG_PTR) this );  // PtrToLong( pPar ) );
          if (iBtnPressRetVal > 0)   // SAC 3/3/06
             // Post-processing following button press
             GetParent()->PostMessage( WM_DATAMODIFIED, iBtnPressRetVal, 0 );
@@ -229,7 +229,7 @@ void CBEMProcCtrlIconBtn::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
          MessageBeep( MB_OK );
       else
       {
-         int iBtnPressRetVal = (int) GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lActionID, m_wSecNavID ), (long) this );  // PtrToLong( pPar ) );
+         int iBtnPressRetVal = (int) GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lActionID, m_wSecNavID ), (ULONG_PTR) this );  // PtrToLong( pPar ) );
          if (iBtnPressRetVal > 0)   // SAC 3/3/06
             // Post-processing following button press
             GetParent()->PostMessage( WM_DATAMODIFIED, iBtnPressRetVal, 0 );

@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -335,24 +335,26 @@ bool BEMPropertyType::setObjClassDataFromStrings()
 	{	m_objTypeDBID[iObjCls] = 0;
 		if (!m_obj1ClassStr[iObjCls].isEmpty())
 		{	m_obj1ClassIdx[iObjCls] = BEMP_GetDBComponentID( m_obj1ClassStr[iObjCls] );
-			assert( m_obj1ClassIdx[iObjCls] > 0 );
+			assert( m_obj1ClassIdx[iObjCls] > 0 || m_obj1ClassStr[iObjCls].indexOf("cf1r")==0 );   // TO DO MFam - undo: IGNORE 'cf1r*' missing object types (for now) - SAC 09/13/21
 			if (m_obj1ClassIdx[iObjCls] > 0 && !m_objPropStr[iObjCls].isEmpty())
 			{	m_objTypeDBID[iObjCls] = BEMPX_GetDatabaseID( m_objPropStr[iObjCls], m_obj1ClassIdx[iObjCls] );
 				assert( m_objTypeDBID[iObjCls] > BEM_COMP_MULT );
 			}
-			bRetVal = (m_obj1ClassIdx[iObjCls] > 0 && (m_objPropStr[iObjCls].isEmpty() || m_objTypeDBID[iObjCls] > BEM_COMP_MULT));
+			//bRetVal = (m_obj1ClassIdx[iObjCls] > 0 && (m_objPropStr[iObjCls].isEmpty() || m_objTypeDBID[iObjCls] > BEM_COMP_MULT));
+			bRetVal = (m_obj1ClassStr[iObjCls].indexOf("cf1r")==0 || (m_obj1ClassIdx[iObjCls] > 0 && (m_objPropStr[iObjCls].isEmpty() || m_objTypeDBID[iObjCls] > BEM_COMP_MULT)));   // TO DO MFam - remove exception for 'cf1r*' object types - SAC 09/13/21
 		}
 		else
 			m_obj1ClassIdx[iObjCls] = 0;
 	}
-	return (bRetVal && m_obj1ClassIdx[0] > 0);
+	//return (bRetVal && m_obj1ClassIdx[0] > 0);
+	return (bRetVal && (m_obj1ClassIdx[0] > 0 || m_obj1ClassStr[0].indexOf("cf1r")==0));   // TO DO MFam - remove exception for 'cf1r*' object types - SAC 09/13/21
 }
 
 
 /////////////////////////////////////////////////////////////////////////////
 
-void BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion )
-{
+bool BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion, QString& qsPTErrMsg )
+{  bool bRetVal = true;
    m_shortName = file.ReadString();   file.PostReadToken();
 
    QString sPropType = file.ReadToken();   // read variable type keyword
@@ -414,6 +416,13 @@ void BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion )
    long iNumObjClassEntries = 1;		// SAC 6/15/12 - mods to accommodate a variable number of compatible referenced object names/types/values
 	if (iFileVersion >= 4)
 	{	iNumObjClassEntries = (int) file.ReadLong();			file.PostReadToken();
+      if (m_propType == BEMP_Obj && (iNumObjClassEntries < 1 || iNumObjClassEntries > BEM_MAX_PROPTYPE_OBJREFCLASSES))     // SAC 06/30/21
+      {  bRetVal = false;
+         if (iNumObjClassEntries < 1)
+            qsPTErrMsg = QString( "Number of referenceable object types (NO) of %1 too low, must be 1-%2"  ).arg(QString::number(iNumObjClassEntries), QString::number(BEM_MAX_PROPTYPE_OBJREFCLASSES));
+         else
+            qsPTErrMsg = QString( "Number of referenceable object types (NO) of %1 too high, must be 1-%2" ).arg(QString::number(iNumObjClassEntries), QString::number(BEM_MAX_PROPTYPE_OBJREFCLASSES));
+      }
 	}
 	int iObjClsIdx = 0;
 	for (; iObjClsIdx < iNumObjClassEntries; iObjClsIdx++)
@@ -444,6 +453,7 @@ void BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion )
 	}
 
 	m_reportPrecision = -9;  // SAC 2/4/15 - property to facilitate rounding of numeric results for compliance reporting - rounding only for output of non-User models written to analysis results XML file
+   return bRetVal;
 }
 
 /////////////////////////////////////////////////////////////////////////////

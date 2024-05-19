@@ -163,7 +163,7 @@ public:
 	int SetupRunFinish(  int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
 	int SetupRun_NonRes( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL,
-								int iBEMProcIdx=-1, bool bRemovePVBatt=false );
+								int iBEMProcIdx=-1, bool bRemovePVBatt=false, bool bPerformFullCSESim=false );
 	bool T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 									QString& sErrorMsg, int iModelType=0 );	// SAC 12/13/18 (HPWHSIZE)
 	bool T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID,

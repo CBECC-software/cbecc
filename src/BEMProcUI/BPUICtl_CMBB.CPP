@@ -945,7 +945,7 @@ void CComboBoxCtl::LoadScreenStrings()
             CString sItemString;
             CBEMPUIPage* pPage = eScreenData.GetPageByID( lScreenID );
             if (pPage)
-               sItemString.Format( "%d of %d  -  %s", l0ScreenIdx+1, iTotNumScreens, pPage->m_sCaption );
+               sItemString.Format( "%d of %d  -  %s", l0ScreenIdx+1, iTotNumScreens, ((const char*) pPage->m_sCaption) );
             else
                sItemString.Format( "%d of %d  -  Screen #%d Title", l0ScreenIdx+1, iTotNumScreens, l0ScreenIdx+1 );
 

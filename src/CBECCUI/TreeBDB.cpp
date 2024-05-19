@@ -234,8 +234,8 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
    else if (iBDBClass == eiBDBCID_DaySch  )   return 0;
    else if (iBDBClass == eiBDBCID_ResSch  )   return 0;
    else if (iBDBClass == eiBDBCID_DResSch )   return 0;
-   else if (iBDBClass == 101              )   return 0;   // Ruleset Library
-   else if (iBDBClass == 102              )   return 64;  // Generic Folder
+   else if (iBDBClass == 1001             )   return 0;   // Ruleset Library
+   else if (iBDBClass == 1002             )   return 64;  // Generic Folder
    else  return 0;
 }
 
@@ -371,50 +371,86 @@ static int siZero = 0;
 //static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 //										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 //#else
-static int  siNumArchComps = 28;
-static int  siNumArchFolders = 10;
-static int  siaMode0[]  = { 1, siNumArchComps-siNumArchFolders, siNumArchComps };
-static int* siapMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
-									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
-									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
-									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
-									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
-									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum };
-static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
-										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, NULL };
 //#endif
+
+
 
 // SAC 1/24/19 - added ResDWHRSys (for 2019 program only)
 // SAC 2/23/20 - removed ResLpTankHtr from both 2019 & 2022 UIs
 #ifdef UI_PROGYEAR2019	// SAC 7/28/18 - shifted PV & Battery objects from Envelope to Mechanical tabs
-static int  siNumHVACComps = 35;
+static int  siNumArchComps = 28;  
+static int  siNumArchFolders = 10;  
+static int  siaMode0[]  = { 1, siNumArchComps-siNumArchFolders, siNumArchComps };
+static int* siapMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, 
+                            &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
+									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
+									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
+									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
+									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum
+                             };
+static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, 
+                              NULL };
+
+static int  siNumHVACComps = 34;       // removed &eiBDBCID_BlrHtPump... - SAC 05/14/21
 static int  siNumHVACFolders = 8;
 static int  siaMode1[]  = { 5, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
                             &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
-									 &eiBDBCID_WtrHtr, &eiBDBCID_BlrHP, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
+									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
 									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
 static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #elif UI_PROGYEAR2022	// SAC 6/19/19
-static int  siNumHVACComps = 35;
-static int  siNumHVACFolders = 8;
-static int  siaMode1[]  = { 5, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
-static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
+static int  siNumArchComps = 55;      // was: 28;  before CBECC_Res integration - SAC 04/27/21
+static int  siNumArchFolders = 15;    // was: 10;  before CBECC_Res integration - SAC 04/27/21
+static int  siaMode0[]  = { 2, siNumArchComps-siNumArchFolders, siNumArchComps };
+static int* siapMode0[] = { &eiBDBCID_ResProj, &eiBDBCID_Building, &eiBDBCID_Story, 
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   &eiBDBCID_ResZnGrp, 
+                            &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
+									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
+									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
+									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21   // reordered from top to bottom (consistent w/ CBECC-Res) - SAC 10/21/21 (MFam)
+   &eiBDBCID_ResAttic      ,   &eiBDBCID_ResZn       ,   &eiBDBCID_ResOtherZn  ,   &eiBDBCID_ResGarage   ,   &eiBDBCID_ResCrawlSpc ,   &eiBDBCID_DwellUnit,
+   &eiBDBCID_ResCathedralCeiling ,   &eiBDBCID_ResCeilingBelowAttic,    &eiBDBCID_ResIntCeiling,   &eiBDBCID_ResExtWall,   &eiBDBCID_ResOpening,
+   &eiBDBCID_ResIntWall    ,   &eiBDBCID_ResUndgrWall,   &eiBDBCID_ResIntFlr   ,   &eiBDBCID_ResExtFlr   ,   &eiBDBCID_ResSlabFlr  ,   &eiBDBCID_ResFlrOverCrawlSpc,
+   &eiBDBCID_ResUndgrFlr   ,   &eiBDBCID_ResWin      ,   &eiBDBCID_ResSkylt    ,   &eiBDBCID_ResDr       ,
+									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   , &eiBDBCID_DwellUnitType, &eiBDBCID_ResConsAssm, &eiBDBCID_ResMat, &eiBDBCID_ResWinType
+                             };
+static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, 
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   &eiBDBCID_DwellUnitType, &eiBDBCID_ResConsAssm, &eiBDBCID_ResMat, &eiBDBCID_ResWinType,
+                              NULL };
+
+static int  siNumHVACComps = 42;
+static int  siNumHVACFolders = 16;
+static int  siaMode1[]  = { 4, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
+static int* siapMode1[] = { &eiBDBCID_ResProj, &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
                             &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
-									 &eiBDBCID_WtrHtr, &eiBDBCID_BlrHP, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
+									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
-									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
+									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/
+                            &eiBDBCID_ResHtgSys, &eiBDBCID_ResClgSys, &eiBDBCID_ResHtPumpSys, &eiBDBCID_ResDistSys, &eiBDBCID_ResDuctSeg, &eiBDBCID_ResFanSys, &eiBDBCID_ResIAQFan, // &eiBDBCID_ResClVentFan,    // SAC 08/18/21
+                            &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
+static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, 
+                              &eiBDBCID_ResHtgSys, &eiBDBCID_ResClgSys, &eiBDBCID_ResHtPumpSys, &eiBDBCID_ResDistSys, &eiBDBCID_ResDuctSeg, &eiBDBCID_ResFanSys, &eiBDBCID_ResIAQFan, // &eiBDBCID_ResClVentFan,    // SAC 08/18/21
+                              &eiBDBCID_ResWtrHtr, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #else
-static int  siNumHVACComps = 29;
+static int  siNumHVACComps = 28;
 static int  siNumHVACFolders = 4;
 static int  siaMode1[]  = { 3, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
                             &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
-									 &eiBDBCID_WtrHtr, &eiBDBCID_BlrHP, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
+									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
 									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad };
@@ -427,40 +463,87 @@ static int** siapFolders[] = { siapFolder0, siapFolder1 };
 static HTREEITEM shaModes[] = { TVI_LAST, TVI_LAST };
 
 // Same statics for LIBRARY TREE
+#ifdef UI_PROGYEAR2019	// SAC 1/24/19 - shifted PV & Battery objects from Envelope to Mechanical tabs
 // { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
 static int  siaLibMode0[]  = { 1, siNumArchComps-siNumArchFolders, siNumArchComps };
-static int* siapLibMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
+static int* siapLibMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, 
+                            &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
 									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
 									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
 									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
-									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum };
+									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum
+                             };
 static int* siapLibFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
-										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, NULL };
+										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, 
+                              NULL };
 
-#ifdef UI_PROGYEAR2019	// SAC 1/24/19 - shifted PV & Battery objects from Envelope to Mechanical tabs
 static int  siaLibMode1[]  = { 2, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
 									 &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
-									 &eiBDBCID_WtrHtr, &eiBDBCID_BlrHP, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
+									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
 									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
 static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #elif UI_PROGYEAR2022	// SAC 6/19/19
-static int  siaLibMode1[]  = { 2, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
-static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
+// { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
+static int  siaLibMode0[]  = { 2, siNumArchComps-siNumArchFolders, siNumArchComps };
+static int* siapLibMode0[] = { &eiBDBCID_ResProj, &eiBDBCID_Building, &eiBDBCID_Story, 
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   &eiBDBCID_ResZnGrp, 
+                            &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
+									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
+									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
+									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21   // reordered from top to bottom (consistent w/ CBECC-Res) - SAC 10/21/21 (MFam)
+   &eiBDBCID_ResAttic      ,   &eiBDBCID_ResZn       ,   &eiBDBCID_ResOtherZn  ,   &eiBDBCID_ResGarage   ,   &eiBDBCID_ResCrawlSpc ,   &eiBDBCID_DwellUnit,
+   &eiBDBCID_ResCathedralCeiling ,   &eiBDBCID_ResCeilingBelowAttic,    &eiBDBCID_ResIntCeiling,   &eiBDBCID_ResExtWall,   &eiBDBCID_ResOpening,
+   &eiBDBCID_ResIntWall    ,   &eiBDBCID_ResUndgrWall,   &eiBDBCID_ResIntFlr   ,   &eiBDBCID_ResExtFlr   ,   &eiBDBCID_ResSlabFlr  ,   &eiBDBCID_ResFlrOverCrawlSpc,
+   &eiBDBCID_ResUndgrFlr   ,   &eiBDBCID_ResWin      ,   &eiBDBCID_ResSkylt    ,   &eiBDBCID_ResDr       ,
+									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   , &eiBDBCID_DwellUnitType, &eiBDBCID_ResConsAssm, &eiBDBCID_ResMat, &eiBDBCID_ResWinType
+                             };
+static int* siapLibFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, 
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   &eiBDBCID_DwellUnitType, &eiBDBCID_ResConsAssm, &eiBDBCID_ResMat, &eiBDBCID_ResWinType,
+                              NULL };
+
+static int  siaLibMode1[]  = { 4, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
+static int* siapLibMode1[] = { &eiBDBCID_ResProj, &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
 									 &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
-									 &eiBDBCID_WtrHtr, &eiBDBCID_BlrHP, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
+									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
-									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
+									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/
+                            &eiBDBCID_ResHtgSys, &eiBDBCID_ResClgSys, &eiBDBCID_ResHtPumpSys, &eiBDBCID_ResDistSys, &eiBDBCID_ResDuctSeg, &eiBDBCID_ResFanSys, &eiBDBCID_ResIAQFan, // &eiBDBCID_ResClVentFan,    // SAC 08/18/21
+                            &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
+static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, 
+                                 &eiBDBCID_ResHtgSys, &eiBDBCID_ResClgSys, &eiBDBCID_ResHtPumpSys, &eiBDBCID_ResDistSys, &eiBDBCID_ResDuctSeg, &eiBDBCID_ResFanSys, &eiBDBCID_ResIAQFan, // &eiBDBCID_ResClVentFan,    // SAC 08/18/21
+                                 &eiBDBCID_ResWtrHtr, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #else
+// { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
+static int  siaLibMode0[]  = { 1, siNumArchComps-siNumArchFolders, siNumArchComps };
+static int* siapLibMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, 
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+                            &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
+									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
+									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
+									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
+									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum
+                             };
+static int* siapLibFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, 
+                              NULL };
+
 static int  siaLibMode1[]  = { 2, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
 									 &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
-									 &eiBDBCID_WtrHtr, &eiBDBCID_BlrHP, &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
+									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_ResWtrHtr, /*&eiBDBCID_ResLpTankHtr,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
 									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad };
@@ -485,11 +568,13 @@ static long* slapOAControl[]		= {	&elDBID_OACtrl_AirSegSupRef, &elDBID_OACtrl_Ai
 static long* slapFluidSeg[]		= {	&elDBID_FluidSeg_PriSegRef, NULL };
 static long* slapChiller[]			= {	&elDBID_Chiller_CndsrInRef, &elDBID_Chiller_CndsrOutRef, &elDBID_Chiller_EvapInRef, &elDBID_Chiller_EvapOutRef, NULL };
 static long* slapBoiler[]			= {	&elDBID_Boiler_FluidFlowInRef, &elDBID_Boiler_FluidFlowOutRef, NULL };
-static long* slapBlrHP[]			= {	&elDBID_BlrHP_FluidSegInRef, &elDBID_BlrHP_FluidSegOutRef, NULL };	// SAC 10/23/20
-static long* slapResDHWSys[]		= {	&elDBID_ResDHWSys_DHWSolarSysRef, NULL };		// SAC 1/31/20 (Com tic #3157)
+//static long* slapBlrHtPump[]		= {	&elDBID_BlrHtPump_FluidSegInRef, &elDBID_BlrHtPump_FluidSegOutRef, NULL };	// SAC 10/23/20
+static long* slapResDHWSys[]		= {	&elDBID_ResDHWSys_DHWSolarSysRef, &elDBID_ResDHWSys_DHWHeater1, &elDBID_ResDHWSys_DHWHeater2, &elDBID_ResDHWSys_DHWHeater3,   // SAC 1/31/20 (Com tic #3157)
+										         &elDBID_ResDHWSys_DHWHeater4, &elDBID_ResDHWSys_DHWHeater5, &elDBID_ResDHWSys_DHWHeater6, NULL };     // SAC 10/12/21 (MFam)
 
-static long** ClassToDBIDAssignmentList( int /*iBDBClass*/ )
+static long** ClassToDBIDAssignmentList( int iBDBClass )
 {
+   if (iBDBClass == eiBDBCID_ResDHWSys			)   return &slapResDHWSys[0];       // SAC 10/12/21 (MFam)
 // SAC 2/2/20 - debate about desire to list assigned components as children - for now we won't (consistent w/ past versions) (tic #3157)
 //   if      (iBDBClass == eiBDBCID_ThrmlZn )   return &slapThermalZone[0]; 
 //   else if (iBDBClass == eiBDBCID_AirSeg  )   return &slapAirSegment[0];  
@@ -500,7 +585,7 @@ static long** ClassToDBIDAssignmentList( int /*iBDBClass*/ )
 //   else if (iBDBClass == eiBDBCID_FluidSeg)   return &slapFluidSeg[0];
 //   else if (iBDBClass == eiBDBCID_Chiller )   return &slapChiller[0];
 //   else if (iBDBClass == eiBDBCID_Boiler  )   return &slapBoiler[0];
-//   else if (iBDBClass == eiBDBCID_BlrHP   )   return &slapBlrHP[0];
+//   else if (iBDBClass == eiBDBCID_BlrHtPump)  return &slapBlrHtPump[0];
 //   else if (iBDBClass == eiBDBCID_ResDHWSys)  return &slapResDHWSys[0];		// SAC 1/31/20 (Com tic #3157)
    return &slapNULL[0];
 }
@@ -519,7 +604,7 @@ static int ClassToPopulateChildMode( int iBDBClass )		// SAC 7/27/14 - 0-Class/C
 	else if (iBDBClass == eiBDBCID_Boiler      )    return 1;
 	else if (iBDBClass == eiBDBCID_HtRej       )    return 1;
 	else if (iBDBClass == eiBDBCID_WtrHtr      )    return 1;
-	else if (iBDBClass == eiBDBCID_BlrHP       )    return 1;
+//	else if (iBDBClass == eiBDBCID_BlrHtPump   )    return 1;
 	else if (iBDBClass == eiBDBCID_ResWtrHtr   )    return 1;
    else if (iBDBClass == eiBDBCID_ResLpTankHtr)    return 1;	 // SAC 1/12/20 (Com tic #3156)
 	else if (iBDBClass == eiBDBCID_FluidSeg    )    return 1;
@@ -552,6 +637,7 @@ bool DBIDAssignmentCompatible( long lAssignmentDBID, int iBEMClass, int iObjIdx,
 int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
 {
    if      (iBDBClass == eiBDBCID_Project )              return  14;
+   else if (iBDBClass == eiBDBCID_ResProj )              return 132;    // SAC 10/20/21 (MFam)
    else if (iBDBClass == eiBDBCID_SchDay)                return  82;
    else if (iBDBClass == eiBDBCID_ThrmlEngyStorModeSchDay) return  82;
    else if (iBDBClass == eiBDBCID_SchWeek)               return  80;
@@ -612,7 +698,7 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
    else if (iBDBClass == eiBDBCID_Boiler)                return  48;
    else if (iBDBClass == eiBDBCID_HtRej)                 return  44;
    else if (iBDBClass == eiBDBCID_WtrHtr)                return  74;
-   else if (iBDBClass == eiBDBCID_BlrHP)                 return  74;	 // SAC 10/23/20
+//   else if (iBDBClass == eiBDBCID_BlrHtPump)             return  74;	 // SAC 10/23/20
    else if (iBDBClass == eiBDBCID_ResDHWSys)             return  42;  // SAC 9/25/13
    else if (iBDBClass == eiBDBCID_ResDWHRSys)   			return 112;  // SAC 1/24/19 - same as Com HX for now...
    else if (iBDBClass == eiBDBCID_ResWtrHtr)             return  74;
@@ -625,8 +711,44 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
    else if (iBDBClass == eiBDBCID_PVArrayGeom)           return 124;
    else if (iBDBClass == eiBDBCID_PVArrayShade)          return 122;
    else if (iBDBClass == eiBDBCID_Battery)               return 120;
-   else if (iBDBClass == 101)                            return   0;  // Ruleset Library
-   else if (iBDBClass == 102)                            return  64;  // Generic Folder
+
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   else if (iBDBClass == eiBDBCID_ResZnGrp             )   return  20;
+   else if (iBDBClass == eiBDBCID_ResConsAssm          )   return  68;
+   else if (iBDBClass == eiBDBCID_ResMat               )   return  70; 
+   else if (iBDBClass == eiBDBCID_ResWinType           )   return  98;  // SAC 8/27/13
+   else if (iBDBClass == eiBDBCID_ResZn                )   return   2;
+   else if (iBDBClass == eiBDBCID_DwellUnitType        )   return 110;
+   else if (iBDBClass == eiBDBCID_DwellUnit            )   return  24;
+   else if (iBDBClass == eiBDBCID_ResOtherZn           )   return  24;	// SAC 9/3/19 - MFamProto
+   else if (iBDBClass == eiBDBCID_ResAttic             )   return  66;
+   else if (iBDBClass == eiBDBCID_ResGarage            )   return  66;
+   else if (iBDBClass == eiBDBCID_ResCrawlSpc          )   return  66;
+   else if (iBDBClass == eiBDBCID_ResExtWall           )   return   4;
+   else if (iBDBClass == eiBDBCID_ResIntWall           )   return   6;
+   else if (iBDBClass == eiBDBCID_ResUndgrWall         )   return   8;
+   else if (iBDBClass == eiBDBCID_ResCathedralCeiling  )   return  52;
+   else if (iBDBClass == eiBDBCID_ResCeilingBelowAttic )   return  54;
+   else if (iBDBClass == eiBDBCID_ResIntCeiling        )   return  54;  // same as CeilingBelowAttic ??
+   else if (iBDBClass == eiBDBCID_ResSlabFlr           )   return  56;
+   else if (iBDBClass == eiBDBCID_ResExtFlr            )   return  60;
+   else if (iBDBClass == eiBDBCID_ResFlrOverCrawlSpc   )   return  60;
+   else if (iBDBClass == eiBDBCID_ResIntFlr            )   return  62;
+   else if (iBDBClass == eiBDBCID_ResUndgrFlr          )   return  56;
+   else if (iBDBClass == eiBDBCID_ResOpening           )   return 128;	// SAC 7/30/20 - MFamProto
+   else if (iBDBClass == eiBDBCID_ResWin               )   return  10;
+   else if (iBDBClass == eiBDBCID_ResSkylt             )   return  58;
+   else if (iBDBClass == eiBDBCID_ResDr                )   return  12;
+//	else if (iBDBClass == eiBDBCID_HVACSys 				 )   return  36;        // SAC 08/18/21
+	else if (iBDBClass == eiBDBCID_ResHtgSys 	   		 )   return  30;   // furnace
+	else if (iBDBClass == eiBDBCID_ResClgSys 	   		 )   return  28;   // air cond
+	else if (iBDBClass == eiBDBCID_ResHtPumpSys    		 )   return  38;   // heat pump
+	else if (iBDBClass == eiBDBCID_ResDistSys 	   	 )   return  42;   // plant
+	else if (iBDBClass == eiBDBCID_ResFanSys 	   		 )   return  26;   // fan
+	else if (iBDBClass == eiBDBCID_ResIAQFan 	  			 )   return  26;   // fan
+	else if (iBDBClass == eiBDBCID_ResClVentFan 	  		 )   return  26;   // fan
+   else if (iBDBClass == 1001)                             return   0;  // Ruleset Library
+   else if (iBDBClass == 1002)                             return  64;  // Generic Folder
    else  return 0;
 }
 
@@ -951,8 +1073,8 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int /*iObjOccur*/ )
    else if (iBDBClass == eiBDBCID_SCSysRpt         )   return 102;
    else if (iBDBClass == eiBDBCID_DHWSysRpt        )   return 104;
    else if (iBDBClass == eiBDBCID_IAQVentRpt       )   return 106;
-   else if (iBDBClass == 101               			)   return   0;   // Ruleset Library
-   else if (iBDBClass == 102               			)   return  64;  // Generic Folder
+   else if (iBDBClass == 1001               			)   return   0;   // Ruleset Library
+   else if (iBDBClass == 1002               			)   return  64;  // Generic Folder
    else  return 0;
 }
 
@@ -1497,15 +1619,20 @@ static void LoadAppendDBIDs()
 		   int iError;
 		   BEMClass* pClass = BEMPX_GetClass( i1Class, iError );
 		   sdwaAppendDBID.SetSize( BEMPX_GetNumClasses() );
+//CString sLogMsg;
 		   while ((iError >= 0) && pClass)
 		   {
 		      CString sParam = ReadProgString( "AppendToTreeEntries", pClass->getShortName().toLatin1().constData(), "");
 		      if (sParam.GetLength() != 0)
 		         sdwaAppendDBID[ i1Class-1 ] = (DWORD) BEMPX_GetDatabaseID( sParam, i1Class );
+            else if (BEMPX_GetDatabaseID( "TreeDescrip", i1Class ) > 0)
+		         sdwaAppendDBID[ i1Class-1 ] = (DWORD) BEMPX_GetDatabaseID( "TreeDescrip", i1Class );
 		      else
 		         sdwaAppendDBID[ i1Class-1 ] = 0;
+//sLogMsg.Format( "   tree append class %d %s param '%s' (%ld)", i1Class, pClass->getShortName().toLatin1().constData(), sParam, sdwaAppendDBID[ i1Class-1 ] );   BEMPX_WriteLogFile( (const char*) sLogMsg );
 		      pClass = BEMPX_GetClass( ++i1Class, iError );
 		   }
+//sLogMsg.Format( "   tree append done @ class %d", i1Class );   BEMPX_WriteLogFile( (const char*) sLogMsg );
 			sqsAppendDBIDsRuleSetID  = sLoadedRuleSetID;
 			sqsAppendDBIDsRuleSetVer = sLoadedRuleSetVer;
 		   //sbAppendDBIDsLoaded = TRUE;
@@ -1540,6 +1667,12 @@ static void SetItemString( BEMObject* pObj, CString& sEntry )
                sEntry += sTemp.toLatin1().constData();
                sEntry += ")";
             }
+//CString sLogMsg;
+//if (sTemp.length() > 0)
+//	sLogMsg.Format( "   tree entry '%s' (DBID %ld appended: %s)", sEntry, (long) sdwaAppendDBID[ pObj->getClass()->get1BEMClassIdx()-1 ], sTemp );
+//else
+//	sLogMsg.Format( "   tree entry '%s' (DBID %ld append not defined)", sEntry, (long) sdwaAppendDBID[ pObj->getClass()->get1BEMClassIdx()-1 ] );
+//BEMPX_WriteLogFile( (const char*) sLogMsg );
          }
       }
    }
@@ -1732,7 +1865,7 @@ void CTreeBDB::PopulateProjectTree( int iBDBClassToHighlight )
 			if (pClass && pClass->getLongName().length() > 0)
 			{  CString sStr;
 			   DWORD dwItemData = 1;   // ((BEMO_User + 1) * 100) + *m_iappModes[m_iTreeMode][i];
-			   int iBmpID = GetBitmapID( 102 );  // generic folder bitmap
+			   int iBmpID = GetBitmapID( 1002 );  // generic folder bitmap
             sStr = pClass->getLongName().toLatin1().constData();
 				if (sStr.GetLength() > 2 && sStr[sStr.GetLength()-1] == 'y' &&
 						sStr[sStr.GetLength()-2] != 'a' && sStr[sStr.GetLength()-2] != 'e' && sStr[sStr.GetLength()-2] != 'i' &&
@@ -1779,7 +1912,7 @@ void CTreeBDB::PopulateLibraryTree( int /*iBDBClassToHighlight*/ )
    else
       sStr = "No Ruleset Library Available";
 
-   int iBmpID = GetBitmapID( 101 );
+   int iBmpID = GetBitmapID( 1001 );
    m_htiRootItem = InsertItem( sStr, iBmpID, iBmpID+1, TVI_ROOT, TVI_LAST );
    if ((m_htiRootItem == NULL) || (!SetItemData( m_htiRootItem, dwItemData )))
       m_htiRootItem = NULL;
@@ -1795,7 +1928,7 @@ void CTreeBDB::PopulateLibraryTree( int /*iBDBClassToHighlight*/ )
          if (iNumRuleLibObjs > 0)
          {
             // First create a node for each type of bldg component
-			   iBmpID = GetBitmapID( 102 );  // generic folder bitmap
+			   iBmpID = GetBitmapID( 1002 );  // generic folder bitmap
             //iBmpID = GetBitmapID( *m_iappModes[m_iTreeMode][i] );
             sStr = pClass->getLongName().toLatin1().constData();
             sStr += " Components:";
@@ -1820,6 +1953,7 @@ void CTreeBDB::PopulateLibraryTree( int /*iBDBClassToHighlight*/ )
 
 void CTreeBDB::PopulateBDBTree( int iTreeMode, int iBDBClassToHighlight, BOOL bOnlyIfRequired )
 {
+         //BEMPX_WriteLogFile( QString("      calling PopulateBDBTree( %1, %2, %3 )").arg( QString::number(iTreeMode), QString::number(iBDBClassToHighlight), QString::number(bOnlyIfRequired) ) );  // SAC 10/21/21
 //   if ( !bOnlyIfRequired || !m_bTreeCurrent )
    if (!bOnlyIfRequired)
       // set this to false in case BEMPUIX_NumBDBDialogInstances() != 0 and therefore we don't populate until next round
@@ -1849,6 +1983,7 @@ void CTreeBDB::PopulateBDBTree( int iTreeMode, int iBDBClassToHighlight, BOOL bO
             PopulateProjectTree( iBDBClassToHighlight );
          else
             PopulateLibraryTree( iBDBClassToHighlight );
+                  //BEMPX_WriteLogFile( QString("      - tree repopulated") );  // SAC 10/21/21
       }
 
       m_bTreeCurrent = TRUE;
@@ -2009,13 +2144,13 @@ void CTreeBDB::CheckAndUpdateTree( long lDBIDModified )
       m_bTreeCurrent = FALSE;
    else if ( m_iTreeMode == TM_Mechanical &&  // MECHANICAL MODE
              ( lDBIDModified == elDBID_Spc_HVACSystem ||
-               DBIDInList( lDBIDModified, &slapHVACSys[0] ) ||
-               DBIDInList( lDBIDModified, &slapClTower[0] ) ||
-               DBIDInList( lDBIDModified, &slapChiller[0] ) ||
-               DBIDInList( lDBIDModified, &slapBoiler[0]  ) ||
-               DBIDInList( lDBIDModified, &slapBlrHP[0]   ) ||
-               DBIDInList( lDBIDModified, &slapPlant[0]   ) ||
-               DBIDInList( lDBIDModified, &slapSpace[0]   ) ) )
+               DBIDInList( lDBIDModified, &slapHVACSys[0]   ) ||
+               DBIDInList( lDBIDModified, &slapClTower[0]   ) ||
+               DBIDInList( lDBIDModified, &slapChiller[0]   ) ||
+               DBIDInList( lDBIDModified, &slapBoiler[0]    ) ||
+               //DBIDInList( lDBIDModified, &slapBlrHtPump[0] ) ||
+               DBIDInList( lDBIDModified, &slapPlant[0]     ) ||
+               DBIDInList( lDBIDModified, &slapSpace[0]     ) ) )
       m_bTreeCurrent = FALSE;
 #elif UI_CARES
 	else if ( lDBIDModified == elDBID_Proj_IsMultiFamily )	// SAC 7/29/16 - toggle access to DwellUnitType & DwellUnit objects
@@ -2370,6 +2505,7 @@ void CTreeBDB::DropItemBeingDragged( COleDataObject* pDataObject )
 
          if (pDataObject && pDataObject->IsDataAvailable( g_cfPrivate ))
          {
+               //BEMPX_WriteLogFile( QString("      about to call DoPasteNative() from within DropItemBeingDragged()") );  // SAC 10/21/21
             pNewObj = DoPasteNative( pDataObject, m_dragInfo.iBDBClass );
 
             // now manually set parent object pointer
@@ -2853,7 +2989,7 @@ void CTreeBDB::PresentQuickMenu( HTREEITEM htiSelItem )
                      	int iDBIDListIdx = 0;
                      	while (plDBIDList[ iDBIDListIdx ] != NULL)
                      	{
-                     	   int iError = 0;
+                     	   iError = 0;
                      	   long lAssignmentDBID = *plDBIDList[ iDBIDListIdx++ ];
                      	   BEMPropertyType* pPropType = BEMPX_GetPropertyTypeFromDBID( lAssignmentDBID, iError );
                      	   if ( (iError == 0) && pPropType && pPropType->getDescription().length() > 0 &&
@@ -3621,6 +3757,7 @@ void CTreeBDB::DoPasteItem(HTREEITEM /*hItem*/, COleDataObject * pDataObject)
       BEMObject* pNewObj = DoPasteNative( pDataObject );
       if (pNewObj)
       {
+               //BEMPX_WriteLogFile( QString("      inside DoPasteItem(), new object '%1'").arg( pNewObj->getName() ) );  // SAC 10/21/21
          // Set modified flag and evaluate proposed ruleset
          SetDataModifiedFlag( TRUE );
 			BEMPX_IncrementModsSinceModelDefaulted();		// SAC 5/30/18
@@ -3628,7 +3765,9 @@ void CTreeBDB::DoPasteItem(HTREEITEM /*hItem*/, COleDataObject * pDataObject)
 
          PopulateBDBTree( m_iTreeMode, pNewObj->getClass()->get1BEMClassIdx() );
       }
+               //else  BEMPX_WriteLogFile( QString("      inside DoPasteItem(), no object pointer returned...") );  // SAC 10/21/21
    } else {
+               //BEMPX_WriteLogFile( QString("      inside DoPasteItem(), invalid data...") );  // SAC 10/21/21
 	   AfxThrowNotSupportedException( );
    }
 }
@@ -3644,6 +3783,9 @@ BEMObject* CTreeBDB::DoPasteNative( COleDataObject * pDataObject, int iBDBClass 
       CArchive ar( spFile.get(), CArchive::load );
       ar >> iBDBClass;
    }
+         //int iErr;
+         //BEMClass* pCls = (iBDBClass > 0 ? BEMPX_GetClass( iBDBClass, iErr ) : NULL);
+         //BEMPX_WriteLogFile( QString("      inside DoPasteNative(), BDBClass %1 '%2'").arg( QString::number(iBDBClass), (pCls ? pCls->getShortName() : "unknown") ) );  // SAC 10/21/21
 
    HGLOBAL hGlobal;
    hGlobal = pDataObject->GetGlobalData( g_cfPrivate );
@@ -3660,12 +3802,14 @@ BEMObject* CTreeBDB::DoPasteNative( COleDataObject * pDataObject, int iBDBClass 
 //
 //         BEMPX_SetActiveObjectIndex( iTargetClass, iTargetIndex, otTargetType );
          pNewObj = BEMPX_ReadProjectComponent( csTempFileName, iBDBClass );
+               //BEMPX_WriteLogFile( QString("      inside DoPasteNative(), pNewObj %1").arg( (pNewObj ? "Valid" : "NULL") ) );  // SAC 10/21/21
       }
       catch ( ... ) 
       {
          //DeleteFile( csTempFileName );
          //GlobalFree( hGlobal );
          //throw;
+               //BEMPX_WriteLogFile( QString("      inside DoPasteNative(), exception thrown...") );  // SAC 10/21/21
       }
       DeleteFile( csTempFileName );
       GlobalFree( hGlobal );

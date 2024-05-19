@@ -141,7 +141,8 @@ void TrimRight( QString& str, QString sRemove )		// SAC 5/4/16
 
 void OurThrowTextioException(int cause, const char* fileName, UINT line, UINT column, const char* lastError/*=NULL*/)
 {
-   throw BEMTextioException(cause, fileName, line, column, lastError);
+   QString qsErr = BuildBEMTextioExceptionErrorString( cause, fileName, line, column, lastError );          // SAC 04/26/21
+   throw BEMTextioException(cause, fileName, line, column, lastError, qsErr.toLocal8Bit().constData());
 //   BEMTextioException* pException = new BEMTextioException(cause, fileName, line, column, lastError);
 //   TRACE1("%s\n", (const char*)pException->m_strErr---or);
 //   THROW(pException);
@@ -184,16 +185,18 @@ IMPLEMENT_DYNAMIC(BEMTextioException, CException)
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-BEMTextioException::BEMTextioException(int cause, const char* fileName, UINT line, UINT column, const char* lastError/*=NULL*/)
-		: std::runtime_error( "file read error" )
-//   : m_cause(cause), m_fileName(fileName), m_line(line), m_column(column), m_strLastError(lastError), m_bNotified( FALSE)
+BEMTextioException::BEMTextioException(int cause, const char* fileName, UINT line, UINT column, const char* lastError/*=NULL*/, const char* sErrMsg/*=NULL*/)
+//		: std::runtime_error( "file read error" )  - moved to bottom of routine to report assembled error string - SAC 04/26/21
+   : m_cause(cause), m_fileName(fileName), m_line(line), m_column(column), m_strLastError(lastError), m_bNotified( FALSE),
+//     std::runtime_error( ConstErrorString() )   // enable more verbose error messaging - SAC 04/26/21
+     std::runtime_error( (sErrMsg ? sErrMsg : "file read error") )
 {
-   m_cause = cause;
-   m_fileName = fileName;
-   m_line = line;
-   m_column = column;
-   m_strLastError = lastError;
-   m_bNotified = FALSE;
+//   m_cause = cause;
+//   m_fileName = fileName;
+//   m_line = line;
+//   m_column = column;
+//   m_strLastError = lastError;
+//   m_bNotified = FALSE;
    BuildErrorString();
 }
 
@@ -237,7 +240,7 @@ BEMTextioException::~BEMTextioException()
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-void BEMTextioException::BuildErrorString()
+QString BuildBEMTextioExceptionErrorString(int cause /*=0*/, const char* fileName /*=NULL*/, UINT line /*=0*/, UINT column /*=0*/, const char* lastError /*=NULL*/)
 {
    static const char szXQuote[]          = "Expected Quote";
    static const char szXInt[]            = "Expected Integer";
@@ -257,12 +260,27 @@ void BEMTextioException::BuildErrorString()
 //   static const char szMsg1[] = "Error Reading File\n%s\nLine Number: %d\nColumn Number: %d\n%s";
 //   QString msg;
 //   msg.Format( szMsg1, (const char*)m_fileName, m_line, m_column, causes[m_cause] );
-   QString msg = QString( "Error Reading File\n%1\nLine Number: %2\nColumn Number: %3\n%4" ).arg( m_fileName,
-							QString::number(m_line), QString::number(m_column), causes[m_cause] );
-   if (!m_strLastError.isEmpty())
-      msg += "\n" + m_strLastError;  
-   m_strError = msg;
+   QString msg = QString( "Error Reading File\n%1\nLine Number: %2\nColumn Number: %3\n%4" ).arg( fileName,
+							QString::number(line), QString::number(column), causes[cause] );
+//   if (!lastError.isEmpty())
+   if (lastError && strlen( lastError ) > 0)
+      msg += QString( "\n%1" ).arg( lastError );  
+   //m_strError = msg;
+   return msg;
 }
+
+void BEMTextioException::BuildErrorString()
+{
+   m_strError = BuildBEMTextioExceptionErrorString( m_cause, m_fileName.toLocal8Bit().constData(), m_line, m_column, m_strLastError.toLocal8Bit().constData() );
+}
+
+//#define BEMTextioExceptMsgLen  1024
+//static char pszBEMTextioException[BEMTextioExceptMsgLen];      // enable more verbose error messaging - SAC 04/26/21
+//const char* BEMTextioException::ConstErrorString()
+//{  BuildErrorString();
+//   strncpy_s( pszBEMTextioException, BEMTextioExceptMsgLen, m_strError.toLocal8Bit().constData(), BEMTextioExceptMsgLen-1 );
+//   return pszBEMTextioException;
+//}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -733,9 +751,14 @@ void BEMTextIO::ReadArray( QString& sId )
 //   This function was added to BEMTextIO 2/28/98 by SAC.
 //   
 /////////////////////////////////////////////////////////////////////////////
-long BEMTextIO::ReadBEMProcParam( QString& sId, BOOL bAllowLeadingDigit )
+long BEMTextIO::ReadBEMProcParam( QString& sId, BOOL bAllowLeadingDigit, QStringList* psKeyList, std::vector<int>* piaKeyInts )
 {
-   sId = ReadToken( bAllowLeadingDigit );  // reads string up to first ':'
+	QString sKeyChars;
+	if (psKeyList && psKeyList->count() > 0)
+		for (int iKeyIdx=0; iKeyIdx<psKeyList->count(); iKeyIdx++)
+			sKeyChars.append( psKeyList->at( iKeyIdx ) );
+
+   sId = ReadToken( bAllowLeadingDigit, FALSE /*bSkipLeadingDelimeters*/, FALSE /*bAllowMidHyphen*/, TRUE /*bAllowNewLineRead*/, &sKeyChars );  // reads string up to first ':'
 
    // return '1' if the token is "DEFAULT" (used in DataType processing)
    if ( sId.compare( "DEFAULT", Qt::CaseInsensitive ) == 0 )
@@ -743,49 +766,110 @@ long BEMTextIO::ReadBEMProcParam( QString& sId, BOOL bAllowLeadingDigit )
 
    char ch = GetChr();
 
-   // SAC - 4/1/98 - added to handle params starting w/ param & not comp (i.e. 'Param[2]')
-   if (ch == '[')
-   {  // read array index thru closing square bracket
-      ReadArray( sId );
-      ch = GetChr();
-   }
+	if (sId.left(3).compare( "for", Qt::CaseInsensitive ) == 0 && ch==':' && psKeyList && piaKeyInts)
+	{	// param is a for loop string, such as  for:#Mo=(1-12)  - SAC 12/9/20
+		QString sKeyTemp;
+	   ch = GetChr();					assert( ch!=':' && ch!='[' && ch!=']' && ch!=',' );
+	   while ( ch != '=' )
+	   {	sKeyTemp += ch;
+		   ch = GetChr();				assert( ch!=':' && ch!='[' && ch!=']' && ch!=',' );
+		}	assert( sKeyTemp.length() > 0 );
+		if (!sKeyTemp.isEmpty())
+	   {	psKeyList->append( sKeyTemp.trimmed() );
 
-   // continue reading and appending to parameter string thru the last segment
-   while ( ch == ':' )
-   {
-      sId += ":" + ReadToken( bAllowLeadingDigit );  // reads and appends the next portion of the parameter string
-      ch = GetChr();
+	   	sKeyTemp.clear();
+		   ch = GetChr();
+		   while ( ch != '(' )
+			   ch = GetChr();
+		   ch = GetChr();
+		   int iStart = -9999;
+		   while ( ch != ')' )
+			{
+				assert( ch=='-' || (ch>='0' && ch<='9') );		// only allow integer values or ranges for now
+			   while ( ch=='-' || (ch>='0' && ch<='9') )
+			   {	sKeyTemp += ch;
+				   ch = GetChr();
+				}	assert( sKeyTemp.length() > 0 );
+				if (iStart == -9999)
+				{	iStart = atoi( sKeyTemp.toLocal8Bit().constData() );
+					piaKeyInts->push_back( iStart );
+					sKeyTemp.clear();
+				}
+				else
+				{	int iEnd = atoi( sKeyTemp.toLocal8Bit().constData() );
+					assert( iEnd > iStart );	// only allow INCREASING range (for now)
+					if (iEnd > iStart)
+					{	for (int i=iStart+1; i<=iEnd; i++)
+							piaKeyInts->push_back( i );
+					}
+					iStart = -9999;  // ready for possible following range
+				}
+				if (ch == ')')
+				{ }  // done
+				else if (ch == ',')
+					ch = GetChr();  // next char should be following #
+				else if (ch == 't' || ch == 'T')
+				{	ch = GetChr();
+					if (ch == 'o' || ch == 'O')
+					{	// user is specifying a RANGE
+						ch = GetChr();  // next char should be following #
+					}
+					//{	assert( false );
+					//}
+				}
+				else
+				{	assert( false );
+					ch = ')';  // force end
+				}
+			}
+	   }
+	}
+	else
+	{
+	   // SAC - 4/1/98 - added to handle params starting w/ param & not comp (i.e. 'Param[2]')
+	   if (ch == '[')
+	   {  // read array index thru closing square bracket
+	      ReadArray( sId );
+	      ch = GetChr();
+	   }
 
-      while ( ch == ' ' )  // advance past spaces
-         ch = GetChr();
-      if ( ch == ',' || ch == '=' || ch == '<' || ch == '>' || ch == '!' )
-      {  // ',' or '=' ends parameter string
-         UnGetChr();
-         return 0;
-      }
-      if ( ch == '[' )
-      {  // read array index thru closing square bracket
-         ReadArray( sId );
-//         sId += ch;
-//         ch = GetChr();
-//         while ( ch != ']' && !AtEOL() )
-//         {
-//            sId += ch;
-//            ch = GetChr();
-//         }
-//         if ( ch == ']' )
-//            sId += ch;
-//         else
-//            ; // TO DO: throw exception, missing ']'
+	   // continue reading and appending to parameter string thru the last segment
+	   while ( ch == ':' )
+	   {
+	      sId += ":" + ReadToken( bAllowLeadingDigit, FALSE /*bSkipLeadingDelimeters*/, FALSE /*bAllowMidHyphen*/, TRUE /*bAllowNewLineRead*/, &sKeyChars );  // reads and appends the next portion of the parameter string
+	      ch = GetChr();
+	
+	      while ( ch == ' ' )  // advance past spaces
+	         ch = GetChr();
+	      if ( (ch == ',' || ch == '=' || ch == '<' || ch == '>' || ch == '!') &&
+	      	  sKeyChars.indexOf( ch ) < 0 )		// SAC 12/10/20
+	      {  // ',' or '=' ends parameter string
+	         UnGetChr();
+	         return 0;
+	      }
+	      if ( ch == '[' )
+	      {  // read array index thru closing square bracket
+	         ReadArray( sId );
+// 	        sId += ch;
+// 	        ch = GetChr();
+// 	        while ( ch != ']' && !AtEOL() )
+// 	        {
+// 	           sId += ch;
+// 	           ch = GetChr();
+// 	        }
+// 	        if ( ch == ']' )
+// 	           sId += ch;
+// 	        else
+// 	           ; // TO DO: throw exception, missing ']'
 
-         // SAC - 4/23/97 - Added to handle Comp:Param[#]:Param[#]
-         ch = GetChr();
-      }
-   //   ch = GetChr();
-   }
-   if ( ch == ',' )
-      UnGetChr();
-
+	         // SAC - 4/23/97 - Added to handle Comp:Param[#]:Param[#]
+	         ch = GetChr();
+	      }
+	   //   ch = GetChr();
+	   }
+	   if ( ch == ',' )
+	      UnGetChr();
+	}
    return 0;
 }
 
@@ -1345,7 +1429,8 @@ int BEMTextIO::ParseColumnarRecord( QStringList& saFields, std::vector<int>& ia0
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-QString BEMTextIO::ReadToken( BOOL bAllowLeadingDigit, BOOL bSkipLeadingDelimeters /*=FALSE*/, BOOL bAllowMidHyphen /*=FALSE*/, BOOL bAllowNewLineRead /*=TRUE*/ )  // SAC 10/9/05		// SAC 9/11/14 - added bAllowNewLineRead arg
+QString BEMTextIO::ReadToken( BOOL bAllowLeadingDigit, BOOL bSkipLeadingDelimeters /*=FALSE*/, BOOL bAllowMidHyphen /*=FALSE*/,		// SAC 10/9/05
+										BOOL bAllowNewLineRead /*=TRUE*/, QString* psKeyChars /*=NULL*/ )  	// SAC 9/11/14 - added bAllowNewLineRead arg   // SAC 12/10/20 - psKeyChars
 {
    QString string;
    Advance( bSkipLeadingDelimeters, bAllowNewLineRead );
@@ -1354,13 +1439,15 @@ QString BEMTextIO::ReadToken( BOOL bAllowLeadingDigit, BOOL bSkipLeadingDelimete
 	   char chr = GetChr( bAllowNewLineRead );
 		if (!m_bAtEOF && (bAllowNewLineRead || !AtEOL()))
 		{
-			if ( !( isalpha( chr ) || chr == '_' || chr == ':' || (bAllowLeadingDigit && isdigit( chr )) ) )
+			if ( !( isalpha( chr ) || chr == '_' || chr == ':' || (bAllowLeadingDigit && isdigit( chr )) ||
+					  (psKeyChars && psKeyChars->indexOf( chr ) >= 0) ) )
    		   OurThrowTextioException(BEMTextioException::xQuote, m_fileName.toLocal8Bit().constData(), m_lineCount, m_chrIndex);
    		
    		string += chr;
    		
    		chr = GetChr();
-   		while (!m_bAtEOF && (__iscsym( chr ) || (bAllowMidHyphen && chr == '-')) && !AtEOL() )
+   		while (!m_bAtEOF && !AtEOL() && (__iscsym( chr ) || (bAllowMidHyphen && chr == '-') ||
+   													(psKeyChars && psKeyChars->indexOf( chr ) >= 0)) )
    		{
    		   string += chr;
    		   chr = GetChr();

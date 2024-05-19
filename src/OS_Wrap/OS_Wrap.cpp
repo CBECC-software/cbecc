@@ -43,6 +43,8 @@
 #include <model/Facility_Impl.hpp>
 #include <model/OutputMeter.hpp>
 #include <model/OutputMeter_Impl.hpp>
+#include <model/MeterCustom.hpp>
+#include <model/MeterCustom_Impl.hpp>
 #include <model/RunPeriod.hpp>
 #include <model/RunPeriod_Impl.hpp>
 //#include <model/SimulationControl.hpp>
@@ -100,12 +102,16 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/optional/optional_io.hpp>   //VS19 - SAC 10/14/20
 //#include <boost/algorithm/string.hpp>
 //#include <algorithm>
 //#include <string>
 #pragma warning(default : 4100 4127 4512)
 #include "memLkRpt.h"
 
+//#include <io.h>     //VS19 - SAC 10/20/20
+#include <iostream>     //VS19 - SAC 10/20/20
+#include <fstream>
 
 using namespace OS_Wrap;
 //using boost::format;
@@ -412,94 +418,94 @@ sMsg += boost::str( boost::format("\nreturn %g") % dRetVal );
 
 
 void OSWrapLib::InitHourlyResults( int iRunIdx )		// SAC 4/17/14
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
 								int iFl, iEU;
-								for (iFl=0; (pRunData && iFl<3); iFl++)
+								for (iFl=0; (pLocRunData && iFl<3); iFl++)
 								{	for (iEU=0; iEU<OSWrap_NumEPlusEnduses; iEU++)
-										pRunData->daHourlyResults[iFl][iEU].resize( 8760, 0.0 );  // Fuel / Enduse
+										pLocRunData->daHourlyResults[iFl][iEU].resize( 8760, 0.0 );  // Fuel / Enduse
 								}
 }
 
 void OSWrapLib::SumIntoHourlyResult( int iRunIdx, int iFuel, int iEnduse, int iHr, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-		pRunData->daHourlyResults[iFuel][iEnduse][iHr] += dVal;
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+		pLocRunData->daHourlyResults[iFuel][iEnduse][iHr] += dVal;
 }
 
 void OSWrapLib::AdjustAndSumHourlyResults( int iRunIdx, double* daFuelConvert )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	pRunData->bHourlyResultsCurrent = true;
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	pLocRunData->bHourlyResultsCurrent = true;
 		int iFl, iEU, hr;
 
 	// SAC 2/1/17 - hard-coded subtraction of OSEU_Fans_PrkgGar Elec from OSEU_Fans (tic #2033)  // SAC 8/14/17 - switched OSEU_Fans_PrkgGar to OSEU_Fans_ProcMtrs
 		double dFans=0.0, dPGFans=0.0;
 		for (hr=0; hr<8760; hr++)
-		{	dFans   += pRunData->daHourlyResults[OSF_Elec][OSEU_Fans         ][hr];
-			dPGFans += pRunData->daHourlyResults[OSF_Elec][OSEU_Fans_ProcMtrs][hr];
+		{	dFans   += pLocRunData->daHourlyResults[OSF_Elec][OSEU_Fans         ][hr];
+			dPGFans += pLocRunData->daHourlyResults[OSF_Elec][OSEU_Fans_ProcMtrs][hr];
 		}
 		if (dPGFans > 0 && dFans > 0)
 		{	assert( dPGFans <= dFans );
 			for (hr=0; hr<8760; hr++)
-				pRunData->daHourlyResults[OSF_Elec][OSEU_Fans][hr] -= pRunData->daHourlyResults[OSF_Elec][OSEU_Fans_ProcMtrs][hr];
+				pLocRunData->daHourlyResults[OSF_Elec][OSEU_Fans][hr] -= pLocRunData->daHourlyResults[OSF_Elec][OSEU_Fans_ProcMtrs][hr];
 		}
 
 		for (iFl=0; iFl<3; iFl++)
 			for (iEU=0; iEU<OSWrap_NumEPlusEnduses; iEU++)
-			{	pRunData->daHourlyResultsSum[iFl][iEU] = 0.0;
+			{	pLocRunData->daHourlyResultsSum[iFl][iEU] = 0.0;
 				for (hr=0; hr<8760; hr++)
-				{	pRunData->daHourlyResults[   iFl][iEU][hr] *= daFuelConvert[iFl];
-					pRunData->daHourlyResultsSum[iFl][iEU]     += pRunData->daHourlyResults[iFl][iEU][hr];
+				{	pLocRunData->daHourlyResults[   iFl][iEU][hr] *= daFuelConvert[iFl];
+					pLocRunData->daHourlyResultsSum[iFl][iEU]     += pLocRunData->daHourlyResults[iFl][iEU][hr];
 				}
 	}		}
 }
 
 int OSWrapLib::InitZoneData( int iRunIdx )
 {	int iNumZones = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	iNumZones = (int) pRunData->saZone.size();
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	iNumZones = (int) pLocRunData->saZone.size();
 		if (iNumZones > 0)
 		{
-			pRunData->daZone_UMLHClg.resize( iNumZones, -1.0 );
-			pRunData->daZone_UMLHHtg.resize( iNumZones, -1.0 );
-         pRunData->daZone_ClgDsgnLd.resize( iNumZones, -1.0 );
-         pRunData->daZone_HtgDsgnLd.resize( iNumZones, -1.0 );
-         pRunData->daZone_ClgDsgnFlow.resize( iNumZones, -1.0 );
-         pRunData->daZone_HtgDsgnFlow.resize( iNumZones, -1.0 );
+			pLocRunData->daZone_UMLHClg.resize( iNumZones, -1.0 );
+			pLocRunData->daZone_UMLHHtg.resize( iNumZones, -1.0 );
+         pLocRunData->daZone_ClgDsgnLd.resize( iNumZones, -1.0 );
+         pLocRunData->daZone_HtgDsgnLd.resize( iNumZones, -1.0 );
+         pLocRunData->daZone_ClgDsgnFlow.resize( iNumZones, -1.0 );
+         pLocRunData->daZone_HtgDsgnFlow.resize( iNumZones, -1.0 );
 	}	}
 	return iNumZones;
 }
 
 std::string OSWrapLib::GetZoneName( int iRunIdx, int idx )
 {	std::string sZnName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saZone.size())
-		sZnName = pRunData->saZone[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saZone.size())
+		sZnName = pLocRunData->saZone[idx];
 	return sZnName;
 }
 
 void OSWrapLib::SetZoneData( int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saZone.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saZone.size())
 		switch (iDataIdx)
-		{	case  0 :	pRunData->daZone_UMLHClg[    idx] = dVal;		break;
-			case  1 :	pRunData->daZone_UMLHHtg[    idx] = dVal;		break;
-			case  2 :	pRunData->daZone_ClgDsgnLd[  idx] = dVal;		break;
-			case  3 :	pRunData->daZone_HtgDsgnLd[  idx] = dVal;		break;
-			case  4 :	pRunData->daZone_ClgDsgnFlow[idx] = dVal;		break;
-			case  5 :	pRunData->daZone_HtgDsgnFlow[idx] = dVal;		break;
+		{	case  0 :	pLocRunData->daZone_UMLHClg[    idx] = dVal;		break;
+			case  1 :	pLocRunData->daZone_UMLHHtg[    idx] = dVal;		break;
+			case  2 :	pLocRunData->daZone_ClgDsgnLd[  idx] = dVal;		break;
+			case  3 :	pLocRunData->daZone_HtgDsgnLd[  idx] = dVal;		break;
+			case  4 :	pLocRunData->daZone_ClgDsgnFlow[idx] = dVal;		break;
+			case  5 :	pLocRunData->daZone_HtgDsgnFlow[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
 
 
 int OSWrapLib::InitFanData( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	int iNumFans = (int) pRunData->saFan.size();
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	int iNumFans = (int) pLocRunData->saFan.size();
 		if (iNumFans > 0)
-			pRunData->daFan_FlowCap.resize( iNumFans, -1.0 );
+			pLocRunData->daFan_FlowCap.resize( iNumFans, -1.0 );
 		return iNumFans;
 	}
 	return 0;
@@ -507,31 +513,31 @@ int OSWrapLib::InitFanData( int iRunIdx )
 
 std::string OSWrapLib::GetFanName( int iRunIdx, int idx )
 {	std::string sName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saFan.size())
-		sName = pRunData->saFan[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saFan.size())
+		sName = pLocRunData->saFan[idx];
 	return sName;
 }
 
 void OSWrapLib::SetFanData(     int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saFan.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saFan.size())
 		switch (iDataIdx)
-		{  case  0 :	pRunData->daFan_FlowCap[idx] = dVal;		break;
+		{  case  0 :	pLocRunData->daFan_FlowCap[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
 
 
 int OSWrapLib::InitCoilClgData( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	int iNumCoilClgs = (int) pRunData->saCoilClg.size();
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	int iNumCoilClgs = (int) pLocRunData->saCoilClg.size();
 		if (iNumCoilClgs > 0)
-		{	pRunData->daCoilClg_TotCap.resize(  iNumCoilClgs, -1.0 );
-			pRunData->daCoilClg_SensCap.resize( iNumCoilClgs, -1.0 );
-	//		pRunData->daCoilClg_FluidLdDsgn.resize( iNumCoilClgs, -1.0 );
-			pRunData->daCoilClg_FluidFlowRtDsgnSim.resize( iNumCoilClgs, -1.0 );
+		{	pLocRunData->daCoilClg_TotCap.resize(  iNumCoilClgs, -1.0 );
+			pLocRunData->daCoilClg_SensCap.resize( iNumCoilClgs, -1.0 );
+	//		pLocRunData->daCoilClg_FluidLdDsgn.resize( iNumCoilClgs, -1.0 );
+			pLocRunData->daCoilClg_FluidFlowRtDsgnSim.resize( iNumCoilClgs, -1.0 );
 		}
 		return iNumCoilClgs;
 	}
@@ -540,21 +546,21 @@ int OSWrapLib::InitCoilClgData( int iRunIdx )
 
 std::string OSWrapLib::GetCoilClgName( int iRunIdx, int idx )
 {	std::string sName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saCoilClg.size())
-		sName = pRunData->saCoilClg[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saCoilClg.size())
+		sName = pLocRunData->saCoilClg[idx];
 	return sName;
 }
 
 
 int OSWrapLib::InitCoilHtgData( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	int iNumCoilHtgs = (int) pRunData->saCoilHtg.size();
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	int iNumCoilHtgs = (int) pLocRunData->saCoilHtg.size();
 		if (iNumCoilHtgs > 0)
-		{	pRunData->daCoilHtg_TotCap.resize( iNumCoilHtgs, -1.0 );
-	//		pRunData->daCoilHtg_FluidLdDsgn.resize( iNumCoilHtgs, -1.0 );
-			pRunData->daCoilHlg_FluidFlowRtDsgnSim.resize( iNumCoilHtgs, -1.0 );
+		{	pLocRunData->daCoilHtg_TotCap.resize( iNumCoilHtgs, -1.0 );
+	//		pLocRunData->daCoilHtg_FluidLdDsgn.resize( iNumCoilHtgs, -1.0 );
+			pLocRunData->daCoilHlg_FluidFlowRtDsgnSim.resize( iNumCoilHtgs, -1.0 );
 		}
 		return iNumCoilHtgs;
 	}
@@ -562,41 +568,41 @@ int OSWrapLib::InitCoilHtgData( int iRunIdx )
 }
 
 void OSWrapLib::SetCoilClgData( int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saCoilClg.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saCoilClg.size())
 		switch (iDataIdx)
-		{  case  0 :	pRunData->daCoilClg_TotCap[idx]             = dVal;		break;
-			case  1 :	pRunData->daCoilClg_SensCap[idx]            = dVal;		break;
-			case  2 :	pRunData->daCoilClg_FluidFlowRtDsgnSim[idx] = dVal;		break;
+		{  case  0 :	pLocRunData->daCoilClg_TotCap[idx]             = dVal;		break;
+			case  1 :	pLocRunData->daCoilClg_SensCap[idx]            = dVal;		break;
+			case  2 :	pLocRunData->daCoilClg_FluidFlowRtDsgnSim[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
 
 std::string OSWrapLib::GetCoilHtgName( int iRunIdx, int idx )
 {	std::string sName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saCoilHtg.size())
-		sName = pRunData->saCoilHtg[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saCoilHtg.size())
+		sName = pLocRunData->saCoilHtg[idx];
 	return sName;
 }
 
 void OSWrapLib::SetCoilHtgData( int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saCoilHtg.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saCoilHtg.size())
 		switch (iDataIdx)
-		{  case  0 :	pRunData->daCoilHtg_TotCap[idx]             = dVal;		break;
-			case  1 :	pRunData->daCoilHlg_FluidFlowRtDsgnSim[idx] = dVal;		break;
+		{  case  0 :	pLocRunData->daCoilHtg_TotCap[idx]             = dVal;		break;
+			case  1 :	pLocRunData->daCoilHlg_FluidFlowRtDsgnSim[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
 
 
 int OSWrapLib::InitBlrData( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	int iNumBoilers = (int) pRunData->saBlr.size();
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	int iNumBoilers = (int) pLocRunData->saBlr.size();
 		if (iNumBoilers > 0)
-			pRunData->daBlr_CapRtd.resize( iNumBoilers, -1.0 );
+			pLocRunData->daBlr_CapRtd.resize( iNumBoilers, -1.0 );
 		return iNumBoilers;
 	}
 	return 0;
@@ -604,28 +610,28 @@ int OSWrapLib::InitBlrData( int iRunIdx )
 
 std::string OSWrapLib::GetBlrName( int iRunIdx, int idx )
 {	std::string sName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saBlr.size())
-		sName = pRunData->saBlr[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saBlr.size())
+		sName = pLocRunData->saBlr[idx];
 	return sName;
 }
 
 void OSWrapLib::SetBlrData(     int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saBlr.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saBlr.size())
 		switch (iDataIdx)
-		{  case  0 :	pRunData->daBlr_CapRtd[idx] = dVal;		break;
+		{  case  0 :	pLocRunData->daBlr_CapRtd[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
 
 
 int OSWrapLib::InitChlrData( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	int iNumChillers = (int) pRunData->saChlr.size();
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	int iNumChillers = (int) pLocRunData->saChlr.size();
 		if (iNumChillers > 0)
-			pRunData->daChlr_CapRtd.resize( iNumChillers, -1.0 );
+			pLocRunData->daChlr_CapRtd.resize( iNumChillers, -1.0 );
 		return iNumChillers;
 	}
 	return 0;
@@ -633,28 +639,28 @@ int OSWrapLib::InitChlrData( int iRunIdx )
 
 std::string OSWrapLib::GetChlrName( int iRunIdx, int idx )
 {	std::string sName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saChlr.size())
-		sName = pRunData->saChlr[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saChlr.size())
+		sName = pLocRunData->saChlr[idx];
 	return sName;
 }
 
 void OSWrapLib::SetChlrData(    int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saChlr.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saChlr.size())
 		switch (iDataIdx)
-		{  case  0 :	pRunData->daChlr_CapRtd[idx] = dVal;		break;
+		{  case  0 :	pLocRunData->daChlr_CapRtd[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
 
 
 int OSWrapLib::InitHtRejData( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	int iNumClgTowers = (int) pRunData->saHtRej.size();
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	int iNumClgTowers = (int) pLocRunData->saHtRej.size();
 		if (iNumClgTowers > 0)
-			pRunData->daHtRej_CapRtd.resize( iNumClgTowers, -1.0 );
+			pLocRunData->daHtRej_CapRtd.resize( iNumClgTowers, -1.0 );
 		return iNumClgTowers;
 	}
 	return 0;
@@ -662,28 +668,28 @@ int OSWrapLib::InitHtRejData( int iRunIdx )
 
 std::string OSWrapLib::GetHtRejName( int iRunIdx, int idx )
 {	std::string sName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saHtRej.size())
-		sName = pRunData->saHtRej[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saHtRej.size())
+		sName = pLocRunData->saHtRej[idx];
 	return sName;
 }
 
 void OSWrapLib::SetHtRejData(   int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saHtRej.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saHtRej.size())
 		switch (iDataIdx)
-		{  case  0 :	pRunData->daHtRej_CapRtd[idx] = dVal;		break;
+		{  case  0 :	pLocRunData->daHtRej_CapRtd[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
 
 
 int OSWrapLib::InitPumpData( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData)
-	{	int iNumPumps = (int) pRunData->saPump.size();
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData)
+	{	int iNumPumps = (int) pLocRunData->saPump.size();
 		if (iNumPumps > 0)
-			pRunData->daPump_FlowCap.resize( iNumPumps, -1.0 );
+			pLocRunData->daPump_FlowCap.resize( iNumPumps, -1.0 );
 		return iNumPumps;
 	}
 	return 0;
@@ -691,17 +697,17 @@ int OSWrapLib::InitPumpData( int iRunIdx )
 
 std::string OSWrapLib::GetPumpName( int iRunIdx, int idx )
 {	std::string sName;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saPump.size())
-		sName = pRunData->saPump[idx];
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saPump.size())
+		sName = pLocRunData->saPump[idx];
 	return sName;
 }
 
 void OSWrapLib::SetPumpData(    int iRunIdx, int idx, int iDataIdx, double dVal )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData && idx >= 0 && idx < (int) pRunData->saPump.size())
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData && idx >= 0 && idx < (int) pLocRunData->saPump.size())
 		switch (iDataIdx)
-		{  case  0 :	pRunData->daPump_FlowCap[idx] = dVal;		break;
+		{  case  0 :	pLocRunData->daPump_FlowCap[idx] = dVal;		break;
 			default :	OS_ASSERT( false );		break;
 		}
 }
@@ -759,80 +765,12 @@ typedef struct
 } QuickAnalysisRunPeriodInfo;
 
 // SAC 10/28/15 - added iRptFuelUseAs argument
-bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, boost::optional<openstudio::model::Model> model, std::string sProcessingPath,
+bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, boost::optional<openstudio::model::Model> resModel, std::string sProcessingPath,
 										/*std::string sSDDXMLFile,*/ std::string sEPlusSubdir, const char* pszRunSubdir, char* pszSQLOutPathFile, int iMaxLenSQLOutPathFile,
-										double* pdResults, bool bStoreHourlyResults, bool bWriteHourlyDebugCSV, const char* pszIDFFile, bool bFirstRunOfGroup,
-										bool bLastRunOfGroup, QuickAnalysisRunPeriodInfo* pQSimRunPeriodInfo, double fResultMult, int iRptFuelUseAs, const char* pszEPlusPath, double dEPlusVerNum )
+										double* pdResults, bool bStoreHourlyResults, bool bWriteHourlyDebugCSV, bool bWriteCustomMetersHourlyCSV,      // SAC 10/04/21
+                              const char* pszIDFFile, bool bFirstRunOfGroup, bool bLastRunOfGroup, QuickAnalysisRunPeriodInfo* pQSimRunPeriodInfo,
+                              double fResultMult, int iRptFuelUseAs, const char* pszEPlusPath, double dEPlusVerNum, OSWRAP_MSGCALLBACK* pMsgCallback /*=NULL*/ )
 {	bool bRetVal = true;
-
-//         if (bSimulateModel && pOSWrap && iRunIdx >= 0 && iRunIdx < 2)
-//			{
-//		// check for simulation warnings/errors
-//				int iLastDot = sSDDXMLFile.rfind('.');
-//				int iLastSpc = sSDDXMLFile.rfind(' ');
-//
-////	std::string sDbgMsg = boost::str( boost::format("%s / dot @ %d / space @ %d") % sSDDXMLFile % iLastDot % iLastSpc );
-////	::MessageBox( NULL, sDbgMsg.c_str(), NULL, MB_ICONEXCLAMATION );
-//
-//				if (iLastSpc >= (iLastDot-1))
-//				{	//ASSERT( FALSE );
-//					lRetVal = OSWrap_SimSDD_SimErrFileNotValid;  // Unable to determine E+ .err path/file
-//				}
-//				else
-//				{	std::string sErrPathFile = boost::str( boost::format("%s%s\\%s\\eplusout.err") 
-//																			% sProcessingPath % sSDDXMLFile.substr( iLastSpc+1, (iLastDot-iLastSpc-1) ) % sEPlusSubdir );
-//					openstudio::path errPathFile = openstudio::toPath( sErrPathFile );
-//					openstudio::energyplus::ErrorFile errorFile( errPathFile );
-//					pRunData->sSimErrPathFile   = sErrPathFile;
-//					pRunData->saSimWarnings     = errorFile.warnings();
-//					pRunData->saSimSevereErrors = errorFile.severeErrors();
-//					pRunData->saSimFatalErrors  = errorFile.fatalErrors();
-//					pRunData->bSimCompleted              = errorFile.completed();
-//					pRunData->bSimCompletedSuccessfully  = errorFile.completedSuccessfully();
-//
-////	sDbgMsg = boost::str( boost::format("ERR file: %s\n# Warnings:  %d\n# Severe Errors:  %d\n# Fatal Errors:  %d\nSim Completed:  %s\nSim Successful:  %s")
-////									% sErrPathFile % pRunData->saSimWarnings.size() % pRunData->saSimSevereErrors.size() % pRunData->saSimFatalErrors.size()
-////									% (errorFile.completed() ? "TRUE" : "FALSE") % (errorFile.completedSuccessfully() ? "TRUE" : "FALSE") );
-////	::MessageBox( NULL, sDbgMsg.c_str(), NULL, MB_ICONEXCLAMATION );
-//
-////  ASSERT_EQ(static_cast<unsigned>(46), errorFile.warnings().size());
-////  EXPECT_EQ(static_cast<unsigned>(8),  errorFile.severeErrors().size());
-////  EXPECT_EQ(static_cast<unsigned>(1),  errorFile.fatalErrors().size());
-//
-////  ASSERT_EQ(static_cast<unsigned>(46), errorFile.warnings().size());
-////  EXPECT_EQ("Output:PreprocessorMessage=\"EPXMLPreProc2\" has the following Warning conditions: Requested glazing exceeds available area for B6CCD5_window_1.  Reducing sill height to fit.", 
-////            errorFile.warnings()[0]);
-////  EXPECT_EQ(static_cast<unsigned>(8), errorFile.severeErrors().size());
-////  EXPECT_EQ(static_cast<unsigned>(1), errorFile.fatalErrors().size());
-////  EXPECT_TRUE(errorFile .completed();
-////  EXPECT_FALSE(errorFile.completedSuccessfully();
-//
-//					if (pRunData->saSimFatalErrors.size() > 0)
-//						lRetVal = OSWrap_SimSDD_SimFatalError;  // Fatal errors occurred in simulation
-//					else if (!errorFile.completedSuccessfully())
-//						lRetVal = OSWrap_SimSDD_SimIncomplete;  // Simulation did not complete successfully
-//				}
-//			}
-//
-//         if (!bSimulateModel || lRetVal > 0)
-//			{	// do nothing more
-//			}
-//			else
-//			{
-
-//				rm.GetJobs - on first job (or perhaps 2nd?)
-//
-//  					openstudio::runmanager::Job j = openstudio::runmanager::JobFactory::createEnergyPlusJob(  .....
-//  					openstudio::path db = openstudio::toPath(QDir::tempPath()) / openstudio::toPath("EnergyPlusJobRunDB");
-//  					openstudio::runmanager::RunManager kit(db, true);
-//  					kit.enqueue(j, false);
-//  					ASSERT_TRUE(kit.workPending());
-//  					EXPECT_EQ(kit.getJobs().size(), static_cast<size_t>(1));
-//  					ASSERT_TRUE(kit.getJob(j.uuid()) ==  j);
-
-	// UNSURE how to retrieve Job from Workflow ??   in order to execute the following
-
-//				file = job.treeOutputFiles().getLastByFilename("eplusout.sql");
 
 	// kludge until we gain access to the E+ Job
 				std::string sEPlusOutputSQLPathFile = sProcessingPath;
@@ -850,23 +788,54 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 
 				if (!boost::filesystem::exists(pathEPlusOutputSQL))
 					lRetVal = (iRunIdx == 0 ? OSWrap_SimSDD_OSSimSQLOutNotFound : OSWrap_SimSDD_OSSimSQL2OutNotFound);  // did not find SQL output
-				else if (!model)
+				else if (!resModel)
 					lRetVal = (iRunIdx == 0 ? OSWrap_SimSDD_OSModelNotValid : OSWrap_SimSDD_OSModel2NotValid);  // lost track of model
 				else
 				{
+              try {   //VS19
+
 					if (pszSQLOutPathFile && iMaxLenSQLOutPathFile > (int) sEPlusOutputSQLPathFile.length())	// SAC 4/2/13
 						strcpy_s( pszSQLOutPathFile, iMaxLenSQLOutPathFile, sEPlusOutputSQLPathFile.c_str() );
 
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+		if (pMsgCallback)
+			pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, boost::str( boost::format("      inside ProcessSimulationResults() - about to open E+ SQL results file:  %s") % sEPlusOutputSQLPathFile ).c_str(), 0 ); 
+#else
+      pMsgCallback;  // make sure it is referenced before end of routine
+#endif  //VS19
+
+//sqlite3_initialize();   // workaround for sqlite3 bug in OpenStudio - SAC 10/21/20
+
+//					Sleep( 10000 );
+#ifdef _DEBUG  //VS19 - SAC 10/21/20
+		if (pMsgCallback)
+      {
+        std::fstream myfile (sEPlusOutputSQLPathFile.c_str(), std::ios::in | std::ios::binary );
+        if (myfile.is_open())
+        {   char testRead[11];
+            myfile.read( testRead, 10 );
+            testRead[10] = '\0';
+         			pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, boost::str( boost::format("      inside ProcessSimulationResults() - E+ SQL file begins:  %s") % testRead ).c_str(), 0 ); 
+          myfile.close();
+        }
+        else
+         			pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, boost::str( boost::format("      inside ProcessSimulationResults() - E+ SQL file NOT writable:  %s") % pathEPlusOutputSQL ).c_str(), 0 ); 
+      }
+#endif  //VS19
+
+
 					openstudio::SqlFile sqlFile(pathEPlusOutputSQL);  //.fullPath);
 					//ASSERT_TRUE(sqlFile.connectionOpen());
+					//bool bSQLConOpen = sqlFile.connectionOpen();
 
-					model->setSqlFile(sqlFile);
+					resModel->setSqlFile(sqlFile);
 
 					//ModelFixture, FacilityTest
-					boost::optional<openstudio::model::Facility> facility = model->getOptionalUniqueModelObject<openstudio::model::Facility>();
-					// -or-  Facility facility = model.getUniqueModelObject<Facility>();
+					boost::optional<openstudio::model::Facility> facility = resModel->getOptionalUniqueModelObject<openstudio::model::Facility>();
+					// -or-  Facility facility = resModel.getUniqueModelObject<Facility>();
 					if (!facility)
-						lRetVal = (iRunIdx == 0 ? OSWrap_SimSDD_OSFacilityNotValid : OSWrap_SimSDD_OSFacility2NotValid);  // unable to retrieve model::Facility following simulation
+					{	lRetVal = (iRunIdx == 0 ? OSWrap_SimSDD_OSFacilityNotValid : OSWrap_SimSDD_OSFacility2NotValid);  // unable to retrieve model::Facility following simulation
+               }
 					else
 					{
 			//			// Returns an EndUse object containing all end uses for the simulation.
@@ -882,8 +851,20 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 								std::string query = "SELECT Value from tabulardatawithstrings where (reportname = 'AnnualBuildingUtilityPerformanceSummary') and (ReportForString = 'Entire Facility') and (TableName = 'End Uses'  ) and (ColumnName ='" + \
 			//													fuelType.valueDescription() + "') and (RowName ='" + category.valueDescription() + "') and (Units = '" + units + "')";
 																fuelType.valueDescription() + "') and (RowName ='" + category.valueDescription() + "')";
-								boost::optional<double> value = sqlFile.execAndReturnFirstDouble(query);
-			//					OS_ASSERT(value);    ------------>>>  (where assert is thrown)
+
+                        boost::optional<double> value = sqlFile.execAndReturnFirstDouble(query);
+
+//                        boost::optional<double> value;
+//  try {
+//								value = sqlFile.execAndReturnFirstDouble(query);
+//			//					OS_ASSERT(value);    ------------>>>  (where assert is thrown)
+//  } catch (std::runtime_error& e) {
+//		if (pMsgCallback)
+//			pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, boost::str( boost::format("      inside ProcessSimulationResults() - SQL query threw exception:  %s") % std::string{e.what()} ).c_str(), 0 ); 
+////    std::string expectedError("Error creating prepared statement: SELECT * FROM NonExistantTable; with error code 1, extended code 1, errmsg: no such table: NonExistantTable");
+////    EXPECT_EQ(expectedError, std::string{e.what()});
+//  }
+
 								if (value && *value != 0.0)
 								{	iNumEndUsesFromTbl++;
 									endUses.addEndUse(*value, fuelType, category);
@@ -955,14 +936,14 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 								//	}
 
 										   FILE *dbgFile = NULL;
-											char sDbg[128];
+											char sDbg[512];
 											if (bWriteHourlyDebugCSV)
 											{	std::string sDbgFN = pszIDFFile;
 												sDbgFN = sDbgFN.substr( 0, sDbgFN.rfind('.') );
 												sDbgFN += " - HrlyMtr.csv";
 											   dbgFile = fopen( sDbgFN.c_str(), "wt" );
 											   if (dbgFile)
-											   {	sprintf( sDbg, "#,EndUseType,SpecificEndUse,FuelType,Frequency\n" );
+											   {	sprintf( sDbg, "#,MeterName,EndUseType,SpecificEndUse,FuelType,Frequency\n" );
 													fprintf( dbgFile, sDbg );
 												}
 											}
@@ -972,13 +953,13 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 																		(947.817 / 100000000000),		// G(?)J -> therms
 																		(947.817 / 100000000000)   };
 
-						// for loop over Run Period objects, which is need to retrieve hourly results
+						      // for loop over Run Period objects, which is need to retrieve hourly results
 								bool bHaveQSimRunPeriods = (pQSimRunPeriodInfo && pQSimRunPeriodInfo->m_iNumQuickAnalysisPeriods > 0);
 								for (int iRP=0; iRP < (bHaveQSimRunPeriods ? pQSimRunPeriodInfo->m_iNumQuickAnalysisPeriods : 1); iRP++)
 								{
 									std::string sRPName;
 									if (!bHaveQSimRunPeriods)
-									{	openstudio::model::RunPeriod runPeriod = model->getUniqueModelObject<openstudio::model::RunPeriod>();
+									{	openstudio::model::RunPeriod runPeriod = resModel->getUniqueModelObject<openstudio::model::RunPeriod>();
 										sRPName = runPeriod.name().get();
 									}
 									else
@@ -989,7 +970,33 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 
 									std::string sFreq, sStatus, sEU, sFuel, sSpecEnduse;
 									//std::string sEU, sFuel, sFreq, sStatus;
-									openstudio::model::OutputMeterVector meters = model->getModelObjects<openstudio::model::OutputMeter>();
+									openstudio::model::OutputMeterVector meters = resModel->getModelObjects<openstudio::model::OutputMeter>();
+
+                           std::vector<std::string> saCustomMtrs;
+                           std::vector<int> etaCustomEnduses;
+                           std::vector<int> ftaCustomFuels;
+                           int iNumCustomMtrs = 0;
+									for(const openstudio::model::OutputMeter& chkMeter : meters)      // enable substitution of default meters with custom meter results - SAC 08/05/21 (HtPumpBlr)
+                           {
+                              std::string sMtrName = chkMeter.name();
+  												//if (dbgFile)
+  												//{  snprintf( sDbg, 512, ",\"%s\",initial meter checks...\n", sMtrName.c_str() );
+  												//   fprintf( dbgFile, sDbg );
+                                    //}
+                              if (boost::iequals( sMtrName, "Custom Space Heating Electricity"))
+                              {  iNumCustomMtrs++;
+                                 saCustomMtrs.push_back(     sMtrName );
+                                 etaCustomEnduses.push_back(  6 );  // openstudio::EndUseType::Heating );
+                                 ftaCustomFuels.push_back(    0 );  // openstudio::FuelType::Electricity );
+                              }
+                              else if (boost::iequals( sMtrName, "Custom Water Systems Electricity"))
+                              {  iNumCustomMtrs++;
+                                 saCustomMtrs.push_back(     sMtrName );
+                                 etaCustomEnduses.push_back( 11 );  // openstudio::EndUseType::WaterSystems );
+                                 ftaCustomFuels.push_back(    0 );  // openstudio::FuelType::Electricity );
+                              }
+                           }
+
 									for(const openstudio::model::OutputMeter& meter : meters)
 									{
 										bool bSuccess = false;			sStatus = "unknown";
@@ -1000,67 +1007,95 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										soSpecEnduse   = meter.specificEndUse();         
 										if (soSpecEnduse)
 											sSpecEnduse = *soSpecEnduse;
-							//			soSpecLocation = meter.specificInstallLocation();
+										//soSpecLocation = meter.specificInstallLocation();
 
 										//std::string sEU = meter.endUseType();
 										boost::optional<openstudio::EndUseType> euType = meter.endUseType();
-										if (!euType)
-											sEU = "enduse uninitialized";
-										else
-										{	//std::string sEU = openstudio::model::OutputMeter::EndUseType(*euType).valueName();
-											     if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.empty()                                                )   {  iEU =  0;  }  // sEU = "InteriorLights";          iEU =  6;  }
-											else if (*euType == openstudio::EndUseType::ExteriorLights         && sSpecEnduse.empty()                                                )   {  iEU =  1;  }  // sEU = "ExteriorLights";          iEU = 10;  }
-											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.empty()                                                )   {  iEU =  2;  }  // sEU = "InteriorEquipment";       iEU =  7;  }
-											else if (*euType == openstudio::EndUseType::ExteriorEquipment      && sSpecEnduse.empty()                                                )   {  iEU =  3;  }  // sEU = "ExteriorEquipment";       iEU = 10;  }
-											else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.empty()                                                )   {  iEU =  4;  }  // sEU = "Fans";                    iEU =  2;  }
-											else if (*euType == openstudio::EndUseType::Pumps                  && sSpecEnduse.empty()                                                )   {  iEU =  5;  }  // sEU = "Pumps";                   iEU =  4;  }
-											else if (*euType == openstudio::EndUseType::Heating                && sSpecEnduse.empty()                                                )   {  iEU =  6;  }  // sEU = "Heating";                 iEU =  0;  }
-											else if (*euType == openstudio::EndUseType::Cooling                && sSpecEnduse.empty()                                                )   {  iEU =  7;  }  // sEU = "Cooling";                 iEU =  1;  }
-											else if (*euType == openstudio::EndUseType::HeatRejection          && sSpecEnduse.empty()                                                )   {  iEU =  8;  }  // sEU = "HeatRejection";           iEU =  3;  }
-											else if (*euType == openstudio::EndUseType::Humidifier             && sSpecEnduse.empty()                                                )   {  iEU =  9;  }  // sEU = "Humidifier";              iEU = -1;  }  // ??
-											else if (*euType == openstudio::EndUseType::HeatRecovery           && sSpecEnduse.empty()                                                )   {  iEU = 10;  }  // sEU = "HeatRecovery";            iEU = -1;  }  // ??
-											else if (*euType == openstudio::EndUseType::WaterSystems           && sSpecEnduse.empty()                                                )   {  iEU = 11;  }  // sEU = "DHW";                     iEU =  5;  }
-											else if (*euType == openstudio::EndUseType::Cogeneration           && sSpecEnduse.empty()                                                )   {  iEU = 12;  }  // sEU = "Cogeneration";            iEU = -1;  }  // ??
-											else if (*euType == openstudio::EndUseType::Refrigeration          && sSpecEnduse.empty()                                                )   {  iEU = 13;  }  // sEU = "Refrigeration";           iEU =  8;  }  // ??
-									//		else if (*euType == openstudio::EndUseType::Miscellaneous          && sSpecEnduse.empty()                                                )   {  iEU = 14;  }  // sEU = "Miscellaneous";           iEU =  7;  }
-											else if (*euType == openstudio::EndUseType::HeatingCoils           && sSpecEnduse.empty()                                                )   {  iEU = 14;  }  // sEU = "HeatingCoils";            iEU =  0;  }
-											else if (*euType == openstudio::EndUseType::CoolingCoils           && sSpecEnduse.empty()                                                )   {  iEU = 15;  }  // sEU = "CoolingCoils";            iEU =  1;  }
-											else if (*euType == openstudio::EndUseType::Boilers                && sSpecEnduse.empty()                                                )   {  iEU = 16;  }  // sEU = "Boilers";                 iEU =  8;  }  // ??
-											else if (*euType == openstudio::EndUseType::Baseboard              && sSpecEnduse.empty()                                                )   {  iEU = 17;  }  // sEU = "Baseboard";               iEU =  0;  }
-											else if (*euType == openstudio::EndUseType::HeatRecoveryForCooling && sSpecEnduse.empty()                                                )   {  iEU = 18;  }  // sEU = "HeatRecoveryForCooling";  iEU =  1;  }  // ??
-											else if (*euType == openstudio::EndUseType::HeatRecoveryForHeating && sSpecEnduse.empty()                                                )   {  iEU = 19;  }  // sEU = "HeatRecoveryForHeating";  iEU =  0;  }  // ??
-											else if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+1][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+1;  }  // sEU = "InteriorLights",     "ComplianceLtg"        iEU =  6;  }	// SAC 11/7/15 - 'Reg Ltg' -> 'ComplianceLtg' (SF tic 544)       
-											else if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+2][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+2;  }  // sEU = "InteriorLights",     "NonComplianceLtg"     iEU =  6;  }	// SAC 11/7/15 - 'NonReg Ltg' -> 'NonComplianceLtg' (SF tic 544) 
-											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+3][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+3;  }  // sEU = "InteriorEquipment",  "Receptacle"           iEU =  6;  }
-											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+4][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+4;  }  // sEU = "InteriorEquipment",  "Process"              iEU =  6;  }
-											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+5][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+5;  }  // sEU = "InteriorEquipment",  "Refrig"               iEU =  6;  }
-											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+6][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+6;  }  // sEU = "InteriorEquipment",  "Internal Transport"   iEU =  6;  }
-											else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+7][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+7;  }  // sEU = "Fans",               "ProcessMotors"    iEU = ;  }  // SAC 1/30/17  // SAC 8/14/17
-											else  {	sEU = "not found";		}		//		ASSERT( FALSE );     }	//	sEU = "<unknown_EndUseType>";		ASSERT( FALSE );		}
-										}
-
 										boost::optional<openstudio::FuelType> fType = meter.fuelType();
-										if (!fType)
-											sFuel = "fuel uninitialized";
-										else
-										{	//std::string sFuel;  // = openstudio::model::OutputMeter::FuelType(*fType).valueName();
-											     if (*fType == openstudio::FuelType::Electricity    )   {  iFl =  0;   sFuel = "Electricity";      }  
-											else if (*fType == openstudio::FuelType::Gas            )   {  iFl = (iRptFuelUseAs < 0 ? 1 : iRptFuelUseAs);   sFuel = "Gas";              }	// SAC 10/28/15 - iRptFuelUseAs
-											else if (*fType == openstudio::FuelType::Gasoline       )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "Gasoline";         }   
-											else if (*fType == openstudio::FuelType::Diesel         )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "Diesel";           }   
-											else if (*fType == openstudio::FuelType::FuelOil_1      )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "FuelOil_1";        }   
-											else if (*fType == openstudio::FuelType::FuelOil_2      )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "FuelOil_2";        }   
-											else if (*fType == openstudio::FuelType::Propane        )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "Propane";          }   
-											else if (*fType == openstudio::FuelType::Water          )   {  iFl = -1;   sFuel = "Water";            }  // ??
-											else if (*fType == openstudio::FuelType::Steam          )   {  iFl = -1;   sFuel = "Steam";            }  // ??
-											else if (*fType == openstudio::FuelType::DistrictCooling)   {  iFl = -1;   sFuel = "DistrictCooling";  }  // ??
-											else if (*fType == openstudio::FuelType::DistrictHeating)   {  iFl = -1;   sFuel = "DistrictHeating";  }  // ??
-											else if (*fType == openstudio::FuelType::EnergyTransfer )   {  iFl = -1;   sFuel = "EnergyTransfer";   }  // ??
-											else  {	sFuel = "not found";		}		//		ASSERT( FALSE );     }	//	sFuel = "<unknown_FuelType>";			ASSERT( FALSE );		}
-										}
-				
+                              std::string sMtrName = meter.name();
 										sFreq = meter.reportingFrequency();
-				
+
+                              bool bThisMtrCustom = false;
+                              bool bThisMtrReplacedByCustom = false;
+                              int iCM;
+                              for (iCM=0; (!bThisMtrCustom && iCM < iNumCustomMtrs); iCM++)    // check for this being a custom meter - SAC 08/05/21
+                              {  if (boost::iequals( sMtrName, saCustomMtrs.at(iCM).c_str() ))
+                                 {  bThisMtrCustom = true;
+                                    iEU = etaCustomEnduses[iCM];
+                                    iFl = ftaCustomFuels[iCM];    sFuel = "Electricity";
+                                    //*euType = (openstudio::EndUseType) etaCustomEnduses[iCM];
+                                    //*fType  = (openstudio::FuelType) ftaCustomFuels[iCM];
+  												if (dbgFile)
+  												{	snprintf( sDbg, 512, ",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",found custom meter...\n", sMtrName.c_str(), pszaEplusEnduses[iEU][0], sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str() );
+  													fprintf( dbgFile, sDbg );
+                                 }  }
+                              }
+
+                              if (!bThisMtrCustom)
+										{
+                                 if (!euType)
+										   	sEU = "enduse uninitialized";
+										   else
+										   {	//std::string sEU = openstudio::model::OutputMeter::EndUseType(*euType).valueName();
+										   	     if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.empty()                                                )   {  iEU =  0;  }  // sEU = "InteriorLights";          iEU =  6;  }
+										   	else if (*euType == openstudio::EndUseType::ExteriorLights         && sSpecEnduse.empty()                                                )   {  iEU =  1;  }  // sEU = "ExteriorLights";          iEU = 10;  }
+										   	else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.empty()                                                )   {  iEU =  2;  }  // sEU = "InteriorEquipment";       iEU =  7;  }
+										   	else if (*euType == openstudio::EndUseType::ExteriorEquipment      && sSpecEnduse.empty()                                                )   {  iEU =  3;  }  // sEU = "ExteriorEquipment";       iEU = 10;  }
+										   	else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.empty()                                                )   {  iEU =  4;  }  // sEU = "Fans";                    iEU =  2;  }
+										   	else if (*euType == openstudio::EndUseType::Pumps                  && sSpecEnduse.empty()                                                )   {  iEU =  5;  }  // sEU = "Pumps";                   iEU =  4;  }
+										   	else if (*euType == openstudio::EndUseType::Heating                && sSpecEnduse.empty()                                                )   {  iEU =  6;  }  // sEU = "Heating";                 iEU =  0;  }
+										   	else if (*euType == openstudio::EndUseType::Cooling                && sSpecEnduse.empty()                                                )   {  iEU =  7;  }  // sEU = "Cooling";                 iEU =  1;  }
+										   	else if (*euType == openstudio::EndUseType::HeatRejection          && sSpecEnduse.empty()                                                )   {  iEU =  8;  }  // sEU = "HeatRejection";           iEU =  3;  }
+										   	else if (*euType == openstudio::EndUseType::Humidifier             && sSpecEnduse.empty()                                                )   {  iEU =  9;  }  // sEU = "Humidifier";              iEU = -1;  }  // ??
+										   	else if (*euType == openstudio::EndUseType::HeatRecovery           && sSpecEnduse.empty()                                                )   {  iEU = 10;  }  // sEU = "HeatRecovery";            iEU = -1;  }  // ??
+										   	else if (*euType == openstudio::EndUseType::WaterSystems           && sSpecEnduse.empty()                                                )   {  iEU = 11;  }  // sEU = "DHW";                     iEU =  5;  }
+										   	else if (*euType == openstudio::EndUseType::Cogeneration           && sSpecEnduse.empty()                                                )   {  iEU = 12;  }  // sEU = "Cogeneration";            iEU = -1;  }  // ??
+										   	else if (*euType == openstudio::EndUseType::Refrigeration          && sSpecEnduse.empty()                                                )   {  iEU = 13;  }  // sEU = "Refrigeration";           iEU =  8;  }  // ??
+									//	   	else if (*euType == openstudio::EndUseType::Miscellaneous          && sSpecEnduse.empty()                                                )   {  iEU = 14;  }  // sEU = "Miscellaneous";           iEU =  7;  }
+										   	else if (*euType == openstudio::EndUseType::HeatingCoils           && sSpecEnduse.empty()                                                )   {  iEU = 14;  }  // sEU = "HeatingCoils";            iEU =  0;  }
+										   	else if (*euType == openstudio::EndUseType::CoolingCoils           && sSpecEnduse.empty()                                                )   {  iEU = 15;  }  // sEU = "CoolingCoils";            iEU =  1;  }
+										   	else if (*euType == openstudio::EndUseType::Boilers                && sSpecEnduse.empty()                                                )   {  iEU = 16;  }  // sEU = "Boilers";                 iEU =  8;  }  // ??
+										   	else if (*euType == openstudio::EndUseType::Baseboard              && sSpecEnduse.empty()                                                )   {  iEU = 17;  }  // sEU = "Baseboard";               iEU =  0;  }
+										   	else if (*euType == openstudio::EndUseType::HeatRecoveryForCooling && sSpecEnduse.empty()                                                )   {  iEU = 18;  }  // sEU = "HeatRecoveryForCooling";  iEU =  1;  }  // ??
+										   	else if (*euType == openstudio::EndUseType::HeatRecoveryForHeating && sSpecEnduse.empty()                                                )   {  iEU = 19;  }  // sEU = "HeatRecoveryForHeating";  iEU =  0;  }  // ??
+										   	else if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+1][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+1;  }  // sEU = "InteriorLights",     "ComplianceLtg"        iEU =  6;  }	// SAC 11/7/15 - 'Reg Ltg' -> 'ComplianceLtg' (SF tic 544)       
+										   	else if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+2][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+2;  }  // sEU = "InteriorLights",     "NonComplianceLtg"     iEU =  6;  }	// SAC 11/7/15 - 'NonReg Ltg' -> 'NonComplianceLtg' (SF tic 544) 
+										   	else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+3][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+3;  }  // sEU = "InteriorEquipment",  "Receptacle"           iEU =  6;  }
+										   	else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+4][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+4;  }  // sEU = "InteriorEquipment",  "Process"              iEU =  6;  }
+										   	else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+5][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+5;  }  // sEU = "InteriorEquipment",  "Refrig"               iEU =  6;  }
+										   	else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+6][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+6;  }  // sEU = "InteriorEquipment",  "Internal Transport"   iEU =  6;  }
+										   	else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+7][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+7;  }  // sEU = "Fans",               "ProcessMotors"    iEU = ;  }  // SAC 1/30/17  // SAC 8/14/17
+										   	else  {	sEU = "not found";		}		//		ASSERT( FALSE );     }	//	sEU = "<unknown_EndUseType>";		ASSERT( FALSE );		}
+                                 }
+
+										   if (!fType)
+										   	sFuel = "fuel uninitialized";
+										   else
+										   {	//std::string sFuel;  // = openstudio::model::OutputMeter::FuelType(*fType).valueName();
+										   	     if (*fType == openstudio::FuelType::Electricity    )   {  iFl =  0;   sFuel = "Electricity";      }  
+										   	else if (*fType == openstudio::FuelType::Gas            )   {  iFl = (iRptFuelUseAs < 0 ? 1 : iRptFuelUseAs);   sFuel = "Gas";              }	// SAC 10/28/15 - iRptFuelUseAs
+										   	else if (*fType == openstudio::FuelType::Gasoline       )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "Gasoline";         }   
+										   	else if (*fType == openstudio::FuelType::Diesel         )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "Diesel";           }   
+										   	else if (*fType == openstudio::FuelType::FuelOil_1      )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "FuelOil_1";        }   
+										   	else if (*fType == openstudio::FuelType::FuelOil_2      )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "FuelOil_2";        }   
+										   	else if (*fType == openstudio::FuelType::Propane        )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "Propane";          }   
+										   	else if (*fType == openstudio::FuelType::Water          )   {  iFl = -1;   sFuel = "Water";            }  // ??
+										   	else if (*fType == openstudio::FuelType::Steam          )   {  iFl = -1;   sFuel = "Steam";            }  // ??
+										   	else if (*fType == openstudio::FuelType::DistrictCooling)   {  iFl = -1;   sFuel = "DistrictCooling";  }  // ??
+										   	else if (*fType == openstudio::FuelType::DistrictHeating)   {  iFl = -1;   sFuel = "DistrictHeating";  }  // ??
+										   	else if (*fType == openstudio::FuelType::EnergyTransfer )   {  iFl = -1;   sFuel = "EnergyTransfer";   }  // ??
+										   	else  {	sFuel = "not found";		}		//		ASSERT( FALSE );     }	//	sFuel = "<unknown_FuelType>";			ASSERT( FALSE );		}
+										   }
+
+                                 for (iCM=0; (!bThisMtrReplacedByCustom && iCM < iNumCustomMtrs); iCM++)    // check for this being a meter REPLACED by a custom meter - SAC 08/05/21
+                                    if (iEU == etaCustomEnduses[iCM] && iFl == ftaCustomFuels[iCM])
+                                    {  bThisMtrReplacedByCustom = true;
+   												if (dbgFile)
+   												{	snprintf( sDbg, 512, ",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",found meter being replaced by custom mtr...\n", sMtrName.c_str(), (sEU.size() > 0 ? sEU.c_str() : pszaEplusEnduses[iEU][0]), sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str() );
+   													fprintf( dbgFile, sDbg );
+                                    }  }
+                              }
+
 										double dEUTot=0.0;
 										if (iFl >= 0 && iEU >= 0 && boost::iequals( sFreq, "hourly"))
 										{
@@ -1075,15 +1110,17 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 													//dEUTot=0.0;
 													for (hr = 0; hr < numValues; ++hr)
 													{
-														pOSWrap->SumIntoHourlyResult( iRunIdx, iFl, iEU, (hr + iYrHourOffset), (values(hr) * fResultMult) );
+														if (!bThisMtrReplacedByCustom)
+                                             pOSWrap->SumIntoHourlyResult( iRunIdx, iFl, iEU, (hr + iYrHourOffset), (values(hr) * fResultMult) );
 														//pRunData->daHourlyResults[iFl][iEU][hr] += values(hr);
 														dEUTot += (values(hr) * fResultMult);
 													}
 
 													sStatus = "success";
+                                       if (bThisMtrReplacedByCustom)
+                                          sStatus += " (replaced by custom mtr)";
 													bSuccess = true;
 													iNumHrlyStreamsRetrieved++;
-				
 												}
 												else
 												{	//ASSERT( FALSE );
@@ -1094,11 +1131,36 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 												sStatus = "error retrieving TimeSeries";
 										}
 
+                              //else if (boost::iequals( sFreq, "hourly"))     // DEBUGGING - retrieve results regardless of iFl & iEU settings - SAC 08/05/21
+                              //{
+										//	boost::optional<openstudio::TimeSeries> timeSeries = meter.getData( sRPName );  // runPeriod.name().get());
+										//	if (timeSeries)
+                              //   {
+										//		openstudio::Vector values = timeSeries->values();
+										//		unsigned numValues = (unsigned) values.size();
+										//		if (numValues > 0 && (numValues + iYrHourOffset) <= 8760)		// numValues == 8760)
+										//		{
+										//			for (hr = 0; hr < numValues; ++hr)
+										//			{
+										//			//	pOSWrap->SumIntoHourlyResult( iRunIdx, iFl, iEU, (hr + iYrHourOffset), (values(hr) * fResultMult) );
+										//				dEUTot += (values(hr) * fResultMult);
+										//			}
+										//			sStatus = "success (unknown enduse or fuel)";
+										//			bSuccess = true;
+										//			iNumHrlyStreamsRetrieved++;
+										//		}
+										//		else
+										//		{	//ASSERT( FALSE );
+										//			sStatus = boost::str( boost::format("NumHrlyVals = %d") % numValues );
+										//		}
+                              //   }
+                              //}
+
 												if (dbgFile)
 												{	if (bSuccess)
-														sprintf( sDbg, "%ld,\"%s\",\"%s\",\"%s\",\"%s\",%s,%g\n", iNumHrlyStreamsRetrieved, (sEU.size() > 0 ? sEU.c_str() : pszaEplusEnduses[iEU][0]), sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str(), sStatus.c_str(), dEUTot );
+														snprintf( sDbg, 512, "%ld,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,%g\n", iNumHrlyStreamsRetrieved, sMtrName.c_str(), (sEU.size() > 0 ? sEU.c_str() : pszaEplusEnduses[iEU][0]), sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str(), sStatus.c_str(), dEUTot );
 													else
-														sprintf( sDbg, "%ld,\"%s\",\"%s\",\"%s\",\"%s\",%s\n"   , iNumHrlyStreamsRetrieved, (sEU.size() > 0 ? sEU.c_str() : pszaEplusEnduses[iEU][0]), sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str(), sStatus.c_str() );
+														snprintf( sDbg, 512, "%ld,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s\n"   , iNumHrlyStreamsRetrieved, sMtrName.c_str(), (sEU.size() > 0 ? sEU.c_str() : pszaEplusEnduses[iEU][0]), sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str(), sStatus.c_str() );
 													//							(sSpecEnduse ? sSpecEnduse->c_str() : ""), (sSpecLocation ? sSpecLocation->c_str() : "") );
 													fprintf( dbgFile, sDbg );
 												}
@@ -1128,19 +1190,239 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 											   }
 
 
-						//		for(const openstudio::EndUseFuelType& fuelType : fuelTypes){
-						//		  std::string units = endUses.getUnitsForFuelType(fuelType);
-						//		  for(const openstudio::EndUseCategoryType& category : categories){
-						//		    for(const std::string& subCategory : subCategories)
-						//			 {
-						//		      double value = endUses.getEndUse(fuelType, category, subCategory);
-						//				if (value != 0.0 && fuelType.value() < 5 && category.value() < 14)
-						//					pdResults[ (fuelType.value() * 14) + category.value() ] = (value * 947.817);   // convert from GJ to kBtu
-						//		      // barchart(value, units) ??
-						//		    }
-						//		  }
-						//		}
+            						//		for(const openstudio::EndUseFuelType& fuelType : fuelTypes){
+            						//		  std::string units = endUses.getUnitsForFuelType(fuelType);
+            						//		  for(const openstudio::EndUseCategoryType& category : categories){
+            						//		    for(const std::string& subCategory : subCategories)
+            						//			 {
+            						//		      double value = endUses.getEndUse(fuelType, category, subCategory);
+            						//				if (value != 0.0 && fuelType.value() < 5 && category.value() < 14)
+            						//					pdResults[ (fuelType.value() * 14) + category.value() ] = (value * 947.817);   // convert from GJ to kBtu
+            						//		      // barchart(value, units) ??
+            						//		    }
+            						//		  }
+            						//		}
 
+
+                        // storage of custom meter hourly CSV export - SAC 09/29/21
+                        if (bWriteCustomMetersHourlyCSV &&
+                            (pQSimRunPeriodInfo==NULL || pQSimRunPeriodInfo->m_iNumQuickAnalysisPeriods < 1))
+                        {
+									openstudio::model::RunPeriod runPeriod = resModel->getUniqueModelObject<openstudio::model::RunPeriod>();
+									std::string sRPName = runPeriod.name().get();
+									std::transform( sRPName.begin(), sRPName.end(), sRPName.begin(), ::toupper );
+
+   								double daExpFuelConvert[] = {	(947.817 / 3412140000),		// J -> kWh
+      																	(947.817 / 1000000000)	};	// J -> kBtu
+                           const char* pszCustMtrFuelLbls[] = { "(kWh),", "(kBtu)," };
+
+#define NumCustMeters  6
+                           const char* pszCustMtrColLbls[] = { "Nonresidential Electricity,,,,,,,,,,", "Residential Electricity,,,,,,,,,,", "Mixed Electricty,,,,,,,,,,", "Nonresidential Gas,,,,,", "Residential Gas,,,,,", "Mixed Gas,,,,,"      };
+                           const char* pszCustMtrNames[]   = { "NONRESELECMETER"           , "RESELECMETER"           , "MIXEDELECMETER"  , "NONRESGASMETER"    , "RESGASMETER"    , "MIXEDGASMETER"  };
+                           int iaCustMtrFuelIdx[]          = {         0                   ,      0                   ,        0          ,        1            ,     1            ,       1          };
+                           int iaFirstCustMtrColIdx[]      = {        -1                   ,     -1                   ,       -1          ,       -1            ,    -1            ,      -1          };  // set during processing
+#define NumCustMtrEnduses     8
+#define NumCustGasMtrEnduses  3
+                           const char* pszMtrEUColLbls[]   = { "Spc Heat,", "Spc Cool,", "Indr Fans,", "Heat Rej,", "Pump&Misc,", "Dom HW,", "Lighting,", "Process,", "Comp Tot,", "TOTAL,"      };
+                           const char* pszMtrEnduseNames[] = { "SPCHEAT"  , "SPCCOOL"  , "INDRFANS"  , "HEATREJ"  , "PUMPMISC"  , "DOMHW"  , "LIGHTING" , "PROCESS"  };
+                           int iaMtrGasUseIdx[]            = {     0      ,    -1      ,    -1       ,    -1      ,    -1       ,     1    ,    -1      ,     2      };
+                           bool baComplianceEnduse[]       = {   true     ,   true     ,   true      ,   true     ,   true      ,   true   ,   true     ,   false    };
+
+                           //double daCustMtrHrlyRes[              (3*(NumCustMtrEnduses+2)) + (3*(NumCustGasMtrEnduses+2)) ][8760];
+                           int iMtr, iTotNumCustMtrHrlyResCols = (3*(NumCustMtrEnduses+2)) + (3*(NumCustGasMtrEnduses+2));
+                           double* dpCustMtrHrlyRes = (double*) malloc( (iTotNumCustMtrHrlyResCols * 8760 * sizeof(double)) );
+
+                                    //std::string sDbg2 = boost::str( boost::format("iTotNumCustMtrHrlyResCols = %d") % iTotNumCustMtrHrlyResCols );
+                                    //if (pMsgCallback)
+                                    //   pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, sDbg2.c_str(), 0 ); 
+
+                           for (iMtr=0; iMtr < iTotNumCustMtrHrlyResCols; iMtr++)
+                           {  for (unsigned hr=0; hr<8760; hr++)
+                                 //daCustMtrHrlyRes[ iMtr ][hr] = 0.0;
+                                 dpCustMtrHrlyRes[ (iMtr*8760)+hr ] = 0.0;
+                           }
+                           bool bAbortCustMtrExport = false;
+                           int iCurExportDataColIdx = 0, iNumCustMtrHrlyStreamsRetrieved = 0;
+                           for (iMtr=0; (!bAbortCustMtrExport && iMtr < NumCustMeters); iMtr++)
+                           {
+                              int iCompTotEUColIdx = (iaCustMtrFuelIdx[iMtr] == 0 ? NumCustMtrEnduses : NumCustGasMtrEnduses);
+                              int iDataColIdx = -1;
+                              for (int iEnduse=0; (!bAbortCustMtrExport && iEnduse < NumCustMtrEnduses); iEnduse++)
+                              {  int iEUColIdx = (iaCustMtrFuelIdx[iMtr] == 0 ? iEnduse : iaMtrGasUseIdx[iEnduse]);
+                                 if (iEUColIdx >= 0)
+                                 {
+         									std::string sMtrName, sStatus;
+                                    sMtrName = boost::str( boost::format("%s:%s") % pszCustMtrNames[iMtr] % pszMtrEnduseNames[iEnduse]);
+         									double dVal, dEUTot=0.0;
+                                    int iNumValues=0;
+                                          //sStatus = boost::str( boost::format("attempting to retrieve horuly results for '%s' (%d col idx)") % sMtrName.c_str() % iDataColIdx );
+                     					boost::optional<openstudio::TimeSeries> timeSeries = sqlFile.timeSeries( sRPName, "Hourly", sMtrName.c_str(), "" );
+                     					if (timeSeries)
+         									{
+                                       if (iaFirstCustMtrColIdx[iMtr] < 0)
+                                          iaFirstCustMtrColIdx[iMtr] = iCurExportDataColIdx;
+                                       iDataColIdx = iaFirstCustMtrColIdx[iMtr] + iEUColIdx;
+         										openstudio::Vector values = timeSeries->values();
+         										unsigned numValues = (unsigned) values.size();
+                                       iNumValues = (int) numValues;
+         										if (numValues > 0 && numValues <= 8760)		// numValues == 8760)
+         										{
+         											for (unsigned hr = 0; hr < numValues; ++hr)
+         											{
+                                             dVal = (values(hr) * daExpFuelConvert[iaCustMtrFuelIdx[iMtr]] * fResultMult);
+                                             dEUTot += dVal;
+                                             dpCustMtrHrlyRes[ (iDataColIdx*8760)+hr ] = dVal;
+                                             if (baComplianceEnduse[iEnduse])
+                                                dpCustMtrHrlyRes[(iaFirstCustMtrColIdx[iMtr]+iCompTotEUColIdx  )*8760+hr] += dVal;   // CompTotal
+                                             dpCustMtrHrlyRes[   (iaFirstCustMtrColIdx[iMtr]+iCompTotEUColIdx+1)*8760+hr] += dVal;   // TOTAL
+
+                                             //daTempHrlyRes[hr] = (values(hr) * daExpFuelConvert[iaCustMtrFuelIdx[iMtr]] * fResultMult);
+         												//dEUTot += daTempHrlyRes[hr];
+
+                                             //daCustMtrHrlyRes[iDataColIdx][hr] = dVal;
+                                             //daCustMtrHrlyRes[iDataColIdx][0] = dVal;
+         												//dEUTot += (values(hr) * daExpFuelConvert[iaCustMtrFuelIdx[iMtr]] * fResultMult);
+                                             //if (baComplianceEnduse[iEnduse])
+                                             //   daCustMtrHrlyRes[iaFirstCustMtrColIdx[iMtr]+iCompTotEUColIdx  ][hr] += daCustMtrHrlyRes[iDataColIdx][hr];   // CompTotal
+                                             //daCustMtrHrlyRes[   iaFirstCustMtrColIdx[iMtr]+iCompTotEUColIdx+1][hr] += daCustMtrHrlyRes[iDataColIdx][hr];   // TOTAL
+         											}
+         											sStatus = boost::str( boost::format("success - '%s' (%d values, %d col idx) annual use = %g") % sMtrName.c_str() % numValues % iDataColIdx % dEUTot );
+         											iNumCustMtrHrlyStreamsRetrieved++;
+         										}
+         										else
+         											sStatus = boost::str( boost::format("TimeSeries '%s' NumHrlyVals = %d") % sMtrName.c_str() % numValues );
+         									}
+         									else
+         										sStatus = boost::str( boost::format("   TimeSeries not found for meter '%s'") % sMtrName.c_str() );
+
+                              		if (pMsgCallback)
+                              			pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, sStatus.c_str(), 0 ); 
+                                 }
+                              }
+                              if (iDataColIdx >= 0)
+                                 iCurExportDataColIdx += (iCompTotEUColIdx+2);
+                           }
+
+                           if (iNumCustMtrHrlyStreamsRetrieved > 0 && !bAbortCustMtrExport)
+                           {  // EXPORT CSV FILE
+
+                                 std::string sCustMtrErr, sCustMtrCSVFN = pszIDFFile;
+											sCustMtrCSVFN = sCustMtrCSVFN.substr( 0, sCustMtrCSVFN.rfind('.') );
+											sCustMtrCSVFN += " - HrlyCustomMtrResults.csv";
+                              	FILE *fp_CMCSV;
+                           		int iErrorCode;
+                           		try
+                           		{  iErrorCode = fopen_s( &fp_CMCSV, sCustMtrCSVFN.c_str(), "wb" );
+                           			if (iErrorCode != 0 || fp_CMCSV == NULL)
+                           			{	//iRetVal = 3;
+                           				sCustMtrErr = boost::str( boost::format( "Error encountered opening custom meter hourly CSV results file:  %s") % sCustMtrCSVFN );
+                           			}
+                           			else
+                           			{  char pszMtrRec[1024];
+                           			   fprintf( fp_CMCSV, "7,4,Row/Col hourly results data begin\n" );
+                           			   fprintf( fp_CMCSV, "\"Hourly CustomMeter Results For Nonresidential, Residential, and Mixed Systems\"\n" );
+                           			   fprintf( fp_CMCSV, "\n" );
+
+                                       strcpy_s( pszMtrRec, 1024, ",,," );
+                                       for (iMtr=0; (!bAbortCustMtrExport && iMtr < NumCustMeters); iMtr++)
+                                       {  if (iaFirstCustMtrColIdx[iMtr] >= 0)
+                                             strcat_s( pszMtrRec, 1024, pszCustMtrColLbls[iMtr] );
+                                       }  strcat_s( pszMtrRec, 1024, "\n" );
+                           			   fprintf( fp_CMCSV, pszMtrRec );
+
+                                       strcpy_s( pszMtrRec, 1024, ",,," );
+                                       for (iMtr=0; (!bAbortCustMtrExport && iMtr < NumCustMeters); iMtr++)
+                                       {  if (iaFirstCustMtrColIdx[iMtr] >= 0)
+                                          {  for (int iEnduse=0; (!bAbortCustMtrExport && iEnduse < (NumCustMtrEnduses+2)); iEnduse++)
+                                             {  if (iEnduse >= NumCustMtrEnduses || iaCustMtrFuelIdx[iMtr] == 0 || iaMtrGasUseIdx[iEnduse] >= 0)
+                                                   strcat_s( pszMtrRec, 1024, pszMtrEUColLbls[iEnduse] );
+                                          }  }
+                                       }  strcat_s( pszMtrRec, 1024, "\n" );
+                           			   fprintf( fp_CMCSV, pszMtrRec );
+
+                                       strcpy_s( pszMtrRec, 1024, "Mo,Da,Hr," );
+                                       for (iMtr=0; (!bAbortCustMtrExport && iMtr < NumCustMeters); iMtr++)
+                                       {  if (iaFirstCustMtrColIdx[iMtr] >= 0)
+                                          {  for (int iEnduse=0; (!bAbortCustMtrExport && iEnduse < (NumCustMtrEnduses+2)); iEnduse++)
+                                             {  if (iEnduse >= NumCustMtrEnduses || iaCustMtrFuelIdx[iMtr] == 0 || iaMtrGasUseIdx[iEnduse] >= 0)
+                                                   strcat_s( pszMtrRec, 1024, pszCustMtrFuelLbls[ iaCustMtrFuelIdx[iMtr] ] );
+                                          }  }
+                                       }  strcat_s( pszMtrRec, 1024, "\n" );
+                           			   fprintf( fp_CMCSV, pszMtrRec );
+
+                                       char pszVal[32];
+                                       int iNumDaysInMonth[12] = {  31,  28,  31,  30,  31,  30,  31,  31,  30,  31,  30,  31 };
+                        					int iYrHr = -1;
+                        					int iMo, iDa, iHr;
+                        					for (iMo=1; iMo<13; iMo++)
+                        						for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
+                        							for (iHr=1; iHr<25; iHr++)
+                        							{	iYrHr++;
+                                                sprintf_s( pszMtrRec, 1024, "%d,%d,%d,", iMo, iDa, iHr );
+                                                for (long lCol=0; lCol<iCurExportDataColIdx; lCol++)
+                                                {  sprintf_s( pszVal, 32, "%g,", dpCustMtrHrlyRes[(lCol*8760)+iYrHr] );
+                                                   strcat_s( pszMtrRec, 1022, pszVal );
+                                                }
+                                                strcat_s( pszMtrRec, 1024, "\n" );
+                                       			fprintf( fp_CMCSV, pszMtrRec );
+                                             }
+                           				fflush( fp_CMCSV );
+                           				fclose( fp_CMCSV );
+                           			}
+                           		}
+                           		catch( ... )
+                           		{	//iRetVal = 4;
+                           			sCustMtrErr = boost::str( boost::format( "Unknown error writing hourly CSV results file header:  %s") % sCustMtrCSVFN );
+                           		}
+                                 if (sCustMtrErr.length() > 0 && pMsgCallback)
+                                    pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, sCustMtrErr.c_str(), 0 ); 
+                           }
+                           else
+                           {	if (pMsgCallback)
+                           		pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, "error exporting custom meter hourly results CSV - no hourly results retrieved", 0 ); 
+                           }
+
+                           if (dpCustMtrHrlyRes)
+                              free( dpCustMtrHrlyRes );
+
+
+                           //const char* pszCustMtrNamesTest[] = { "NONRESELECMETER:LIGHTING", "NONRESELECMETER:PROCESS", NULL };
+                           //int iaExpFuelIdx[]            = {         0                       ,            0                          };
+                           //int iCustMtrIdx = -1;
+                           //while (pszCustMtrNamesTest[++iCustMtrIdx])
+                           //{
+   								//	std::string sStatus;
+   								//	double dEUTot=0.0;
+               				//	boost::optional<openstudio::TimeSeries> timeSeries = sqlFile.timeSeries( sRPName, "Hourly", pszCustMtrNamesTest[iCustMtrIdx], "" );
+               				//	if (timeSeries)
+   								//	{
+   								//		openstudio::Vector values = timeSeries->values();
+   								//		unsigned numValues = (unsigned) values.size();
+   								//		//ASSERT( numValues==0 || numValues==8760 );
+   								//		if (numValues > 0 && numValues <= 8760)		// numValues == 8760)
+   								//		{
+   								//			//dEUTot=0.0;
+   								//			for (unsigned hr = 0; hr < numValues; ++hr)
+   								//			{
+   								//				//if (!bThisMtrReplacedByCustom)
+                           //            //   pOSWrap->SumIntoHourlyResult( iRunIdx, iFl, iEU, (hr + iYrHourOffset), (values(hr) * fResultMult) );
+   								//				dEUTot += (values(hr) * daExpFuelConvert[iaExpFuelIdx[iCustMtrIdx]] * fResultMult);
+   								//			}
+   								//			sStatus = boost::str( boost::format("success - '%s' annual use = %g") % pszCustMtrNamesTest[iCustMtrIdx] % dEUTot );
+   								//			//bSuccess = true;
+   								//			//iNumHrlyStreamsRetrieved++;
+   								//		}
+   								//		else
+   								//		{	//ASSERT( FALSE );
+   								//			sStatus = boost::str( boost::format("TimeSeries '%s' NumHrlyVals = %d") % pszCustMtrNamesTest[iCustMtrIdx] % numValues );
+   								//		}
+   								//	}
+   								//	else
+   								//		sStatus = boost::str( boost::format("error retrieving TimeSeries '%s'") % pszCustMtrNamesTest[iCustMtrIdx] );;
+                        	//	if (pMsgCallback)
+                        	//		pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, sStatus.c_str(), 0 ); 
+                           //}
+                        }  // end of:  storage of custom meter hourly CSV export - SAC 09/29/21
 							}	// end of:  if (pRunData && bStoreHourlyResults)
 
 						}
@@ -1461,6 +1743,13 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 
 					sqlFile.close();		// SAC 4/28/19 - close file to ensure subsequent clean-up can delete it
 					//Sleep(500);				// SAC 4/29/19 - additional code to pause because close alone not releasing file in time in all cases
+
+              } catch (std::runtime_error& e) {    //VS19
+         		if (pMsgCallback)
+         			pMsgCallback( 0 /*iCodeType*/, 0 /*level*/, boost::str( boost::format("      inside ProcessSimulationResults() - threw exception:  %s") % std::string{e.what()} ).c_str(), 0 ); 
+//             std::string expectedError("Error creating prepared statement: SELECT * FROM NonExistantTable; with error code 1, extended code 1, errmsg: no such table: NonExistantTable");
+//             EXPECT_EQ(expectedError, std::string{e.what()});
+              }
 				}
 //			}
 
@@ -2106,8 +2395,8 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 						bProcResultsOK = ProcessSimulationResults( this, lRetVal, iaRunIdx[iESimIdx], model[iaRunIdx[iESimIdx]], sProcessingPath, /*sSDDXMLFile[iaRunIdx[iESimIdx]],*/ sEPlusSubdir,
 														saRunSubdir[iESimIdx].c_str(), (iaRunIdx[iESimIdx]==0 ? pszSQLOutPathFile : pszSQLOutPathFile2), (iaRunIdx[iESimIdx]==0 ? iMaxLenSQLOutPathFile : iMaxLenSQLOutPathFile2),
 														(iaRunIdx[iESimIdx]==0 ? pdResults : pdResults2), (iaRunIdx[iESimIdx]==0 ? bStoreHourlyResults : bStoreHourlyResults2),
-														(iaRunIdx[iESimIdx]==0 ? bWriteHourlyDebugCSV : bWriteHourlyDebugCSV2), openstudio::toString(idfPath[iESimIdx]).c_str(),
-														baFirstQSRun[iESimIdx], baLastQSRun[iESimIdx], pqsRunPeriodInfo[iESimIdx], faResultMult[iESimIdx], -1 /*iRptFuelUseAs*/, pszEPlusPath, -1 );			OS_ASSERT( bProcResultsOK );
+														(iaRunIdx[iESimIdx]==0 ? bWriteHourlyDebugCSV : bWriteHourlyDebugCSV2), false, openstudio::toString(idfPath[iESimIdx]).c_str(),
+														baFirstQSRun[iESimIdx], baLastQSRun[iESimIdx], pqsRunPeriodInfo[iESimIdx], faResultMult[iESimIdx], -1 /*iRptFuelUseAs*/, pszEPlusPath, -1, pMsgCallback );			OS_ASSERT( bProcResultsOK );
 					}
 				}
 		}
@@ -2789,6 +3078,11 @@ long OSWrapLib::ProcessResults_Multiple(	const char* pszEPlusPath, const char* p
 	std::string sProcessingPath = pszProcessingPath;
 	std::string sEPlusSubdir = "EnergyPlus";		// std::string saEPlusSubdir[24];  // = { "EnergyPlus", "EnergyPlus" };
 	std::string strErrMsg;
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+   	std::string sDbg = boost::str( boost::format("      inside OSWrapLib::ProcessResults_Multiple() on %d run(s)") % iNumSDDSimInfo );
+		if (pMsgCallback && !bAbort)
+			bAbort = (pMsgCallback( iCodeType, 0 /*level*/, sDbg.c_str(), 0 ) == -1); 
+#endif  //VS19
 
 		bool baFirstQSRun[24]  = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
 		bool baLastQSRun[24]   = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
@@ -2832,7 +3126,14 @@ long OSWrapLib::ProcessResults_Multiple(	const char* pszEPlusPath, const char* p
 																				% sProcessingPath % pRunData[iESimIdx]->sRunSubdir % sEPlusSubdir );
 						pData[pRunData[iESimIdx]->iRunIdx]->sSimVersionID = ParseEnergyPlusTablesForVersionID( sTblOutputPathFile );
 		//		pData[pRunData[iESimIdx]->iRunIdx]->sSimVersionID = "Windows-32 8.1.0.009";
-   
+
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+		if (pMsgCallback && !bAbort)
+			bAbort = (pMsgCallback( iCodeType, 0 /*level*/, boost::str( boost::format("      sim info: iESimIdx %d | Warn/Severe/Fatal %d/%d/%d | Completed/Success %d/%d")
+                                       % iESimIdx % pData[pRunData[iESimIdx]->iRunIdx]->saSimWarnings.size() % pData[pRunData[iESimIdx]->iRunIdx]->saSimSevereErrors.size() % pData[pRunData[iESimIdx]->iRunIdx]->saSimFatalErrors.size()
+                                       % pData[pRunData[iESimIdx]->iRunIdx]->bSimCompleted % pData[pRunData[iESimIdx]->iRunIdx]->bSimCompletedSuccessfully ).c_str(), 0 ) == -1); 
+#endif  //VS19
+
 								//	sDbgMsg = boost::str( boost::format("ERR file: %s\n# Warnings:  %d\n# Severe Errors:  %d\n# Fatal Errors:  %d\nSim Completed:  %s\nSim Successful:  %s")
 								//									% sErrPathFile % pRunData->saSimWarnings.size() % pRunData->saSimSevereErrors.size() % pRunData->saSimFatalErrors.size()
 								//									% (errorFile.completed() ? "TRUE" : "FALSE") % (errorFile.completedSuccessfully() ? "TRUE" : "FALSE") );
@@ -2864,9 +3165,15 @@ long OSWrapLib::ProcessResults_Multiple(	const char* pszEPlusPath, const char* p
 						bProcResultsOK = ProcessSimulationResults( this, lRetVal, pRunData[iESimIdx]->iRunIdx, model[pRunData[iESimIdx]->iRunIdx], sProcessingPath, /*sSDDXMLFile[pRunData[iESimIdx]->iRunIdx],*/ sEPlusSubdir,
 														pRunData[iESimIdx]->sRunSubdir.c_str(), paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->pszSQLOutPathFile, FILENAME_MAX,
 														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->pdResults, paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->bStoreHourlyResults,
-														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->bWriteHourlyDebugCSV, openstudio::toString(idfPath[iESimIdx]).c_str(),
+														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->bWriteHourlyDebugCSV, paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->bWriteCustomMetersHourlyCSV,     // SAC 10/04/21
+                                          openstudio::toString(idfPath[iESimIdx]).c_str(),
 														baFirstQSRun[iESimIdx], baLastQSRun[iESimIdx], pqsRunPeriodInfo[iESimIdx], pRunData[iESimIdx]->fResultMult,
-														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->lRptFuelUseAs, pszEPlusPath, dEPlusVerNum );								OS_ASSERT( bProcResultsOK );
+														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->lRptFuelUseAs, pszEPlusPath, dEPlusVerNum, pMsgCallback );								OS_ASSERT( bProcResultsOK );
+
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+		if (pMsgCallback && !bAbort)
+			bAbort = (pMsgCallback( iCodeType, 0 /*level*/, boost::str( boost::format("      inside OSWrapLib::ProcessResults_Multiple() - back from ProcessSimulationResults(), returned %d") % bProcResultsOK ).c_str(), 0 ) == -1); 
+#endif  //VS19
 
 					}
 				}
@@ -2906,13 +3213,16 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 	else if (!boost::filesystem::exists(sqlPathFile))
 		lRetVal = -2;
 	else
-	{	boost::optional<openstudio::model::Model> model = openstudio::model::Model::load( osmPathFile );
-		if(model)
+	{	boost::optional<openstudio::model::Model> locModel = openstudio::model::Model::load( osmPathFile );
+		if(locModel)
 		{
+
+//sqlite3_initialize();   // workaround for sqlite3 bug in OpenStudio - SAC 10/21/20
+
 			openstudio::SqlFile sqlFile( sqlPathFile );  //.fullPath);
 			//ASSERT_TRUE(sqlFile.connectionOpen());
 
-			model->setSqlFile(sqlFile);
+			locModel->setSqlFile(sqlFile);
 
 	std::string sDbgFN = pszOSMPathFile;
 	sDbgFN = sDbgFN.substr( 0, sDbgFN.rfind('.') );
@@ -2924,7 +3234,7 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 		fprintf( dbgFile, sDbg );
 	}
 
-			openstudio::model::RunPeriod runPeriod = model->getUniqueModelObject<openstudio::model::RunPeriod>();
+			openstudio::model::RunPeriod runPeriod = locModel->getUniqueModelObject<openstudio::model::RunPeriod>();
 			std::string sRPName;
 			sRPName = runPeriod.name().get();
 		//	boost:to_upper(sRPName);
@@ -2936,7 +3246,7 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 	//												(947.817 / 100000000000) };
 		//	boost::optional<std::string> soSpecEnduse;  //, soSpecLocation;
 			std::string sSpecEnduse;  //, sSpecLocation;
-			openstudio::model::OutputMeterVector meters = model->getModelObjects<openstudio::model::OutputMeter>();
+			openstudio::model::OutputMeterVector meters = locModel->getModelObjects<openstudio::model::OutputMeter>();
 			for(const openstudio::model::OutputMeter& meter : meters)
 			{
 				bool bSuccess = false;
@@ -3120,11 +3430,11 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 
 std::vector<double>* OSWrapLib::GetHourlyResultArray( int iRunIdx, int iFuel, int iEnduse, double* pdTotal )
 {
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData != NULL && pRunData->bHourlyResultsCurrent)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData != NULL && pLocRunData->bHourlyResultsCurrent)
 	{	if (pdTotal)
-			*pdTotal = pRunData->daHourlyResultsSum[iFuel][iEnduse];
-		return &pRunData->daHourlyResults[iFuel][iEnduse];
+			*pdTotal = pLocRunData->daHourlyResultsSum[iFuel][iEnduse];
+		return &pLocRunData->daHourlyResults[iFuel][iEnduse];
 	}
 	return NULL;
 }
@@ -3162,59 +3472,260 @@ std::vector<double>* OSWrapLib::GetHourlyResultArray( int iRunIdx, int iFuel, in
 // ----------------------------------------------------------------------
 
 
+long OSWrapLib::ExportHourlyCustomMeters( const char* pszOSMPathFile, const char* pszSQLPathFile )    // SAC 09/28/21
+{  long lRetVal = 0;
+
+
+//	openstudio::path sqlPathFile = openstudio::toPath(pszSQLPathFile);
+//	if (!boost::filesystem::exists(sqlPathFile))
+//		lRetVal = -2;
+//	else
+//	{	   //sqlite3_initialize();   // workaround for sqlite3 bug in OpenStudio - SAC 10/21/20
+//			openstudio::SqlFile sqlFile( sqlPathFile );  //.fullPath);
+//			//ASSERT_TRUE(sqlFile.connectionOpen());
+
+
+	openstudio::path osmPathFile = openstudio::toPath(pszOSMPathFile);
+	openstudio::path sqlPathFile = openstudio::toPath(pszSQLPathFile);
+	if (!boost::filesystem::exists(osmPathFile))
+		lRetVal = -1;
+	else if (!boost::filesystem::exists(sqlPathFile))
+		lRetVal = -2;
+	else
+	{	boost::optional<openstudio::model::Model> locModel = openstudio::model::Model::load( osmPathFile );
+		if(locModel)
+		{
+         //sqlite3_initialize();   // workaround for sqlite3 bug in OpenStudio - SAC 10/21/20
+			openstudio::SqlFile sqlFile( sqlPathFile );  //.fullPath);
+			//ASSERT_TRUE(sqlFile.connectionOpen());
+
+			locModel->setSqlFile(sqlFile);
+
+               	std::string sDbgFN = pszOSMPathFile;
+               	sDbgFN = sDbgFN.substr( 0, sDbgFN.rfind('.') );
+               	sDbgFN += " - CustomMtr.csv";
+                  FILE *dbgFile = fopen( sDbgFN.c_str(), "wt" ); 
+               	char sDbg[128];
+                  if (dbgFile)
+                  {	sprintf( sDbg, "#,EndUseType,SpecificEndUse,FuelType,Frequency\n" );
+               		fprintf( dbgFile, sDbg );
+               	}
+
+			openstudio::model::RunPeriod runPeriod = locModel->getUniqueModelObject<openstudio::model::RunPeriod>();
+			std::string sRPName;
+			sRPName = runPeriod.name().get();
+		   //	boost:to_upper(sRPName);
+			std::transform( sRPName.begin(), sRPName.end(), sRPName.begin(), ::toupper );
+
+			std::string sEU, sFuel, sFreq, sStatus, sMtrName;
+      	//		double daFuelConvert[3] = {	(947.817 / 3412140000),			// G(?)J -> kWh
+      	//												(947.817 / 100000000000),		// G(?)J -> therms
+      	//												(947.817 / 100000000000) };
+		   //	boost::optional<std::string> soSpecEnduse;  //, soSpecLocation;
+			std::string sSpecEnduse;  //, sSpecLocation;
+			openstudio::model::MeterCustomVector meters = locModel->getModelObjects<openstudio::model::MeterCustom>();
+			for(const openstudio::model::MeterCustom& meter : meters)
+			{
+				bool bSuccess = false;
+				sStatus = "unknown";
+				//if (meter.installLocationType() && (InstallLocationType::Building == meter.installLocationType().get().value())){
+				//	result.push_back(meter);
+
+            //sMtrName = meter.getName();  // "<meter name>";
+            sMtrName = "NonResElecMeter:InteriorLights";
+
+				sSpecEnduse.erase();
+				//boost::optional<std::string> soSpecEnduse;  //, soSpecLocation;
+				//soSpecEnduse   = meter.specificEndUse();         
+				//if (soSpecEnduse)
+				//	sSpecEnduse = *soSpecEnduse;
+
+				//boost::optional<openstudio::EndUseType> euType = meter.endUseType();
+				//int iEU = -1;
+				////std::string sEU = openstudio::model::MeterCustom::EndUseType(*euType).valueName();
+				//     if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.empty()                                                )   {  sEU = "InteriorLights";             iEU =  0;  }  //  6;  }
+				//else if (*euType == openstudio::EndUseType::ExteriorLights         && sSpecEnduse.empty()                                                )   {  sEU = "ExteriorLights";             iEU =  1;  }  // 10;  }
+				//else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.empty()                                                )   {  sEU = "InteriorEquipment";          iEU =  2;  }  //  7;  }
+				//else if (*euType == openstudio::EndUseType::ExteriorEquipment      && sSpecEnduse.empty()                                                )   {  sEU = "ExteriorEquipment";          iEU =  3;  }  // 10;  }
+				//else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.empty()                                                )   {  sEU = "Fans";                       iEU =  4;  }  //  2;  }
+				//else if (*euType == openstudio::EndUseType::Pumps                  && sSpecEnduse.empty()                                                )   {  sEU = "Pumps";                      iEU =  5;  }  //  4;  }
+				//else if (*euType == openstudio::EndUseType::Heating                && sSpecEnduse.empty()                                                )   {  sEU = "Heating";                    iEU =  6;  }  //  0;  }
+				//else if (*euType == openstudio::EndUseType::Cooling                && sSpecEnduse.empty()                                                )   {  sEU = "Cooling";                    iEU =  7;  }  //  1;  }
+				//else if (*euType == openstudio::EndUseType::HeatRejection          && sSpecEnduse.empty()                                                )   {  sEU = "HeatRejection";              iEU =  8;  }  //  3;  }
+				//else if (*euType == openstudio::EndUseType::Humidifier             && sSpecEnduse.empty()                                                )   {  sEU = "Humidifier";                 iEU =  9;  }  // -1;  }  // ??
+				//else if (*euType == openstudio::EndUseType::HeatRecovery           && sSpecEnduse.empty()                                                )   {  sEU = "HeatRecovery";               iEU = 10;  }  // -1;  }  // ??
+				//else if (*euType == openstudio::EndUseType::WaterSystems           && sSpecEnduse.empty()                                                )   {  sEU = "DHW";                        iEU = 11;  }  //  5;  }
+				//else if (*euType == openstudio::EndUseType::Cogeneration           && sSpecEnduse.empty()                                                )   {  sEU = "Cogeneration";               iEU = 12;  }  // -1;  }  // ??
+				//else if (*euType == openstudio::EndUseType::Refrigeration          && sSpecEnduse.empty()                                                )   {  sEU = "Refrigeration";              iEU = 13;  }  //  8;  }  // ??
+				////else if (*euType == openstudio::EndUseType::Miscellaneous          && sSpecEnduse.empty()                                                )   {  sEU = "Miscellaneous";              iEU = 14;  }  //  7;  }
+				//else if (*euType == openstudio::EndUseType::HeatingCoils           && sSpecEnduse.empty()                                                )   {  sEU = "HeatingCoils";               iEU = 14;  }  //  0;  }
+				//else if (*euType == openstudio::EndUseType::CoolingCoils           && sSpecEnduse.empty()                                                )   {  sEU = "CoolingCoils";               iEU = 15;  }  //  1;  }
+				//else if (*euType == openstudio::EndUseType::Boilers                && sSpecEnduse.empty()                                                )   {  sEU = "Boilers";                    iEU = 16;  }  //  8;  }  // ??
+				//else if (*euType == openstudio::EndUseType::Baseboard              && sSpecEnduse.empty()                                                )   {  sEU = "Baseboard";                  iEU = 17;  }  //  0;  }
+				//else if (*euType == openstudio::EndUseType::HeatRecoveryForCooling && sSpecEnduse.empty()                                                )   {  sEU = "HeatRecoveryForCooling";     iEU = 18;  }  //  1;  }  // ??
+				//else if (*euType == openstudio::EndUseType::HeatRecoveryForHeating && sSpecEnduse.empty()                                                )   {  sEU = "HeatRecoveryForHeating";     iEU = 19;  }  //  0;  }  // ??
+				//else if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+1][1])==0)   {  sEU = "InteriorLights-Comp";        iEU = HrlyEUs_LastUniqueEU+1;  }  // sEU = "InteriorLights",     "ComplianceLtg"       iEU =  6;  }	// SAC 11/7/15 - 'Reg Ltg' -> 'ComplianceLtg' (SF tic 544)      
+				//else if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+2][1])==0)   {  sEU = "InteriorLights-NonComp";     iEU = HrlyEUs_LastUniqueEU+2;  }  // sEU = "InteriorLights",     "NonComplianceLtg"    iEU =  6;  }	// SAC 11/7/15 - 'NonReg Ltg' -> 'NonComplianceLtg' (SF tic 544)
+				//else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+3][1])==0)   {  sEU = "InteriorEquipment-Recept.";  iEU = HrlyEUs_LastUniqueEU+3;  }  // sEU = "InteriorEquipment",  "Receptacle"          iEU =  6;  }
+				//else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+4][1])==0)   {  sEU = "InteriorEquipment-Process";  iEU = HrlyEUs_LastUniqueEU+4;  }  // sEU = "InteriorEquipment",  "Process"             iEU =  6;  }
+				//else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+5][1])==0)   {  sEU = "InteriorEquipment-Refrig" ;  iEU = HrlyEUs_LastUniqueEU+5;  }  // sEU = "InteriorEquipment",  "Refrig"              iEU =  6;  }
+				//else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+6][1])==0)   {  sEU = "InteriorEquipment-IntTrans"; iEU = HrlyEUs_LastUniqueEU+6;  }  // sEU = "InteriorEquipment",  "Internal Transport"  iEU =  6;  }
+				//else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+7][1])==0)   {  sEU = "Fans-ProcessMotors";         iEU = HrlyEUs_LastUniqueEU+7;  }  // sEU = "Fans",               "ProcessMotors"   iEU =  7;  }  // SAC 1/30/17  // SAC 8/14/17
+				//else  {	sEU = "<unknown_EndUseType>";		}  // ASSERT( FALSE );		}
+
+				//boost::optional<openstudio::FuelType> fType = meter.fuelType();
+				//int iFl = -1;
+				////std::string sFuel = openstudio::model::MeterCustom::FuelType(*fType).valueName();
+				//     if (*fType == openstudio::FuelType::Electricity    )   {  sFuel = "Electricity";      iFl =  0;  } 
+				//else if (*fType == openstudio::FuelType::Gas            )   {  sFuel = "Gas";              iFl =  1;  } 
+				//else if (*fType == openstudio::FuelType::Gasoline       )   {  sFuel = "Gasoline";         iFl =  2;  }   
+				//else if (*fType == openstudio::FuelType::Diesel         )   {  sFuel = "Diesel";           iFl =  2;  }   
+				//else if (*fType == openstudio::FuelType::FuelOil_1      )   {  sFuel = "FuelOil_1";        iFl =  2;  }   
+				//else if (*fType == openstudio::FuelType::FuelOil_2      )   {  sFuel = "FuelOil_2";        iFl =  2;  }   
+				//else if (*fType == openstudio::FuelType::Propane        )   {  sFuel = "Propane";          iFl =  2;  }   
+				//else if (*fType == openstudio::FuelType::Water          )   {  sFuel = "Water";            iFl = -1;  }  // ??
+				//else if (*fType == openstudio::FuelType::Steam          )   {  sFuel = "Steam";            iFl = -1;  }  // ??
+				//else if (*fType == openstudio::FuelType::DistrictCooling)   {  sFuel = "DistrictCooling";  iFl = -1;  }  // ??
+				//else if (*fType == openstudio::FuelType::DistrictHeating)   {  sFuel = "DistrictHeating";  iFl = -1;  }  // ??
+				//else if (*fType == openstudio::FuelType::EnergyTransfer )   {  sFuel = "EnergyTransfer";   iFl = -1;  }  // ??
+				//else  {	sFuel = "<unknown_FuelType>";			}  // ASSERT( FALSE );		}
+            sFuel.erase();
+            boost::optional<std::string> soFuel = meter.fuelType();
+				if (soFuel)
+					sFuel = *soFuel;
+
+				sSpecEnduse = "<none>";
+				sFreq = "hourly";    //meter.reportingFrequency();
+            //if (istringEqual(meter.reportingFrequency(),reportingFrequency)) {
+            //  EXPECT_EQ("Hourly", meter.reportingFrequency());
+
+				double dEUTot=0.0;
+				if (boost::iequals( sFreq, "hourly"))
+				{
+					//boost::optional<openstudio::TimeSeries> timeSeries = meter.getData( sRPName );  // runPeriod.name().get());
+					boost::optional<openstudio::TimeSeries> timeSeries = sqlFile.timeSeries( sRPName, "Hourly", sMtrName, "");
+					if (timeSeries)
+					{
+						openstudio::Vector values = timeSeries->values();
+						unsigned numValues = (unsigned) values.size();
+						//ASSERT( numValues==0 || numValues==8760 );
+						//pData->daHourlyResults[0][0];  // Fuel / Enduse
+						if (numValues != 8760)
+						{	//ASSERT( FALSE );
+							//int iErrHere = 1;
+							sStatus = boost::str( boost::format("NumHrlyVals = %d") % numValues );
+						}
+						else
+						{	dEUTot=0.0;
+							for (unsigned i = 0; i < numValues; ++i)
+							{
+								dEUTot += values(i);
+								//pData->daHourlyResults[iFl][iEU][i] = values(i);
+							}
+
+							sStatus = "success";
+							bSuccess = true;
+							lRetVal++;
+
+						}
+					}
+					else
+						sStatus = "error retrieving TimeSeries";
+				}
+				else
+					sStatus = boost::str( boost::format("MtrFreq = '%s'") % sFreq );
+
+
+                     if (dbgFile)
+                  	{	if (bSuccess)
+                  			sprintf( sDbg, "%ld,\"%s\",\"%s\",\"%s\",\"%s\",%s,%g\n", lRetVal, sEU.c_str(), sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str(), sStatus.c_str(), dEUTot );
+                  		else
+                  			sprintf( sDbg, "%ld,\"%s\",\"%s\",\"%s\",\"%s\",%s\n", lRetVal, sEU.c_str(), sSpecEnduse.c_str(), sFuel.c_str(), sFreq.c_str(), sStatus.c_str() );
+                           //						(sSpecEnduse ? sSpecEnduse->c_str() : ""), (sSpecLocation ? sSpecLocation->c_str() : "") );
+                  		fprintf( dbgFile, sDbg );
+                  	}
+
+                  //	OPENSTUDIO_ENUM(FuelType,
+                  //	  ((Electricity))
+                  //	  ((Gas)(NaturalGas))
+                  //	  ((Gasoline))
+                  //	  ((Diesel))
+                  //	  ((FuelOil_1))
+                  //	  ((FuelOil_2))
+                  //	  ((Propane))
+                  //	  ((Water))
+                  //	  ((Steam))
+                  //	  ((DistrictCooling))
+                  //	  ((DistrictHeating))
+                  //	  ((EnergyTransfer)));
+			}
+
+                  if (dbgFile)
+                  {  fflush( dbgFile );
+                     fclose( dbgFile );
+                  }
+
+			sqlFile.close();		// SAC 4/28/19 - close file to ensure subsequent clean-up can delete it
+			//Sleep(500);				// SAC 4/29/19 - additional code to pause because close alone not releasing file in time in all cases
+		}
+	}
+	return lRetVal;
+}
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 //		Simulation Message Retrieval
 // ----------------------------------------------------------------------
 int  OSWrapLib::GetNum_Warnings( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? -1 : (int) pRunData->saSimWarnings.size());
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL ? -1 : (int) pLocRunData->saSimWarnings.size());
 }
 
 int  OSWrapLib::GetNum_SevereErrors( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? -1 : (int) pRunData->saSimSevereErrors.size());
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL ? -1 : (int) pLocRunData->saSimSevereErrors.size());
 }
 
 int  OSWrapLib::GetNum_FatalErrors( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? -1 : (int) pRunData->saSimFatalErrors.size());
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL ? -1 : (int) pLocRunData->saSimFatalErrors.size());
 }
 
 std::string  OSWrapLib::GetMsg_Warning( int iRunIdx, int idx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL || (int) pRunData->saSimWarnings.size() <= idx ? "" : pRunData->saSimWarnings[idx]);
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL || (int) pLocRunData->saSimWarnings.size() <= idx ? "" : pLocRunData->saSimWarnings[idx]);
 }
 
 std::string  OSWrapLib::GetMsg_SevereError( int iRunIdx, int idx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL || (int) pRunData->saSimSevereErrors.size() <= idx ? "" : pRunData->saSimSevereErrors[idx]);
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL || (int) pLocRunData->saSimSevereErrors.size() <= idx ? "" : pLocRunData->saSimSevereErrors[idx]);
 }
 
 std::string  OSWrapLib::GetMsg_FatalError( int iRunIdx, int idx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL || (int) pRunData->saSimFatalErrors.size() <= idx ? "" : pRunData->saSimFatalErrors[idx]);
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL || (int) pLocRunData->saSimFatalErrors.size() <= idx ? "" : pLocRunData->saSimFatalErrors[idx]);
 }
 
 
 std::string  OSWrapLib::Get_SimErrPathFile( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? "" : pRunData->sSimErrPathFile);
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL ? "" : pLocRunData->sSimErrPathFile);
 }
 
 std::string  OSWrapLib::Get_SimVersionID( int iRunIdx )	// SAC 5/19/14
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? "" : pRunData->sSimVersionID);
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL ? "" : pLocRunData->sSimVersionID);
 }
 
 bool  OSWrapLib::GetBool_SimCompleted( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? false : pRunData->bSimCompleted);
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL ? false : pLocRunData->bSimCompleted);
 }
 
 bool  OSWrapLib::GetBool_SimCompletedSuccessfully( int iRunIdx )
-{	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? false : pRunData->bSimCompletedSuccessfully);
+{	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	return (pLocRunData == NULL ? false : pLocRunData->bSimCompletedSuccessfully);
 }
 
 
@@ -3224,39 +3735,39 @@ bool  OSWrapLib::GetBool_SimCompletedSuccessfully( int iRunIdx )
 int  OSWrapLib::AddResult_Zone( int iRunIdx, const char* pszZoneName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszZoneName == NULL || strlen( pszZoneName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saZone.push_back( pszZoneName );
-		iRetVal = (int) pRunData->saZone.size();
+	{	pLocRunData->saZone.push_back( pszZoneName );
+		iRetVal = (int) pLocRunData->saZone.size();
 	}
 	return iRetVal;
 }
 double  OSWrapLib::GetResult_ZoneUMLHClg( int iRunIdx, int idx )
 {
 	double dRetVal;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		dRetVal = -1;
-	else if (idx >= (int) pRunData->daZone_UMLHClg.size())
+	else if (idx >= (int) pLocRunData->daZone_UMLHClg.size())
 		dRetVal = -2;
 	else
-		dRetVal = pRunData->daZone_UMLHClg[idx];
+		dRetVal = pLocRunData->daZone_UMLHClg[idx];
 	return dRetVal;
 }
 double  OSWrapLib::GetResult_ZoneUMLHHtg( int iRunIdx, int idx )
 {
 	double dRetVal;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		dRetVal = -1;
-	else if (idx >= (int) pRunData->daZone_UMLHHtg.size())
+	else if (idx >= (int) pLocRunData->daZone_UMLHHtg.size())
 		dRetVal = -2;
 	else
-		dRetVal = pRunData->daZone_UMLHHtg[idx];
+		dRetVal = pLocRunData->daZone_UMLHHtg[idx];
 	return dRetVal;
 }
 
@@ -3264,41 +3775,41 @@ double  OSWrapLib::GetResult_ZoneUMLHHtg( int iRunIdx, int idx )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_Zone( int iRunIdx, int idx, double* pfZoneResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daZone_UMLHClg.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daZone_UMLHClg.size())
 									iRetVal = -(i+11);
 								else
-									pfZoneResults[i] = pRunData->daZone_UMLHClg[idx];
+									pfZoneResults[i] = pLocRunData->daZone_UMLHClg[idx];
 								break;
-				case  1 :	if (idx >= (int) pRunData->daZone_UMLHHtg.size())
+				case  1 :	if (idx >= (int) pLocRunData->daZone_UMLHHtg.size())
 									iRetVal = -(i+11);
 								else
-									pfZoneResults[i] = pRunData->daZone_UMLHHtg[idx];
+									pfZoneResults[i] = pLocRunData->daZone_UMLHHtg[idx];
 								break;
-				case  2 :	if (idx >= (int) pRunData->daZone_ClgDsgnLd.size())
+				case  2 :	if (idx >= (int) pLocRunData->daZone_ClgDsgnLd.size())
 									iRetVal = -(i+11);
 								else
-									pfZoneResults[i] = pRunData->daZone_ClgDsgnLd[idx];
+									pfZoneResults[i] = pLocRunData->daZone_ClgDsgnLd[idx];
 								break;
-				case  3 :	if (idx >= (int) pRunData->daZone_HtgDsgnLd.size())
+				case  3 :	if (idx >= (int) pLocRunData->daZone_HtgDsgnLd.size())
 									iRetVal = -(i+11);
 								else
-									pfZoneResults[i] = pRunData->daZone_HtgDsgnLd[idx];
+									pfZoneResults[i] = pLocRunData->daZone_HtgDsgnLd[idx];
 								break;
-				case  4 :	if (idx >= (int) pRunData->daZone_ClgDsgnFlow.size())
+				case  4 :	if (idx >= (int) pLocRunData->daZone_ClgDsgnFlow.size())
 									iRetVal = -(i+11);
 								else
-									pfZoneResults[i] = pRunData->daZone_ClgDsgnFlow[idx];
+									pfZoneResults[i] = pLocRunData->daZone_ClgDsgnFlow[idx];
 								break;
-				case  5 :	if (idx >= (int) pRunData->daZone_HtgDsgnFlow.size())
+				case  5 :	if (idx >= (int) pLocRunData->daZone_HtgDsgnFlow.size())
 									iRetVal = -(i+11);
 								else
-									pfZoneResults[i] = pRunData->daZone_HtgDsgnFlow[idx];
+									pfZoneResults[i] = pLocRunData->daZone_HtgDsgnFlow[idx];
 								break;
 				default :		iRetVal = -2;		break;
 			}
@@ -3313,14 +3824,14 @@ int  OSWrapLib::GetResult_Zone( int iRunIdx, int idx, double* pfZoneResults, int
 int  OSWrapLib::AddResult_Fan( int iRunIdx, const char* pszFanName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszFanName == NULL || strlen( pszFanName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saFan.push_back( pszFanName );
-		iRetVal = (int) pRunData->saFan.size();
+	{	pLocRunData->saFan.push_back( pszFanName );
+		iRetVal = (int) pLocRunData->saFan.size();
 	}
 	return iRetVal;
 }
@@ -3329,16 +3840,16 @@ int  OSWrapLib::AddResult_Fan( int iRunIdx, const char* pszFanName )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_Fan( int iRunIdx, int idx, double* pfFanResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daFan_FlowCap.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daFan_FlowCap.size())
 									iRetVal = -(i+11);
 								else
-									pfFanResults[i] = pRunData->daFan_FlowCap[idx];
+									pfFanResults[i] = pLocRunData->daFan_FlowCap[idx];
 								break;
 				default :		iRetVal = -2;		break;
 			}
@@ -3353,14 +3864,14 @@ int  OSWrapLib::GetResult_Fan( int iRunIdx, int idx, double* pfFanResults, int i
 int  OSWrapLib::AddResult_CoilClg( int iRunIdx, const char* pszCoilClgName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszCoilClgName == NULL || strlen( pszCoilClgName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saCoilClg.push_back( pszCoilClgName );
-		iRetVal = (int) pRunData->saCoilClg.size();
+	{	pLocRunData->saCoilClg.push_back( pszCoilClgName );
+		iRetVal = (int) pLocRunData->saCoilClg.size();
 	}
 	return iRetVal;
 }
@@ -3369,28 +3880,28 @@ int  OSWrapLib::AddResult_CoilClg( int iRunIdx, const char* pszCoilClgName )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_CoilClg( int iRunIdx, int idx, double* pfCoilClgResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daCoilClg_TotCap.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daCoilClg_TotCap.size())
 									iRetVal = -(i+11);
 								else
-									pfCoilClgResults[i] = pRunData->daCoilClg_TotCap[idx];
+									pfCoilClgResults[i] = pLocRunData->daCoilClg_TotCap[idx];
 								break;
-				case  1 :	if (idx >= (int) pRunData->daCoilClg_SensCap.size())
+				case  1 :	if (idx >= (int) pLocRunData->daCoilClg_SensCap.size())
 									iRetVal = -(i+11);
 								else
-									pfCoilClgResults[i] = pRunData->daCoilClg_SensCap[idx];
+									pfCoilClgResults[i] = pLocRunData->daCoilClg_SensCap[idx];
 								break;
-	//			case  2 :	if (idx >= (int) pRunData->daCoilClg_FluidLdDsgn.size())
-				case  2 :	if (idx >= (int) pRunData->daCoilClg_FluidFlowRtDsgnSim.size())		// SAC 11/26/13 - added
+	//			case  2 :	if (idx >= (int) pLocRunData->daCoilClg_FluidLdDsgn.size())
+				case  2 :	if (idx >= (int) pLocRunData->daCoilClg_FluidFlowRtDsgnSim.size())		// SAC 11/26/13 - added
 									iRetVal = -(i+11);
 								else
-	//								pfCoilClgResults[i] = pRunData->daCoilClg_FluidLdDsgn[idx];
-									pfCoilClgResults[i] = pRunData->daCoilClg_FluidFlowRtDsgnSim[idx];
+	//								pfCoilClgResults[i] = pLocRunData->daCoilClg_FluidLdDsgn[idx];
+									pfCoilClgResults[i] = pLocRunData->daCoilClg_FluidFlowRtDsgnSim[idx];
 								break;
 				default :		iRetVal = -2;		break;
 			}
@@ -3405,14 +3916,14 @@ int  OSWrapLib::GetResult_CoilClg( int iRunIdx, int idx, double* pfCoilClgResult
 int  OSWrapLib::AddResult_CoilHtg( int iRunIdx, const char* pszCoilHtgName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszCoilHtgName == NULL || strlen( pszCoilHtgName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saCoilHtg.push_back( pszCoilHtgName );
-		iRetVal = (int) pRunData->saCoilHtg.size();
+	{	pLocRunData->saCoilHtg.push_back( pszCoilHtgName );
+		iRetVal = (int) pLocRunData->saCoilHtg.size();
 	}
 	return iRetVal;
 }
@@ -3421,23 +3932,23 @@ int  OSWrapLib::AddResult_CoilHtg( int iRunIdx, const char* pszCoilHtgName )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_CoilHtg( int iRunIdx, int idx, double* pfCoilHtgResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daCoilHtg_TotCap.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daCoilHtg_TotCap.size())
 									iRetVal = -(i+11);
 								else
-									pfCoilHtgResults[i] = pRunData->daCoilHtg_TotCap[idx];
+									pfCoilHtgResults[i] = pLocRunData->daCoilHtg_TotCap[idx];
 								break;
-	//			case  1 :	if (idx >= (int) pRunData->daCoilHtg_FluidLdDsgn.size())
-				case  1 :	if (idx >= (int) pRunData->daCoilHlg_FluidFlowRtDsgnSim.size())    // SAC 11/26/13 - added
+	//			case  1 :	if (idx >= (int) pLocRunData->daCoilHtg_FluidLdDsgn.size())
+				case  1 :	if (idx >= (int) pLocRunData->daCoilHlg_FluidFlowRtDsgnSim.size())    // SAC 11/26/13 - added
 									iRetVal = -(i+11);
 								else
-	//								pfCoilHtgResults[i] = pRunData->daCoilHtg_FluidLdDsgn[idx];
-									pfCoilHtgResults[i] = pRunData->daCoilHlg_FluidFlowRtDsgnSim[idx];
+	//								pfCoilHtgResults[i] = pLocRunData->daCoilHtg_FluidLdDsgn[idx];
+									pfCoilHtgResults[i] = pLocRunData->daCoilHlg_FluidFlowRtDsgnSim[idx];
 								break;
 				default :		iRetVal = -2;		break;
 			}
@@ -3460,14 +3971,14 @@ int  OSWrapLib::GetResult_CoilHtg( int iRunIdx, int idx, double* pfCoilHtgResult
 int  OSWrapLib::AddResult_Blr( int iRunIdx, const char* pszBlrName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszBlrName == NULL || strlen( pszBlrName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saBlr.push_back( pszBlrName );
-		iRetVal = (int) pRunData->saBlr.size();
+	{	pLocRunData->saBlr.push_back( pszBlrName );
+		iRetVal = (int) pLocRunData->saBlr.size();
 	}
 	return iRetVal;
 }
@@ -3475,21 +3986,21 @@ int  OSWrapLib::AddResult_Blr( int iRunIdx, const char* pszBlrName )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_Blr( int iRunIdx, int idx, double* pfBlrResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daBlr_CapRtd.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daBlr_CapRtd.size())
 									iRetVal = -(i+11);
 								else
-									pfBlrResults[i] = pRunData->daBlr_CapRtd[idx];
+									pfBlrResults[i] = pLocRunData->daBlr_CapRtd[idx];
 								break;
-	//			case  1 :	if (idx >= (int) pRunData->daBlr_HtgRtPk.size())
+	//			case  1 :	if (idx >= (int) pLocRunData->daBlr_HtgRtPk.size())
 	//								iRetVal = -(i+11);
 	//							else
-	//								pfBlrResults[i] = pRunData->daBlr_HtgRtPk[idx];
+	//								pfBlrResults[i] = pLocRunData->daBlr_HtgRtPk[idx];
 	//							break;
 				default :		iRetVal = -2;		break;
 			}
@@ -3503,14 +4014,14 @@ int  OSWrapLib::GetResult_Blr( int iRunIdx, int idx, double* pfBlrResults, int i
 int  OSWrapLib::AddResult_Chlr( int iRunIdx, const char* pszChlrName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszChlrName == NULL || strlen( pszChlrName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saChlr.push_back( pszChlrName );
-		iRetVal = (int) pRunData->saChlr.size();
+	{	pLocRunData->saChlr.push_back( pszChlrName );
+		iRetVal = (int) pLocRunData->saChlr.size();
 	}
 	return iRetVal;
 }
@@ -3518,21 +4029,21 @@ int  OSWrapLib::AddResult_Chlr( int iRunIdx, const char* pszChlrName )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_Chlr( int iRunIdx, int idx, double* pfChlrResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daChlr_CapRtd.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daChlr_CapRtd.size())
 									iRetVal = -(i+11);
 								else
-									pfChlrResults[i] = pRunData->daChlr_CapRtd[idx];
+									pfChlrResults[i] = pLocRunData->daChlr_CapRtd[idx];
 								break;
-	//			case  1 :	if (idx >= (int) pRunData->daChlr_EvapClgRtPk.size())
+	//			case  1 :	if (idx >= (int) pLocRunData->daChlr_EvapClgRtPk.size())
 	//								iRetVal = -(i+11);
 	//							else
-	//								pfChlrResults[i] = pRunData->daChlr_EvapClgRtPk[idx];
+	//								pfChlrResults[i] = pLocRunData->daChlr_EvapClgRtPk[idx];
 	//							break;
 				default :		iRetVal = -2;		break;
 			}
@@ -3546,14 +4057,14 @@ int  OSWrapLib::GetResult_Chlr( int iRunIdx, int idx, double* pfChlrResults, int
 int  OSWrapLib::AddResult_HtRej( int iRunIdx, const char* pszHtRejName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszHtRejName == NULL || strlen( pszHtRejName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saHtRej.push_back( pszHtRejName );
-		iRetVal = (int) pRunData->saHtRej.size();
+	{	pLocRunData->saHtRej.push_back( pszHtRejName );
+		iRetVal = (int) pLocRunData->saHtRej.size();
 	}
 	return iRetVal;
 }
@@ -3561,21 +4072,21 @@ int  OSWrapLib::AddResult_HtRej( int iRunIdx, const char* pszHtRejName )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_HtRej( int iRunIdx, int idx, double* pfHtRejResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daHtRej_CapRtd.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daHtRej_CapRtd.size())
 									iRetVal = -(i+11);
 								else
-									pfHtRejResults[i] = pRunData->daHtRej_CapRtd[idx];
+									pfHtRejResults[i] = pLocRunData->daHtRej_CapRtd[idx];
 								break;
-	//			case  1 :	if (idx >= (int) pRunData->daHtRej_HtTransRtPk.size())
+	//			case  1 :	if (idx >= (int) pLocRunData->daHtRej_HtTransRtPk.size())
 	//								iRetVal = -(i+11);
 	//							else
-	//								pfHtRejResults[i] = pRunData->daHtRej_HtTransRtPk[idx];
+	//								pfHtRejResults[i] = pLocRunData->daHtRej_HtTransRtPk[idx];
 	//							break;
 				default :		iRetVal = -2;		break;
 			}
@@ -3589,14 +4100,14 @@ int  OSWrapLib::GetResult_HtRej( int iRunIdx, int idx, double* pfHtRejResults, i
 int  OSWrapLib::AddResult_Pump( int iRunIdx, const char* pszPumpName )
 {
 	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else if (pszPumpName == NULL || strlen( pszPumpName ) < 1)
 		iRetVal = -2;
 	else
-	{	pRunData->saPump.push_back( pszPumpName );
-		iRetVal = (int) pRunData->saPump.size();
+	{	pLocRunData->saPump.push_back( pszPumpName );
+		iRetVal = (int) pLocRunData->saPump.size();
 	}
 	return iRetVal;
 }
@@ -3604,16 +4115,16 @@ int  OSWrapLib::AddResult_Pump( int iRunIdx, const char* pszPumpName )
 //				> 0 => num results retrieved
 int  OSWrapLib::GetResult_Pump( int iRunIdx, int idx, double* pfPumpResults, int iNumResults )
 {	int iRetVal = 0;
-	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	if (pRunData == NULL)
+	OSWrapLibData* pLocRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
+	if (pLocRunData == NULL)
 		iRetVal = -1;
 	else
 	{	for (int i=0; (iRetVal >= 0 && i<iNumResults); i++)
 		{	switch (i)
-			{	case  0 :	if (idx >= (int) pRunData->daPump_FlowCap.size())
+			{	case  0 :	if (idx >= (int) pLocRunData->daPump_FlowCap.size())
 									iRetVal = -(i+11);
 								else
-									pfPumpResults[i] = pRunData->daPump_FlowCap[idx];
+									pfPumpResults[i] = pLocRunData->daPump_FlowCap[idx];
 								break;
 				default :		iRetVal = -2;		break;
 			}

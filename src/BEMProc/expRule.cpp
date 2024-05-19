@@ -66,7 +66,9 @@
 using namespace std;
 using namespace boost::assign;
 
-
+#define NO_FMTLIB
+#include "HumidAirProp.h"     // integration of CoolProp (v6.4.1 - psychrometric library) - SAC 05/19/21
+//double HumidAir:HAProps(const std::string &OutputName, const std::string &Input1Name, double Input1, const std::string &Input2Name, double Input2, const std::string &Input3Name, double Input3);
 
 // SAC 5/21/01 - added pointers to string arrays to facilitate detailed, rule-based BEMProc error/range checking
 QStringList* pssaErrorMsgs = NULL;
@@ -117,6 +119,7 @@ static QString FuncName( int iFuncID )
 		case  OP_FindN          :  return "findnocase"; 
 		case  OP_Atof           :  return "atof";  
 		case  OP_Round          :  return "round"; 
+		case  OP_SubStr         :  return "substr";     // SAC 07/13/21
 		case  OP_ErrorExp       :  return "error";  
 		case  BF_SymValue       :  return "EnumValue";        
 		case  BF_SumAll         :  return "SumAll";          
@@ -273,6 +276,9 @@ static QString FuncName( int iFuncID )
 		case  BF_Par2RefSymVal  :  return "Parent2RefSymbolValue"; 
 		case  BF_Par3SymVal     :  return "Parent3SymbolValue";    
 		case  BF_Par3RefSymVal  :  return "Parent3RefSymbolValue"; 
+		case  BF_FormatNL       :  return "FormatNL";                
+		case  BF_PS_HAPropsVld  :  return "Psych_HAPropsValid";                
+		case  BF_PS_HAProps     :  return "Psych_HAProps";                
 
 		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
 	}
@@ -694,7 +700,14 @@ bool LocalSetBEMProcData( ExpEvalStruct* pEval, BOOL bTagDataAsUserDefined, BOOL
    if (expError.code != EXP_None)
    {
       QString sMsg = expError.string;
-      sMsg += " evaluating rule: ";
+      sMsg += " evaluating";
+      QString sRunAbbrev;
+      BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
+      if (!sRunAbbrev.isEmpty())
+      {  sMsg += " run ";
+         sMsg += sRunAbbrev;
+      }
+      sMsg += " rule: ";
       sMsg += pEval->sRuleID;
       BEMPX_WriteLogFile( sMsg );
 		if (!ErrorFree( expError ))  // SAC 8/2/12 - keep track of number of errors ensizeered during evaluation of rules
@@ -827,7 +840,14 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
             // sMsg += " evaluating rule: ";
 			// SAC 5/1/13 - replace 'bogus' w/ 'ERROR' in error messages (plus track this as an error in the ruleset object)
          //   QString sMsg = "Bogus Expression Return Value evaluating rule: ";
-            QString sMsg = "ERROR:  Invalid expression return value evaluating rule: ";
+            QString sMsg = "ERROR:  Invalid expression return value evaluating";
+            QString sRunAbbrev;
+            BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
+            if (!sRunAbbrev.isEmpty())
+            {  sMsg += " run ";
+               sMsg += sRunAbbrev;
+            }
+            sMsg += " rule: ";
             sMsg += pEval->sRuleID;
 				// SAC 3/5/13 - more verbose messaging
 				QString sCompID;
@@ -921,7 +941,11 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       	sDebug2 = QString( "  on '%1'" ).arg( pObj->getName() );
       else
          sDebug2.clear();
-      sDebug = QString( "Error setting rule data:  %1  -- evaluating rule: %2%3" ).arg( pszSetBEMData_ErrMsg, pEval->sRuleID, sDebug2 );
+      QString sRunAbbrev;
+      BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
+      if (!sRunAbbrev.isEmpty())
+         sRunAbbrev = " run " + sRunAbbrev;
+      sDebug = QString( "Error setting rule data:  %1  -- evaluating%2 rule: %3%4" ).arg( pszSetBEMData_ErrMsg, sRunAbbrev, pEval->sRuleID, sDebug2 );
       BEMPX_WriteLogFile( sDebug );
 		if (ruleSet.getLogMsgCallbackFunc())
 			ruleSet.getLogMsgCallbackFunc()( logMsgERROR, (const char*) sDebug.toLocal8Bit().constData(), NULL );
@@ -942,7 +966,14 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       {  // error evaluating rulelist
          QString sMsg = "Compliance Rulelist '";
          sMsg += pEval->sRulelistToEvaluate;
-         sMsg += "' Not Found evaluating rule: ";
+         sMsg += "' Not Found evaluating";
+         QString sRunAbbrev;
+         BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
+         if (!sRunAbbrev.isEmpty())
+         {  sMsg += " run ";
+            sMsg += sRunAbbrev;
+         }
+         sMsg += " rule: ";
          sMsg += pEval->sRuleID;
          BEMPX_WriteLogFile( sMsg );
 			if (ruleSet.getLogMsgCallbackFunc())
@@ -1005,6 +1036,8 @@ void CopyExpEvalStruct( ExpEvalStruct* pDest, ExpEvalStruct* pSrc )
    pDest->sRuleListName          = pSrc->sRuleListName;
 
    pDest->plRuleEvalCount      = pSrc->plRuleEvalCount      ;
+
+   pDest->bGetEnumString       = pSrc->bGetEnumString;    // to enable more dynamic enumeration value vs. string retrieval - SAC 09/17/21 (MFam)
 
    pDest->maRulelistEvalObjIdxs.clear();
    pDest->maDeletedClassIDs.clear();
@@ -1907,7 +1940,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
                ((YYSTYPE*)data)->index = lMDBID;
                *pVar = BEMPELEM;
 #ifdef YYDEBUG
-					_snprintf( parseMsg, 256, "         GetNodeType: name '%s', op %d (%s), BEMPELEM %ld\n", name, crntFunc, (pFuncName ? pFuncName : "?"), lMDBID );		// SAC 8/31/16
+					_snprintf( parseMsg, 256, "         GetNodeType: name '%s', op %d (%s), BEMPELEM %lld\n", name, crntFunc, (pFuncName ? pFuncName : "?"), lMDBID );		// SAC 8/31/16
 #endif
             }
          }
@@ -2123,7 +2156,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
          	   		   	{	((YYSTYPE*)data)->index = lMDBID;
          	   		   		*pVar = BEMPELEM;
 #ifdef YYDEBUG
-										_snprintf( parseMsg, 256, "         GetNodeType: name '%s', op %d (%s), BEMPELEM %ld\n", name, crntFunc, (pFuncName ? pFuncName : "?"), lMDBID );		// SAC 8/31/16
+										_snprintf( parseMsg, 256, "         GetNodeType: name '%s', op %d (%s), BEMPELEM %lld\n", name, crntFunc, (pFuncName ? pFuncName : "?"), lMDBID );		// SAC 8/31/16
 #endif
          	   		   	}
 								}
@@ -2221,6 +2254,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
          break;
 
       case BF_Format      :
+      case BF_FormatNL    : // SAC 12/11/20
       case BF_PostError   :
       case BF_PostWarn    :
       case BF_PostLogMsg  : // SAC 10/30/07
@@ -2307,6 +2341,12 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 
       case BF_SchSum :   // SAC 8/17/18 - ScheduleSum( #Scheds, SchedRef1, SchedRef2, ... SchedRef#, <MultOrMultSchRef1>, <MultOrMultSchRef2>, ... <MultOrMultSchRef#> )
 			// ScheduleSum() - all object reference or numeric arguments not needing parsing
+         break;
+
+      case BF_PS_HAPropsVld :  // SAC 05/26/21 - Psych_HAPropsValid( -same args as below- ) - returns 0 if error or invalid results (and posts warning) or 1 if args & result valid
+      case BF_PS_HAProps :     // SAC 05/21/21 - Psych_HAProps( "ReturnAbbrev", "Inp1Abbrev", #Inp1Val, "Inp2Abbrev", #Inp2Val, ... SchedRef#, <MultOrMultSchRef1>, <MultOrMultSchRef2>, ... <MultOrMultSchRef#> )
+			// Abbrevs:  DBT (F), WBT (F), RH (frac, relative humidity),  (enthalpy)
+         // default Pressure, 1 atm, 101.325 kPa
          break;
 
       default : 
@@ -2695,18 +2735,18 @@ static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode**
 		//	sDbgMsg += "' w/ '";
 		//	sDbgMsg += (char*) pNode[i]->pValue;
 		//	sDbgMsg += "' =>  ";
-                              	sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), (char*) pNode[i]->pValue );
+                              	sTemp = QString::asprintf( sFormatThis.toLocal8Bit().constData(), (char*) pNode[i]->pValue );
 		//	sDbgMsg += sTemp;
 		//   BEMPX_WriteLogFile( sDbgMsg );
 		//}
                            }
 								// experiment w/ using '%c' to insert individual ASCII characters - SAC 3/18/12
                            else if (cNext == 'c')
-                              sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), (int) pNode[i]->fValue );
+                              sTemp = QString::asprintf( sFormatThis.toLocal8Bit().constData(), (int) pNode[i]->fValue );
                            else
 									{	bRetVal = NumericFormatValid( sFormatThis, iPctIdx, error );		// SAC 4/25/16 - added to verify valid format for string output
                            	if (bRetVal)
-                           		sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), pNode[i]->fValue );
+                           		sTemp = QString::asprintf( sFormatThis.toLocal8Bit().constData(), pNode[i]->fValue );
                            }
                            sRetStr += sTemp;
                         }
@@ -2959,7 +2999,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                                            (op == BF_Parent2 ? pEval->iPrimPar2ObjIdx  : pEval->iPrimPar3ObjIdx ));
                                   BEM_ObjType eParObjType = (op == BF_Parent  ? pEval->ePrimParObjType  :
                                                            (op == BF_Parent2 ? pEval->ePrimPar2ObjType : pEval->ePrimPar3ObjType));
-                                  GetBEMProcData( (long long) pNode->fValue, iParObjIdx, eParObjType, stack, error, ruleSet.IsDataModel()/*bGetSymStr*/, pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
+                                  GetBEMProcData( (long long) pNode->fValue, iParObjIdx, eParObjType, stack, error, pEval->bGetEnumString/*ruleSet.IsDataModel() bGetSymStr*/, pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
                                }
                                else
                                   ExpSetErr( error, EXP_RuleProc, "Invalid Parent() argument" );
@@ -3001,7 +3041,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             	  ExpSetErr( error, EXP_RuleProc, "Local*() argument not found" );
 									 else
 									 {	if (pNode->type == EXP_Value)
-                            	   GetBEMProcData( (long long) pNode->fValue, pEval->iPrimObjIdx, pEval->ePrimObjType, stack, error, (op == BF_LocSymStr || (ruleSet.IsDataModel() && op != BF_LocSymVal)), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
+                            	   GetBEMProcData( (long long) pNode->fValue, pEval->iPrimObjIdx, pEval->ePrimObjType, stack, error, (op == BF_LocSymStr || (pEval->bGetEnumString/*ruleSet.IsDataModel()*/ && op != BF_LocSymVal)), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
                             	else
                             	   ExpSetErr( error, EXP_RuleProc, "Invalid Local*() argument" );
                             	ExpxNodeDelete( pNode );
@@ -3058,7 +3098,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             	      }
                             	      else
 													// SAC 4/2/14 - replaced 'lDBID' with 'lMDBID' to ensure that MODEL index is accounted for in all Global() data retrieval
-                            	         GetBEMProcData( lMDBID, 0, BEMO_User, stack, error, (op == BF_GlobSymStr || (ruleSet.IsDataModel() && op != BF_GlobSymVal)), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets   // SAC 6/30/20
+                            	         GetBEMProcData( lMDBID, 0, BEMO_User, stack, error, (op == BF_GlobSymStr || (pEval->bGetEnumString/*ruleSet.IsDataModel()*/ && op != BF_GlobSymVal)), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets   // SAC 6/30/20
                             	   }
                             	}
                             	else
@@ -4544,6 +4584,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 							}
 
       case BF_Format      :
+      case BF_FormatNL    : // SAC 12/11/20
       case BF_PostError   :
       case BF_PostWarn    :
       case BF_PostLogMsg  : // SAC 10/30/07 - added PostMessageToLog()
@@ -4561,7 +4602,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
             assert( nArgs >= iMinArgs && nArgs <= iMaxArgs );	// SAC 3/23/12 - cranked up max # arguments to 30 (to enable day schedule definitions)
             if (nArgs < iMinArgs)
             {  // post error & setup return argument
-               ExpSetErr( error, EXP_RuleProc, QString( "%1() requires at least %2 argument." ).arg( FuncName(op), QString::number(iMinArgs) ) );
+               ExpSetErr( error, EXP_RuleProc, QString( "%1() requires at least %2 argument(s)." ).arg( FuncName(op), QString::number(iMinArgs) ) );
                pNode[0] = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                pNode[0]->type = EXP_Invalid;
                pNode[0]->fValue = 0;
@@ -4694,14 +4735,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                // now assemble string from arguments
                QString sRetStr;
                bool bFmtOK = true;	// SAC 4/25/16 - added to handle unsuccessful string formatting
-               bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile || op == BF_WriteSimInp);  // SAC 3/8/17
+               bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile || op == BF_WriteSimInp || op == BF_FormatNL);  // SAC 3/8/17   // SAC 12/11/20
                if (bArgsOK)
                {
                   QString sFormat = (char*) pNode[0]->pValue;
 						bFmtOK = ProcessFormatStatement( sRetStr, sFormat, &pNode[1], nArgs-1, error, bPreserveNewlines );	// SAC 1/26/15 - populate formatted string via subordinate routine to enable access from other routine(s)
 
                   // now perform the appropriate action with the resulting string
-                  if (bFmtOK && sRetStr.length() > 0 && op != BF_Format)
+                  if (bFmtOK && sRetStr.length() > 0 && op != BF_Format && op != BF_FormatNL)
                   {
                      if (op == BF_AppendMsg && (lDBID_MsgArray > 0 || lDBID_MsgCount > 0))  // SAC 5/21/20
 							{	// AppendMessage( AbortAnalysis (Obj:Prop/0/1), LogMessage (Obj:Prop/0/1), MsgCount ("Obj:Prop"/"none"), MsgArray ("Obj:Prop"/"none"), <Format() arguments> ) 
@@ -6160,7 +6201,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													{	if (op == BF_HrlyResMltNeg && dHrlyRes[iHr] >= 0)
 															dHrlyRes[iHr] = 0;		// SAC 10/4/17 - don't apply multiplier and zero out Meter-Enduse array values that are not < 0 for ApplyHourlyResultMultipliers_Neg() function
 														else if (bHrlyMultIsConst)
-															dHrlyRes[iHr] *= (dConstHrlyMult * dHrlyMult);  // APPLY single (constant) multiplier
+														{	dHrlyRes[iHr] *= (dConstHrlyMult * dHrlyMult);  // APPLY single (constant) multiplier
+															dHrlySum += dHrlyRes[iHr];								// added line to sum this value into annual total - SAC 12/02/20
+														}
 														else if (pTable->GrabRecord( iHr+1, iTableColumn, &dTblVal ))  //, BOOL bVerboseOutput=FALSE );  // SAC 5/15/12
 														{	if (bHaveSecTbl && pSecTable->GrabRecord( iHr+1, iSecTblCol, &dSecTblVal ))
 																dHrlyRes[iHr] *= ((dTblVal + (dSecTblVal*dSecTblMult)) * dHrlyMult);  // APPLY hourly multiplier factors (w/ adder)
@@ -6446,9 +6489,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												else
 	                           	   {	bArgsOK = FALSE;
 	                           	   	switch (arg)
-	                           	   	{	case  1 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #1: expecting string (merged schedule name prefix)." ) );
-	                           	   		case  2 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #2: expecting integer # of schedules to merege (2-10)." ) );
-	                           	   		default :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #%1: expecting schedule reference, multiplier or min/max value." ).arg( QString::number(arg) ) );
+	                           	   	{	case  1 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #1: expecting string (merged schedule name prefix)." ) );     break;
+	                           	   		case  2 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #2: expecting integer # of schedules to merege (2-10)." ) );  break;
+	                           	   		default :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #%1: expecting schedule reference, multiplier or min/max value." ).arg( QString::number(arg) ) );  break;
       	                           }	}
       	                           if (arg > 1)
       	                              ExpxNodeDelete( pNode );
@@ -6504,8 +6547,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											else
                            	   {	bArgsOK = FALSE;
                            	   	switch (arg)
-                           	   	{	case  1 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid SchDayHoursString() function argument #1: expecting string (SchDay object name)." ) );
-                           	   		default :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid SchDayHoursString() function argument #%1" ).arg( QString::number(arg) ) );
+                           	   	{	case  1 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid SchDayHoursString() function argument #1: expecting string (SchDay object name)." ) );  break;
+                           	   		default :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid SchDayHoursString() function argument #%1" ).arg( QString::number(arg) ) );  break;
      	                           }	}
      	                           if (arg > 1)
      	                              ExpxNodeDelete( pNode );
@@ -6547,6 +6590,176 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            {	pNode->type = EXP_String;
                               pNode->pValue = malloc( sHrArray.length() + 1 );
                               strcpy( (char*) pNode->pValue, (const char*) sHrArray.toLocal8Bit().constData() );
+                           }
+                           // Push result argument node back onto the stack to serve as return value
+                           ExpxStackPush( stack, pNode );
+                           break; }
+
+      case BF_PS_HAPropsVld :  // SAC 05/26/21 - Psych_HAPropsValid( -same args as below- ) - returns 0 if error or invalid results (and posts warning) or 1 if args & result valid
+      case BF_PS_HAProps :     // SAC 05/21/21 - Psych_HAProps( "ReturnAbbrev", "Inp1Abbrev", #Inp1Val, "Inp2Abbrev", #Inp2Val, <#PresVal> )
+                        {  ExpNode* pNode = NULL;
+                           BOOL bArgsOK = FALSE;
+                           double dHAProp = 0.0;
+                           QString qsHAPropsErrMsg, qsFuncEcho;
+                           if (nArgs < 5 || nArgs > 6)
+                           {  qsHAPropsErrMsg = QString( "Invalid number of %1() arguments (%2, must be 5-6: \"ReturnAbbrev\", \"Inp1Abbrev\", #Inp1Val, \"Inp2Abbrev\", #Inp2Val, <#PresVal> )" ).arg( FuncName( op ), QString::number(nArgs) );
+										if (nArgs < 1)
+											pNode = new ExpNode;
+										else
+                              {	for ( int arg = nArgs; arg > 0; arg-- )
+	                              {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
+   	                              if (arg > 1)  // don't delete last argument - used to store return value
+      	                              ExpxNodeDelete( pNode );
+         	                        else if (pNode && pNode->type == EXP_String)
+            	                     {  free( pNode->pValue );
+               	                     pNode->pValue = NULL;
+                           }	}	}	}
+                        	else
+                        	{	bArgsOK = TRUE;
+                           	// valid # of arguments
+										int arg;
+   									std::string sVar[4], sUnits[4];
+                              double dVar[3], dMin[4], dMax[4];
+                              sVar[2]="Press";  dVar[2]=29.921;  //101.325; (kPa)
+                              for (arg = nArgs; arg > 0; arg--)
+                              {  pNode = ExpxStackPop( stack );  // Pop and delete each node off stack
+                                 if (bArgsOK)
+                                 {  bArgsOK = FALSE;  
+                                    if ((arg<3 || arg==4) && pNode->type != EXP_String)
+                                       qsHAPropsErrMsg = QString( "Invalid %1() function argument #%2: expecting string." ).arg(FuncName( op ), QString::number(arg));
+                                    else if ((arg==3 || arg>4) && pNode->type != EXP_Value)
+                                       qsHAPropsErrMsg = QString( "Invalid %1() function argument #%2: expecting value." ).arg(FuncName( op ), QString::number(arg));
+                                    else
+                                       switch (arg)
+                                       {  case  1 :  sVar[3] = (char*) pNode->pValue;  bArgsOK = TRUE;  break;
+                                          case  2 :  sVar[0] = (char*) pNode->pValue;  bArgsOK = TRUE;  break;
+                                          case  3 :  dVar[0] =         pNode->fValue;  bArgsOK = TRUE;  break;
+                                          case  4 :  sVar[1] = (char*) pNode->pValue;  bArgsOK = TRUE;  break;
+                                          case  5 :  dVar[1] =         pNode->fValue;  bArgsOK = TRUE;  break;
+                                          case  6 :  dVar[2] =         pNode->fValue;  bArgsOK = TRUE;  break;
+                                          default :  qsHAPropsErrMsg = QString( "Unable to parse %1() function argument #%2." ).arg(FuncName( op ), QString::number(arg));  break;
+                                       }
+                                 }
+      	                        if (arg > 1)
+      	                           ExpxNodeDelete( pNode );
+         	                     else if (pNode && pNode->type == EXP_String)
+            	                  {  free( pNode->pValue );
+               	                  pNode->pValue = NULL;
+										}	}
+										if (bArgsOK)
+                              {  for (arg=0; (bArgsOK && arg<=3); arg++)
+                                 {  if (     sVar[arg] == "DBT"       )  {  sUnits[arg] = "°F";                      dMin[arg] = -10.0;  dMax[arg] = 120.0;  }
+                                    else if (sVar[arg] == "WBT"       )  {  sUnits[arg] = "°F";                      dMin[arg] = -10.0;  dMax[arg] =  92.0;  }
+                                    else if (sVar[arg] == "DPT"       )  {  sUnits[arg] = "°F";                      dMin[arg] =   0.0;  dMax[arg] =  85.0;  }
+                                    else if (sVar[arg] == "Press"     )  {  sUnits[arg] = "in. hg";                  dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                    else if (sVar[arg] == "MixVol"    )  {  sUnits[arg] = "ft3/lb dry air";          dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                    else if (sVar[arg] == "RH"        )  {  sUnits[arg] = "frac";                    dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                    else if (sVar[arg] == "HumRat"    )  {  sUnits[arg] = "gr moisture/lb dry air";  dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                    else if (sVar[arg] == "MixEnth"   )  {  sUnits[arg] = "btu/lb dry air";          dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                    else if (sVar[arg] == "MixEntropy")  {  sUnits[arg] = "btu/lb dry air/°R";       dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                    else if (sVar[arg] == "SpecHt"    )  {  sUnits[arg] = "btu/lb dry air/°R";       dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                 // else if (sVar[arg] == "MixVisc"   )  {  sUnits[arg] = "Pa-s"; 
+                                    else if (sVar[arg] == "ThrmlCndct")  {  sUnits[arg] = "btu/h-ft-°F";             dMin[arg] = 0.0;    dMax[arg] = 999999.0;  }
+                                    else
+                                    {  int iFArg = (arg==0 ? 2 : (arg==3 ? 1 : 4));   bArgsOK = FALSE ;
+                                       qsHAPropsErrMsg = QString( "Unable to parse %1() function argument #%2: unrecognized input variable '%3', valid options include: DBT, WBT, DPT, Press, MixVol, RH, HumRat, MixEnth, MixEntropy, SpecHt or ThrmlCndct" ).arg(FuncName( op ), QString::number(iFArg)).arg(sVar[arg].c_str());
+                                    }
+                              }  }
+										if (bArgsOK)   // argument range checks
+                              {  qsFuncEcho = QString( "%1( %2" ).arg( FuncName( op ), sVar[3].c_str() );
+                                 for (arg=0; (bArgsOK && arg<=2); arg++ )
+                                 {  int iFArg = (arg==0 ? 3 : (arg==1 ? 5 : 6));
+                                    if (dVar[arg] < dMin[arg])
+                                    {  bArgsOK = FALSE;
+                                       if (dMax[arg] < 999999.0)
+                                          qsHAPropsErrMsg = QString( "Invalid %1() argument #%2 (%3): %4 (%5) must be >= %6 and <= %7" ).arg(FuncName( op ), QString::number(iFArg),QString::number(dVar[arg]),sVar[arg].c_str(),sUnits[arg].c_str(),QString::number(dMin[arg]),QString::number(dMax[arg]));
+                                       else
+                                          qsHAPropsErrMsg = QString( "Invalid %1() argument #%2 (%3): %4 (%5) must be >= %6" ).arg(FuncName( op ), QString::number(iFArg),QString::number(dVar[arg]),sVar[arg].c_str(),sUnits[arg].c_str(),QString::number(dMin[arg]),QString::number(dMax[arg]));
+                                    }
+                                    else if (dVar[arg] > dMax[arg])
+                                    {  bArgsOK = FALSE;
+                                       qsHAPropsErrMsg = QString( "Invalid %1() argument #%2 (%3): %4 (%5) must be <= %6" ).arg(FuncName( op ), QString::number(iFArg),QString::number(dVar[arg]),sVar[arg].c_str(),sUnits[arg].c_str(),QString::number(dMax[arg]));
+                                    }
+                                    else
+                                       qsFuncEcho += QString( ", %1, %2" ).arg( sVar[arg].c_str(), QString::number(dVar[arg]) );
+                                 }
+                                 qsFuncEcho += " )";
+                              }
+                        // other range checks on inputs / before or after units conversion ??
+
+										if (bArgsOK)
+                              {  for (arg=0; arg<=3; arg++)  // input & output arguments
+                                 {  if (     sVar[arg] == "DBT"       ) /* °F                     */  sVar[arg] = "T"; 
+                                    else if (sVar[arg] == "WBT"       ) /* °F                     */  sVar[arg] = "B"; 
+                                    else if (sVar[arg] == "DPT"       ) /* °F                     */  sVar[arg] = "D"; 
+                                    else if (sVar[arg] == "Press"     ) /* in. hg                 */  sVar[arg] = "P"; 
+                                    else if (sVar[arg] == "MixVol"    ) /* ft3/lb dry air         */  sVar[arg] = "V"; 
+                                    else if (sVar[arg] == "RH"        ) /* frac                   */  sVar[arg] = "R"; 
+                                    else if (sVar[arg] == "HumRat"    ) /* gr moisture/lb dry air */  sVar[arg] = "W"; 
+                                    else if (sVar[arg] == "MixEnth"   ) /* btu/lb dry air         */  sVar[arg] = "H"; 
+                                    else if (sVar[arg] == "MixEntropy") /* btu/lb dry air/°R      */  sVar[arg] = "S"; 
+                                    else if (sVar[arg] == "SpecHt"    ) /* btu/lb dry air/°R      */  sVar[arg] = "C"; 
+                                 // else if (sVar[arg] == "MixVisc"   ) /* Pa-s                   */  sVar[arg] = "M"; 
+                                    else if (sVar[arg] == "ThrmlCndct") /* btu/h-ft-°F            */  sVar[arg] = "K"; 
+
+                                    if (arg<=2)  // is input argument
+                                    {  // convert input args to HAProps() native units
+                                       if (     sVar[arg] == "T" /*"DBT"       */ ||  
+                                                sVar[arg] == "B" /*"WBT"       */ ||  
+                                                sVar[arg] == "D" /*"DPT"       */ )  dVar[arg] = 273.15 + ((dVar[arg] - 32.0) * (5.0/9.0));  /* °F -> °K */ 
+                                       else if (sVar[arg] == "P" /*"Press"     */ )  dVar[arg] *= 3.3864     ;  /* in. hg                 -> kPa                 */
+                                       else if (sVar[arg] == "V" /*"MixVol"    */ )  dVar[arg] *= 0.062428   ;  /* ft3/lb dry air         -> m3/kg dry air       */
+                                    // else if (sVar[arg] == "R" /*"RH"        */ )  
+                                       else if (sVar[arg] == "W" /*"HumRat"    */ )  dVar[arg] *= 0.000142857;  /* gr moisture/lb dry air -> kg water/kg dry air */
+                                       else if (sVar[arg] == "H" /*"MixEnth"   */ )  dVar[arg] *= 2.326      ;  /* btu/lb dry air         -> kJ/kg dry air       */
+                                       else if (sVar[arg] == "S" /*"MixEntropy"*/ )  dVar[arg] *= 4.1868     ;  /* btu/lb dry air/°R      -> kJ/kg dry air/°K    */
+                                       else if (sVar[arg] == "C" /*"SpecHt"    */ )  dVar[arg] *= 4.1868     ;  /* btu/lb dry air/°R      -> kJ/kg dry air/°K    */
+                                    // else if (sVar[arg] == "M" /*"MixVisc"   */ )  break;
+                                       else if (sVar[arg] == "K" /*"ThrmlCndct"*/ )  dVar[arg] *= 0.001730735;  /* btu/h-ft-°F            -> kW/m/°K             */
+                                    }
+                              }  }
+										if (bArgsOK)
+                              {  //double HAProps(const std::string &OutputName, const std::string &Input1Name, double Input1, const std::string &Input2Name, double Input2, const std::string &Input3Name, double Input3);
+                                 dHAProp = HumidAir::HAProps( sVar[3], sVar[0], dVar[0], sVar[1], dVar[1], sVar[2], dVar[2] );
+                                 if (std::isinf(dHAProp))
+                                    qsHAPropsErrMsg = QString( "%1() result is INF (infinity)" ).arg( FuncName( op ) );
+                                 else if (std::isnan(dHAProp))
+                                    qsHAPropsErrMsg = QString( "%1() result is NAN (not-a-number)" ).arg( FuncName( op ) );
+                           // other validity checks on return value ??
+                                 else
+                                 {  // convert OUTPUT from HAProps() native units to ruleset units
+                                    if (     sVar[3] == "T" /*"DBT"       */ || 
+                                             sVar[3] == "B" /*"WBT"       */ || 
+                                             sVar[3] == "D" /*"DPT"       */ )  dHAProp = ((dHAProp - 273.15) * (9.0/5.0)) + 32;   /* °K -> °F */
+                                    else if (sVar[3] == "P" /*"Press"     */ )  dHAProp /= 3.3864     ;  /* kPa                 -> in. hg                 */
+                                    else if (sVar[3] == "V" /*"MixVol"    */ )  dHAProp /= 0.062428   ;  /* m3/kg dry air       -> ft3/lb dry air         */
+                                 // else if (sVar[3] == "R" /*"RH"        */ )  
+                                    else if (sVar[3] == "W" /*"HumRat"    */ )  dHAProp /= 0.000142857;  /* kg water/kg dry air -> gr moisture/lb dry air */
+                                    else if (sVar[3] == "H" /*"MixEnth"   */ )  dHAProp /= 2.326      ;  /* kJ/kg dry air       -> btu/lb dry air         */
+                                    else if (sVar[3] == "S" /*"MixEntropy"*/ )  dHAProp /= 4.1868     ;  /* kJ/kg dry air/°K    -> btu/lb dry air/°R      */
+                                    else if (sVar[3] == "C" /*"SpecHt"    */ )  dHAProp /= 4.1868     ;  /* kJ/kg dry air/°K    -> btu/lb dry air/°R      */
+                                 // else if (sVar[3] == "M" /*"MixVisc"   */ )  
+                                    else if (sVar[3] == "K" /*"ThrmlCndct"*/ )  dHAProp /= 0.001730735;  /* kW/m/°K             -> btu/h-ft-°F            */
+                              }  }
+                           }
+									if (!qsHAPropsErrMsg.isEmpty())
+									{  if (!qsFuncEcho.isEmpty())
+                                 qsHAPropsErrMsg += QString( "  | %1" ).arg( qsFuncEcho );
+                              if (op == BF_PS_HAProps)
+                              {  pNode->type = EXP_Invalid;
+	                              pNode->fValue = 0;
+                                 ExpSetErr( error, EXP_RuleProc, QString( "Error:  %1" ).arg( qsHAPropsErrMsg ) );
+                              }
+                              else
+                              {	pNode->type = EXP_Value;
+	                              pNode->fValue = 0.0;
+                                 //ExpSetErr( error, EXP_RuleWarn, QString( "Warning:  %1" ).arg( qsHAPropsErrMsg ) );
+                              	BEMPX_WriteLogFile( QString( "Warning:  %1" ).arg( qsHAPropsErrMsg ) );
+                              	ruleSet.logMsgCallback( logMsgMESSAGE, QString( "Warning:  %1" ).arg( qsHAPropsErrMsg ), NULL );
+                           }  }
+									else
+                           {	pNode->type = EXP_Value;
+	                           pNode->fValue = (op == BF_PS_HAProps ? dHAProp : 1.0);
                            }
                            // Push result argument node back onto the stack to serve as return value
                            ExpxStackPush( stack, pNode );
@@ -6757,10 +6970,27 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
 	      // if final error checking passed, then create the components
 	      if (bSuccess)
 	      {
+            bool bIsCSEObj = false;    // SAC 07/15/21
+            BEMClass* pCr8Class = BEMPX_GetClass( i1Cr8Class, iError );
+            if (pCr8Class)
+            {  QString sClsName = pCr8Class->getShortName();
+               bIsCSEObj = (sClsName.indexOf("cse") == 0);    // prepare for some special processing if this is a CSE object (to prevent trailing '\') - SAC 07/15/21
+            }
+
 	         int iFirstNewObjIdx = BEMPX_GetNumObjects( i1Cr8Class, BEMO_User );
 	         for (int i=0; (bSuccess && i<iNumComps); i++)
 	         {
 	            sCompName = sNamePrefix;
+
+               if (bIsCSEObj && sCompName.lastIndexOf('\\') >= 0)       // code to prevent CSE object names w/ trailing '\' chars - SAC 07/15/21
+               {  bool bNameOK = false;
+                  for (int iS=(int) sCompName.length()-1; (!bNameOK && iS >= 0); iS--)
+                  {  if (sCompName[iS] != ' ' && sCompName[iS] != '\\')
+                        bNameOK = true;
+                     else if (sCompName[iS] == '\\')
+                        sCompName.truncate(iS);
+               }  }
+
 	            if (BEMPX_GetDefaultComponentName( i1Cr8Class, sCompName ))
 	            {
 	               BEMObject* pNewObj = BEMPX_CreateObject( i1Cr8Class, sCompName.toLocal8Bit().constData(), pParentObj, BEMO_User, FALSE );
@@ -6771,12 +7001,23 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
 	                        ExpSetErr( error, EXP_RuleProc, "CreateChildren() Error:  Component creation failed" );
 	                  else  ExpSetErr( error, EXP_RuleProc, "CreateComp() Error:  Component creation failed" );
 	               }
-	               else if (op == BF_Cr8Comp && pObjToCopy && !BEMPX_CopyComponent( pNewObj, pObjToCopy, -1 /*iBEMProcIdx*/ ))
-						{	sErrMsg = QString( "Copy of object '%1' (identified by 5th argument of CreateComp()) to newly created object '%2' Failed." ).arg( sObjToCopyName, sCompName );
-							ExpSetErr( error, EXP_RuleProc, sErrMsg );
-						}
+                  // reorganize to activate code to set Parent of newly copied object (to same as that copying from) - SAC 01/29/21 (Com tic #3232)
+	               else if (op == BF_Cr8Comp && pObjToCopy)
+                  {  if (!BEMPX_CopyComponent( pNewObj, pObjToCopy, -1 /*iBEMProcIdx*/,
+								                        false /*bCopyPrimaryDefaultDataAsUserDefined*/, true /*bCopyChildren*/ ))     // added bCopyChildren to both make this object a child of the original object's parent + copy its children - SAC 01/28/21 (Com tic #3232)
+   						{	bSuccess = FALSE;
+	                     sErrMsg = QString( "Copy of object '%1' (identified by 5th argument of CreateComp()) to newly created object '%2' Failed." ).arg( sObjToCopyName, sCompName );
+   							ExpSetErr( error, EXP_RuleProc, sErrMsg );
+   						}
+                     else if (pObjToCopy->haveParent())     // SAC 01/29/21
+                     {  BEMObject* pParObj = pObjToCopy->getParent();         assert( pParObj );
+                        if (pParObj)
+                        {  pNewObj->setParent( pParObj );
+                           pParObj->addChild( pNewObj );
+                     }  }
+                  }
 	               // SAC 5/26/00 - added code to implement new EvalOption argument
-	               else if (pEval->sRulelistToEvaluate.length() > 0 && iEvalOption == 1)
+	               if (bSuccess && pEval->sRulelistToEvaluate.length() > 0 && iEvalOption == 1)
 	               {
 	                  pEval->iRulelistEvalClass = i1Cr8Class;
 	                  pEval->eRulelistEvalObjType = BEMO_User;
@@ -7453,7 +7694,20 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 						pEval->iPrimParObjIdx >= 0 && pCr8Class->ClassInParentList( pEval->iPrimPar1Class ))
 				pParentObj = BEMPX_GetObjectByClass( pEval->iPrimPar1Class, iError, pEval->iPrimParObjIdx, pEval->ePrimParObjType );
 
+         bool bIsCSEObj = false;
+         if (pCr8Class)
+         {  QString sClsName = pCr8Class->getShortName();
+            bIsCSEObj = (sClsName.indexOf("cse") == 0);    // prepare for some special processing if this is a CSE object (to prevent trailing '\') - SAC 07/15/21
+         }
 			QString sNewCompName = sCompName.c_str();
+         if (bIsCSEObj && sNewCompName.lastIndexOf('\\') >= 0)       // code to prevent CSE object names w/ trailing '\' chars - SAC 07/15/21
+         {  bool bNameOK = false;
+            for (int iS=(int) sNewCompName.length()-1; (!bNameOK && iS >= 0); iS--)
+            {  if (sNewCompName[iS] != ' ' && sNewCompName[iS] != '\\')
+                  bNameOK = true;
+               else if (sNewCompName[iS] == '\\')
+                  sNewCompName.truncate(iS);
+         }  }
 			if (!BEMPX_GetDefaultComponentName( iObjCID, sNewCompName ))
 				sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to load new object name (CID = %d)" ) % iObjCID );
 			else
@@ -7594,7 +7848,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 	bool bRetMustBeValid = (op == BF_GlobalVal || op == BF_LocalVal || op == BF_ParentVal || op == BF_Parent2Val || op == BF_Parent3Val);  // SAC 2/13/14
 	bool bGetSymStr = (  op == BF_LocSymStr || op == BF_GlobSymStr || op == BF_Par2SymStr || op == BF_Par3SymStr || op == BF_LocRefSymStr ||
 								op == BF_ParSymStr || op == BF_ParRefSymStr || op == BF_Par2RefSymStr || op == BF_Par3RefSymStr || op == BF_GlobRefSymStr );  // SAC 4/10/14  // SAC 4/4/18
-	if (!bGetSymStr && ruleSet.IsDataModel() && op != BF_LocSymVal && op != BF_GlobSymVal && op != BF_Par2SymVal && op != BF_Par3SymVal && op != BF_LocRefSymVal &&
+	if (!bGetSymStr && pEval->bGetEnumString/*ruleSet.IsDataModel()*/ && op != BF_LocSymVal && op != BF_GlobSymVal && op != BF_Par2SymVal && op != BF_Par3SymVal && op != BF_LocRefSymVal &&
 			op != BF_ParSymVal && op != BF_ParRefSymVal && op != BF_Par2RefSymVal && op != BF_Par3RefSymVal && op != BF_GlobRefSymVal)		// SAC 6/30/20
 		bGetSymStr = true;
    // First grab trailing child index (if ChildRef())
@@ -8722,7 +8976,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 									ExpNode_init( &tempNode );
 									long lDBID, iThisModel = i0Model;
 									lMDBID = (long long) plParams[ nArgs-1 ]+iArr;
-									GetBEMProcDataToNode( &tempNode, lMDBID, iObjIdx, eObjType, error, ruleSet.IsDataModel()/*bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
+									GetBEMProcDataToNode( &tempNode, lMDBID, iObjIdx, eObjType, error, pEval->bGetEnumString/*ruleSet.IsDataModel() bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
 
 //if (tempNode.type == EXP_Invalid)
 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > invalid BEM data" ).arg( QString::number( iObjIdx ) );
@@ -8883,7 +9137,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 							else if (pOrigNodes[iFirstProcNodeIdx+i]->type == EXP_Value)
 							{	long lDBID, iThisModel = i0Model;
 								lMDBID = (long long) pOrigNodes[iFirstProcNodeIdx+i]->fValue;
-								GetBEMProcDataToNode( &tempNodes[i], lMDBID, *it, eObjType, error, ruleSet.IsDataModel()/*bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
+								GetBEMProcDataToNode( &tempNodes[i], lMDBID, *it, eObjType, error, pEval->bGetEnumString/*ruleSet.IsDataModel() bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
 								if (tempNodes[i].type == EXP_Invalid)
 								{  QString sBEMProcErr;
 									if (lMDBID > BEM_MODEL_MULT)
@@ -10004,13 +10258,13 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 							}
 							else
 							{	pOutObj = pInObj->getModelMappedObject(i1);
-								sBEMProcErr = QString( "   [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i1 ), 2 ).arg( QString::number( (int) pOutObj, 16 ) ).arg( pOutObj->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
+								sBEMProcErr = QString( "   [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i1 ), 2 ).arg( QString::number( (ULONG_PTR) pOutObj, 16 ) ).arg( pOutObj->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
 								for (int i2=0; i2<BEMPROC_MAXMODELS; i2++)
 								{	if (pOutObj->getModelMappedObject(i2) == NULL)
 									{	sBEMProcErr = QString( "        [%1] -> NULL" ).arg( QString::number( i2 ), 2 );		BEMPX_WriteLogFile( sBEMProcErr );
 									}
 									else
-									{	sBEMProcErr = QString( "        [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i2 ), 2 ).arg( QString::number( (int) pOutObj->getModelMappedObject(i2), 16 ), pOutObj->getModelMappedObject(i2)->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
+									{	sBEMProcErr = QString( "        [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i2 ), 2 ).arg( QString::number( (ULONG_PTR) pOutObj->getModelMappedObject(i2), 16 ), pOutObj->getModelMappedObject(i2)->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
 				}	}	}	}	}	}
 			}
 		}
@@ -10866,7 +11120,7 @@ int XCONS::xc_ErrV( const char* fmt, va_list ap /*=NULL*/)
 	QString pfx = QString( "Cons '%1': " ).arg( xc_consName );
 	QString msg;
 	if (ap)
-		msg.vsprintf( fmt, ap );
+		msg = QString::vasprintf( fmt, ap );
 	else
 		msg = fmt;
 	xc_errMsg = pfx + msg;
@@ -10977,7 +11231,7 @@ int XCONS::xc_GetCompID( const char* compName)
 	if (xc_IsOK())
 	{	compID = BEMPX_GetDBComponentID( compName);
 		if (compID < 0)
-			xc_Err( "unable to retrieve %s component ID", compName);
+			xc_Err( "unable to retrieve '%s' component ID", compName);
 	}
 	return compID;
 }	// XCONS::xc_GetCompID
@@ -11082,7 +11336,10 @@ int XCONS::xc_Setup()			// setup XCONS/XMAT
 {
 	xc_errMsg.clear();
 	if (xc_staticsOK == 0)
-	{	xc_consCompID = xc_GetCompID( "Cons" );
+	{	if (BEMPX_GetDBComponentID( "ResConsAssm" ) > 0)      // first check for comp ID of ResConsAssm - SAC 09/27/21 (MFam)
+         xc_consCompID = xc_GetCompID( "ResConsAssm" );
+      else
+         xc_consCompID = xc_GetCompID( "Cons" );
 
 		#define CONSPROPID( s) xc_##s##ID = xc_GetPropID( #s, xc_consCompID)		// specify class ID - SAC 9/25/20
 		CONSPROPID( CanAssignTo);
@@ -11157,7 +11414,10 @@ int XCONS::xc_Setup()			// setup XCONS/XMAT
 
 
 		// Mat properties
-		XMAT::xm_matCompID = xc_GetCompID( "Mat" );
+		if (BEMPX_GetDBComponentID( "ResMat" ) > 0)           // first check for comp ID of ResMat - SAC 09/27/21 (MFam)
+   		XMAT::xm_matCompID = xc_GetCompID( "ResMat" );
+      else
+   		XMAT::xm_matCompID = xc_GetCompID( "Mat" );
 		#define MATPROPID( s) XMAT::xm_##s##ID = xc_GetPropID( #s, XMAT::xm_matCompID);
 		// long lDBID_Mat_Name    = BEMPX_GetDatabaseID( "Name"   , iCID_Mat );
 		MATPROPID( Name);

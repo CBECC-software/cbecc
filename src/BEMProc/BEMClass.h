@@ -160,6 +160,10 @@ public:
 	const QString	getDefaultNameTemplate()					{	return m_defaultNameTemplate;	}
 	void				setDefaultNameTemplate( QString str )	{	m_defaultNameTemplate = str;	}
 
+   int      getNumPreviousNames()            {  return m_previousNames.size();  }   // SAC 07/28/21 (MFam)
+	QString	getPreviousName( int idx )			{	return m_previousNames[idx];	}
+	void		addPreviousName( QString s )		{	m_previousNames.push_back( s );  return;	}
+
 	BEMObject* CreateBEMObject( QString sName, BEM_ObjType objType = BEMO_User,
 	                           BEMObject* pParent = NULL, bool bDefaultParent = TRUE,
                               bool bAutoCreate = TRUE, int iBEMProcIdx=-1, BOOL bIgnoreMaxDefinable=FALSE, int i0ChildIdx = -1 );  // SAC 5/29/14 - added i0ChildIdx in place of BOOL bMakeFirstChild = FALSE );
@@ -181,6 +185,7 @@ private:
    QString    m_shortName;       // Short name (max 7 characters)
    QString    m_longName;        // Long (more descriptive) name 
    QString    m_defaultName;     // String used to default the name of newly created bldg components: "<DefName> #"
+	QStringList	m_previousNames;	// to facilitate data model backward compatibility by tracking re-named classes - SAC 07/28/21 (MFam)
    int        m_numProps;        // number of properties which describe this type of bldg component
    long       m_maxDefinable;    // maximum number of component of this type which can be created   // SAC 1/27/12 - short -> long
    int        m_maxReferences;   // maximum times this component can be referenced by other components
@@ -331,7 +336,8 @@ public:
    bool DefaultObject( int iOccur, bool bApplyUserDefs=TRUE, long lDBID=0, BEM_PropertyStatus ePropStatus=BEMS_Undefined,
                        BOOL bSingleValueModified=FALSE, int iBEMProcIdx=-1 );
    bool CopyObject(    BEMObject* pObj, int iBEMProcIdx=-1,
-								bool bCopyPrimaryDefaultDataAsUserDefined=false );		// SAC 6/8/15 - CBECC issue 1061
+								bool bCopyPrimaryDefaultDataAsUserDefined=false, 		// SAC 6/8/15 - CBECC issue 1061
+                        bool bCopyChildren=false );      // added bCopyChildren to both make this object a child of the original object's parent + copy its children - SAC 01/28/21 (Com tic #3232)
    bool CopyObjectBetweenModels( BEMObject* pObj, int iThisBEMProcIdx, int iSrcBEMProcIdx );
 //   bool ArchiveObject( BEMObject* pObj, bool bRestore=FALSE, int iBEMProcIdx=-1 );  // SAC 7/31/02 - Added to archive baseline design components
 

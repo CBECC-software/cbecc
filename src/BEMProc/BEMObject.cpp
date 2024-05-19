@@ -257,7 +257,8 @@ bool BEMObject::ChangeParentChildIndex( BEMObject* pChild, bool bMoveUp /*=true*
 //   
 /////////////////////////////////////////////////////////////////////////////
 bool BEMObject::CopyObject( BEMObject* pObj, int iBEMProcIdx /*=-1*/,
-										bool bCopyPrimaryDefaultDataAsUserDefined /*=false*/ )		// SAC 6/8/15 - CBECC issue 1061
+										bool bCopyPrimaryDefaultDataAsUserDefined /*=false*/, 		// SAC 6/8/15 - CBECC issue 1061
+                              bool bCopyChildren /*=false*/ )     // added bCopyChildren to both make this object a child of the original object's parent + copy its children - SAC 01/28/21 (Com tic #3232)
 {
    bool bRetVal = (pObj != NULL);
    if (bRetVal)
@@ -267,7 +268,10 @@ bool BEMObject::CopyObject( BEMObject* pObj, int iBEMProcIdx /*=-1*/,
       // m_objectType     = pObj->m_objectType    ;  // this has to do with what list this object resides in
       m_userReferenced = pObj->m_userReferenced;
    	m_class          = pObj->m_class         ;  // should already be the same
-   	// BEMObject*	m_parent;   // don't copy parent pointer for now
+   //	if (bCopyChildren && pObj->m_parent && m_parent != pObj->m_parent)   // SAC 01/28/21
+   //   {  m_parent      = pObj->m_parent;
+   //      pObj->m_parent->addChild( this );
+   //   }
    	// CObList		m_children;	 // don't copy children for now
       m_treeState      = pObj->m_treeState;  // set this item's state to be = copied item's state ??
 
@@ -305,6 +309,7 @@ bool BEMObject::CopyObject( BEMObject* pObj, int iBEMProcIdx /*=-1*/,
 
 					// SAC 6/14/12 - assume only FIRST ObjClassIdx may be an auto-create object type (??)
                if ( pNewProp->getType() && pNewProp->getType()->getPropType() == BEMP_Obj &&
+                    pNewProp->getType()->getObj1ClassIdx(0) > 0 &&      // prevent crash if invalid/missing object assignment types - SAC 06/30/21
                     pBEMProc->getClass( pNewProp->getType()->getObj1ClassIdx(0) - 1 )->getAutoCreate() )
                   // don't copy AutoCreate assignments
                   bRetVal = TRUE;
@@ -327,6 +332,24 @@ bool BEMObject::CopyObject( BEMObject* pObj, int iBEMProcIdx /*=-1*/,
             }
          }
       }
+
+   	if (bRetVal && bCopyChildren && pObj->getChildCount() > 0)        // SAC 01/28/21
+         for (int iChldIdx=0; (bRetVal && iChldIdx < pObj->getChildCount()); iChldIdx++)
+         {  BEMObject* pChildObj = pObj->getChild( iChldIdx );
+            if (pChildObj)
+            {  QString sName;
+               BOOL bSOCN = BEMPX_SetObjectCopyName( sName, pChildObj->getName().toLocal8Bit().constData(), TRUE, iBEMProcIdx );		bSOCN;
+               BEMObject* pChildCopyObj = BEMPX_CreateObject( pChildObj->getClass()->get1BEMClassIdx(), sName.toLocal8Bit().constData(), this, BEMO_User, FALSE, TRUE, iBEMProcIdx );
+               if (pChildCopyObj)
+                  bRetVal = pChildCopyObj->CopyObject( pChildObj, iBEMProcIdx, bCopyPrimaryDefaultDataAsUserDefined, bCopyChildren );
+               else
+               {  bRetVal = FALSE;        assert( false );
+               }
+            }
+            else
+            {     bRetVal = FALSE;        assert( false );
+            }
+         }
 
       // now re-create all auto-create attachments
    	AutoCreateReferences( iBEMProcIdx );

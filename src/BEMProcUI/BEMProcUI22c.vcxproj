@@ -22,26 +22,27 @@
     <ProjectName>BEMProcUI22c</ProjectName>
     <ProjectGuid>{6F465328-30A9-43D7-B8A7-D7740A222122}</ProjectGuid>
     <Keyword>MFCProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -68,24 +69,24 @@
     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>../../bin/Release_VC12/</OutDir>
-    <IntDir>../../bin/BEMProcUI22c_VC12/Win32/Release\</IntDir>
+    <OutDir>../../bin/Release_VC142/</OutDir>
+    <IntDir>../../bin/BEMProcUI_VC142/22c/x86/Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>../../bin/Release_VC12x64/</OutDir>
-    <IntDir>../../bin/BEMProcUI22c_VC12/x64/Release\</IntDir>
+    <OutDir>../../bin/Release_VC142x64/</OutDir>
+    <IntDir>../../bin/BEMProcUI_VC142/22c/x64/Release\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>../../bin/Debug_VC12/</OutDir>
-    <IntDir>../../bin/BEMProcUI22c_VC12/Win32/Debug\</IntDir>
+    <OutDir>../../bin/Debug_VC142/</OutDir>
+    <IntDir>../../bin/BEMProcUI_VC142/22c/x86/Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>../../bin/Debug_VC12x64/</OutDir>
-    <IntDir>../../bin/BEMProcUI22c_VC12/x64/Debug\</IntDir>
+    <OutDir>../../bin/Debug_VC142x64/</OutDir>
+    <IntDir>../../bin/BEMProcUI_VC142/22c/x64/Debug\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -128,7 +129,7 @@
       <DataExecutionPrevention />
       <ImportLibrary>$(OutDir)BEMProcUI22c.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC12\BEMProc22c.lib</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC142\BEMProc22c.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.3\lib;</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
@@ -168,7 +169,7 @@
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalIncludeDirectories>..\..\vendor\Qt_5.6.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\Qt_5.15.0\include</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -185,8 +186,8 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <ImportLibrary>$(OutDir)BEMProcUI22c.lib</ImportLibrary>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC12x64\BEMProc22c.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.6.1\lib-x64;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC142x64\BEMProc22c.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib-x64;</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -242,7 +243,7 @@
       <DataExecutionPrevention />
       <ImportLibrary>$(OutDir)BEMProcUI22c.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC12\BEMProc22c.lib</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC142\BEMProc22c.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.3\lib;</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
@@ -280,7 +281,7 @@
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\vendor\Qt_5.6.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\Qt_5.15.0\include</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -298,8 +299,8 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <ImportLibrary>$(OutDir)BEMProcUI22c.lib</ImportLibrary>
-      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC12x64\BEMProc22c.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.6.1\lib-x64;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC142x64\BEMProc22c.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib-x64;</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>

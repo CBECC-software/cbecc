@@ -405,9 +405,13 @@ public:
    void DeleteData();
    BOOL Init( const char* pszScreenDataFileName = NULL, BOOL bReportResults=FALSE );
 
-   BOOL ReadMainScreenInfo( CTextIO& file, int iFileStructVersion=1 );
-   BOOL ReadScreenControl(  CTextIO& file, int iFileStructVersion=1 );
-   BOOL ReadScreenPage(     CTextIO& file, int iFileStructVersion=1 );
+   BOOL ReadScreenFile( CString sScreenFile, int iFileStructVersion );  // SAC 08/12/21 (MFam)
+
+   BOOL ReadMainScreenInfo(  CTextIO& file, int iFileStructVersion=1 );
+   BOOL ReadScreenControl(   CTextIO& file, int iFileStructVersion=1 );
+   BOOL ReadScreenPage(      CTextIO& file, int iFileStructVersion=1 );
+   BOOL ReadScreenInclude(   CTextIO& file, int iFileStructVersion=1 );  // SAC 08/12/21 (MFam)
+   BOOL ReadScreenFile_Body( CTextIO& file, int& iFileStructVersion  );  // SAC 08/17/21 (MFam)
 
    int             GetNumPagesByClass( int iClass, int iUIMode=1 );
    CBEMPUIPage*    GetPageByClassAndIndex( int iClass, int iPageIdx, int iUIMode=1 );

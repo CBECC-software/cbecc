@@ -1256,7 +1256,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				{}
 			}
 		}
-		else if (wAction >= 3051 && wAction <= 3058)
+		else if ( (wAction >= 3051 && wAction <= 3058) ||
+					 (wAction >= 3075 && wAction <= 3079) )
 		{
 			CString sBrowsePath, sFileDescrip, sFileExt, sInitString;
 			long lDBID_File = 0;
@@ -1330,6 +1331,12 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				sFileExt	    = _T("csv");
 				lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:RunSetFile" );			   ASSERT( lDBID_File > 0 );
 			}
+			else if (wAction >= 3075 && wAction <= 3079)		// SAC 12/13/20
+			{	sBrowsePath = esProjectsPath;
+				sFileDescrip = _T("Ruleset table file (*.csv)|*.csv||");
+				sFileExt	    = _T("csv");
+				lDBID_File	 = BEMPX_GetDatabaseID( "Proj:ReplaceRuleTableFile[1]" ) + (wAction - 3075);		ASSERT( lDBID_File > 0 );
+			}
 
 			if (lDBID_File <= 0 || !DirectoryExists( sBrowsePath ))
 			{  ASSERT( FALSE );
@@ -1339,7 +1346,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				CFileDialog dlg( bOpenDlg, sFileExt, sInitString, (bOpenDlg ? OFN_FILEMUSTEXIST | OFN_HIDEREADONLY : OFN_HIDEREADONLY), sFileDescrip, pDlg );
 				if (dlg.DoModal()==IDOK)
 				{	CString sSelectedFile = dlg.GetPathName();
-					if (wAction == 3052 || wAction == 3053)
+					if ( wAction == 3052 || wAction == 3053 ||
+						 (wAction >= 3075 && wAction <= 3079) )		// SAC 12/14/20
 					{	// remove portion of path equal to default Projects path for certain file selections
 						if (sSelectedFile.GetLength() > esProjectsPath.GetLength() &&
 							 esProjectsPath.CompareNoCase( sSelectedFile.Left( esProjectsPath.GetLength() ) ) == 0)
@@ -1653,6 +1661,32 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 		}
 
 #elif UI_CANRES
+
+      else if (wAction >= 128 && wAction <= 129)      // SAC 10/20/21 (MFam)
+      {	int iDlgHt = 600, iDlgWd = 770;  // Present dialog to collect Multifamily Dwelling Unit data
+      	int iDlgClassID = eiBDBCID_ResProj;
+      	if (wAction == 128)	// SAC 1/15/15 - Present dialog to collect properties defaulted based on Proj:SimSpeedOption
+      	{	iDlgHt = 400;
+      		iDlgWd = 410;
+      	}
+      	else if (wAction == 129)	// SAC 2/2/15 - Present dialog to review/edit AirNet effective leakage area properties
+      	{	iDlgHt = 510;		// SAC 7/13/20 - was: 300;
+      		iDlgWd = 500;		//					  was: 400;
+      	}
+			CString sDialogCaption;
+			GetDialogCaption( iDlgClassID, sDialogCaption );
+         CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         dlgProj.DoModal();
+      }
       else if (wAction >= 190 && wAction <= 195)
       {	int iDlgHt = 740, iDlgWd = 600;  // Present dialog to collect Spc ResSpcDHWFeatures data
       	int iDlgClassID = eiBDBCID_ResSpcDHWFeatures;
@@ -2205,6 +2239,8 @@ LRESULT CMainFrame::OnCheckCompat( WPARAM wParam, LPARAM lParam )
 			if (BEMPX_SetDataInteger( elDBID_Proj_IsMultiFamily, lIsMultiFam ) && lIsMultiFam > 0)
 				lRetVal = 0;
 		}
+		else if (eiDeveloperMenu == 0 && lParam == BEMPX_GetDBComponentID( "OtherZone" ))      // prevent OtherZone creation when not DeveloperMenu - SAC 05/29/21
+			lRetVal = 0;
 #endif // UI_CARES
 
 	}
@@ -3192,6 +3228,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
                                                 {  "ReportStandardUMLHs"         ,  "ReportStandardUMLHs"         ,    0   },  // SAC 11/11/19
                                                 {  "ReportAllUMLHZones"          ,  "ReportAllUMLHZones"          ,    0   },  // SAC 11/11/19
                                                 {  "SimulateCSEOnly"             ,  "SimulateCSEOnly"             ,    0   },  // SAC 3/10/20
+                                                {  "ReportGenNRCCPRFXML"         ,  "ReportGenNRCCPRFXML"         ,    0   },  // SAC 04/10/21
 																{  NULL, NULL, -1  }  };
 
 		int iAnalOptIdx = -1;
@@ -3248,7 +3285,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			}	}	}	}
 		}
 
-		if (!sProxyINIOptions.IsEmpty())		// SAC 9/5/13 - add proxy server settings
+		if (!sProxyINIOptions.IsEmpty() && !bBatchMode)		// SAC 9/5/13 - add proxy server settings   // prevent adding proxy settings to Batch INI options strings - SAC 10/09/21
 			sOptionsCSVString += sProxyINIOptions;
 		if (!sDebugRuleEvalCSV.IsEmpty())  // SAC 1/9/14 - mods to share rule debug CSV INI option accross res & com
 			sOptionsCSVString += sDebugRuleEvalCSV;
@@ -3318,6 +3355,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sOptionsCSVString +=			"BypassDHW,1,";
 		if (ReadProgInt( sOptsSec,	"EnableHPAutosize", 0 /*default*/ ) > 0)		// SAC 6/21/19
 			sOptionsCSVString +=			"EnableHPAutosize,1,";
+      int iShuffleSFamDHW = ReadProgInt( sOptsSec,	"ShuffleSFamDHW", -1 /*default*/ );    // SAC 05/13/21
+		if (iShuffleSFamDHW >= 0)		
+		{	sTemp.Format( "ShuffleSFamDHW,%d,", iShuffleSFamDHW );
+			sOptionsCSVString += sTemp;
+      }
       if (ReadProgInt( sOptsSec,   "ExportHourlyResults_All",   0 /*default*/ ) > 0)		// SAC 9/5/13
          sOptionsCSVString +=       "ExportHourlyResults_All,1,";
       if (ReadProgInt( sOptsSec,   "ExportHourlyResults_u",   0 /*default*/ ) > 0)		// SAC 8/5/13
@@ -3340,7 +3382,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
          sOptionsCSVString +=       "ComplianceReportXML,1,";
       if (ReadProgInt( sOptsSec,   "SendRptSignature",        1 /*default*/ ) < 1)		// SAC 9/12/13
          sOptionsCSVString +=       "SendRptSignature,0,";
-		if (!sProxyINIOptions.IsEmpty())		// SAC 9/5/13 - add proxy server settings
+		if (!sProxyINIOptions.IsEmpty() && !bBatchMode)		// SAC 9/5/13 - add proxy server settings   // prevent adding proxy settings to Batch INI options strings - SAC 10/09/21
 			sOptionsCSVString += sProxyINIOptions;
 		if (!sDebugRuleEvalCSV.IsEmpty())  // SAC 1/9/14 - mods to share rule debug CSV INI option accross res & com
 			sOptionsCSVString += sDebugRuleEvalCSV;
@@ -3736,7 +3778,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 																		//	sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/,
 																			NULL /*pszLogPathFile*/, sUIVersionString, 
 																			sOptionsCSVString, pszBatchErr, 1024, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/,
-																			bOLDRules, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128 );
+																			bOLDRules, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128, sProxyINIOptions );  // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
 			RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 			CString sResult;
 			if (strlen( pszBatchErr ) > 0)
@@ -3908,7 +3950,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 			int iBatchResult = CMX_PerformBatchAnalysis_CECRes( sBatchPathFile, esProjectsPath, sBEMPathFile, sRulePathFile,
 														sCSEPath, sCSEPath, sT24DHWPath, NULL /*pszDHWWeatherPath*/, sBatchLogPathFile /*pszLogPathFile*/,
 														sUIVersionString, pszAnalOpts, pszBatchErr, 1024, true /*bDisplayProgress*/,
-														GetSafeHwnd() /*HWND hWnd*/, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128 );
+														GetSafeHwnd() /*HWND hWnd*/, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128, sProxyINIOptions );  // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
 			RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 			CString sResult;
 			if (strlen( pszBatchErr ) > 0)
@@ -4640,7 +4682,7 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 									}
 
 #ifdef UI_CARES
-									str2.Format( "\"%s-CZ%.2i\",\"%s\",,,,,,CumCSV,,,\n", qsRunTitle.toLatin1().constData(), iCZ, pszCZs[iCZ-1] );
+									str2.Format( "\"%s-CZ%.2i\",\"%s\",,,,,,,,,CumCSV,,\n", qsRunTitle.toLatin1().constData(), iCZ, pszCZs[iCZ-1] );		// fix column alignment of Output (CumCSV) entry - SAC 01/04/21
 #elif UI_CANRES
 									str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
 																	qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );		ASSERT( FALSE );  // need to incorporate CZ detail
@@ -6209,8 +6251,8 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 
 #ifdef UI_CARES
 	long lEnergyCodeYearNum=0, lAllOrientations=0;		
+	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   );   // restored retrieval of lAllOrientations to reference in code below to export multiple results records to summary CSV - SAC 03/16/21
 //	long lRunScope=0, lIsAddAlone=0;
-//	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   );
 //	if (bContinue && BEMPX_GetUIActiveFlag() && 
 //		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
 //		 ( //( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&   - SAC 2/19/18 - removed warning and replaced w/ ruleset check preventing analysis for EAA or AA (tic #984)
@@ -6417,9 +6459,11 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 				// SAC 6/20/19 - 20->21 added columns documenting EDR1 (source energy TDV) to facilitate 2022 code research
 				// SAC 1/29/20 - 21->22 inserted columns documenting Proposed and Std design model DHWSolarSys SSF (calced by CSE) (only 1st Prop solar sys) into cols EA-EB
 				// SAC 6/18/20 - 22->23 inserted 19 columns for RESNET/HERS analysis results in cols LS-MK (prior to CAHP/CMFNH)
-				CString sDfltResFN = "AnalysisResults-v23.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
+				// SAC 03/16/21 - 23->24 inserted 8 columns for HVAC system count & capacities in cols JZ-KG (prior to CO2 emissions by enduse)
+            // SAC 07/20/21 - 24->25 inserted 2 columns for Std design auto-sized central HPWH capacity & tank volume @ col KH (prior to CO2 emissions by enduse) (tic #1275)
+				CString sDfltResFN = "AnalysisResults-v25.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
 				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						23 /*iResFormatVer*/, sOriginalFileName );
+																						25 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
 					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3328];
@@ -7640,15 +7684,20 @@ void CMainFrame::OnUpdateToolsT24ComplianceReport(CCmdUI* pCmdUI)		// SAC 5/17/1
 void CMainFrame::OnToolsT24ComplianceReport()		// SAC 5/17/13
 {
 #ifdef UI_CARES
-	int iReportID = 0;
+	int iReportID = 0, iSecRptID = -1;
 #elif UI_CANRES
-	int iReportID = 1;
+	int iReportID = 1, iSecRptID = -1;
+   if (ReadProgInt( "options", "ReportGenNRCCPRFXML", 0 /*default*/ ) > 0)
+      iSecRptID = 4;
 #else
-	int iReportID = -1;
+	int iReportID = -1, iSecRptID = -1;
 	AfxMessageBox( "Title-24 compliance report generation only available in 2013 Title-24 mode." );
 #endif
 	if (iReportID >= 0)
-		GenerateReport( iReportID );
+	{	GenerateReport( iReportID );
+      if (iSecRptID >= 0)
+         GenerateReport( iSecRptID, true );
+   }
 }
 
 void CMainFrame::OnUpdateToolsT24StandardModelReport(CCmdUI* pCmdUI)		// SAC 11/18/15
@@ -7740,7 +7789,9 @@ BOOL CMainFrame::OnSetCursor( CWnd* pWnd, UINT nHitTest, UINT message )
 // iReportID  =>	0 : CARES2013
 //						1 : CANRES2013
 //						2 : CAHP
-void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
+//                3 : CANRES - Std report
+//                4 : CANRES - NRCC-PRF schema report - SAC 04/13/21
+void CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SAC 10/8/14  // SAC 04/13/21
 {
 	if (iReportID >= 0)
 	{
@@ -7762,7 +7813,10 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 		if (sDefaultResFNWord.Find("Analysis") != 0)
 			bSchemaBasedRptGen = true;
 #elif UI_CANRES
-		// add code once schema-based reporting enabled in -Com
+      if (iReportID == 4)  // SAC 04/13/21
+      {  sDefaultResFNWord = "NRCCPRF";
+         bSchemaBasedRptGen = true;
+      }
 #endif
 
 	   CString sProjFileName;
@@ -7780,7 +7834,11 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 			sErrMsg = "Error locating/identifying project data.  Make sure project data is saved and analysis performed prior to selecting this option.";
 
 		if (!sErrMsg.IsEmpty())
-			AfxMessageBox( sErrMsg );
+		{	if (!bSilent)  // SAC 04/13/21
+            AfxMessageBox( sErrMsg );
+         else
+            BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+      }
 		else
 		{	sErrMsg.Empty();
 			CString sAppendToFN, sRptGenCompReport, sRptType, sRptTypeLong;
@@ -7811,20 +7869,31 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 			             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 							 "(once the file is closed), or \n'Cancel' to abort the %s.", "PDF", sOutRptFN, "report generation" );
 			if (!sErrMsg.IsEmpty())
-				AfxMessageBox( sErrMsg );
-			else if (OKToWriteOrDeleteFile( sOutRptFN, sMsg ))
+			{	if (!bSilent)  // SAC 04/13/21
+               AfxMessageBox( sErrMsg );
+            else
+               BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         }
+			else if (OKToWriteOrDeleteFile( sOutRptFN, sMsg, bSilent ))
 		   {
 			// SAC 6/15/16 - added logic to check report generator availability PRIOR to report generation (depending on EnableRptGenStatusChecks INI option)
 				bool bContinue = true;
 				if (bIsUIActive && ReadProgInt( "options", "EnableRptGenStatusChecks", 1 /*default*/ ) > 0 && !CheckReportGenAccess( false ))
-				{	CString sNoRptGenMsg;
-					// check whether user still wishes to generate a report even if report gen not available...
-					sNoRptGenMsg.Format( "The report generator is currently offline.\nIf your network provides web access via a proxy server, "
-												"make sure the proxy address and credentials are correct.  You can find these settings in:  "
-												"Tools > Proxy Server Settings.\n\nWould you still like to generate a %s report?", sRptType );
-			//		if (BEMMessageBox( sNoRptGenMsg, "Report Generation", MB_YESNO | MB_DEFBUTTON2 ) == IDNO)
-					if (BEMMessageBox( sNoRptGenMsg, "Report Generation", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::No)
-				   	bContinue = false;
+      		{	if (!bSilent)  // SAC 04/13/21
+               {  CString sNoRptGenMsg;
+   					// check whether user still wishes to generate a report even if report gen not available...
+   					sNoRptGenMsg.Format( "The report generator is currently offline.\nIf your network provides web access via a proxy server, "
+   												"make sure the proxy address and credentials are correct.  You can find these settings in:  "
+   												"Tools > Proxy Server Settings.\n\nWould you still like to generate a %s report?", sRptType );
+   			//		if (BEMMessageBox( sNoRptGenMsg, "Report Generation", MB_YESNO | MB_DEFBUTTON2 ) == IDNO)
+   					if (BEMMessageBox( sNoRptGenMsg, "Report Generation", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::No)
+   				   	bContinue = false;
+               }
+               else
+               {  sErrMsg.Format( "Unable to generate %s %s due to report generator being offline.", sDefaultResFNWord, sRptTypeLong );
+                  BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+  				   	bContinue = false;
+               }
 				}
 
 				if (bContinue)
@@ -7894,6 +7963,12 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenApp"        ), sRptGenApp        );
 	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenService"    ), sRptGenService    );
 	      			}
+                  if (iReportID == 4)  // SAC 04/13/21
+                  {	BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenCompReport" ), sRptGenCompReport );
+      	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenServer"     ), sRptGenServer     ); 
+      	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenApp"        ), sRptGenApp        ); 
+      	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenService"    ), sRptGenService    ); 
+                  }
 
 						EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
 						iRptGenRetVal = CMX_GenerateReport_Proxy_CEC( sResXMLFileName /*sProjPath, sResFN*/, sCACertPath, sRptGenCompReport, sRptGenUIApp, sRptGenUIVer,
@@ -7909,7 +7984,10 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 										 "Tools > Proxy Server Settings.", sRptType );
 						else
 							sErrMsg.Format( "CMX_GenerateReport_CEC() returned error code %d", iRptGenRetVal );
-	               MessageBox( sErrMsg );
+	               if (!bSilent)  // SAC 04/13/21
+                     MessageBox( sErrMsg );
+                  else
+                     BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 					else
 					{	//sErrMsg.Format( "CMX_GenerateReport_CEC() SUCCEEDED - report file:  %s/%s-BEES.pdf", sProjPath, sResFN );
@@ -7931,7 +8009,7 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 									VERIFY( BEMPX_WriteLogFile( "Compliance report marked as 'not usable for compliance' since valid reports cannot be generated outside the compliance analysis sequence.",
 																					NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
 
-								if (MessageBox( "Report successfully generated.\n\nWould you like to view the report?", "Report Generated", MB_YESNO ) == IDYES)
+								if (!bSilent && MessageBox( "Report successfully generated.\n\nWould you like to view the report?", "Report Generated", MB_YESNO ) == IDYES)
 								{	OpenFileViaShellExecute( sOutRptFN, sRptTypeLong /*FileDescrip*/ );
 									//	int idx = sOutRptFN.ReverseFind('\\');   // sProjPath.ReverseFind('/');
 									//	CString sPDFPath = (idx > 0 ? sOutRptFN.Left( idx ) : "");
@@ -7940,7 +8018,10 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 							}
 							else
 							{  sErrMsg.Format( "CMX_GenerateReport_CEC() succeeded but report file not found:\n   %s", sOutRptFN );
-		            	   MessageBox( sErrMsg );
+      	               if (!bSilent)  // SAC 04/13/21
+		               	   MessageBox( sErrMsg );
+                        else
+                           BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 							}
 			//			}
 					}
@@ -8016,6 +8097,7 @@ bool CMainFrame::CheckReportGenAccess( bool bDisplayResult )
 		}
 		else
 		{	bIncludeProxyInfo = TRUE;
+         sNetComLibrary = "cpp-httplib";     // current network access library - SAC 06/16/21
 			sResultMsg = "Report generator website not accecssed.  ";			CString sTempMsg;
 			switch (iRptGenRetVal)
 			{	case   1 : sTempMsg.Format( "Error initializing %s on first attempt.", (sNetComLibrary.IsEmpty() ? "QT" : sNetComLibrary) );

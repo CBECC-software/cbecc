@@ -410,7 +410,7 @@ void CBEMProcCtrlList::OnLButtonDblClk( UINT /*nFlags*/, CPoint point )
 //               sMsg.Format( "Double clicked on item #%d => navigation ID %d.", iHitItem, m_iNavigationID );
 //               MessageBox( sMsg );
 
-               int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_iNavigationID, 0 ), (long) GetParent() );
+               int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_iNavigationID, 0 ), (ULONG_PTR) GetParent() );
                if (iBtnPressRetVal > 0)
                {
                   // Post-processing following mods

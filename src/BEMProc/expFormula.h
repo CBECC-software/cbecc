@@ -93,172 +93,176 @@ typedef enum optypes_   /* types other than what the parser generates */
    OP_FindN,      /* 21 */  /* SAC 2/4/13 - added findnocase() function */
    OP_Atof,       /* 22 */  /* SAC 2/23/16 - added atof() */
    OP_Round,      /* 23 */  /* SAC 11/13/17 - added round() - round to specified digits */
-   OP_ErrorExp,   /* 24 */
+   OP_SubStr,     /* 24 */  /* SAC 07/13/21 - added substr( int firstChar(0-n), int length ) */
+   OP_ErrorExp,   /* 25 */
 
-   BF_Global,        /*  25 */
-   BF_Local,         /*  26 */
-   BF_Parent,        /*  27 */
-   BF_Parent2,       /*  28 */
-   BF_Parent3,       /*  29 */
-   BF_LocalRef,      /*  30 */
-   BF_ParentRef,     /*  31 */
-   BF_Parent2Ref,    /*  32 */
-   BF_Parent3Ref,    /*  33 */
-   BF_SymValue,      /*  34 */
-   BF_SumChld,       /*  35 */
-   BF_SumAll,        /*  36 */
-   BF_RuleLib,       /*  37 */
-   BF_ChildRef,      /*  38 */
-   BF_Lookup,        /*  39 */
-   BF_ChildCnt,      /*  40 */
-   BF_SumRevRef,     /*  41 */
-   BF_MaxChild,      /*  42 */
-   BF_MaxAll,        /*  43 */
-   BF_MaxRevRef,     /*  44 */
-   BF_CurTime,       /*  45 */
-   BF_Date,          /*  46 */
-   BF_CheckSym,      /*  47 */
-   BF_EvalRules,     /*  48 */
-   BF_Cr8Child,      /*  49 */
-   BF_DelChild,      /*  50 */
-   BF_Cr8Comp,       /*  51 */
-   BF_DelComp,       /*  52 */
-   BF_DelAllComps,   /*  53 */
-   BF_StoreBEMProc,  /*  54 */
-   BF_LCompAssign,   /*  55 */
-   BF_PCompAssign,   /*  56 */
-   BF_LIsDefault,    /*  57 */
-   BF_PIsDefault,    /*  58 */
-   BF_CurYear,       /*  59 */
-   BF_MinChild,      /*  60 */
-   BF_MinAll,        /*  61 */
-   BF_MinRevRef,     /*  62 */
-   BF_FltToStr,      /*  63 */
-   BF_LocSymStr,     /*  64 */
-   BF_CompIdx,       /*  65 */
-   BF_ChildIdx,      /*  66 */
-   BF_MoDaShift,     /*  67 */
-   BF_ShiftProf,     /*  68 */
-   BF_Format,        /*  69 */  /* SAC  5/14/01 - added */
-   BF_LocStatus,     /*  70 */  /* SAC  5/16/01 - added */
-   BF_ParStatus,     /*  71 */  /* SAC  5/16/01 - added */
-   BF_PostError,     /*  72 */  /* SAC  5/21/01 - added */
-   BF_PostWarn,      /*  73 */  /* SAC  5/21/01 - added */
-   BF_CompExists,    /*  74 */  /* SAC  7/ 6/01 - added */
-   BF_GlobSymStr,    /*  75 */  /* SAC  7/25/01 - added */
-   BF_WizZoning,     /*  76 */  /* SAC  8/23/01 - added */
-   BF_GlobStatus,    /*  77 */  /* SAC  8/24/01 - added */
-   BF_AllocAreas,    /*  78 */  /* SAC 12/16/01 - added */
-   BF_CountRefs,     /*  79 */  /* SAC  1/ 3/02 - added */
-   BF_CompName,      /*  80 */  /* SAC  1/ 3/02 - added */
-   BF_CountUPRefs,   /*  81 */  /* SAC  1/ 4/02 - added */
-   BF_CountNoRefs,   /*  82 */  /* SAC  1/ 4/02 - added */
-   BF_MaxRevRefC,    /*  83 */  /* SAC  1/ 9/02 - added */
-   BF_MaxAllComp,    /*  84 */  /* SAC  1/24/02 - added */
-   BF_PosShell,      /*  85 */  /* SAC  3/26/02 - added */
-   BF_CompCnt,       /*  86 */  /* SAC  4/ 1/02 - added */
-   BF_BitMatchCmp,   /*  87 */  /* SAC  4/ 2/02 - added */
-   BF_BitMatchCnt,   /*  88 */  /* SAC  4/ 2/02 - added */
-   BF_UnqCompName,   /*  89 */  /* SAC  4/ 9/02 - added */
-   BF_ZBAZoning,     /*  90 */  /* SAC  6/25/02 - added */
-   BF_DfltAdiabat,   /*  91 */  /* SAC  7/15/02 - added */
-   BF_MoDaNumDays,   /*  92 */  /* SAC 10/24/02 - added */
-   BF_StrUnique,     /*  93 */  /* SAC  8/25/03 - added */
-   BF_FileExists,    /*  94 */  /* SAC  1/ 6/04 - added */
-   BF_ImportComp,    /*  95 */  /* SAC  1/ 6/04 - added */
-   BF_EnsureChild,   /*  96 */  /* SAC  4/27/04 - added */
-   BF_SplitPath,     /*  97 */  /* SAC  11/5/04 - added */
-   BF_MaxRevRefA,    /*  98 */  /* SAC 11/10/04 - added */
-   BF_CountOccur,    /*  99 */  /* SAC 9/28/07 - added */
-   BF_SumToArray,    /* 100 */  /* SAC 9/28/07 - added */
-   BF_SumRevRefEx,   /* 101 */  /* SAC 9/28/07 - added */
-   BF_LocSymInv,     /* 102 */  /* SAC 9/28/07 - added */ 
-   BF_MsgBox,        /* 103 */  /* SAC 9/29/06 - added */
-   BF_GlobalRef,     /* 104 */  /* SAC 9/28/07 - added */
-   BF_BEMProcDBID,   /* 105 */  /* SAC 6/14/07 - added */
-   BF_PostLogMsg,    /* 106 */  /* SAC 10/30/07 - added */
-   BF_FindInStr,     /* 107 */  /* SAC 7/2/09 - added */
-   BF_RplcInStr,     /* 108 */  /* SAC 11/20/09 - added */
-   BF_LocMxStrLen,   /* 109 */  /* SAC 11/20/09 - added */
-   BF_ParStrAElem,   /* 110 */  /* SAC 11/20/09 - added */
-   BF_ParCompType,   /* 111 */  /* SAC 2/16/10 - added */
-   BF_LocArrIdx,     /* 112 */  /* SAC 3/3/10 - added */
-   BF_CompArray,     /* 113 */  /* SAC 3/7/11 - added */
-   BF_GCompAssign,   /* 114 */  /* SAC 5/12/12 - added */
-   BF_HrlyResSum,    /* 115 */  /* SAC 5/15/12 - added */
-   BF_HrlyResMult,   /* 116 */  /* SAC 5/15/12 - added */
-   BF_CompType,      /* 117 */  /* SAC 8/20/10 - added */
-   BF_SumAcrsIf,     /* 118 */  /* SAC 2/15/13 - added */
-   BF_SumChldIf,     /* 119 */  /* SAC 2/15/13 - added */
-   BF_PolyLpArea,    /* 120 */  /* SAC 5/28/13 - added */
-   BF_ScalePolyLp,   /* 121 */  /* SAC 5/28/13 - added */
-   BF_WriteToFile,   /* 122 */  /* SAC 6/6/13 - added */
-   BF_ConsUFctr,     /* 123 */  /* SAC 6/12/13 - added */
-   BF_DayltArea,     /* 124 */  /* SAC 10/1/13 - added */
-   BF_LogDuration,   /* 125 */  /* SAC 10/24/13 - added */
-   BF_InitPolyLp,    /* 126 */  /* SAC 10/29/13 - added */
-   BF_GlobalVal,     /* 127 */  /* SAC 2/13/14 - added */
-   BF_LocalVal,      /* 128 */  /* SAC 2/13/14 - added */
-   BF_ParentVal,     /* 129 */  /* SAC 2/13/14 - added */
-   BF_Parent2Val,    /* 130 */  /* SAC 2/13/14 - added */
-   BF_Parent3Val,    /* 131 */  /* SAC 2/13/14 - added */
-   BF_IfValidAnd,    /* 132 */  /* SAC 2/13/14 - added */
-   BF_Cr8PolyLp,     /* 133 */  /* SAC 2/18/14 - added */
-   BF_ConsUFctrR,    /* 134 */  /* SAC 2/21/14 - added */
-   BF_Cr8SCSysRpt,   /* 135 */  /* SAC 3/10/14 - added */
-   BF_AsgnCr8Comp,   /* 136 */  /* SAC 3/11/14 - added */
-   BF_Cr8DHWRpt,     /* 137 */  /* SAC 3/14/14 - added */
-   BF_Cr8IAQRpt,     /* 138 */  /* SAC 3/26/14 - added */
-   BF_ValidOr,       /* 139 */  /* SAC 4/1/14 - added */
-   BF_LocRefSymStr,  /* 140 */  /* SAC 4/10/14 - added */
-   BF_ParSymStr,     /* 141 */  /* SAC 4/10/14 - added */
-   BF_ParRefSymStr,  /* 142 */  /* SAC 4/10/14 - added */
-   BF_Par2SymStr,    /* 143 */  /* SAC 4/10/14 - added */
-   BF_Par2RefSymStr, /* 144 */  /* SAC 4/10/14 - added */
-   BF_Par3SymStr,    /* 145 */  /* SAC 4/10/14 - added */
-   BF_Par3RefSymStr, /* 146 */  /* SAC 4/10/14 - added */
-   BF_SymString,     /* 147 */  /* SAC 4/10/14 - added */
-   BF_Cr8DUHVAC,     /* 148 */  /* SAC 6/28/14 - added */
-   BF_MaxChildC,     /* 149 */  /* SAC 10/18/14 - added */
-   BF_MinChildC,     /* 150 */  /* SAC 10/18/14 - added */
-   BF_YrMoDa2Date,   /* 151 */  /* SAC 10/31/14 - added */
-   BF_Date2WkDay,    /* 152 */  /* SAC 10/31/14 - added */
-   BF_Date2Mo,       /* 153 */  /* SAC 10/31/14 - added */
-   BF_Date2Yr,       /* 154 */  /* SAC 10/31/14 - added */
-   BF_YrMoDa2DOW,    /* 155 */  /* SAC 10/31/14 - added */
-   BF_Cr8DURpt,      /* 156 */  /* SAC 11/15/14 - added */
-   BF_ListRevRef,    /* 157 */  /* SAC 1/26/15 - added */
-   BF_ListRevRefIf,  /* 158 */  /* SAC 1/26/15 - added */
-   BF_OpenExpFile,   /* 159 */  /* SAC 9/15/15 - added */
-   BF_WriteExpFile,  /* 160 */  /* SAC 9/15/15 - added */
-   BF_CloseExpFile,  /* 161 */  /* SAC 9/15/15 - added */
-   BF_StrToFlt,      /* 162 */  /* SAC 2/23/16 - added */
-   BF_Cr8DUWHtr,     /* 163 */  /* SAC 5/29/16 - added */
-   BF_AddCSERptCol,  /* 164 */  /* SAC 11/14/16 - added */
-   BF_HrlyResMltNEM, /* 165 */  /* SAC 1/23/17 - added */
-   BF_HrlyResMltNeg, /* 166 */  /* SAC 10/4/17 - added */
-   BF_CopyHrlyRes,   /* 167 */  /* SAC 10/5/17 - added */
-   BF_GlobRefSymStr, /* 168 */  /* SAC 4/4/18 - added */
-   BF_SchSum,        /* 169 */  /* SAC 8/17/18 - added */
-   BF_UListRevRef,   /* 170 */  /* SAC 8/22/19 - added */
-   BF_UListRevRefIf, /* 171 */  /* SAC 8/22/19 - added */
-   BF_Par2CompType,  /* 172 */  /* SAC 9/5/19 - added */
-   BF_Par3CompType,  /* 173 */  /* SAC 9/5/19 - added */
-   BF_SchDayHrsStr,  /* 174 */  /* SAC 10/6/19 - added */
-   BF_WriteSimInp,   /* 175 */  /* SAC 3/10/20 - added */
-   BF_RetCSVVal,     /* 176 */  /* SAC 4/10/20 - added */
-	BF_EvalRLCSVCol,  /* 177 */  /* SAC 5/9/20 - added */
-   BF_AppendMsg,     /* 178 */  /* SAC 5/21/20 - added */
-   BF_GlobSymVal,    /* 179 */  /* SAC 6/30/20 - added */
-   BF_GlobRefSymVal, /* 180 */  /* SAC 6/30/20 - added */
-   BF_LocSymVal,     /* 181 */  /* SAC 6/30/20 - added */
-   BF_LocRefSymVal,  /* 182 */  /* SAC 6/30/20 - added */
-   BF_ParSymVal,     /* 183 */  /* SAC 6/30/20 - added */
-   BF_ParRefSymVal,  /* 184 */  /* SAC 6/30/20 - added */
-   BF_Par2SymVal,    /* 185 */  /* SAC 6/30/20 - added */
-   BF_Par2RefSymVal, /* 186 */  /* SAC 6/30/20 - added */
-   BF_Par3SymVal,    /* 187 */  /* SAC 6/30/20 - added */
-   BF_Par3RefSymVal, /* 188 */  /* SAC 6/30/20 - added */
+   BF_Global,        /*  26 */
+   BF_Local,         /*  27 */
+   BF_Parent,        /*  28 */
+   BF_Parent2,       /*  29 */
+   BF_Parent3,       /*  30 */
+   BF_LocalRef,      /*  31 */
+   BF_ParentRef,     /*  32 */
+   BF_Parent2Ref,    /*  33 */
+   BF_Parent3Ref,    /*  34 */
+   BF_SymValue,      /*  35 */
+   BF_SumChld,       /*  36 */
+   BF_SumAll,        /*  37 */
+   BF_RuleLib,       /*  38 */
+   BF_ChildRef,      /*  39 */
+   BF_Lookup,        /*  40 */
+   BF_ChildCnt,      /*  41 */
+   BF_SumRevRef,     /*  42 */
+   BF_MaxChild,      /*  43 */
+   BF_MaxAll,        /*  44 */
+   BF_MaxRevRef,     /*  45 */
+   BF_CurTime,       /*  46 */
+   BF_Date,          /*  47 */
+   BF_CheckSym,      /*  48 */
+   BF_EvalRules,     /*  49 */
+   BF_Cr8Child,      /*  50 */
+   BF_DelChild,      /*  51 */
+   BF_Cr8Comp,       /*  52 */
+   BF_DelComp,       /*  53 */
+   BF_DelAllComps,   /*  54 */
+   BF_StoreBEMProc,  /*  55 */
+   BF_LCompAssign,   /*  56 */
+   BF_PCompAssign,   /*  57 */
+   BF_LIsDefault,    /*  58 */
+   BF_PIsDefault,    /*  59 */
+   BF_CurYear,       /*  60 */
+   BF_MinChild,      /*  61 */
+   BF_MinAll,        /*  62 */
+   BF_MinRevRef,     /*  63 */
+   BF_FltToStr,      /*  64 */
+   BF_LocSymStr,     /*  65 */
+   BF_CompIdx,       /*  66 */
+   BF_ChildIdx,      /*  67 */
+   BF_MoDaShift,     /*  68 */
+   BF_ShiftProf,     /*  69 */
+   BF_Format,        /*  70 */  /* SAC  5/14/01 - added */
+   BF_LocStatus,     /*  71 */  /* SAC  5/16/01 - added */
+   BF_ParStatus,     /*  72 */  /* SAC  5/16/01 - added */
+   BF_PostError,     /*  73 */  /* SAC  5/21/01 - added */
+   BF_PostWarn,      /*  74 */  /* SAC  5/21/01 - added */
+   BF_CompExists,    /*  75 */  /* SAC  7/ 6/01 - added */
+   BF_GlobSymStr,    /*  76 */  /* SAC  7/25/01 - added */
+   BF_WizZoning,     /*  77 */  /* SAC  8/23/01 - added */
+   BF_GlobStatus,    /*  78 */  /* SAC  8/24/01 - added */
+   BF_AllocAreas,    /*  79 */  /* SAC 12/16/01 - added */
+   BF_CountRefs,     /*  80 */  /* SAC  1/ 3/02 - added */
+   BF_CompName,      /*  81 */  /* SAC  1/ 3/02 - added */
+   BF_CountUPRefs,   /*  82 */  /* SAC  1/ 4/02 - added */
+   BF_CountNoRefs,   /*  83 */  /* SAC  1/ 4/02 - added */
+   BF_MaxRevRefC,    /*  84 */  /* SAC  1/ 9/02 - added */
+   BF_MaxAllComp,    /*  85 */  /* SAC  1/24/02 - added */
+   BF_PosShell,      /*  86 */  /* SAC  3/26/02 - added */
+   BF_CompCnt,       /*  87 */  /* SAC  4/ 1/02 - added */
+   BF_BitMatchCmp,   /*  88 */  /* SAC  4/ 2/02 - added */
+   BF_BitMatchCnt,   /*  89 */  /* SAC  4/ 2/02 - added */
+   BF_UnqCompName,   /*  90 */  /* SAC  4/ 9/02 - added */
+   BF_ZBAZoning,     /*  91 */  /* SAC  6/25/02 - added */
+   BF_DfltAdiabat,   /*  92 */  /* SAC  7/15/02 - added */
+   BF_MoDaNumDays,   /*  93 */  /* SAC 10/24/02 - added */
+   BF_StrUnique,     /*  94 */  /* SAC  8/25/03 - added */
+   BF_FileExists,    /*  95 */  /* SAC  1/ 6/04 - added */
+   BF_ImportComp,    /*  96 */  /* SAC  1/ 6/04 - added */
+   BF_EnsureChild,   /*  97 */  /* SAC  4/27/04 - added */
+   BF_SplitPath,     /*  98 */  /* SAC  11/5/04 - added */
+   BF_MaxRevRefA,    /*  99 */  /* SAC 11/10/04 - added */
+   BF_CountOccur,    /* 100 */  /* SAC 9/28/07 - added */
+   BF_SumToArray,    /* 101 */  /* SAC 9/28/07 - added */
+   BF_SumRevRefEx,   /* 102 */  /* SAC 9/28/07 - added */
+   BF_LocSymInv,     /* 103 */  /* SAC 9/28/07 - added */ 
+   BF_MsgBox,        /* 104 */  /* SAC 9/29/06 - added */
+   BF_GlobalRef,     /* 105 */  /* SAC 9/28/07 - added */
+   BF_BEMProcDBID,   /* 106 */  /* SAC 6/14/07 - added */
+   BF_PostLogMsg,    /* 107 */  /* SAC 10/30/07 - added */
+   BF_FindInStr,     /* 108 */  /* SAC 7/2/09 - added */
+   BF_RplcInStr,     /* 109 */  /* SAC 11/20/09 - added */
+   BF_LocMxStrLen,   /* 110 */  /* SAC 11/20/09 - added */
+   BF_ParStrAElem,   /* 111 */  /* SAC 11/20/09 - added */
+   BF_ParCompType,   /* 112 */  /* SAC 2/16/10 - added */
+   BF_LocArrIdx,     /* 113 */  /* SAC 3/3/10 - added */
+   BF_CompArray,     /* 114 */  /* SAC 3/7/11 - added */
+   BF_GCompAssign,   /* 115 */  /* SAC 5/12/12 - added */
+   BF_HrlyResSum,    /* 116 */  /* SAC 5/15/12 - added */
+   BF_HrlyResMult,   /* 117 */  /* SAC 5/15/12 - added */
+   BF_CompType,      /* 118 */  /* SAC 8/20/10 - added */
+   BF_SumAcrsIf,     /* 119 */  /* SAC 2/15/13 - added */
+   BF_SumChldIf,     /* 120 */  /* SAC 2/15/13 - added */
+   BF_PolyLpArea,    /* 121 */  /* SAC 5/28/13 - added */
+   BF_ScalePolyLp,   /* 122 */  /* SAC 5/28/13 - added */
+   BF_WriteToFile,   /* 123 */  /* SAC 6/6/13 - added */
+   BF_ConsUFctr,     /* 124 */  /* SAC 6/12/13 - added */
+   BF_DayltArea,     /* 125 */  /* SAC 10/1/13 - added */
+   BF_LogDuration,   /* 126 */  /* SAC 10/24/13 - added */
+   BF_InitPolyLp,    /* 127 */  /* SAC 10/29/13 - added */
+   BF_GlobalVal,     /* 128 */  /* SAC 2/13/14 - added */
+   BF_LocalVal,      /* 129 */  /* SAC 2/13/14 - added */
+   BF_ParentVal,     /* 130 */  /* SAC 2/13/14 - added */
+   BF_Parent2Val,    /* 131 */  /* SAC 2/13/14 - added */
+   BF_Parent3Val,    /* 132 */  /* SAC 2/13/14 - added */
+   BF_IfValidAnd,    /* 133 */  /* SAC 2/13/14 - added */
+   BF_Cr8PolyLp,     /* 134 */  /* SAC 2/18/14 - added */
+   BF_ConsUFctrR,    /* 135 */  /* SAC 2/21/14 - added */
+   BF_Cr8SCSysRpt,   /* 136 */  /* SAC 3/10/14 - added */
+   BF_AsgnCr8Comp,   /* 137 */  /* SAC 3/11/14 - added */
+   BF_Cr8DHWRpt,     /* 138 */  /* SAC 3/14/14 - added */
+   BF_Cr8IAQRpt,     /* 139 */  /* SAC 3/26/14 - added */
+   BF_ValidOr,       /* 140 */  /* SAC 4/1/14 - added */
+   BF_LocRefSymStr,  /* 141 */  /* SAC 4/10/14 - added */
+   BF_ParSymStr,     /* 142 */  /* SAC 4/10/14 - added */
+   BF_ParRefSymStr,  /* 143 */  /* SAC 4/10/14 - added */
+   BF_Par2SymStr,    /* 144 */  /* SAC 4/10/14 - added */
+   BF_Par2RefSymStr, /* 145 */  /* SAC 4/10/14 - added */
+   BF_Par3SymStr,    /* 146 */  /* SAC 4/10/14 - added */
+   BF_Par3RefSymStr, /* 147 */  /* SAC 4/10/14 - added */
+   BF_SymString,     /* 148 */  /* SAC 4/10/14 - added */
+   BF_Cr8DUHVAC,     /* 149 */  /* SAC 6/28/14 - added */
+   BF_MaxChildC,     /* 150 */  /* SAC 10/18/14 - added */
+   BF_MinChildC,     /* 151 */  /* SAC 10/18/14 - added */
+   BF_YrMoDa2Date,   /* 152 */  /* SAC 10/31/14 - added */
+   BF_Date2WkDay,    /* 153 */  /* SAC 10/31/14 - added */
+   BF_Date2Mo,       /* 154 */  /* SAC 10/31/14 - added */
+   BF_Date2Yr,       /* 155 */  /* SAC 10/31/14 - added */
+   BF_YrMoDa2DOW,    /* 156 */  /* SAC 10/31/14 - added */
+   BF_Cr8DURpt,      /* 157 */  /* SAC 11/15/14 - added */
+   BF_ListRevRef,    /* 158 */  /* SAC 1/26/15 - added */
+   BF_ListRevRefIf,  /* 159 */  /* SAC 1/26/15 - added */
+   BF_OpenExpFile,   /* 160 */  /* SAC 9/15/15 - added */
+   BF_WriteExpFile,  /* 161 */  /* SAC 9/15/15 - added */
+   BF_CloseExpFile,  /* 162 */  /* SAC 9/15/15 - added */
+   BF_StrToFlt,      /* 163 */  /* SAC 2/23/16 - added */
+   BF_Cr8DUWHtr,     /* 164 */  /* SAC 5/29/16 - added */
+   BF_AddCSERptCol,  /* 165 */  /* SAC 11/14/16 - added */
+   BF_HrlyResMltNEM, /* 166 */  /* SAC 1/23/17 - added */
+   BF_HrlyResMltNeg, /* 167 */  /* SAC 10/4/17 - added */
+   BF_CopyHrlyRes,   /* 168 */  /* SAC 10/5/17 - added */
+   BF_GlobRefSymStr, /* 169 */  /* SAC 4/4/18 - added */
+   BF_SchSum,        /* 170 */  /* SAC 8/17/18 - added */
+   BF_UListRevRef,   /* 171 */  /* SAC 8/22/19 - added */
+   BF_UListRevRefIf, /* 172 */  /* SAC 8/22/19 - added */
+   BF_Par2CompType,  /* 173 */  /* SAC 9/5/19 - added */
+   BF_Par3CompType,  /* 174 */  /* SAC 9/5/19 - added */
+   BF_SchDayHrsStr,  /* 175 */  /* SAC 10/6/19 - added */
+   BF_WriteSimInp,   /* 176 */  /* SAC 3/10/20 - added */
+   BF_RetCSVVal,     /* 177 */  /* SAC 4/10/20 - added */
+	BF_EvalRLCSVCol,  /* 178 */  /* SAC 5/9/20 - added */
+   BF_AppendMsg,     /* 179 */  /* SAC 5/21/20 - added */
+   BF_GlobSymVal,    /* 180 */  /* SAC 6/30/20 - added */
+   BF_GlobRefSymVal, /* 181 */  /* SAC 6/30/20 - added */
+   BF_LocSymVal,     /* 182 */  /* SAC 6/30/20 - added */
+   BF_LocRefSymVal,  /* 183 */  /* SAC 6/30/20 - added */
+   BF_ParSymVal,     /* 184 */  /* SAC 6/30/20 - added */
+   BF_ParRefSymVal,  /* 185 */  /* SAC 6/30/20 - added */
+   BF_Par2SymVal,    /* 186 */  /* SAC 6/30/20 - added */
+   BF_Par2RefSymVal, /* 187 */  /* SAC 6/30/20 - added */
+   BF_Par3SymVal,    /* 188 */  /* SAC 6/30/20 - added */
+   BF_Par3RefSymVal, /* 189 */  /* SAC 6/30/20 - added */
+   BF_FormatNL,      /* 190 */  /* SAC 12/11/20 - added */
+   BF_PS_HAPropsVld, /* 191 */  /* SAC 05/26/21 - added */
+   BF_PS_HAProps,    /* 192 */  /* SAC 05/21/21 - added */
 } OpTypes;
 
 typedef enum fmerrorcode_
@@ -305,6 +309,7 @@ typedef enum functypes_   /* types other than what the parser generates */
 {
    EXP_Unary,
    EXP_Binary,
+   EXP_Ternary,      /* SAC 07/13/21 */
    EXP_ErrorFunc,
    EXP_BEMPFunc,
    EXP_TableLookup

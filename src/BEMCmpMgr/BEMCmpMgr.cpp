@@ -52,6 +52,13 @@ static char THIS_FILE[] = __FILE__;
 #include "BEMCM_I.h"
 #include "memLkRpt.h"
 
+#ifdef _DEBUG
+bool ebLogAnalysisMsgs = true;      // SAC 10/28/21 (MFam)
+#elif  CODEYEAR2022
+bool ebLogAnalysisMsgs = true;
+#else
+bool ebLogAnalysisMsgs = false;
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -717,7 +724,7 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 	if (sbLogCSECallbacks)
 		BEMPX_WriteLogFile( szCSECallbackMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	//QString sMsg;
-	//sMsg.sprintf( "      CSE_MsgCallback( lvll= %d, msg= %s )", level, msg );
+	//sMsg = QString::asprintf( "      CSE_MsgCallback( lvll= %d, msg= %s )", level, msg );
 	//BEMMessageBox( sMsg, "" );
 //	return ((siCallbackCount % 40) == 0 ? CSE_ABORT : CSE_CONTINUE);
 	int iRetVal = CSE_CONTINUE;
@@ -809,7 +816,7 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 //				if (!strncmp(  pszCSEProgressMsgs[  i], msg, strlen(pszCSEProgressMsgs[i]) ))  // SAC 8/19/13 - fix bug where 'msg', when set to ' Reports' includes a trailing LF character
 //				{	bFound = true;
 //	
-//	//QString sLogMsg;	sLogMsg.sprintf( "setting progress pct to %.1f:  %s", ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCSEProgressValSum / siNumProgressRuns) * sfPctDoneFollowingSimulations /*98*/)), msg );
+//	//QString sLogMsg;	sLogMsg = QString::asprintf( "setting progress pct to %.1f:  %s", ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCSEProgressValSum / siNumProgressRuns) * sfPctDoneFollowingSimulations /*98*/)), msg );
 //	//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 //	
 //					sqt_progress->setValue( (int) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCSEProgressValSum / siNumProgressRuns) * sfPctDoneFollowingSimulations /*98*/)) );
@@ -1085,7 +1092,7 @@ BOOL CMX_TransformModel(	LPCSTR sShortTransformName, BOOL bEvalRules, BOOL bRepo
 	{
       QString sMsg;
 	   if (bReportToLog)
-	      sMsg.sprintf( szTrans1, sShortTransformName );
+	      sMsg = QString::asprintf( szTrans1, sShortTransformName );
 
 		bRetVal = BEMPX_AddModel( iBEMProcIdxToCopy, laDBIDsToBypassCopy, true /*bSetActiveBEMProcToNew*/ );
       if (!bRetVal)
@@ -1110,7 +1117,7 @@ BOOL CMX_TransformModel(	LPCSTR sShortTransformName, BOOL bEvalRules, BOOL bRepo
 
 			if (bLogDurationStats)
 			{	QString sEvalTransSecsMsg;
-				sEvalTransSecsMsg.sprintf( "      Model transformation '%s' duration:  %.2f seconds", sShortTransformName, BEMPX_GetDurationSinceMark( 2 ) );
+				sEvalTransSecsMsg = QString::asprintf( "      Model transformation '%s' duration:  %.2f seconds", sShortTransformName, BEMPX_GetDurationSinceMark( 2 ) );
 		      BEMPX_WriteLogFile( sEvalTransSecsMsg );
 			}
 	}
@@ -1128,7 +1135,7 @@ BOOL CM_EvaluateModelRules(	LPCSTR sShortTransformName, BOOL bReportToLog /*=FAL
 //		if (bRetVal)
 //		{
 		   if (bReportToLog)
-		      sMsg.sprintf( szTrans2, sShortTransformName );
+		      sMsg = QString::asprintf( szTrans2, sShortTransformName );
 
 			if (bLogDurationStats)
    		{	BEMPX_SetDurationMark( 3 );
@@ -1140,7 +1147,7 @@ BOOL CM_EvaluateModelRules(	LPCSTR sShortTransformName, BOOL bReportToLog /*=FAL
 									// 											long* plNumRuleEvals /*=NULL*/, double* pdNumSeconds /*=NULL*/ )
 			if (bLogDurationStats)
 			{	QString sEvalTransSecsMsg;
-				sEvalTransSecsMsg.sprintf( "         Transform '%s' rule evaluation duration:  %.2f seconds", sShortTransformName, BEMPX_GetDurationSinceMark( 3 ) );
+				sEvalTransSecsMsg = QString::asprintf( "         Transform '%s' rule evaluation duration:  %.2f seconds", sShortTransformName, BEMPX_GetDurationSinceMark( 3 ) );
 		      BEMPX_WriteLogFile( sEvalTransSecsMsg );
 			}
 
@@ -1157,7 +1164,7 @@ BOOL CM_EvaluateModelRules(	LPCSTR sShortTransformName, BOOL bReportToLog /*=FAL
 		   if (bReportToLog)
 		      BEMPX_WriteLogFile( sMsg );
 
-//QString sDbgDetailWrite;	sDbgDetailWrite.sprintf( "pszBEMBaseDetailsPathFile = %s -%s writing BEM details file",
+//QString sDbgDetailWrite;	sDbgDetailWrite = QString::asprintf( "pszBEMBaseDetailsPathFile = %s -%s writing BEM details file",
 //										((pszBEMBaseDetailsPathFile==NULL || strlen( pszBEMBaseDetailsPathFile ) < 1) ? "blank" : pszBEMBaseDetailsPathFile), 
 //										((pszBEMBaseDetailsPathFile==NULL || strlen( pszBEMBaseDetailsPathFile ) < 1) ? " NOT" : "") );			BEMMessageBox( sDbgDetailWrite, "" );
 			if (pszBEMBaseDetailsPathFile && strlen( pszBEMBaseDetailsPathFile ) > 0)
@@ -1240,7 +1247,7 @@ BOOL CMX_WriteSimulationInput( SimulationType /*eSimType*/,
 // needed?          {
 // needed?             dbgFile.SeekToEnd();
 // needed?             QString sTmp;
-// needed?             sTmp.sprintf( "l1: %2d,  l2: %2d,  l3: %2d,  l4: %2d,  l5: %4d,  sfCurProgress: %f\n",
+// needed?             sTmp = QString::asprintf( "l1: %2d,  l2: %2d,  l3: %2d,  l4: %2d,  l5: %4d,  sfCurProgress: %f\n",
 // needed?                          l1, l2, l3, l4, l5, sfCurProgress );
 // needed?             dbgFile.Write( sTmp.GetBuffer( sTmp.length() ), sTmp.length() );
 // needed?             dbgFile.Close();
@@ -1254,13 +1261,30 @@ BOOL CMX_WriteSimulationInput( SimulationType /*eSimType*/,
 /////////////////////////////////////////////////////////////////////////////
 
 // SAC 6/19/14 - moved from OpenStudioInterface
-int CopyAnalysisResultsObjects( QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest, bool bIncludeEnergyUseObjs )
+int CopyAnalysisResultsObjects( QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest, bool bIncludeEnergyUseObjs, QVector<QString>* psaCopyClassPrefixes )
 {	int iRetVal = 0;
 	if (iBEMProcIdxSrc >= 0 && iBEMProcIdxDest >= 0 && iBEMProcIdxSrc != iBEMProcIdxDest)
 	{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run (iBEMProcIdxSrc) into the current model (iBEMProcIdxDest)
-		int iObjClsToCopy[3] = { BEMPX_GetDBComponentID( "EUseSummary" ), (bIncludeEnergyUseObjs ? BEMPX_GetDBComponentID( "EnergyUse" ) : 0), 0 };
-												assert( iObjClsToCopy[0] > 0 && (iObjClsToCopy[1] > 0 || !bIncludeEnergyUseObjs) );
-		int iObjClsIdx=-1, iError;
+//		int iObjClsToCopy[3] = { BEMPX_GetDBComponentID( "EUseSummary" ), (bIncludeEnergyUseObjs ? BEMPX_GetDBComponentID( "EnergyUse" ) : 0), 0 };
+//												assert( iObjClsToCopy[0] > 0 && (iObjClsToCopy[1] > 0 || !bIncludeEnergyUseObjs) );
+      std::vector<int> iObjClsToCopy;     // mods to enable all objects where class name begins w/ psaCopyClassPrefixes - SAC 11/24/20
+      iObjClsToCopy.push_back( BEMPX_GetDBComponentID( "EUseSummary" ) );
+      if (bIncludeEnergyUseObjs)
+         iObjClsToCopy.push_back( BEMPX_GetDBComponentID( "EnergyUse" ) );
+		int iClsPrfxIdx, iObjClsIdx, iError, iNumClasses=BEMPX_GetNumClasses();
+      if (psaCopyClassPrefixes)
+         for (iClsPrfxIdx = 0; iClsPrfxIdx < (int) psaCopyClassPrefixes->size(); iClsPrfxIdx++)
+            for (iObjClsIdx = 1; iObjClsIdx <= iNumClasses; iObjClsIdx++)
+            {  BEMClass* pClass = BEMPX_GetClass( iObjClsIdx, iError, iBEMProcIdxSrc );
+               QString sClassName = (pClass==NULL ? "" : pClass->getShortName());
+               if (sClassName.left( psaCopyClassPrefixes->at(iClsPrfxIdx).length() ).compare( psaCopyClassPrefixes->at(iClsPrfxIdx) ) == 0)
+               {  iObjClsToCopy.push_back( iObjClsIdx );
+// debugging
+//BEMPX_WriteLogFile( QString("   copying from BEMProc %1 to %2: %3-%4  (%5)").arg( QString::number(iBEMProcIdxSrc), QString::number(iBEMProcIdxDest), QString::number(iObjClsIdx), sClassName, QString::number(BEMPX_GetNumObjects( iObjClsIdx, BEMO_User, iBEMProcIdxSrc )) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               }
+            }
+      iObjClsToCopy.push_back( 0 );
+      iObjClsIdx = -1;
 		while (iObjClsToCopy[++iObjClsIdx] > 0)
 		{  // first blast all objects of this type in the target model
 			int iNumObjsToDel = BEMPX_GetNumObjects( iObjClsToCopy[iObjClsIdx], BEMO_User, iBEMProcIdxDest );
@@ -1269,21 +1293,29 @@ int CopyAnalysisResultsObjects( QString& sErrMsg, const char* pszRunID, int iBEM
 				if (pDelObj)
 					BEMPX_DeleteObject( pDelObj, iBEMProcIdxDest );
 			}
-			int iCopyRetVal  = (iObjClsToCopy[iObjClsIdx] <= 0 ? 0 : BEMPX_CopyClassObjectsAcrossModels( iObjClsToCopy[iObjClsIdx], iBEMProcIdxSrc, iBEMProcIdxDest ));
-			if (iObjClsToCopy[iObjClsIdx] < 1)
-			{	sErrMsg.sprintf( "Invalid results object types (%s model (%d))", pszRunID, iObjClsIdx );
-//											34 : Invalid results object types
-				iRetVal = 34;
-				//	if ((iRun==0 && iDontAbortOnErrorsThruStep < 1) || (iRun==1 && iDontAbortOnErrorsThruStep < 3) || (iRun==2 && iDontAbortOnErrorsThruStep < 6) || (iRun==3 && iDontAbortOnErrorsThruStep < 9))  // check flag to bypass errors
-				//		iRetVal = (iRetVal > 0 ? iRetVal : 34);		// DO abort
-			}
-			else if (iCopyRetVal != 0)
-			{	sErrMsg.sprintf( "Error copying results objects from model %d to %d (%d class)", iBEMProcIdxSrc, iBEMProcIdxDest, iObjClsToCopy[iObjClsIdx] );
+         if (BEMPX_GetNumObjects( iObjClsToCopy[iObjClsIdx], BEMO_User, iBEMProcIdxSrc ) > 0)
+			{  int iCopyRetVal  = BEMPX_CopyClassObjectsAcrossModels( iObjClsToCopy[iObjClsIdx], iBEMProcIdxSrc, iBEMProcIdxDest );
+			//   if (iObjClsToCopy[iObjClsIdx] < 1)
+			//   {	sErrMsg = QString::asprintf( "Invalid results object types (%s model (%d))", pszRunID, iObjClsIdx );
+//			//								34 : Invalid results object types
+			//   	iRetVal = 34;
+			//   	//	if ((iRun==0 && iDontAbortOnErrorsThruStep < 1) || (iRun==1 && iDontAbortOnErrorsThruStep < 3) || (iRun==2 && iDontAbortOnErrorsThruStep < 6) || (iRun==3 && iDontAbortOnErrorsThruStep < 9))  // check flag to bypass errors
+			//   	//		iRetVal = (iRetVal > 0 ? iRetVal : 34);		// DO abort
+			//   }
+			//   else if (iCopyRetVal != 0)
+			   if (iCopyRetVal != 0)
+			   {	sErrMsg = QString::asprintf( "Error copying results objects from model %d to %d (%d class)", iBEMProcIdxSrc, iBEMProcIdxDest, iObjClsToCopy[iObjClsIdx] );
 //											35 : Error copying results objects from a previous model
-				iRetVal = 35;
-				//	if ((iRun==0 && iDontAbortOnErrorsThruStep < 1) || (iRun==1 && iDontAbortOnErrorsThruStep < 3) || (iRun==2 && iDontAbortOnErrorsThruStep < 6) || (iRun==3 && iDontAbortOnErrorsThruStep < 9))  // check flag to bypass errors
-				//		iRetVal = (iRetVal > 0 ? iRetVal : 35);		// DO abort
-			}
+			   	iRetVal = 35;
+			   	//	if ((iRun==0 && iDontAbortOnErrorsThruStep < 1) || (iRun==1 && iDontAbortOnErrorsThruStep < 3) || (iRun==2 && iDontAbortOnErrorsThruStep < 6) || (iRun==3 && iDontAbortOnErrorsThruStep < 9))  // check flag to bypass errors
+			   	//		iRetVal = (iRetVal > 0 ? iRetVal : 35);		// DO abort
+			   }
+// debugging
+//if (!sErrMsg.isEmpty())
+//BEMPX_WriteLogFile( QString("   copying from BEMProc %1 to %2 - ERROR %3: %4").arg( QString::number(iBEMProcIdxSrc), QString::number(iBEMProcIdxDest), QString::number(iRetVal), sErrMsg ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//else
+//BEMPX_WriteLogFile( QString("   copied %1 objs of class %2 from BEMProc %3 to %4").arg( QString::number(BEMPX_GetNumObjects( iObjClsToCopy[iObjClsIdx], BEMO_User, iBEMProcIdxDest )), QString::number(iObjClsToCopy[iObjClsIdx]), QString::number(iBEMProcIdxSrc), QString::number(iBEMProcIdxDest) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         }
 	}	}
 	else
 	{	assert( FALSE );	// invalid iBEMProcIdxSrc and/or iBEMProcIdxDest
@@ -1291,12 +1323,13 @@ int CopyAnalysisResultsObjects( QString& sErrMsg, const char* pszRunID, int iBEM
 	return iRetVal;
 }
 
-int CM_CopyAnalysisResultsObjects_CECNonRes( QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest )
-{	int iRetVal = CopyAnalysisResultsObjects( sErrMsg, pszRunID, iBEMProcIdxSrc, iBEMProcIdxDest, true );
+int CM_CopyAnalysisResultsObjects_CECNonRes( QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest, QVector<QString>* psaCopyClassPrefixes )
+{	int iRetVal = CopyAnalysisResultsObjects( sErrMsg, pszRunID, iBEMProcIdxSrc, iBEMProcIdxDest, true, psaCopyClassPrefixes );
 	// added portion of routine copying Proj:RunResults* & ResultSummary object references for NonRes analysis
 	if (iRetVal == 0)
 	{	// now results objects from previous run are in place, now ensure that references to those objects are also valid
-		char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+		char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary",
+                                       "Proj:EUseSummaryRef", NULL };      // added Proj:EUseSummaryRef - SAC 11/27/20
 		int iRORPIdx = -1;
 		while (pszaResObjRefProps[++iRORPIdx] != NULL)
 		{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );
@@ -1306,6 +1339,7 @@ int CM_CopyAnalysisResultsObjects_CECNonRes( QString& sErrMsg, const char* pszRu
 			{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iBEMProcIdxSrc /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
 				{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
                                                //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+//BEMMessageBox( QString( "setting EUseSummary results reference for run %1, %2[%3] = %4" ).arg( pszRunID, pszaResObjRefProps[iRORPIdx], QString::number(iPAIdx+1), sROR ) );
 		}	}	}
 	}
 	return iRetVal;
@@ -1455,7 +1489,7 @@ int CMX_GenerateRulesetModelReport(	const char* pszReportSavePathFileNoExt, cons
 
 				if (bVerbose)  // SAC 2/10/14
 				{	QString sLogMsg;
-					sLogMsg.sprintf( "         generating report '%s' via rulelist '%s' to file:  %s", pszReportSelection, sRptRL.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() );
+					sLogMsg = QString::asprintf( "         generating report '%s' via rulelist '%s' to file:  %s", pszReportSelection, sRptRL.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 
@@ -1482,7 +1516,7 @@ int Local_GenerateRulesetModelReport( QString sRptPathFile, QString sRptRL,
 		{	sRptPathFile = pszFullPath;
 
 			QString sMsg;
-			sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+			sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 			             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 							 "(once the file is closed), or \n'Abort' to abort the %s.", "report", sRptPathFile.toLocal8Bit().constData(), "report generation" );
 			if (!OKToWriteOrDeleteFile( sRptPathFile.toLocal8Bit().constData(), sMsg, bSilent ))
@@ -1659,6 +1693,385 @@ int CMX_RestoreAnalysisResultsFromTempFiles( QVector<QString>& saUniqueEUseSumOb
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// site access via httplib library - SAC 06/12/21
+std::string ApplyProxySettings( httplib::Client &cli, const char* pszUseProxyAddress, const char* pszUseProxyCredentials, const char* pszUseProxyType )     // SAC 06/16/21
+{  std::string sProxySummary; 
+   if (pszUseProxyAddress && strlen( pszUseProxyAddress ) > 0)
+   {  std::string sProxyHost, sProxyUser, sProxyPW, sProxyType;
+      int iProxyPort = 8080; 
+      sProxyHost = pszUseProxyAddress;
+      size_t iProxyColon = sProxyHost.find(':');
+      bool bContinueProxy = true;
+      if (iProxyColon > 0 && iProxyColon != std::string::npos)
+      {  std::string sPort = sProxyHost.substr( iProxyColon+1 );
+         int iChkPort = atoi( sPort.c_str() );                 assert( iChkPort > 0 );
+         if (iChkPort > 0)
+            iProxyPort = iChkPort;
+         sProxyHost = sProxyHost.substr( 0, iProxyColon );     assert( sProxyHost.length() > 0 );
+         if (sProxyHost.length() > 0)
+            cli.set_proxy( sProxyHost.c_str(), iProxyPort );
+         else 
+            bContinueProxy = false;
+      }
+      if (bContinueProxy && pszUseProxyCredentials && strlen( pszUseProxyCredentials ) > 0)
+      {  sProxyUser = pszUseProxyCredentials;
+         iProxyColon = sProxyUser.find(':');
+         if (iProxyColon > 0 && iProxyColon != std::string::npos)
+         {  sProxyPW   = sProxyUser.substr( iProxyColon+1 );         assert( sProxyPW.length() > 0 );
+            sProxyUser = sProxyUser.substr( 0, iProxyColon );        assert( sProxyUser.length() > 0 );
+            if (pszUseProxyType && strlen( pszUseProxyType ) > 0)
+               sProxyType = pszUseProxyType;
+            if (sProxyType.length() > 0 && sProxyType.compare( "digest" )==0)
+               cli.set_proxy_digest_auth( sProxyUser.c_str(), sProxyPW.c_str() );
+            else
+            {  cli.set_proxy_basic_auth(  sProxyUser.c_str(), sProxyPW.c_str() );
+               if (sProxyType.length() == 0)
+                  sProxyType = "(undefined)";
+               else
+                  sProxyType += " (not 'digest' so using 'basic')";
+         }  }
+         else
+         {  sProxyPW = sProxyUser;     sProxyUser.clear();
+            cli.set_proxy_bearer_token_auth( sProxyPW.c_str() );       // if not ':' found, assume credential only password & therefore use set_proxy_bearer_token_auth()
+            sProxyType = "(credentials exclude ':' so using 'bearer_token')";
+      }  }
+      //    cli.set_proxy("host", port);
+      //    // Basic Authentication
+      //    cli.set_proxy_basic_auth("user", "pass");
+      //    // Digest Authentication
+      //    cli.set_proxy_digest_auth("user", "pass");
+      //    // Bearer Token Authentication
+      //    cli.set_proxy_bearer_token_auth("pass");
+      if (sProxyUser.length() > 0)
+         sProxySummary = boost::str( boost::format( "host: %s | port: %d | user: %s | pw: %s | type: %s" ) % sProxyHost % iProxyPort % sProxyUser % sProxyPW % sProxyType );
+      else
+         sProxySummary = boost::str( boost::format( "host: %s | port: %d" ) % sProxyHost % iProxyPort );
+   }
+   return sProxySummary;
+}
+
+int CheckSiteAccessViaHttpLib(   const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,
+                                 const char* pszProxyType, char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/ )
+{	int iRetVal = 0;
+//	TCHAR szTempFileName[MAX_PATH];
+
+   std::string sHost = pszSite;
+   int iHostLen = (int) sHost.find( "/", 8 );            assert( iHostLen > 0 );    // SAC 06/13/21
+   std::string sGetPath = sHost.substr( iHostLen, std::string::npos );
+   sHost = sHost.substr( 0, iHostLen );
+
+//bVerbose = true;  // *** TEMPORARY *** - SAC 06/12/21
+
+	QString qsVerbose;
+															if (bVerbose && (pszErrorMsg == NULL || iErrorMsgLen < 1))
+																bVerbose = false;
+															if (bVerbose)
+																qsVerbose = "\nCheckSiteAccessViaHttpLib() - ";
+
+	int iFirstTry = (pszProxyAddress && strlen( pszProxyAddress ) > 0 && pszProxyCredentials && strlen( pszProxyCredentials ) > 0) ? 1 : 3;   // if proxy server settings passed in, then ONLY try that method
+	int iLastTry  = (iFirstTry == 0) ? 3 : 4;  // was: 100;
+	for (int i=iFirstTry; (iRetVal >= 0 && i <= iLastTry); i++)
+	{  iRetVal = 0;
+		// PROXY SETUP
+			const char *pszUseProxyAddress=NULL, *pszUseProxyCredentials=NULL, *pszUseProxyType=NULL;
+			if (i < 3)	// first 2 times through, use Proxy settings passed into function
+			{	pszUseProxyAddress = pszProxyAddress;
+				pszUseProxyCredentials = pszProxyCredentials;
+				if (pszProxyType && strlen( pszProxyType ) > 0)
+					pszUseProxyType = pszProxyType;
+			}
+			else if (i > 2)   // i==1 attempts DIRECT connection
+			{
+	// retrieve default proxy server settings from Windows  ???
+			}
+
+			if (iRetVal == 0)
+			{	httplib::Client cli( sHost.c_str() );  // pszSite );
+				//httplib::SSLClient cli( pszSite );
+
+      // setup Proxy stuff
+            std::string sProxyInfo;
+            if (pszUseProxyAddress)       // SAC 06/15/21
+               sProxyInfo = ApplyProxySettings( cli, pszUseProxyAddress, pszUseProxyCredentials, pszUseProxyType );
+
+//            cli.set_connection_timeout(0, 300000); // 300 milliseconds
+            cli.set_connection_timeout(10, 0);  // SAC 09/28/21 - now 10 secs, was: // 5 seconds
+            cli.set_read_timeout(20, 0);        // SAC 09/28/21 - now 20 secs, was: // 5 seconds
+            cli.set_write_timeout(20, 0);       // SAC 09/28/21 - now 20 secs, was: // 5 seconds
+
+//            auto res = cli.Get( sGetPath.c_str(), [](uint64_t len, uint64_t total) {
+//                  BEMPX_WriteLogFile( QString("%1 / %2 bytes => %3% complete  -> ").arg( QString::number(len), QString::number(total), QString::number((int)(len*100/total)) ) );
+////                  printf("%lld / %lld bytes => %d%% complete\n",
+////                     len, total,
+////                     (int)(len*100/total));
+//                  return true; // return 'false' if you want to cancel the request.
+//                  }  );
+
+//            std::string body;
+//            auto res = cli.Get("/large-data",
+//                             [&](const char *data, size_t data_length) {
+//                                    body.append(data, data_length);
+//                                    return true;
+//                                 });
+
+            cli.set_keep_alive(true);
+            auto res = cli.Get( sGetPath.c_str() );
+            cli.set_keep_alive(false);
+
+            QString qsConnectInfo;
+            if (!res)
+            {  iRetVal = 2;   // error downloading file
+#ifdef _DEBUG
+               if (i < 3)
+                  BEMPX_WriteLogFile( QString("   FAILED to connect via proxy %1 |-| to host: %2 | path: %3").arg( sProxyInfo.c_str(), sHost.c_str(), sGetPath.c_str() ) );
+#endif
+               if (i < 3)
+                  qsConnectInfo = QString("      failed to connect to report generator @ %1 via proxy %2 (%3/%4)").arg(pszSite, pszUseProxyAddress, QString::number(i), QString::number(iLastTry));
+               else
+                  qsConnectInfo = QString("      failed to connect to report generator @ %1 (%2/%3)").arg(pszSite, QString::number(i), QString::number(iLastTry));
+            }
+				else
+				{	// download SUCCESS
+					iRetVal = (i<3 ? -2 : -1);
+//					iRetVal = (i<3 ? -2 : (i==3 ? -1 : -3));
+//		Return Values:	  -1 =>	SUCCESS  (using no proxy server settings)
+//							  -2 =>	SUCCESS  (using supplied proxy server settings)
+//							  -3 =>	SUCCESS  (using proxy server settings retrieved from operating system)
+   				if (res->body.length() > 3 && res->body.find("true")==0)
+   					iRetVal -= 10;		// adjust retval to reflect 'true' response
+#ifdef _DEBUG
+               if (i<3)
+                  BEMPX_WriteLogFile( QString("   Connected via proxy %1 |-| to host: %2 | path: %3").arg( sProxyInfo.c_str(), sHost.c_str(), sGetPath.c_str() ) );
+#endif
+               if (i<3)
+                  qsConnectInfo = QString("      connected to report generator via proxy %1 (%2/%3)").arg(pszUseProxyAddress, QString::number(i), QString::number(iLastTry));
+               else
+                  qsConnectInfo = QString("      connected to report generator (%1/%2)"             ).arg(QString::number(i), QString::number(iLastTry));
+				}
+// TEMPORARILY export this info string to log all the time
+            if (bVerbose || iRetVal >= 0)
+               BEMPX_WriteLogFile( qsConnectInfo );
+
+//            int iDnldRetVal = surlSiteChk.DownloadFile( pszSite, szTempFileName, pszCACertPath, pszUseProxyAddress, pszUseProxyCredentials, pszUseProxyType,
+//																			NULL /*pszDataToPost*/, 0 /*iPostDataLen*/, pszErrorMsg, iErrorMsgLen, bVerbose );
+//				if (iDnldRetVal > 0)
+//				{	//assert( FALSE );
+//					iRetVal = iDnldRetVal;
+//					//switch (iDnldRetVal)
+//					//{	case  1 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - invalid storage path:  %s", sWthrZipPathFile );					break;
+//					//	case  2 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - error downloading file:  %s", sWeatherFileDownloadURL );			break;		// this error occurs when NORESCO proxy not able to be negotiated
+//					//	case  3 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - user chose not to overwrite file:  %s  -->>  %s", sWeatherFileDownloadURL, sWthrZipPathFile );		break;
+//					//	default :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed:  %s  -->>  %s", sWeatherFileDownloadURL, sWthrZipPathFile );	break;
+//				}	//}
+//				else
+//				{	// download SUCCESS
+//					iRetVal = (i==0 ? -2 : (i==1 ? -1 : -3));
+////		Return Values:	  -1 =>	SUCCESS  (using no proxy server settings)
+////							  -2 =>	SUCCESS  (using supplied proxy server settings)
+////							  -3 =>	SUCCESS  (using proxy server settings retrieved from operating system)
+//				}
+
+																//		QMessageBox msgBox;
+																//		msgBox.setWindowTitle( "CheckSiteAccessViaHttpLib()" );
+																//		msgBox.setIcon( QMessageBox::Warning ); 
+																//		msgBox.setText( QString("back from surlSiteChk.DownloadFile() - Download RetVal: %L1 - Func RetVal: %L2\nTemp File: %3").arg(iDnldRetVal).arg(iRetVal).arg(szTempFileName) );
+																//		msgBox.exec();
+			}
+
+// download to string, not file...?
+//			if (iRetVal >= 0 && FileExists( szTempFileName ))		// if still looping or errant return code, then DELETE the temp file site status was written to
+//				DeleteFile( szTempFileName );
+	}														if (bVerbose)
+																qsVerbose += QString("download loop retval %L1 >> ").arg(iRetVal);
+
+// download to string, not file...?
+//	// CHECK FOR OUTPUT FILE containing 'true' - indicating report gen site up and functioning
+//	if (iRetVal < 0 && FileExists( szTempFileName ))
+//	{
+//
+//																//		QMessageBox msgBox;
+//																//		msgBox.setWindowTitle( "CheckSiteAccessViaHttpLib()" );
+//																//		msgBox.setIcon( QMessageBox::Warning ); 
+//																//		msgBox.setText( QString("About to open Temp File - Func RetVal: %L1\nTemp File: %2").arg(iRetVal).arg(szTempFileName) );
+//																//		msgBox.exec();
+//
+//		FILE* fp_Out = _fsopen( szTempFileName, "rb", _SH_DENYNO /*_SH_DENYWR*/ );
+//		if (fp_Out==NULL) 
+//		{ }	//	iRetVal = 19;		//	19 : Error opening output file following report generation
+//		else
+//		{	char buff[32];
+//			int nread = (int) fread( buff, sizeof(char), 20, fp_Out );  // first 20 chars of file should do it...
+//			if (nread < 4)
+//			{ }	//	iRetVal = 20;		//	20 : Error reading data from output file following report generation
+//			else
+//			{	buff[20] = '\0';
+//				QString sHdrText = buff;
+//				sHdrText = sHdrText.toLower();
+//															if (bVerbose)
+//																qsVerbose += QString("file starts '%1' >> ").arg(sHdrText);
+//				if (sHdrText.indexOf("true") >= 0)
+//				{	iRetVal -= 10;		// adjust retval to reflect 'true' response
+//				}
+//			}
+//			fclose( fp_Out );
+//		}
+//
+//																	//	QMessageBox msgBox;
+//																	//	msgBox.setWindowTitle( "CheckSiteAccessViaHttpLib()" );
+//																	//	msgBox.setIcon( QMessageBox::Warning ); 
+//																//		msgBox.setText( QString("About to delete Temp File: %1").arg(szTempFileName) );
+//																//		msgBox.exec();
+//
+//	   DeleteFile( szTempFileName );
+//	}
+
+	if (iRetVal == 0)
+		iRetVal = (iFirstTry==1 ? 8 : 7);
+//											 7 : Unable to connect either directly or via proxy server settings retrieved from the operating system
+//											 8 : Unable to connect via supplied proxy server settings
+
+//	QString sDbgMsg;	sDbgMsg = QString::asprintf( "CheckSiteAccessViaHttpLib() %s - returning %d.", (iRetVal < 0 ? "SUCCESS" : "Failed"), iRetVal );
+//	AfxMessageBox( sDbgMsg );
+															if (bVerbose)
+															{	qsVerbose += QString("returning %L1").arg(iRetVal);
+																int iToAdd = iErrorMsgLen - 1 - (int) strlen( pszErrorMsg );
+																strcat_s( pszErrorMsg, iErrorMsgLen, qsVerbose.left(iToAdd).toLocal8Bit() );
+#ifdef _DEBUG
+   BEMPX_WriteLogFile( pszErrorMsg );
+#endif
+															}
+
+	return iRetVal;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// report generation via httplib library - SAC 06/12/21
+int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
+									const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,		// pass NULLs for no proxy
+									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/ )
+{	int iRetVal = 0;
+
+//bVerbose = true;  // *** TEMPORARY *** - SAC 06/13/21
+
+   std::string sHost = pszURL;
+   int iHostLen = (int) sHost.find( "/", 8 );            assert( iHostLen > 0 );    // SAC 06/13/21
+   std::string sPostPath = sHost.substr( iHostLen, std::string::npos );
+   sHost = sHost.substr( 0, iHostLen );
+
+	httplib::Client cli( sHost.c_str() );  // pszSite );
+//	httplib::SSLClient cli( pszSite );
+
+// setup Proxy stuff
+   std::string sProxyInfo;
+   if (pszProxyAddress && strlen( pszProxyAddress ) > 0)          // SAC 06/16/21
+      sProxyInfo = ApplyProxySettings( cli, pszProxyAddress, pszProxyCredentials, pszProxyType );
+
+//   std::string sRptData = pszRptData;     assert( sRptData.length() == iRptDataLen );
+//   httplib::MultipartFormDataItems items = {
+//     { "text", sRptData, "", "" },
+   //  { "text2", "a?b", "", "" },
+   //  { "file1", "h\ne\n\nl\nl\no\n", "hello.txt", "text/plain" },
+   //  { "file2", "{\n  \"world\", true\n}\n", "world.json", "application/json" },
+   //  { "file3", "", "", "application/octet-stream" },
+//   };
+//   auto res = cli.Post( sPostPath.c_str(), items );
+
+//            auto res = cli.Get( sGetPath.c_str(), [](uint64_t len, uint64_t total) {
+//               BEMPX_WriteLogFile( QString("%1 / %2 bytes => %3% complete  -> ").arg( QString::number(len), QString::number(total), QString::number((int)(len*100/total)) ) );
+////               printf("%lld / %lld bytes => %d%% complete\n",
+////                  len, total,
+////                  (int)(len*100/total));
+//               return true; // return 'false' if you want to cancel the request.
+//               }
+//            );
+//   std::string body;
+//   auto res = cli.Post( sPostPath.c_str(), pszRptData, iRptDataLen, "application/text" );
+
+//   cli.set_connection_timeout(0, 300000); // 300 milliseconds
+   cli.set_connection_timeout(10, 0);  // SAC 09/28/21 - now 10 secs, was: // 8 seconds
+   cli.set_read_timeout(300, 0);       // 5 minutes
+   cli.set_write_timeout(300, 0);      // 5 minutes
+
+   cli.set_keep_alive(true);
+   auto res = cli.Post( sPostPath.c_str(), pszRptData, iRptDataLen, "text/plain" );
+   cli.set_keep_alive(false);
+//  Result Post(const char *path, const char *body, size_t content_length,
+//              const char *content_type);
+//                    [&](const char *data, size_t data_length) {
+//                           body.append(data, data_length);
+//                           return true;
+//                        });
+
+   assert( res );
+   if (!res)
+   {
+//		iRetVal = 1;   // bogus PathFile to save to
+		iRetVal = 2;	// error downloading data (probably negotiating proxy server)
+//		iRetVal = 3;   // error overwriting output file
+
+      std::string sErr;
+      switch (res.error())
+      {  case  0 : sErr = "Success";  break;
+         case  1 : sErr = "Unknown";  break;
+         case  2 : sErr = "Connection";  break;
+         case  3 : sErr = "BindIPAddress";  break;
+         case  4 : sErr = "Read";  break;
+         case  5 : sErr = "Write";  break;
+         case  6 : sErr = "ExceedRedirectCount";  break;
+         case  7 : sErr = "Canceled";  break;
+         case  8 : sErr = "SSLConnection";  break;
+         case  9 : sErr = "SSLLoadingCerts";  break;
+         case 10 : sErr = "SSLServerVerification";  break;
+         case 11 : sErr = "UnsupportedMultipartBoundaryChars";  break;
+         case 12 : sErr = "Compression";  break;
+         default : sErr = "<unknown>";  break;
+      }
+      if (pszErrorMsg && iErrorMsgLen > 0)
+      {  sErr = "Report generation communication error encountered: " + sErr;
+         strcat_s( pszErrorMsg, iErrorMsgLen, sErr.c_str() );
+      }
+      else
+         BEMPX_WriteLogFile( QString("      Error encountered generating report: %1 (returned from cpp-httplib)").arg( sErr.c_str() ) );
+   }
+	else
+	{	// download SUCCESS
+      if (bVerbose)
+         BEMPX_WriteLogFile( QString("      cpp-httplib status: %1: %2 bytes returned from report generator").arg( httplib::detail::status_message(res->status), QString::number(res->body.length()) ) );
+
+ 		std::string sOverwriteMsg = boost::str( boost::format( "The report file '%s' is opened in another application.  This file must be closed in that "
+													"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+													"(once the file is closed), or \n'Abort' to abort the file writing." ) % pszOutPathFile );
+  		if (!OKToWriteOrDeleteFile( pszOutPathFile, sOverwriteMsg.c_str() ))
+  		{	iRetVal = 3;
+  											//		if (m_bVerbose)
+  											//			m_sVerboseStr += QString("cannot write file %1 >> ").arg(pszOutPathFile);
+  		}
+  		else
+  		{  std::ofstream outFile( pszOutPathFile, std::ios::binary );     // override default arg2 (ios_base::out) w/ ios_base::binary - SAC 10/06/21
+         outFile << res->body;
+         outFile.close();
+//			QString qsPF = m_sPathFile;
+//			QFile file( qsPF );
+//			file.open(QIODevice::WriteOnly);
+//			file.write( m_pFileDownloader->downloadedData() );
+//			file.close();
+//													if (m_bVerbose)
+//														m_sVerboseStr += QString("wrote %L1 to file '%2' >> ").arg(m_pFileDownloader->downloadedDataSize()).arg(m_sPathFile);
+		}
+	}
+
+//	int iDnldRetVal = surlRptGen.DownloadFile( pszURL, pszOutPathFile, pszCACertPath, pszProxyAddress, pszProxyCredentials, pszProxyType,
+//																pszRptData, iRptDataLen, pszErrorMsg, iErrorMsgLen, bVerbose );
+//	if (iDnldRetVal > 0)
+//	{	assert( FALSE );
+//		iRetVal = iDnldRetVal;
+//	}
+
+	return iRetVal;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAC 11/4/15 - 
 static Qt_URLFile surlSiteChk;
 
@@ -1741,10 +2154,10 @@ int CheckSiteAccessViaQt(	const char* pszSite, const char* pszCACertPath, const 
 				{	//assert( FALSE );
 					iRetVal = iDnldRetVal;
 					//switch (iDnldRetVal)
-					//{	case  1 :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - invalid storage path:  %s", sWthrZipPathFile );					break;
-					//	case  2 :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - error downloading file:  %s", sWeatherFileDownloadURL );			break;		// this error occurs when NORESCO proxy not able to be negotiated
-					//	case  3 :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - user chose not to overwrite file:  %s  -->>  %s", sWeatherFileDownloadURL, sWthrZipPathFile );		break;
-					//	default :	sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed:  %s  -->>  %s", sWeatherFileDownloadURL, sWthrZipPathFile );	break;
+					//{	case  1 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - invalid storage path:  %s", sWthrZipPathFile );					break;
+					//	case  2 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - error downloading file:  %s", sWeatherFileDownloadURL );			break;		// this error occurs when NORESCO proxy not able to be negotiated
+					//	case  3 :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed - user chose not to overwrite file:  %s  -->>  %s", sWeatherFileDownloadURL, sWthrZipPathFile );		break;
+					//	default :	sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Hourly simulation weather file download failed:  %s  -->>  %s", sWeatherFileDownloadURL, sWthrZipPathFile );	break;
 				}	//}
 				else
 				{	// download SUCCESS
@@ -1811,7 +2224,7 @@ int CheckSiteAccessViaQt(	const char* pszSite, const char* pszCACertPath, const 
 //											 7 : Unable to connect either directly or via proxy server settings retrieved from the operating system
 //											 8 : Unable to connect via supplied proxy server settings
 
-//	QString sDbgMsg;	sDbgMsg.sprintf( "CheckSiteAccessViaQt() %s - returning %d.", (iRetVal < 0 ? "SUCCESS" : "Failed"), iRetVal );
+//	QString sDbgMsg;	sDbgMsg = QString::asprintf( "CheckSiteAccessViaQt() %s - returning %d.", (iRetVal < 0 ? "SUCCESS" : "Failed"), iRetVal );
 //	AfxMessageBox( sDbgMsg );
 															if (bVerbose)
 															{	qsVerbose += QString("returning %L1").arg(iRetVal);

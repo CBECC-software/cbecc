@@ -54,6 +54,7 @@ extern QApplication* sq_app;
 extern bool sbQtAppDuringInit;
 #endif
 
+extern bool ebLogAnalysisMsgs;     // SAC 10/27/21 (MFam)
 
 extern bool FileExists( QString& sFileName );
 extern bool FileExists( const char* pszFileName );
@@ -96,8 +97,10 @@ extern void StoreEXEPath();
 extern bool RelativeToCompletePath_IfNeeded( QString& sPathFile );
 extern void PrependPathIfNecessary( std::string& sFileName, std::string& sPath );
 
-extern int     CopyAnalysisResultsObjects(           QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest, bool bIncludeEnergyUseObjs );
-extern int  CM_CopyAnalysisResultsObjects_CECNonRes( QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest );	// SAC 6/19/14 - moved from OpenStudioInterface
+extern int     CopyAnalysisResultsObjects(           QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest,
+                                                         bool bIncludeEnergyUseObjs, QVector<QString>* psaCopyClassPrefixes=NULL );    // added psaCopyClassPrefixes - SAC 11/24/20
+extern int  CM_CopyAnalysisResultsObjects_CECNonRes( QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest,
+                                                         QVector<QString>* psaCopyClassPrefixes=NULL );	// SAC 6/19/14 - moved from OpenStudioInterface    // SAC 11/24/20
 
 #define  MAX_BEMBASE_DATA_SET_ERRORS  100
 extern double DeltaTime( boost::posix_time::ptime& tmStart );
@@ -114,6 +117,9 @@ extern int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* ps
 extern int GenerateReportViaQt(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 											const char* pszProxyAddress=NULL, const char* pszProxyCredentials=NULL, const char* pszProxyType=NULL,		// pass NULLs for no proxy
 											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );
+extern int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
+											const char* pszProxyAddress=NULL, const char* pszProxyCredentials=NULL, const char* pszProxyType=NULL,		// pass NULLs for no proxy
+											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );      // SAC 06/13/21
 
 extern int CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy
 										char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false,
@@ -121,6 +127,8 @@ extern int CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, cons
 										char* pszFoundProxyCredentials=NULL, int iFoundProxyCredentialsLen=0 );
 extern int CheckSiteAccessViaQt(	const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy
 										const char* pszProxyType, char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );
+extern int CheckSiteAccessViaHttpLib(	const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy
+										const char* pszProxyType, char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );    // SAC 06/12/21
 
 //extern int ComputeSHA1( const char* pszPathFile );
 extern int ComputeSHA256_File( const char* pszPathFile, char* pResultBuffer, int iResultBufferLen );

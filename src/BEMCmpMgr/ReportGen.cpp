@@ -57,9 +57,10 @@
 #include <openssl/err.h> 
 #include <openssl/evp.h>
 #include <openssl/aes.h>
-#pragma warning(disable:4996)
-#include <openssl/applink.c>
-#pragma warning(default:4996)
+//#pragma warning(disable:4996)   // exclude when including httplib.h - SAC 06/12/21
+//#include <openssl/applink.c>
+//#pragma warning(default:4996)
+#include <openssl/opensslv.h>   // updated for openssl v1.1+ - SAC 10/13/20
 //CURL #include <curl/curl.h>
 #include "memLkRpt.h"
 
@@ -302,7 +303,7 @@ int spc_sign(unsigned char *msg, unsigned int mlen, unsigned char *out,
 
 
 //Signs and verifies using existing PEM files
-bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, bool /*bVerbose*/ )
+bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, bool bDbgVerbose )
 {
 	                    //     BEMMessageBox( "Signing Report XML", "" );
 	//char * szXmlMsg = NULL;				//original xml data
@@ -372,7 +373,9 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 		//	PEMerr(PEM_F_PEM_READ_PRIVATEKEY,ERR_R_BUF_LIB);
 	   //             return(0);
 		}
+//	BEMPX_WriteLogFile( QString( "      about to call OpenSSL BIO_set_fp()" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // SAC 06/09/21
 		BIO_set_fp( pbioPrv, privKey, BIO_NOCLOSE );
+//	BEMPX_WriteLogFile( QString( "      back from calling OpenSSL BIO_set_fp()" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // SAC 06/08/21
 #pragma warning(default:4996)
 
 
@@ -398,14 +401,14 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 //	if (pbioPrv == NULL)
 //	{	//ERR_print_errors_fp(stdout);
 //		ERR_error_string( ERR_get_error(), pErrBuffer ); 
-//				sErrMsg.sprintf( "GenerateReport_CEC():  Data signing error - BIO_new_mem_buf() failure:  %s", pErrBuffer );
+//				sErrMsg = QString::asprintf( "GenerateReport_CEC():  Data signing error - BIO_new_mem_buf() failure:  %s", pErrBuffer );
 //	}
 //	else
 //	{	
 
 
 //	if (bVerbose)
-//	{	QString sDbg;	sDbg.sprintf( "SignXML() pbioPrv data:  method:type: %d  /method:name: '%s'  /init: %d  /shutdown: %d  /flags: %d  /retry_reason: %d  /num: %d  /references: %d  /num_read: %ul  /num_write: %ul",
+//	{	QString sDbg = QString::asprintf( "SignXML() pbioPrv data:  method:type: %d  /method:name: '%s'  /init: %d  /shutdown: %d  /flags: %d  /retry_reason: %d  /num: %d  /references: %d  /num_read: %ul  /num_write: %ul",
 //										pbioPrv->method->type, pbioPrv->method->name, pbioPrv->init, pbioPrv->shutdown, pbioPrv->flags, pbioPrv->retry_reason, pbioPrv->num, pbioPrv->references, pbioPrv->num_read, pbioPrv->num_write );
 //		BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 //	}
@@ -419,31 +422,40 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 		if (rsaPrivKey == NULL)
 		{	//ERR_print_errors_fp(stdout);
 			ERR_error_string( ERR_get_error(), pErrBuffer ); 
-				sErrMsg.sprintf( "SignXML():  Data signing error - PEM_read_bio_RSAPrivateKey() failure:  %s", pErrBuffer );
+				sErrMsg = QString::asprintf( "SignXML():  Data signing error - PEM_read_bio_RSAPrivateKey() failure:  %s", pErrBuffer );
 		}
 		else
 		{
 
-//	if (bVerbose)
-//	{	QString sDbg;	sDbg.sprintf( "SignXML() rsaPrivKey data:  pad: %d  /version: %ld  /meth:name: '%s'", rsaPrivKey->pad, rsaPrivKey->version, rsaPrivKey->meth->name );
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+			/* OpenSSL 1.0.2 and below (old code) */
+	if (bDbgVerbose)
+	{	QString sDbg = QString::asprintf("SignXML() rsaPrivKey data:  pad: %d  /version: %ld  /meth:name: '%s'", rsaPrivKey->pad, rsaPrivKey->version, rsaPrivKey->meth->name);
+		BEMPX_WriteLogFile(sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/);
+	}
+#else
+			/* OpenSSL 1.1.0 and above (new code) */
+//	if (bDbgVerbose)
+//	{	QString sDbg = QString::asprintf( "SignXML() rsaPrivKey data:  pad: %d  /version: %ld  /meth:name: '%s'", rsaPrivKey->pad, rsaPrivKey->version, rsaPrivKey->meth->name );
 //		BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 //	}
+#endif
 
 			signature = (unsigned char*) malloc( RSA_size( rsaPrivKey ) );
 			if (!signature)
-			{	sErrMsg.sprintf( "SignXML():  Error allocating signature of size %d", RSA_size( rsaPrivKey ) );
+			{	sErrMsg = QString::asprintf( "SignXML():  Error allocating signature of size %d", RSA_size( rsaPrivKey ) );
 			}
 			else
 			{	unsigned char hash[SHA_DIGEST_LENGTH];
 				if (!SHA1((unsigned char *)szXmldata, strlen(szXmldata), hash)) 
 				{	//ERR_print_errors_fp(stdout);
 					ERR_error_string( ERR_get_error(), pErrBuffer ); 
-					sErrMsg.sprintf( "SignXML():  Data signing error - SHA1() failure:  %s", pErrBuffer );
+					sErrMsg = QString::asprintf( "SignXML():  Data signing error - SHA1() failure:  %s", pErrBuffer );
 				} 
 				else if (!RSA_sign( NID_sha1, hash, SHA_DIGEST_LENGTH, signature, &slen, rsaPrivKey ))
 				{	//ERR_print_errors_fp(stdout);
 					ERR_error_string( ERR_get_error(), pErrBuffer ); 
-					sErrMsg.sprintf( "SignXML():  Data signing error - RSA_sign() failure:  %s", pErrBuffer );
+					sErrMsg = QString::asprintf( "SignXML():  Data signing error - RSA_sign() failure:  %s", pErrBuffer );
 				}
 				else
 				{
@@ -455,16 +467,16 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 		//				cout<<"Verify fail!"<<endl;
 		//			/* end verify*/
 
-#if 0	// enable to debug SHA1
-					if (bVerbose)
+//#if 0	// enable to debug SHA1
+					if (bDbgVerbose)
 					{	char szHashHex[SHA_DIGEST_LENGTH*2+1];
 						for(int i = 0; i < SHA_DIGEST_LENGTH; i++)
-							sprintf( &szHashHex[i*2], "%02x", hash[i] );
+							sprintf_s( &szHashHex[i*2], 3, "%02x", hash[i] );
 						QString sMsg;
-						sMsg.sprintf("SignXML():  SHA1 %s", szHashHex);
+						sMsg = QString::asprintf("SignXML():  SHA1 %s", szHashHex);
 						BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
-#endif
+//#endif
 
 					*signature_hex = (char *)malloc(slen * 2 + 1);
 					if(*signature_hex)
@@ -605,10 +617,12 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 										const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,  // SAC 6/2/14  // SAC 10/9/14
 										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, long iSecurityKeyIndex /*=0*/, 	// SAC 11/5/15   // SAC 1/10/17
 										bool bFinalPDFGeneration /*=true*/, bool bSchemaBasedRptGen /*=false*/ )		// SAC 11/20/18
-{ 
+{ 	bool bSacOut=false;
+//bSacOut = true;
+//bVerbose = true;
 				if (bVerbose)
 				{	QString sFuncArgMsg;
-					sFuncArgMsg.sprintf( "GenerateReport_CEC( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s',\n                                           '%s', '%s', '%s', %s, %s )",
+					sFuncArgMsg = QString::asprintf( "GenerateReport_CEC( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s',\n                                           '%s', '%s', '%s', %s, %s )",
 							(pszXMLResultsPathFile ? pszXMLResultsPathFile : "(null)"), (pszCACertPath ? pszCACertPath : "(null)"), (pszReportName ? pszReportName : "(null)"), (pszAuthToken1 ? pszAuthToken1 : "(null)"), (pszAuthToken2 ? pszAuthToken2 : "(null)"),
 							(pszSignature ? pszSignature : "(null)"), (pszPublicKey ? "<PubKey>"/*pszPublicKey*/ : "(null)"), (pszPrivateKey ? "<PrvKey>"/*pszPrivateKey*/ : "(null)"), (pszProxyAddress ? pszProxyAddress : "(null)"), (pszProxyCredentials ? pszProxyCredentials : "(null)"),
 							(pszPDFOnlyBool ? pszPDFOnlyBool : "(null)"), (pszDebugBool ? pszDebugBool : "(null)"), (bVerbose ? "true" : "false"), (bSilent ? "true" : "false"), (bSendSignature ? "true" : "false"), (pszCompRptID ? pszCompRptID : "(null)"),
@@ -617,7 +631,6 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 					BEMPX_WriteLogFile( sFuncArgMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 	int iRetVal = 0;
-
 	FILE *fp_xml = NULL;
 	FILE *fp_Out = NULL;
   
@@ -696,6 +709,8 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 		if (lRptIDNum >= 0)
 		{	bPDFRpt = (lRptIDNum & 2);		bSecRpts[0] = (lRptIDNum & 4);		bSecRpts[2] = (lRptIDNum & 16);
 			bXMLRpt = (lRptIDNum & 1);		bSecRpts[1] = (lRptIDNum & 8);		bSecRpts[3] = (lRptIDNum & 32);
+         if (bSchemaBasedRptGen)    // reset lRptIDNum to -1 for bSchemaBasedRptGen to ensure proper format of report gen URL - SAC 04/11/21
+            lRptIDNum = -1;
 		}
 		else
 		{	bSingleRpt = true; 
@@ -725,13 +740,13 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 						sRptPrvKey = pszPrivateKey;  // now expected as input - SAC 1/10/17
 						if (!RetrievePublicPrivateKeys( sSecKeyRLName, sRptPubKey, sRptPrvKey, &sRptPubHexKey, NULL, sKeyErrMsg, &sPrvKeyPathFile ))
 						{	if (!sKeyErrMsg.isEmpty())
-								sLogMsg.sprintf( "GenerateReport_CEC():  %s", sKeyErrMsg.toLocal8Bit().constData() );
+								sLogMsg = QString::asprintf( "GenerateReport_CEC():  %s", sKeyErrMsg.toLocal8Bit().constData() );
 							else
 								sLogMsg = "GenerateReport_CEC():  Error retrieving public/private keys from BEMBase.";
 							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						}
 //#ifdef _DEBUG
-//			sLogMsg.sprintf( "GenerateReport_CEC():  Public Key:\n%s", sRptPubKey );
+//			sLogMsg = QString::asprintf( "GenerateReport_CEC():  Public Key:\n%s", sRptPubKey );
 //			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 //			sLogMsg.clear();
 //#endif
@@ -842,11 +857,11 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 
 //	BEMMessageBox( QString( "about to write rpt file:  %1" ).arg( FileOutName ) );
 			if (iRetVal == 0)
-			{	sLogMsg.sprintf( "The XML file '%s' is opened in another application.  This file must be closed in that "
+			{	sLogMsg = QString::asprintf( "The XML file '%s' is opened in another application.  This file must be closed in that "
 			                "application before an updated file can be written.\n\nSelect 'Retry' to proceed "
 								 "(once the file is closed), or \n'Abort' to abort the report generation.", FileOutName );
 				if (!OKToWriteOrDeleteFile( FileOutName, sLogMsg, bSilent ))
-				{	//sErrorMsg.sprintf( "ERROR:  User chose not to overwrite %s file:  %s", pszOutFileDescs[i], sOutFiles[i] );
+				{	//sErrorMsg = QString::asprintf( "ERROR:  User chose not to overwrite %s file:  %s", pszOutFileDescs[i], sOutFiles[i] );
 					iRetVal = 5;
 				}
 			}
@@ -900,7 +915,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 
 	// SAC 10/14/13 - latest XMl signing/security stuff from RS ->
 				char *signature_hex = 0; // rsa signature
-				if (bSignData && SignXML( postthis, &signature_hex, sPrvKeyPathFile.toLocal8Bit().constData() /*sRptPrvKey*/, bVerbose ))
+				if (bSignData && SignXML( postthis, &signature_hex, sPrvKeyPathFile.toLocal8Bit().constData() /*sRptPrvKey*/, bSacOut /*bVerbose*/ ))
 				{
 					sSignHex = signature_hex;
 #pragma warning(disable:4996)
@@ -929,19 +944,19 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 					}
 				}
 
-				//if (bVerbose)
-				//{	if (!sRptPubHexKey.isEmpty())
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key:\n%s", sRptPubHexKey.toLocal8Bit().constData() );
-				//	else
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key NOT COMPUTED" );
-				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				//	if (!sSignHex.isEmpty())
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature:\n%s", sSignHex.toLocal8Bit().constData() );
-				//	else
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature NOT COMPUTED" );
-				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				//	sLogMsg.clear();
-				//}
+				if (bSacOut)
+				{	if (!sRptPubHexKey.isEmpty())
+						sLogMsg = QString::asprintf( "GenerateReport_CEC():  hex-encoded public key:\n%s", sRptPubHexKey.toLocal8Bit().constData() );
+					else
+						sLogMsg = QString::asprintf( "GenerateReport_CEC():  hex-encoded public key NOT COMPUTED" );
+					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					if (!sSignHex.isEmpty())
+						sLogMsg = QString::asprintf( "GenerateReport_CEC():  hex-encoded signature:\n%s", sSignHex.toLocal8Bit().constData() );
+					else
+						sLogMsg = QString::asprintf( "GenerateReport_CEC():  hex-encoded signature NOT COMPUTED" );
+					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					sLogMsg.clear();
+				}
 
 				if (sSignHex.isEmpty())
 				{
@@ -956,41 +971,48 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 
 				if (TRUE)	//bVerbose)
 				{
-					sLogMsg.sprintf( "  Generating report '%s' %s %s", pszReportName, (bPDFRpt && bXMLRpt ? "pdf+xml" : (bPDFRpt ? "pdf" : "xml")), (sSignHex.length() > 5 ? "(signed)" : " ") );
+					sLogMsg = QString::asprintf( "  Generating report '%s' %s %s", pszReportName, (bPDFRpt && bXMLRpt ? "pdf+xml" : (bPDFRpt ? "pdf" : "xml")), (sSignHex.length() > 5 ? "(signed)" : " ") );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					sLogMsg.clear();
 				}
 
          // URL setting moved down here from above
-		//			sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
+		//			sURL = QString::asprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 		//								pszReportName, pszAuthToken1, pszAuthToken2, pszPDFOnlyBool, pszDebugBool, sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
 		// SAC 7/14/17 - new URL scheme for single-pass report gen
 		// SAC 8/24/17 - revised new scheme replacing bPDFRpt & bXMLRpt w/ an integer servings as bitwise flags for addiitonal reports
 				if (lRptIDNum >= 0)
 				{	if (bSchemaBasedRptGen)		// SAC 11/20/18 - report incompatibility of URL for CF1R XML schema-based report gen
-					{	sLogMsg.sprintf( "  ERROR: CF1R XML schema-based report gen URL incompatible with RptIDNum >= 0 reports, generating report '%s' %s %s", pszReportName, (bPDFRpt && bXMLRpt ? "pdf+xml" : (bPDFRpt ? "pdf" : "xml")), (sSignHex.length() > 5 ? "(signed)" : " ") );
+					{	sLogMsg = QString::asprintf( "  ERROR: CF1R XML schema-based report gen URL incompatible with RptIDNum >= 0 reports, generating report '%s' %s %s", pszReportName, (bPDFRpt && bXMLRpt ? "pdf+xml" : (bPDFRpt ? "pdf" : "xml")), (sSignHex.length() > 5 ? "(signed)" : " ") );
 						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						sLogMsg.clear();
 					}
-					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%ld/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
+					sURL = QString::asprintf( "https://%s/%s/%s/%s/%s/%s/%ld/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 							pszReportName, pszAuthToken1, pszAuthToken2, lRptIDNum, /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
 				}
 				else
-					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
+					sURL = QString::asprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 							pszReportName, pszAuthToken1, pszAuthToken2, (bPDFRpt ? "true" : "false"), (bXMLRpt ? "true" : "false"), /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
 
 				if (bVerbose)
-				{	sLogMsg.sprintf( "GenerateReport_CEC():  web server URI:  %s", sURL.toLocal8Bit().constData() );
+				{	sLogMsg = QString::asprintf( "GenerateReport_CEC():  web server URI:  %s", sURL.toLocal8Bit().constData() );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 
-// ------------------------
-// --  Qt Communication  --
-// ------------------------
 							if (bVerbose)
-								BEMPX_WriteLogFile( "    Communicating w/ report generator using Qt", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					iRetVal = GenerateReportViaQt( FileOutName, sURL.toLocal8Bit().constData(), pszCACertPath, postthis, npost, pszProxyAddress, pszProxyCredentials,
+//								BEMPX_WriteLogFile( "    Communicating w/ report generator using Qt", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//					iRetVal = GenerateReportViaQt( FileOutName, sURL.toLocal8Bit().constData(), pszCACertPath, postthis, npost, pszProxyAddress, pszProxyCredentials,
+								BEMPX_WriteLogFile( "    Communicating w/ report generator using HttpLib", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+               int iRptIter=0;      // added mechanism to iterate up to 8 times if report gen fails due to connection/download issue - SAC 09/28/21
+               iRetVal = 2;   // => error downloading data (probably negotiating proxy server)
+               while (++iRptIter <= 8 && iRetVal == 2)
+               {  if (iRptIter > 1)
+      					BEMPX_WriteLogFile( QString::asprintf( "  Generating report (attempt #%d) '%s' %s %s", iRptIter, pszReportName, (bPDFRpt && bXMLRpt ? "pdf+xml" : (bPDFRpt ? "pdf" : "xml")), (sSignHex.length() > 5 ? "(signed)" : " ") ),
+                                                NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   					iRetVal = GenerateReportViaHttpLib( FileOutName, sURL.toLocal8Bit().constData(), pszCACertPath, postthis, npost, pszProxyAddress, pszProxyCredentials,
 																pszProxyType, NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bVerbose );
+               }
 			}
 
 		// moved flush/close of output file down here and executed anytime the file exists, rather than only when CURL executed successfully - SAC 9/21/13
@@ -1067,15 +1089,15 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 //					sRenameTo += "-errant";
 //					if (FileExists( sRenameTo ))
 //					{	if (!FileWriteable( sRenameTo.toLocal8Bit().constData() ) || !DeleteFile( sRenameTo.toLocal8Bit().constData() ))
-//						{	sLogMsg.sprintf( "    unable to replace errant report file with latest version:  %s", sRenameTo.toLocal8Bit().constData() );
+//						{	sLogMsg = QString::asprintf( "    unable to replace errant report file with latest version:  %s", sRenameTo.toLocal8Bit().constData() );
 //							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 //							sRenameTo.clear();
 //					}	}
 //					if (!sRenameTo.isEmpty())
 //					{	if (MoveFile( FileOutName, sRenameTo.toLocal8Bit().constData() ))
-//							sLogMsg.sprintf( "    errant report file renamed to:  %s", sRenameTo.toLocal8Bit().constData() );
+//							sLogMsg = QString::asprintf( "    errant report file renamed to:  %s", sRenameTo.toLocal8Bit().constData() );
 //						else
-//							sLogMsg.sprintf( "    attempt to rename errant report file failed:  '%s' -->> '%s'", FileOutName, sRenameTo.toLocal8Bit().constData() );
+//							sLogMsg = QString::asprintf( "    attempt to rename errant report file failed:  '%s' -->> '%s'", FileOutName, sRenameTo.toLocal8Bit().constData() );
 //						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 //			}	}	}
 
@@ -1135,7 +1157,8 @@ int CMX_CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const c
 //CURL 			iRetVal = CheckSiteAccess(	sSite, pszCACertPath, pszProxyAddress, pszProxyCredentials,		// pass NULLs for no proxy
 //CURL 												pszErrorMsg, iErrorMsgLen, bVerbose );
  		else
-			iRetVal = CheckSiteAccessViaQt(	sSite.toLocal8Bit().constData(), pszCACertPath, pszProxyAddress, pszProxyCredentials, pszProxyType,		// pass NULLs for no proxy
+			iRetVal = CheckSiteAccessViaHttpLib(	sSite.toLocal8Bit().constData(), pszCACertPath, pszProxyAddress, pszProxyCredentials, pszProxyType,		// pass NULLs for no proxy
+//			iRetVal = CheckSiteAccessViaQt(	sSite.toLocal8Bit().constData(), pszCACertPath, pszProxyAddress, pszProxyCredentials, pszProxyType,		// pass NULLs for no proxy
 														pszErrorMsg, iErrorMsgLen, bVerbose );
 	}
 #pragma warning(default:4996)
@@ -1184,7 +1207,7 @@ int CMX_CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const c
 //CURL		{	iRetVal = 13;				assert( FALSE );			//	24 : CACertPath not a valid or found directory
 //CURL		}
 //CURL		else
-//CURL		{	sCACertPathFile.sprintf( "%s/curl-ca-bundle.crt", sCACertPath );
+//CURL		{	sCACertPathFile = QString::asprintf( "%s/curl-ca-bundle.crt", sCACertPath );
 //CURL			if (!FileExists( sCACertPathFile ))
 //CURL			{	iRetVal = 14;			assert( FALSE );			//	2 : CACert file not found
 //CURL			}

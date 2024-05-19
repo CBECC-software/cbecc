@@ -83,6 +83,8 @@ const UINT DefIntLen   = 8;
 const UINT DefFloatLen = 9;
 const UINT DefStrLen   = 0;        // Use string length by default
 
+extern QString BuildBEMTextioExceptionErrorString(int cause=0, const char* fileName=NULL, UINT line=0, UINT column=0, const char* lastError=NULL);  // SAC 04/26/21
+
 /////////////////////////////////////////////////////////////////////////////
 //	BEMTextioException
 //    An instance of this class is created each time a BEMTextIO file exception
@@ -110,10 +112,12 @@ public:
 
 // Implementation (use OurThrowTextioException to create)
 public:
-   BEMTextioException(int cause=0, const char* fileName=NULL, UINT line=0, UINT column=0, const char* lastError=NULL);
+   BEMTextioException(int cause=0, const char* fileName=NULL, UINT line=0, UINT column=0,
+                        const char* lastError=NULL, const char* sErrMsg=NULL);
 
    void BuildErrorString();
    virtual ~BEMTextioException();
+   const char* ConstErrorString();     // SAC 04/26/21
 };
 
 void OurThrowTextioException(int cause, const char* fileName, UINT line, UINT column, const char* lastError=NULL);
@@ -203,13 +207,14 @@ public:
 
    QString ReadString( BOOL bReadPastEOL=FALSE, BOOL bAllowMidQuote=FALSE, BOOL bMayBeArray=FALSE );
    QString ReadToNextToken( QStringList& saTokens, BOOL bReadPastEOL=TRUE );
-   QString ReadToken( BOOL bAllowLeadingDigit=FALSE, BOOL bSkipLeadingDelimeters=FALSE, BOOL bAllowMidHyphen=FALSE, BOOL bAllowNewLineRead=TRUE );		// SAC 9/11/14 - added bAllowNewLineRead arg
+   QString ReadToken( BOOL bAllowLeadingDigit=FALSE, BOOL bSkipLeadingDelimeters=FALSE, BOOL bAllowMidHyphen=FALSE,
+   							BOOL bAllowNewLineRead=TRUE, QString* psKeyChars=NULL );		// SAC 9/11/14 - added bAllowNewLineRead arg   // SAC 12/10/20 - added psKeyChars
    QString ReadLine( BOOL bAdvanceFirst = TRUE );
    long    ReadLong();
    float   ReadFloat();
    double  ReadDouble();
    void    ReadArray( QString& sId );
-   long    ReadBEMProcParam( QString& sId, BOOL bAllowLeadingDigit=FALSE );
+   long    ReadBEMProcParam( QString& sId, BOOL bAllowLeadingDigit=FALSE, QStringList* psKeyList=NULL, std::vector<int>* piaKeyInts=NULL );		// SAC 12/09/20
    int     ReadBEMCondition();
 	// Added new function to enable reading of strings that may or may NOT be quote delimited
    QString ReadCSVString( BOOL bReadToFollowingDelimeter = TRUE, BOOL bSkipBlankEntries = TRUE, BOOL* pbStrQuoted = NULL );  // SAC 1/27/12

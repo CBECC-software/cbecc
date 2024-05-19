@@ -169,7 +169,7 @@ BOOL CBEMProcDlgPrimData::OnInitDialog()
       for (int i=0; i<m_iNumPrimProps; i++)
       {
          long lPropDBID = BEMPX_GetPrimaryPropertyDBID( m_i1Class, i );
-         int iError = 0;
+         iError = 0;
          BEMProperty* pProp = BEMPX_GetProperty( lPropDBID, iError, m_iObjIdx );
          if ( (iError >= 0) && (pProp != NULL) )
          {
@@ -307,7 +307,7 @@ LRESULT CBEMProcDlgPrimData::DisplayMods( WPARAM, LPARAM )
 BOOL CBEMProcDlgPrimData::OnToolTipNotify( UINT /*id*/, NMHDR* pNMHDR, LRESULT* /*pResult*/ )
 {
    TOOLTIPTEXT* pTTT = (TOOLTIPTEXT*) pNMHDR;
-   UINT nID = pNMHDR->idFrom;
+   UINT_PTR nID = pNMHDR->idFrom;
    if (pTTT->uFlags & TTF_IDISHWND)
    {  // idFrom is actually the HWND of the tool
       CWnd* pCtrl = GetDlgItem( ::GetDlgCtrlID((HWND)nID) );

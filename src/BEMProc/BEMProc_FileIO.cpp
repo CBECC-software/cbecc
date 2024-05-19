@@ -211,7 +211,8 @@ public:
    bool UseParenArrayFormat( BEMObject* pObj, BEMProperty* pProp, int iProp );  // SAC 1/22/02 - final argument POSITION pos -> int iProp
    void PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet=TRUE );		// SAC 6/8/19
    void WriteProperties( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false,		// SAC 6/8/15 - CBECC issue 1061
-   								bool bSkipWritingComponentName=false, int iIndentSpcs=0 );	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
+   								bool bSkipWritingComponentName=false, int iIndentSpcs=0, 	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
+                           bool bWriteOnlyCSEExpressionProperties=false );    // workaround for CSE object COPY bug requiring re-write of expressions - SAC 05/19/21
    void WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, bool bWritePrimaryDefaultData=false, int iIndentSpcs=0 );  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp	// SAC 6/10/15 - CBECC issue 1061
    void WriteParenPropertyArray(   BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, int iIndentSpcs=0 );  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp
    void WriteCritDefComment( const char* szComment );
@@ -244,12 +245,23 @@ public:
 	// SAC 3/22/16
 	void AddToSpecificProperties( const char* pszSpecPropName )		{	m_bSpecificPropertiesActive = TRUE;
 																							m_saSpecificPropNames.push_back( pszSpecPropName );	}
+	void RemoveFromSpecificProperties(const char* pszSpecPropName)	{	for (int i = (int) m_saSpecificPropNames.size()-1; i >= 0; i--)
+                                                                     {  if (m_saSpecificPropNames[i].compare( pszSpecPropName, Qt::CaseInsensitive )==0)
+																							      m_saSpecificPropNames.removeAt( i );
+                                                                     }
+                                                                     m_bSpecificPropertiesActive = (m_saSpecificPropNames.size() > 0);	}
 	BOOL ObjectInSpecificPropObjectArray( BEMObject* pObj )			{	BOOL bFound = FALSE;
 																							for (int i=0; (!bFound && i < (int) m_povSpecificPropObjects.size()); i++)
 																								bFound = (m_povSpecificPropObjects[i] == pObj);
 																							return bFound;		}
 	void AddSpecificPropObject( BEMObject* pObj )						{	if (!ObjectInSpecificPropObjectArray( pObj ))
 																								m_povSpecificPropObjects.append( pObj );
+																							return;	}
+	void RemoveSpecificPropObject( BEMObject* pObj )					{  for (int i=0; i < (int) m_povSpecificPropObjects.size(); i++)
+                                                                        if (m_povSpecificPropObjects[i] == pObj)
+                                                                        {  m_povSpecificPropObjects.removeAt(i);
+                                                                           break;
+                                                                        }
 																							return;	}
 	void ResetSpecificProperties()											{	m_bSpecificPropertiesActive = FALSE;
 																							m_saSpecificPropNames.clear();
@@ -291,6 +303,7 @@ private:
    long m_lVersion;
    int  m_iFileType;   // SAC 8/30/11 - added iFileType argument => BEMFT_Std, BEMFT_CSE, ...
 	bool m_bOnlyValidInputs;	// SAC 4/16/14
+   bool m_bWritePrevNames;    // enable writing of previous class/property names when writing 2019 project files - SAC 08/06/21 (MFam)
 
 // SAC 1/15/03 - Added member to re-enable output of Undefined data when writing non-user input mode file (backward compatibility)
    bool m_bWriteAllProperties;
@@ -373,6 +386,11 @@ CProjectFile::CProjectFile( const char* fileName, int iFileMode /*bool bIsInputM
 	m_iChildIndent = (m_iFileType == BEMFT_CSE ? 3 : 0);		// SAC 12/5/16 - Indents child objects this number of spaces in relation to its parent
 	m_plaClsObjIndices = plaClsObjIndices;
 	m_bReportInvalidEnums = bReportInvalidEnums;
+
+   std::string sFN = fileName;
+   int iLastDotIdx = (int) sFN.rfind('.');
+   int iVint19Idx  = (int) sFN.rfind("19");
+   m_bWritePrevNames = (iLastDotIdx > 0 && iVint19Idx > iLastDotIdx);    // enable writing of previous class/property names when writing 2019 project files - SAC 08/06/21 (MFam)
 
    try
    {
@@ -1752,7 +1770,7 @@ bool CProjectFile::StatusRequiresWrite( BEMProperty* pProp, bool bWritePrimaryDe
 	   	   bRetVal = TRUE;
 			else
 		   	bRetVal = ( (pProp->getDataStatus() == BEMS_UserDefined) ||
-								((m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType )) && pProp->getDataStatus() > 0) ||					// SAC 1/3/13	// SAC 12/2/15   // SAC 5/20/20
+								((m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsNRCCXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType )) && pProp->getDataStatus() > 0) ||					// SAC 1/3/13	// SAC 12/2/15   // SAC 5/20/20
 	   		            (m_bWriteLibData && (pProp->getDataStatus() == BEMS_RuleLibrary ||
 	   	   	                              pProp->getDataStatus() == BEMS_UserLibrary) ) );
 	   }
@@ -1908,8 +1926,8 @@ bool CProjectFile::UseParenArrayFormat( BEMObject* pObj, BEMProperty* pProp, int
    {
       pProp = pObj->getProperty(iProp);
       //if ( pProp->m_iCritDefIdx > 0 || ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 9/12/16 - critical default comments not implemented
-      if ( ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType ) ||  BEMPX_IsCF1RXML( m_iFileType ) ||  BEMPX_IsRESNETXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 8/9/12 - added logic to allow CSE properties to be rule defined (just not undefined)	// SAC 12/2/15   // SAC 5/20/20
-		     ( m_iFileType != BEMFT_CSE && !BEMPX_IsHPXML( m_iFileType ) && !BEMPX_IsCF1RXML( m_iFileType ) && !BEMPX_IsRESNETXML( m_iFileType )  && pProp->getDataStatus() != BEMS_UserDefined) )
+      if ( ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType ) ||  BEMPX_IsCF1RXML( m_iFileType ) ||  BEMPX_IsNRCCXML( m_iFileType ) ||  BEMPX_IsRESNETXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 8/9/12 - added logic to allow CSE properties to be rule defined (just not undefined)	// SAC 12/2/15   // SAC 5/20/20
+		     ( m_iFileType != BEMFT_CSE && !BEMPX_IsHPXML( m_iFileType ) && !BEMPX_IsCF1RXML( m_iFileType ) && !BEMPX_IsNRCCXML( m_iFileType ) && !BEMPX_IsRESNETXML( m_iFileType )  && pProp->getDataStatus() != BEMS_UserDefined) )
          return FALSE;
       iProp++;
       iNumLeft--;
@@ -2058,7 +2076,7 @@ void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QStrin
    }
    else if (iDataType == BEMP_Flt)
    {  // float => simple format
-		if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType ))  // SAC 4/11/12 - ensure exponential format NOT used for outputting float data		// SAC 12/2/15   // SAC 5/20/20
+		if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsNRCCXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType ))  // SAC 4/11/12 - ensure exponential format NOT used for outputting float data		// SAC 12/2/15   // SAC 5/20/20
 			FloatToString_NoExpNotation( sData, pProp->getDouble() );
 		else
       	sData = QString( "%1" ).arg( QString::number(pProp->getDouble()) );
@@ -2092,18 +2110,19 @@ void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QStrin
 /////////////////////////////////////////////////////////////////////////////
 
 // SAC 4/7/16 - report cases where an enum has no valid string based on current project data
-void ReportInvalidEnumerationWrite( BEMObject* pObj, BEMProperty* pProp, int iBEMProcIdx )
+void ReportInvalidEnumerationWrite( BEMObject* pObj, BEMProperty* pProp, int iBEMProcIdx, bool bWritePrevNames /*=false*/ )
 {	QString sMsg;
 	long lDBID = BEMPX_GetDBID( pObj->getClass()->get1BEMClassIdx(), pProp->getType()->get1PropTypeIdx(), pProp->get1ArrayIdx() );
 	int iOccur = BEMPX_GetObjectIndex( pObj->getClass(), pObj, iBEMProcIdx );
 	QString sOldSym = BEMPX_GetSymbolString( pProp->getInt(), lDBID, iOccur, pObj->getObjectType(), iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );
+   QString qsClsName = (bWritePrevNames && pObj->getClass()->getNumPreviousNames() > 0 ? pObj->getClass()->getPreviousName(0) : pObj->getClass()->getShortName());    // SAC 08/06/21 (MFam)
 	QString sArrayInfo;
 	if (pProp->getType()->getNumValues() > 1)
 		sArrayInfo = QString( "[%1]" ).arg( QString::number(pProp->get1ArrayIdx()) );
 	if (sOldSym.isEmpty())
-		sMsg = QString( "Error writing enumeration property for %1 '%2', property %3%4" ).arg( pObj->getClass()->getShortName(), pObj->getName(), pProp->getType()->getShortName(), sArrayInfo );
+		sMsg = QString( "Error writing enumeration property for %1 '%2', property %3%4" ).arg( qsClsName, pObj->getName(), pProp->getType()->getShortName(), sArrayInfo );
 	else
-		sMsg = QString( "Error writing enumeration property for %1 '%2', property %3%4 (previously '%5' (?))" ).arg( pObj->getClass()->getShortName(), pObj->getName(), pProp->getType()->getShortName(), sArrayInfo, sOldSym );
+		sMsg = QString( "Error writing enumeration property for %1 '%2', property %3%4 (previously '%5' (?))" ).arg( qsClsName, pObj->getName(), pProp->getType()->getShortName(), sArrayInfo, sOldSym );
    BEMPX_WriteLogFile( sMsg, NULL, FALSE, TRUE /*bSupressAllMessageBoxes*/ );
 }
 
@@ -2178,7 +2197,7 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
          }
   	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1 && m_bReportInvalidEnums)		// SAC 5/20/19
 	      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
-				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
+				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx, m_bWritePrevNames );
 
          // if this property has a critical default comment, then write it now
          //if ( pProp->m_iCritDefIdx > 0 )
@@ -2254,7 +2273,7 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
       {	assert( FALSE );	
 			if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1 && m_bReportInvalidEnums)		// SAC 5/20/19
 				// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
-				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
+				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx, m_bWritePrevNames );
 		}
       iCount++;
       if ( iCount < pProp->getType()->getNumValues() )
@@ -2312,15 +2331,17 @@ void CProjectFile::WriteComment( QString sDescrip, QString sUnits, int iStartChr
 //   
 /////////////////////////////////////////////////////////////////////////////
 void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bool bWritePrimaryDefaultData /*=false*/, 		// SAC 6/8/15 - CBECC issue 1061
-   								bool bSkipWritingComponentName /*=false*/, int iIndentSpcs /*=0*/ )	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
+   								bool bSkipWritingComponentName /*=false*/, int iIndentSpcs /*=0*/, 	   // SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
+                           bool bWriteOnlyCSEExpressionProperties /*=false*/ )   // workaround for CSE object COPY bug requiring re-write of expressions - SAC 05/19/21
 {
    int length;
 	BOOL bAbortObjectWrite = FALSE;  // SAC 1/19/13
-   if (!bSkipWritingComponentName && (m_iFileType != BEMFT_CSE || pObj->getClass()->getShortName().compare("cseTOP") != 0))  // SAC 3/15/12 - prevent writing of "TOP" component type
+   QString qsClsName = (m_bWritePrevNames && pObj->getClass()->getNumPreviousNames() > 0 ? pObj->getClass()->getPreviousName(0) : pObj->getClass()->getShortName());    // SAC 08/06/21 (MFam)
+   if (!bSkipWritingComponentName && (m_iFileType != BEMFT_CSE || qsClsName.compare("cseTOP") != 0))  // SAC 3/15/12 - prevent writing of "TOP" component type
 	{   // Write:  "<Class Name>   <Object Name>"
 //	   length = ((QString)pObj->getClass()->m_lpszShortName).length();
-	   length = pObj->getClass()->getShortName().length();
-		QString sObjType = pObj->getClass()->getShortName();
+	   length = qsClsName.length();
+		QString sObjType = qsClsName;
 		if (m_iFileType == BEMFT_CSE)
 		{	assert( sObjType.indexOf( "cse" ) == 0 );
 			length-=3;
@@ -2405,15 +2426,18 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	for (int iProp=0; iProp < pObj->getPropertiesSize(); iProp++)
    	{
    	   BEMProperty* pProp = pObj->getProperty(iProp);
-   	
+
    	   QString sPropType = pProp->getType()->getShortName();
+         bool bContinueWritingProp = (!bWriteOnlyCSEExpressionProperties ||      // workaround for CSE object COPY bug requiring re-write of expressions - SAC 05/19/21
+                                      m_iFileType != BEMFT_CSE || (sPropType.right(2).compare("_x") == 0 &&
+                                                                   sPropType.indexOf("wsDayUse") < 0));
 			if (pProp && m_iFileType == BEMFT_CSE && sPropType.right(2).compare("_x") == 0)
 				sPropType = sPropType.left( sPropType.length()-2 );
 			if (pProp && m_iFileType == BEMFT_CSE && sPropType.left(6).compare("alter_") == 0)	// SAC 12/4/19 - remove pre-pended 'alter_' from property name written to CSE input
 				sPropType = sPropType.right( sPropType.length()-6 );
-   	
+
    	   // if property valid and should be written
-   	   if ( pProp != NULL && MustWriteProperty( pObj, pProp, iProp/*pos*/, bWritePrimaryDefaultData ) )  // SAC 1/22/02
+   	   if ( bContinueWritingProp && pProp != NULL && MustWriteProperty( pObj, pProp, iProp/*pos*/, bWritePrimaryDefaultData ) )  // SAC 1/22/02
    	   {
    	      // if pProp IS NOT array, just write it out
    	      if (pProp->getType()->getNumValues() == 1)
@@ -2482,7 +2506,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	         }
 	   	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1 && m_bReportInvalidEnums)		// SAC 5/20/19
    		      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
-						ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
+						ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx, m_bWritePrevNames );
    	         else
    	         {  assert( FALSE );
 					}
@@ -2545,7 +2569,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    		m_file.NewLine();
 		}
 		// SAC 1/29/20 - KLUDGE to force end/close of ExportFile, since CSE likes this to be parent to EXPORT but can't in BEMBase since not allowed to create parent EXPORTFILE for primary CSV output file
-		else if (pObj->getClass()->getShortName().indexOf("cseEXPORTFILE")==0)
+		else if (qsClsName.indexOf("cseEXPORTFILE")==0)
 		{	m_file.WriteToken( "   endEXPORTFILE", 16 );
 			m_file.NewLine();
 		}
@@ -2674,8 +2698,10 @@ void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, boo
 //   
 /////////////////////////////////////////////////////////////////////////////
 void CProjectFile::AppendCSEObjectType( QString& sPartial, BEMObject* pObj )  // SAC 3/22/16
-{	int length = pObj->getClass()->getShortName().length();
-	QString sObjType = pObj->getClass()->getShortName();
+{
+   QString qsClsName = (m_bWritePrevNames && pObj->getClass()->getNumPreviousNames() > 0 ? pObj->getClass()->getPreviousName(0) : pObj->getClass()->getShortName());    // SAC 08/06/21 (MFam)
+   int length = qsClsName.length();
+	QString sObjType = qsClsName;
 	if (m_iFileType == BEMFT_CSE)
 	{	assert( sObjType.indexOf( "cse" ) == 0 );
 		length-=3;
@@ -2706,6 +2732,9 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 
 	bool bCSEDHWPreRunReqd = false;
 	bool bCSEDHWSolarPreRunReqd = false;	// SAC 1/28/20 (StdSolarSys)
+   bool bCSECHPWHSizingRunReqd = false;   // SAC 07/07/21 (Res tic #1275)
+   int iNumCSEDHWSysShuffles = 0;         // SAC 05/13/21
+	long lDBID_cseDHWSYS_wsDayUse_x=0, lDBID_cseDHWSYS_wsLoadShareDHWSYS=0;
    if (m_iFileType == BEMFT_CSE)   // SAC 8/28/12 - special CSE '#define' writing stuff   - SAC 3/15/16 - and 
 	{	int iArr;
 		long lProjCommentDBID   = BEMPX_GetDatabaseID( "Proj:CSE_Comment" );
@@ -2765,6 +2794,8 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 
 	// Write DHW Use Include file statement - SAC 3/15/16
 		long lProjDHWUseIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:CSE_DHWUseIncFile" );
+		if (lProjDHWUseIncludeFileDBID < 1)		// // SAC 10/18/21 (MFam)
+			lProjDHWUseIncludeFileDBID = BEMPX_GetDatabaseID( "ResProj:DHWUseIncludeFile" );
 		if (lProjDHWUseIncludeFileDBID < 1)		// SAC 5/17/16 - backward compat
 			lProjDHWUseIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:DHWUseIncludeFile" );
 		QString sDHWUseIncFile;
@@ -2780,7 +2811,9 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 		}
 
 		long lCSEDHWPreRunReqd = 0;	// SAC 3/22/16
-		long lProjCSEDHWPreRunReqdDBID = BEMPX_GetDatabaseID( "Proj:CSE_DHWPreRunReqd" );
+		long lProjCSEDHWPreRunReqdDBID = BEMPX_GetDatabaseID( "ResProj:CSE_DHWPreRunReqd" );   // SAC 10/18/21 (MFam)
+		if (lProjCSEDHWPreRunReqdDBID < 1)	
+			lProjCSEDHWPreRunReqdDBID = BEMPX_GetDatabaseID( "Proj:CSE_DHWPreRunReqd" );
 		if (lProjCSEDHWPreRunReqdDBID < 1)	// SAC 5/17/16 - backward compat
 			lProjCSEDHWPreRunReqdDBID = BEMPX_GetDatabaseID( "Proj:CSEDHWPreRunReqd" );
 		if (lProjCSEDHWPreRunReqdDBID < 1)
@@ -2790,10 +2823,30 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 
 		long lCSEDHWSolarPreRunReqd = 0;	// SAC 1/28/20 (StdSolarSys)
 		long lProjCSEDHWSolarPreRunReqdDBID = BEMPX_GetDatabaseID( "Proj:CSE_DHWSolarPreRunReqd" );
+		if (lProjCSEDHWSolarPreRunReqdDBID < 1)	// SAC 10/18/21 (MFam)
+			lProjCSEDHWSolarPreRunReqdDBID = BEMPX_GetDatabaseID( "ResProj:CSE_DHWSolarPreRunReqd" );
 		if (lProjCSEDHWSolarPreRunReqdDBID > 0 && BEMPX_GetInteger( lProjCSEDHWSolarPreRunReqdDBID, lCSEDHWSolarPreRunReqd, -1, -1, -1, BEMO_User, iBEMProcIdx ) && lCSEDHWSolarPreRunReqd > 0)
 			bCSEDHWSolarPreRunReqd = true;
+
+      long lDBID_Proj_CSEDHWSizingRunReqd = BEMPX_GetDatabaseID( "Proj:CSE_DHWSizingRunReqd" );    // SAC 07/07/21 (Res tic #1275)
+		if (lDBID_Proj_CSEDHWSizingRunReqd < 1)	// SAC 10/18/21 (MFam)
+			lDBID_Proj_CSEDHWSizingRunReqd = BEMPX_GetDatabaseID( "ResProj:CSE_DHWSizingRunReqd" );
+      long lCSEDHWSizingRunReqd=0;
+      bCSECHPWHSizingRunReqd = (lDBID_Proj_CSEDHWSizingRunReqd > 0 && BEMPX_GetInteger( lDBID_Proj_CSEDHWSizingRunReqd, lCSEDHWSizingRunReqd ) && lCSEDHWSizingRunReqd > 0);
+
+		long lShuffleSFamDHWNum = 0;	   // SAC 05/13/21
+		long lProjShuffleSFamDHWNumDBID = BEMPX_GetDatabaseID( "Proj:ShuffleSFamDHWNum" );
+		if (lProjShuffleSFamDHWNumDBID < 1)	// SAC 10/18/21 (MFam)
+			lProjShuffleSFamDHWNumDBID = BEMPX_GetDatabaseID( "ResProj:ShuffleSFamDHWNum" );
+		if (lProjShuffleSFamDHWNumDBID > 0 && BEMPX_GetInteger( lProjShuffleSFamDHWNumDBID, lShuffleSFamDHWNum, -1, -1, -1, BEMO_User, iBEMProcIdx ) && lShuffleSFamDHWNum > 0)
+			iNumCSEDHWSysShuffles = lShuffleSFamDHWNum;
+		lDBID_cseDHWSYS_wsDayUse_x        = BEMPX_GetDatabaseID( "cseDHWSYS:wsDayUse_x" );
+		lDBID_cseDHWSYS_wsLoadShareDHWSYS = BEMPX_GetDatabaseID( "cseDHWSYS:wsLoadShareDHWSYS" );
 	}
 
+	if (bCSECHPWHSizingRunReqd)		// SAC 07/07/21
+	{	AddToSpecificProperties( "wsSolarSys" );
+   }
 	if (bCSEDHWPreRunReqd)		// SAC 3/22/16
 	{	AddToSpecificProperties( "whZone" );
 		AddToSpecificProperties( "whTEx_x" );
@@ -2852,18 +2905,132 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
          	   }
          	}
 
-			// SAC 8/19/15 - added code to insert "Run" command following writing of any cseDHWSYS objects (and child heaters) - in order to perform LDEF "PreRun"
+            // Write COPIES of DHWSYSs (when needed)
+            if (iNumCSEDHWSysShuffles > 1 && pClass->getShortName().compare( "cseDHWSYS" )==0)
+   			{	for (ib=0; ib < (int) pClass->ObjectCount( BEMO_User ); ib++)
+   				{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
+            	   if (pObj != NULL)
+            	   {	bool bOKToWriteObj = (m_plaClsObjIndices ? ObjectToBeWritten( i1Class, ib ) : true);		// SAC 12/16/18 - CSE HPWHSIZE runs
+            	      if (bOKToWriteObj && pObj->getParent() == NULL)
+                     {  QString qsDayUseName, qsLoadShareSysName;
+                        int iFirstShuffleNum = 0;
+                        if (lDBID_cseDHWSYS_wsDayUse_x > 0 && BEMPX_GetString( lDBID_cseDHWSYS_wsDayUse_x, qsDayUseName, FALSE, 0, -1, ib, BEMO_User, NULL, 0, iBEMProcIdx ) && !qsDayUseName.isEmpty())
+                        {  iFirstShuffleNum = (int) atof( qsDayUseName.right(2).toLocal8Bit().constData() );
+                           qsDayUseName = qsDayUseName.left( qsDayUseName.length()-2 );
+                        }
+                        if (lDBID_cseDHWSYS_wsLoadShareDHWSYS > 0)
+                           BEMPX_GetString( lDBID_cseDHWSYS_wsLoadShareDHWSYS, qsLoadShareSysName, FALSE, 0, -1, ib, BEMO_User, NULL, 0, iBEMProcIdx );
+                        for (int iShuffleNum = 2; iShuffleNum <= iNumCSEDHWSysShuffles; iShuffleNum++)
+                        {  QString qsCSECopyLine = QString( "DHWSYS  \"%1-%2\"  COPY  \"%3\"  " ).arg( pObj->getName(), QString::number(iShuffleNum), pObj->getName() );
+                           if (iFirstShuffleNum > 0)
+                           {  int iThisShuffleNum = iFirstShuffleNum + iShuffleNum - 1;
+                              if (iThisShuffleNum > 5)         // prevent shuffles > 5 ??
+                                 iThisShuffleNum = (iThisShuffleNum % 5);
+                              //qsCSECopyLine += QString( "wsDayUse = %10%2  " ).arg( qsDayUseName, QString::number(iThisShuffleNum) );
+                              qsCSECopyLine += QString( "wsDayUse = %1" ).arg( qsDayUseName );
+                              qsCSECopyLine += QString( "0%1  " ).arg( QString::number(iThisShuffleNum) );
+                           }
+                           if (!qsLoadShareSysName.isEmpty())
+                              qsCSECopyLine += QString( "wsLoadShareDHWSYS = \"%1-%2\"  " ).arg( qsLoadShareSysName, QString::number(iShuffleNum) );
+            					m_file.WriteWholeRecord( qsCSECopyLine.toLocal8Bit().constData() );
+                        // now RE-write any properties defined as EXPRESSIONS (to avoid a CSE bug in COPY command) - SAC 05/19/21
+								   WriteProperties( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/, true /*bWriteOnlyCSEExpressionProperties*/ );
+                        }
+         	      		m_file.NewLine();
+               }  }  }
+            }
+
+			   // SAC 8/19/15 - added code to insert "Run" command following writing of any cseDHWSYS objects (and child heaters) - in order to perform LDEF "PreRun"
          	if (m_iFileType == BEMFT_CSE && pClass->getShortName().compare("cseTOP", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0)
 				{	m_file.WriteWholeRecord( " DELETE Report \"eb\"    // move from end of CSE file" );		// SAC 9/8/15 - move this line UP, immediately following cseTOP command
 	      		m_file.NewLine();
 	      	}
-         	else if ((bCSEDHWPreRunReqd || bCSEDHWSolarPreRunReqd) && pClass->getShortName().compare("cseDHWSYS", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0)
+
+            // CSE Ecosizer ASHP autosizing mechanism - SAC 07/07/21 (Res tic #1275)
+         	if (bCSECHPWHSizingRunReqd && pClass->getShortName().compare("cseDHWSYS", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0)
          	{	m_file.WriteWholeRecord( " verbose = -1          // suppress progress messages" );
-					m_file.WriteWholeRecord( " RUN                   // perform DHW (or DHWSolar) pre-run calcs" );
-					m_file.WriteWholeRecord( " UNSET verbose         // re-enable progress messages" );
-         		//m_file.WriteToken( szCSE_Run, strlen( szCSE_Run ) );
-	      		//m_file.NewLine();		m_file.NewLine();
+					m_file.WriteWholeRecord( " RUN                   // prerun #1: find daywaste fraction" );
 	      		m_file.NewLine();
+
+               // alter each DHWSYS to restore the PreRun calc mode
+               QString qsWSCalcMode;   int iCMError, iCMSpecialVal, iNumPreRunRestores=0;
+   				for (ib=0; ib < (int) pClass->ObjectCount( BEMO_User ); ib++)
+	   			{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
+                  qsWSCalcMode = BEMPX_GetString( BEMPX_GetDatabaseID( "cseDHWSYS:wsCalcMode" ), iCMSpecialVal, iCMError, ib, BEMO_User, iBEMProcIdx );
+                  qsWSCalcMode = qsWSCalcMode.toUpper();
+            	   if (pObj != NULL && !qsWSCalcMode.compare( "PRERUN" ))
+                  {  qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pObj->getName() );
+      					m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+		      			m_file.WriteWholeRecord( "   wsCalcMode = PreRun" );
+				      	m_file.WriteWholeRecord( "endDHWSYS" );
+                     iNumPreRunRestores++;
+               }  }        assert( iNumPreRunRestores > 0 );
+
+	      		m_file.NewLine();
+					m_file.WriteWholeRecord( " RUN                   // prerun #2: Ecosizer load" );
+	      		m_file.NewLine();
+
+               // no need to reset wsCalcMode back to PreRun, as following run should be final
+
+               // write ALTERs that set heater tank volume & htg capacity
+               long lSysSzgReqd=0, lHtrSzgReqd=0;   int iNumSzgSystems=0;
+               int iHtrClassID = BEMPX_GetClassIndexByLongName( "cseDHWHEATER" );      assert( iHtrClassID > 0 );
+               int iSysClassID = pClass->get1BEMClassIdx();                            assert( iSysClassID > 0 );
+   				for (ib=0; ib < (int) pClass->ObjectCount( BEMO_User ); ib++)
+	   			{	BEMObject* pDHWSysObj = pClass->GetObject( BEMO_User, ib );
+                  // check for and keep track of SOLARSYSTEM assignments left out of initial CSE object writing
+                  QString qsWSSolarSys = BEMPX_GetString( BEMPX_GetDatabaseID( "cseDHWSYS:wsSolarSys" ), iCMSpecialVal, iCMError, ib, BEMO_User, iBEMProcIdx );
+                  bool bFoundSzgHtr=false;
+        	         if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "cseDHWSYS:CSESizingRunRequired" ), lSysSzgReqd, 0, -1,	ib, BEMO_User, iBEMProcIdx ) && lSysSzgReqd > 0)
+                  {  
+                     int iNumChildHtrs = (int) BEMPX_GetNumChildren( iSysClassID, ib, BEMO_User, iHtrClassID, iBEMProcIdx );
+                     // loop over child DHWHEATERs searching for any requiring autosizing
+                     for (int iChild=0; (!bFoundSzgHtr && iChild<iNumChildHtrs); iChild++)
+                     {  BEM_ObjType eChildHtrObjType = BEMO_User;
+                        int i0ChildHtrObjIdx = BEMPX_GetChildObjectIndex( iSysClassID, iHtrClassID, iCMError, eChildHtrObjType, iChild+1, ib, BEMO_User, iBEMProcIdx );
+                        assert( i0ChildHtrObjIdx >= 0 );
+                        assert( eChildHtrObjType == BEMO_User );
+                        if (i0ChildHtrObjIdx >= 0)
+                        {  BEMObject* pDHWHtrObj = BEMPX_GetObjectByClass( iHtrClassID, iCMError, i0ChildHtrObjIdx, BEMO_User, iBEMProcIdx );      assert( pDHWHtrObj );
+                           if (pDHWHtrObj && BEMPX_GetInteger( BEMPX_GetDatabaseID( "cseDHWHEATER:CSESizingRunRequired" ), lHtrSzgReqd, 0, -1, i0ChildHtrObjIdx, BEMO_User, iBEMProcIdx ) && lHtrSzgReqd > 0)
+                           {  bFoundSzgHtr = true;
+                              // NOTE: THIS ASSUMES THERE IS ONLY 1 HEATER TO BE SIZED
+                              qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pDHWSysObj->getName() );           m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                              if (qsWSSolarSys.size() > 0)
+                              {  qsWSCalcMode = QString( "   wsSolarSys = \"%1\"" ).arg( qsWSSolarSys );                m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                              }
+                              qsWSCalcMode = QString( "   ALTER  DHWHEATER  \"%1\"" ).arg( pDHWHtrObj->getName() );     m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                              qsWSCalcMode = QString( "      whVolRunning = @DHWSYS[\"%1\"].volRunningDes" ).arg( pDHWSysObj->getName() );   m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                              qsWSCalcMode = QString( "      whHeatingCap = @DHWSYS[\"%1\"].heatingCapDes" ).arg( pDHWSysObj->getName() );   m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+         				      	m_file.WriteWholeRecord( "endDHWSYS" );
+               	      		m_file.NewLine();
+                              iNumSzgSystems++;
+                     }  }  }
+                  }
+                  if (!bFoundSzgHtr && qsWSSolarSys.size() > 0)
+                  {  // write wsSolarSys ALTER for systems w/out auto-sized heater(s)
+                     qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pDHWSysObj->getName() );        m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                     qsWSCalcMode = QString( "   wsSolarSys = \"%1\"" ).arg( qsWSSolarSys );                m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+         				m_file.WriteWholeRecord( "endDHWSYS" );
+               	   m_file.NewLine();
+                  }
+                  if (qsWSSolarSys.size() > 0)
+                     RemoveSpecificPropObject( pDHWSysObj );
+               }           assert( iNumSzgSystems > 0 );
+  					m_file.WriteWholeRecord( " UNSET verbose         // re-enable progress messages" );
+	      		m_file.NewLine();
+               RemoveFromSpecificProperties( "wsSolarSys" );
+            }
+
+         	if ((bCSEDHWPreRunReqd || bCSEDHWSolarPreRunReqd) && pClass->getShortName().compare("cseDHWSYS", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0)
+         	{	if (!bCSECHPWHSizingRunReqd)
+               {  m_file.WriteWholeRecord( " verbose = -1          // suppress progress messages" );
+					   m_file.WriteWholeRecord( " RUN                   // perform DHW (or DHWSolar) pre-run calcs" );
+   					m_file.WriteWholeRecord( " UNSET verbose         // re-enable progress messages" );
+            		//m_file.WriteToken( szCSE_Run, strlen( szCSE_Run ) );
+	         		//m_file.NewLine();		m_file.NewLine();
+	         		m_file.NewLine();
+               }
 
 				// more special pre-run logic - need to write out EXPORT objects and then another RUN command BEFORE the ALTER data - SAC 1/28/20 (StdSolarSys)
 					if (bCSEDHWSolarPreRunReqd)
@@ -2908,7 +3075,6 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 								   bMainObjWritten = TRUE;
 								   WriteProperties( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/ );
 								}
-
 							   // then write each of this component's children (recursively)
 						   	if (pObj->getChildCount() > 0)
 							   {	// Cruise thru list of BEM child objects, writing each out to the file
@@ -3883,13 +4049,14 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
 			if (iError >= 0 && pClass && (iFileMode != BEMFM_INPUT || !pClass->getAutoCreate()))
 			{	QString sObjType = pClass->getShortName();
 				if (sObjType.indexOf( "cse" ) == 0)
-				{	int iNumObjs = (int) pClass->ObjectCount( BEMO_User );
+				{	int iMaxNameLen = (sObjType.compare("cseDHWSYS")==0 ? MAX_CSE_NAMELENGTH-3 : MAX_CSE_NAMELENGTH);     // trim DHWSYS names by additional 3 chars to allow space for DayUse shuffle copy names - SAC 05/13/21
+               int iNumObjs = (int) pClass->ObjectCount( BEMO_User );
 					for (int ib=0; ib < iNumObjs; ib++)
 					{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
 						QString sObjName = (pObj==NULL ? "" : pObj->getName());
-      	   	   if (pObj && sObjName.length() > MAX_CSE_NAMELENGTH)
+      	   	   if (pObj && sObjName.length() > iMaxNameLen)
          		   {	QString sAppend = QString( "-%1.%2" ).arg( QString::number(i1Class), QString::number(ib+1) );
-         		   	sObjName = sObjName.left( MAX_CSE_NAMELENGTH-sAppend.length() );
+         		   	sObjName = sObjName.left( iMaxNameLen-sAppend.length() );
          		   	sObjName += sAppend;
          		   	pObj->setName(sObjName);
    	}	}	}	}	}
@@ -3951,6 +4118,7 @@ bool  BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iB
 BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx /*=-1*/ )
 {
    BEMObject* pRetVal = NULL;
+   BEMObject* pFirstObj = NULL;     // SAC 10/21/21
 
    std::auto_ptr<CProjectFile> file( new CProjectFile( fileName, BEMFM_INPUT /*TRUE*/ ) );
 
@@ -3967,6 +4135,9 @@ BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, in
       {
          pNewObj = file->ReadComponent( iJunk );
 
+         if (pNewObj && pFirstObj == NULL)
+            pFirstObj = pNewObj;     // return this first object if the main one not found - CAN HAPPEN when pasting across different programs or versions - SAC 10/21/21 (MFam)
+
          // store this object pointer as the return value if its class matches the function argument
          if ((pRetVal == NULL) && pNewObj && pNewObj->getClass() && pNewObj->getClass()->get1BEMClassIdx() == i1BEMClass)
             pRetVal = pNewObj;
@@ -3981,7 +4152,7 @@ BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, in
       BEMP_ResolveAllReferences( BEMO_User, NULL, TRUE, iBEMProcIdx );
    }
 
-   return pRetVal;
+   return (pRetVal ? pRetVal : pFirstObj);
 }
 
 
@@ -3997,7 +4168,7 @@ const char* pszPropTypeTypes[] = {	"Integer    "		// BEMP_Int  0
 //#define  BEMDMX_SIM    0  // SAC 8/23/12 - added export of simulation data model to facilitate synchronization of data model w/ other program modules
 //#define  BEMDMX_INP    1  // SAC 2/26/13 - added input version of DM export
 //#define  BEMDMX_INPMP  2  // SAC 10/31/13 - added input version of DM export that EXCLUDES Prescribed properties (MP-minus precribed)
-bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFile )
+bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFile, bool bWritePrevNames /*=false*/ )    // bWritePrevNames - SAC 08/05/21 (MFam)
 {	bool bRetVal = true;
    QFile file;		file.setFileName( pszDataModelOutFile );
    try
@@ -4028,13 +4199,15 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 
 				if (iNumPropsOfClassToBeWritten > 0 || eBEMProc.getClass(iC1)->getNumProps() < 1 || eBEMProc.getClass(iC1)->getXMLIgnoreName())	// SAC 1/28/14 - don't write object at all if we have no properties to write (unless this obj has no props at all)
 				{
+                  QString sClsShortName = (bWritePrevNames && eBEMProc.getClass(iC1)->getNumPreviousNames() > 1 ? eBEMProc.getClass(iC1)->getPreviousName(0) : eBEMProc.getClass(iC1)->getShortName());  // SAC 08/05/21
+                  QString sClsLongName  = (bWritePrevNames && eBEMProc.getClass(iC1)->getNumPreviousNames() > 1 ? eBEMProc.getClass(iC1)->getPreviousName(1) : eBEMProc.getClass(iC1)->getLongName( ));
 						if (iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP)
-							sLine.sprintf( "\n--------------------\n%-16s  %-32s  #Props:%3d/%3d  MaxDefinable:%5d\n", 
-								  /*eBEMProc.getClass(iC1)->m_i1BEMClassIdx,*/ eBEMProc.getClass(iC1)->getShortName().toLocal8Bit().constData(), eBEMProc.getClass(iC1)->getLongName().toLocal8Bit().constData(), iNumPropsOfClassToBeWritten, eBEMProc.getClass(iC1)->getNumProps()
+							sLine = QString::asprintf( "\n--------------------\n%-16s  %-32s  #Props:%3d/%3d  MaxDefinable:%5d\n", 
+								  /*eBEMProc.getClass(iC1)->m_i1BEMClassIdx,*/ sClsShortName.toLocal8Bit().constData(), sClsLongName.toLocal8Bit().constData(), iNumPropsOfClassToBeWritten, eBEMProc.getClass(iC1)->getNumProps()
 								, eBEMProc.getClass(iC1)->getMaxDefinable()	);
 						else
-							sLine.sprintf( "\n--------------------\n%-16s  %-32s  #Props:%3d/%3d  MaxDefinable:%5d  SingleRecord: %c  XMLIgnoreName: %c\n", 
-								  /*eBEMProc.getClass(iC1)->m_i1BEMClassIdx,*/ eBEMProc.getClass(iC1)->getShortName().toLocal8Bit().constData(), eBEMProc.getClass(iC1)->getLongName().toLocal8Bit().constData(), iNumPropsOfClassToBeWritten, eBEMProc.getClass(iC1)->getNumProps()
+							sLine = QString::asprintf( "\n--------------------\n%-16s  %-32s  #Props:%3d/%3d  MaxDefinable:%5d  SingleRecord: %c  XMLIgnoreName: %c\n", 
+								  /*eBEMProc.getClass(iC1)->m_i1BEMClassIdx,*/ sClsShortName.toLocal8Bit().constData(), sClsLongName.toLocal8Bit().constData(), iNumPropsOfClassToBeWritten, eBEMProc.getClass(iC1)->getNumProps()
 								, eBEMProc.getClass(iC1)->getMaxDefinable(), (eBEMProc.getClass(iC1)->getWriteAsSingleRecord() ? 'T':'F')
 								, (eBEMProc.getClass(iC1)->getXMLIgnoreName() ? 'T':'F')
 							//	, eBEMProc.getClass(iC1)->, eBEMProc.getClass(iC1)->, eBEMProc.getClass(iC1)->
@@ -4045,7 +4218,10 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 							for (int iPar=0; (iPar < BEM_MAX_PARENT_TYPES && eBEMProc.getClass(iC1)->getParentType( iPar ) > -1); iPar++)
 							{	if (iPar > 0)
 									sTemp += "  /  ";
-								sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getParentType( iPar ) )->getShortName();
+                        if (bWritePrevNames && eBEMProc.getClass( eBEMProc.getClass(iC1)->getParentType( iPar ) )->getNumPreviousNames() > 1)    // SAC 08/05/21
+                           sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getParentType( iPar ) )->getPreviousName(0);
+                        else
+      							sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getParentType( iPar ) )->getShortName();
 							}
 							sTemp += "\n";
 							file.write( sTemp.toLocal8Bit().constData() );
@@ -4055,7 +4231,10 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 							for (int iChld=0; (iChld < BEM_MAX_CHILD_TYPES && eBEMProc.getClass(iC1)->getChildType( iChld ) > -1); iChld++)
 							{	if (iChld > 0)
 									sTemp += "  /  ";
-								sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getChildType( iChld ) )->getShortName();
+                        if (bWritePrevNames && eBEMProc.getClass( eBEMProc.getClass(iC1)->getChildType( iChld ) )->getNumPreviousNames() > 1)    // SAC 08/05/21
+                           sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getChildType( iChld ) )->getPreviousName(0);
+								else
+                           sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getChildType( iChld ) )->getShortName();
 							}
 							sTemp += "\n";
 							file.write( sTemp.toLocal8Bit().constData() );
@@ -4093,11 +4272,11 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 										default                :	sDataType = "unknown input type";		break; 
 									}
 								if (eBEMProc.getPropertyType(iProp1)->getNumValues() > 1)
-									sNumVals.sprintf( "#Vals:%3d", eBEMProc.getPropertyType(iProp1)->getNumValues() );
+									sNumVals = QString::asprintf( "#Vals:%3d", eBEMProc.getPropertyType(iProp1)->getNumValues() );
 								else
 									sNumVals = " -  -  - ";
 								if (!eBEMProc.getPropertyType(iProp1)->getUnitsLabel().isEmpty())
-								//	sUnits.sprintf( "Units: %-17s", eBEMProc.getPropertyType(iProp1)->getUnitsLabel().toLatin1().constData() );
+								//	sUnits = QString::asprintf( "Units: %-17s", eBEMProc.getPropertyType(iProp1)->getUnitsLabel().toLatin1().constData() );
 									sUnits = QString( "Units: %1" ).arg( eBEMProc.getPropertyType(iProp1)->getUnitsLabel(), -17 );
 								else
 									sUnits = " -  -  -  -  -  -  -  - ";
@@ -4106,14 +4285,14 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 					         sLine = QString( "      %1  %2  %3  %4  %5  %6 %7\n" ).arg( eBEMProc.getPropertyType(iProp1)->getShortName(), -24 ).arg( sLongName, -60 ).arg(
 										  pszPropTypeTypes[ eBEMProc.getPropertyType(iProp1)->getPropType() ], sNumVals, sUnits ).arg( sDataType, -18 ).arg( sRangeMsg );
 							// avoid sprintf() to preserve special characters in units strings
-					      //   sLine.sprintf( "      %-24s  %-60s  %s  %s  %s  %-18s %s\n",    // MaxDefinable:%5d  MaxRefs:%3d", 
+					      //   sLine = QString::asprintf( "      %-24s  %-60s  %s  %s  %s  %-18s %s\n",    // MaxDefinable:%5d  MaxRefs:%3d", 
 							//			  eBEMProc.getPropertyType(iProp1)->getShortName().toLocal8Bit().constData(), sLongName.toLocal8Bit().constData()  //, eBEMProc.getPropertyType(iProp1)->m_i1PropTypeIdx
 							//			, pszPropTypeTypes[ eBEMProc.getPropertyType(iProp1)->getPropType() ], sNumVals.toLocal8Bit().constData()
 							//			, sUnits.toLatin1().constData(), sDataType.toLocal8Bit().constData(), sRangeMsg.toLocal8Bit().constData()	);
 						// SAC 3/3/14 - added subsequent record to write more descriptive info re: input class (when dependent on other BEMBase data)
 								if (!eBEMProc.getPropertyType(iProp1)->getInputClassInfo().isEmpty())
 								{	file.write( sLine.toLatin1() );
-									sLine.sprintf( "      %-24s  %-60s  %-11s  %-9s  %-24s  %s\n", " ", " ", " ", " ", " ", eBEMProc.getPropertyType(iProp1)->getInputClassInfo().toLocal8Bit().constData() );
+									sLine = QString::asprintf( "      %-24s  %-60s  %-11s  %-9s  %-24s  %s\n", " ", " ", " ", " ", " ", eBEMProc.getPropertyType(iProp1)->getInputClassInfo().toLocal8Bit().constData() );
 								}
 							}
 							else
@@ -4123,7 +4302,7 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 										  eBEMProc.getPropertyType(iProp1)->getUnitsLabel(), -17 ).arg( QString::number( eBEMProc.getPropertyType(iProp1)->getWriteSimulationFlag() ), 2 ).arg(
 										  (eBEMProc.getPropertyType(iProp1)->getXMLWriteArrayIndices() ? 'T':'F') );
 							// avoid sprintf() to preserve special characters in units strings
-					      //   sLine.sprintf( "      %-24s  %-60s  Type: %s  #Vals:%3d  Units: %-17s WriteSimFlag:%2d  WriteXMLArrayIndices: %c\n",    // MaxDefinable:%5d  MaxRefs:%3d", 
+					      //   sLine = QString::asprintf( "      %-24s  %-60s  Type: %s  #Vals:%3d  Units: %-17s WriteSimFlag:%2d  WriteXMLArrayIndices: %c\n",    // MaxDefinable:%5d  MaxRefs:%3d", 
 							//			  eBEMProc.getPropertyType(iProp1)->getShortName().toLocal8Bit().constData(), sLongName.toLocal8Bit().constData()  //, eBEMProc.getPropertyType(iProp1)->m_i1PropTypeIdx
 							//			, pszPropTypeTypes[ eBEMProc.getPropertyType(iProp1)->getPropType() ], eBEMProc.getPropertyType(iProp1)->getNumValues()
 							//			, eBEMProc.getPropertyType(iProp1)->getUnitsLabel().toLatin1().constData(), eBEMProc.getPropertyType(iProp1)->getWriteSimulationFlag()
@@ -4136,8 +4315,15 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 							if (eBEMProc.getPropertyType(iProp1)->getPropType() == BEMP_Obj)
 							{	for (int iO=0; iO < BEM_MAX_PROPTYPE_OBJREFCLASSES; iO++)
 								{	if (eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO) > 0)
-									{	if (eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO) > 0)
-										{	BEMPX_DBIDToDBCompParamString( eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO), sTemp2 );
+									{
+                              QString sRefClsName;
+                              if (bWritePrevNames && eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getNumPreviousNames() > 1)    // SAC 08/05/21
+                                 sRefClsName = eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getPreviousName(0);
+                              else
+                                 sRefClsName = eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName();
+
+                              if (eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO) > 0)
+										{  BEMPX_DBIDToDBCompParamString( eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO), sTemp2, false, (bWritePrevNames ? 0 : -1) );
 											QString sSymStr;
 											if (eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO) == -99)
 											{	// special case where the object dependency is based on the Type of both the referencing and referenced objects being the same
@@ -4146,7 +4332,7 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 																					BEMPX_GetDatabaseID( pObjTypePropType->getShortName(), BEMPX_GetClassID( lDBID ) ) : 0);
 												BEMPropertyType* pLocObjTypePropType = (lLocTypeDBID > 0 ? BEMPX_GetPropertyTypeFromDBID( lLocTypeDBID, iError ) : NULL);
 												if (pLocObjTypePropType && !pLocObjTypePropType->getShortName().isEmpty())
-												//	sSymStr.sprintf( "%s:%s", eBEMProc.getClass(iC1)->getShortName().toLocal8Bit().constData(), pLocObjTypePropType->getShortName().toLocal8Bit().constData() );
+												//	sSymStr = QString::asprintf( "%s:%s", eBEMProc.getClass(iC1)->getShortName().toLocal8Bit().constData(), pLocObjTypePropType->getShortName().toLocal8Bit().constData() );
 													sSymStr = QString( "%1:%2" ).arg( eBEMProc.getClass(iC1)->getShortName(), pLocObjTypePropType->getShortName() );
 											}
 											else
@@ -4154,22 +4340,19 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 																							-1 /*iOccur*/, BEMO_User /*eObjType*/, -1 /*iBEMProcIdx*/, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// SAC 1/15/14 - added final argument to ensure char string reporting
 									      if ((iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP) && !sSymStr.isEmpty())
 											{	if (eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO) == -99)
-												//	sTemp.sprintf( "                               %s  (%s = %s)\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
-													sTemp = QString( "                               %1  (%2 = %3)\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName(),
-																		sTemp2, sSymStr );
+												//	sTemp = QString::asprintf( "                               %s  (%s = %s)\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
+													sTemp = QString( "                               %1  (%2 = %3)\n" ).arg( sRefClsName, sTemp2, sSymStr );
 												else
-												//	sTemp.sprintf( "                               %s  (%s = \"%s\")\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
-													sTemp = QString( "                               %1  (%2 = \"%3\")\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName(),
-																		sTemp2, sSymStr );
+												//	sTemp = QString::asprintf( "                               %s  (%s = \"%s\")\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
+													sTemp = QString( "                               %1  (%2 = \"%3\")\n" ).arg( sRefClsName,	sTemp2, sSymStr );
 											}
 											else
-											//	sTemp.sprintf( "                               %s  (%s = %ld)\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
-												sTemp = QString( "                               %1  (%2 = %3)\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName(),
-																	sTemp2, QString::number( eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO) ) );
+											//	sTemp = QString::asprintf( "                               %s  (%s = %ld)\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
+												sTemp = QString( "                               %1  (%2 = %3)\n" ).arg( sRefClsName, sTemp2, QString::number( eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO) ) );
 										}
 										else
-										//	sTemp.sprintf( "                               %s\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData() );
-											sTemp = QString( "                               %1\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName() );
+										//	sTemp = QString::asprintf( "                               %s\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData() );
+											sTemp = QString( "                               %1\n" ).arg( sRefClsName );
 										file.write( sTemp.toLatin1() );
 									}
 								}
@@ -4192,12 +4375,12 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 													BEMPropertyType* pDepPropType = BEMPX_GetPropertyTypeFromDBID( pSDS->getCompParam(i), iError );
 													if (pDepPropType && pDepPropType->getPropType() == BEMP_Sym)
 															sDepSymStr = BEMPX_GetSymbolString( (long) pSDS->getDepValue(i), pSDS->getCompParam(i) );
-													BEMPX_DBIDToDBCompParamString( pSDS->getCompParam(i), sTemp2 );
+													BEMPX_DBIDToDBCompParamString( pSDS->getCompParam(i), sTemp2, false, (bWritePrevNames ? 0 : -1) );
 											      if ((iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP) && !sDepSymStr.isEmpty())
-													//	sTemp.sprintf( "                               %s  %s = \"%s\"\n", (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), sDepSymStr.toLocal8Bit().constData() );
+													//	sTemp = QString::asprintf( "                               %s  %s = \"%s\"\n", (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), sDepSymStr.toLocal8Bit().constData() );
 														sTemp = QString( "                               %1  %2 = \"%3\"\n" ).arg( (bFirstThisRnd ? "When:" : " and:"), sTemp2, sDepSymStr );
 													else
-													//	sTemp.sprintf( "                               %s  %s = %g\n"  , (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), pSDS->getDepValue(i) );
+													//	sTemp = QString::asprintf( "                               %s  %s = %g\n"  , (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), pSDS->getDepValue(i) );
 														sTemp = QString( "                               %1  %2 = %3\n" ).arg( (bFirstThisRnd ? "When:" : " and:"), sTemp2, QString::number( pSDS->getDepValue(i) ) );
 													file.write( sTemp.toLatin1() );
 													bFirstThisRnd = false;
@@ -4206,12 +4389,12 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 										else if (iSDS > 0 && iNumSymListsWritten > 0)
 											file.write( "                               else:\n" );
 
-										sTemp.sprintf( "                                      default:  %ld\n", pSDS->getDefaultValue() );
+										sTemp = QString::asprintf( "                                      default:  %ld\n", pSDS->getDefaultValue() );
 										file.write( sTemp.toLatin1() );
 										for (i=0; i < pSDS->getNumSymbols(); i++)
 										{	BEMSymbol* pSym = pSDS->getSymbol(i);						assert( pSym );
 											if (pSym)
-											//{	sTemp.sprintf( "                                       %6ld:  \"%s\"\n", pSym->getValue(), pSym->getString().toLocal8Bit().constData() );
+											//{	sTemp = QString::asprintf( "                                       %6ld:  \"%s\"\n", pSym->getValue(), pSym->getString().toLocal8Bit().constData() );
 											{	sTemp = QString( "                                       %1:  \"%2\"\n" ).arg( QString::number( pSym->getValue() ), 6 ).arg( pSym->getString() );
 												file.write( sTemp.toLatin1() );
 											}
@@ -4307,7 +4490,7 @@ bool StatusRequiresWrite_XML( BEMProperty* pProp, int iFileMode /*bool bIsInputM
 
 	assert( (iFileMode != BEMFM_SIM || !bWriteAllProperties) );
    bool bRetVal = ( (pProp->getDataStatus() == BEMS_UserDefined) ||
-	                 (pProp->getDataStatus() != BEMS_Undefined && (bWriteAllProperties || BEMPX_IsHPXML( iFileType ) || BEMPX_IsCF1RXML( iFileType ) ||
+	                 (pProp->getDataStatus() != BEMS_Undefined && (bWriteAllProperties || BEMPX_IsHPXML( iFileType ) || BEMPX_IsCF1RXML( iFileType ) || BEMPX_IsNRCCXML( iFileType ) ||
 																						BEMPX_IsRESNETXML( iFileType ) || iFileMode != BEMFM_INPUT /*!bIsInputMode*/)) );		// SAC 12/2/15   // SAC 5/20/20
 	if (iFileMode == BEMFM_SIM)  // SAC 5/22/12 - added logic to further specify when properties are to be written to SIMULATION export files
 	{	switch (pProp->getType()->getWriteSimulationFlag())
@@ -4464,7 +4647,7 @@ void PropertyToString_XML( BEMObject* pObj, BEMProperty* pProp, QString& sData, 
 }
 
 void WriteBracketPropertyArray_XML( QXmlStreamWriter& stream, BEMObject* pObj, BEMProperty* pProp, int& iProp, int iFileMode /*bool bIsInputMode*/, int iFileType,
-												bool bWriteAllProperties, int iBEMProcIdx, bool bUseReportPrecisionSettings /*=false*/ )
+												bool bWriteAllProperties, int iBEMProcIdx, bool bUseReportPrecisionSettings /*=false*/, bool bWritePrevNames /*=false*/ )
 {  // Write array as list of the format "PROP[n] = VALUE" with comments as required
    //QString sPropType = pProp->getType()->getShortName();
    QString sData;
@@ -4497,7 +4680,7 @@ void WriteBracketPropertyArray_XML( QXmlStreamWriter& stream, BEMObject* pObj, B
          }
   	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
 	      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
-				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
+				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx, bWritePrevNames );
       }
       iCount++;
       // get next property if this is not the last one of this property type
@@ -4515,9 +4698,10 @@ void XMLPropertyNameReplacements( QString& sPropName )	// SAC 3/7/18
 
 // retval:  >= 0 => # of properties SKIPPED due to name beginning "afterchildren_"
 int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, int iBEMProcIdx,
-									bool bWritePropertiesDefinedByRuleset, bool bUseReportPrecisionSettings /*=false*/ )
+									bool bWritePropertiesDefinedByRuleset, bool bUseReportPrecisionSettings /*=false*/, bool bWritePrevNames /*=false*/ )
 {	int iNumAfterChildrenProps = 0;
-	QString sClassName = pObj->getClass()->getShortName();
+	//QString sClassName = pObj->getClass()->getShortName();
+	QString sClassName = (bWritePrevNames && pObj->getClass()->getNumPreviousNames() > 0 ? pObj->getClass()->getPreviousName(0) : pObj->getClass()->getShortName());    // SAC 08/06/21 (MFam)
 	if (BEMPX_IsHPXML( iFileType ))
 	{	assert( sClassName.left(3).compare("hpx") == 0 );
 		if (sClassName.left(3).compare("hpx") == 0)
@@ -4528,6 +4712,13 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 		if (sClassName.left(10).compare("cf1rtblRow") == 0)
 			sClassName = "Row";
 		else if (sClassName.left(4).compare("cf1r") == 0)
+			sClassName = sClassName.right( sClassName.length()-4 );
+	}
+	else if (BEMPX_IsNRCCXML( iFileType ))       // SAC 11/23/20
+	{	assert( sClassName.left(4).compare("nrcc") == 0 );
+		if (sClassName.left(10).compare("nrcctblRow") == 0)
+			sClassName = "Row";
+		else if (sClassName.left(4).compare("nrcc") == 0)
 			sClassName = sClassName.right( sClassName.length()-4 );
 	}
 	else if (BEMPX_IsRESNETXML( iFileType ))		// SAC 5/20/20
@@ -4585,7 +4776,11 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
       if ( pProp != NULL && IndexInArray( iAttribProps, iProp ) < 0 &&
       	  MustWriteProperty_XML( pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset ) )
       {
-			if (pProp->getType()->getShortName().indexOf("afterchildren_")==0 && !pObj->getClass()->getWriteAsSingleRecord())	// SAC 11/21/18 - code to postpone writing of 'afterchildren_*' properties until after children are written
+         if (pProp->getType()->getShortName().left(12).compare("noXMLoutput_", Qt::CaseInsensitive)==0 &&
+             (BEMPX_IsCF1RXML( iFileType ) || BEMPX_IsNRCCXML( iFileType )))
+         {  // SKIP writing this property (those whose names begin 'noXMLoutput_') - SAC 01/29/21
+         }
+			else if (pProp->getType()->getShortName().indexOf("afterchildren_")==0 && !pObj->getClass()->getWriteAsSingleRecord())	// SAC 11/21/18 - code to postpone writing of 'afterchildren_*' properties until after children are written
 			{	iNumAfterChildrenProps++;
 	         iProp += (pProp->getType()->getNumValues()-1);
 	      }
@@ -4601,14 +4796,15 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
             }
    	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
  		      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
-					ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
+					ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx, bWritePrevNames );
             else
 				{ //  assert( FALSE );
 				}
          }
          else  // pProp IS array
          {
-               WriteBracketPropertyArray_XML( stream, pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
+               WriteBracketPropertyArray_XML( stream, pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx,
+                                              bUseReportPrecisionSettings, bWritePrevNames );
          }
       }
 		// SAC 5/8/19 - new logic to cause properties to get written to XML output even if undefined
@@ -4637,7 +4833,7 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 }
 
 void WritePropertiesAfterChildren_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, int iBEMProcIdx,
-									bool bWritePropertiesDefinedByRuleset, bool bUseReportPrecisionSettings /*=false*/ )	// SAC 11/21/18 - routine to write 'afterchildren_*' properties (after children are written)
+									bool bWritePropertiesDefinedByRuleset, bool bUseReportPrecisionSettings /*=false*/, bool bWritePrevNames /*=false*/ )	// SAC 11/21/18 - routine to write 'afterchildren_*' properties (after children are written)
 {
    // Write Properties in the form: "   <PropType Name> = <Property Value>"
    for (int iProp=0; iProp<pObj->getPropertiesSize(); iProp++)
@@ -4659,14 +4855,15 @@ void WritePropertiesAfterChildren_XML( QXmlStreamWriter& stream, BEMObject* pObj
             }
    	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
  		      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
-					ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
+					ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx, bWritePrevNames );
             else
 				{ //  assert( FALSE );
 				}
          }
          else  // pProp IS array
          {		//assert( false );  // if we get here we will need to trim property name written by the following routine to exclude leading "afterchildren_"
-               WriteBracketPropertyArray_XML( stream, pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
+               WriteBracketPropertyArray_XML( stream, pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx,
+                                              bUseReportPrecisionSettings, bWritePrevNames );
          }
       }
       else if (pProp == NULL)
@@ -4689,10 +4886,12 @@ static inline int IndexOfIntInArray( int iVal, int iArraySize, int* piArray )
 }
 
 void WriteComponent_XML(	QXmlStreamWriter& stream, BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, int iBEMProcIdx,
-									int iNumClassIDsToIgnore /*=0*/, int* piClassIDsToIgnore /*=NULL*/, bool bWritePropertiesDefinedByRuleset /*=true*/, bool bUseReportPrecisionSettings /*=false*/ )
+									int iNumClassIDsToIgnore /*=0*/, int* piClassIDsToIgnore /*=NULL*/, bool bWritePropertiesDefinedByRuleset /*=true*/, bool bUseReportPrecisionSettings /*=false*/,
+                           bool bWritePrevNames /*=false*/ )
 {
    // first write this component's properties
-   int iNumAfterChildrenProps = WriteProperties_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+   int iNumAfterChildrenProps = WriteProperties_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx,
+                                                     bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings, bWritePrevNames );
 
    // then write each of this component's children (recursively)
    if (pObj->getChildCount() > 0)
@@ -4715,7 +4914,7 @@ void WriteComponent_XML(	QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 						(iNumClassIDsToIgnore < 1 || !piClassIDsToIgnore || IndexOfIntInArray( pChild->getClass()->get1BEMClassIdx(), iNumClassIDsToIgnore, piClassIDsToIgnore ) < 0) )		// SAC 1/6/15
       	   {
 					WriteComponent_XML( stream, pChild, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, iNumClassIDsToIgnore, piClassIDsToIgnore,
-												bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+												bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings, bWritePrevNames );
       	   }
       	   else
       	   {  // assert( FALSE );  - OK for some classes not flagged for simulation - and when tweaking order of child writing
@@ -4724,7 +4923,8 @@ void WriteComponent_XML(	QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
    }
 
 	if (iNumAfterChildrenProps > 0)  // SAC 1/24/12 - toggle back ON auto-formatting if the last component was written into a single record of the XML file
-		WritePropertiesAfterChildren_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+		WritePropertiesAfterChildren_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx,
+                                        bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings, bWritePrevNames );
 
 	if (!pObj->getClass()->getWriteAsSingleRecord())  // SAC 1/24/12 - toggle back ON auto-formatting if the last component was written into a single record of the XML file
 		stream.writeEndElement();
@@ -4791,6 +4991,10 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
 		stream.setAutoFormatting(true);
 		stream.setAutoFormattingIndent(2);
 
+      int iLastDotIdx = sFileName.lastIndexOf('.');
+      int iVint19Idx  = sFileName.lastIndexOf("19");
+      bool bWritePrevNames = (iLastDotIdx > 0 && iVint19Idx > iLastDotIdx);    // enable writing of previous class/property names when writing 2019 project files - SAC 08/06/21 (MFam)
+
 		if (!bAppend)
 		{	stream.writeStartDocument();
 			//stream.writeDTD("<?xml  version=\"1.0\"  encoding=\"utf-8\" ?>");
@@ -4800,8 +5004,8 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
 				stream.writeAttribute("xmlns", "http://hpxmlonline.com/2014/6");
 				stream.writeAttribute("schemaVersion", "2.1");
 			}
-			else if (BEMPX_IsCF1RXML( iFileType ))		// SAC 3/6/18
-			{	// no specific starting elements for CF1R XML files...
+			else if (BEMPX_IsCF1RXML( iFileType ) || BEMPX_IsNRCCXML( iFileType ))		// SAC 3/6/18
+			{	// no specific starting elements for CF1R or NRCC XML files...
 			}
 			else if (BEMPX_IsRESNETXML( iFileType ))		// SAC 5/20/20
 			{	// write RESNET copywrite message ??
@@ -4839,9 +5043,10 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
    	   int iError;
    	   BEMClass* pClass = BEMPX_GetClass( i1Class, iError, iBEMProcIdx );
    	   if ( (iError >= 0) && (pClass != NULL) &&
-   	   	  (!BEMPX_IsHPXML( iFileType ) || pClass->getShortName().indexOf("hpx")==0) &&		// SAC 12/2/15 - when in HPXML writing mode, only write objects whose class name begins w/ "hpx"
-   	   	  (!BEMPX_IsCF1RXML( iFileType ) || pClass->getShortName().indexOf("cf1r")==0) &&		// SAC 3/6/18 - when in CF1RXML writing mode, only write objects whose class name begins w/ "cf1r"
-   	   	  (!BEMPX_IsRESNETXML( iFileType ) || pClass->getShortName().indexOf("rnx")==0) &&		// SAC 5/20/20 - when in RESNETXML writing mode, only write objects whose class name begins w/ "rnx"
+   	   	  (!BEMPX_IsHPXML(     iFileType ) || pClass->getShortName().indexOf("hpx" )==0) &&		// SAC 12/2/15 - when in HPXML writing mode, only write objects whose class name begins w/ "hpx"
+   	   	  (!BEMPX_IsCF1RXML(   iFileType ) || pClass->getShortName().indexOf("cf1r")==0) &&	   // SAC 3/6/18 - when in CF1RXML writing mode, only write objects whose class name begins w/ "cf1r"
+   	   	  (!BEMPX_IsNRCCXML(   iFileType ) || pClass->getShortName().indexOf("nrcc")==0) &&	   // when in NRCCXML writing mode, only write objects whose class name begins w/ "nrcc" - SAC 11/23/20
+   	   	  (!BEMPX_IsRESNETXML( iFileType ) || pClass->getShortName().indexOf("rnx" )==0) &&	   // SAC 5/20/20 - when in RESNETXML writing mode, only write objects whose class name begins w/ "rnx"
    	          // don't write class objects tagged as AutoCreate to INPUT file
    	        ( (iFileMode != BEMFM_INPUT /*!bIsInputMode*/) || (!pClass->getAutoCreate()) ) )
    	   {
@@ -4864,7 +5069,8 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
    	      	      // course of its parent being written.
    	      	      if ( pObj->getParent() == NULL &&
 									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, true /*bWritePropertiesDefinedByRuleset*/ )) )  // SAC 2/28/13
-   	      	         WriteComponent_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, 0, NULL, true /*bWritePropertiesDefinedByRuleset*/, false /*bUseReportPrecisionSettings*/ );
+   	      	         WriteComponent_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, 0, NULL, true /*bWritePropertiesDefinedByRuleset*/,
+                                            false /*bUseReportPrecisionSettings*/, bWritePrevNames );
    	      	   }
    	      	   else
    	      	   {  assert( FALSE );
@@ -4890,7 +5096,7 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
 
 ////////////////////////////////////////////////////////////
 
-BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /*=-1*/, int iFileType /*=-1*/ )
+BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /*=-1*/, int iFileType /*=-1*/, bool bWritePrevNames /*=false*/ )
 {
 	bool bFileOK = false;
 	if (pszFileName && strlen( pszFileName ) > 0)
@@ -4900,6 +5106,7 @@ BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /
 	}
 	else
 		mp_file = NULL;
+   m_bWritePrevNames = bWritePrevNames;
 
 	if (mp_file && bFileOK)
 	{	mp_stream = new QXmlStreamWriter( mp_file );
@@ -4909,8 +5116,8 @@ BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /
 		mp_stream->writeStartDocument();
 		//mp_stream->writeDTD("<?xml  version=\"1.0\"  encoding=\"utf-8\" ?>");
 
-		if (BEMPX_IsCF1RXML( iFileType ) || BEMPX_IsRESNETXML( iFileType ))
-		{	// SAC 3/6/18 - when in CF1RXML writing mode, don't write SDD and ruleset stuff   // SAC 5/20/20 - same for RESNET
+		if (BEMPX_IsCF1RXML( iFileType ) || BEMPX_IsRESNETXML( iFileType ) || BEMPX_IsNRCCXML( iFileType ))
+		{	// SAC 3/6/18 - when in CF1RXML writing mode, don't write SDD and ruleset stuff   // SAC 5/20/20 - same for RESNET   // sane for NRCCXML - SAC 11/23/20
 		}
 		else
 		{	mp_stream->writeStartElement("SDDXML");
@@ -5006,7 +5213,7 @@ bool BEMXMLWriter::WriteModel(	bool bWriteAllProperties, BOOL /*bSupressAllMessa
 									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset )) )  // SAC 2/28/13
    	      	      {
    	      	         WriteComponent_XML( *mp_stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx,
-   	      	         							iNumClassIDsToIgnore, piClassIDsToIgnore, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+   	      	         							iNumClassIDsToIgnore, piClassIDsToIgnore, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings, m_bWritePrevNames );
    	      	      }
    	      	   }
    	      	   else
@@ -5062,7 +5269,7 @@ bool BEMXMLWriter::WriteCF1RPRF01E(	int iBEMClassID, bool bWriteAllProperties, B
 									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset )) )  // SAC 2/28/13
    	      	      {
    	      	         WriteComponent_XML( *mp_stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx,
-   	      	         							0 /*iNumClassIDsToIgnore*/, NULL /*piClassIDsToIgnore*/, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+   	      	         							0 /*iNumClassIDsToIgnore*/, NULL /*piClassIDsToIgnore*/, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings, m_bWritePrevNames );
    	      	      }
    	      	   }
    	      	   else

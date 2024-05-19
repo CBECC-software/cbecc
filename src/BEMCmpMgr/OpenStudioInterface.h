@@ -89,7 +89,8 @@ extern int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEP
                           							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
 															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,	// SAC 8/22/14		// SAC 10/2/14
-															bool bIncludeOutputDiagnostics=false, int iProgressType=0 );	// SAC 4/2/15		// SAC 5/27/15
+															bool bIncludeOutputDiagnostics=false, int iProgressType=0,     // SAC 4/2/15		// SAC 5/27/15
+                                             QVector<QString>* psaCopyAcrossModelClassPrefixes=NULL );      // SAC 11/24/20
 
 typedef struct
 {
@@ -115,7 +116,8 @@ extern int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const ch
                           							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
 															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,	// SAC 8/22/14		// SAC 10/2/14
-															bool bIncludeOutputDiagnostics=false, int iProgressType=0 );	// SAC 4/2/15		// SAC 5/27/15
+															bool bIncludeOutputDiagnostics=false, int iProgressType=0, 	   // SAC 4/2/15		// SAC 5/27/15
+                                             QVector<QString>* psaCopyAcrossModelClassPrefixes=NULL );      // SAC 11/24/20
 
 extern long CMX_TestHourlyResultsRetrieval( const char* pszOSMPathFile, const char* pszSQLPathFile );
 
@@ -165,6 +167,8 @@ class COSRunInfo
 		int			QuickAnalysisPeriodEndDay(     int iDaIdx )	{	return	(int) ((iDaIdx >= 0 && iDaIdx < MAX_NUM_QANALPERIODS) ? m_qaData.m_iQuickAnalysisPeriodEndDay[    iDaIdx] : -1);	}
 		int			QuickAnalysisPeriodEndDOWk(    int iDaIdx )	{	return	(int) ((iDaIdx >= 0 && iDaIdx < MAX_NUM_QANALPERIODS) ? m_qaData.m_iQuickAnalysisPeriodBeginDOWk[ iDaIdx] : -1);	}
 
+      void        SetStoreHourlyResults( bool bSHR )	{	m_bStoreHourlyResults = bSHR;  return;  }    // SAC 10/29/21 (MFam)
+
 		QuickAnalysisInfo  m_qaData;
 
 	private:
@@ -203,7 +207,8 @@ extern int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo*
                           							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
 															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
-															bool bIncludeOutputDiagnostics=false, int iProgressType=0, bool bUseEPlusRunMgr=false );	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics=false, int iProgressType=0, bool bUseEPlusRunMgr=false, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+                                             bool bInitRunInfoOnly=false );      // SAC 10/29/21 (MFam)
 
 extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
@@ -215,6 +220,7 @@ extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osR
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
 															bool bIncludeOutputDiagnostics=false, int iProgressType=0, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
 															QStringList* psaEPlusProcDirsToBeRemoved=NULL, bool bReportAllUMLHZones=false, 	// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
-															QString* sStdDsgnCSEResultsPathFile=NULL );		// SAC 10/8/20 (tic #3218)
+															QString* sStdDsgnCSEResultsPathFile=NULL, QVector<QString>* psaCopyAcrossModelClassPrefixes=NULL,		// SAC 10/8/20 (tic #3218)   // SAC 11/24/20
+                                             void* pCompRuleDebugInfo=NULL, bool bRptMissingEPFiles=true );    // SAC 04/14/21
 
 #endif  // _OPENSTUDIOINTERFACE_H

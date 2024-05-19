@@ -39,6 +39,10 @@ Proj:AlterIncl2Categs, "Alterations-only projects must include upgrades to at le
 (7) Water Heating Systems
 (8) Roofing Products
 (9) Others"
+Proj:PVWModuleType, "PV module type:
+(Standard) is a typical poly- or mono-crystalline silicon module with efficiencies of 14-17%,
+(Premium) is high efficiency (~18-20%) mono-crystalline silicon modules that have anti-reflective coatings and lower temperature coefficients, and
+(Thin Film) assumes a low efficiency (~11%) with a significantly lower temperature coefficient."
 
 Zone:FloorArea,        "Floor area of zone measured to outside stud face of exterior walls and centerline if walls between zones"    
 

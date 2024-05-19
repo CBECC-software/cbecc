@@ -112,13 +112,13 @@ public:
 	~EPlusRunMgr();
 	void DeleteRuns();
 	int SetupRun( int iRunIdx, QString sRunAbbrev, QString sIDFPathFile,
-						QString sEPlusWthr, bool bHourlySim, long lProgressModel, QString& sErrorMsg );
+						QString sEPlusWthr, bool bHourlySim, long lProgressModel, QString& sErrorMsg, const char* pszEPlusIDDFN=NULL );
 	//					int iRunType, bool bAllowReportIncludeFile=true,
 	//					const char* pszRunAbbrev=NULL );
 	//int SetupRun_Simple( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 	//					const char* pszRunAbbrev=NULL, const char* pszExtraEPlusCmdLineArgs=NULL,
 	//					const char* pszAppendToEPlusFile=NULL, int iModelType=0 );
-	int SetupRunFinish( int iRunIdx, QString& sErrorMsg, const char* sEPlusFileCopy=NULL );
+	int SetupRunFinish( int iRunIdx, QString& sErrorMsg, const char* pszEPlusIDDFN=NULL );
 	//int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 	//							const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psEPlusVer=NULL, int iBEMProcIdx=-1 );
 	const EPlusRun& GetRun(int iRun) { return *m_vEPlusRun[iRun]; }

@@ -129,7 +129,7 @@ static const char* pszaFuelPropName[] = {		"Elec",
 
 const char*  pszCSEMtrNames[]    = { "MtrElec", "MtrNatGas", "MtrOther" };		// SAC 10/8/20 (tic #3218)
 static double daCSEMtrTDVMults[] = { 1/3.412 /*kBtu->kWh*/,  0.01 /*kBtu->therm*/,  0.01 /*kBtu->therm*/ };		// (CSE kBTU * TDV Mult) conversion to kTDV - SAC 10/8/20 (tic #3218)
-const char*  pszCSEDHWEnduseList[] = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw", "DhwBU", "DhwMFL", /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook",*/ "User2", /*"User2", "PV", "BT",*/ NULL };	// added to facilitate retrieval of Res DHW separate from other enduses - SAC 10/8/20 (tic #3218)
+const char*  pszCSEDHWEnduseList[] = { /*"Tot", "Clg", "Htg", "HPBU",*/ "Dhw", "DhwBU", "DhwMFL", /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook",*/ "User2", /*"User2", "PV", "BT",*/ NULL };	// added to facilitate retrieval of Res DHW separate from other enduses - SAC 10/8/20 (tic #3218)
 
 static double dHrlyRes[8760];
 static double dHrlyResCompTot[8760];
@@ -331,6 +331,7 @@ void COSRunInfo::InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char*
 											BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodEndMonth",   iCID_Proj ), lEndMonth  , 0, -1, 0, BEMO_User, iBEMProcIdx ) && lEndMonth   == 12  && 
 											BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodEndDay",     iCID_Proj ), lEndDay    , 0, -1, 0, BEMO_User, iBEMProcIdx ) && lEndDay     == 31  && 
 											BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodYear",       iCID_Proj ), lYear      , 0, -1, 0, BEMO_User, iBEMProcIdx ) && lYear       > 0  );
+BEMPX_WriteLogFile( QString( "   COSRunInfo::InitializeRunInfo() - setting m_bStoreHourlyResults to %1" ).arg( (m_bStoreHourlyResults ? "true" : "false") ) );
 
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:AnnualWeatherFile" ), m_sWthrPathFile, FALSE, 0, -1, -1, BEMO_User, NULL, 0, iBEMProcIdx );
 	}
@@ -342,6 +343,7 @@ void COSRunInfo::InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char*
 			m_iaObjClassID[   i] = 0;
 		}
 		m_bStoreHourlyResults = false;
+BEMPX_WriteLogFile( QString( "   COSRunInfo::InitializeRunInfo() - setting m_bStoreHourlyResults to false (pOSWrap = NULL)" ), NULL, FALSE, TRUE, FALSE );
 		m_sWthrPathFile.clear();
 	}
 
@@ -563,13 +565,12 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 					if (bVerbose)
 					{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmCSVStartTime;	// SAC 5/22/19
 						double dCSVTime = ((double) td.total_microseconds()) / 1000000.0;
-						QString sCSVTimeMsg;
-						sCSVTimeMsg.sprintf( "     SimOutVarsToCSV Processing time:  %.3f sec", dCSVTime );
+						QString sCSVTimeMsg = QString::asprintf( "     SimOutVarsToCSV Processing time:  %.3f sec", dCSVTime );
 						BEMPX_WriteLogFile( sCSVTimeMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 			}	}
 
-	//		QString sEPlusOutPath;		sEPlusOutPath.sprintf( "%s%s\\EnergyPlus\\", sProcessingPath, osSimInfo[iSimRun].pszRunID );
+	//		QString sEPlusOutPath = QString::asprintf( "%s%s\\EnergyPlus\\", sProcessingPath, osSimInfo[iSimRun].pszRunID );
 	//		QString sSimOutVarsCSVPathFile = sProcessingPath;
 	//		sSimOutVarsCSVPathFile += osRunInfo[iSimRun].SDDFile();								assert( sSimOutVarsCSVPathFile.lastIndexOf('.') > 0 );
 	//		if (sSimOutVarsCSVPathFile.lastIndexOf('.') > 0)
@@ -577,14 +578,14 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 	//		sSimOutVarsCSVPathFile += " - OutputVars.csv";
 	//		QString sOverwriteMsg;
 	//		sLogMsg.clear();
-	//		sOverwriteMsg.sprintf( "The CSV file '%s' is opened in another application.  This file must be closed in that "
+	//		sOverwriteMsg = QString::asprintf( "The CSV file '%s' is opened in another application.  This file must be closed in that "
 	//										"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 	//										"(once the file is closed), or \n'Cancel' to abort the analysis.", sSimOutVarsCSVPathFile );
 	//		if (!OKToWriteOrDeleteFile( sSimOutVarsCSVPathFile, sOverwriteMsg, bSilent ))
 	//		{	if (bSilent)
-	//				sLogMsg.sprintf( "Warning:  Unable to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
+	//				sLogMsg = QString::asprintf( "Warning:  Unable to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
 	//			else
-	//				sLogMsg.sprintf( "Warning:  User chose not to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
+	//				sLogMsg = QString::asprintf( "Warning:  User chose not to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
 	//		}
 	//		else
 	//		{
@@ -609,14 +610,14 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 	//					if (!FileExists( sOutCSV ))
 	//						sLogMsg = "Warning:  SimOutVarsToCSV ouput file not found";
 	//					else if (!CopyFile( sOutCSV, sSimOutVarsCSVPathFile, FALSE ))
-	//						sLogMsg.sprintf( "Warning:  Unable to copy SimOutVarsToCSV file from '%s' to '%s'", sOutCSV, sSimOutVarsCSVPathFile );
+	//						sLogMsg = QString::asprintf( "Warning:  Unable to copy SimOutVarsToCSV file from '%s' to '%s'", sOutCSV, sSimOutVarsCSVPathFile );
 	//					else
 	//					{	int iGotHere = 1;
 	//						iGotHere;
 	//					}
 	//				}
 	//				catch(exec_stream_t::error_t &e)
-	//				{	sLogMsg.sprintf( "Warning:  Execution of ReadVarsESO reported error: %s", e.what() );
+	//				{	sLogMsg = QString::asprintf( "Warning:  Execution of ReadVarsESO reported error: %s", e.what() );
 	//				}
 	//		}	}
 	//		if (!sLogMsg.isEmpty())
@@ -636,7 +637,7 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir,
 													BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath,
 													QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/, bool bReportAllUMLHZones, 		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
-													QString* sStdDsgnCSEResultsPathFile /*=NULL*/ )		// SAC 10/8/20 (tic #3218)
+													QString* sStdDsgnCSEResultsPathFile /*=NULL*/, bool bRptMissingEPFiles )		// SAC 10/8/20 (tic #3218)
 {
 	BOOL bRetVal = TRUE;
 	QString sLogMsg, sTemp;
@@ -647,6 +648,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 			 BEMPX_GetFloat(   BEMPX_GetDatabaseID( "Bldg:ResFlrArea"    ), fBldgResFlrArea   , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  (fBldgNonResFlrArea > 0 || fBldgResFlrArea > 0) &&
 			 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"      ), lCliZnNum         , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  lCliZnNum > 0 )
 			fTotBldgFlrArea = fBldgNonResFlrArea + fBldgResFlrArea;
+BEMPX_WriteLogFile( QString( "   ProcessNonresSimulationResults() - CZ %1, NonResArea %2, ResArea %3, TotArea %4, iRetVal %5" ).arg( QString::number( lCliZnNum ), QString::number( fBldgNonResFlrArea ), QString::number( fBldgResFlrArea ), QString::number( fTotBldgFlrArea ), QString::number( iRetVal ) ) );
 
 		int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
 		long lDBID_EUseSummary_ZoneUMLHsLoaded  = BEMPX_GetDatabaseID( "ZoneUMLHsLoaded", iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHsLoaded > 0 );
@@ -696,6 +698,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 		long lNumResultsSets;		// SAC 11/3/19 - enable multiple results sets (2022)
 		BEMPX_GetInteger(BEMPX_GetDatabaseID( "Proj:NumResultsSets"), lNumResultsSets, 1, -1, -1, BEMO_User, osRunInfo.BEMProcIdx());			assert( (lNumResultsSets > 0 && lNumResultsSets < 11) );
 
+         //BEMPX_WriteLogFile( QString( "      ProcessNonresSimulationResults() - marker 1: StoreHourlyResults %1, iRetVal %2" ).arg( QString::number( (osRunInfo.StoreHourlyResults() ? 1 : 0) ), QString::number( iRetVal ) ) );
 		if (osRunInfo.StoreHourlyResults() && iRetVal == 0)
 		{
 			for (int iResSet=0; iResSet < lNumResultsSets; iResSet++)		// SAC 11/3/19
@@ -793,7 +796,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 			for (iFl=0; iFl < OSF_NumFuels; iFl++)
 			{
 // SAC 7/23/18 - moved E+ hourly results retrieval OUT of here and into RetrieveSimulationResults() (above)
-////BEMPX_WriteLogFile( QString( "   Process hourly results for Fuel %1 (%2)" ).arg( QString::number( iFl ), (iFl==0 ? "Elec" : (iFl==1 ? "Gas" : "Other" )) ) );
+BEMPX_WriteLogFile( QString( "   ProcessNonresSimulationResults() - processing hourly results for Fuel %1 (%2)" ).arg( QString::number( iFl ), (iFl==0 ? "Elec" : (iFl==1 ? "Gas" : "Other" )) ) );
 //				InitHrlyRes( dHrlyResCompTot );
 //				InitHrlyRes( dHrlyResTot );
 				esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daEnduseTotal[iFl] = esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daEnduseTotal[iFl] = 0.0;  // SAC 7/23/18 - to be re-calced in following loop
@@ -932,7 +935,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 									esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daCO2Total[iFl] += RoundVal( esEUMap_CECNonRes[iEUIdx].daCO2Total[iFl], iCO2EmisTotalRnd );
 							}
 						}
-//BEMPX_WriteLogFile( QString( "         dTDVSum %1 - fTotBldgFlrArea %2 - esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] %3" ).arg( QString::number( dTDVSum ), QString::number( fTotBldgFlrArea ), QString::number( esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] ) ) );
+//BEMPX_WriteLogFile( QString( "         ProcessNonresSimulationResults() - dTDVSum %1 - fTotBldgFlrArea %2 - esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] %3" ).arg( QString::number( dTDVSum ), QString::number( fTotBldgFlrArea ), QString::number( esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] ) ) );
 
 					// calc and store A2030 TDS results - SAC 8/26/18
 						if (bSetTDSResults)
@@ -1010,6 +1013,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 					{	BEMObject* pEUObj = BEMPX_GetObjectByName( iCID_EnergyUse, iError, esEUMap_CECNonRes[iEUIdx].sEnduseName, BEMO_User, osRunInfo.BEMProcIdx() );
 						if (pEUObj == NULL)
 						{	assert( !osRunInfo.IsStdRun() && iFl==0 );	// should need to create EU object if first run & first fuel
+BEMPX_WriteLogFile( QString( "   ProcessNonresSimulationResults() - creating EnergyUse object '%1'" ).arg( esEUMap_CECNonRes[iEUIdx].sEnduseName ), NULL, FALSE, TRUE, FALSE );
 							pEUObj = BEMPX_CreateObject( iCID_EnergyUse, esEUMap_CECNonRes[iEUIdx].sEnduseName, NULL /*pPar*/, BEMO_User, true /*bDfltPar*/, true /*bAutoCr8*/, osRunInfo.BEMProcIdx() );
 							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "EnduseName", iCID_EnergyUse ), BEMP_Str, (void*) esEUMap_CECNonRes[iEUIdx].sEnduseName, BEMO_User,
                                                      -1 /*iOccur*/, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );  // -or- BEMS_SimResult
@@ -1586,8 +1590,11 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				if (BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo.BEMProcIdx() ) <= iResSet)
 				{
 // debugging PV-solar
-//	BEMPX_WriteLogFile( QString( "   in ProcessNonresSimulationResults(), creating EUseSummary object %1 '%2'" ).arg( QString::number( iResSet ), sResultSetName ), NULL, FALSE, TRUE, FALSE );
-					BEMPX_CreateObject( iCID_EUseSummary, sResultSetName.toLocal8Bit().constData() /*szName*/, NULL /*pPar*/, BEMO_User, true /*bDfltPar*/, true /*bAutoCr8*/, osRunInfo.BEMProcIdx() );
+BEMPX_WriteLogFile( QString( "   ProcessNonresSimulationResults() - creating EUseSummary object %1 '%2'" ).arg( QString::number( iResSet ), sResultSetName ), NULL, FALSE, TRUE, FALSE );
+					BEMObject* pEUseSmryObj = BEMPX_CreateObject( iCID_EUseSummary, sResultSetName.toLocal8Bit().constData() /*szName*/, NULL /*pPar*/, BEMO_User, true /*bDfltPar*/, true /*bAutoCr8*/, osRunInfo.BEMProcIdx() );
+               long lDBID_Proj_EUseSummaryRef = BEMPX_GetDatabaseID( "Proj:EUseSummaryRef" );      // needed for NRCCPRF XML population - SAC 11/27/20
+               if (pEUseSmryObj && lDBID_Proj_EUseSummaryRef > 0)
+   					BEMPX_SetBEMData( lDBID_Proj_EUseSummaryRef, BEMP_Obj, pEUseSmryObj, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 				}
 				if (BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo.BEMProcIdx() ) > iResSet)
 				{
@@ -1681,9 +1688,8 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 													{	sLogMsg = "  PerfSim_E+ - " + sLogMsg;
 														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 													}
-					//	QString sSimInfo;
 					//	std::string	sSimErrPathFile = osWrap.Get_SimErrPathFile();
-					//	sSimInfo.sprintf( "ERR file: %s\n# Warnings:  %d\n# Severe Errors:  %d\n# Fatal Errors:  %d\nSim Completed:  %s\nSim Successful:  %s",
+					//	QString sSimInfo = QString::asprintf( "ERR file: %s\n# Warnings:  %d\n# Severe Errors:  %d\n# Fatal Errors:  %d\nSim Completed:  %s\nSim Successful:  %s",
 					//							sSimErrPathFile.c_str(), osWrap.GetNum_Warnings(), osWrap.GetNum_SevereErrors(), osWrap.GetNum_FatalErrors(),
 					//							(osWrap.GetBool_SimCompleted() ? "TRUE" : "FALSE"), (osWrap.GetBool_SimCompletedSuccessfully() ? "TRUE" : "FALSE") );
 					//	BEMMessageBox( sSimInfo, NULL, 2 /*warning*/ );
@@ -2325,19 +2331,19 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				{
 					QString sClgHoursStr = "hours", sHtgHoursStr = "hours";	
 					if (lConstantClgUMLHLimit > 0)
-						sClgHoursStr.sprintf( "hours of %d", lConstantClgUMLHLimit );
+						sClgHoursStr = QString::asprintf( "hours of %d", lConstantClgUMLHLimit );
 					if (lConstantHtgUMLHLimit > 0)
-						sHtgHoursStr.sprintf( "hours of %d", lConstantHtgUMLHLimit );
+						sHtgHoursStr = QString::asprintf( "hours of %d", lConstantHtgUMLHLimit );
 
 					QString cstrUMLHWarningMsg;
 					if (iNumZonesExceedClgUMLHs > 0 && iNumZonesExceedHtgUMLHs > 0)
-						cstrUMLHWarningMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s.",
+						cstrUMLHWarningMsg = QString::asprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s.",
     																iNumZonesExceedClgUMLHs, osRunInfo.LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs, sHtgHoursStr.toLocal8Bit().constData() );
 					else if (iNumZonesExceedClgUMLHs > 0)
-						cstrUMLHWarningMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s.",
+						cstrUMLHWarningMsg = QString::asprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s.",
     																iNumZonesExceedClgUMLHs, osRunInfo.LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData() );
 					else  // if (iNumZonesExceedHtgUMLHs > 0)
-						cstrUMLHWarningMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s.",
+						cstrUMLHWarningMsg = QString::asprintf( "Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s.",
     																iNumZonesExceedHtgUMLHs, osRunInfo.LongRunID().toLocal8Bit().constData(), sHtgHoursStr.toLocal8Bit().constData() );
 					cstrUMLHWarningMsg += "\r\n\r\nAll thermal zones exceeding unmet load hour limits will be reported on PRF-1, which will be watermarked 'not for compliance'.";
 
@@ -2538,12 +2544,12 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				{	sCopyTo = boost::str( boost::format( "%s%s%s" ) % sRootProcDir.c_str() % sSDDFileRoot.c_str() % fcInfo[iFC].sCopyTo.c_str() );
 					sFailMsg = "";
 					if (!bFileExists)
-					{	if (fcInfo[iFC].bReportFailure)
+					{	if (fcInfo[iFC].bReportFailure && bRptMissingEPFiles)
 							sFailMsg = boost::str( boost::format( "    during simulation file clean-up, file not found:  %s" ) % sCopyFr.c_str() );
 					}
 					else	// file exists
 					{	if (!CopyFile( sCopyFr.c_str(), sCopyTo.c_str(), FALSE ))
-						{	if (fcInfo[iFC].bReportFailure)
+						{	if (fcInfo[iFC].bReportFailure && bRptMissingEPFiles)
 								sFailMsg = boost::str( boost::format( "    during simulation file clean-up, unable to copy file:  '%s' -to- '%s'" ) % sCopyFr.c_str() % sCopyTo.c_str() );
 					}	}
 					if (sFailMsg.size() > 0)
@@ -2591,7 +2597,8 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
                           							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
 															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
-															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+                                             QVector<QString>* psaCopyAcrossModelClassPrefixes /*=NULL*/ )      // SAC 11/24/20
 {
 	int iRetVal = 0;
 	QString sLogMsg, sTemp;
@@ -2632,7 +2639,7 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
    char pszSQLOutPathFile2[MAX_PATH+1];
 	int iMaxLenSQLOutPathFile = MAX_PATH+1;
 	int iMaxLenSQLOutPathFile2 = MAX_PATH+1;
-								if (bVerbose)
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 									BEMPX_WriteLogFile( "  PerfSim_E+ - About to simulate SDD", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	char pszSimSDDErrorMsg[1024];		pszSimSDDErrorMsg[0] = '\0';
 // --------------------
@@ -2662,7 +2669,7 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 																							// OSWRAP_MSGCALLBACK OSWrapCallback( int level, const char* msg, int action )
 														pszSimSDDErrorMsg, 1024, bIncludeOutputDiagnostics, iCodeType );
 
-								if (bVerbose)
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 								{	sLogMsg = QString( "  PerfSim_E+ - Back from SDD simulation (returned %1)" ).arg( QString::number(lSimRetVal) );
 									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								}
@@ -2734,7 +2741,7 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 		if (osRunInfo.StoreHourlyResults() && osRunInfo2.StoreHourlyResults() && iRetVal == 0)
 		{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
 			QString sResCopyErrMsg;
-			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, osRunInfo2.RunID().toLocal8Bit().constData(), osRunInfo.BEMProcIdx(), osRunInfo2.BEMProcIdx() );
+			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, osRunInfo2.RunID().toLocal8Bit().constData(), osRunInfo.BEMProcIdx(), osRunInfo2.BEMProcIdx(), psaCopyAcrossModelClassPrefixes );
 			assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
 			if (iResCopyRetVal > 0)
 			{	if (sErrMsg.isEmpty())
@@ -2762,7 +2769,8 @@ int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* psz
                           							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
 															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
-															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+                                             QVector<QString>* psaCopyAcrossModelClassPrefixes /*=NULL*/ )     // SAC 11/24/20
 {
 	OSWrapLib osWrap;
 	COSRunInfo osRunInfo[MultEPlusSim_MaxSims];
@@ -2774,7 +2782,7 @@ int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* psz
 		iSimRetVal = ProcessSimulationResults_Multiple(	osWrap, &osRunInfo[0], sErrMsg, pszEPlusPath, NULL /*pszWthrPath*/, pszSimProcessDir,
 															pSimInfo, iNumSimInfo, bVerbose, FALSE /*bDurationStats*/, pdTranslationTime, pdSimulationTime,
 															iSimulationStorage, dEPlusVer, pszEPlusVerStr, iEPlusVerStrLen, pszOpenStudioVerStr,
-															iOpenStudioVerStrLen, iCodeType, bIncludeOutputDiagnostics, iProgressType );
+															iOpenStudioVerStrLen, iCodeType, bIncludeOutputDiagnostics, iProgressType, NULL, false, NULL, psaCopyAcrossModelClassPrefixes );
 	return iSimRetVal;
 }
 
@@ -2786,7 +2794,8 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
                           							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
 															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
-															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, bool bUseEPlusRunMgr /*=false*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, bool bUseEPlusRunMgr /*=false*/, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+                                             bool bInitRunInfoOnly /*=false*/ )     // SAC 10/29/21 (MFam)
 {
 
 //typedef struct
@@ -2880,6 +2889,11 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 			oswSimInfo[iRun].bSimulateModel			= pSimInfo[iRun]->bSimulateModel;
 			oswSimInfo[iRun].bStoreHourlyResults	= osRunInfo[iRun].StoreHourlyResults();
 			oswSimInfo[iRun].bWriteHourlyDebugCSV	= true;
+
+         long lProj_Meter=0;        // SAC 10/04/21
+         BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:Meter" ), lProj_Meter, 0, -1, 0, BEMO_User, pSimInfo[iRun]->iBEMProcIdx );
+			oswSimInfo[iRun].bWriteCustomMetersHourlyCSV = (lProj_Meter > 0);
+
 			oswSimInfo[iRun].lRptFuelUseAs			= osRunInfo[iRun].RptFuelUseAs();		// SAC 10/28/15
 			oswSimInfo[iRun].lRunPeriodYear			= osRunInfo[iRun].RunPeriodYear();		// SAC 3/1/19
 			oswSimInfo[iRun].pQuickAnalysisInfo		= &osRunInfo[iRun].m_qaData;
@@ -2887,21 +2901,23 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 			oswSimInfo[iRun].iSimReturnValue			= 0;
 	}	}
 
-								if (bVerbose)
-									BEMPX_WriteLogFile( "  PerfSim_E+ - About to simulate SDD", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	char pszSimSDDErrorMsg[1024];		pszSimSDDErrorMsg[0] = '\0';
+   long lSimRetVal = 0;
+   if (!bInitRunInfoOnly)     // SAC 10/29/21 (MFam)
+	{
+   							if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+									BEMPX_WriteLogFile( "  PerfSim_E+ - About to simulate SDD", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 // --------------------
 // SIMULATE SDD MODELS
 // --------------------
-	long lSimRetVal = osWrap.SimulateSDD_Multiple( pszEPlusPath, pszSimProcessDir, poswSimInfo, iNumSimInfo,
+	   lSimRetVal = osWrap.SimulateSDD_Multiple( pszEPlusPath, pszSimProcessDir, poswSimInfo, iNumSimInfo,
 														(OSWRAP_MSGCALLBACK*) OSWrapCallback, iProgressType, pdTranslationTime, pdSimulationTime,  // SAC 1/23/14		// SAC 5/27/15
 																							// OSWRAP_MSGCALLBACK OSWrapCallback( int level, const char* msg, int action )
 														pszSimSDDErrorMsg, 1024, bIncludeOutputDiagnostics, iCodeType, !bUseEPlusRunMgr );
-								if (bVerbose)
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 								{	sLogMsg = QString( "  PerfSim_E+ - Back from SDD simulation (returned %1)" ).arg( QString::number(lSimRetVal) );
 									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								}
-
 
 //		// Info related to models needing to be simulated
 //		sLogMsg = QString( "  SimulateSDD_Multiple() - pszEPlusPath:  %1"     ).arg( pszEPlusPath );				BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
@@ -2927,7 +2943,7 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 		boost::posix_time::ptime	tmStartTime = boost::posix_time::microsec_clock::local_time();  // SAC 1/23/14
 
 		EPlusRunMgr epRunMgr( pszEPlusPath, pszSimProcessDir, iCodeType, iProgressType, bVerbose /*bVerbose*/, true /*bSilent*/ );
-		int iRunIdx = 0;		QString sSetupRunErrMsg;
+		int iRunIdx = 0, iNumRuns=0;		QString sSetupRunErrMsg, sFirstRunSubdir;
 		for (int iSI=0; (lSimRetVal == 0 && iSI < iNumSimInfo); iSI++)
 		{	if (oswSimInfo[iSI].pszRunSubdir && oswSimInfo[iSI].pszWeatherPathFile && oswSimInfo[iSI].bSimulateModel)
 			{	QString qsIDFPathFile;
@@ -2956,6 +2972,57 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 					qsIDFPathFile = qsIDFPathFile.left( qsIDFPathFile.length()-3 );
 					qsIDFPathFile += "idf";
 				}
+
+			// Evaluate rules that serve to modify IDF file being simulated - SAC 04/23/21
+				if (lSimRetVal == 0 && FileExists( qsIDFPathFile ))
+				{	QString qsModIDFRulelistName;
+					if (iCodeType == CT_T24N)
+					{	switch (oswSimInfo[iSI].iProgressModel)
+						{	case BCM_NRP_Model_zb	:	qsModIDFRulelistName = "zb";  break;
+							case BCM_NRP_Model_ab	:	qsModIDFRulelistName = "ab";  break;
+							case BCM_NRP_Model_zp	:	qsModIDFRulelistName = "zp";  break;
+							case BCM_NRP_Model_ap	:	qsModIDFRulelistName = "ap";  break;
+					}	}
+					else
+					{	switch (oswSimInfo[iSI].iProgressModel)
+						{	case BCM_NRAP_Model_zp	:	qsModIDFRulelistName = "zp";  break;
+							case BCM_NRAP_Model_ap	:	qsModIDFRulelistName = "ap";  break;
+							case BCM_NRAP_Model_zb1	:	qsModIDFRulelistName = "zb1";  break;
+							case BCM_NRAP_Model_zb2	:	qsModIDFRulelistName = "zb2";  break;
+							case BCM_NRAP_Model_zb3	:	qsModIDFRulelistName = "zb3";  break;
+							case BCM_NRAP_Model_zb4	:	qsModIDFRulelistName = "zb4";  break;
+							case BCM_NRAP_Model_ab1	:	qsModIDFRulelistName = "ab1";  break;
+							case BCM_NRAP_Model_ab2	:	qsModIDFRulelistName = "ab2";  break;
+							case BCM_NRAP_Model_ab3	:	qsModIDFRulelistName = "ab3";  break;
+							case BCM_NRAP_Model_ab4	:	qsModIDFRulelistName = "ab4";  break;
+					}	}
+               qsModIDFRulelistName += "_EnergyPlus_PreSim";
+               if (BEMPX_RulelistExists( qsModIDFRulelistName.toLocal8Bit().constData() ))
+               {  QString qsOpenSimInputExportFileErr;
+                  int iSimInputExpFileIdx = BEMPX_OpenSimInputExportFile( qsIDFPathFile.toLocal8Bit().constData(), qsOpenSimInputExportFileErr ); 
+                  if (iSimInputExpFileIdx < 0)
+                  {	lSimRetVal = 82;		// Error evaluating PreSim (sim input editing) rules
+   						if (!qsOpenSimInputExportFileErr.isEmpty())
+	   						BEMPX_WriteLogFile( qsOpenSimInputExportFileErr, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  }
+                  else
+                  {	int iSaveActiveBEMProcIdx = BEMPX_GetActiveModel();      // SAC 04/27/21
+				         BEMPX_SetActiveModel( osRunInfo[iSI].BEMProcIdx() );
+
+                     if (!BEMPX_EvaluateRuleList( qsModIDFRulelistName.toLocal8Bit().constData(), FALSE /*bTagDataAsUserDefined*/, 
+																		0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/, bVerbose ))
+									//bool BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined=FALSE, int iEvalOnlyClass=0,	int iEvalOnlyObjIdx=-1,
+									//				int iEvalOnlyObjType=0, BOOL bVerboseOutput=FALSE, void* pvTargetedDebugInfo=NULL, long* plNumRuleEvals=NULL,
+									//				double* pdNumSeconds=NULL, PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL, QStringList* psaWarningMsgs=NULL );		
+							{	lSimRetVal = 82;		// Error evaluating PreSim (sim input editing) rules
+                        sErrMsg = QString( "Error evaluating PreSim rulelist '%1'" ).arg( qsModIDFRulelistName );
+							}
+                     BEMPX_CloseSimInputExportFile( iSimInputExpFileIdx );
+
+				         if (BEMPX_GetActiveModel() != iSaveActiveBEMProcIdx)  // SAC 04/27/21
+					         BEMPX_SetActiveModel( iSaveActiveBEMProcIdx );
+                  }
+            }  }
 
 			// Execute AnalysisActions that pertain to ActOnSimInput - SAC 3/10/20
 				if (lSimRetVal == 0 && FileExists( qsIDFPathFile ))
@@ -2999,13 +3066,24 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 				}	}
 
 				if (lSimRetVal == 0)
-				{	int iRunOK = epRunMgr.SetupRun( iRunIdx++, oswSimInfo[iSI].pszRunSubdir, qsIDFPathFile,
+				{  char pszEPlusIDDFN[32] = "\0";
+               if (oswSimInfo[iSI].bWriteCustomMetersHourlyCSV)      // SAC 10/04/21
+               {  strcpy_s( pszEPlusIDDFN, 32, "Energy+500CstmMtrs.idd" );
+                  BEMPX_WriteLogFile( QString("   simulating E+ using %1 to facilitate custom meter output").arg( pszEPlusIDDFN ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               }
+               int iRunOK = epRunMgr.SetupRun( iRunIdx++, oswSimInfo[iSI].pszRunSubdir, qsIDFPathFile,
 																oswSimInfo[iSI].pszWeatherPathFile, oswSimInfo[iSI].bStoreHourlyResults,
-																oswSimInfo[iSI].iProgressModel, sSetupRunErrMsg );
+																oswSimInfo[iSI].iProgressModel, sSetupRunErrMsg, pszEPlusIDDFN );
 					if (iRunOK != 0)
 					{
 						lSimRetVal = iRunOK;		// additional error reporting here??
-		}	}	}	}
+               }
+               else
+               {  iNumRuns++;
+                  if (iNumRuns == 1)
+                     sFirstRunSubdir = oswSimInfo[iSI].pszRunSubdir;
+               }
+		}	}	}
 
 		if (lSimRetVal == 0 && iRunIdx > 0)
 		{
@@ -3015,6 +3093,9 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 			epRunMgr.DoRuns();
 //BEMMessageBox( "Back from E+ via EPlusRunMgr" );
 												//		sbFreezeProgress = bSaveFreezeProg;
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+			BEMPX_WriteLogFile( QString( "   back from E+ via EPlusRunMgr:  %1 run(s), beginning w/ %2" ).arg( QString::number( iNumRuns ), sFirstRunSubdir ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+#endif  //VS19
 
 			if (pdSimulationTime)
 			{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmStartTime;
@@ -3042,8 +3123,16 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 
 	//else if (lSimRetVal == 0)
 	if (lSimRetVal == 0)
-				lSimRetVal = osWrap.ProcessResults_Multiple(	pszEPlusPath, pszSimProcessDir, poswSimInfo, iNumSimInfo,
+	{
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+			BEMPX_WriteLogFile( QString( "   calling osWrap.ProcessResults_Multiple() on %1 run(s)" ).arg( QString::number( iNumSimInfo ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+#endif  //VS19
+      			lSimRetVal = osWrap.ProcessResults_Multiple(	pszEPlusPath, pszSimProcessDir, poswSimInfo, iNumSimInfo,
 												(OSWRAP_MSGCALLBACK*) OSWrapCallback, iProgressType, pszSimSDDErrorMsg, 1024, iCodeType, dEPlusVerNum );
+#ifdef _DEBUG  //VS19 - SAC 10/14/20
+			BEMPX_WriteLogFile( QString( "   back from osWrap.ProcessResults_Multiple(), retval:  %1" ).arg( QString::number( lSimRetVal ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+#endif  //VS19
+   }
 
 	if (dEPlusVer)
 		*dEPlusVer = osWrap.EnergyPlusVersion( pszEPlusPath );  // SAC 5/16/14
@@ -3154,6 +3243,8 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 //	BEMPX_WriteLogFile( "  pausing 5 secs to allow E+cleanup", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 //	Sleep(5000);				// SAC 5/22/19 - additional pause to ensure directory clean-up successful
 
+   }  // end of: if (!bInitRunInfoOnly)     // SAC 10/29/21 (MFam)
+
 								if (bVerbose && iRetVal != OSI_SimEPlus_UserAbortedAnalysis)
 									BEMPX_WriteLogFile( "  PerfSim_E+ - returning", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	
@@ -3172,7 +3263,8 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
 															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
 															QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/, bool bReportAllUMLHZones /*=false*/, 		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
-															QString* sStdDsgnCSEResultsPathFile /*=NULL*/ )		// SAC 10/8/20 (tic #3218)
+															QString* sStdDsgnCSEResultsPathFile /*=NULL*/, QVector<QString>* psaCopyAcrossModelClassPrefixes /*=NULL*/, 		// SAC 10/8/20 (tic #3218)   // SAC 11/24/20
+                                             void* pCompRuleDebugInfo /*=NULL*/, bool bRptMissingEPFiles /*=true*/ )      // SAC 04/14/21
 {
 	int iRetVal = 0;
 	QString sTempErr;
@@ -3186,7 +3278,8 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 		if (iRun > 0 && bCopyHourlyResultsToNextModel && iRetVal == 0)
 		{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
 			QString sResCopyErrMsg;
-			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, osRunInfo[iRun].RunID().toLocal8Bit().constData(), osRunInfo[iRun-1].BEMProcIdx(), osRunInfo[iRun].BEMProcIdx() );
+BEMPX_WriteLogFile( QString( "   in ProcessSimulationResults_Multiple(), CM_CopyAnalysisResultsObjects_CECNonRes() BEMProcIdx %1 to %2" ).arg( QString::number(osRunInfo[iRun-1].BEMProcIdx()), QString::number(osRunInfo[iRun].BEMProcIdx()) ), NULL, FALSE, TRUE, FALSE );
+			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, osRunInfo[iRun].RunID().toLocal8Bit().constData(), osRunInfo[iRun-1].BEMProcIdx(), osRunInfo[iRun].BEMProcIdx(), psaCopyAcrossModelClassPrefixes );
 			assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
 			if (iResCopyRetVal > 0)
 			{	if (sErrMsg.isEmpty())
@@ -3199,9 +3292,38 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 		if (iResCopyRetVal == 0)
 		{
 // debugging PV-solar
-//	BEMPX_WriteLogFile( QString( "   in ProcessSimulationResults_Multiple(), about to call ProcessNonresSimulationResults() on run %1" ).arg( osRunInfo[iRun].RunID() ), NULL, FALSE, TRUE, FALSE );
+BEMPX_WriteLogFile( QString( "   in ProcessSimulationResults_Multiple(), about to call ProcessNonresSimulationResults() on run %1" ).arg( osRunInfo[iRun].RunID() ), NULL, FALSE, TRUE, FALSE );
 			ProcessNonresSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath, 	// SAC 4/17/14 - moved ALL results processing to subordinate routine
-														psaEPlusProcDirsToBeRemoved, bReportAllUMLHZones, sStdDsgnCSEResultsPathFile );		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
+														psaEPlusProcDirsToBeRemoved, bReportAllUMLHZones, sStdDsgnCSEResultsPathFile, bRptMissingEPFiles );		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
+
+      // call *_PostSim rulelist, if exists, to enable reporting of either hourly or non-hourly sim results - SAC 04/14/21
+         QString sPostSimRulelistName = QString( "%1_PostSim" ).arg( osRunInfo[iRun].RunID() );
+			if (!BEMPX_RulelistExists( sPostSimRulelistName.toLocal8Bit().constData() ))
+         {
+            if (bVerbose)
+               BEMPX_WriteLogFile( QString::asprintf( "   rulelist not found (and therefore not evaluated):  %s", sPostSimRulelistName.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         }
+         else
+         {
+				int iSaveActiveBEMProcIdx = BEMPX_GetActiveModel();
+				BEMPX_SetActiveModel( osRunInfo[iRun].BEMProcIdx() );
+
+            if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+               BEMPX_WriteLogFile( QString::asprintf( "   about to evaluate rulelist '%s' on BEMProcIdx %d", sPostSimRulelistName.toLocal8Bit().constData(), osRunInfo[iRun].BEMProcIdx() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			   //iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
+   			//				if (bVerbose)
+				//					BEMPX_WriteLogFile( "  PerfAnal_NRes - NRCCPRF XML prep rules", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   		   BOOL bPostSimEvalSuccessful = CMX_EvaluateRuleset( sPostSimRulelistName.toLocal8Bit().constData(), bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );     // SAC 04/14/21
+			   //BEMPX_RefreshLogFile();
+			   //if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs && iDontAbortOnErrorsThruStep < 8)
+			   //{
+				//	iRetVal = (iRetVal > 0 ? iRetVal : 81);
+				//	bAbort = true;
+			   //}
+
+				if (BEMPX_GetActiveModel() != iSaveActiveBEMProcIdx)  // && !bAbort && !BEMPX_AbortRuleEvaluation())
+					BEMPX_SetActiveModel( iSaveActiveBEMProcIdx );
+         }
 		}
 	}
 

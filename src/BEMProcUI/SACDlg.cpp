@@ -1326,7 +1326,7 @@ LRESULT CSACDlg::DisplayMods( WPARAM, LPARAM )
 BOOL CSACDlg::OnToolTipNotify( UINT /*id*/, NMHDR* pNMHDR, LRESULT* /*pResult*/ )
 {
    TOOLTIPTEXT* pTTT = (TOOLTIPTEXT*) pNMHDR;
-   UINT nID = pNMHDR->idFrom;
+   UINT_PTR nID = pNMHDR->idFrom;
    if ( (pTTT->uFlags & TTF_IDISHWND) && (m_pTDPage != NULL) )
    {  // idFrom is actually the HWND of the tool
       // Convert it to its actual control ID
@@ -1442,7 +1442,7 @@ INT_PTR CSACDlg::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
                {
                   HWND hWndChild = pChildWnd->GetSafeHwnd();
          			pTI->hwnd = m_hWnd;
-         			pTI->uId = (UINT)hWndChild;
+         			pTI->uId = (UINT_PTR)hWndChild;
          			pTI->uFlags |= TTF_IDISHWND;
          			pTI->lpszText = LPSTR_TEXTCALLBACK;
 

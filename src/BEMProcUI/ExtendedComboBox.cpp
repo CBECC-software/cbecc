@@ -1009,12 +1009,12 @@ void CExtendedComboBox::LoadObjectNames( int i1ClassID, BOOL /*bLoadAll*/ )
    {
       for (int eType=(int) BEMO_RuleLib; eType < (int) BEMO_NumTypes; eType++)
       {
-         int iNumObjects = BEMPX_GetNumObjects( i1ClassID, (BEM_ObjType) eType );
-         for (int iObj=0; iObj < iNumObjects; iObj++)
+         int iNumObjs = BEMPX_GetNumObjects( i1ClassID, (BEM_ObjType) eType );
+         for (int iObj=0; iObj < iNumObjs; iObj++)
          {
-            int iError;
-            BEMObject* pObj = BEMPX_GetObjectByClass( i1ClassID, iError, iObj, (BEM_ObjType) eType );
-            if ( (iError == 0) && (pObj != NULL) &&
+            int iErr;
+            BEMObject* pObj = BEMPX_GetObjectByClass( i1ClassID, iErr, iObj, (BEM_ObjType) eType );
+            if ( (iErr == 0) && (pObj != NULL) &&
                  ( (m_iComboMode == CM_OBJECT && (m_laObjTypeDBID.GetSize() == 0 || ObjectTypeIsCompatible( i1ClassID, iObj, (BEM_ObjType) eType ))) ||   // SAC 6/15/12 - revised to handle multiple referenced object types
                    (m_iComboMode == CM_ACTIVE && (m_laObjTypeDBID.GetSize() == 0 || ObjectTypeIsCompatible( i1ClassID, iObj, (BEM_ObjType) eType )) &&
                     pObj->getUserReferenced() ) ) )
@@ -1052,7 +1052,7 @@ void CExtendedComboBox::LoadScreenStrings()
          CString sItemString;
          CBEMPUIPage* pPage = eScreenData.GetPageByID( lScreenID );
          if (pPage)
-            sItemString.Format( "%d of %d  -  %s", l0ScreenIdx+1, iTotNumScreens, pPage->m_sCaption );
+            sItemString.Format( "%d of %d  -  %s", l0ScreenIdx+1, iTotNumScreens, ((const char*) pPage->m_sCaption) );
          else
             sItemString.Format( "%d of %d  -  Screen #%d Title", l0ScreenIdx+1, iTotNumScreens, l0ScreenIdx+1 );
 

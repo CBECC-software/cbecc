@@ -1,0 +1,2936 @@
+RulesetFilename   "CA Res 2019.bin"  
+
+Proj   "EAA Example 3 w/ ADU & Addition"  
+   BEMVersion = 10
+   SoftwareVersion = "CBECC-Res 2019.2.0 (1207)"
+   SoftwareVersionDetail = "CBECC-Res 2019.2.0 Beta (1203)"
+   CreateDate = 1629762473
+   ModDate = 1633285606
+   RunDate = 1474307407
+   ProjFileName = "EAAExample4LrgAddADU.ribd19"
+   RunTitle = "Gar Convert to ADU & Master Suite"
+   AnalysisType = "Proposed and Standard"
+   CALGreen = 0
+   TDVType = "TDV"
+   StandardsVersion = "Compliance 2020"
+   AnalysisReport = "Building Summary (csv)"
+   ComplianceReportPDF = 1
+   ComplianceReportXML = 1
+   CommunitySolarProject = "- select CS project -"
+   InCmntySlrProjTerritory = 0
+   PVCompCredit = 0
+   PVWInputs = "Simplified"
+   PVSizeOption = "Use Specified Sizes"
+   PVWDCSysSize = ( 0, 0, 0, 0, 0 )
+   PVWModuleType = ( "Standard", "Standard", "Standard", "Standard", 
+                     "Standard" )
+   PVWCalFlexInstType = ( "CFI1", "CFI1", "CFI1", "CFI1", "CFI1" )
+   PVWGeomSpecMethod = ( "azimuth and tilt", "azimuth and tilt", 
+                         "azimuth and tilt", "azimuth and tilt", 
+                         "azimuth and tilt" )
+   PVWLocSpecMethod = ( "- not specified -", "- not specified -", 
+                        "- not specified -", "- not specified -", 
+                        "- not specified -" )
+   PVWRelLocSpecMeth = ( "- specify relative position -", 
+                         "- specify relative position -", 
+                         "- specify relative position -", 
+                         "- specify relative position -", 
+                         "- specify relative position -" )
+   PVWArrayTiltInput = ( "deg", "deg", "deg", "deg", "deg" )
+   PVWArrayType = ( "Fixed (open rack)", "Fixed (open rack)", 
+                    "Fixed (open rack)", "Fixed (open rack)", 
+                    "Fixed (open rack)" )
+   PVWPwrElec = ( "- none -", "- none -", "- none -", "- none -", 
+                  "- none -" )
+   AllowExcessPVEDR = 0
+   ReducedPVReq = 0
+   ReducedPVReqExcept = "- select applicable required PV exception -"
+   BattMaxCap = 0
+   BatteryControl = "Basic"
+   BattGridHarmCredit = 0
+   TDVSummerPkFirstHr = 19
+   BattDRNumRankedDays = 20
+   SimSpeedOption = "Compliance"
+   DesignRatingCalcs = 0
+   DRtgLtgCredit = 0
+   DRtgLtgReduction = 0
+   SpecifyTargetDRtg = 0
+   SFamCompactDistrib = "not compact"
+   SFamCDSpecFixDists = 0
+   CAHPProgram = "- none -"
+   IsCAHPElecUtil = 1
+   IsCAHPNGasUtil = 1
+   IsCAHPDOEChalHome = 0
+   IsCAHPFutureCode = 0
+   CAHPSolarOption = "- select -"
+   ClimateZone = "CZ12  (Sacramento)"
+   Address = "1420 Ninth Ave."
+   ZipCode = 95818
+   RunScope = "Addition and/or Alteration"
+   City = "Sacramento"
+   IsMultiFamily = 0
+   SFamADUType = "Attached"
+   CentralMFamLaundry = 0
+   DfltMFamLaundryZn = "House"
+   ZonalControl = 0
+   Description = "ADU 525 ft2"
+   UseDefaultACH50 = 0
+   ACH50 = 5
+   Status = "New"
+   IsVerified = 0
+   IsAddAlone = 0
+   AdditionCFAFrac = 1
+   AlterIncl2Categs = 0
+   ProjInclKitchen = 1
+   InsulConsQuality = "No"
+   NumBedrooms = 5
+   NumAddBedrooms = 0
+   AllOrientations = 0
+   FrontOrientation = 180
+   GasType = "Natural Gas"
+   HasGarage = 0
+   SFamADUNumBedrooms = 1
+   SFamADUArea = 440
+   SFamMaxVertDist = 9.33
+   DisableIAQ = 0
+   IAQSupInletsAccessible = 0
+   IAQHasFID = 0
+   UnitIAQOption[1] = "Default Minimum IAQ Fan"
+   UnitIAQOption[2] = "Default Minimum IAQ Fan"
+   UnitIAQFanCnt1[1] = 1
+   UnitIAQFanCnt1[2] = 0
+   UnitIAQFanCnt2[1] = 1
+   UnitIAQFanCnt2[2] = 0
+   UnitIAQFanCnt3[1] = 1
+   UnitIAQFanCnt3[2] = 0
+   UnitIAQFanCnt4[1] = 1
+   UnitIAQFanCnt4[2] = 0
+   UnitIAQZone1[1] = "House"
+   UnitIAQZone1[2] = "ADU"
+   UnitIAQZone2[1] = "House"
+   UnitIAQZone2[2] = "House"
+   UnitIAQZone3[1] = "House"
+   UnitIAQZone3[2] = "House"
+   UnitIAQZone4[1] = "House"
+   UnitIAQZone4[2] = "House"
+   UnitClVentOption = "- none -"
+   ClVentVerified = 0
+   UnitClVentZone = ( "House", "House", "House", "House", "House", 
+                      "House" )
+   ApplRefrigZone[1] = "House"
+   ApplWasherZone[1] = "House"
+   ApplDryerZone[1] = "House"
+   ApplCookZone[1] = "House"
+   ApplDishZone[1] = "House"
+   Appl_HaveRefrig[1] = 1
+   Appl_HaveDish[1] = 1
+   Appl_HaveCook[1] = 1
+   Appl_HaveWasher[1] = 1
+   Appl_HaveDryer[1] = 1
+   ApplCookFuel[1] = "Gas"
+   ApplDryerFuel[1] = "Gas"
+   Appl_RefrigUsage[1] = 639
+   ApplRefrigEffMethod[1] = "from # bedrooms/unit"
+   ApplDishUsageMethod[1] = "from # bedrooms/unit"
+   ResultsCurrentMsg = "(not current)"
+   BypassMessageBoxes = 1
+   CSERpt_ZnDataDump = 0
+   CSERpt_HVACDescrip = 0
+   CSERpt_ZnEnergy = 0
+   CSERpt_HtPumpHtg = 0
+   CSERpt_Mtr_All = 0
+   CSERpt_Mtr_Elec = 0
+   CSERpt_Mtr_NGas = 0
+   CSERpt_Mtr_Othr = 0
+   CSERpt_ZnEnergy_DD = 0
+   CSERpt_Mtr_All_DD = 0
+   CSERpt_Mtr_Elec_DD = 0
+   CSERpt_Mtr_NGas_DD = 0
+   CSERpt_Mtr_Othr_DD = 0
+   CSERpt_ZnEnergy_CD = 0
+   CSERpt_Mtr_All_CD = 0
+   CSERpt_Mtr_Elec_CD = 0
+   CSERpt_Mtr_NGas_CD = 0
+   CSERpt_Mtr_Othr_CD = 0
+   CSERpt_ZnEnergy_HD = 0
+   CSERpt_Mtr_All_HD = 0
+   CSERpt_Mtr_Elec_HD = 0
+   CSERpt_Mtr_NGas_HD = 0
+   CSERpt_Mtr_Othr_HD = 0
+   ..
+
+Zone   "House"  
+   Type = "Conditioned"
+   Status = "Existing"
+   HVACSysStatus = "Existing"
+   HVACSysVerified = 0
+   HVACSystem = "Ex System"
+   exHVACSystem = "Ex System"
+   DHWSys1Status = "Altered"
+   DHWSys1Verified = 0
+   AltDHWSys1 = "Altered Storage"
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 2016
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.67
+   Bottom = 2
+   NumStories = 1
+   ..
+
+CeilingBelowAttic   "Ceiling (below attic)"  
+   Status = "Existing"
+   IsVerified = 0
+   Area = 2016
+   Construction = "R-19"
+   exConstruction = "Ceiling R11"
+   AtticZone = "Attic"
+   ..
+
+ExtWall   "Ex Wall Front"  
+   Status = "Existing"
+   IsVerified = 0
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 576
+   Construction = "Wall R0"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+Win   "F1"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 24
+   Height = 4
+   Width = 6
+   Multiplier = 3
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 24
+   exHeight = 4
+   exWidth = 6
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "F2"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 32
+   Height = 4
+   Width = 8
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 32
+   exHeight = 4
+   exWidth = 8
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Door   "Entry"  
+   Status = "Existing"
+   IsVerified = 0
+   Area = 20
+   Ufactor = 0.5
+   exUfactor = 0.5
+   ..
+
+Win   "F3"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 16
+   Height = 4
+   Width = 4
+   Multiplier = 3
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 32
+   exHeight = 4
+   exWidth = 8
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "Ex Wall Left"  
+   Status = "Existing"
+   IsVerified = 0
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 288
+   Construction = "Wall R0"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+Win   "L1"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 16
+   Height = 4
+   Width = 4
+   Multiplier = 3
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 16
+   exHeight = 4
+   exWidth = 4
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "L2"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 24
+   Height = 4
+   Width = 6
+   Multiplier = 2
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 24
+   exHeight = 4
+   exWidth = 6
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "Ex Wall Back"  
+   Status = "Existing"
+   IsVerified = 0
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 306
+   Construction = "Wall R0"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+Win   "B1"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 30
+   Height = 5
+   Width = 6
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 30
+   exHeight = 5
+   exWidth = 6
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "B2"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 9
+   Height = 3
+   Width = 3
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 9
+   exHeight = 3
+   exWidth = 3
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "B3"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 12
+   Height = 4
+   Width = 3
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 9
+   exHeight = 3
+   exWidth = 3
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "Ex Wall Right"  
+   Status = "Existing"
+   IsVerified = 0
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 125
+   Construction = "Wall R0"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+Win   "R1"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 12
+   Height = 4
+   Width = 3
+   Multiplier = 2
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 12
+   exHeight = 4
+   exWidth = 3
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "R2"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 24
+   Height = 4
+   Width = 6
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 24
+   exHeight = 4
+   exWidth = 6
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "R3"  
+   Status = "Altered"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 6
+   Height = 2
+   Width = 3
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 30
+   exHeight = 5
+   exWidth = 6
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+IntWall   "Wall to Addition"  
+   Status = "New"
+   IsVerified = 0
+   Area = 120
+   Construction = "Interior R0"
+   IsPartySurface = 0
+   OtherSideModeled = 0
+   Outside = "MasterSuite"
+   ..
+
+FloorOverCrawl   "Floor Over Crawlspace"  
+   Status = "Existing"
+   IsVerified = 0
+   Area = 2016
+   FloorZ = 2
+   Construction = "Raised Crawl R0"
+   ..
+
+Zone   "MasterSuite"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "Existing"
+   HVACSysVerified = 0
+   HVACSystem = "Ex System"
+   exHVACSystem = "Ex System"
+   DHWSys1Status = "Altered"
+   DHWSys1Verified = 0
+   AltDHWSys1 = "Altered Storage"
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1050
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 7.67
+   Bottom = 2
+   NumStories = 1
+   ..
+
+CeilingBelowAttic   "Addtn Ceiling"  
+   Status = "New"
+   IsVerified = 0
+   Area = 1050
+   Construction = "R-38 Ceiling"
+   AtticZone = "Addtn Attic"
+   ..
+
+ExtWall   "Addtn Left"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 315
+   Construction = "R-21"
+   Exception = "Wall Extension"
+   Tilt = 90
+   ..
+
+Win   "Add L1"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 21.32
+   Height = 5.33
+   Width = 4
+   Multiplier = 2
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 16
+   exHeight = 4
+   exWidth = 4
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "Add L2"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 6
+   Height = 2
+   Width = 3
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 16
+   exHeight = 4
+   exWidth = 4
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "Addtn Back"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 270
+   Construction = "R-19 + R5"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+Win   "Add B1"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 20
+   Height = 5
+   Width = 4
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 16
+   exHeight = 4
+   exWidth = 4
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "Add B2"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "French Door Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 40.02
+   Height = 6.67
+   Width = 6
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 33.35
+   exHeight = 6.67
+   exWidth = 5
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "Add B3"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 16
+   Height = 4
+   Width = 4
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 16
+   exHeight = 4
+   exWidth = 4
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "Addtn Right"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 315
+   Construction = "R-19 + R5"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+Win   "Add R1"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "French Door Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 40.02
+   Height = 6.67
+   Width = 6
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 6
+   exHeight = 2
+   exWidth = 3
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 10
+   OverhangDistUp = 1
+   OverhangExL = 20
+   OverhangExR = 4
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "Add R2"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Fix Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 6.67
+   Height = 6.67
+   Width = 1
+   Multiplier = 2
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 33.35
+   exHeight = 6.67
+   exWidth = 5
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 10
+   OverhangDistUp = 1
+   OverhangExL = 20
+   OverhangExR = 8
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Win   "Add R3"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 9
+   Height = 3
+   Width = 3
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 9
+   exHeight = 3
+   exWidth = 3
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 10
+   OverhangDistUp = 1
+   OverhangExL = 15
+   OverhangExR = 15
+   OverhangFlap = 0
+   exOverhangDepth = 10
+   exOverhangDistUp = 1
+   exOverhangExL = 15
+   exOverhangExR = 15
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+FloorOverCrawl   "Floor Over Crawlspace 2"  
+   Status = "New"
+   IsVerified = 0
+   Area = 1050
+   FloorZ = 2
+   Construction = "R-19 Raised"
+   ..
+
+CrawlSpace   "Crawl Space"  
+   Type = "Normal (vented)"
+   Perimeter = 151.789
+   AvgWallHeight = 2
+   ..
+
+Zone   "ADU"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   HVACSystem = "ADU HVAC"
+   exHVACSystem = "Ex System"
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys1 = "ADU DHW"
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 440
+   CeilingHeight = 8
+   FloorHeight = 9
+   WinHeadHeight = 7.67
+   Bottom = 0.67
+   NumStories = 1
+   ..
+
+ExtWall   "ADU Front"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 176
+   Construction = "R-15 Wall"
+   Exception = "Existing Wall w/ Siding"
+   Tilt = 90
+   ..
+
+Win   "ADU F1"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 16
+   Height = 4
+   Width = 4
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 16
+   exHeight = 4
+   exWidth = 4
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Door   "ADU Entry"  
+   Status = "New"
+   IsVerified = 0
+   Area = 20
+   Ufactor = 0.2
+   exUfactor = 0.5
+   ..
+
+ExtWall   "ADU Back"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 176
+   Construction = "R-15 Wall"
+   Exception = "Existing Wall w/ Siding"
+   Tilt = 90
+   ..
+
+Win   "ADU Fr Dr"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "French Door Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 33.35
+   Height = 6.67
+   Width = 5
+   Multiplier = 1
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 33.35
+   exHeight = 6.67
+   exWidth = 5
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "ADU Right-2"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 160
+   Construction = "R-15 Wall"
+   Exception = "Existing Wall w/ Siding"
+   Tilt = 90
+   ..
+
+Win   "ADU R1"  
+   Status = "New"
+   IsVerified = 0
+   WinType = "Oper Vinyl Low-E"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 20
+   Height = 5
+   Width = 4
+   Multiplier = 2
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 6
+   exHeight = 2
+   exWidth = 3
+   exMultiplier = 1
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 0
+   exOverhangDistUp = 0
+   exOverhangExL = 0
+   exOverhangExR = 0
+   exOverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+SlabFloor   "Slab ADU"  
+   Status = "New"
+   IsVerified = 0
+   Area = 440
+   Surface = "Default (80% carpeted/covered, 20% exposed)"
+   Perimeter = 84
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-5, 8 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+CathedralCeiling   "Roof L"  
+   Status = "New"
+   IsVerified = 0
+   Area = 220
+   RoofRise = 5
+   Orientation = "Left"
+   OrientationValue = 90
+   Construction = "R-38 Cathedral"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+CathedralCeiling   "Roof R"  
+   Status = "New"
+   IsVerified = 0
+   Area = 220
+   RoofRise = 5
+   Orientation = "Right"
+   OrientationValue = 270
+   Construction = "R-38 Cathedral"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+Attic   "Attic"  
+   Type = "Ventilated"
+   Status = "Existing"
+   IsVerified = 0
+   RoofRise = 5
+   Construction = "Asphalt Shingle Roof"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+Attic   "Addtn Attic"  
+   Type = "Ventilated"
+   Status = "New"
+   IsVerified = 0
+   RoofRise = 5
+   Construction = "Asphalt RB"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+EUseSummary   "EUSummary"  
+   Title1[2] = "Proposed"
+   Title1[3] = "Proposed"
+   Title1[4] = "Proposed"
+   Title1[5] = "Standard"
+   Title1[6] = "Standard"
+   Title1[7] = "Standard"
+   Title1[8] = "Compliance"
+   Title1[10] = "Proposed"
+   Title1[11] = "Standard"
+   Title1[23] = "Prop Design"
+   Title1[24] = "Prop Design"
+   Title1[25] = "Prop Design"
+   Title1[27] = "Std Design"
+   Title1[28] = "Std Design"
+   Title1[29] = "Std Design"
+   Title1[30] = "CO2"
+   Title2[2] = "Design"
+   Title2[3] = "Design"
+   Title2[4] = "Design"
+   Title2[5] = "Design"
+   Title2[6] = "Design"
+   Title2[7] = "Design"
+   Title2[8] = "Margin"
+   Title2[10] = "Design"
+   Title2[11] = "Design"
+   Title2[23] = "Electric CO2"
+   Title2[24] = "Fuel CO2"
+   Title2[25] = "Total CO2"
+   Title2[27] = "Electric CO2"
+   Title2[28] = "Fuel CO2"
+   Title2[29] = "Total CO2"
+   Title2[30] = "Emissions"
+   Title3[1] = "End Use"
+   Title3[2] = "Site (kWh)"
+   Title3[3] = "Site (therms)"
+   Title3[4] = "(kTDV/ft²-yr)"
+   Title3[5] = "Site (kWh)"
+   Title3[6] = "Site (therms)"
+   Title3[7] = "(kTDV/ft²-yr)"
+   Title3[8] = "(kTDV/ft²-yr)"
+   Title3[10] = "(kW)"
+   Title3[11] = "(kW)"
+   Title3[23] = "Emis. (kg)"
+   Title3[24] = "Emis. (kg)"
+   Title3[25] = "Emis. (kg)"
+   Title3[27] = "Emis. (kg)"
+   Title3[28] = "Emis. (kg)"
+   Title3[29] = "Emis. (kg)"
+   Title3[30] = "Margin (kg)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "1,474"
+   Enduse1[3] = "725.5"
+   Enduse1[4] = "56.00"
+   Enduse1[5] = "1,350"
+   Enduse1[6] = "691.0"
+   Enduse1[7] = "52.99"
+   Enduse1[8] = "-3.01"
+   Enduse1[10] = "0.00"
+   Enduse1[11] = "0.00"
+   Enduse1[23] = "309"
+   Enduse1[24] = "3,850"
+   Enduse1[25] = "4,159"
+   Enduse1[27] = "282"
+   Enduse1[28] = "3,667"
+   Enduse1[29] = "3,949"
+   Enduse1[30] = "-210"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "2,958"
+   Enduse2[4] = "93.58"
+   Enduse2[5] = "3,151"
+   Enduse2[7] = "97.12"
+   Enduse2[8] = "3.54"
+   Enduse2[10] = "7.61"
+   Enduse2[11] = "7.47"
+   Enduse2[23] = "721"
+   Enduse2[25] = "721"
+   Enduse2[27] = "758"
+   Enduse2[29] = "758"
+   Enduse2[30] = "37"
+   Enduse3[1] = "IAQ Ventilation"
+   Enduse3[2] = "471"
+   Enduse3[4] = "3.72"
+   Enduse3[5] = "471"
+   Enduse3[7] = "3.72"
+   Enduse3[8] = "0.00"
+   Enduse3[10] = "0.05"
+   Enduse3[11] = "0.05"
+   Enduse3[23] = "94"
+   Enduse3[25] = "94"
+   Enduse3[27] = "94"
+   Enduse3[29] = "94"
+   Enduse3[30] = "0"
+   Enduse4[1] = "Other HVAC"
+   Enduse4[4] = "0.00"
+   Enduse4[7] = "0.00"
+   Enduse4[8] = "0.00"
+   Enduse4[10] = "0.00"
+   Enduse4[11] = "0.00"
+   Enduse4[25] = "0"
+   Enduse4[29] = "0"
+   Enduse5[1] = "Water Heating"
+   Enduse5[2] = "113"
+   Enduse5[3] = "256.0"
+   Enduse5[4] = "15.49"
+   Enduse5[5] = "114"
+   Enduse5[6] = "400.0"
+   Enduse5[7] = "23.73"
+   Enduse5[8] = "8.24"
+   Enduse5[10] = "0.01"
+   Enduse5[11] = "0.01"
+   Enduse5[23] = "22"
+   Enduse5[24] = "1,358"
+   Enduse5[25] = "1,381"
+   Enduse5[27] = "23"
+   Enduse5[28] = "2,123"
+   Enduse5[29] = "2,145"
+   Enduse5[30] = "764"
+   Enduse6[1] = "Inside Lighting"
+   Enduse6[2] = "722"
+   Enduse6[4] = "6.30"
+   Enduse6[5] = "722"
+   Enduse6[7] = "6.30"
+   Enduse6[8] = "0.00"
+   Enduse6[10] = "0.19"
+   Enduse6[11] = "0.19"
+   Enduse6[23] = "157"
+   Enduse6[25] = "157"
+   Enduse6[27] = "157"
+   Enduse6[29] = "157"
+   Enduse6[30] = "0"
+   Enduse7[1] = "Appl. & Cooking"
+   Enduse7[2] = "732"
+   Enduse7[3] = "32.8"
+   Enduse7[4] = "7.79"
+   Enduse7[5] = "733"
+   Enduse7[6] = "32.8"
+   Enduse7[7] = "7.80"
+   Enduse7[8] = "0.01"
+   Enduse7[10] = "0.11"
+   Enduse7[11] = "0.11"
+   Enduse7[23] = "145"
+   Enduse7[24] = "174"
+   Enduse7[25] = "319"
+   Enduse7[27] = "145"
+   Enduse7[28] = "174"
+   Enduse7[29] = "319"
+   Enduse7[30] = "0"
+   Enduse8[1] = "Plug Loads"
+   Enduse8[2] = "2,717"
+   Enduse8[4] = "22.08"
+   Enduse8[5] = "2,717"
+   Enduse8[7] = "22.08"
+   Enduse8[8] = "0.00"
+   Enduse8[10] = "0.40"
+   Enduse8[11] = "0.40"
+   Enduse8[23] = "555"
+   Enduse8[25] = "555"
+   Enduse8[27] = "555"
+   Enduse8[29] = "555"
+   Enduse8[30] = "0"
+   Enduse9[1] = "Exterior"
+   Enduse9[2] = "194"
+   Enduse9[4] = "1.59"
+   Enduse9[5] = "194"
+   Enduse9[7] = "1.59"
+   Enduse9[8] = "0.00"
+   Enduse9[10] = "0.03"
+   Enduse9[11] = "0.03"
+   Enduse9[23] = "43"
+   Enduse9[25] = "43"
+   Enduse9[27] = "43"
+   Enduse9[29] = "43"
+   Enduse9[30] = "0"
+   Enduse10[1] = "TOTAL"
+   Enduse10[2] = "9,382"
+   Enduse10[3] = "1,014.3"
+   Enduse10[4] = "206.55"
+   Enduse10[5] = "9,452"
+   Enduse10[6] = "1,123.8"
+   Enduse10[7] = "215.33"
+   Enduse10[8] = "8.78"
+   Enduse10[10] = "8.42"
+   Enduse10[11] = "8.27"
+   Enduse10[23] = "2,046"
+   Enduse10[24] = "5,382"
+   Enduse10[25] = "7,429"
+   Enduse10[27] = "2,057"
+   Enduse10[28] = "5,964"
+   Enduse10[29] = "8,020"
+   Enduse10[30] = "591"
+   Enduse11[1] = "Compliance Total"
+   Enduse11[2] = "5,017"
+   Enduse11[3] = "981.5"
+   Enduse11[4] = "168.79"
+   Enduse11[5] = "5,087"
+   Enduse11[6] = "1,090.9"
+   Enduse11[7] = "177.56"
+   Enduse11[8] = "8.77"
+   Enduse11[10] = "7.68"
+   Enduse11[11] = "7.54"
+   Enduse11[23] = "1,146"
+   Enduse11[24] = "5,208"
+   Enduse11[25] = "6,355"
+   Enduse11[27] = "1,157"
+   Enduse11[28] = "5,790"
+   Enduse11[29] = "6,946"
+   Enduse11[30] = "591"
+   Enduse13[1] = "Photovoltaics"
+   Enduse13[4] = "0.00"
+   Enduse13[7] = " "
+   Enduse13[8] = "0.00"
+   Enduse13[10] = "0.00"
+   Enduse13[25] = "0"
+   Enduse13[29] = "0"
+   Enduse13[30] = "0"
+   Enduse14[1] = "Battery"
+   Enduse14[4] = "0.00"
+   Enduse14[7] = " "
+   Enduse14[8] = "0.00"
+   Enduse14[10] = "0.00"
+   Enduse14[11] = "0.00"
+   Enduse14[25] = "0"
+   Enduse14[29] = "0"
+   Enduse14[30] = "0"
+   Enduse98[1] = "Flexibility"
+   Enduse99[1] = "Self Util/Flexibility Credit"
+   Enduse99[25] = "0"
+   Enduse99[29] = "0"
+   Enduse99[30] = "0"
+   PassFail = "PASS"
+   ComplyMessage = "COMPLIES"
+   SummaryCol1[4] = "Standard Design"
+   SummaryCol1[5] = "Proposed Design"
+   SummaryCol2[1] = "Compliance"
+   SummaryCol2[2] = "Total"
+   SummaryCol2[3] = "(kTDV/ft²-yr)"
+   SummaryCol2[4] = "177.56"
+   SummaryCol2[5] = "168.79"
+   SummaryCol3[1] = "Compliance"
+   SummaryCol3[2] = "Margin"
+   SummaryCol3[3] = "(kTDV/ft²-yr)"
+   SummaryCol3[5] = "8.77"
+   MarginkW[1] = -0.14
+   MarginkWh = 70
+   MarginTherms = 109.47
+   PctSavingskW = -1.7
+   PctSavingskWh = 0.7
+   PctSavingsTherms = 9.7
+   PctSavingsTDV = 4.1
+   PctSavingsCmpTDV = 4.9
+   PctSavkWLbl = "-1.7"
+   PctSavkWhLbl = "0.7"
+   PctSavThermsLbl = "9.7"
+   PctSavTDVLbl = "4.1"
+   PctSavCmpTDVLbl = "4.9"
+   PropElecDemand[1] = 8.41606
+   StdElecDemand = 8.27395
+   StdDesignPVSize = 0
+   PropPV_Total = 0
+   PropPV_Export = 0
+   PropPV_PctExport = 0
+   StdPV_Total = 0
+   StdPV_Export = 0
+   StdPV_PctExport = 0
+   ResultsNotes[5] = "Standard Design PV Capacity: 0.00 kWdc"
+   HaveResultsNotesPV[5] = 1
+   CO2FuelUnitLabel = "kg"
+   CO2TotalUnitLabel = "kg"
+   MeetsTier1 = 0
+   MeetsTier2 = 0
+   PropElecCarbon[1] = 2.04521
+   PropFuelCarbon[1] = 5.3829
+   PropFinalCarbon[1] = 7.4281
+   PropExclExpCarbon[1] = 7.42811
+   PropExportCarbon[1] = 0
+   PropSelfConsCarbon[1] = 0
+   PropNoSolFlxCarbon[1] = 7.42811
+   StdFinalCarbon = 8.01994
+   StdExclExpCarbon = 8.01994
+   StdExportCarbon = 0
+   StdSelfConsCarbon = 0
+   StdNoSolFlxCarbon = 8.01994
+   HideCompSummary = 1
+   HideEDRs = 1
+   HideC02Emissions = 0
+   CompSummaryMsg = "Compliance Summary not available for 2019 analysis."
+   EDRMsg = "Energy Design Rating calcs not yet implemented for 2019 analysis."
+   ..
+
+SchDay   "CARes2013 InsLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.023, 0.019, 0.015, 0.017, 0.021, 0.031, 0.042, 0.041, 0.034, 
+          0.029, 0.027, 0.025, 0.021, 0.021, 0.021, 0.026, 0.031, 0.044, 
+          0.084, 0.118, 0.113, 0.096, 0.063, 0.038 )
+   ..
+
+SchDay   "CARes2013 Occupancy Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.035, 0.035, 0.035, 0.035, 0.035, 0.059, 0.082, 0.055, 0.027, 
+          0.014, 0.014, 0.014, 0.014, 0.014, 0.019, 0.027, 0.041, 0.055, 
+          0.068, 0.082, 0.082, 0.07, 0.053, 0.035 )
+   ..
+
+SchDay   "CARes2013 Equipment Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.037, 0.035, 0.034, 0.034, 0.032, 0.036, 0.042, 0.044, 0.037, 
+          0.032, 0.033, 0.033, 0.032, 0.033, 0.035, 0.037, 0.044, 0.053, 
+          0.058, 0.06, 0.062, 0.06, 0.052, 0.045 )
+   ..
+
+SchDay   "CARes2013 ExtLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+          0.25, 0.25, 0.25, 0.25 )
+   ..
+
+SchDay   "CARes2013 SZ Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Liv Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Slp Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 65, 65, 65, 65, 65, 65, 
+          65, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 SZ Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Liv Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Slp Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+Cons   "Asphalt Shingle Roof-user"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "- select inside finish -"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 Top Chord of Roof Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 1
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   CavInsulOverFrame = 1
+   ..
+
+Cons   "Asphalt Shingle Roof"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "- select inside finish -"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 Top Chord of Roof Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   CavInsulOverFrame = 1
+   ..
+
+Cons   "Ceiling R11"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 11"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Wall R0"  
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation (vertical) -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Raised Crawl R0"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Interior R0"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation (vertical) -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "R-38 Ceiling"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 38"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "R-19 + R5"  
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "R5 Sheathing"
+   WallExtFinishLayer = "Synthetic Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Asphalt High performance"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "- select inside finish -"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 Top Chord of Roof Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 1
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   CavInsulOverFrame = 1
+   ..
+
+Cons   "Asphalt RB"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "- select inside finish -"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 Top Chord of Roof Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 1
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   CavInsulOverFrame = 1
+   ..
+
+Cons   "R-15 Wall"  
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 15"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "R-19"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "R-19 Raised"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "R-38 Cathedral"  
+   CanAssignTo = "Cathedral Ceilings"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 38 in 11-1/4 in. cavity (R-37)"
+   FrameLayer = "2x12 @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "R-21"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 21"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "Synthetic Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Mat   "SoftWood"  
+   Density = 35
+   SpecHeat = 0.39
+   Conductivity = 0.08167
+   ConductivityCT = 0.0012
+   RValPerInch = 1.0204
+   ..
+
+Mat   "Steel"  
+   Density = 489
+   SpecHeat = 0.12
+   Conductivity = 26.2
+   RValPerInch = 0.00318
+   ..
+
+Mat   "SIPSskin"  
+   Thickness = 0.4375
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+Mat   "Ceiling Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Other Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Wood layer"  
+   Thickness = 0.5
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+Mat   "Light Roof"  
+   Thickness = 0.2
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+Mat   "Gypsum Board"  
+   Thickness = 0.5
+   Density = 40
+   SpecHeat = 0.27
+   Conductivity = 0.09167
+   ConductivityCT = 0.0001217
+   RValPerInch = 0.9091
+   ..
+
+Mat   "VertWallCavity"  
+   Thickness = 3.5
+   Density = 0.075
+   SpecHeat = 0.24
+   Conductivity = 0.314
+   ConductivityCT = 0.00397
+   RValPerInch = 1.1333
+   ..
+
+Mat   "Ins-R9.1-D1.5-SH0.2-C0.03205"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0347692
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Carpet"  
+   Thickness = 0.5
+   Density = 12.3
+   SpecHeat = 0.34
+   Conductivity = 0.02
+   RValPerInch = 4.1667
+   ..
+
+Mat   "Ins-R29.2-D1.5-SH0.2-C0.03205"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0387027
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R13-D1.5-SH0.2-C0.02244"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0224359
+   ConductivityQII = 0.0320513
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "3 Coat Stucco-user"  
+   Thickness = 0.875
+   Density = 116
+   SpecHeat = 0.2
+   Conductivity = 0.4167
+   RValPerInch = 0.2
+   ..
+
+Mat   "Ins-R19-D1.5-SH0.2-C0.01535"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0153509
+   ConductivityQII = 0.0219298
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "R4 Synth Stucco"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.02083
+   ConductivityCT = 0.00175
+   RValPerInch = 4
+   ..
+
+Mat   "Shthg-R1-D1.5-SH0.35-C0.08333"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.08333
+   ConductivityQII = 0.08333
+   ConductivityCT = 0.00175
+   ..
+
+Mat   "3 Coat Stucco"  
+   Thickness = 0.875
+   Density = 116
+   SpecHeat = 0.2
+   Conductivity = 0.4167
+   RValPerInch = 0.2686
+   ..
+
+Mat   "Insul-R5-D1.5-SH0.35-C0.01667"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.016666
+   ConductivityQII = 0.016666
+   ConductivityCT = 0.00175
+   ..
+
+Mat   "Synthetic Stucco"  
+   Thickness = 0.375
+   Density = 58
+   SpecHeat = 0.2
+   Conductivity = 0.2
+   RValPerInch = 0.5333
+   ..
+
+Mat   "Ins-R15-D1.5-SH0.2-C0.01944"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0194444
+   ConductivityQII = 0.0277778
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R9.1-D1.5-SH0.2-C0.03205 22"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0358487
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R19-D1.5-SH0.2-C0.02412"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0241228
+   ConductivityQII = 0.0344612
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R37-D1.5-SH0.2-C0.00788"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.00788288
+   ConductivityQII = 0.0112613
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R37-D1.5-SH0.2-C0.02534"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0253378
+   ConductivityQII = 0.0361969
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R18-D1.5-SH0.2-C0.02546"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.025463
+   ConductivityQII = 0.0363757
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R21-D1.5-SH0.2-C0.02183"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0218254
+   ConductivityQII = 0.0311791
+   ConductivityCT = 0.0032537
+   ..
+
+WindowType   "Ex Oper Wood Single"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 0.99
+   NFRCSHGC = 0.74
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "Ex Fix Wood Single"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 1.04
+   NFRCSHGC = 0.76
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "Ex Oper Metal Single"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 1.28
+   NFRCSHGC = 0.8
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "Ex Fix Metal Single"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 1.19
+   NFRCSHGC = 0.83
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "Oper Vinyl Low-E"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.23
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "Fix Vinyl Low-E"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.23
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "Glass Block"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 0.57
+   NFRCSHGC = 0.67
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "French Door Vinyl Low-E"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.2
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "SGD"  
+   SpecMethod = "Overall Window Area"
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.2
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+WindowType   "Mild 30 / 35"  
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.35
+   ExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+HVACSys   "Ex System"  
+   Type = "Other Heating and Cooling System"
+   Status = "Existing"
+   CFIClVentOption = "- none -"
+   CFIClVentFlow = 0
+   CFIClVentPwr = 0
+   CFIClVentAttic = "Attic"
+   NumHeatSystemTypes = 1
+   HeatSystemCount = ( 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
+   HeatSystem[1] = "Ex Furnace"
+   AutoSizeHeatInp = 1
+   HeatDucted = 1
+   NumCoolSystemTypes = 1
+   CoolSystemCount = ( 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
+   CoolSystem[1] = "Ex Cooling"
+   AutoSizeCoolInp = 1
+   CoolDucted = 1
+   NumHtPumpSystemTypes = 0
+   HtPumpDucted = 0
+   ServesAsDHWHtr = 0
+   DHWTankVolume = 50
+   DHWIntInsulRVal = 0
+   DHWExtInsulRVal = 0
+   DHWAmbientCond = "Unconditioned"
+   DistribSystem = "Ducts"
+   Fan = "HVAC Fan"
+   ..
+
+HVACSys   "ADU HVAC"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   CFIClVentOption = "- none -"
+   CFIClVentFlow = 0
+   CFIClVentPwr = 0
+   CFIClVentAttic = "Addtn Attic"
+   NumHeatSystemTypes = 0
+   AutoSizeHeatInp = 0
+   HeatDucted = 0
+   NumCoolSystemTypes = 0
+   AutoSizeCoolInp = 1
+   CoolDucted = 0
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount = ( 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
+   HtPumpSystem[1] = "Minisplit HP"
+   HtPumpDucted = 0
+   ServesAsDHWHtr = 0
+   DHWTankVolume = 50
+   DHWIntInsulRVal = 0
+   DHWExtInsulRVal = 0
+   DHWAmbientCond = "Unconditioned"
+   ..
+
+HVACHeat   "Ex Furnace"  
+   Type = "CntrlFurnace - Fuel-fired central furnace"
+   AFUE = 75
+   ..
+
+HVACCool   "Ex Cooling"  
+   Type = "SplitAirCond - Split air conditioning system"
+   SEER = 8
+   EER = 7.06
+   CFMperTon = 350
+   ACCharge = "Not Verified"
+   RefrigerantType = "R410A"
+   UseEERinAnalysis = 1
+   IsMultiSpeed = 0
+   IsZonal = 0
+   ..
+
+HVACHtPump   "Minisplit HP"  
+   Type = "DuctlessMiniSplitHeatPump - Ductless mini-split heat pump"
+   HSPF = 8.2
+   Cap47 = 36000
+   Cap17 = 24000
+   SEER = 14
+   EER = 11.7
+   ACCharge = "Not Verified"
+   RefrigerantType = "R410A"
+   ClSizingFactor = 1.1
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 0
+   VCHPDucts = "Unducted"
+   ..
+
+HVACDist   "Ducts"  
+   Type = "Ducts located in attic (Ventilated and Unventilated)"
+   Status = "Existing"
+   IsVerified = 0
+   DefaultSystem = 0
+   DuctLeakage = "Existing (not specified)"
+   DuctLeakageVal = 5
+   HasBypassDuct = 0
+   DuctInsRvalOpt = "4.2"
+   exDuctInsRvalOpt = "2.1"
+   SupplyDuctLoc = "Attic"
+   ReturnDuctLoc = "Attic"
+   SupplyDuctAttic = "Attic"
+   ReturnDuctAttic = "Attic"
+   RetDuctInsRvalOpt = "4.2"
+   DuctDesign = 0
+   LowLkgAH = 0
+   IsLessThanFortyFt = 0
+   ..
+
+HVACFan   "HVAC Fan"  
+   Type = "Single Speed PSC Furnace Fan"
+   DefaultSystem = 0
+   WperCFMCool = 0.45
+   ..
+
+HVACFan   "HP Fan"  
+   Type = "Single Speed PSC Furnace Fan"
+   DefaultSystem = 0
+   WperCFMCool = 0.58
+   ..
+
+DHWSys   "ADU DHW"  
+   SystemType = "Point of use"
+   CentralRecircType = "Non-Central"
+   CHPWHSysDescrip = "- select system description -"
+   CHPWHIntegPkgType = "Residential (NEEA rated) Product"
+   CHPWHCompType = "- select CHPWH type -"
+   CHPWHNEEABrand = "n/a"
+   CHPWHNEEAModel = "n/a"
+   CHPWHComModel = "- select Model -"
+   CHPWHTankLoc = "- select tank location -"
+   CHPWHSrcAirLoc = "- select source air location -"
+   CHPWHLoopTankType = "- none -"
+   CHPWHLoopTankCompType = "- select CHPWH type -"
+   CHPWHLoopTankNEEABrand = "n/a"
+   CHPWHLoopTankNEEAModel = "n/a"
+   CHPWHLoopTankComModel = "- select Model -"
+   CDServesMBathFix = 1
+   CDServesKitFix = 1
+   CDServesThirdFix = 1
+   DHWHeater[1] = "Tankless UEF"
+   HeaterMult[1] = 1
+   UseDefaultLoops = 1
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   TotShowersServed = 1
+   TotBathsServed = 1
+   SolFracType = "- none -"
+   ..
+
+DHWSys   "Altered Storage"  
+   SystemType = "Standard"
+   CentralRecircType = "Non-Central"
+   CHPWHSysDescrip = "- select system description -"
+   CHPWHIntegPkgType = "Residential (NEEA rated) Product"
+   CHPWHCompType = "- select CHPWH type -"
+   CHPWHNEEABrand = "n/a"
+   CHPWHNEEAModel = "n/a"
+   CHPWHComModel = "- select Model -"
+   CHPWHTankLoc = "- select tank location -"
+   CHPWHSrcAirLoc = "- select source air location -"
+   CHPWHLoopTankType = "- none -"
+   CHPWHLoopTankCompType = "- select CHPWH type -"
+   CHPWHLoopTankNEEABrand = "n/a"
+   CHPWHLoopTankNEEAModel = "n/a"
+   CHPWHLoopTankComModel = "- select Model -"
+   CDServesMBathFix = 1
+   CDServesKitFix = 1
+   CDServesThirdFix = 1
+   DHWHeater[1] = "Gas Storage"
+   HeaterMult[1] = 1
+   UseDefaultLoops = 1
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   TotShowersServed = 1
+   TotBathsServed = 1
+   SolFracType = "- none -"
+   ..
+
+DHWHeater   "Tankless 0.82"  
+   HeaterElementType = "Gas"
+   TankType = "Consumer Instantaneous (UEF)"
+   HPWHCategory = "Non-UEF Rated"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   HPWHComModel = "n/a"
+   ASHPType = "- select HPWH type -"
+   EnergyFactor = 0.81
+   TankVolume = 0
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   RecovEff = 83.3662
+   RatedFlow = 4.7
+   AnnFuelUse = 205
+   AnnElecUse = 52
+   StandbyElec = 4
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "Gas Storage"  
+   HeaterElementType = "Gas"
+   TankType = "Consumer Storage (UEF)"
+   HPWHCategory = "Non-UEF Rated"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   HPWHComModel = "n/a"
+   ASHPType = "- select HPWH type -"
+   EnergyFactor = 0.73
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   RecovEff = 82
+   FirstHourRating = 119
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "Tankless UEF"  
+   HeaterElementType = "Gas"
+   TankType = "Consumer Instantaneous (UEF)"
+   HPWHCategory = "Non-UEF Rated"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   HPWHComModel = "n/a"
+   EnergyFactor = 0.81
+   TankVolume = 0
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   RecovEff = 83.3662
+   RatedFlow = 4.7
+   AnnFuelUse = 205
+   AnnElecUse = 52
+   StandbyElec = 4
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+
+END_OF_FILE

@@ -442,6 +442,16 @@ QString ScheduleSum( int iNumScheds, QString sSchNamePrefix, ExpNode** pNodeList
 	if (bHaveMin && bHaveMax && dSchMin > dSchMax)
 		sErr = QString( "Invalid ScheduleSum() function arguments %1-%2: schedule minimum (%3) must be <= maximum (%4)." ).arg( QString::number(iSchMinMaxArgIdx+2), QString::number(iSchMinMaxArgIdx+3), QString::number(dSchMin), QString::number(dSchMax) );
 
+   if (!sErr.isEmpty())
+      BEMPX_WriteLogFile( QString( "executing ScheduleSum( NumScheds %1, SchNamePrefix '%2', ...) error:  %3").arg( QString::number(iNumScheds), sSchNamePrefix, sErr ) );
+#ifdef _DEBUG
+   else
+   {
+      BEMPX_WriteLogFile( QString( "executing ScheduleSum( NumScheds %1, SchNamePrefix '%2', ...):"          ).arg( QString::number(iNumScheds), sSchNamePrefix ) );
+      for (iSch=0; iSch < iNumScheds; iSch++)
+         BEMPX_WriteLogFile( QString( "   %1 sched '%2', %3 weeks, %4 multiplier").arg( scheds[iSch].sType, scheds[iSch].sName, QString::number(scheds[iSch].iNumWeeks), QString::number(daMults[iSch]) ) );
+   }
+#endif
 	if (sErr.isEmpty())
 	{	BEMSch sumSch;
 		sumSch.bValid = true;
@@ -471,6 +481,10 @@ QString ScheduleSum( int iNumScheds, QString sSchNamePrefix, ExpNode** pNodeList
 			else
 			{	assert( false );
 			}
+//#ifdef _DEBUG
+   if (!sErr.isEmpty())
+      BEMPX_WriteLogFile( QString( "      week %1, ending %2/%3").arg( QString::number(sumSch.iNumWeeks), QString::number(sumSch.lEndMonth[sumSch.iNumWeeks-1]), QString::number(sumSch.lEndDay[sumSch.iNumWeeks-1]) ) );
+//#endif
 		} while (!bYrEnd && sErr.isEmpty());
 
 	// perform week summing

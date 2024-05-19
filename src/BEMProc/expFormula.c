@@ -173,6 +173,7 @@ static OperatorTable controlOps[] =
 
 static void UnaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error );
 static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error );
+static void TernaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error );   /* SAC 07/13/21 */
 static void ErrorFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error );
 static void BEMPFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error );
 static void TableLookup( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error );
@@ -203,6 +204,7 @@ static FuncTable functable[] =
    { "findnocase", EXP_Binary,  OP_FindN,    2 },  /* SAC 2/4/13 - added findnocase() function */
    { "atof",     EXP_Unary,     OP_Atof,     1 },  /* SAC 2/23/16 - added atof() */
    { "round",    EXP_Binary,    OP_Round,    2 },  /* SAC 11/13/17 - added round() - round to specified digits */
+   { "substr",   EXP_Ternary,   OP_SubStr,   3 },  /* SAC 07/13/21 - added substr( int firstChar(0-n), int length ) */
 
    { "error",    EXP_ErrorFunc, OP_ErrorExp, 3 },
    { "#E",       EXP_ErrorFunc, OP_ErrorExp, 3 },
@@ -525,6 +527,12 @@ static FuncTable functable[] =
    {                "#P3SV",       EXP_BEMPFunc, BF_Par3SymVal,    VAR_ARGS },  /* SAC 6/30/20 - added */
    { "Parent3RefSymbolValue",      EXP_BEMPFunc, BF_Par3RefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
    {                "#PR3SV",      EXP_BEMPFunc, BF_Par3RefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "FormatNL",                   EXP_BEMPFunc, BF_FormatNL,      VAR_ARGS },  /* SAC 12/11/20 - added */
+   {                "#FMTNL",      EXP_BEMPFunc, BF_FormatNL,      VAR_ARGS },  /* SAC 12/11/20 - added */
+   { "Psych_HAPropsValid",         EXP_BEMPFunc, BF_PS_HAPropsVld, VAR_ARGS },  /* SAC 05/26/21 - added */
+   {                "#PSHAPV",     EXP_BEMPFunc, BF_PS_HAPropsVld, VAR_ARGS },  /* SAC 05/26/21 - added */
+   { "Psych_HAProps",              EXP_BEMPFunc, BF_PS_HAProps,    VAR_ARGS },  /* SAC 05/21/21 - added */
+   {                "#PSHAP",      EXP_BEMPFunc, BF_PS_HAProps,    VAR_ARGS },  /* SAC 05/21/21 - added */
    { NULL,                         0,           0,              0 }
 };
 
@@ -553,11 +561,12 @@ static FuncTable varfunctable[] =
    { NULL,        0,           0,            0 }
 };
 
-#define  BEMPFuncIndex  3
+#define  BEMPFuncIndex  4
 PFFormulaFunction evalFunctions[] =
 {
    UnaryFunc,
    BinaryFunc,
+   TernaryFunc,   /* SAC 07/13/21 */
    ErrorFunc,
    BEMPFunc,
 };
@@ -2494,7 +2503,6 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
 						sprintf( sNum, "%.*g", (int) value2, value1 );
 						result = atof( sNum );
 					}  break;
-
             /* These operators do not apply to numerics */
             case OP_Find :      /* SAC 2/4/13 - added find() function */
             case OP_FindN :     /* SAC 2/4/13 - added findnocase() function */
@@ -2510,6 +2518,57 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
          ExpStackPush( stack, node1 );   /* Re-use node1 */
 
       ExpNodeDelete( node2 );
+   }
+}
+
+static void TernaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error)  /* SAC 07/13/21 */
+{
+   ExpNode* node1;  ExpNode* node2;  ExpNode* node3;			nArgs;	pData;
+   EXP_ERRORCODE( *error ) = EXP_None;
+   if( ( node3 = ExpStackPop( stack ) ) == NULL || ( node2 = ExpStackPop( stack ) ) == NULL || ( node1 = ExpStackPop( stack ) ) == NULL )
+      ExpSetError( error, EXP_Underflow, NULL );
+   else
+   {
+      switch( op )
+      {
+         case OP_SubStr :     /* SAC 07/13/21 - added substr( string, int firstChar(0-n), int length ) */
+                     {  if (node1->type == EXP_String && node2->type == EXP_Value && node3->type == EXP_Value)
+                        {
+                           char* str1     =       node1->pValue;
+                           int iStartChar = (int) node2->fValue;
+                           int iLength    = (int) node3->fValue;
+                           if (iStartChar >= (int) strlen( str1 ))
+                              iStartChar = (int) strlen( str1 );
+                           int iFinalLen = min( (iStartChar+iLength), (int) strlen( str1 ) ) - iStartChar;
+                           char* newStr  = malloc( iFinalLen + 1 );
+                           if ( newStr == NULL )
+                              ExpSetError( error, EXP_Underflow, NULL );
+                           else
+                           {
+                              if (iStartChar < (int) strlen( str1 ))
+                                 strncpy( newStr, &str1[iStartChar], iFinalLen );
+                              newStr[ iFinalLen ] = '\0';
+                           }
+                           free( node1->pValue );
+                           node1->pValue = newStr;
+                        }
+                        else
+                        {
+                           ExpSetError( error, EXP_RuleProc, "Error: invalid function arguments, expecting ( string, int, int )" );
+                           if (node1->type == EXP_String)
+                              free( node1->pValue );
+                           node1->type = EXP_Invalid;
+                           node1->fValue = 0;
+                        }
+                     }  break;
+         default :
+               ExpSetError( error, EXP_RuleProc, "Error: function incompatible with ternary collection" );
+               break;
+      }
+
+      ExpStackPush( stack, node1 );   /* Re-use node1 */
+      ExpNodeDelete( node2 );
+      ExpNodeDelete( node3 );
    }
 }
 
@@ -2705,8 +2764,8 @@ static const char* pszExpNodeTypeDescrip[] = {
             "(EndSwitch node)"  };  // EXP_EndSwitch    
 void NodeToString( ExpNode* node, char* str, int iStrLen )
 {	switch (node->type)
-	{	case EXP_Value       :  _snprintf( str, iStrLen, "%g %s",   node->fValue, pszExpNodeTypeDescrip[node->type] );   break;
-		case EXP_String      :  _snprintf( str, iStrLen, "'%s' %s", node->pValue, pszExpNodeTypeDescrip[node->type] );   break;
+	{	case EXP_Value       :  _snprintf( str, iStrLen, "%g %s",           node->fValue, pszExpNodeTypeDescrip[node->type] );   break;
+		case EXP_String      :  _snprintf( str, iStrLen, "'%s' %s", (char*) node->pValue, pszExpNodeTypeDescrip[node->type] );   break;
 	//	case EXP_Invalid     :
 	//	case EXP_Index       :
 	//	case EXP_Keyword     :

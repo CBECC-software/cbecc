@@ -373,7 +373,7 @@ void CBEMProcDlgCreate::OnOK()
 
          if (iNumPrimProps > 0)
          {
-            int iError = 0;
+            iError = 0;
             int iObjIdx = BEMPX_GetObjectIndex(  BEMPX_GetClass( m_i1Class, iError ), pNewObj );
          
             // Create new building component

@@ -85,7 +85,8 @@
 //#define  DMRuleReserved_PrevNames		22		// SAC 8/6/15		// SAC 1/26/19 - moved up to avoid rl_PREVNAMES rulelist creation
 #define  DMRuleReserved_Report			24
 //#define  DMRuleReserved_Resets			24		// SAC 11/2/16		// SAC 1/26/19 - moved up to avoid rl_RESETS rulelist creation
-#define  DMRuleReserved_MAX_NUM			24
+#define  DMRuleReserved_NRCCPRF			25    // NRCCPRF XML reporting - SAC 11/27/20
+#define  DMRuleReserved_MAX_NUM			25
 
 static bool SetAllDataForDMRuleReserved( int iDMRuleRsrvd )		// SAC 8/8/13 - added to enable variation in bSetAllData rulelist property for "reserved" lists
 {	return  ( (iDMRuleRsrvd == DMRuleReserved_Default) ? false : true );
@@ -116,8 +117,9 @@ const char* pszDMRuleReserved[] = {	"DATATYPE",
 												"FILEHASHES",
 												"SECURITYKEYS",
 									//			"PREVIOUSNAMES",
-												"REPORT" };
+												"REPORT",
 									//			"RESETS" };
+                                    "NRCCPRF" };      // NRCCPRF XML reporting - SAC 11/27/20
 
 const char* pszDMRuleDataTypes[] = {	"String",
 													"Integer",
@@ -188,6 +190,21 @@ void EnsureValidPath( QString sFileWithPath, QString& sFileToCheck )
 		qdFileToCheck.setPath( qdFileWithPath.absolutePath() );
 		sFileToCheck = qdFileWithPath.absoluteFilePath( sFileToCheck );
 	}
+}
+
+void RuleFile::EnsureValidPath_AltPaths( QString sFileWithPath, QString& sFileToCheck )
+{
+   QString sWorkingFile = sFileToCheck;
+   EnsureValidPath( sFileWithPath, sWorkingFile );
+   int iFPSize = (int) m_slFilePaths.size();
+   for (int i=0; (!FileExists( sWorkingFile.toLocal8Bit().constData() ) && i < iFPSize); i++)
+   {
+      sWorkingFile  = m_slFilePaths.at(i);
+      sWorkingFile += sFileToCheck;
+      EnsureValidPath( m_slFilePaths.at(i), sWorkingFile );
+   }
+   if (FileExists( sWorkingFile.toLocal8Bit().constData() ))
+      sFileToCheck = sWorkingFile;
 }
 
 
@@ -768,22 +785,29 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 
 							case  22 :	{	// EvalRulelist
 												if (pszSimPathFileName && iSimInputExpFileIdx < 0)		// SAC 3/10/20
-												{	iSimInputExpFileIdx = ruleSet.nextExportFileIndex();
-													if (iSimInputExpFileIdx < 0)
-													{	iRetVal = -14;
-														sErrorMsg = QString( "Error applying AnalysisAction %1: too many ruleset export files open:  %2" ).arg(
-																								AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), pszSimPathFileName );
-													}
-													else
-													{	int iOpenRetVal = ruleSet.openExportFile( iSimInputExpFileIdx, pszSimPathFileName, "a+" );
-														if (iOpenRetVal == 0)
-															ruleSet.setSimInputExpFileIdx( iSimInputExpFileIdx );
-														else
-														{	iRetVal = -15;
-															sErrorMsg = QString( "Error applying AnalysisAction %1: unable to open simulaiton input file:  %2" ).arg(
-																								AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), pszSimPathFileName );
-												}	}	}
-
+												{  QString qsOpenSimInpError;
+                                       iSimInputExpFileIdx = BEMPX_OpenSimInputExportFile( pszSimPathFileName, qsOpenSimInpError );
+                                       if (iSimInputExpFileIdx < 0)
+                                       {  iRetVal = iSimInputExpFileIdx-12;  // -14 or -15
+                                          sErrorMsg = QString( "Error applying AnalysisAction %1: %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsOpenSimInpError );
+                                       }
+                                    // replaced following code w/ above to enable access to Sim inputs outside of this routine - SAC 04/23/21
+                                    //   iSimInputExpFileIdx = ruleSet.nextExportFileIndex();
+												//	if (iSimInputExpFileIdx < 0)
+												//	{	iRetVal = -14;
+												//		sErrorMsg = QString( "Error applying AnalysisAction %1: too many ruleset export files open:  %2" ).arg(
+												//												AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), pszSimPathFileName );
+												//	}
+												//	else
+												//	{	int iOpenRetVal = ruleSet.openExportFile( iSimInputExpFileIdx, pszSimPathFileName, "a+" );
+												//		if (iOpenRetVal == 0)
+												//			ruleSet.setSimInputExpFileIdx( iSimInputExpFileIdx );
+												//		else
+												//		{	iRetVal = -15;
+												//			sErrorMsg = QString( "Error applying AnalysisAction %1: unable to open simulaiton input file:  %2" ).arg(
+												//												AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), pszSimPathFileName );
+												//	}	}
+                                    }
 												if (iRetVal >= 0)
 												{	QString qsRLName = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValString, iStatus, iSpecialVal, iError, iAA );
 													if (iStatus < 1)
@@ -896,13 +920,47 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 			}	// end of:  for (int iAA=0...
 
 			if (iSimInputExpFileIdx >= 0)		// SAC 3/10/20
-			{	ruleSet.closeExportFile( iSimInputExpFileIdx, iSimInputExpFileIdx );
-				ruleSet.setSimInputExpFileIdx( -1 );
-			}
+            BEMPX_CloseSimInputExportFile( iSimInputExpFileIdx );    // SAC 04/23/21
+			//{	ruleSet.closeExportFile( iSimInputExpFileIdx, iSimInputExpFileIdx );
+			//	ruleSet.setSimInputExpFileIdx( -1 );
+			//}
 		}	// end of:  if (iNumAnalActs > 0)
 	}	// end of:  if (lDBID_AnalAct_Type > BEM_COMP_MULT)
 
 	return iRetVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+// return value:  >=0 => iSimInputExpFileIdx
+//                < 0 => error code (and message)
+int BEMPX_OpenSimInputExportFile( const char* pszSimPathFileName, QString& sErrorMsg )    // SAC 04/23/21
+{  int iSimInputExpFileIdx = -1;
+	if (pszSimPathFileName && strlen( pszSimPathFileName ) > 0)	
+	{	iSimInputExpFileIdx = ruleSet.nextExportFileIndex();
+		if (iSimInputExpFileIdx < 0)
+		{	iSimInputExpFileIdx = -2;
+			sErrorMsg = QString( "Unable to open SimInput file: too many ruleset export files open (%1):  %2" ).arg( QString::number( NUM_RULE_EXPORTFILES ), pszSimPathFileName );
+		}
+		else
+		{	int iOpenRetVal = ruleSet.openExportFile( iSimInputExpFileIdx, pszSimPathFileName, "a+" );
+			if (iOpenRetVal == 0)
+				ruleSet.setSimInputExpFileIdx( iSimInputExpFileIdx );
+			else
+			{	iSimInputExpFileIdx = -3;
+				sErrorMsg = QString( "Unable to open simulation input file:  %1" ).arg( pszSimPathFileName );
+	}	}	}
+   else
+      sErrorMsg = "SimInput path/filename not specified.";
+   return iSimInputExpFileIdx;
+}
+
+void BEMPX_CloseSimInputExportFile( int iSimInputExpFileIdx )    // SAC 04/23/21
+{	if (iSimInputExpFileIdx >= 0)		// SAC 3/10/20
+	{	ruleSet.closeExportFile( iSimInputExpFileIdx, iSimInputExpFileIdx );
+		ruleSet.setSimInputExpFileIdx( -1 );
+	}
 }
 
 
@@ -978,10 +1036,18 @@ BOOL BEMPX_ReadBEMBaseFile( LPCSTR fileName, QString& sBEMBaseFile )			// was: R
 // Notes --------------------------------------------------------------------
 //   
 /////////////////////////////////////////////////////////////////////////////
-RuleFile::RuleFile( QString& fileName )
+RuleFile::RuleFile( QString& fileName, QStringList* pslAltPaths /*=NULL*/ )
 {
    m_file.Open( fileName.toLocal8Bit().constData(), BEMTextIO::load );
    m_fileName = fileName;
+
+   int iPathLen = std::max( fileName.lastIndexOf('\\'), fileName.lastIndexOf('/') );      // SAC 08/06/21
+   if (iPathLen > 0)
+      m_slFilePaths.append( fileName.left( iPathLen+1 ) );
+   if (pslAltPaths)
+   {  for (int i=0; i < (int) pslAltPaths->size(); i++)
+         m_slFilePaths.append( pslAltPaths->at(i) );
+   }
 }
 
 
@@ -1984,10 +2050,15 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFileName, int i1RuleFileIdx,
       errorFile.write( readMsg.toLocal8Bit().constData(), readMsg.length() );
 
 		QString token = file.ReadToken();
+      int iHardwireEnumStrVal = -1;       // -1 (ruleset default) / 0 Value / 1 String - SAC 09/24/21 (MFam)
 		while (!token.isEmpty() && token != "ENDFILE" && !file.AtEOF())		// SAC 1/23/20 - added check for EOF
-		{	if (token == "RULELIST")
+		{	if (token == "ENUM_PROPERTIES_VALUE")
+            iHardwireEnumStrVal = 0;
+         else if (token == "ENUM_PROPERTIES_STRING")
+            iHardwireEnumStrVal = 1;
+         else if (token == "RULELIST")
      	      bRetVal = ((ReadRuleList( ruleListIndex++, errorFile, iFileStructVer /*ruleSet.m_iFileStructVersion*/, 
-     	      									i1RuleFileIdx, &file, pszRulePathFileName )) && (bRetVal));
+     	      									i1RuleFileIdx, &file, pszRulePathFileName, iHardwireEnumStrVal )) && (bRetVal));
 			else
 			{	int i1Class = BEMPX_GetDBComponentID( token.toLocal8Bit().constData() );	// SAC 2/4/18 - enable specification of library objects within rulelist files
             if (i1Class > 0)
@@ -2423,7 +2494,7 @@ bool RuleFile::Read( QFile& errorFile )
 
       token = m_file.ReadToken();
 		if (ruleSet.IsDataModel())
-		{	// handle parsing of reminder of "master" data model ruleset file
+		{	// handle parsing of remainder of "master" data model ruleset file
 	      QString token2, token3, sTransRLName;
 	      QStringList saLibFiles;		// SAC 9/3/16 - added this and following bools to ensure that all RULE NEWs are processed and added to BEMBase PRIOR to processing library entries, since ptrs to PropTypes change as rule news are added
 	      int iNumRuleFiles=0;
@@ -2515,7 +2586,7 @@ bool RuleFile::Read( QFile& errorFile )
 					while (token != "ENDLIBRARYFILES")
 					{	// parse LIBRARY file
 						QString sLibFilePath = token;
-						EnsureValidPath( m_fileName, sLibFilePath );
+						EnsureValidPath_AltPaths( m_fileName, sLibFilePath );
                   if (!FileExists( sLibFilePath.toLocal8Bit().constData() ))
 						{	sErrMsg = QString( "   Error: Library file not found: %1\n\n" ).arg( sLibFilePath );
 							errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
@@ -2531,7 +2602,7 @@ bool RuleFile::Read( QFile& errorFile )
 					while (token != "ENDTABLEFILES")
 					{	// parse LIBRARY file
 						QString sTblFilePath = token;
-						EnsureValidPath( m_fileName, sTblFilePath );
+						EnsureValidPath_AltPaths( m_fileName, sTblFilePath );
                   if (!FileExists( sTblFilePath.toLocal8Bit().constData() ))
 						{	sErrMsg = QString( "   Error: Table file not found: %1\n\n" ).arg( sTblFilePath );
 							errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
@@ -2588,7 +2659,7 @@ bool RuleFile::Read( QFile& errorFile )
 					while (token != "ENDRULEFILES")
 					{	// parse RULE file
 						QString sRuleFilePath = token;
-						EnsureValidPath( m_fileName, sRuleFilePath );
+						EnsureValidPath_AltPaths( m_fileName, sRuleFilePath );
                   if (!FileExists( sRuleFilePath.toLocal8Bit().constData() ))
 						{	sErrMsg = QString( "   Error: rule file not found: %1\n\n" ).arg( sRuleFilePath );
 							errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
@@ -2611,6 +2682,9 @@ bool RuleFile::Read( QFile& errorFile )
 					}
 					iNumRuleFiles += (int) saRuleFiles.size();
 				}
+      	   else if ( token == "TABLELIST" )    // enable data-model rulesets to read in old-style (faster, column index-based) tables - SAC 10/18/21 (MFam)
+      	      // read listing of look-up table definitions
+      	      bRetVal = ((ReadTableList( errorFile )) && (bRetVal));
 				else if (token == "RULELISTFILES")
 				{	// SAC 5/17/16 - code to handle parsing of procedural rulelist files (to facilitate rule sharing w/ CBECC-Res for CSE DHW)
       			int ruleListIndex = ruleSet.getNumTransformations();
@@ -2618,7 +2692,7 @@ bool RuleFile::Read( QFile& errorFile )
 					while (token != "ENDRULELISTFILES")
 					{	// parse procedural RULELIST file
 						QString sRuleFilePath = token;
-						EnsureValidPath( m_fileName, sRuleFilePath );
+						EnsureValidPath_AltPaths( m_fileName, sRuleFilePath );
                   if (!FileExists( sRuleFilePath.toLocal8Bit().constData() ))
 						{	sErrMsg = QString( "   Error: rulelist file not found: %1\n\n" ).arg( sRuleFilePath );
 							errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
@@ -2709,18 +2783,24 @@ bool RuleFile::Read( QFile& errorFile )
       	      bRetVal = ((ReadListFile( m_file.ReadString(), errorFile, UniqueList   )) && (bRetVal));
       	
       	   else if ( token == "LIBRARY" || token == "RULEFILE" )		// SAC 9/23/14 - expand to handle RULEFILE as well
-      	   {  // read file contianing library objects
+      	   {  // read file containing library objects
       	      QString libFileStr = m_file.ReadString();
-					QDir libFile( libFileStr );
-      	      QString libFileDir = libFile.path();
-      	      if (libFileDir.length() == 0)
-      	      {
-						QDir qdFileWithPath( m_fileName );
-						libFile.setPath( qdFileWithPath.absolutePath() );
-						libFileStr = qdFileWithPath.absoluteFilePath( libFileStr );
-      	      }
-
-      	      if ( token == "LIBRARY" )
+					//QDir libFile( libFileStr );
+      	      //QString libFileDir = libFile.path();
+      	      //if (libFileDir.length() == 0)
+      	      //{
+					//	QDir qdFileWithPath( m_fileName );
+					//	libFile.setPath( qdFileWithPath.absolutePath() );
+					//	libFileStr = qdFileWithPath.absoluteFilePath( libFileStr );
+      	      //}
+               // replaced above w/ following to accommodate alternate (shared) rule source paths - SAC 08/31/21 (MFam)
+					EnsureValidPath_AltPaths( m_fileName, libFileStr );
+               if (!FileExists( libFileStr.toLocal8Bit().constData() ))
+					{	sErrMsg = QString( "   Error: %1 file not found: %2\n\n" ).arg( token, libFileStr );
+						errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+						bRetVal = FALSE;
+					}
+					else if ( token == "LIBRARY" )
 	      	      bRetVal = ((ReadLibraryText( libFileStr.toLocal8Bit().constData(), BEMO_RuleLib, &errorFile )) && (bRetVal));
 	      	   else
 						bRetVal = ((ReadRuleFile( libFileStr.toLocal8Bit().constData(), i1RuleFileIdx++, ruleListIndex, errorFile, ruleSet.getFileStructVersion() )) && (bRetVal));	// SAC 9/23/14 - new
@@ -2838,7 +2918,7 @@ bool RuleFile::Read( QFile& errorFile )
 
       	   else if ( token == "DMRULEFILE" )		// SAC 3/24/20 - added ability to specify type of DataModelRule compatibility (initially just CA-HERS
 				{	QString sRuleFilePath = m_file.ReadCSVString();
-					EnsureValidPath( m_fileName, sRuleFilePath );
+					EnsureValidPath_AltPaths( m_fileName, sRuleFilePath );
                if (!FileExists( sRuleFilePath.toLocal8Bit().constData() ))
 					{	sErrMsg = QString( "   Error: rule file not found: %1\n\n" ).arg( sRuleFilePath );
 						errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
@@ -2927,6 +3007,7 @@ bool RuleFile::Read( QFile& errorFile )
 // Arguments ----------------------------------------------------------------
 //   int    ruleListIndex : integer index of this rulelist
 //   QFile& errorFile     : file where error messages are written
+//   int iHardwireEnumStrVal : -1 (ruleset default) / 0 Value / 1 String - SAC 09/24/21 (MFam)
 //   
 // Return Value -------------------------------------------------------------
 //   TRUE always.
@@ -2951,8 +3032,8 @@ bool RuleFile::Read( QFile& errorFile )
 //      end loop
 //   
 /////////////////////////////////////////////////////////////////////////////
-bool RuleFile::ReadRuleList( int ruleListIndex, QFile& /*errorFile*/, int iFileStructVer, int i1RuleFileIndex /*=0*/,
-			  							BEMTextIO* pFile /*=NULL*/, const char* pszFileName /*=NULL*/ )
+bool RuleFile::ReadRuleList( int ruleListIndex, QFile& errorFile, int iFileStructVer, int i1RuleFileIndex /*=0*/,
+			  							BEMTextIO* pFile /*=NULL*/, const char* pszFileName /*=NULL*/, int iHardwireEnumStrVal /*=-1*/ )
 {
    bool bRetVal = TRUE;
    if (pFile == NULL)
@@ -2985,7 +3066,7 @@ bool RuleFile::ReadRuleList( int ruleListIndex, QFile& /*errorFile*/, int iFileS
 	pnFileName.replace('\\','/');
    QString sFN = (pnFileName.lastIndexOf('/') > 0 ? pnFileName.right( (pnFileName.length()-pnFileName.lastIndexOf('/')-1) ) : pnFileName);
    ruleSet.addNewRuleList( token.toLocal8Bit().constData(), (lSetAllData != 0), (lAllowMultipleEvaluations != 0), (lTagAllDataAsUserDefined > 0),
-                    pFile->GetLineCount(), (const char*) sFN.toLocal8Bit().constData(), (lDONTPerformSetBEMDataResets == 0) );  // Creates new rule list
+                    pFile->GetLineCount(), (const char*) sFN.toLocal8Bit().constData(), (lDONTPerformSetBEMDataResets == 0), iHardwireEnumStrVal );  // Creates new rule list
 
    int ruleIndex = 1;
 
@@ -3000,9 +3081,17 @@ bool RuleFile::ReadRuleList( int ruleListIndex, QFile& /*errorFile*/, int iFileS
    {
       pFile->Advance();  // advance past any spaces or comments in ASCII ruleset file
       QString sParamID;
-      // read component/parameter string which from left side of equation
-      pFile->ReadBEMProcParam( sParamID );
-      pFile->Advance();  // advance past any spaces or comments in ASCII ruleset file
+      QStringList slKeyList;		int iNumKeys=-1;
+#define MAX_NUM_KEYS  5
+      std::vector<int> iaKeyInts[MAX_NUM_KEYS];
+      while ((iNumKeys+1) < MAX_NUM_KEYS && iNumKeys < slKeyList.count())
+      {	iNumKeys = slKeyList.count();		sParamID.clear();
+      	// read component/parameter string which from left side of equation
+      	pFile->ReadBEMProcParam( sParamID, FALSE, &slKeyList, &iaKeyInts[iNumKeys] );
+      	pFile->Advance();  // advance past any spaces or comments in ASCII ruleset file
+      }
+		if (sParamID.length() > 4 && sParamID.left(3).compare( "for:", Qt::CaseInsensitive ) == 0)
+		{	assert( false );  }	// too many 'key's specified
 
       // Skip the '='
       if ( '=' != pFile->GetChr() )
@@ -3037,13 +3126,42 @@ bool RuleFile::ReadRuleList( int ruleListIndex, QFile& /*errorFile*/, int iFileS
       {  assert( FALSE );  }  // TO DO: exception if there isnt a '}'
       pFile->Advance();  // advance past any spaces or comments in ASCII ruleset file
 
-      // add rule to current rule list
-//      RuleProcAdd( sRuleID, sParamID, expString, i1RuleFileIndex /*was: 1*/, iRuleFileLineNum /*iRuleLineNum*/ );
-//		ruleSet.addRuleToCurrentList( sRuleID.toLocal8Bit().constData(), sParamID.toLocal8Bit().constData(),
-//												expString.toLocal8Bit().constData(), i1RuleFileIndex /*was: 1*/,
-		ruleSet.addRuleToCurrentList( sRuleID, sParamID,
-												expString, i1RuleFileIndex /*was: 1*/,
-												iRuleFileLineNum /*iRuleLineNum*/ );
+		if (iNumKeys < 1)
+		{	// no keys so just do normal rule processing... - SAC 12/10/20
+	      // add rule to current rule list
+// 	     RuleProcAdd( sRuleID, sParamID, expString, i1RuleFileIndex /*was: 1*/, iRuleFileLineNum /*iRuleLineNum*/ );
+//			ruleSet.addRuleToCurrentList( sRuleID.toLocal8Bit().constData(), sParamID.toLocal8Bit().constData(),
+//													expString.toLocal8Bit().constData(), i1RuleFileIndex /*was: 1*/,
+			ruleSet.addRuleToCurrentList( sRuleID, sParamID,
+													expString, i1RuleFileIndex /*was: 1*/,
+													iRuleFileLineNum /*iRuleLineNum*/ );
+		}
+		else		// duplicate rule for however many keys and key values are specified
+		{	int iKeyIdx[MAX_NUM_KEYS] = {0,0,0,0,0};
+			int iKeyRuleCount=0;
+			for (iKeyIdx[0]=0; iKeyIdx[0] < std::max( 1, (int) iaKeyInts[0].size() ); iKeyIdx[0]++)
+				for (iKeyIdx[1]=0; iKeyIdx[1] < std::max( 1, (int) iaKeyInts[1].size() ); iKeyIdx[1]++)
+					for (iKeyIdx[2]=0; iKeyIdx[2] < std::max( 1, (int) iaKeyInts[2].size() ); iKeyIdx[2]++)
+						for (iKeyIdx[3]=0; iKeyIdx[3] < std::max( 1, (int) iaKeyInts[3].size() ); iKeyIdx[3]++)
+							for (iKeyIdx[4]=0; iKeyIdx[4] < std::max( 1, (int) iaKeyInts[4].size() ); iKeyIdx[4]++)
+							{
+								QString sKeyRuleID=sRuleID, sKeyParamID=sParamID, expKeyString=expString, sKeyVal;
+								for (int iKey=0; iKey<MAX_NUM_KEYS; iKey++)
+									if (iaKeyInts[iKey].size() > 0)
+									{	sKeyVal = QString::number( iaKeyInts[iKey][iKeyIdx[iKey]] );
+										sKeyRuleID += QString(", %1=%2").arg( slKeyList[iKey], sKeyVal );
+										sKeyParamID.replace(  slKeyList[iKey], sKeyVal );
+										expKeyString.replace( slKeyList[iKey], sKeyVal );
+									}
+								// add rule to current rule list
+								ruleSet.addRuleToCurrentList( sKeyRuleID, sKeyParamID, expKeyString,
+																		i1RuleFileIndex /*was: 1*/, iRuleFileLineNum /*iRuleLineNum*/ );
+								iKeyRuleCount++;
+#ifdef _DEBUG  // debugging
+QString sDbg = QString( "key rule added: rulefileidx %1, line# %2: %3 || %4 || %5\n" ).arg( QString::number(i1RuleFileIndex), QString::number(iRuleFileLineNum), sKeyRuleID, sKeyParamID, expKeyString );
+errorFile.write( sDbg.toLocal8Bit().constData(), sDbg.length() );
+#endif
+		}					}
 
       // read the next rule's ID string, then incrament rule index
       ReadRuleID( sRuleID, ruleListIndex, ruleIndex, pFile, sFN.toLocal8Bit().constData() );
@@ -3134,44 +3252,41 @@ bool RuleFile::ReadTableList( QFile& errorFile )
       m_file.String( fileName, _MAX_PATH );
       // extract directopry portion of look-up filename
       QString tableFileDir;
-//      fileName.GetDir( tableFileDir );
-//      // if no directory portion of filename exists, then create one
-//      if ( tableFileDir.length() == 0 )
-//      {
-//         QString fileDir;
-//         QString fileDrive;
-//         m_fileName.GetDir( fileDir );
-//         m_fileName.GetDrive( fileDrive );
-//
-//         fileName.SetDir( fileDir );
-//         fileName.SetDrive( fileDrive );
-//      }
-		QDir qdFileToCheck( fileName );
-		tableFileDir = qdFileToCheck.path();
-		// if no directory portion of filename exists, then create one
-		if (tableFileDir.length() == 0)
-		{	QDir qdFileWithPath( m_fileName );
-			qdFileToCheck.setPath( qdFileWithPath.absolutePath() );
-			fileName = qdFileWithPath.absoluteFilePath( fileName );
+
+
+		//QDir qdFileToCheck( fileName );
+		//tableFileDir = qdFileToCheck.path();
+		//// if no directory portion of filename exists, then create one
+		//if (tableFileDir.length() == 0)
+		//{	QDir qdFileWithPath( m_fileName );
+		//	qdFileToCheck.setPath( qdFileWithPath.absolutePath() );
+		//	fileName = qdFileWithPath.absoluteFilePath( fileName );
+		//}
+		EnsureValidPath_AltPaths( m_fileName, fileName );     // SAC 08/31/21
+      if (!FileExists( fileName.toLocal8Bit().constData() ))
+		{	QString sErrMsg = QString( "   Error: Table file not found: %1\n\n" ).arg( fileName );
+			errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+			bRetVal = FALSE;
 		}
-      
-      cTemp = '\0';
-      while ( cTemp != ',' && !m_file.AtEOL() ) cTemp = m_file.GetChr(); // Skip comma
-      int nParams;
-      m_file.Int( nParams, 10 );  // get # independent variables
-      cTemp = '\0';
-      while ( cTemp != ',' && !m_file.AtEOL() ) cTemp = m_file.GetChr(); // Skip comma
-      int nCols;
-      m_file.Int( nCols, 10 );  // get # dependent variables
+		else
+      {
+         cTemp = '\0';
+         while ( cTemp != ',' && !m_file.AtEOL() ) cTemp = m_file.GetChr(); // Skip comma
+         int nParams;
+         m_file.Int( nParams, 10 );  // get # independent variables
+         cTemp = '\0';
+         while ( cTemp != ',' && !m_file.AtEOL() ) cTemp = m_file.GetChr(); // Skip comma
+         int nCols;
+         m_file.Int( nCols, 10 );  // get # dependent variables
 
-      m_file.GetLine(); // Skip the rest of this line
+         m_file.GetLine(); // Skip the rest of this line
 
-      // read the look-up table and add this table definition to the current ruleset
-      bRetVal = ((ruleSet.addTable( token.toLocal8Bit().constData(), fileName.toLocal8Bit().constData(), nParams, nCols, errorFile )) && (bRetVal));
+         // read the look-up table and add this table definition to the current ruleset
+         bRetVal = ((ruleSet.addTable( token.toLocal8Bit().constData(), fileName.toLocal8Bit().constData(), nParams, nCols, errorFile )) && (bRetVal));
 
-      // read the next table's name (or "END")
-      token = m_file.ReadToken();
-   }
+         // read the next table's name (or "END")
+         token = m_file.ReadToken();
+   }  }
    return bRetVal;
 }
 

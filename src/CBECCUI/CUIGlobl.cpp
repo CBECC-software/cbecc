@@ -645,8 +645,8 @@ void GetProgramPath()
 	esOverviewPDF   = esProgramPath + "CBECC-Com19_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com19_UserManual.pdf";			// SAC 4/26/17
  #elif  UI_PROGYEAR2022
-	esOverviewPDF   = esProgramPath + "CBECC-Com22_QuickStartGuide.pdf";
-	esUserManualPDF = esProgramPath + "CBECC-Com22_UserManual.pdf";			// SAC 6/19/19
+	esOverviewPDF   = esProgramPath + "CBECC-22_QuickStartGuide.pdf";
+	esUserManualPDF = esProgramPath + "CBECC-22_UserManual.pdf";			// SAC 6/19/19
  #else
  	esOverviewPDF   = esProgramPath + "CBECC-Com_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com_UserManual.pdf";			// SAC 7/8/13
@@ -2463,6 +2463,7 @@ int eiBDBCID_PVArrayGeom = 0;
 int eiBDBCID_PVArrayShade = 0;
 int eiBDBCID_Battery = 0;
 
+int eiBDBCID_ResProj = 0;     // SAC 10/20/21 (MFam)
 int eiBDBCID_Building = 0;
 int eiBDBCID_Story = 0;
 int eiBDBCID_Space = 0;
@@ -2517,7 +2518,7 @@ int eiBDBCID_ResSpcDHWFeatures = 0;
 int eiBDBCID_ProcLd = 0;
 int eiBDBCID_StorTank = 0;
 int eiBDBCID_WtrHtr = 0;
-int eiBDBCID_BlrHP = 0;			// SAC 10/23/20
+//int eiBDBCID_BlrHtPump = 0;			// SAC 10/23/20      // removed BlrHtPump... - SAC 05/14/21
 
 
 long elDBID_Proj_Name = 0;
@@ -2556,11 +2557,18 @@ long elDBID_Chiller_EvapInRef = 0;          // "FluidSeg"
 long elDBID_Chiller_EvapOutRef = 0;         // "FluidSeg"
 long elDBID_Boiler_FluidFlowInRef = 0;      // "FluidSeg"
 long elDBID_Boiler_FluidFlowOutRef = 0;     // "FluidSeg"
-long elDBID_BlrHP_FluidSegInRef = 0;        // "FluidSeg"	SAC 10/23/20
-long elDBID_BlrHP_FluidSegOutRef = 0;       // "FluidSeg"
+//long elDBID_BlrHtPump_FluidSegInRef = 0;        // "FluidSeg"	SAC 10/23/20
+//long elDBID_BlrHtPump_FluidSegOutRef = 0;       // "FluidSeg"
 
 long elDBID_ResDHWSys_CentralSysType = 0;						// SAC 1/31/20 (Com tic #3156)
 long elDBID_ResDHWSys_DHWSolarSysRef = 0;						// SAC 1/31/20 (Com tic #3157)
+long elDBID_ResDHWSys_DHWHeater1 = 0;           // SAC 10/12/21 (MFam)
+long elDBID_ResDHWSys_DHWHeater2 = 0;
+long elDBID_ResDHWSys_DHWHeater3 = 0;
+long elDBID_ResDHWSys_DHWHeater4 = 0;
+long elDBID_ResDHWSys_DHWHeater5 = 0;
+long elDBID_ResDHWSys_DHWHeater6 = 0;
+
 long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
 long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
@@ -2577,9 +2585,46 @@ long elDBID_BatchRuns_RunSetFile = 0;          // SAC 10/06/20
 long elDBID_BatchRuns_RunSetFileStatus = 0;  
 long elDBID_BatchRuns_RunSetDescrip = 0;   
 
+// integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+int eiBDBCID_ResZnGrp = 0;
+int eiBDBCID_ResConsAssm = 0;
+int eiBDBCID_ResMat = 0;
+int eiBDBCID_ResWinType = 0;
+int eiBDBCID_ResZn = 0;
+int eiBDBCID_DwellUnitType = 0;
+int eiBDBCID_DwellUnit = 0;
+int eiBDBCID_ResOtherZn = 0;
+int eiBDBCID_ResAttic = 0;
+int eiBDBCID_ResGarage = 0;
+int eiBDBCID_ResCrawlSpc = 0;
+int eiBDBCID_ResExtWall = 0;
+int eiBDBCID_ResIntWall = 0;
+int eiBDBCID_ResUndgrWall = 0;
+int eiBDBCID_ResCathedralCeiling = 0;
+int eiBDBCID_ResCeilingBelowAttic = 0;
+int eiBDBCID_ResIntCeiling = 0;
+int eiBDBCID_ResSlabFlr = 0;
+int eiBDBCID_ResExtFlr = 0;
+int eiBDBCID_ResFlrOverCrawlSpc = 0;
+int eiBDBCID_ResIntFlr = 0;
+int eiBDBCID_ResUndgrFlr = 0;
+int eiBDBCID_ResOpening = 0;
+int eiBDBCID_ResWin = 0;
+int eiBDBCID_ResSkylt = 0;
+int eiBDBCID_ResDr = 0;
+int eiBDBCID_ResHtgSys = 0;      // SAC 08/18/21
+int eiBDBCID_ResClgSys = 0;
+int eiBDBCID_ResHtPumpSys = 0;
+int eiBDBCID_ResDistSys = 0;
+int eiBDBCID_ResDuctSeg = 0;
+int eiBDBCID_ResFanSys = 0;
+int eiBDBCID_ResIAQFan = 0;
+int eiBDBCID_ResClVentFan = 0;
+
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
 	     if (iBDBClass == eiBDBCID_Proj    )				{  iTabCtrlWd =  900;    iTabCtrlHt = 580;   }	// SAC 11/8/14
+	else if (iBDBClass == eiBDBCID_ResProj)         	{  iTabCtrlWd =  960;    iTabCtrlHt = 460;   }	// SAC 10/20/21 (MFam)
 	else if (iBDBClass == eiBDBCID_EUseSummary)			{  iTabCtrlWd =  810;    iTabCtrlHt = 515;   }	// SAC 12/28/17  // SAC 9/15/20 - ht 495->515
 	else if (iBDBClass == eiBDBCID_AirSeg  )				{  iTabCtrlWd =  470;    iTabCtrlHt = 530;   }
 	else if (iBDBClass == eiBDBCID_FluidSeg)				{  iTabCtrlWd =  470;    iTabCtrlHt = 530;   }	// SAC 4/30/14
@@ -2597,9 +2642,57 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_PVArrayGeom  )		{  iTabCtrlWd =  350;    iTabCtrlHt = 250;   }
 	else if (iBDBClass == eiBDBCID_PVArrayShade )		{  iTabCtrlWd =  350;    iTabCtrlHt = 250;   }
 	else if (iBDBClass == eiBDBCID_Battery      )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }	// SAC 7/16/18
-	else if (iBDBClass == eiBDBCID_ResDWHRSys)	  		{  iTabCtrlWd =  500;    iTabCtrlHt = 250;   }	// SAC 12/23/18
-	else if (iBDBClass == eiBDBCID_ResDHWSys )	  		{  iTabCtrlWd =  900;    iTabCtrlHt = 610;   }	// SAC 1/12/20 (Com tic #3156)
-	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd =  600;    iTabCtrlHt = 480;   }	// SAC 1/31/20 (Com tic #3157)
+	else if (iBDBClass == eiBDBCID_ResDWHRSys   && elRulesetCodeYear < 2022)      // restored previous Com dialog sizes for 2019 and earlier code vintages - SAC 10/15/21
+                                             	  		{  iTabCtrlWd =  500;    iTabCtrlHt = 250;   }	// SAC 12/23/18
+	else if (iBDBClass == eiBDBCID_ResDHWSys    && elRulesetCodeYear < 2022)
+                                             	  		{  iTabCtrlWd =  900;    iTabCtrlHt = 610;   }	// SAC 1/12/20 (Com tic #3156)
+	else if (iBDBClass == eiBDBCID_DHWSolarSys  && elRulesetCodeYear < 2022)
+                                             	  		{  iTabCtrlWd =  600;    iTabCtrlHt = 480;   }	// SAC 1/31/20 (Com tic #3157)
+	else if (iBDBClass == eiBDBCID_ResWtrHtr    && elRulesetCodeYear < 2022)
+                                             	  		{  iTabCtrlWd = 900;    iTabCtrlHt = 550;   }
+	else if (iBDBClass == eiBDBCID_ResLpTankHtr && elRulesetCodeYear < 2022)
+                                             	  		{  iTabCtrlWd = 900;    iTabCtrlHt = 550;   }
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+	else if (iBDBClass == eiBDBCID_ResZnGrp)           {  iTabCtrlWd = 900;    iTabCtrlHt = 550;   }
+	else if (iBDBClass == eiBDBCID_ResConsAssm)        {  iTabCtrlWd = 670;    iTabCtrlHt = 610;   }
+	else if (iBDBClass == eiBDBCID_ResWinType)     	   {	iTabCtrlWd = 600;		iTabCtrlHt = 510;   }
+	else if (iBDBClass == eiBDBCID_ResZn)     	      {  iTabCtrlWd = 750;    iTabCtrlHt = 450;   }
+	else if (iBDBClass == eiBDBCID_DwellUnitType)     	{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }
+	else if (iBDBClass == eiBDBCID_DwellUnit)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 450;   }
+	else if (iBDBClass == eiBDBCID_ResOtherZn)     	   {  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }	// SAC 9/3/19 - MFamProto
+	else if (iBDBClass == eiBDBCID_ResAttic)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResGarage)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResCrawlSpc)        {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResExtWall)     	   {  iTabCtrlWd = 500;    iTabCtrlHt = 480;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 420;   }
+	else if (iBDBClass == eiBDBCID_ResIntWall)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResUndgrWall)     	{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResCathedralCeiling)     	{  iTabCtrlWd = 550;    iTabCtrlHt = 480;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 420;   }
+	else if (iBDBClass == eiBDBCID_ResCeilingBelowAttic)     	{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResIntCeiling)     	{  iTabCtrlWd = 500;    iTabCtrlHt = 510;   }
+	else if (iBDBClass == eiBDBCID_ResSlabFlr)     	   {  iTabCtrlWd = 700;    iTabCtrlHt = 460;   }
+	else if (iBDBClass == eiBDBCID_ResExtFlr)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResFlrOverCrawlSpc)     	{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResIntFlr)     	   {  iTabCtrlWd = 500;    iTabCtrlHt = 510;   }
+	else if (iBDBClass == eiBDBCID_ResUndgrFlr)     	{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResOpening)       	{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }	// SAC 7/30/20 - MFamProto
+	else if (iBDBClass == eiBDBCID_ResWin)     	      {	iTabCtrlWd = 650;		iTabCtrlHt = 610;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
+	else if (iBDBClass == eiBDBCID_ResSkylt)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResDr)     	      {  iTabCtrlWd = 550;    iTabCtrlHt = 360;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 300;   }
+//	else if (iBDBClass == eiBDBCID_HVACSys)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
+	else if (iBDBClass == eiBDBCID_ResHtgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }      // SAC 08/18/21
+	else if (iBDBClass == eiBDBCID_ResClgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResHtPumpSys)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21
+	else if (iBDBClass == eiBDBCID_ResDistSys)	   	{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
+	else if (iBDBClass == eiBDBCID_ResFanSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+	else if (iBDBClass == eiBDBCID_ResIAQFan)	  			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
+	else if (iBDBClass == eiBDBCID_ResClVentFan)	  		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
+   // integrated Res DHW UI into Com - SAC 10/12/21 (MFam)
+	else if (iBDBClass == eiBDBCID_ResDHWSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20
+	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 480;   }	// SAC 1/12/20 (Res tic #1013)  - SAC 6/11/20 (tic #1210)
+	else if (iBDBClass == eiBDBCID_ResDWHRSys)	   	{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
+	else if (iBDBClass == eiBDBCID_ResWtrHtr)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 600;   }	// Ht was 440 - increased to allow for UEF water heater labels   // ht 540->600 - SAC 01/31/21
+	else if (iBDBClass == eiBDBCID_ResLpTankHtr)	      {  iTabCtrlWd = 600;    iTabCtrlHt = 500;   }
+
 	else                                					{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	return TRUE;
 }
@@ -2830,7 +2923,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
 	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 960;    iTabCtrlHt = 460;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890   - SAC 11/9/19 wd: 890->960   - SAC 4/24/20 ht: 400->460
 	else if (iBDBClass == eiBDBCID_EUseSummary)			{  if (elRulesetCodeYear >= 2022)
-																			{	iTabCtrlWd = 1080;    iTabCtrlHt = 520;		}		// SAC 6/12/19 - accommodate additional columns in 2022 results
+																			{	iTabCtrlWd = 1080;    iTabCtrlHt = 570;		}		// SAC 6/12/19 - accommodate additional columns in 2022 results   // SAC 12/02/20 - Ht 520->570
 																			else
 																			{	iTabCtrlWd =  810;    iTabCtrlHt = 520;		}  }	// SAC 12/28/17
 	else if (iBDBClass == eiBDBCID_RESNETBldg)			{  iTabCtrlWd = 960;    iTabCtrlHt = 460;   }	// SAC 9/27/20
@@ -2854,13 +2947,13 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd = 730;    iTabCtrlHt = 535;   }	// SAC 2/21/17
 	else if (iBDBClass == eiBDBCID_HVACSys)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
-	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 640;   }	// SAC 11/10/20 - Ht 580 -> 640
+	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
 	else if (iBDBClass == eiBDBCID_IAQFan)	   			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
 	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20
 	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 480;   }	// SAC 1/12/20 (Res tic #1013)  - SAC 6/11/20 (tic #1210)
 	else if (iBDBClass == eiBDBCID_DWHRSys)	   		{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
-	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// Ht was 440 - increased to allow for UEF water heater labels
+	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 600;   }	// Ht was 440 - increased to allow for UEF water heater labels   // ht 540->600 - SAC 01/31/21
 	else if (iBDBClass == eiBDBCID_DHWLoopTankHeater)	{  iTabCtrlWd = 600;    iTabCtrlHt = 500;   }
 	else if (iBDBClass == eiBDBCID_SCSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_DHWSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
@@ -3081,6 +3174,7 @@ void InitBEMDBIDs()
 	eiBDBCID_PVArrayShade       = BEMPX_GetDBComponentID( "PVArrayShade" );
 	eiBDBCID_Battery            = BEMPX_GetDBComponentID( "Battery"      );
 
+   eiBDBCID_ResProj            = BEMPX_GetDBComponentID( "ResProj" );         // SAC 10/20/21 (MFam)
    eiBDBCID_Building           = BEMPX_GetDBComponentID( "Building" );
    eiBDBCID_Story              = BEMPX_GetDBComponentID( "Story" );
    eiBDBCID_Space              = BEMPX_GetDBComponentID( "Space" );
@@ -3131,11 +3225,13 @@ void InitBEMDBIDs()
 	eiBDBCID_ResWtrHtr          = BEMPX_GetDBComponentID( "ResWtrHtr" );
 	eiBDBCID_ResLpTankHtr       = BEMPX_GetDBComponentID( "ResLpTankHtr" );	// SAC 1/12/20 (Com tic #3156)
 	eiBDBCID_DHWSolarSys        = BEMPX_GetDBComponentID( "DHWSolarSys" );	// SAC 1/31/20 (Com tic #3157)
+      if (eiBDBCID_DHWSolarSys < 1)
+         eiBDBCID_DHWSolarSys  = BEMPX_GetDBComponentID( "DHWSolSys" );    // address rename of DHWSolarSys to DHWSolSys between 2019 & 2022 rulesets - SAC 10/12/21 (MFam)
 	eiBDBCID_ResSpcDHWFeatures  = BEMPX_GetDBComponentID( "ResSpcDHWFeatures" );
 	eiBDBCID_ProcLd             = BEMPX_GetDBComponentID( "ProcLd" );        
 	eiBDBCID_StorTank           = BEMPX_GetDBComponentID( "StorTank" );      
 	eiBDBCID_WtrHtr             = BEMPX_GetDBComponentID( "WtrHtr" );        
-	eiBDBCID_BlrHP              = BEMPX_GetDBComponentID( "BlrHP" );        
+//	eiBDBCID_BlrHtPump          = BEMPX_GetDBComponentID( "BlrHtPump" );        // removed BlrHtPump... - SAC 05/14/21
 
    elDBID_Proj_Name               = BEMPX_GetDatabaseID( "Name",               eiBDBCID_Project );
    elDBID_Proj_RunDate            = BEMPX_GetDatabaseID( "RunDate",            eiBDBCID_Project );
@@ -3177,11 +3273,17 @@ void InitBEMDBIDs()
 	elDBID_Chiller_EvapOutRef          = BEMPX_GetDatabaseID( "EvapOutRef",         eiBDBCID_Chiller  );
 	elDBID_Boiler_FluidFlowInRef       = BEMPX_GetDatabaseID( "FluidFlowInRef",     eiBDBCID_Boiler   );
 	elDBID_Boiler_FluidFlowOutRef      = BEMPX_GetDatabaseID( "FluidFlowOutRef",    eiBDBCID_Boiler   );
-	elDBID_BlrHP_FluidSegInRef         = BEMPX_GetDatabaseID( "FluidSegInRef",      eiBDBCID_BlrHP   );
-	elDBID_BlrHP_FluidSegOutRef        = BEMPX_GetDatabaseID( "FluidSegOutRef",     eiBDBCID_BlrHP   );
+//	elDBID_BlrHtPump_FluidSegInRef     = BEMPX_GetDatabaseID( "FluidSegInRef",      eiBDBCID_BlrHtPump   );     // removed BlrHtPump... - SAC 05/14/21
+//	elDBID_BlrHtPump_FluidSegOutRef    = BEMPX_GetDatabaseID( "FluidSegOutRef",     eiBDBCID_BlrHtPump   );
 
 	elDBID_ResDHWSys_CentralSysType    = BEMPX_GetDatabaseID( "CentralSysType",     eiBDBCID_ResDHWSys );	// SAC 1/31/20 (Com tic #3156)
 	elDBID_ResDHWSys_DHWSolarSysRef    = BEMPX_GetDatabaseID( "DHWSolarSysRef",     eiBDBCID_ResDHWSys );	// SAC 1/31/20 (Com tic #3157)
+	elDBID_ResDHWSys_DHWHeater1	     = BEMPX_GetDatabaseID( "DHWHeater", eiBDBCID_ResDHWSys );    // SAC 10/12/21 (MFam)
+	elDBID_ResDHWSys_DHWHeater2	     = elDBID_ResDHWSys_DHWHeater1 + 1;
+	elDBID_ResDHWSys_DHWHeater3	     = elDBID_ResDHWSys_DHWHeater2 + 1;
+	elDBID_ResDHWSys_DHWHeater4	     = elDBID_ResDHWSys_DHWHeater3 + 1;
+	elDBID_ResDHWSys_DHWHeater5	     = elDBID_ResDHWSys_DHWHeater4 + 1;
+	elDBID_ResDHWSys_DHWHeater6	     = elDBID_ResDHWSys_DHWHeater5 + 1;
 
 	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
 	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 
@@ -3198,6 +3300,42 @@ void InitBEMDBIDs()
    elDBID_BatchRuns_RunSetFile         = BEMPX_GetDatabaseID( "RunSetFile",         eiBDBCID_BatchRuns );    // SAC 10/06/20
    elDBID_BatchRuns_RunSetFileStatus   = BEMPX_GetDatabaseID( "RunSetFileStatus",   eiBDBCID_BatchRuns );  
    elDBID_BatchRuns_RunSetDescrip      = BEMPX_GetDatabaseID( "RunSetDescrip",      eiBDBCID_BatchRuns );   
+
+   // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+   eiBDBCID_ResZnGrp              = BEMPX_GetDBComponentID( "ResZnGrp" );
+   eiBDBCID_ResConsAssm           = BEMPX_GetDBComponentID( "ResConsAssm" );                    
+   eiBDBCID_ResMat                = BEMPX_GetDBComponentID( "ResMat" );                    
+   eiBDBCID_ResWinType            = BEMPX_GetDBComponentID( "ResWinType" );                    
+   eiBDBCID_ResZn                 = BEMPX_GetDBComponentID( "ResZn" );                    
+   eiBDBCID_DwellUnitType         = BEMPX_GetDBComponentID( "DwellUnitType" );                    
+   eiBDBCID_DwellUnit             = BEMPX_GetDBComponentID( "DwellUnit" );                    
+   eiBDBCID_ResOtherZn            = BEMPX_GetDBComponentID( "ResOtherZn" );                    
+   eiBDBCID_ResAttic              = BEMPX_GetDBComponentID( "ResAttic" );                    
+   eiBDBCID_ResGarage             = BEMPX_GetDBComponentID( "ResGarage" );                    
+   eiBDBCID_ResCrawlSpc           = BEMPX_GetDBComponentID( "ResCrawlSpc" );                    
+   eiBDBCID_ResExtWall            = BEMPX_GetDBComponentID( "ResExtWall" );                    
+   eiBDBCID_ResIntWall            = BEMPX_GetDBComponentID( "ResIntWall" );                    
+   eiBDBCID_ResUndgrWall          = BEMPX_GetDBComponentID( "ResUndgrWall" );                    
+   eiBDBCID_ResCathedralCeiling   = BEMPX_GetDBComponentID( "ResCathedralCeiling" );                    
+   eiBDBCID_ResCeilingBelowAttic  = BEMPX_GetDBComponentID( "ResCeilingBelowAttic" );                    
+   eiBDBCID_ResIntCeiling         = BEMPX_GetDBComponentID( "ResIntCeiling" );                    
+   eiBDBCID_ResSlabFlr            = BEMPX_GetDBComponentID( "ResSlabFlr" );                    
+   eiBDBCID_ResExtFlr             = BEMPX_GetDBComponentID( "ResExtFlr" );                    
+   eiBDBCID_ResFlrOverCrawlSpc    = BEMPX_GetDBComponentID( "ResFlrOverCrawlSpc" );                    
+   eiBDBCID_ResIntFlr             = BEMPX_GetDBComponentID( "ResIntFlr" );                    
+   eiBDBCID_ResUndgrFlr           = BEMPX_GetDBComponentID( "ResUndgrFlr" );                    
+   eiBDBCID_ResOpening            = BEMPX_GetDBComponentID( "ResOpening" );                    
+   eiBDBCID_ResWin                = BEMPX_GetDBComponentID( "ResWin" );                    
+   eiBDBCID_ResSkylt              = BEMPX_GetDBComponentID( "ResSkylt" );                    
+   eiBDBCID_ResDr                 = BEMPX_GetDBComponentID( "ResDr" );                 
+   eiBDBCID_ResHtgSys             = BEMPX_GetDBComponentID( "ResHtgSys" );      // SAC 08/18/21
+   eiBDBCID_ResClgSys             = BEMPX_GetDBComponentID( "ResClgSys" );
+   eiBDBCID_ResHtPumpSys          = BEMPX_GetDBComponentID( "ResHtPumpSys" );
+   eiBDBCID_ResDistSys            = BEMPX_GetDBComponentID( "ResDistSys" );
+   eiBDBCID_ResDuctSeg            = BEMPX_GetDBComponentID( "ResDuctSeg" );
+   eiBDBCID_ResFanSys             = BEMPX_GetDBComponentID( "ResFanSys" );
+   eiBDBCID_ResIAQFan             = BEMPX_GetDBComponentID( "ResIAQFan" );
+   eiBDBCID_ResClVentFan          = BEMPX_GetDBComponentID( "ResClVentFan" );
 
 // SAC 5/13/14 - revised to keep this property characterized as Required (but still marked as Primary)
 	// make adjustments to the InputClass of certain properties to ensure proper UI functionality
@@ -3221,7 +3359,7 @@ void InitBEMDBIDs()
    eiBDBCID_DwellUnitType = BEMPX_GetDBComponentID( "DwellUnitType" );	// SAC 6/18/14
    eiBDBCID_DwellUnit     = BEMPX_GetDBComponentID( "DwellUnit" );
    eiBDBCID_Zone       = BEMPX_GetDBComponentID( "Zone" );
-   eiBDBCID_OtherZone  = BEMPX_GetDBComponentID( "OtherZone" );	// SAC 9/3/19 - MFamProto
+   eiBDBCID_OtherZone  = (eiDeveloperMenu == 0 ? 0 : BEMPX_GetDBComponentID( "OtherZone" ));	// SAC 9/3/19 - MFamProto   // hide from tree when eiDeveloperMenu = 0 - SAC 03/30/21
    eiBDBCID_Garage     = BEMPX_GetDBComponentID( "Garage" );
    eiBDBCID_Attic      = BEMPX_GetDBComponentID( "Attic" );
    eiBDBCID_CrawlSpace = BEMPX_GetDBComponentID( "CrawlSpace" );
@@ -3258,6 +3396,8 @@ void InitBEMDBIDs()
    eiBDBCID_ClVentFan  = BEMPX_GetDBComponentID( "ClVentFan" );
 	eiBDBCID_DHWSys     = BEMPX_GetDBComponentID( "DHWSys" );
 	eiBDBCID_DHWSolarSys= BEMPX_GetDBComponentID( "DHWSolarSys" );		// SAC 1/12/20 (Res tic #1013)
+      if (eiBDBCID_DHWSolarSys < 1)
+         eiBDBCID_DHWSolarSys  = BEMPX_GetDBComponentID( "DHWSolSys" );    // address rename of DHWSolarSys to DHWSolSys between 2019 & 2022 rulesets - SAC 10/12/21 (MFam)
 	eiBDBCID_DWHRSys    = BEMPX_GetDBComponentID( "DWHRSys" );			// SAC 12/23/18
 	eiBDBCID_DHWHeater  = BEMPX_GetDBComponentID( "DHWHeater" );
 	eiBDBCID_DHWLoopTankHeater  = BEMPX_GetDBComponentID( "DHWLoopTankHeater" );	// SAC 11/14/19

@@ -99,6 +99,14 @@ int main(int argc, char *argv[])
 	parser.addVersionOption();
 
 	// add command line options
+	QCommandLineOption sharedPath1Option( "sharedPath1",        // SAC 08/02/21 (MFam)
+				QCoreApplication::translate("main", "Set shared data model and rule file path #1 <sharedpath1>."),
+				QCoreApplication::translate("main", "sharedpath1"));
+		parser.addOption(sharedPath1Option);
+	QCommandLineOption sharedPath2Option( "sharedPath2",
+				QCoreApplication::translate("main", "Set shared data model and rule file path #2 <sharedpath2>."),
+				QCoreApplication::translate("main", "sharedpath2"));
+		parser.addOption(sharedPath2Option);
 	QCommandLineOption bemBaseTxtOption( "bemBaseTxt",
 				QCoreApplication::translate("main", "Set data model definitions file <bembasetxt>."),
 				QCoreApplication::translate("main", "bembasetxt"));
@@ -147,13 +155,14 @@ int main(int argc, char *argv[])
 
 // before applying command line path/file settings, default all
 #ifdef CBECC_RES19
-//// to compile rules relative to Debug/Release exe -> bin\Res\rule source locations
-//	bemCmplr.SetBEMBaseText(  "../Res/Rules/src/CAR13 BEMBase.txt" );
-//	bemCmplr.SetBEMEnumsText( "../Res/Rules/src/CAR16 BEMEnums.txt" );
-//	bemCmplr.SetBEMBaseBin(   "../Res/Rules/CA Res 2016/CAR16 BEMBase.bin" );
-//	bemCmplr.SetRuleText(     "../Res/Rules/src/Rules/Rules-2016.txt" );
-//	bemCmplr.SetRuleBin(      "../Res/Rules/CA Res 2016.bin" );
-//	bemCmplr.SetRuleLog(      "../Res/Rules/src/Rules/Rules Log.out" );
+// to compile rules relative to Debug/Release exe -> bin\Res\rule source locations
+	bemCmplr.SetSP1Text(      "../Res/RuleDev/shared/" );
+	bemCmplr.SetBEMBaseText(  "../Res/RuleDev/T24R/CAR13 BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../Res/RuleDev/T24R/CAR19 BEMEnums.txt" );
+	bemCmplr.SetBEMBaseBin(   "../Res/Rulesets/CA Res 2019/CAR19 BEMBase.bin" );
+	bemCmplr.SetRuleText(     "../Res/RuleDev/T24R/Rules/Rules-2016.txt" );
+	bemCmplr.SetRuleBin(      "../Res/Rulesets/CA Res 2019.bin" );
+	bemCmplr.SetRuleLog(      "../Res/RuleDev/T24R/Rules/Rules19 Log.out" );
 
 //// to compile rules relative to SVN exe->rule source locations
 //	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
@@ -163,21 +172,22 @@ int main(int argc, char *argv[])
 //	bemCmplr.SetRuleBin(      "Data/Rulesets/CA Res 2016.bin" );
 //	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
 
-// to compile rules relative to SVN exe->rule source locations
-	bemCmplr.SetBEMBaseText(  "../../RuleDev/Rulesets/CA RESNET/CAR13 BEMBase.txt" );
-	bemCmplr.SetBEMEnumsText( "../../RuleDev/Rulesets/CA RESNET/CAR19 BEMEnums.txt" );
-	bemCmplr.SetBEMBaseBin(   "../Res/Rules/CA Res 2019/CAR19 BEMBase.bin" );
-	bemCmplr.SetRuleText(     "../../RuleDev/Rulesets/CA RESNET/Rules/Rules-2019-2-0.txt" );
-	bemCmplr.SetRuleBin(      "../Res/Rules/CA Res 2019.bin" );
-	bemCmplr.SetRuleLog(      "../../RuleDev/Rulesets/CA RESNET/Rules/Rules-2019-RESNET dbg Log.out" );
+//// to compile rules relative to SVN exe->rule source locations
+//	bemCmplr.SetBEMBaseText(  "../../RuleDev/Rulesets/CA RESNET/CAR13 BEMBase.txt" );
+//	bemCmplr.SetBEMEnumsText( "../../RuleDev/Rulesets/CA RESNET/CAR19 BEMEnums.txt" );
+//	bemCmplr.SetBEMBaseBin(   "../Res/Rules/CA Res 2019/CAR19 BEMBase.bin" );
+//	bemCmplr.SetRuleText(     "../../RuleDev/Rulesets/CA RESNET/Rules/Rules-2019-2-0.txt" );
+//	bemCmplr.SetRuleBin(      "../Res/Rules/CA Res 2019.bin" );
+//	bemCmplr.SetRuleLog(      "../../RuleDev/Rulesets/CA RESNET/Rules/Rules-2019-RESNET dbg Log.out" );
 #else		// CBECC-Com
 // to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
-	bemCmplr.SetBEMBaseText(  "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );
-	bemCmplr.SetBEMEnumsText( "../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" );
-	bemCmplr.SetBEMBaseBin(   "../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
-	bemCmplr.SetRuleText(     "../Com/Rules/src/Rules/CEC 2016 NonRes.txt" );
-	bemCmplr.SetRuleBin(      "../Com/Rules/CEC 2016 NonRes.bin" );
-	bemCmplr.SetRuleLog(      "../Com/Rules/src/Rules/Rules-2016 Log.out" );
+	bemCmplr.SetSP1Text(      "../Com/RuleDev/src/shared/" );
+	bemCmplr.SetBEMBaseText(  "../Com/RuleDev/src/BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../Com/RuleDev/src/T24N/T24N_2022 BEMEnums.txt" );
+	bemCmplr.SetBEMBaseBin(   "../Com/Rulesets/T24N_2022/T24N_2022 BEMBase.bin" );
+	bemCmplr.SetRuleText(     "../Com/RuleDev/src/T24N/Rules/T24N_2022.txt" );
+	bemCmplr.SetRuleBin(      "../Com/Rulesets/T24N_2022.bin" );
+	bemCmplr.SetRuleLog(      "_Rules-2022 Log.out" );
 
 //// to compile rules relative to SVN exe->rule source locations
 //	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
@@ -189,6 +199,12 @@ int main(int argc, char *argv[])
 #endif
 
 // now apply command line path/file arguments
+	QString qsSP1 = parser.value(sharedPath1Option);      // SAC 08/02/21 (MFam)
+	if (!qsSP1.isEmpty())
+		bemCmplr.SetSP1Text( qsSP1 );
+	QString qsSP2 = parser.value(sharedPath2Option);
+	if (!qsSP2.isEmpty())
+		bemCmplr.SetSP2Text( qsSP2 );
 	QString qsBT = parser.value(bemBaseTxtOption);
 	if (!qsBT.isEmpty())
 		bemCmplr.SetBEMBaseText( qsBT );
@@ -273,6 +289,8 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 	fontBold.setPointSize( 10 );
 	fontBold.setBold( true );
 
+	sp1BrowseButton = createButton(tr("..."), SLOT(browseSP1()));
+	sp2BrowseButton = createButton(tr("..."), SLOT(browseSP2()));
 	dmDefsBrowseButton = createButton(tr("..."), SLOT(browseDMDefs()));
 	dmEnumsBrowseButton = createButton(tr("..."), SLOT(browseDMEnums()));
 	dmCompiledBrowseButton = createButton(tr("..."), SLOT(browseDMCompiled()));
@@ -282,6 +300,8 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 	rlLogBrowseButton = createButton(tr("..."), SLOT(browseRLLog()));
 	rlCompileButton = createButton(tr("  Compile &Ruleset  "), SLOT(compileRuleset()));
 
+	sp1TextEdit = createTextEdit();
+	sp2TextEdit = createTextEdit();
 	dmDefsTextEdit = createTextEdit();
 	dmEnumsTextEdit = createTextEdit();
 	dmCompiledTextEdit = createTextEdit();
@@ -289,6 +309,9 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 	rlCompiledTextEdit = createTextEdit();
 	rlLogTextEdit = createTextEdit();
 
+	spLabel = new QLabel(tr("Shared File Path(s):"));
+	spSpacerLabel = new QLabel(tr("   "));
+	spSpacer2Label = new QLabel(tr("   "));
 	dmCompilerLabel = new QLabel(tr("Data Model Compiler"));
 	dmDefsLabel = new QLabel(tr("   Data Model Definitions File:"));
 	dmEnumsLabel = new QLabel(tr("   Data Model Enumerations File:"));
@@ -301,13 +324,19 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 	rlSpacerLabel = new QLabel(tr("   "));
 //! [0]
 
+//	spSpacerLabel->setFont( font );
+//	dmSpacerLabel->setFont( font );
+//	rlSpacerLabel->setFont( font );
+	spLabel->setFont( fontBold );
 	dmCompilerLabel->setFont( fontBold );
 	dmCompileButton->setFont( fontBold );
 	rlCompilerLabel->setFont( fontBold );
 	rlCompileButton->setFont( fontBold );
 
 	QFontMetrics fm( font );
-	int iBrowseBtnWd = fm.width("...")+10;
+	int iBrowseBtnWd = fm.horizontalAdvance("...")+10;
+	sp1BrowseButton->setFixedWidth( iBrowseBtnWd );
+	sp2BrowseButton->setFixedWidth( iBrowseBtnWd );
 	dmDefsBrowseButton->setFixedWidth( iBrowseBtnWd );
 	dmEnumsBrowseButton->setFixedWidth( iBrowseBtnWd );
 	dmCompiledBrowseButton->setFixedWidth( iBrowseBtnWd );
@@ -315,7 +344,8 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 	rlCompiledBrowseButton->setFixedWidth( iBrowseBtnWd );
 	rlLogBrowseButton->setFixedWidth( iBrowseBtnWd );
 
-	int iFileLabelWd = fm.width("   Data Model Enumerations File:")+10;
+	int iFileLabelWd = fm.horizontalAdvance("   Data Model Enumerations File:")+10;
+	spLabel->setFixedWidth( iFileLabelWd );
 	dmDefsLabel->setFixedWidth( iFileLabelWd );
 	dmEnumsLabel->setFixedWidth( iFileLabelWd );
 	dmCompiledLabel->setFixedWidth( iFileLabelWd );
@@ -333,36 +363,63 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 
 //! [1]
 	QGridLayout *mainLayout = new QGridLayout;
-	mainLayout->addWidget(dmCompilerLabel, 0, 0);
-	mainLayout->addWidget(dmDefsLabel, 1, 0);
-	mainLayout->addWidget(dmDefsTextEdit, 1, 1, 1, 2);
-	mainLayout->addWidget(dmDefsBrowseButton, 1, 3);
-	mainLayout->addWidget(dmEnumsLabel, 2, 0);
-	mainLayout->addWidget(dmEnumsTextEdit, 2, 1, 1, 2);
-	mainLayout->addWidget(dmEnumsBrowseButton, 2, 3);
-	mainLayout->addWidget(dmCompiledLabel, 3, 0);
-	mainLayout->addWidget(dmCompiledTextEdit, 3, 1, 1, 2);
-	mainLayout->addWidget(dmCompiledBrowseButton, 3, 3);
-	mainLayout->addWidget(dmCompileButton, 4, 2, 1, 2);
-	mainLayout->addWidget(dmSpacerLabel, 5, 2);
-	mainLayout->addWidget(rlCompilerLabel, 6, 0);
-	mainLayout->addWidget(rlPrimLabel, 7, 0);
-	mainLayout->addWidget(rlPrimTextEdit, 7, 1, 1, 2);
-	mainLayout->addWidget(rlPrimBrowseButton, 7, 3);
-	mainLayout->addWidget(rlCompiledLabel, 8, 0);
-	mainLayout->addWidget(rlCompiledTextEdit, 8, 1, 1, 2);
-	mainLayout->addWidget(rlCompiledBrowseButton, 8, 3);
-	mainLayout->addWidget(rlLogLabel, 9, 0);
-	mainLayout->addWidget(rlLogTextEdit, 9, 1, 1, 2);
-	mainLayout->addWidget(rlLogBrowseButton, 9, 3);
-	mainLayout->addWidget(rlCompileButton, 10, 2, 1, 2);
-	mainLayout->addWidget(rlSpacerLabel, 11, 2);
+
+	mainLayout->addWidget(spSpacerLabel, 0, 0);     // added for shared paths - SAC 07/31/21 (MFam)
+	mainLayout->addWidget(spLabel, 1, 0);
+	mainLayout->addWidget(sp1TextEdit, 1, 1, 1, 2);
+	mainLayout->addWidget(sp1BrowseButton, 1, 3);
+	mainLayout->addWidget(sp2TextEdit, 2, 1, 1, 2);
+	mainLayout->addWidget(sp2BrowseButton, 2, 3);
+	mainLayout->addWidget(spSpacer2Label, 3, 0); 
+
+	mainLayout->addWidget(dmCompilerLabel, 4, 0);
+	mainLayout->addWidget(dmDefsLabel, 5, 0);
+	mainLayout->addWidget(dmDefsTextEdit, 5, 1, 1, 2);
+	mainLayout->addWidget(dmDefsBrowseButton, 5, 3);
+	mainLayout->addWidget(dmEnumsLabel, 6, 0);
+	mainLayout->addWidget(dmEnumsTextEdit, 6, 1, 1, 2);
+	mainLayout->addWidget(dmEnumsBrowseButton, 6, 3);
+	mainLayout->addWidget(dmCompiledLabel, 7, 0);
+	mainLayout->addWidget(dmCompiledTextEdit, 7, 1, 1, 2);
+	mainLayout->addWidget(dmCompiledBrowseButton, 7, 3);
+	mainLayout->addWidget(dmCompileButton, 8, 2, 1, 2);
+	mainLayout->addWidget(dmSpacerLabel, 9, 2);
+	mainLayout->addWidget(rlCompilerLabel, 10, 0);
+	mainLayout->addWidget(rlPrimLabel, 11, 0);
+	mainLayout->addWidget(rlPrimTextEdit, 11, 1, 1, 2);
+	mainLayout->addWidget(rlPrimBrowseButton, 11, 3);
+	mainLayout->addWidget(rlCompiledLabel, 12, 0);
+	mainLayout->addWidget(rlCompiledTextEdit, 12, 1, 1, 2);
+	mainLayout->addWidget(rlCompiledBrowseButton, 12, 3);
+	mainLayout->addWidget(rlLogLabel, 13, 0);
+	mainLayout->addWidget(rlLogTextEdit, 13, 1, 1, 2);
+	mainLayout->addWidget(rlLogBrowseButton, 13, 3);
+	mainLayout->addWidget(rlCompileButton, 14, 2, 1, 2);
+	mainLayout->addWidget(rlSpacerLabel, 15, 2);
 	setLayout(mainLayout);
 
 	setWindowTitle(tr("Data Model & Ruleset Compiler"));
-	resize(800, 540);
+	resize(800, 660);
 }
 //! [1]
+
+void BEMCompiler::browseSP1()
+{
+	QString dir = QFileDialog::getExistingDirectory( this, 
+					tr("Select Shared File Path #1"), QDir::currentPath(),
+               QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	if (!dir.isEmpty())
+		sp1TextEdit->setText(dir);
+}
+
+void BEMCompiler::browseSP2()
+{
+	QString dir = QFileDialog::getExistingDirectory( this, 
+					tr("Select Shared File Path #1"), QDir::currentPath(),
+               QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	if (!dir.isEmpty())
+		sp2TextEdit->setText(dir);
+}
 
 //! [2]
 void BEMCompiler::browseDMDefs()
@@ -493,11 +550,25 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 	QString fileDMCmpld = dmCompiledTextEdit->toPlainText();
 	GetFullPath( fileDMCmpld, qAppDir );
 
+	QString fileEnums = dmEnumsTextEdit->toPlainText();
+	GetFullPath( fileEnums, qAppDir );
+   bool bWritePrevNamesToIDMTxt = (!fileEnums.isEmpty() && fileEnums.indexOf("19") >= 0);    // SAC 08/05/21
+
+   QStringList qslSharedPaths;
+	QString sp[2] = { sp1TextEdit->toPlainText(), sp2TextEdit->toPlainText() };
+   for (int iSP=0; iSP<2; iSP++)
+      if (sp[iSP].length() > 0)
+      {
+	      GetFullPath( sp[iSP], qAppDir );
+         if (sp[iSP].lastIndexOf("//") != sp[iSP].length()-1 &&
+             sp[iSP].lastIndexOf("/" ) != sp[iSP].length()-1)
+            sp[iSP] += "/";
+         qslSharedPaths.append(sp[iSP]);
+      }
+
 	if (bDataModel)
 	{	QString fileDefs  = dmDefsTextEdit->toPlainText();
-		QString fileEnums = dmEnumsTextEdit->toPlainText();
 		GetFullPath( fileDefs, qAppDir );
-		GetFullPath( fileEnums, qAppDir );
 		if (fileDefs.isEmpty() || fileEnums.isEmpty() || fileDMCmpld.isEmpty())
 		{	iRetVal = 1;
 			sMsg = "All Data Model fields above must be provided before the data model can be compiled.";
@@ -513,14 +584,16 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 	//	else if (!CFile::exists(fileDefs))
 	//		sErrMsg = QString( "Data Model Definitions file not found:\n%1" ).arg( fileDefs );
 		else
-		{	//CBEMPCmplApp *pApp = (CBEMPCmplApp*)AfxGetApp();
+		{
+         //CBEMPCmplApp *pApp = (CBEMPCmplApp*)AfxGetApp();
 			//BOOL bReportBEMStats = pApp && pApp->IsUIActive();
 			//BOOL bReportBEMStats = TRUE;
 			QApplication::setOverrideCursor(Qt::BusyCursor);
 			QApplication::processEvents();
 
 			BOOL bCompOK = BEMPX_CompileDataModel(	fileDefs.toLocal8Bit().constData(), fileEnums.toLocal8Bit().constData(),
-																fileDMCmpld.toLocal8Bit().constData(), &sDetails );
+																fileDMCmpld.toLocal8Bit().constData(), &sDetails,
+                                                (qslSharedPaths.size() > 0 ? &qslSharedPaths : NULL) );
 
 			QApplication::restoreOverrideCursor();
 			QApplication::processEvents();
@@ -561,7 +634,8 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 
 			QString sRuleDetails;
 			BOOL bCompOK = BEMPX_CompileRuleset( fileDMCmpld.toLocal8Bit().constData(), filePrim.toLocal8Bit().constData(),
-															 fileCmpld.toLocal8Bit().constData(), fileLog.toLocal8Bit().constData(), &sRuleDetails );
+															 fileCmpld.toLocal8Bit().constData(), fileLog.toLocal8Bit().constData(),
+                                              &sRuleDetails, (qslSharedPaths.size() > 0 ? &qslSharedPaths : NULL) );
 
 		// SAC 10/12/16 - added code to create and store data model documentaiton files
 			if (bCompOK)
@@ -575,8 +649,8 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 				{	assert( false );	// error loading (newly compiled) ruleset binary file
 				}
 				else
-				{	BEMPX_WriteDataModelExport( BEMDMX_INPMP, sInpDataModelOutFile.toLocal8Bit().constData() );
-					BEMPX_WriteDataModelExport( BEMDMX_SIM  , sSimDataModelOutFile.toLocal8Bit().constData() );
+				{	BEMPX_WriteDataModelExport( BEMDMX_INPMP, sInpDataModelOutFile.toLocal8Bit().constData(), bWritePrevNamesToIDMTxt );
+					BEMPX_WriteDataModelExport( BEMDMX_SIM  , sSimDataModelOutFile.toLocal8Bit().constData(), bWritePrevNamesToIDMTxt );
 			}	}
 
 			QApplication::restoreOverrideCursor();

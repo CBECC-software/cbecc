@@ -175,7 +175,7 @@ LRESULT CBEMProcCtrlRTF::OnDisplayData(WPARAM, LPARAM)
       {
          CFile cFile( sRTFFileName, CFile::modeRead | CFile::shareDenyWrite );
          EDITSTREAM es;
-         es.dwCookie = (DWORD) &cFile;
+         es.dwCookie = (DWORD_PTR) &cFile;
          es.pfnCallback = MyStreamInCallback; 
          StreamIn(SF_RTF, es);
 

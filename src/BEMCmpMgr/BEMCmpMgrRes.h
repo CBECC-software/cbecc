@@ -56,7 +56,8 @@ int BEMCMPMGR_API __cdecl CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchP
 														const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 														const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV=NULL,
 														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL,
-														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL, char* pszResultMsg=NULL, int iResultMsgLen=0 );		// SAC 1/10/17  // SAC 11/13/17
+														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL, char* pszResultMsg=NULL, int iResultMsgLen=0, 		// SAC 1/10/17  // SAC 11/13/17
+                                          const char* pszProxyOptionsCSV=NULL );    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
 
 // -----------------------------------------------------------------------------
 int BEMCMPMGR_API __cdecl CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,

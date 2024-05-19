@@ -559,6 +559,7 @@ extern int eiBDBCID_PVArrayGeom;
 extern int eiBDBCID_PVArrayShade;
 extern int eiBDBCID_Battery;
 
+extern int eiBDBCID_ResProj;     // SAC 10/20/21 (MFam)
 extern int eiBDBCID_Building;
 extern int eiBDBCID_Story;
 extern int eiBDBCID_Space;
@@ -613,7 +614,7 @@ extern int eiBDBCID_ResSpcDHWFeatures;	// SAC 1/23/19
 extern int eiBDBCID_ProcLd;
 extern int eiBDBCID_StorTank;
 extern int eiBDBCID_WtrHtr;
-extern int eiBDBCID_BlrHP;			// SAC 10/23/20
+//extern int eiBDBCID_BlrHtPump;			// SAC 10/23/20      // removed BlrHtPump... - SAC 05/14/21
 
 extern long elDBID_Proj_Name;
 extern long elDBID_Proj_RunDate;
@@ -674,11 +675,17 @@ extern long elDBID_Chiller_EvapInRef;       // "FluidSeg"
 extern long elDBID_Chiller_EvapOutRef;      // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowInRef;   // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowOutRef;  // "FluidSeg"
-extern long elDBID_BlrHP_FluidSegInRef;     // "FluidSeg"	SAC 10/23/20
-extern long elDBID_BlrHP_FluidSegOutRef;    // "FluidSeg"
+//extern long elDBID_BlrHtPump_FluidSegInRef;     // "FluidSeg"	SAC 10/23/20
+//extern long elDBID_BlrHtPump_FluidSegOutRef;    // "FluidSeg"
 
 extern long elDBID_ResDHWSys_CentralSysType;	// SAC 1/31/20 (Com tic #3156)
 extern long elDBID_ResDHWSys_DHWSolarSysRef;	// SAC 1/31/20 (Com tic #3157)
+extern long elDBID_ResDHWSys_DHWHeater1;     // SAC 10/12/21 (MFam)
+extern long elDBID_ResDHWSys_DHWHeater2;
+extern long elDBID_ResDHWSys_DHWHeater3;
+extern long elDBID_ResDHWSys_DHWHeater4;
+extern long elDBID_ResDHWSys_DHWHeater5;
+extern long elDBID_ResDHWSys_DHWHeater6;
 
 extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
 extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
@@ -695,6 +702,42 @@ extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to
 extern long elDBID_BatchRuns_RunSetFile;          // BEMP_Str "(relative path and) name of RunSet CSV file"     ; SAC 10/06/20
 extern long elDBID_BatchRuns_RunSetFileStatus;    // BEMP_Int "status of RunSet file (0-blank, 1-not found, 2-invalid, 3-OK)"
 extern long elDBID_BatchRuns_RunSetDescrip;       // BEMP_Str "Description of batch processing from RunSet file"
+
+// integration of CBECC-Res into CBECC-Com - SAC 04/27/21
+extern int eiBDBCID_ResZnGrp;       // SAC 08/11/21
+extern int eiBDBCID_ResConsAssm;
+extern int eiBDBCID_ResMat;
+extern int eiBDBCID_ResWinType;
+extern int eiBDBCID_ResZn;
+extern int eiBDBCID_DwellUnitType;
+extern int eiBDBCID_DwellUnit;
+extern int eiBDBCID_ResOtherZn;
+extern int eiBDBCID_ResAttic;
+extern int eiBDBCID_ResGarage;
+extern int eiBDBCID_ResCrawlSpc;
+extern int eiBDBCID_ResExtWall;
+extern int eiBDBCID_ResIntWall;
+extern int eiBDBCID_ResUndgrWall;
+extern int eiBDBCID_ResCathedralCeiling;
+extern int eiBDBCID_ResCeilingBelowAttic;
+extern int eiBDBCID_ResIntCeiling;
+extern int eiBDBCID_ResSlabFlr;
+extern int eiBDBCID_ResExtFlr;
+extern int eiBDBCID_ResFlrOverCrawlSpc;
+extern int eiBDBCID_ResIntFlr;
+extern int eiBDBCID_ResUndgrFlr;
+extern int eiBDBCID_ResOpening;
+extern int eiBDBCID_ResWin;
+extern int eiBDBCID_ResSkylt;
+extern int eiBDBCID_ResDr;
+extern int eiBDBCID_ResHtgSys;      // SAC 08/18/21
+extern int eiBDBCID_ResClgSys;
+extern int eiBDBCID_ResHtPumpSys;
+extern int eiBDBCID_ResDistSys;
+extern int eiBDBCID_ResDuctSeg;
+extern int eiBDBCID_ResFanSys;
+extern int eiBDBCID_ResIAQFan;
+extern int eiBDBCID_ResClVentFan;
 
 #endif   // UI_CANRES
 

@@ -7,6 +7,9 @@
 
 #include "targetver.h"
 
+#define CPPHTTPLIB_OPENSSL_SUPPORT  // SAC 06/13/21
+#include "httplib.h"    // SAC 06/07/21
+
 #define NOMINMAX                 // prevent:  warning C4003: not enough actual parameters for macro 'min'   w/ inclusion of QtCore\QDateTime.h
 #define WIN32_LEAN_AND_MEAN      // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:

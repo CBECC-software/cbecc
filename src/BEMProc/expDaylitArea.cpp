@@ -87,7 +87,18 @@ static inline double LineAngle( double dX1, double dX2, double dY1, double dY2, 
 	return (dAng < -0.000005 ? dAng + sd2Pi : dAng);
 }
 
-
+static inline double RoundToPrec( double d, int prec )      //VS19 - SAC 11/04/20
+{  double dRnd = d;
+   switch (prec)
+   {  case 0 : dRnd = std::round( d );   break;
+      case 1 : dRnd = std::round( d *      10.0 ) /      10.0;   break;
+      case 2 : dRnd = std::round( d *     100.0 ) /     100.0;   break;
+      case 3 : dRnd = std::round( d *    1000.0 ) /    1000.0;   break;
+      case 4 : dRnd = std::round( d *   10000.0 ) /   10000.0;   break;
+      case 5 : dRnd = std::round( d *  100000.0 ) /  100000.0;   break;
+      case 6 : dRnd = std::round( d * 1000000.0 ) / 1000000.0;   break;
+   }  return dRnd;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -376,278 +387,278 @@ static inline bool point_is_spike_or_equal_BEM(Point1 const& last_point, Point2 
 
 }}} // namespace boost:geometry::detail
 
-// -------------------- SAC - based on: boost/geometry/algorithms/remove_spikes.hpp  -------------------- 
-#ifndef BOOST_GEOMETRY_ALGORITHMS_REMOVE_SPIKES_HPP
-#define BOOST_GEOMETRY_ALGORITHMS_REMOVE_SPIKES_HPP
-
-#include <deque>
-
-#include <boost/range.hpp>
+//VS19 // -------------------- SAC - based on: boost/geometry/algorithms/remove_spikes.hpp  -------------------- 
+//VS19 #ifndef BOOST_GEOMETRY_ALGORITHMS_REMOVE_SPIKES_HPP
+//VS19 #define BOOST_GEOMETRY_ALGORITHMS_REMOVE_SPIKES_HPP
+//VS19 
+//VS19 #include <deque>
+//VS19 
+//VS19 #include <boost/range.hpp>
 #include <boost/typeof/typeof.hpp>
-
-#include <boost/geometry/core/closure.hpp>
-#include <boost/geometry/core/coordinate_type.hpp>
-#include <boost/geometry/core/cs.hpp>
-#include <boost/geometry/core/interior_rings.hpp>
-#include <boost/geometry/geometries/concepts/check.hpp>
-#include <boost/geometry/algorithms/detail/point_is_spike_or_equal.hpp>
-#include <boost/geometry/algorithms/clear.hpp>
-
-
-/*
-Remove spikes from a ring/polygon.
-Ring (having 8 vertices, including closing vertex)
-+------+
-| |
-| +--+
-| | ^this "spike" is removed, can be located outside/inside the ring
-+------+
-(the actualy determination if it is removed is done by a strategy)
-
-*/
-
-
-namespace boost { namespace geometry
-{
-
-
-#ifndef DOXYGEN_NO_DETAIL
-namespace detail { namespace remove_spikes
-{
-
-
-template <typename Range>
-struct range_remove_spikes
-{
- typedef typename strategy::side::services::default_strategy
- <
- typename cs_tag<Range>::type
- >::type side_strategy;
-
- typedef typename coordinate_type<Range>::type coordinate_type;
- typedef typename point_type<Range>::type point_type;
-
-
- static inline void apply(Range& range)
- {
- std::size_t n = boost::size(range);
- std::size_t const min_num_points = core_detail::closure::minimum_ring_size
- <
- geometry::closure<Range>::value
- >::value;
- if (n < min_num_points)
- {
- return;
- }
-
- typedef typename boost::range_iterator<Range>::type iterator;
-
- std::deque<point_type> cleaned;
- for (typename boost::range_iterator<Range const>::type it = boost::begin(range);
- it != boost::end(range); ++it)
- {
- // Add point
- cleaned.push_back(*it);
-
- while(cleaned.size() >= 3
- && detail::point_is_spike_or_equal_BEM(cleaned.back(), *(cleaned.end() - 3), *(cleaned.end() - 2)))
- {
- // Remove pen-ultimate point causing the spike (or which was equal)
- cleaned.erase(cleaned.end() - 2);
- }
- }
-
- // For a closed-polygon, remove closing point, this makes checking first point(s) easier and consistent
- if (geometry::closure<Range>::value == geometry::closed)
- {
- cleaned.pop_back();
- }
-
- bool found = false;
- do
- {
- found = false;
- // Check for spike in first point
- int const penultimate = 2;
- while(cleaned.size() > 3 && detail::point_is_spike_or_equal_BEM(cleaned.front(), *(cleaned.end() - penultimate), cleaned.back()))
- {
- cleaned.pop_back();
- found = true;
- }
- // Check for spike in second point
- while(cleaned.size() > 3 && detail::point_is_spike_or_equal_BEM(*(cleaned.begin() + 1), cleaned.back(), cleaned.front()))
- {
- cleaned.pop_front();
- found = true;
- }
- }
- while (found);
-
- // Close if necessary
- if (geometry::closure<Range>::value == geometry::closed)
- {
- cleaned.push_back(cleaned.front());
- }
-
- // Copy output
- geometry::clear(range);
- std::copy(cleaned.begin(), cleaned.end(), std::back_inserter(range));
- }
-};
-
-
-template <typename Polygon>
-struct polygon_remove_spikes
-{
- static inline void apply(Polygon& polygon)
- {
- typedef typename geometry::ring_type<Polygon>::type ring_type;
-
- typedef range_remove_spikes<ring_type> per_range;
- per_range::apply(exterior_ring(polygon));
-
- typename interior_return_type<Polygon>::type rings
- = interior_rings(polygon);
- for (BOOST_AUTO_TPL(it, boost::begin(rings)); it != boost::end(rings); ++it)
- {
- per_range::apply(*it);
- }
- }
-};
-
-
-}} // namespace detail::remove_spikes
-#endif // DOXYGEN_NO_DETAIL
-
-
-
-#ifndef DOXYGEN_NO_DISPATCH
-namespace dispatch
-{
-
-
-template
-<
- typename Geometry,
- typename Tag = typename tag<Geometry>::type
->
-struct remove_spikes
-{
- static inline void apply(Geometry&)
- {}
-};
-
-
-template <typename Ring>
-struct remove_spikes<Ring, ring_tag>
- : detail::remove_spikes::range_remove_spikes<Ring>
-{};
-
-
-
-template <typename Polygon>
-struct remove_spikes<Polygon, polygon_tag>
- : detail::remove_spikes::polygon_remove_spikes<Polygon>
-{};
-
-
-
-} // namespace dispatch
-#endif
-
-
-/*!
- \ingroup remove_spikes
- \tparam Geometry geometry type
- \param geometry the geometry to make remove_spikes
-*/
-template <typename Geometry>
-inline void remove_spikes(Geometry& geometry)
-{
- concept::check<Geometry>();
-
- dispatch::remove_spikes<Geometry>::apply(geometry);
-}
-
-
-}} // namespace boost::geometry
-
-
-#endif // BOOST_GEOMETRY_ALGORITHMS_REMOVE_SPIKES_HPP
-// -------------------- SAC - end of code based on: boost/geometry/algorithms/remove_spikes.hpp --------------------
-
-
-// -------------------- SAC - based on: boost/geometry/multi/algorithms/remove_spikes.hpp --------------------
-#ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_REMOVE_SPIKES_HPP
-#define BOOST_GEOMETRY_MULTI_ALGORITHMS_REMOVE_SPIKES_HPP
-
-
-#include <boost/geometry/multi/core/closure.hpp>
-#include <boost/geometry/multi/core/point_order.hpp>
-#include <boost/geometry/multi/core/tags.hpp>
-#include <boost/geometry/multi/geometries/concepts/check.hpp>
-
-//SAC #include <boost/geometry/algorithms/remove_spikes.hpp>
-#include "memLkRpt.h"
-
-
-namespace boost { namespace geometry
-{
-
-
-#ifndef DOXYGEN_NO_DETAIL
-namespace detail { namespace remove_spikes
-{
-
-template <typename MultiGeometry, typename SingleVersion>
-struct multi_remove_spikes
-{
- static inline void apply(MultiGeometry& multi)
- {
- for (typename boost::range_iterator<MultiGeometry>::type
- it = boost::begin(multi);
- it != boost::end(multi);
- ++it)
- {
- SingleVersion::apply(*it);
- }
- }
-};
-
-
-
-}} // namespace detail::remove_spikes
-#endif // DOXYGEN_NO_DETAIL
-
-
-
-#ifndef DOXYGEN_NO_DISPATCH
-namespace dispatch
-{
-
-
-template <typename MultiPolygon>
-struct remove_spikes<MultiPolygon, multi_polygon_tag>
- : detail::remove_spikes::multi_remove_spikes
- <
- MultiPolygon,
- detail::remove_spikes::polygon_remove_spikes
- <
- typename boost::range_value<MultiPolygon>::type
- >
- >
-{};
-
-
-} // namespace dispatch
-#endif
-
-
-}} // namespace boost::geometry
-
-
-#endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_REMOVE_SPIKES_HPP
-// -------------------- SAC - end of code based on: boost/geometry/multi/algorithms/remove_spikes.hpp --------------------
+//VS19 
+//VS19 #include <boost/geometry/core/closure.hpp>
+//VS19 #include <boost/geometry/core/coordinate_type.hpp>
+//VS19 #include <boost/geometry/core/cs.hpp>
+//VS19 #include <boost/geometry/core/interior_rings.hpp>
+//VS19 include <boost/geometry/geometries/concepts/check.hpp>
+//VS19 #include <boost/geometry/algorithms/detail/point_is_spike_or_equal.hpp>
+//VS19 #include <boost/geometry/algorithms/clear.hpp>
+//VS19 
+//VS19 
+//VS19 /*
+//VS19 Remove spikes from a ring/polygon.
+//VS19 Ring (having 8 vertices, including closing vertex)
+//VS19 +------+
+//VS19 | |
+//VS19 | +--+
+//VS19 | | ^this "spike" is removed, can be located outside/inside the ring
+//VS19 +------+
+//VS19 (the actualy determination if it is removed is done by a strategy)
+//VS19 
+//VS19 */
+//VS19 
+//VS19 
+//VS19 namespace boost { namespace geometry
+//VS19 {
+//VS19 
+//VS19 
+//VS19 #ifndef DOXYGEN_NO_DETAIL
+//VS19 namespace detail { namespace remove_spikes
+//VS19 {
+//VS19 
+//VS19 
+//VS19 template <typename Range>
+//VS19 struct range_remove_spikes
+//VS19 {
+//VS19  typedef typename strategy::side::services::default_strategy
+//VS19  <
+//VS19  typename cs_tag<Range>::type
+//VS19  >::type side_strategy;
+//VS19 
+//VS19  typedef typename coordinate_type<Range>::type coordinate_type;
+//VS19  typedef typename point_type<Range>::type point_type;
+//VS19 
+//VS19 
+//VS19  static inline void apply(Range& range)
+//VS19  {
+//VS19  std::size_t n = boost::size(range);
+//VS19  std::size_t const min_num_points = core_detail::closure::minimum_ring_size
+//VS19  <
+//VS19  geometry::closure<Range>::value
+//VS19  >::value;
+//VS19  if (n < min_num_points)
+//VS19  {
+//VS19  return;
+//VS19  }
+//VS19 
+//VS19  typedef typename boost::range_iterator<Range>::type iterator;
+//VS19 
+//VS19  std::deque<point_type> cleaned;
+//VS19  for (typename boost::range_iterator<Range const>::type it = boost::begin(range);
+//VS19  it != boost::end(range); ++it)
+//VS19  {
+//VS19  // Add point
+//VS19  cleaned.push_back(*it);
+//VS19 
+//VS19  while(cleaned.size() >= 3
+//VS19  && detail::point_is_spike_or_equal_BEM(cleaned.back(), *(cleaned.end() - 3), *(cleaned.end() - 2)))
+//VS19  {
+//VS19  // Remove pen-ultimate point causing the spike (or which was equal)
+//VS19  cleaned.erase(cleaned.end() - 2);
+//VS19  }
+//VS19  }
+//VS19 
+//VS19  // For a closed-polygon, remove closing point, this makes checking first point(s) easier and consistent
+//VS19  if (geometry::closure<Range>::value == geometry::closed)
+//VS19  {
+//VS19  cleaned.pop_back();
+//VS19  }
+//VS19 
+//VS19  bool found = false;
+//VS19  do
+//VS19  {
+//VS19  found = false;
+//VS19  // Check for spike in first point
+//VS19  int const penultimate = 2;
+//VS19  while(cleaned.size() > 3 && detail::point_is_spike_or_equal_BEM(cleaned.front(), *(cleaned.end() - penultimate), cleaned.back()))
+//VS19  {
+//VS19  cleaned.pop_back();
+//VS19  found = true;
+//VS19  }
+//VS19  // Check for spike in second point
+//VS19  while(cleaned.size() > 3 && detail::point_is_spike_or_equal_BEM(*(cleaned.begin() + 1), cleaned.back(), cleaned.front()))
+//VS19  {
+//VS19  cleaned.pop_front();
+//VS19  found = true;
+//VS19  }
+//VS19  }
+//VS19  while (found);
+//VS19 
+//VS19  // Close if necessary
+//VS19  if (geometry::closure<Range>::value == geometry::closed)
+//VS19  {
+//VS19  cleaned.push_back(cleaned.front());
+//VS19  }
+//VS19 
+//VS19  // Copy output
+//VS19  geometry::clear(range);
+//VS19  std::copy(cleaned.begin(), cleaned.end(), std::back_inserter(range));
+//VS19  }
+//VS19 };
+//VS19 
+//VS19 
+//VS19 template <typename Polygon>
+//VS19 struct polygon_remove_spikes
+//VS19 {
+//VS19  static inline void apply(Polygon& polygon)
+//VS19  {
+//VS19  typedef typename geometry::ring_type<Polygon>::type ring_type;
+//VS19 
+//VS19  typedef range_remove_spikes<ring_type> per_range;
+//VS19  per_range::apply(exterior_ring(polygon));
+//VS19 
+//VS19  typename interior_return_type<Polygon>::type rings
+//VS19  = interior_rings(polygon);
+//VS19  for (BOOST_AUTO_TPL(it, boost::begin(rings)); it != boost::end(rings); ++it)
+//VS19  {
+//VS19  per_range::apply(*it);
+//VS19  }
+//VS19  }
+//VS19 };
+//VS19 
+//VS19 
+//VS19 }} // namespace detail::remove_spikes
+//VS19 #endif // DOXYGEN_NO_DETAIL
+//VS19 
+//VS19 
+//VS19 
+//VS19 #ifndef DOXYGEN_NO_DISPATCH
+//VS19 namespace dispatch
+//VS19 {
+//VS19 
+//VS19 
+//VS19 template
+//VS19 <
+//VS19  typename Geometry,
+//VS19  typename Tag = typename tag<Geometry>::type
+//VS19 >
+//VS19 struct remove_spikes
+//VS19 {
+//VS19  static inline void apply(Geometry&)
+//VS19  {}
+//VS19 };
+//VS19 
+//VS19 
+//VS19 template <typename Ring>
+//VS19 struct remove_spikes<Ring, ring_tag>
+//VS19  : detail::remove_spikes::range_remove_spikes<Ring>
+//VS19 {};
+//VS19 
+//VS19 
+//VS19 
+//VS19 template <typename Polygon>
+//VS19 struct remove_spikes<Polygon, polygon_tag>
+//VS19  : detail::remove_spikes::polygon_remove_spikes<Polygon>
+//VS19 {};
+//VS19 
+//VS19 
+//VS19 
+//VS19 } // namespace dispatch
+//VS19 #endif
+//VS19 
+//VS19 
+//VS19 /*!
+//VS19  \ingroup remove_spikes
+//VS19  \tparam Geometry geometry type
+//VS19  \param geometry the geometry to make remove_spikes
+//VS19 */
+//VS19 template <typename Geometry>
+//VS19 inline void remove_spikes(Geometry& geometry)
+//VS19 {
+//VS19  concept::check<Geometry>();
+//VS19 
+//VS19  dispatch::remove_spikes<Geometry>::apply(geometry);
+//VS19 }
+//VS19 
+//VS19 
+//VS19 }} // namespace boost::geometry
+//VS19 
+//VS19 
+//VS19 #endif // BOOST_GEOMETRY_ALGORITHMS_REMOVE_SPIKES_HPP
+//VS19 // -------------------- SAC - end of code based on: boost/geometry/algorithms/remove_spikes.hpp --------------------
+
+
+//VS19 // -------------------- SAC - based on: boost/geometry/multi/algorithms/remove_spikes.hpp --------------------
+//VS19 #ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_REMOVE_SPIKES_HPP
+//VS19 #define BOOST_GEOMETRY_MULTI_ALGORITHMS_REMOVE_SPIKES_HPP
+//VS19 
+//VS19 
+//VS19 #include <boost/geometry/multi/core/closure.hpp>
+//VS19 #include <boost/geometry/multi/core/point_order.hpp>
+//VS19 #include <boost/geometry/multi/core/tags.hpp>
+//VS19 #include <boost/geometry/multi/geometries/concepts/check.hpp>
+//VS19 
+//VS19 //SAC #include <boost/geometry/algorithms/remove_spikes.hpp>
+//VS19 #include "memLkRpt.h"
+//VS19 
+//VS19 
+//VS19 namespace boost { namespace geometry
+//VS19 {
+//VS19 
+//VS19 
+//VS19 #ifndef DOXYGEN_NO_DETAIL
+//VS19 namespace detail { namespace remove_spikes
+//VS19 {
+//VS19 
+//VS19 template <typename MultiGeometry, typename SingleVersion>
+//VS19 struct multi_remove_spikes
+//VS19 {
+//VS19  static inline void apply(MultiGeometry& multi)
+//VS19  {
+//VS19  for (typename boost::range_iterator<MultiGeometry>::type
+//VS19  it = boost::begin(multi);
+//VS19  it != boost::end(multi);
+//VS19  ++it)
+//VS19  {
+//VS19  SingleVersion::apply(*it);
+//VS19  }
+//VS19  }
+//VS19 };
+//VS19 
+//VS19 
+//VS19 
+//VS19 }} // namespace detail::remove_spikes
+//VS19 #endif // DOXYGEN_NO_DETAIL
+//VS19 
+//VS19 
+//VS19 
+//VS19 #ifndef DOXYGEN_NO_DISPATCH
+//VS19 namespace dispatch
+//VS19 {
+//VS19 
+//VS19 
+//VS19 template <typename MultiPolygon>
+//VS19 struct remove_spikes<MultiPolygon, multi_polygon_tag>
+//VS19  : detail::remove_spikes::multi_remove_spikes
+//VS19  <
+//VS19  MultiPolygon,
+//VS19  detail::remove_spikes::polygon_remove_spikes
+//VS19  <
+//VS19  typename boost::range_value<MultiPolygon>::type
+//VS19  >
+//VS19  >
+//VS19 {};
+//VS19 
+//VS19 
+//VS19 } // namespace dispatch
+//VS19 #endif
+//VS19 
+//VS19 
+//VS19 }} // namespace boost::geometry
+//VS19 
+//VS19 
+//VS19 #endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_REMOVE_SPIKES_HPP
+//VS19 // -------------------- SAC - end of code based on: boost/geometry/multi/algorithms/remove_spikes.hpp --------------------
 
 BEMMultiPoly removeSpikes(const BEMMultiPoly& polygons)
 {
@@ -1209,7 +1220,7 @@ bool BEMDaylitArea::AdjustSecondarySideDaylitRefPnt( BEMSpaceDaylitArea& spcDLAs
 					else
 						AdjustReferencePoint( 1, &spcDLAs );
 					if (m_bDLRefPntValid[1])
-						m_dRefPntToSpcCenterDist[1] = boost::geometry::distance( m_pntDayltgRefPnts[1], m_pParentSpace->m_ptSpcCenter );
+						m_dRefPntToSpcCenterDist[1] = RoundToPrec( boost::geometry::distance( m_pntDayltgRefPnts[1], m_pParentSpace->m_ptSpcCenter ), 4 );     // rounding - SAC 11/04/20
 	return m_bDLRefPntValid[1];
 }
 
@@ -1386,7 +1397,7 @@ bool BEMDaylitArea::InitSideDaylitAreas( double dParentZ )
 				else
 					AdjustReferencePoint( 0 );
 				if (m_bDLRefPntValid[0])
-					m_dRefPntToSpcCenterDist[0] = boost::geometry::distance( m_pntDayltgRefPnts[0], m_pParentSpace->m_ptSpcCenter );
+					m_dRefPntToSpcCenterDist[0] = RoundToPrec( boost::geometry::distance( m_pntDayltgRefPnts[0], m_pParentSpace->m_ptSpcCenter ), 4 );     // rounding - SAC 11/04/20
 
 		//		BEMPoly polyTempSec;
 		//		double dSecX1,	dSecY1, dSecX2, dSecY2, dSecX3, dSecY3, dSecX4, dSecY4;
@@ -1764,7 +1775,7 @@ bool BEMDaylitArea::InitTopDaylitArea( double dParentZ )
 	// TO DO - ALL dayltg ref pnts outside space, so start w/ the one closest to the spc center and move in toward skylt...
 				}
 				if (m_bDLRefPntValid[0])
-					m_dRefPntToSpcCenterDist[0] = boost::geometry::distance( m_pntDayltgRefPnts[0], m_pParentSpace->m_ptSpcCenter );
+					m_dRefPntToSpcCenterDist[0] = RoundToPrec( boost::geometry::distance( m_pntDayltgRefPnts[0], m_pParentSpace->m_ptSpcCenter ), 4 );     // rounding - SAC 11/04/20
 			}
 
 			bRetVal = true;
@@ -2248,7 +2259,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 //		}
 #endif
 
-#ifdef _DEBUG  // from VS19 port
+#ifdef _DEBUG
       if (sErrMsg.isEmpty())
          BEMPX_WriteLogFile( QString("      daylighting details for Space:  %1").arg( pszSpcName ) );
       else
@@ -2413,7 +2424,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 				}
 			}
 
-#ifdef _DEBUG
+#ifdef _DEBUG  //VS19
          if (sErrMsg.isEmpty())
          {  int iDbgIdx=0;
             BEMPX_WriteLogFile( QString("         daylit area effective aperture details") );
@@ -2439,7 +2450,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 					if (dDLArea > 0)
 						dDLAreaByType[0] += dDLArea;
 					if (pChk1->m_fDegreesFromSouth == -1 && pChk1->m_bDLRefPntValid[0])
-					{	pChk1->m_fRelativeDayltPotential[0] = ((pChk1->m_fEffectiveAperture[0] * spcDLAs.m_daSpcSkylitRDPCoefs[0]) + spcDLAs.m_daSpcSkylitRDPCoefs[1]);
+					{	pChk1->m_fRelativeDayltPotential[0] = RoundToPrec( ((pChk1->m_fEffectiveAperture[0] * spcDLAs.m_daSpcSkylitRDPCoefs[0]) + spcDLAs.m_daSpcSkylitRDPCoefs[1]), 4 );    // rounding - SAC 11/04/20
 						if (pChk1->m_bDLRefPntInStdLoc[0])
 						{	if (pChk1->m_fRelativeDayltPotential[0] > fMaxRDPTopStdLoc)
 							{	paDLATopStdLoc.clear();
@@ -2461,7 +2472,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 					if (dDLArea > 0)
 						dDLAreaByType[1] += dDLArea;
 					if (pChk1->m_fDegreesFromSouth >= 0 && pChk1->m_bDLRefPntValid[0])
-					{	pChk1->m_fRelativeDayltPotential[0] = ((pChk1->m_fEffectiveAperture[0] * spcDLAs.m_daSpcPriSideRDPCoefs[0]) + (pChk1->m_fDegreesFromSouth * spcDLAs.m_daSpcPriSideRDPCoefs[1]) + spcDLAs.m_daSpcPriSideRDPCoefs[2]);
+					{	pChk1->m_fRelativeDayltPotential[0] = RoundToPrec( ((pChk1->m_fEffectiveAperture[0] * spcDLAs.m_daSpcPriSideRDPCoefs[0]) + (pChk1->m_fDegreesFromSouth * spcDLAs.m_daSpcPriSideRDPCoefs[1]) + spcDLAs.m_daSpcPriSideRDPCoefs[2]), 4 );    // rounding - SAC 11/04/20
 						if (pChk1->m_bDLRefPntInStdLoc[0])
 						{	if (pChk1->m_fRelativeDayltPotential[0] > fMaxRDPPrimStdLoc)
 							{	paDLAPrimStdLoc.clear();
@@ -2483,7 +2494,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 					if (dDLArea > 0)
 						dDLAreaByType[2] += dDLArea;
 					if (pChk1->m_fDegreesFromSouth >= 0 && pChk1->m_bDLRefPntValid[1])
-					{	pChk1->m_fRelativeDayltPotential[1] = ((pChk1->m_fEffectiveAperture[1] * spcDLAs.m_daSpcSecSideRDPCoefs[0]) + (pChk1->m_fDegreesFromSouth * spcDLAs.m_daSpcSecSideRDPCoefs[1]) + spcDLAs.m_daSpcSecSideRDPCoefs[2]);
+					{	pChk1->m_fRelativeDayltPotential[1] = RoundToPrec( ((pChk1->m_fEffectiveAperture[1] * spcDLAs.m_daSpcSecSideRDPCoefs[0]) + (pChk1->m_fDegreesFromSouth * spcDLAs.m_daSpcSecSideRDPCoefs[1]) + spcDLAs.m_daSpcSecSideRDPCoefs[2]), 4 );    // rounding - SAC 11/04/20
 						if (pChk1->m_bDLRefPntInStdLoc[1])
 						{	if (pChk1->m_fRelativeDayltPotential[1] > fMaxRDPSecStdLoc)
 							{	paDLASecStdLoc.clear();
@@ -2503,7 +2514,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 			}	}
 			dDaylitArea = dDLAreaByType[0] + dDLAreaByType[1] + dDLAreaByType[2];
 
-#ifdef _DEBUG
+#ifdef _DEBUG  //VS19
          if (sErrMsg.isEmpty())
          {  int iDbgIdx=0;
             BEMPX_WriteLogFile( QString("         relative daylighting potentials - # max RDPs (std/oth) top %1/%2, prim side %3/%4, sec side %5/%6").arg( QString::number(paDLATopStdLoc.size()), QString::number(paDLATopOthLoc.size()),
@@ -2591,7 +2602,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 				}	assert( spcDLAs.m_dlaSec.m_bDLRefPntValid[0] );
 			}
 
-#ifdef _DEBUG 
+#ifdef _DEBUG  //VS19
          if (sErrMsg.isEmpty())
          {  int iDbgIdx=0;
             BEMPX_WriteLogFile( QString("         sorting and selection of dayltg ref points") );

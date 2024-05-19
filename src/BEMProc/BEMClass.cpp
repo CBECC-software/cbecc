@@ -75,6 +75,7 @@ void BEMClass::clear()
 	m_shortName.clear();
 	m_longName.clear();
    m_defaultName.clear();
+	m_previousNames.clear();	// to facilitate data model backward compatibility by tracking re-named classes - SAC 07/28/21 (MFam)
    m_numProps			= 0;
    m_maxDefinable	= 0;
    m_maxReferences  = 0;
@@ -140,6 +141,7 @@ BOOL BEMClass::Copy( BEMClass* pClass, BOOL bCopyObjects /*=TRUE*/ )
       m_shortName                 = pClass->m_shortName;
       m_longName                  = pClass->m_longName;
       m_defaultName               = pClass->m_defaultName;
+	   m_previousNames             = pClass->m_previousNames;	// to facilitate data model backward compatibility by tracking re-named classes - SAC 07/28/21 (MFam)
       m_numProps                  = pClass->m_numProps;
       m_maxDefinable              = pClass->m_maxDefinable;
       m_maxReferences             = pClass->m_maxReferences;
@@ -533,6 +535,13 @@ void BEMClass::ReadText( BEMTextIO& file, int iFileVersion )
 	   m_XMLIgnoreName			= (BOOL) file.ReadLong();		file.PostReadToken();  // SAC 1/24/12 - (file ver 2) added to prevent output of component names to XML files        
    }
 
+   if (iFileVersion >= 8)  // previousNames - SAC 07/29/21 (MFam)
+   {  int iNumPrevNames = (int) file.ReadLong();   file.PostReadToken();
+      for (int i=0; i<iNumPrevNames; i++)
+      {  QString qsPName = file.ReadString();      file.PostReadToken();
+         m_previousNames.append( qsPName );
+   }  }
+
    m_helpID = (UINT) file.ReadLong();
    file.PostReadToken();
 }
@@ -567,6 +576,11 @@ void BEMClass::Write( CryptoFile& file )
    for (i=0; i<BEM_MAX_CHILD_TYPES; i++)
       file.Write( &m_childType[i], sizeof( int ));
    file.Write( &m_numChildTypes, sizeof( int ));
+
+   int iNumPNames = m_previousNames.size();      // to facilitate data model backward compatibility by tracking re-named classes - SAC 07/29/21 (MFam)
+   file.Write( &iNumPNames, sizeof( int ));
+   for (i=0; i<iNumPNames; i++)
+      file.WriteQString( m_previousNames[i] );
 }
 
 
