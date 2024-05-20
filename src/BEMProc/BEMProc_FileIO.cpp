@@ -2233,11 +2233,15 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
 void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, int iIndentSpcs )  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp
 {
    // Write array as list of the format "PROP = ( VALUE1, VALUE2, ... )" with no comments
+   //  -or- for CSE input files:  PROP = VAL1, VAL2, VAL3;      - SAC 05/21/22
    int iCount = 0;
-   m_file.WriteToken( "( ", 2 );
    QString sPropType = pProp->getType()->getShortName();
-   int iColStart = 3 + sPropType.length() + 6 + iIndentSpcs;
+   int iColStart = 3 + sPropType.length() + 4 + iIndentSpcs;
    QString sLine;
+   if (m_iFileType != BEMFT_CSE)    // SAC 05/21/22
+   {  m_file.WriteToken( "( ", 2 );
+      iColStart += 2;
+   }
 
    // loop over all properties in array   
    while ( (iCount < pProp->getType()->getNumValues()) && (iProp < (int) pObj->getPropertiesSize()) )
@@ -2282,7 +2286,17 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
    // write final line of data to file
    m_file.WriteToken( sLine.toLocal8Bit().constData(), sLine.length() );
 
-   if ( iCount == pProp->getType()->getNumValues() )
+   if (m_iFileType == BEMFT_CSE)    // SAC 05/21/22
+   {  m_file.WriteToken( ";", 1 );
+		if (m_iPropertyCommentOption == 1)
+		{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
+										pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
+			if (!pProp->getType()->getUnitsLabel().isEmpty() || bWrtDescrip)
+				WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), pProp->getType()->getUnitsLabel(), 40, 4 );
+		}
+      m_file.NewLine();
+   }
+   else if ( iCount == pProp->getType()->getNumValues() )
    {  // write closing paren if necessary
       m_file.WriteToken( " )", 2 );
       m_file.NewLine();
@@ -2640,7 +2654,7 @@ static inline BOOL StringAllUpper( const char* str )   // SAC 8/30/11
 void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bool bWritePrimaryDefaultData /*=false*/, int iIndentSpcs /*=0*/ )		// SAC 6/8/15 - CBECC issue 1061
 {
 	// SAC 8/30/11 - added code to abort writing of this object if we are in CSE writing mode and component type has any lower case letters
-//   if (m_iFileType == BEMFT_CSE && !StringAllUpper( pObj->getClass()->getShortName() ))
+   //if (m_iFileType == BEMFT_CSE && !StringAllUpper( pObj->getClass()->getShortName() ))
    if (m_iFileType == BEMFT_CSE && (pObj->getClass()->getShortName().indexOf("cse")!=0 ||
    		!StringAllUpper( pObj->getClass()->getShortName().right( pObj->getClass()->getShortName().length()-3 ).toLocal8Bit().constData() )))
 		return;
@@ -2657,7 +2671,16 @@ void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, boo
    // then write each of this component's children (recursively)
    if (pObj->getChildCount() > 0)
    {
-// SAC 2/19/14 - added special handling for PolyLp objects - we need to write those FIRST, before other child types to ensure they are not written after other valid PolyLp parents
+      // prevent writing cseGAIN children of cseTOP iff writing CSE input AND specific list of objects to be written is specified AND cseGAIN is not in that list - SAC 01/25/22 (MFam)
+      bool bExcludeCSEGainObjs = false;
+      int iCID_Gain = -1;
+      if (m_iFileType == BEMFT_CSE && m_plaClsObjIndices && pObj->getClass()->getShortName().indexOf("cseTOP")==0)
+      {  iCID_Gain = BEMPX_GetDBComponentID( "cseGAIN" );
+         if (iCID_Gain > 0 && !ObjectToBeWritten( iCID_Gain, -1 ))
+            bExcludeCSEGainObjs = true;
+      }
+
+      // SAC 2/19/14 - added special handling for PolyLp objects - we need to write those FIRST, before other child types to ensure they are not written after other valid PolyLp parents
 		int iPolyLpCID = BEMPX_GetDBComponentID( "PolyLp" );
 		for (int iLp = (iPolyLpCID>0 ? 0 : 1); iLp < 2; iLp++)
 		{	int iChildCID		= ( iLp==0                  ? iPolyLpCID : -1);
@@ -2671,7 +2694,8 @@ void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, boo
 			for (int iCIdx=0; iCIdx < pObj->getChildCount(); iCIdx++)
 			{	BEMObject* pChild = pObj->getChild( iCIdx );					assert( pChild );
       	   if (pChild != NULL && (iChildCID < 0 || pChild->getClass()->get1BEMClassIdx() == iChildCID   ) &&	// SAC 2/19/14
-																	 pChild->getClass()->get1BEMClassIdx() != iNotChildCID )
+																	 pChild->getClass()->get1BEMClassIdx() != iNotChildCID &&
+                (!bExcludeCSEGainObjs || pChild->getClass()->get1BEMClassIdx() != iCID_Gain) )     // SAC 01/25/22 (MFam)
       	   {
       	      WriteComponent( pChild, iBEMProcIdx, bWritePrimaryDefaultData, iIndentSpcs+m_iChildIndent );
       	   }
@@ -2869,6 +2893,17 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
              // don't write class objects tagged as AutoCreate to INPUT file
            ( (!m_bIsUserInputMode) || (!pClass->getAutoCreate()) ) )
       {
+         if (pClass->getShortName().compare( "cseIZXFER" )==0)
+         {  // BEFORE writing IZXFERs, write doMainSim = "NO", since any/all DHW preruns/runs would have already been listed above - SAC 05/23/22
+            long lDBID_cseTOP_DOMainSim = BEMPX_GetDatabaseID( "cseTOP:DOMainSim" );
+            QString qsDoMainSim;
+            if (lDBID_cseTOP_DOMainSim > 0 && BEMPX_GetString( lDBID_cseTOP_DOMainSim, qsDoMainSim, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) && !qsDoMainSim.isEmpty())
+            {	m_file.NewLine();
+					QString qsWriteDoMainSim = QString( "   doMainSim = \"%1\"" ).arg( qsDoMainSim );
+      			m_file.WriteWholeRecord( qsWriteDoMainSim.toLocal8Bit().constData() );
+               m_file.NewLine();
+         }  }
+
 			// SAC 4/16/14 - if storing input and m_bOnlyValidInputs = true, then check to confirm that there are valid input properties before writing file
 			bool bWriteClass = (m_iFileMode == BEMFM_INPUT && m_bOnlyValidInputs) ? false : true;
 			if (!bWriteClass)
@@ -3310,7 +3345,8 @@ void CProjectFile::WriteEndOfFileMarker( int iBEMProcIdx /*=-1*/ )
 			}
 
 		// Write Report Include file statement
-			long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:CSE_RptIncFile" );
+			//long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:CSE_RptIncFile" );
+			long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "ResProj:ReportIncludeFile" );     // switch to newer version - SAC 05/13/22
 			if (lProjReportIncludeFileDBID < 1)
 				lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" );
 			QString sRptIncFile;
@@ -4480,7 +4516,7 @@ int BEMPX_SetPropertiesToUserDefined( int iBEMProcIdx /*=-1*/ )
 
 // SAC 2/28/13 - added to prevent writing of Sim objects w/ NO properties
 static bool MustWriteProperties_XML( BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, bool bWritePropertiesDefinedByRuleset );
-static bool MustWriteComponent_XML(  BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, bool bWritePropertiesDefinedByRuleset );
+static bool MustWriteComponent_XML(  BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, bool bWritePropertiesDefinedByRuleset, int iBEMProcIdx );
 
 bool StatusRequiresWrite_XML( BEMProperty* pProp, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties )
 {
@@ -4718,6 +4754,8 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 	{	assert( sClassName.left(4).compare("nrcc") == 0 );
 		if (sClassName.left(10).compare("nrcctblRow") == 0)
 			sClassName = "Row";
+		else if (sClassName.left(9).compare("nrcccomp_") == 0)         // 'nrcccomp_ObjectType' -->> 'comp:ObjectType' - SAC 04/27/22
+			sClassName = "comp:" + sClassName.right( sClassName.length()-9 );
 		else if (sClassName.left(4).compare("nrcc") == 0)
 			sClassName = sClassName.right( sClassName.length()-4 );
 	}
@@ -4908,7 +4946,7 @@ void WriteComponent_XML(	QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 			for (int iCIdx=0; iCIdx < pObj->getChildCount(); iCIdx++)
 			{	BEMObject* pChild = pObj->getChild( iCIdx );					assert( pChild );
       	   if ( pChild != NULL &&
-						(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pChild, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset )) &&  // SAC 2/28/13
+						(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pChild, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset, iBEMProcIdx )) &&  // SAC 2/28/13
 						(iChildCID < 0 || pChild->getClass()->get1BEMClassIdx() == iChildCID   ) &&		// SAC 2/19/14
 												pChild->getClass()->get1BEMClassIdx() != iNotChildCID  &&
 						(iNumClassIDsToIgnore < 1 || !piClassIDsToIgnore || IndexOfIntInArray( pChild->getClass()->get1BEMClassIdx(), iNumClassIDsToIgnore, piClassIDsToIgnore ) < 0) )		// SAC 1/6/15
@@ -4949,26 +4987,45 @@ bool MustWriteProperties_XML( BEMObject* pObj, int iFileMode /*bool bIsInputMode
 	return bRetVal;
 }
 
-bool MustWriteComponent_XML( BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, bool bWritePropertiesDefinedByRuleset )  // SAC 2/28/13 - added to prevent writing of Sim objects w/ NO properties
+bool MustWriteComponent_XML( BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, bool bWritePropertiesDefinedByRuleset, int iBEMProcIdx )  // SAC 2/28/13 - added to prevent writing of Sim objects w/ NO properties
 {
-   // first check to see if any of this component's properties need writing
-   bool bRetVal = MustWriteProperties_XML( pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset );
+   bool bRetVal = true;
 
-   // then write each of this component's children (recursively)
-   if (!bRetVal && pObj->getChildCount() > 0)
-   {  // Cruise thru list of BEM child objects, writing each out to the file
-   //   POSITION pos = pObj->m_children.GetHeadPosition();
-   //   while ( !bRetVal && pos != NULL )
-   //   {  BEMObject* pChild = (BEMObject*) pObj->m_children.GetAt( pos );
-		for (int iCIdx=0; (!bRetVal && iCIdx < pObj->getChildCount()); iCIdx++)
-		{	BEMObject* pChild = pObj->getChild( iCIdx );					assert( pChild );
-         if (pChild != NULL)
-            bRetVal = MustWriteComponent_XML( pChild, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset );
-         else
-         {  assert( FALSE );
-         }
+   // for Sim XML file writing - exclude objects where ExcludeFromEPlus > 0 - SAC 04/26/22
+   if (iFileMode == BEMFM_SIM && iFileType == BEMFT_XML)
+   {  long lDBID_ExcludeProp = BEMPX_GetDatabaseID( "ExcludeFromEPlus", pObj->getClass()->get1BEMClassIdx() );
+      int iObjIdx = BEMPX_GetObjectIndex( pObj->getClass(), pObj, iBEMProcIdx );
+      if (lDBID_ExcludeProp > 0 && iObjIdx >= 0)
+      {  long lExclude;
+         if (BEMPX_GetInteger( lDBID_ExcludeProp, lExclude, 0, -1, iObjIdx, BEMO_User, iBEMProcIdx ) && lExclude > 0)
+            bRetVal = false;
       }
-   }
+      // also bail on object output if class type begins 'cf1r' or 'nrcc' (T24 reporting obejcts) - SAC 04-26-22
+      if (bRetVal)
+      {  QString qsClassName = pObj->getClass()->getShortName();
+         if (qsClassName.length() > 4 && (qsClassName.indexOf( "nrcc" )==0 || qsClassName.indexOf( "cf1r" )==0))
+            bRetVal = false;
+   }  }
+
+   if (bRetVal)
+   {  // next check to see if any of this component's properties need writing
+      bRetVal = MustWriteProperties_XML( pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset );
+
+      // then write each of this component's children (recursively)
+      if (!bRetVal && pObj->getChildCount() > 0)
+      {  // Cruise thru list of BEM child objects, writing each out to the file
+      //   POSITION pos = pObj->m_children.GetHeadPosition();
+      //   while ( !bRetVal && pos != NULL )
+      //   {  BEMObject* pChild = (BEMObject*) pObj->m_children.GetAt( pos );
+   		for (int iCIdx=0; (!bRetVal && iCIdx < pObj->getChildCount()); iCIdx++)
+   		{	BEMObject* pChild = pObj->getChild( iCIdx );					assert( pChild );
+            if (pChild != NULL)
+               bRetVal = MustWriteComponent_XML( pChild, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset, iBEMProcIdx );
+            else
+            {  assert( FALSE );
+            }
+         }
+   }  }
 	return bRetVal;
 }
 
@@ -5068,7 +5125,7 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
    	      	      // if it DOES have a parent, then it will be written automatically during the
    	      	      // course of its parent being written.
    	      	      if ( pObj->getParent() == NULL &&
-									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, true /*bWritePropertiesDefinedByRuleset*/ )) )  // SAC 2/28/13
+									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, true /*bWritePropertiesDefinedByRuleset*/, iBEMProcIdx )) )  // SAC 2/28/13
    	      	         WriteComponent_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, 0, NULL, true /*bWritePropertiesDefinedByRuleset*/,
                                             false /*bUseReportPrecisionSettings*/, bWritePrevNames );
    	      	   }
@@ -5210,7 +5267,7 @@ bool BEMXMLWriter::WriteModel(	bool bWriteAllProperties, BOOL /*bSupressAllMessa
    	      	      // if it DOES have a parent, then it will be written automatically during the
    	      	      // course of its parent being written.
    	      	      if ( pObj->getParent() == NULL &&
-									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset )) )  // SAC 2/28/13
+									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset, iBEMProcIdx )) )  // SAC 2/28/13
    	      	      {
    	      	         WriteComponent_XML( *mp_stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx,
    	      	         							iNumClassIDsToIgnore, piClassIDsToIgnore, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings, m_bWritePrevNames );
@@ -5266,7 +5323,7 @@ bool BEMXMLWriter::WriteCF1RPRF01E(	int iBEMClassID, bool bWriteAllProperties, B
    	      	      // if it DOES have a parent, then it will be written automatically during the
    	      	      // course of its parent being written.
    	      	      if ( pObj->getParent() == NULL &&
-									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset )) )  // SAC 2/28/13
+									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset, iBEMProcIdx )) )  // SAC 2/28/13
    	      	      {
    	      	         WriteComponent_XML( *mp_stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx,
    	      	         							0 /*iNumClassIDsToIgnore*/, NULL /*piClassIDsToIgnore*/, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings, m_bWritePrevNames );

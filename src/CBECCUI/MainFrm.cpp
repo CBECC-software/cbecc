@@ -1687,6 +1687,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgProj.DoModal();
       }
+
+  #ifdef  UI_PROGYEAR2019   // address separate access to dwelling unit DHW features by code vintage 2019 via ResSpcDHWFeatures, else DwellUnitType - SAC 03/09/22
       else if (wAction >= 190 && wAction <= 195)
       {	int iDlgHt = 740, iDlgWd = 600;  // Present dialog to collect Spc ResSpcDHWFeatures data
       	int iDlgClassID = eiBDBCID_ResSpcDHWFeatures;
@@ -1714,7 +1716,27 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 			{	ASSERT( FALSE );
 			}
 		}
-	// SAC 5/29/14 - code to create & delete CartesianPt children of PolyLp objects
+  #else
+      else if (wAction >= 190 && wAction <= 194)
+      {	int iDlgHt = 710, iDlgWd = 600;  // Present dialog to collect Multifamily Dwelling Unit data
+      	int iDlgClassID = eiBDBCID_DwellUnitType;
+			CString sDialogCaption;
+			GetDialogCaption( iDlgClassID, sDialogCaption );
+         CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         dlgProj.DoModal();
+      }
+  #endif
+
+	   // SAC 5/29/14 - code to create & delete CartesianPt children of PolyLp objects
       else if (wAction >= 1001 && wAction <= 1300)
 		{	// DELETE CartesianPt child of current PolyLp object
 			int iError;
@@ -1761,6 +1783,32 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgWinShadesDiagram.DoModal();
       }
+		else if (wAction == 3067)		// dialog to collect inputs for creation of AirSys to serve active ResOtherZn - SAC 05/17/22
+      {	long iDlgHt = 600, iDlgWd = 600; 
+			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "ResOtherZn:AirSys_WizDlgDims[1]" ), iDlgWd );
+			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "ResOtherZn:AirSys_WizDlgDims[2]" ), iDlgHt );
+      	int iDlgClassID = eiBDBCID_ResOtherZn;
+         lRetVal = 0;	// no data modified by this call (yet), so don't perform Data Modified stuff
+			CString sDialogCaption;
+			GetDialogCaption( iDlgClassID, sDialogCaption );
+         CSACDlg dlgAS( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Create" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 120 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         if (dlgAS.DoModal() == IDOK)
+         {  int iActiveObjIdx_ResOtherZn = BEMPX_GetActiveObjectIndex( eiBDBCID_ResOtherZn );
+            if (iActiveObjIdx_ResOtherZn >= 0)
+               lRetVal = (CMX_EvaluateRuleset( "Create_ResOtherZn_AirSys", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+   									NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/, eiBDBCID_ResOtherZn /*iEvalOnlyClass*/,
+   									iActiveObjIdx_ResOtherZn /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ ) ? 1 : 0);
+         }
+		}
 
 #endif  // UI_CARES or UI_CANRES
 
@@ -3229,6 +3277,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
                                                 {  "ReportAllUMLHZones"          ,  "ReportAllUMLHZones"          ,    0   },  // SAC 11/11/19
                                                 {  "SimulateCSEOnly"             ,  "SimulateCSEOnly"             ,    0   },  // SAC 3/10/20
                                                 {  "ReportGenNRCCPRFXML"         ,  "ReportGenNRCCPRFXML"         ,    0   },  // SAC 04/10/21
+                                                {  "LogAnalysisProgress"         ,  "LogAnalysisProgress"         ,   -1   },  // SAC 01/14/22 (MFam)
 																{  NULL, NULL, -1  }  };
 
 		int iAnalOptIdx = -1;
@@ -3263,6 +3312,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			{	sOptTemp.Format( "AnalysisDialogTimeout,%d,", iAnalysisDialogTimeout );
 				sOptionsCSVString += sOptTemp;
 			}
+
+      int iEnableResearchMode = ReadProgInt( sOptsSec, "EnableResearchMode", 0 /*default*/ );	// SAC 02/25/22
+		if (iEnableResearchMode > 0)
+		{	sOptTemp.Format( "EnableResearchMode,%d,", iEnableResearchMode );
+			sOptionsCSVString += sOptTemp;
+		}
 
 	// Add loop to check/add rule-based reporting options based on the enumerations currently available in the ruleset data model
 		long lDBID_Proj_RuleReportType = BEMPX_GetDatabaseID( "RuleReportType", BEMPX_GetDBComponentID( "Proj" ) );					ASSERT( lDBID_Proj_RuleReportType > 0 );
@@ -3307,9 +3362,10 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	// only specify FullComplianceAnalysis option if NOT in batch mode
 			long lAnalysisType;
 			VERIFY( BEMPX_SetDataInteger( elDBID_Proj_AnalysisType, lAnalysisType ) );   // SAC 9/12/11
-			ASSERT( lAnalysisType == 0 || lAnalysisType == 12 || lAnalysisType == 13 ||  // 0-Research, 12-ProposedOnly, 13-PropAndStd
-					  lAnalysisType == 2 );	// SAC 10/26/16 - 2-Existing Building EDR
-			BOOL bFullComplianceAnalysis = (lAnalysisType == 13);
+			ASSERT( lAnalysisType == 0  || lAnalysisType == 12 || lAnalysisType == 13 ||  // 0-Research, 12-ProposedOnly, 13-PropAndStd
+                 lAnalysisType == 14 || lAnalysisType == 15 ||                         // 14-MxdFuelBaseCompare, 15-AllElecBaseCompare - SAC 12/29/21 (MxdFuel)
+					  lAnalysisType == 2  );	// SAC 10/26/16 - 2-Existing Building EDR
+			BOOL bFullComplianceAnalysis = (lAnalysisType >= 13);       // was: == 13); - SAC 12/29/21 (MxdFuel)
 			if (!bFullComplianceAnalysis)		// default in ...Analysis...() routine switched to TRUE
 				sOptionsCSVString += "FullComplianceAnalysis,0,";
 		}
@@ -3396,6 +3452,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       int iEnableResearchMode = ReadProgInt( sOptsSec, "EnableResearchMode", 0 /*default*/ );	// SAC 5/14/16 - 
 		if (iEnableResearchMode > 0)
 		{	sOptTemp.Format( "EnableResearchMode,%d,", iEnableResearchMode );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iEnableMixedFuelCompare = ReadProgInt( sOptsSec, "EnableMixedFuelCompare", 0 /*default*/ );	// SAC 12/28/21 (MxdFuel) 
+		if (iEnableMixedFuelCompare > 0)
+		{	sOptTemp.Format( "EnableMixedFuelCompare,%d,", iEnableMixedFuelCompare );
 			sOptionsCSVString += sOptTemp;
 		}
       int lSimulateCentralDHWBranches = ReadProgInt( sOptsSec, "SimulateCentralDHWBranches", 1 /*default*/ );	// SAC 10/30/19		// SAC 11/6/19 - default 0->1
@@ -3512,7 +3573,7 @@ int CMainFrame::CheckWhichReportsToGenerate( CString& sRptList )	// SAC 2/19/15	
 	{	lRptStd  = 1;	iRetVal++;	}
 #elif UI_CARES
 	long lAnalType=0;
-	if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AnalysisType" ), lAnalType ) && lAnalType != 13)
+	if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AnalysisType" ), lAnalType ) && lAnalType < 13)     // was: != 13) - SAC 12/29/21 (MxdFuel)
 		return 0;		// SAC 10/27/16 - ignore report gen check if analysis NOT full compliance
 	if (ReadProgInt( "options", "ComplianceReportPDF", 0 /*default*/ ) > 0 ||
 			(BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:ComplianceReportPDF" ), lRptPDF ) && lRptPDF > 0))
@@ -4240,7 +4301,7 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 
 #ifdef UI_CANRES
 			if (lRunsSpanClimates > 0)		// SAC 1/4/19
-			{	qsErrMsg = "Batch processing option 'RunsSpanClimates' not compatible with CBECC-Com.";		// batch definitions CSV format change required to enable this in CBECC-Com
+			{	qsErrMsg = "Batch processing option 'RunsSpanClimates' not compatible with CBECC.";		// batch definitions CSV format change required to enable this in CBECC-Com
 				BEMMessageBox( qsErrMsg, "Batch Processing", 3 /*error*/ );
 				return FALSE;
 			}
@@ -6853,7 +6914,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 			// SAC 9/24/19 - updated default T24N CSVResultsLog filename adding '-v7' for new CSV format that EXcludes 2022 SrcPrime energy use columns
 			// SAC 11/04/19 - updated default T24N CSVResultsLog filename adding '-v8' for new CSV format that includes ResultsSet (EUseSummary) name and C02 results
 			// SAC 9/16/20 - updated default T24N CSVResultsLog filename adding '-v9' for new CSV format that includes Flexibility Proposed TDV (tic #3218)
-			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v9.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v9.csv" : "AnalysisResults-v9.csv"));
+         // updated default T24N CSVResultsLog filename adding '-v10' for added Report Gen NRCC PRF transaction ID & processing date/time - SAC 12/05/21
+			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v10.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v10.csv" : "AnalysisResults-v10.csv"));
 			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
 			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 
@@ -7546,16 +7608,22 @@ void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 //	AfxMessageBox( sTestMsg );
 
 	CString sDefaultResFNWord = "AnalysisResults";		// SAC 11/21/18 - enable new CBECC-Res CF1R XML schema-based reporting
-#ifdef UI_CARES
 	long lEnergyCodeYr;
+#ifdef UI_CARES
 	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
-	//if (lEnergyCodeYr >= 2019)
-	//	sDefaultResFNWord = "CF1RPRF01E";
-	// SAC 1/31/19 - revised above code to be sensitive to Res INI option ComplianceReportPrompt
-		sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYr >= 2019 ? "CF1RPRF01E" : "AnalysisResults") );
+   if (lEnergyCodeYr >= 2019)
+      sDefaultResFNWord = "CF1RPRF01E";
+	////	sDefaultResFNWord = "CF1RPRF01E";
+	//// SAC 1/31/19 - revised above code to be sensitive to Res INI option ComplianceReportPrompt
+   //		sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYr >= 2019 ? "CF1RPRF01E" : "AnalysisResults") );
 #elif UI_CANRES
-	// add code once schema-based reporting enabled in -Com
+	// added based on above - SAC 05/26/22
+	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEnergyCodeYr );
+   if (lEnergyCodeYr >= 2022)
+      sDefaultResFNWord = "NRCCPRF";
 #endif
+	// SAC 1/31/19 - revised above code to be sensitive to Res INI option ComplianceReportPrompt
+	sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", sDefaultResFNWord );
 
 	CString sAppendForResults, sAppendForPDF, sAppendForXML;
 	sAppendForResults.Format( " - %s.xml", sDefaultResFNWord );
@@ -7801,8 +7869,8 @@ void CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SA
 
 		bool bSchemaBasedRptGen = false;		// SAC 11/21/18 - enable new CBECC-Res CF1R XML schema-based reporting
 		CString sDefaultResFNWord = "AnalysisResults";
-#ifdef UI_CARES
 		long lEnergyCodeYr;
+#ifdef UI_CARES
 		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
 	//	if (lEnergyCodeYr >= 2019)
 	//	{	bSchemaBasedRptGen = true;
@@ -7813,7 +7881,10 @@ void CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SA
 		if (sDefaultResFNWord.Find("Analysis") != 0)
 			bSchemaBasedRptGen = true;
 #elif UI_CANRES
-      if (iReportID == 4)  // SAC 04/13/21
+   	// added based on above - SAC 05/26/22
+   	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEnergyCodeYr );
+		sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYr >= 2022 ? "NRCCPRF" : "AnalysisResults") );
+      if (iReportID == 4 || sDefaultResFNWord.Find("NRCCPRF") == 0)  // SAC 04/13/21
       {  sDefaultResFNWord = "NRCCPRF";
          bSchemaBasedRptGen = true;
       }
@@ -7963,7 +8034,7 @@ void CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SA
 	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenApp"        ), sRptGenApp        );
 	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenService"    ), sRptGenService    );
 	      			}
-                  if (iReportID == 4)  // SAC 04/13/21
+                  if (iReportID == 4 || sDefaultResFNWord.Find("NRCCPRF") == 0)  // SAC 04/13/21   // SAC 05/26/22
                   {	BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenCompReport" ), sRptGenCompReport );
       	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenServer"     ), sRptGenServer     ); 
       	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenApp"        ), sRptGenApp        ); 
@@ -8235,8 +8306,8 @@ void CMainFrame::OnToolsReport_BuildingSummary_T24()		// SAC 6/19/13
 	CString sAT;
 	VERIFY( BEMPX_SetDataString( BEMPX_GetDatabaseID( "AnalysisType", BEMPX_GetDBComponentID( "Proj" ) ), sAT ) );
 	BOOL bInclProp = (sAT.Find("Proposed") >= 0);
-	BOOL bInclStd  = (sAT.Find("Standard") >= 0);
-
+	BOOL bInclStd  = (sAT.Find("Standard") >= 0 ||
+                     sAT.Find("Baseline Comparison") > 0);     // SAC 12/29/21 (MxdFuel)
    m_bDoingSummaryReport = TRUE;		// causes simulations to be skipped during analysis
    LONG lPerfAnalRetVal = OnPerformAnalysis(0,0);
    m_bDoingSummaryReport = FALSE;
@@ -8363,6 +8434,11 @@ void CMainFrame::CreateBuildingComponent( int i1BDBClass, long lAssignmentDBID, 
          // primary data may have been user defaulted
 			BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
          SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis, i1BDBClass );		// SAC 5/16/18 - switched from DefaultAction_OpenDialog to DefaultAction_InitAnalysis to ensure evaluation
+
+      if (i1BDBClass == eiBDBCID_Proj)
+      {  if (elDBID_Proj_AnalysisVersion < 1 || !BEMPX_SetDataInteger( elDBID_Proj_AnalysisVersion, elProjAnalysisVersion ))     // SAC 05/30/22
+            elProjAnalysisVersion = 0;
+      }
 
       // then go edit the new component
       if (bEditNewComponent)
@@ -8601,6 +8677,7 @@ void CMainFrame::SetupNewProject()
 {
 	// SAC 6/18/14 - added RE-load of BEM CIDs & DBIDs to account for special conditions, such as UI_CANRES 2D/simplified geometry
 	InitBEMDBIDs();
+   elProjAnalysisVersion = 0;     // SAC 05/30/22
 
 	// ruleset should be newly re-loaded (via CComplianceUIDoc::OnNewDocument())
 #ifdef UI_CANRES

@@ -375,7 +375,8 @@ inline int                   CBEMPUISpreadConfigArray::GetSize( ) const     {ret
 // SAC 1/26/02 - increased from 4000 to 4500
 // SAC 4/28/02 - increased from 4500 to 5000
 // SAC 10/6/02 - increased from 5000 to 5500
-#define  MAX_TAB_CONTROLS  5500
+// SAC 11/17/21 - increased from 5500 to 6500
+#define  MAX_TAB_CONTROLS  6500
 // SAC  1/26/02 - increased from 100 to 150
 // SAC 10/30/02 - increased from 150 to 250
 #define  MAX_TAB_PAGES      250

@@ -74,9 +74,9 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
     <OutDir>../../bin/Release_VC142x64/</OutDir>
     <IntDir>../../bin/BEMProcUI_VC142/22r/x64/Release\</IntDir>
-    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>../../bin/Debug_VC142/</OutDir>
@@ -84,8 +84,8 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>../../bin/Release_VC142x64/</OutDir>
-    <IntDir>../../bin/BEMProcUI_VC142/22r/x64/Release\</IntDir>
+    <OutDir>../../bin/Debug_VC142x64/</OutDir>
+    <IntDir>../../bin/BEMProcUI_VC142/22r/x64/Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -157,7 +157,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_AFXEXT;_CRT_SECURE_NO_WARNINGS;BOOST_FILESYSTEM_VERSION=3;COMPILE_BEMPROC;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32;_WIN64;NDEBUG;_WINDOWS;_AFXEXT;_CRT_SECURE_NO_WARNINGS;BOOST_FILESYSTEM_VERSION=3;COMPILE_BEMPROC;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -187,7 +187,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>$(OutDir)BEMProcUI22r.lib</ImportLibrary>
       <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC142x64\BEMProc22r.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib-x64;</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -270,7 +270,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_CRT_SECURE_NO_WARNINGS;BOOST_FILESYSTEM_VERSION=3;COMPILE_BEMPROC;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32;_WIN64;_DEBUG;_WINDOWS;_AFXEXT;_CRT_SECURE_NO_WARNINGS;BOOST_FILESYSTEM_VERSION=3;COMPILE_BEMPROC;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -300,7 +300,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>$(OutDir)BEMProcUI22r.lib</ImportLibrary>
       <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC142x64\BEMProc22r.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib-x64;</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>

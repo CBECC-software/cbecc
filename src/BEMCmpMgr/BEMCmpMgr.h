@@ -227,7 +227,8 @@ int  BEMCMPMGR_API __cdecl CMX_GenerateFileHashesFromCSV( const char* pszHashFil
 
 bool BEMCMPMGR_API __cdecl CMX_RetrievePublicKey( QString sSecKeyRulelistName, bool bConvertBinHex, QString& sRptPubKey, QString& sErrMsg );
 
-bool BEMCMPMGR_API __cdecl CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName=NULL, BOOL bSupressAllMessageBoxes=FALSE );
+bool BEMCMPMGR_API __cdecl CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName=NULL, BOOL bSupressAllMessageBoxes=FALSE,
+                                                            const char** saPayloadAttribs=NULL, QString** qsaPayloadAttribStrings=NULL );    // SAC 12/05/21
 
 int  BEMCMPMGR_API __cdecl CMX_ExtractErrorsFromReportXML( const char* xmlFileName, QString& sErrors, BOOL bPostToProjectLog=TRUE, BOOL bPostToBEMProc=TRUE, BOOL bSupressAllMessageBoxes=FALSE );
 #endif // CECRPTGEN

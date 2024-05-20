@@ -167,7 +167,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2022;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32;_WIN64;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2022;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -185,9 +185,9 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;..\..\bin\Release_VC142x64\BEMProc22r.lib;..\..\bin\Release_VC142x64\BEMCmpMgr22r.lib;..\..\bin\Release_VC142x64\BEMProcUI22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;Qt5WinExtras.lib;..\..\bin\Release_VC142x64\BEMProc22r.lib;..\..\bin\Release_VC142x64\BEMCmpMgr22r.lib;..\..\bin\Release_VC142x64\BEMProcUI22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(IntDir)CBECC-Res22.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(IntDir)CBECC-Res22.map</MapFileName>
@@ -286,7 +286,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2022;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32;_WIN64;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2022;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -303,9 +303,9 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;..\..\bin\Debug_VC142x64\BEMProc22r.lib;..\..\bin\Debug_VC142x64\BEMCmpMgr22r.lib;..\..\bin\Debug_VC142x64\BEMProcUI22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;Qt5WinExtrasd.lib;..\..\bin\Debug_VC142x64\BEMProc22r.lib;..\..\bin\Debug_VC142x64\BEMCmpMgr22r.lib;..\..\bin\Debug_VC142x64\BEMProcUI22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)CBECC-Res22.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>

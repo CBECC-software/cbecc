@@ -65,8 +65,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION    22,0,5,1211
- PRODUCTVERSION 22,0,5,1211
+ FILEVERSION    22,1,0,1250
+ PRODUCTVERSION 22,1,0,1250
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -83,14 +83,14 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "BEM Processor User Interface DLL (T-24 Res)\0"
-            VALUE "FileVersion", "2022.0.5 (1211)\0"
+            VALUE "FileVersion", "2022.1.0 (1250)\0"
             VALUE "InternalName", "BEMProcUI22r\0"
-            VALUE "LegalCopyright", "Copyright (C) 2012-2020, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2022, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "BEMProcUI22r.dll\0"
             VALUE "ProductName", "BEM Processor UI DLL (T-24 Res)\0"
-            VALUE "ProductVersion", "2022.0.5\0"
-            VALUE "SpecialBuild", "build 1211\0"
+            VALUE "ProductVersion", "2022.1.0\0"
+            VALUE "SpecialBuild", "build 1250\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -115,8 +115,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     GROUPBOX        "General Information",IDC_SACWIZFRAME,5,5,377,182
     PUSHBUTTON      "&Help",IDC_WIZHELP,50,194,37,14
-    PUSHBUTTON      "« &Previous",IDC_PREVSCREEN,97,194,77,14
-    DEFPUSHBUTTON   "&Next »",IDC_NEXTTOPIC,186,194,67,14
+    PUSHBUTTON      "ï¿½ &Previous",IDC_PREVSCREEN,97,194,77,14
+    DEFPUSHBUTTON   "&Next ï¿½",IDC_NEXTTOPIC,186,194,67,14
     PUSHBUTTON      "&Finish",IDOK,341,194,41,14
     PUSHBUTTON      "&Cancel",IDCANCELBTN,3,195,41,14
 END
@@ -145,8 +145,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     GROUPBOX        "General Information",IDC_SACWIZFRAME,5,5,377,182
     PUSHBUTTON      "&Help",IDC_WIZHELP,50,194,37,14
-    PUSHBUTTON      "« &Previous",IDC_PREVSCREEN,97,194,77,14
-    DEFPUSHBUTTON   "&Next »",IDC_NEXTTOPIC,186,194,67,14
+    PUSHBUTTON      "ï¿½ &Previous",IDC_PREVSCREEN,97,194,77,14
+    DEFPUSHBUTTON   "&Next ï¿½",IDC_NEXTTOPIC,186,194,67,14
     PUSHBUTTON      "&Finish",IDOK,341,194,41,14
     PUSHBUTTON      "&Cancel",IDCANCELBTN,3,195,41,14
 END

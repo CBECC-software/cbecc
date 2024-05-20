@@ -297,7 +297,10 @@ BOOL CBEMPUIScreenData::ReadScreenControl( CTextIO& file, int iFileStructVersion
 {
    BOOL bRetVal = FALSE;
    if (m_iNumControls >= MAX_TAB_CONTROLS)
-      BEMMessageBox( "Too Many Controls" );
+   {  CString errMsg;      // expanded error message - SAC 11/16/21
+      errMsg.Format( _T("Too many UI controls in screen definitions file(s) (max %d ctrls, dialog tab %d of max %d)"), MAX_TAB_CONTROLS, m_iNumPages, MAX_TAB_PAGES );
+      BEMMessageBox( errMsg );
+   }
    else
    {
       m_apControls[ m_iNumControls ] = new CBEMPUIControl;

@@ -2678,9 +2678,17 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 	pCSERun->SetLastRun( bLastRun);
 	pCSERun->SetIsStdDesign( bIsStdDesign);
 
+   long lCSEHVACSizingReqd = 0;     // prevent DHW HPWH & solar sizing runs while in the process of HVAC sizing runs - SAC 05/12/22
+   bool bIsCSEHVACSizingRun = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:HVACSizingNeeded" ), lCSEHVACSizingReqd, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lCSEHVACSizingReqd > 0);
+
+   QString sRunIDProcFileAppend = "-cse";
+   long lSimPVBattOnly=0, lDBID_Proj_SimPVBattOnly = BEMPX_GetDatabaseID( "Proj:CSE_SimPVBattOnly" );    // SAC 01/23/22 (MFam)
+   if (lDBID_Proj_SimPVBattOnly > 0 && BEMPX_GetInteger( lDBID_Proj_SimPVBattOnly, lSimPVBattOnly, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lSimPVBattOnly > 0)
+      sRunIDProcFileAppend = "-pvb-cse";
+
 	QString sRunID			= pszRunID;
 	QString sRunAbbrev	= pszRunAbbrev;
-	QString sRunIDProcFile = " - " + sRunAbbrev + QString("-cse");		// add '-cse' to ensure no conflicts w/ files to/from other engines
+	QString sRunIDProcFile = " - " + sRunAbbrev + sRunIDProcFileAppend;  // QString("-cse");		// add '-cse' to ensure no conflicts w/ files to/from other engines
 	QString sProjFileAlone = m_sModelFileOnlyNoExt + sRunIDProcFile;
 
 	if (m_bStoreBEMProcDetails)
@@ -2749,16 +2757,17 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 	if (iRetVal == 0)
 	{
-   	if (m_lAnalysisType > 0 && bPerformFullCSESim)     // SAC 10/26/21 (MFam)
+   	if (m_lAnalysisType > 0)   // SAC 03/03/22 - need to evaluate ProposedInput_MFam for ResDHWSys defaulting, even when not full CSE sim ... was:  && bPerformFullCSESim)     // SAC 10/26/21 (MFam)
       {
    		// try evaluating prop & postprop rulelists EVERY time
    		iRetVal = LocalEvaluateRuleset(		sErrorMsg, 84, "ProposedInput_MFam", m_bVerbose, m_pCompRuleDebugInfo );		// generic project defaulting
                                                    //		84	: Error evaluating ProposedInput_MFam residential rules  (BEMAnal_CECRes_EvalPropInp3Error)
    		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
    			iRetVal = BEMAnal_CECRes_RuleProcAbort;
-   
-   		if (iRetVal == 0) // && iRunIdx == 0)
-   			iRetVal = LocalEvaluateRuleset(	sErrorMsg, 85, "ProposedModelSimulationCheck", m_bVerbose, m_pCompRuleDebugInfo );		// check user input model for simulation-related errors
+      }   
+   	if (m_lAnalysisType > 0 && iRetVal == 0)     // revised to eval following rulelists even when NOT bPerformFullCSESim - SAC 02/27/22
+      {
+   		iRetVal = LocalEvaluateRuleset(	sErrorMsg, 85, "ProposedModelSimulationCheck", m_bVerbose, m_pCompRuleDebugInfo );		// check user input model for simulation-related errors
                                                    //		85	: Error evaluating ProposedModelSimulationCheck residential rules  (BEMAnal_CECRes_EvalSimChkError)
    		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
    			iRetVal = BEMAnal_CECRes_RuleProcAbort;
@@ -2848,11 +2857,27 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 		}
 
 		QString sRptIncFile, sProcRptIncFile, sZoneIncFile, sProcZoneIncFile;		QVector<QString> saZoneIncFiles, saProcZoneIncFiles, saZoneNameIncFiles;
-		if (iRetVal == 0)
+		if (iRetVal == 0 && lSimPVBattOnly < 1)    // lSimPVBattOnly - SAC 01/23/22 (MFam)
 		{	// Write Report Include file statement
-			long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:CSE_RptIncFile" );
-			if (bAllowReportIncludeFile && lProjReportIncludeFileDBID > 0 && BEMPX_GetString( lProjReportIncludeFileDBID, sRptIncFile ) && !sRptIncFile.isEmpty())
-			{	BOOL bOrigRptIncFileLastSlashIdx = sRptIncFile.lastIndexOf('\\');
+			long lProjReportIncludeFileDBID = 0;  // BEMPX_GetDatabaseID( "Proj:CSE_RptIncFile" );
+         if (lProjReportIncludeFileDBID < 1 || !BEMPX_GetString( lProjReportIncludeFileDBID, sRptIncFile ) || sRptIncFile.isEmpty())
+         {  // mods to check ResProj report incl. file - SAC 05/13/22
+            lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "ResProj:ReportIncludeFile" );
+            if (lProjReportIncludeFileDBID > 0)
+               BEMPX_GetString( lProjReportIncludeFileDBID, sRptIncFile );
+         }
+               // debugging
+               //BEMPX_WriteLogFile( QString( "     SetupRun_NonRes():  iRunIdx %1, iRunType %2, pszRunID %3, pszRunAbbrev %4 - sRptIncFile %5" ).arg( QString::number( iRunIdx ), QString::number( iRunType ), pszRunID, pszRunAbbrev, sRptIncFile ),  NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         if (!sRptIncFile.isEmpty() && 
+             ( iRunType == CRM_StdMixedFuel || iRunType >= CRM_StdDesign ))
+         {  long lReportInclPropOnly, lProjReportInclPropOnlyDBID = BEMPX_GetDatabaseID( "ResProj:ReportInclPropOnly" );
+            if (BEMPX_GetInteger( lProjReportInclPropOnlyDBID, lReportInclPropOnly ) && lReportInclPropOnly > 0)
+            {  sRptIncFile.clear();
+               BEMPX_DefaultProperty( lProjReportIncludeFileDBID, m_iError );
+            }
+         }
+			if (bAllowReportIncludeFile && !sRptIncFile.isEmpty())
+			{  BOOL bOrigRptIncFileLastSlashIdx = sRptIncFile.lastIndexOf('\\');
 				if (sRptIncFile.indexOf(':') < 0 && sRptIncFile.indexOf('\\') != 0)
 					// report file does not include a FULL path, so expected to be a path relative to the project file - so prepend project path...
 					sRptIncFile = m_sModelPathOnly + sRptIncFile;
@@ -3131,16 +3156,23 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			BEMObject* pCSE_ElecUseImpFile = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "Proj:CSE_ElecUseIMPORTFILE" ), iSpecialVal, iError );
 		 	if (pCSE_ElecUseImpFile && pCSE_ElecUseImpFile->getClass())
 		 	{	int iCSE_ElecUseImpFileObjIdx = BEMPX_GetObjectIndex( pCSE_ElecUseImpFile->getClass(), pCSE_ElecUseImpFile );		assert( iCSE_ElecUseImpFileObjIdx >= 0 );
-				double* pdHrlyElecUse[ NUM_T24_NRES_EndUses ];
+				double* pdHrlyElecUse[ NUM_T24_NRES_EndUses * 2 ];    // added retrieval of 'Res' enduses - SAC 01/24/22 (MFam)
 				int iNumHrlyElecUsePtrs = 0, iHrlyElecUsePtrRV, iEU;
+				for (iEU=0; iEU < (NUM_T24_NRES_EndUses*2); iEU++)
+               pdHrlyElecUse[iEU] = NULL;
 				for (iEU=0; iEU < NUM_T24_NRES_EndUses; iEU++)
-				{	pdHrlyElecUse[iEU] = NULL;
-					if (iEU != IDX_T24_NRES_EU_CompTot && iEU != IDX_T24_NRES_EU_Total)
+				{	if (iEU != IDX_T24_NRES_EU_CompTot && iEU != IDX_T24_NRES_EU_Total && iEU != IDX_T24_NRES_EU_EffTot)
 					{	iHrlyElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyElecUse[iNumHrlyElecUsePtrs], NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
 																							esEUMap_CECNonRes[iEU].sEnduseName, iBEMProcIdx );
 						if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
 							iNumHrlyElecUsePtrs++;
-				}	}
+                  if (esEUMap_CECNonRes[iEU].sEnduseName && esEUMap_CECNonRes[iEU].sResEnduseName &&     // take into account previsouly stored RES enduse data as well - SAC 01/24/22 (MFam)
+                      strcmp( esEUMap_CECNonRes[iEU].sEnduseName, esEUMap_CECNonRes[iEU].sResEnduseName ) != 0)
+                  {  iHrlyElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyElecUse[iNumHrlyElecUsePtrs], NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
+																							esEUMap_CECNonRes[iEU].sResEnduseName, iBEMProcIdx );
+						   if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
+							   iNumHrlyElecUsePtrs++;
+				}	}  }
 
 		//		double* pdHrlyTotElecUse = NULL;
 		//		int iHrlyTotElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyTotElecUse, NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
@@ -3270,7 +3302,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			// SAC 2/11/20 - mod to facilitate solar thermal sizing either before or after HPWH sizing depending on whether any solar system is assigned to multiple HPWH systems needing sizing (Res tic #862)
 				long lHPWHSizUseSSF = 0;
 				bool bSizeSolarAfterHPWH = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizUseSSF" ), lHPWHSizUseSSF ) && lHPWHSizUseSSF > 0);
-				if (iRetVal == 0 && !bSizeSolarAfterHPWH)
+				if (iRetVal == 0 && !bIsCSEHVACSizingRun && !bSizeSolarAfterHPWH && lSimPVBattOnly < 1)      // lSimPVBattOnly - SAC 01/23/22 (MFam)
 				{
 					// DHWSolarSys Sizing - SAC 2/2/20 (Com tic #3157)
 					long lDBID_Proj_StdDHWSolarSysRef = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		QString qsStdDHWSolarSysName;
@@ -3288,7 +3320,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 				// SAC 1/29/19 - code to initiate HPWH Sizing run(s) when called for (based on Res)
 				long lCSE_HPWHSizingReqd=0, lHPWHSizInProc=0;
 				long lDBID_HPWHSizInProc = BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizInProc" );	// SAC 12/18/18
-				if (iRetVal == 0 && lDBID_HPWHSizInProc > 0 && (!BEMPX_GetInteger( lDBID_HPWHSizInProc, lHPWHSizInProc ) || lHPWHSizInProc < 1) &&
+				if (iRetVal == 0 && !bIsCSEHVACSizingRun && lSimPVBattOnly < 1 && lDBID_HPWHSizInProc > 0 && (!BEMPX_GetInteger( lDBID_HPWHSizInProc, lHPWHSizInProc ) || lHPWHSizInProc < 1) &&    // lSimPVBattOnly - SAC 01/23/22 (MFam)
 					 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizingReqd" ), lCSE_HPWHSizingReqd ) && lCSE_HPWHSizingReqd > 0)
 				{	// set flag indicating that we are performing HPWHSizing (otherwise we get stuck in an infinite loop during setup of CSE run initiated by T24Res_HPWHSizing()
 					lHPWHSizInProc = 1;
@@ -3306,7 +3338,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 //m_bVerbose = bVerboseInit;
 
 
-				if (iRetVal == 0 && bSizeSolarAfterHPWH)	// SAC 2/11/20 (Res tic #862)
+				if (iRetVal == 0 && !bIsCSEHVACSizingRun && bSizeSolarAfterHPWH && lSimPVBattOnly < 1)	   // SAC 2/11/20 (Res tic #862)    // lSimPVBattOnly - SAC 01/23/22 (MFam)
 				{
 					// DHWSolarSys Sizing - SAC 2/2/20 (Com tic #3157)
 					long lDBID_Proj_StdDHWSolarSysRef = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		QString qsStdDHWSolarSysName;
@@ -3318,7 +3350,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 				}	}
 
 
-				if (iRetVal == 0)		// DHW pre-run needed to calculate annual DHW TDV for the model EXCLUDING Solar Thermal system(s) - SAC 5/1/20 (FlexibilityCredit)
+				if (iRetVal == 0 && !bIsCSEHVACSizingRun && lSimPVBattOnly < 1)		// DHW pre-run needed to calculate annual DHW TDV for the model EXCLUDING Solar Thermal system(s) - SAC 5/1/20 (FlexibilityCredit)   // lSimPVBattOnly - SAC 01/23/22 (MFam)
 				{	double dUseCentralElecDHWSolPVCredPct;
 					long lDBID_UseCentralElecDHWSolPVCredPct = BEMPX_GetDatabaseID( "Proj:UseCentralElecDHWSolPVCredPct" );		//assert( lDBID_UseCentralElecDHWSolPVCredPct > 0 );
 					if (lDBID_UseCentralElecDHWSolPVCredPct > 0 && BEMPX_GetFloat( lDBID_UseCentralElecDHWSolPVCredPct, dUseCentralElecDHWSolPVCredPct ) && dUseCentralElecDHWSolPVCredPct > 0.001)

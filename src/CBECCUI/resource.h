@@ -150,7 +150,15 @@
 #define IDB_TREERESNET2                 263
 #define IDB_TREERPROJ                   264
 #define IDB_TREERPROJ2                  265
-#define IDB_TREELAST                    265
+#define IDB_TREERESZNGRP                266
+#define IDB_TREERESZNGRP2               267
+#define IDB_TREERESZN                   268
+#define IDB_TREERESZN2                  269
+#define IDB_TREERESOTHZN                270
+#define IDB_TREERESOTHZN2               271
+#define IDB_TREERESDWELL                272
+#define IDB_TREERESDWELL2               273
+#define IDB_TREELAST                    273
 #define IDD_WIZARD                      301
 #define IDD_ANALYSISSTATUS              302
 #define IDD_BEMPROCERRORS               303

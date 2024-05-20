@@ -135,7 +135,8 @@ extern int ComputeSHA256_File( const char* pszPathFile, char* pResultBuffer, int
 extern int ComputeSHA256_File_Raw( const char* pszPathFile, unsigned char* hash, int iHashLen );
 extern int ComputeSHA256_Compare( const char* pszPathFile, const char* pBufferToCompare );
 
-extern bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName=NULL, BOOL bSupressAllMessageBoxes=FALSE );
+extern bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName=NULL, BOOL bSupressAllMessageBoxes=FALSE,
+                                   const char** saPayloadAttribs=NULL, QString** qsaPayloadAttribStrings=NULL );    // SAC 12/05/21
 extern int  ExtractErrorsFromTitle24ReportXML( const char* xmlFileName, QString& sErrors, BOOL bPostToProjectLog=TRUE, BOOL bPostToBEMProc=TRUE, BOOL bSupressAllMessageBoxes=FALSE );
 extern long EncodeBase64FromFile( const char* inFileName, QString& encStr );
 
@@ -146,12 +147,24 @@ extern void CM_CharSwap(    char* lpBuf, int length );
 extern QString AnalysisAction_PhaseString( long iAnalPhase );
 extern QString AnalysisAction_BeforeAfter( long iBeforeAfter );
 
+// moved from BEMCmpMgrCom.h to enable access during Res/MFam analysis - SAC 11/29/21
+extern int  BCM_NRP_NumModels( int iModels );
+extern int  BCM_NRP_NumProgressModels( long lNRP );
+extern void SetCECNResProgressVal_Parallel( bool bAll, bool bZP, bool bAP, bool bEPlusSim, bool bCSESim );  // SAC 11/19/21
+extern void SetCECNResProgressVal_Serial( bool bZP, bool bAP, bool bZB, bool bAB );
+extern int  GetCECNResProgressIndex( long lStep, long lModel, long lSimProg );
+extern void SetCECNResProgressMessage( QString& sMsg, long lNRPStep, long lNRPModels, long lSimProg );
+extern float *faCECNResProgressVals, fCECNResProgressValSum;
+extern float *faCECNResCumulativeProgressSum;
+extern bool ebLogAnalysisProgress;     // SAC 01/14/22
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // CSE & Analysis progress tracking callback stuff
 class CSERunMgr;
 typedef int CSE_MSGCALLBACK( int level, const char* msg);
 extern int /*CALLBACK*/ CSE_MsgCallback( int level, const char* msg );
+extern void SetCSEMessageProcessingType( int iMPT=0 );   // SAC 11/19/21
 extern  int CSE_ProcessMessage( int level, const char* msg, int iRun=-1, const class CSERunMgr* pCSERunMgr=NULL);
 extern const char* pszCSEProgressMsgs[];
 extern int siNumProgressErrors;

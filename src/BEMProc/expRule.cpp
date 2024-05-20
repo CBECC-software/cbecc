@@ -279,6 +279,8 @@ static QString FuncName( int iFuncID )
 		case  BF_FormatNL       :  return "FormatNL";                
 		case  BF_PS_HAPropsVld  :  return "Psych_HAPropsValid";                
 		case  BF_PS_HAProps     :  return "Psych_HAProps";                
+		case  BF_NUnqChldVals   :  return "NumUniqueChildVals";     /* SAC 12/31/21 (MFam) - added */
+		case  BF_Cr8CompFor     :  return "CreateCompFor";          
 
 		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
 	}
@@ -1859,6 +1861,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_GlobRefSymStr : // SAC 4/4/18
 		case BF_UListRevRef   :  // SAC 8/22/19 - UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_UListRevRefIf :  // SAC 8/22/19 - UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		case BF_NUnqChldVals  :  // NumUniqueChildVals( ChildObjType:PropRef:Prop, CountUndefs(dflt1) )  - SAC 12/31/21 (MFam)
          {
             int iCompType = 0;  // SAC 1/4/01 - added to facilitate parsing of new BF_CountNoRefs func
             if (crntFunc == BF_CountNoRefs)
@@ -2198,6 +2201,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_CompCnt     : // "ComponentCount",  SAC  4/1/02 - first and only argument is a component type
       case BF_ImportComp  : // SAC 1/6/04 - ImportComponentFromFile( <CompType>, <path/filename> )
       case BF_AsgnCr8Comp : // SAC 3/11/14 - AssignOrCreateComp() - first argument comp type, 2nd is comp name, following args are pairs of created comp property name (in quotes) and values/strings/enumerations for each property */
+      case BF_Cr8CompFor  : // "CreateCompFor",   5-6 arguments - ( MinVal, MaxVal, LoopObjectType:LoopVal, ParentObject, CreateObjectType:LoopValProp, <optional: CreateObjectType:FirstLoopObjectFound> ) - SAC 04/27/22
          dbId = (int)BEMPX_GetDBComponentID( name );
          found = dbId > 0 && dbId <= BEM_MAX_COMP_ID;
          if ( found )
@@ -2394,6 +2398,7 @@ static void BEMProc_BitwiseMatches(             int op, int nArgs, ExpStack* sta
 static void BEMProc_SumIntoArrayElement(        int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );  // SAC 7/21/06
 static void BEMProc_EnsureStringUniqueness(     int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );  // SAC 8/25/03
 static BOOL CreateDeleteFuncLeftSideOK(        int op, int nArgs,                  ExpEvalStruct* pEval, ExpError* error );
+static void CreateCompFor(                     int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );   // 04/29/22
 static void CreateChildrenOrComp(              int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );
 static void DeleteChildrenCompOrAll(           int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );
 static void AssignOrCreateComp(                int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );  // SAC 3/11/14
@@ -3131,6 +3136,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 		case BF_ListRevRefIf :  // SAC 1/26/15 - ListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_UListRevRef   :  // SAC 8/22/19 - UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_UListRevRefIf :  // SAC 8/22/19 - UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		case BF_NUnqChldVals  :  // NumUniqueChildVals( ChildObjType:PropRef:Prop, CountUndefs(dflt1) )  - SAC 12/31/21 (MFam)
                             BEMProcSumChildrenAllOrRevRef( op, nArgs, stack, pEval, error );
                             break;
 
@@ -4164,10 +4170,13 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
       case BF_Cr8Comp    :  // "CreateComp",      SAC 5/26/00 - switched from 3 fixed to variable (3 or 4) arguments - SAC 11/19/14 -> up to 5 args
       case BF_DelComp    :  // "DeleteComp",      SAC 5/26/00 - switched from 1 fixed to variable (1 or 2) arguments
       case BF_DelAllComps:  // "DeleteAllComps",  SAC 5/26/00 - switched from 2 fixed to variable (2 or 3) arguments
+      case BF_Cr8CompFor :  // "CreateCompFor",   5-6 arguments - ( MinVal, MaxVal, LoopObjectType:LoopVal, ParentObject, CreateObjectType:LoopValProp, <optional: CreateObjectType:FirstLoopObjectFound> ) - SAC 04/27/22
                            {// first ensure that the left side of this rule is compatible with the result of this function 
                             if (CreateDeleteFuncLeftSideOK( op, nArgs, pEval, error ))
                             {
-                              if (op == BF_Cr8Child || op == BF_Cr8Comp)
+                              if (op == BF_Cr8CompFor)
+                                 CreateCompFor( op, nArgs, stack, pEval, error );
+                              else if (op == BF_Cr8Child || op == BF_Cr8Comp)
                                  CreateChildrenOrComp( op, nArgs, stack, pEval, error );
                               else  // Delete*()
                                  DeleteChildrenCompOrAll( op, nArgs, stack, pEval, error );
@@ -6803,6 +6812,12 @@ static BOOL CreateDeleteFuncLeftSideOK( int op, int nArgs, ExpEvalStruct* pEval,
    else if (op == BF_DelChild && (nArgs < 1 || nArgs > 3))
       ExpSetErr( error, EXP_RuleProc, "DeleteChildren() must have between 1 and 3 arguments." );
 
+   // CreateCompFor() - 5-6 arguments - ( MinVal, MaxVal, LoopObjectType:LoopVal, ParentObject, CreateObjectType:LoopValProp, <optional: CreateObjectType:FirstLoopObjectFound> ) - SAC 04/29/22
+   else if (op == BF_Cr8CompFor && iArrayIdx != BEM_PARAM0_ACTION)
+      ExpSetErr( error, EXP_RuleProc, "CreateCompFor() must resolve to a *:Action property." );
+   else if (op == BF_Cr8CompFor && (nArgs < 5 || nArgs > 6))
+      ExpSetErr( error, EXP_RuleProc, "CreateCompFor() must have between 5 and 6 arguments." );
+
    else if (op == BF_Cr8Comp && iDataType != BEMP_Obj && (iDataType != BEMP_Str || iPropType != 0 || iArrayIdx != BEM_PARAM0_ACTION))
       ExpSetErr( error, EXP_RuleProc, "CreateComp() must resolve to either a *:Action or component assignment property." );
    else if (op == BF_Cr8Comp && (nArgs < 2 || nArgs > 5))
@@ -6824,6 +6839,175 @@ static BOOL CreateDeleteFuncLeftSideOK( int op, int nArgs, ExpEvalStruct* pEval,
       return TRUE;
 
    return FALSE;
+}
+
+
+static void CreateCompFor( int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error )      // 04/29/22
+{  QString sErrMsg;
+   // BF_Cr8CompFor  =>  "CreateCompFor"  =>  5-6 arguments - ( MinVal, MaxVal, LoopObjectType:LoopVal, ParentObject, CreateObjectType:LoopValProp, <optional: CreateObjectType:FirstLoopObjectFound> )
+         //  MinVal & MaxVal define the range of For loop values
+         //  LoopObjectType:LoopVal is the property checked for equivalence to the loop value (MinVal thru MaxVal)
+         //  ParentObject is the object that will be the Parent of each component (table row) created by this function
+         //  CreateObjectType:LoopValProp defines both the object type created PLUS the property the loop value is set to
+         //  CreateObjectType:FirstLoopObjectFound is a reference to the first LoopObjectType found that meets LoopVal
+
+   ExpNode* pNode = ExpxStackPop( stack );
+
+   // 6th (optional) CreateCompFor argument - CreateObjectType:FirstLoopObjectFound is a reference to the first LoopObjectType found that meets LoopVal
+   long lDBID_FirstLoopObjectFound = 0;
+   if (nArgs > 5)
+   {  QString sFirstLoopObjectFound;
+      if (pNode->type != EXP_String)
+         sErrMsg = "Invalid CreateCompFor() 6th argument (quoted string containing Obj:Prop to store a reference to the first LoopObjectType found that meets LoopVal)";
+      else if (strlen( (char*) pNode->pValue ) > 0)
+      {  //sFirstLoopObjectFound = (char*) pNode->pValue;
+         lDBID_FirstLoopObjectFound = BEMPX_GetDatabaseID( (char*) pNode->pValue );
+         if (lDBID_FirstLoopObjectFound < BEM_COMP_MULT)
+            sErrMsg = QString( "Database ID of CreateCompFor() 6th argument (CreateObjectType:FirstLoopObjectFound) '%1' invalid." ).arg( (char*) pNode->pValue );
+      }
+      ExpxNodeDelete( pNode );
+      pNode = ExpxStackPop( stack );
+   }
+
+   // 5th CreateCompFor argument - CreateObjectType:LoopValProp defines both the object type created PLUS the property the loop value is set to
+   int iCID_ToCreate = 0;
+   long lDBID_CreateObjLoopValProp = 0;      assert( nArgs >= 5 );
+   if (sErrMsg.isEmpty())
+   {  if (pNode->type != EXP_String)
+         sErrMsg = "Invalid CreateCompFor() 5th argument (quoted string containing Obj:Prop defining both the object type created AND the property the loop value is set to)";
+      else 
+      {  lDBID_CreateObjLoopValProp = BEMPX_GetDatabaseID( (char*) pNode->pValue );
+         if (lDBID_CreateObjLoopValProp < BEM_COMP_MULT)
+            sErrMsg = QString( "Database ID of CreateCompFor() 5th argument (CreateObjectType:LoopValProp) '%1' invalid." ).arg( (char*) pNode->pValue );
+         else
+            iCID_ToCreate = BEMPX_GetClassID( lDBID_CreateObjLoopValProp );
+      }
+      ExpxNodeDelete( pNode );
+      pNode = ExpxStackPop( stack );
+   }
+
+   // 4th CreateCompFor argument - ParentObject is the object that will be the Parent of each component (table row) created by this function
+   BEMObject* pParentObj = NULL;
+   if (sErrMsg.isEmpty())
+   {  if (pNode->type != EXP_String)
+         sErrMsg = "Invalid CreateComp() 4th argument (name of parent object for each created component)";
+      else if (strlen( (char*) pNode->pValue ) > 0)
+      {  pParentObj = BEMPX_GetComponentByName( (char*) pNode->pValue, FALSE /*bCheckLibsOnly*/, -1 /*iBEMProcIdx*/, TRUE /*bSkipCheckingRuleLib*/ );
+         if (pParentObj == NULL)
+            sErrMsg = QString( "CreateCompFor() 4th argument (parent object) '%1' not found." ).arg( (char*) pNode->pValue );
+      }
+      ExpxNodeDelete( pNode );
+      pNode = ExpxStackPop( stack );
+   }
+
+   // 3rd CreateCompFor argument - LoopObjectType:LoopVal is the property checked for equivalence to the loop value (MinVal thru MaxVal)
+   int iCID_LoopObjType = 0;
+   long lDBID_LoopObjValProp = 0;
+   if (sErrMsg.isEmpty())
+   {  if (pNode->type != EXP_String)
+         sErrMsg = "Invalid CreateCompFor() 3rd argument (quoted string containing Obj:Prop defining both the object type to loop over and the property that is checked for in the loop)";
+      else 
+      {  lDBID_LoopObjValProp = BEMPX_GetDatabaseID( (char*) pNode->pValue );
+         if (lDBID_LoopObjValProp < BEM_COMP_MULT)
+            sErrMsg = QString( "Database ID of CreateCompFor() 3rd argument (LoopObjectType:LoopVal) '%1' invalid." ).arg( (char*) pNode->pValue );
+         else
+            iCID_LoopObjType = BEMPX_GetClassID( lDBID_LoopObjValProp );
+      }
+      ExpxNodeDelete( pNode );
+      pNode = ExpxStackPop( stack );
+   }
+
+   // 2nd CreateCompFor argument - MaxVal for the range of For loop values
+   long lMaxVal = 0;
+   if (sErrMsg.isEmpty())
+   {  if (pNode->type != EXP_Value)
+         sErrMsg = "Invalid CreateCompFor() 2nd argument (MaxVal for the range of For loop values)";
+      else 
+         lMaxVal = (long) pNode->fValue;
+      ExpxNodeDelete( pNode );
+      pNode = ExpxStackPop( stack );
+   }
+
+   // 1st CreateCompFor argument - MinVal for the range of For loop values
+   long lMinVal = 0;
+   if (sErrMsg.isEmpty())
+   {  if (pNode->type != EXP_Value)
+         sErrMsg = "Invalid CreateCompFor() 1st argument (MinVal for the range of For loop values)";
+      else 
+      {  lMinVal = (long) pNode->fValue;
+         if (lMaxVal < lMinVal)
+            sErrMsg = QString( "Invalid CreateCompFor() arguments 1-2 (Min & MaxVal for the range of For loop values) - Max (%1) must be >= Min (%2)" ).arg(
+                                                         QString::number( lMaxVal ), QString::number( lMinVal ) );
+      }
+      // not deleting 1st node - it will serve as the return node
+   }
+
+   int iNumObjsCreated = 0;
+   if (sErrMsg.isEmpty() && lDBID_LoopObjValProp > 0)
+   {  // object creation loop
+      int iNumLoopObjs = BEMPX_GetNumObjects( iCID_LoopObjType /* BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 */ );
+      long lLoopVal = lMinVal;
+      for (; lLoopVal <= lMaxVal && sErrMsg.isEmpty(); lLoopVal++)
+      {
+         bool bLoopValMatchFound = false;
+         for (int iLoopObjIdx=0; iLoopObjIdx < iNumLoopObjs && !bLoopValMatchFound && sErrMsg.isEmpty(); iLoopObjIdx++)
+         {  double dObjLoopVal;
+            if ( BEMPX_GetFloat( lDBID_LoopObjValProp, dObjLoopVal, -999, -1, iLoopObjIdx ) &&
+                 dObjLoopVal != -999 && (long) floor(dObjLoopVal+0.5) == lLoopVal )
+            {  // this LoopObj's LoopObjValProp matches lLoopVal - so creation of new object called for here
+               bLoopValMatchFound = true;
+               QString qsCr8CompName;
+               if (BEMPX_GetDefaultComponentName( iCID_ToCreate, qsCr8CompName ))
+               {
+                  BEMObject* pNewObj = BEMPX_CreateObject( iCID_ToCreate, qsCr8CompName.toLocal8Bit().constData(), pParentObj, BEMO_User, FALSE );
+                  if (pNewObj == NULL)
+                     sErrMsg = QString( "CreateCompFor() Error: unable to create object #%1 for loop value %2" ).arg(
+                                                         QString::number( iNumObjsCreated+1 ), QString::number( lLoopVal ) );
+                  else
+                  {
+                     int iNewObjIdx = BEMPX_GetObjectIndex( pNewObj->getClass(), pNewObj, -1 /*iBEMProcIdx*/ );
+                     iNumObjsCreated++;
+                     if (lDBID_CreateObjLoopValProp > 0)
+                     {
+                        if (BEMPX_SetBEMData( lDBID_CreateObjLoopValProp, BEMP_Int, (void*) &lLoopVal, BEMO_User, iNewObjIdx, BEMS_UserDefined,
+                                              BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)
+                           sErrMsg = QString( "CreateCompFor() Error:  Unable to set int to new object (DBID %1, value %2)" ).arg(
+                                                      QString::number( lDBID_CreateObjLoopValProp ), QString::number( lLoopVal ) );
+                     }
+                     if (sErrMsg.isEmpty() && lDBID_FirstLoopObjectFound > 0)
+                     {  int iLpObjErr;
+                        BEMObject* pLoopObj = BEMPX_GetObjectByClass( iCID_LoopObjType, iLpObjErr, iLoopObjIdx /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );
+                        if (pLoopObj == NULL)
+                           sErrMsg = QString( "CreateCompFor() Error:  Unable to retrieve loop object pointer (Class %1, index %2)" ).arg(
+                                                      QString::number( iCID_LoopObjType ), QString::number( iLoopObjIdx ) );
+                        else if (BEMPX_SetBEMData( lDBID_FirstLoopObjectFound, BEMP_Obj, (void*) pLoopObj, BEMO_User, iNewObjIdx, BEMS_UserDefined,
+                                                   BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)
+                           sErrMsg = QString( "CreateCompFor() Error:  Unable to set int to new object (DBID %1, value %2)" ).arg(
+                                                      QString::number( lDBID_CreateObjLoopValProp ), QString::number( lLoopVal ) );
+                  }  }
+            }  }
+      }  }
+   }
+
+   // init return node
+   if (pNode == NULL)
+      pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
+   else if (pNode->type == EXP_String)
+   {  // for last node, free string argument, but not entire node
+      free( pNode->pValue );
+      pNode->pValue = NULL;
+   }
+
+   if (!sErrMsg.isEmpty())
+   {  ExpSetErr( error, EXP_RuleProc, sErrMsg );
+      pNode->type   = EXP_Invalid;
+   }
+   else
+   {  pNode->type   = EXP_Value;
+      pNode->fValue = iNumObjsCreated;
+   }
+   // push result node onto stack
+   ExpxStackPush( stack, pNode );
 }
 
 
@@ -8320,6 +8504,7 @@ bool StoreChildObjectPtrs( BEMObject* pParentObj, int iGen, vector<BEMObject*>& 
 		// SAC 1/26/15 - BF_ListRevRefIf : ListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		// SAC 8/22/19 - BF_UListRevRef   : UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		// SAC 8/22/19 - BF_UListRevRefIf : UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		//  BF_NUnqChldVals  : NumUniqueChildVals( ChildObjType:PropRef:Prop, CountUndefs(dflt1) )  - SAC 12/31/21 (MFam)
 static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error )
 {
    BOOL bRevRefFunc = (	op == BF_SumRevRef || op == BF_MaxRevRef || op == BF_MinRevRef || op == BF_MaxRevRefC || op == BF_MaxRevRefA || op == BF_SumRevRefEx ||  // SAC 1/3/02  // SAC 11/10/04  // SAC 8/1/06
@@ -8329,6 +8514,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
    bool bGetCount   = (op == BF_CountRefs || op == BF_CountUPRefs || op == BF_CountOccur);  // SAC 1/3-4/02  // SAC 5/4/06
    bool bStoreArgsForProcessing = (op == BF_ListRevRef || op == BF_ListRevRefIf || op == BF_UListRevRef || op == BF_UListRevRefIf);  // SAC 1/26/15   // SAC 8/22/19
 	bool bStoreUniqueList = (op == BF_UListRevRef || op == BF_UListRevRefIf);  // SAC 8/22/19
+   bool bCountUniqueVals   = (op == BF_NUnqChldVals);    // SAC 01/01/22 (MFam)
+   bool bCountUniqueUndefs = (op == BF_NUnqChldVals);    // default val - SAC 01/01/22 (MFam)
    int i0FirstFormatStrArgIdx = -1;	// SAC 1/26/15
    bool bReturnArrayIdx = (op == BF_MaxRevRefA);   // SAC 11/10/04
 	int iOnlyChildGen = -1;  // used to restrict *Children*() routines to a FIXED, SINGLE generation, as opposed to traversing all possible generations (SAC 5/29/15)
@@ -8389,12 +8576,12 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 				}
 				else
 				{	iArgCondition = (int) pThisNode->fValue;
-// #define EQ 268
-// #define NEQ 269
-// #define LT 270
-// #define GT 271
-// #define LE 272
-// #define GE 273
+                     // #define EQ 268
+                     // #define NEQ 269
+                     // #define LT 270
+                     // #define GT 271
+                     // #define LE 272
+                     // #define GE 273
 					bArgCondParsed = TRUE;
 				}
 			}
@@ -8429,17 +8616,18 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       		iNumConsecStringArgs++;
       	else
          {	bAbort = TRUE;
-	         if (bGetMax)
-   	         ExpSetErr( error, EXP_RuleProc, "Invalid MaxXxx() argument" );
-      	   else if (bGetMin)
-         	   ExpSetErr( error, EXP_RuleProc, "Invalid MinXxx() argument" );
-	         else if (bGetCount)
-   	         ExpSetErr( error, EXP_RuleProc, "Invalid CountXxx() argument" );
-      	   else
-         	   ExpSetErr( error, EXP_RuleProc, "Invalid SumXxx() argument" );
+	         //if (bGetMax)
+   	      //   ExpSetErr( error, EXP_RuleProc, "Invalid MaxXxx() argument" );
+      	   //else if (bGetMin)
+         	//   ExpSetErr( error, EXP_RuleProc, "Invalid MinXxx() argument" );
+	         //else if (bGetCount)
+   	      //   ExpSetErr( error, EXP_RuleProc, "Invalid CountXxx() argument" );
+      	   //else
+         	//   ExpSetErr( error, EXP_RuleProc, "Invalid SumXxx() argument" );
+        	   ExpSetErr( error, EXP_RuleProc, QString( "Invalid %1() argument" ).arg( FuncName( op ) ) );     // SAC 01/02/22
       }	}
       else
-//         plParams[ arg-1 ] = (long) pThisNode->fValue;
+      //   plParams[ arg-1 ] = (long) pThisNode->fValue;
 		{	iNumConsecStringArgs = 0;
 			lMDBID = (long long) pThisNode->fValue;
 			if (lMDBID < 11 && lMDBID >= 0 && (op == BF_SumChld || op == BF_MaxChild || op == BF_MinChild || op == BF_MaxChildC || op == BF_MinChildC))	// store OnlyChildGen argument
@@ -8475,7 +8663,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       	ExpxNodeDelete( pThisNode );
    }
 
-//	QString sDbgLog;
+      //	QString sDbgLog;
 	BOOL bReturnUNDEFINED = FALSE;  // SAC 4/19/13
    if (!bAbort)
    {
@@ -8514,13 +8702,14 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
             pPrimObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lPrimDBID ), iTmpErr, iModelPrimObjIdx, pEval->ePrimObjType, i0Model );
          }
       }
-      else if (op == BF_SumChld || op == BF_MaxChild || op == BF_MinChild || op == BF_SumChldIf || op == BF_MaxChildC || op == BF_MinChildC)  // SAC 3/5/13 - BF_SumChldIf  // SAC 10/18/14
+      else if (op == BF_SumChld || op == BF_MaxChild || op == BF_MinChild || op == BF_SumChldIf || op == BF_MaxChildC || op == BF_MinChildC ||   // SAC 3/5/13 - BF_SumChldIf  // SAC 10/18/14
+               op == BF_NUnqChldVals)     // SAC 01/01/22 (MFam)
       {
          i1ChildClass  = BEMPX_GetClassID( plParams[ 0 ] );
          i1ParentClass = BEMPX_GetClassID( pEval->lPrimDBID );
 			//assert( i0Model<0 || i0Model==BEMPX_GetActiveModel() );  - SAC 4/3/13 - should be OK to span models now
-		//	iNumObjs = (int) BEMPX_GetNumChildren( pEval->lPrimDBID, iModelPrimObjIdx, pEval->ePrimObjType, i1ChildClass, i0Model );
-		// SAC 6/3/13 - added code to traverse ALL children, grandchildren, greatgrand... for all possible obejcts of the specified child class and archive their object indexes for later reference
+		   //	iNumObjs = (int) BEMPX_GetNumChildren( pEval->lPrimDBID, iModelPrimObjIdx, pEval->ePrimObjType, i1ChildClass, i0Model );
+		   // SAC 6/3/13 - added code to traverse ALL children, grandchildren, greatgrand... for all possible obejcts of the specified child class and archive their object indexes for later reference
 			assert( i1ParentClass != i1ChildClass );
 			if (i1ParentClass == i1ChildClass)	// SAC 6/1/16 - added error
          {	bAbort = TRUE;
@@ -8541,8 +8730,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 				// now paAllChildObjs vector is populated w/ EVERY descendant of the parent object (and even the parent object itself)
 				// now check each of these obejcts and store it in array of child objects that will be looped over when processing...
 				iNumObjs = (int) paAllChildObjs.size();
-		// SAC 4/20/15 - REMOVED restriction that child objects traversed for mins/maxs/sums be from a single generation (of child objects)
-		//		int iChildGen = -1;  // added iChildGen check to ensure that children of only a FIXED, SINGLE generation are referenced in the sum/min/max/... function execution
+		      // SAC 4/20/15 - REMOVED restriction that child objects traversed for mins/maxs/sums be from a single generation (of child objects)
+		      //		int iChildGen = -1;  // added iChildGen check to ensure that children of only a FIXED, SINGLE generation are referenced in the sum/min/max/... function execution
 		      for (iObj=0; iObj<iNumObjs; iObj++)
 				{	pThisObj = paAllChildObjs[iObj];
 					if (pThisObj && pThisObj->getClass() && pThisObj->getClass()->get1BEMClassIdx() == i1ChildClass)
@@ -8552,7 +8741,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 							//	iChildGen = iaAllChildObjGens[iObj];
 							//assert( iaAllChildObjGens[iObj] >= iChildGen );		// once we have found the FIRST child generation encountered, we shouldn't come across another object at a more senior generation
 							//if (iaAllChildObjGens[iObj] == iChildGen)
-		// SAC 5/29/15 - revised above code to account for new argument which specifies a certain child generation (1-10) OR the case where only the first encountered generation should be traversed (0)
+		               // SAC 5/29/15 - revised above code to account for new argument which specifies a certain child generation (1-10) OR the case where only the first encountered generation should be traversed (0)
 							if (iOnlyChildGen == 0)	// initial setting of 0 causes only the first encountered generation to be processed - like the original code did
 								iOnlyChildGen = iaAllChildObjGens[iObj];
 							if (iOnlyChildGen == -1 || iaAllChildObjGens[iObj] == iOnlyChildGen)
@@ -8568,13 +8757,13 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
          ExpSetErr( error, EXP_RuleProc, "Invalid BEMProcSumChildrenAllOrRevRef() Operation Code" );
       }
 
-//if (bStoreUniqueList)
-//{	if (pPrimObj)
-//		sDbgLog = QString( "storing unique list for %1 '%2':" ).arg( pPrimObj->getClass()->getShortName(), pPrimObj->getName() );
-//	else
-//		sDbgLog = QString( "storing unique list for (unknown object):" );
-//	BEMPX_WriteLogFile( sDbgLog );
-//}
+            //if (bStoreUniqueList)
+            //{	if (pPrimObj)
+            //		sDbgLog = QString( "storing unique list for %1 '%2':" ).arg( pPrimObj->getClass()->getShortName(), pPrimObj->getName() );
+            //	else
+            //		sDbgLog = QString( "storing unique list for (unknown object):" );
+            //	BEMPX_WriteLogFile( sDbgLog );
+            //}
 
 		// SAC 8/1/06 - added code to handle fourth & fifth arguments to SumRevRefEx()
       int iExtendedFlag = 0;
@@ -8627,6 +8816,13 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
          nArgs--;
       }
 
+      if (op == BF_NUnqChldVals && nArgs > 1)   // SAC 01/01/22 (MFam)
+      {
+         bCountUniqueUndefs = (plParams[nArgs-1]);
+         nArgs--;
+                        // ADD DEBUG ECHO OF PARAMETERS & bCountUniqueUndefs - if need arises
+      }
+
 		// SAC 6/14/00 - added code to perform RevRef functions over entire array if both assignment and sum/min/max arguments are arrays of the same length
       int iStartArg = 0, iSizeArg0Arr = -1;
       int iArrIdxLast = 0;
@@ -8665,6 +8861,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       int iMinMaxObjIdx = -1;
       QVector<QString> qvsUniqueStrings;	// SAC 8/22/19
       QVector<double>  qvdUniqueValues;
+      bool bUniqueUndefFound = false;     // SAC 01/02/21
       for (iObj=0; (!bAbort) && (iObj<iNumObjs); iObj++)
       {
 			// SAC 1/3/02 - Added code to limit array looping via new third argument to *RevRef & second argument of CountRefs
@@ -8675,8 +8872,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
                iArrLoopMax = lMaxArrayDBID-1;
          	else
          	{
-	      //      double fMaxArr;
-	      //      if (BEMPX_SetDataFloat( lMaxArrayDBID, fMaxArr, 1000, -1, iObj, BEMO_User, i0Model )  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
+	            //double fMaxArr;
+	            //if (BEMPX_SetDataFloat( lMaxArrayDBID, fMaxArr, 1000, -1, iObj, BEMO_User, i0Model )  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
 	            double fMaxArr = BEMPX_GetFloatAndStatus( lMaxArrayDBID, iStatus, iSpecialVal, iError, iObj, BEMO_User, i0Model, true );
 					if (iStatus > 0  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
 	               iArrLoopMax = (int) (fMaxArr+0.1) - 1;
@@ -8707,7 +8904,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
             else if (bRevRefFunc || bGetCount)
             {
                iObjIdx = -1;
-         //      pObj = (BEMObject*) BEMPX_GetData( plParams[0]+iArr, iDataType, iSpecialVal, iError, iObj, pEval->ePrimObjType, FALSE, i0Model );
+               //pObj = (BEMObject*) BEMPX_GetData( plParams[0]+iArr, iDataType, iSpecialVal, iError, iObj, pEval->ePrimObjType, FALSE, i0Model );
                pObj = BEMPX_GetObjectAndStatus( plParams[0]+iArr, iDataStatus, iSpecialVal, iError, iObj, pEval->ePrimObjType, i0Model );
                if (iError >= 0 && iDataStatus > 0 && pObj && pObj == pPrimObj)
                {
@@ -8753,9 +8950,9 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
                }
             }
             else
-			//		iObjIdx = BEMPX_GetChildObjectIndex( i1ParentClass, i1ChildClass, iError, eObjType,
-			//															iObj+1, iModelPrimObjIdx /*pEval->iPrimObjIdx*/, pEval->ePrimObjType, i0Model );
-			// SAC 6/3/13 - continuation of fix to ensure that ALL descendants
+			      //		iObjIdx = BEMPX_GetChildObjectIndex( i1ParentClass, i1ChildClass, iError, eObjType,
+			      //															iObj+1, iModelPrimObjIdx /*pEval->iPrimObjIdx*/, pEval->ePrimObjType, i0Model );
+			      // SAC 6/3/13 - continuation of fix to ensure that ALL descendants
 					iObjIdx = iaChildObjIdxs[iObj];
 
             if (op == BF_CountOccur || !bGetCount)  // SAC 5/4/06
@@ -8765,7 +8962,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 					int iFirstArgArgs = (bStoreArgsForProcessing ? 0 : (nArgs-1));		// SAC 1/26/15
                for (int i=iStartArg; (iObjIdx > -1) && (iError >= 0) && (i < iFirstArgArgs); i++)
                {
-            //      pObj = (BEMObject*) BEMPX_GetData( plParams[i], iDataType, iSpecialVal, iError, iObjIdx, eObjType, FALSE, i0Model );
+                  //pObj = (BEMObject*) BEMPX_GetData( plParams[i], iDataType, iSpecialVal, iError, iObjIdx, eObjType, FALSE, i0Model );
 						pObj = BEMPX_GetObjectAndStatus( plParams[i], iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, i0Model );
                   if (iError >= 0 && iDataStatus > 0 && pObj)
                   {
@@ -8861,8 +9058,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 											case BEMP_Flt	:	bIsNumeric[iLR] = TRUE;		dValCond[iLR] = (double) pValProp->getDouble();		break;
 											case BEMP_Sym	:	bIsNumeric[iLR] = TRUE;		dValCond[iLR] = (double) pValProp->getInt();
 																	bIsString[iLR] = TRUE;		sValCond[iLR] = BEMPX_GetSymbolString( pValProp->getInt(), lArgCondDBID[iLR], iValObjIdx, eValObjType, i0Model /*0 iBEMProcIdx*/ );  break;
-//const char* __cdecl BEMPX_GetSymbolString( long iSymVal, long lDBID, int iOccur=-1,
-//                                         BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+                                       //const char* __cdecl BEMPX_GetSymbolString( long iSymVal, long lDBID, int iOccur=-1,
+                                       //                                         BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 											case BEMP_Str	:	bIsString[iLR] = TRUE;		sValCond[iLR] = pValProp->getString();					break;
 											case BEMP_Obj	:	if (pValProp->getObj())
 																	{	dValCond[iLR] = (double) BEMPX_GetObjectIndex( pValProp->getObj()->getClass(), pValProp->getObj(), i0Model /*0 iBEMProcIdx*/ );
@@ -8898,13 +9095,13 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 							else if (bIsNumeric[0] && bIsNumeric[1])
 							{	// NUMERIC comparison
 								switch (iArgCondition)
-					//			{	case EQ :	bSumThisOne = (dValCond[0] == dValCond[1]);		break;
-					//				case NEQ:	bSumThisOne = (dValCond[0] != dValCond[1]);		break;
-					//				case LT :	bSumThisOne = (dValCond[0] <  dValCond[1]);		break;
-					//				case GT :	bSumThisOne = (dValCond[0] >  dValCond[1]);		break;
-					//				case LE :	bSumThisOne = (dValCond[0] <= dValCond[1]);		break;
-					//				case GE :	bSumThisOne = (dValCond[0] >= dValCond[1]);		break;
-					//				default :	bSumThisOne = FALSE;		assert( FALSE );			break;		- SAC 4/21/17 - replaced w/ below to better handle floating point representation issues
+								//{	case EQ :	bSumThisOne = (dValCond[0] == dValCond[1]);		break;
+								//	case NEQ:	bSumThisOne = (dValCond[0] != dValCond[1]);		break;
+								//	case LT :	bSumThisOne = (dValCond[0] <  dValCond[1]);		break;
+								//	case GT :	bSumThisOne = (dValCond[0] >  dValCond[1]);		break;
+								//	case LE :	bSumThisOne = (dValCond[0] <= dValCond[1]);		break;
+								//	case GE :	bSumThisOne = (dValCond[0] >= dValCond[1]);		break;
+								//	default :	bSumThisOne = FALSE;		assert( FALSE );			break;		- SAC 4/21/17 - replaced w/ below to better handle floating point representation issues
 								{	case EQ :	bSumThisOne = (AreSame( dValCond[0], dValCond[1] )   );		break;
 									case NEQ:	bSumThisOne = (AreSame( dValCond[0], dValCond[1] )==0);		break;
 									case LT :	bSumThisOne = (dValCond[0] < dValCond[1] && AreSame( dValCond[0], dValCond[1] )==0);		break;
@@ -8920,13 +9117,13 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 						}
 						else if (iExtendedFlag)
                   {
-               //      void* pData = (void*) BEMPX_GetDataAndStatus( lExtDBID+iArr, iExDataStatus, iExDataType, iSpecialVal, iError, iObjIdx, eObjType, FALSE, i0Model );
-               //      if (pData != NULL)
-               //      {
-               //         // SAC 8/7/10 - implementation of targeted debug output
-               //         if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lExtDBID+iArr, iObjIdx ))
-               //            ReportTagetedDebugInfo( pEval, iExDataType, lExtDBID+iArr, iObjIdx, eObjType, "BEMProcSumChildrenAllOrRevRef()-1", i0Model );
-					// SAC 9/5/16 - replaced above w/ following (during open source conversions)
+                     //      void* pData = (void*) BEMPX_GetDataAndStatus( lExtDBID+iArr, iExDataStatus, iExDataType, iSpecialVal, iError, iObjIdx, eObjType, FALSE, i0Model );
+                     //      if (pData != NULL)
+                     //      {
+                     //         // SAC 8/7/10 - implementation of targeted debug output
+                     //         if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lExtDBID+iArr, iObjIdx ))
+                     //            ReportTagetedDebugInfo( pEval, iExDataType, lExtDBID+iArr, iObjIdx, eObjType, "BEMProcSumChildrenAllOrRevRef()-1", i0Model );
+					      // SAC 9/5/16 - replaced above w/ following (during open source conversions)
 							iExDataType = BEMPX_GetDataType( lExtDBID + iArr );
 							if ((iExDataType == BEMP_Int || iExDataType == BEMP_Sym || iExDataType == BEMP_Flt) &&
 								 pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lExtDBID+iArr, iObjIdx ))
@@ -8978,15 +9175,15 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 									lMDBID = (long long) plParams[ nArgs-1 ]+iArr;
 									GetBEMProcDataToNode( &tempNode, lMDBID, iObjIdx, eObjType, error, pEval->bGetEnumString/*ruleSet.IsDataModel() bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
 
-//if (tempNode.type == EXP_Invalid)
-//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > invalid BEM data" ).arg( QString::number( iObjIdx ) );
-//else if (tempNode.type == EXP_Value)
-//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > value %2" ).arg( QString::number( iObjIdx ), QString::number( tempNode.fValue ) );
-//else if (tempNode.type == EXP_String)
-//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > string '%2'" ).arg( QString::number( iObjIdx ), (char*) tempNode.pValue );
-//else
-//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > unknown node status" ).arg( QString::number( iObjIdx ) );
-//BEMPX_WriteLogFile( sDbgLog );
+                                 //if (tempNode.type == EXP_Invalid)
+                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > invalid BEM data" ).arg( QString::number( iObjIdx ) );
+                                 //else if (tempNode.type == EXP_Value)
+                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > value %2" ).arg( QString::number( iObjIdx ), QString::number( tempNode.fValue ) );
+                                 //else if (tempNode.type == EXP_String)
+                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > string '%2'" ).arg( QString::number( iObjIdx ), (char*) tempNode.pValue );
+                                 //else
+                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > unknown node status" ).arg( QString::number( iObjIdx ) );
+                                 //BEMPX_WriteLogFile( sDbgLog );
 
 									if (tempNode.type == EXP_Invalid)
 									{	// simply skip past ivalid data (?)
@@ -8998,40 +9195,44 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 									else if (tempNode.type == EXP_String && qvsUniqueStrings.indexOf( QString( (char*) tempNode.pValue ) ) < 0)
 									{	qvsUniqueStrings.append( QString( (char*) tempNode.pValue ) );
 										ivObjIdxs.push_back( iObjIdx );
-//sDbgLog = QString( "      unique > qvsUniqueStrings size %1 '%2' > ivObjIdxs size %3" ).arg( QString::number( qvsUniqueStrings.size() ), qvsUniqueStrings.at( qvsUniqueStrings.size()-1 ), QString::number( ivObjIdxs.size() ) );
-//BEMPX_WriteLogFile( sDbgLog );
+                                 //sDbgLog = QString( "      unique > qvsUniqueStrings size %1 '%2' > ivObjIdxs size %3" ).arg( QString::number( qvsUniqueStrings.size() ), qvsUniqueStrings.at( qvsUniqueStrings.size()-1 ), QString::number( ivObjIdxs.size() ) );
+                                 //BEMPX_WriteLogFile( sDbgLog );
 									}
 									else
 									{	// not unique
-//sDbgLog = QString( "      NOT unique" );
-//BEMPX_WriteLogFile( sDbgLog );
+                                 //sDbgLog = QString( "      NOT unique" );
+                                 //BEMPX_WriteLogFile( sDbgLog );
 									}
 							}	}
 		               else
                      {
-               //      	void* pData = (void*) BEMPX_GetDataAndStatus( plParams[ nArgs-1 ]+iArr, iDataStatus, iDataType, iSpecialVal, iError, iObjIdx, eObjType, FALSE, i0Model );
-	            //      	if (pData != NULL)
-	            //      	{
-               //      	   // SAC 8/7/10 - implementation of targeted debug output
-               //      	   if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( plParams[ nArgs-1 ]+iArr, iObjIdx ))
-               //      	      ReportTargetedDebugInfo( pEval, iDataType, plParams[ nArgs-1 ]+iArr, iObjIdx, eObjType, "BEMProcSumChildrenAllOrRevRef()-2", i0Model );
-					// SAC 9/5/16 - replaced above w/ following (during open source conversions)
+                        //      	void* pData = (void*) BEMPX_GetDataAndStatus( plParams[ nArgs-1 ]+iArr, iDataStatus, iDataType, iSpecialVal, iError, iObjIdx, eObjType, FALSE, i0Model );
+	                     //      	if (pData != NULL)
+	                     //      	{
+                        //      	   // SAC 8/7/10 - implementation of targeted debug output
+                        //      	   if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( plParams[ nArgs-1 ]+iArr, iObjIdx ))
+                        //      	      ReportTargetedDebugInfo( pEval, iDataType, plParams[ nArgs-1 ]+iArr, iObjIdx, eObjType, "BEMProcSumChildrenAllOrRevRef()-2", i0Model );
+					         // SAC 9/5/16 - replaced above w/ following (during open source conversions)
 								iDataType = BEMPX_GetDataType( plParams[ nArgs-1 ]+iArr );
-								if ((iDataType == BEMP_Int || iDataType == BEMP_Sym || iDataType == BEMP_Flt) &&
+								if ((iDataType == BEMP_Int || iDataType == BEMP_Sym || iDataType == BEMP_Flt || ((iDataType == BEMP_Str || iDataType == BEMP_Obj) && bCountUniqueVals)) &&     // SAC 01/02/21 (MFam)
 									 pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( plParams[ nArgs-1 ]+iArr, iObjIdx ))
 									ReportTargetedDebugInfo( pEval, iDataType, plParams[ nArgs-1 ]+iArr, iObjIdx, eObjType, "BEMProcSumChildrenAllOrRevRef()-2", i0Model );
-								long lData=0;		double dData=0.0;		iDataStatus=0;
+								long lData=0;		double dData=0.0;		iDataStatus=0;    QString sData;
 								if (iDataType == BEMP_Int || iDataType == BEMP_Sym)
 									lData = BEMPX_GetIntegerAndStatus( plParams[ nArgs-1 ]+iArr, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, i0Model );
 								else if (iDataType == BEMP_Flt)
 									dData = BEMPX_GetFloatAndStatus(   plParams[ nArgs-1 ]+iArr, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, i0Model );
+                        else if ((iDataType == BEMP_Str || iDataType == BEMP_Obj) && bCountUniqueVals)      // SAC 01/02/21 (MFam)
+                           sData = BEMPX_GetStringAndStatus(  plParams[ nArgs-1 ]+iArr, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, i0Model );
 
 									if (iDataStatus < 1)		// handle case where property is UNDEFINED
 									{	// data undefined
+                              if (!bUniqueUndefFound && bCountUniqueUndefs)      // SAC 01/02/21
+                                 bUniqueUndefFound = true;
 									// do nothing if data to be summed is undefined
 	                     	//   QString sBEMProcErr;  // SAC 12/24/07 - added more verbose BEMProc retrieval info
 	                     	//   PopulateBEMProcInfo( sBEMProcErr, plParams[ nArgs-1 ]+iArr, iObjIdx, eObjType, i0Model, "Data Retrieval from BEMProc failed (", ") in BEMProcSumChildrenAllOrRevRef()" );
-// INSERT , iBEMProcModel  as 5th argument
+                                    // INSERT , iBEMProcModel  as 5th argument
 	                     	//   ExpSetErr( error, EXP_RuleProc, sBEMProcErr );
 	                     	//   bAbort = TRUE;
 									}
@@ -9045,7 +9246,40 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
                      		   else
                      		   {
                      		      dData = (double) lData;
-                     		      if (iExtendedFlag == 2)  // SAC 8/1/06
+                                 if (bCountUniqueVals)      // SAC 01/02/21 (MFam)
+									      {  if (qvdUniqueValues.indexOf( dData ) < 0)
+									            qvdUniqueValues.append( dData );
+                                 }
+                                 else
+                                 {  if (iExtendedFlag == 2)  // SAC 8/1/06
+                     		            dData += fExVal;
+                     		         else if (iExtendedFlag == 3)
+                     		            dData *= fExVal;
+                     	
+                     		         if (!bGetMax && !bGetMin)
+                     		            fResult += dData;
+                     		         else if (bGetMax && dData > fResult)
+                     		         {
+                     		            iMinMaxObjIdx = iObjIdx;
+                     		            iMinMaxArrIdx = iArr;   // SAC 11/10/04 - for BF_MaxRevRefA
+                     		            fResult = dData;
+                     		         }
+                     		         else if (bGetMin && dData < fResult)
+                     		         {
+                     		            iMinMaxObjIdx = iObjIdx;
+                     		            iMinMaxArrIdx = iArr;   // SAC 11/10/04 - for BF_MaxRevRefA
+                     		            fResult = dData;
+                                 }  }
+                     		   }
+                     		}
+                     		else if (iDataType == BEMP_Flt)
+                     		{  // Get float data
+                              if (bCountUniqueVals)      // SAC 01/02/21 (MFam)
+									   {  if (qvdUniqueValues.indexOf( dData ) < 0)
+									         qvdUniqueValues.append( dData );
+                              }
+                              else
+                     		   {  if (iExtendedFlag == 2)  // SAC 8/1/06
                      		         dData += fExVal;
                      		      else if (iExtendedFlag == 3)
                      		         dData *= fExVal;
@@ -9063,31 +9297,13 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
                      		         iMinMaxObjIdx = iObjIdx;
                      		         iMinMaxArrIdx = iArr;   // SAC 11/10/04 - for BF_MaxRevRefA
                      		         fResult = dData;
-                     		      }
-                     		   }
+                              }  }
                      		}
-                     		else if (iDataType == BEMP_Flt)
-                     		{  // Get float data
-                     		   if (iExtendedFlag == 2)  // SAC 8/1/06
-                     		      dData += fExVal;
-                     		   else if (iExtendedFlag == 3)
-                     		      dData *= fExVal;
-                     	
-                     		   if (!bGetMax && !bGetMin)
-                     		      fResult += dData;
-                     		   else if (bGetMax && dData > fResult)
-                     		   {
-                     		      iMinMaxObjIdx = iObjIdx;
-                     		      iMinMaxArrIdx = iArr;   // SAC 11/10/04 - for BF_MaxRevRefA
-                     		      fResult = dData;
-                     		   }
-                     		   else if (bGetMin && dData < fResult)
-                     		   {
-                     		      iMinMaxObjIdx = iObjIdx;
-                     		      iMinMaxArrIdx = iArr;   // SAC 11/10/04 - for BF_MaxRevRefA
-                     		      fResult = dData;
-                     		   }
-                     		}
+                           else if ((iDataType == BEMP_Str || iDataType == BEMP_Obj) && bCountUniqueVals)      // SAC 01/02/21 (MFam)
+                           {
+                              if (qvsUniqueStrings.indexOf( sData ) < 0)
+									      qvsUniqueStrings.append( sData );
+                           }
                      		else
                      		{
                      		   ExpSetErr( error, EXP_RuleProc, "Data Type Incompatible with Summing" );
@@ -9119,9 +9335,9 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 					ExpNode tempNodes[30];
 					for (i=0; i<iNumFmtArgs; i++)
 						ExpNode_init( &tempNodes[i] );	// SAC 4/21/17
-				//	{	tempNodes[i].type = EXP_Invalid;
-				//		tempNodes[i].fValue = 0;
-				//	}
+				   //	{	tempNodes[i].type = EXP_Invalid;
+				   //		tempNodes[i].fValue = 0;
+				   //	}
 					int iProcObjIdx=0;
 					int iFirstProcNodeIdx = i0FirstFormatStrArgIdx + 3;
 					std::vector<int>::iterator it = ivObjIdxs.begin();
@@ -9147,7 +9363,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 									else
 										lDBID = (long) lMDBID;
                      	   PopulateBEMProcInfo( sBEMProcErr, lDBID, *it, eObjType, iThisModel, "Data Retrieval from BEMProc failed (", ") in BEMProcSumChildrenAllOrRevRef()" );
-// INSERT , iBEMProcModel  as 5th argument
+                              // INSERT , iBEMProcModel  as 5th argument
                      	   ExpSetErr( error, EXP_RuleProc, sBEMProcErr );
                      	   bAbort = TRUE;
 								}
@@ -9183,6 +9399,17 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 			else
 				bReturnUNDEFINED = TRUE;	// no RevRef obejcts found to echo to result string
 		}
+
+      if (!bAbort  &&  bCountUniqueVals)     // SAC 01/02/21 (MFam)
+      {
+         fResult = qvsUniqueStrings.size() + qvdUniqueValues.size() +
+                   (bUniqueUndefFound ? 1 : 0);
+            //int iTmpErr;
+            //if (pPrimObj == NULL && pEval->lPrimDBID > 0)
+            //   pPrimObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lPrimDBID ), iTmpErr, pEval->iPrimObjIdx, pEval->ePrimObjType, i0Model );
+            //if (pPrimObj)
+            //   BEMPX_WriteLogFile( QString( "   %1 '%2' %3 : %4 = %5" ).arg( pPrimObj->getClass()->getShortName(), pPrimObj->getName(), pEval->sRuleID, FuncName( op ), QString::number(fResult) ) );
+      }
 
 		// SAC 1/9/02 - Added code to handle new MaxRevRefComp() function
       if (!bAbort  &&  (op == BF_MaxRevRefC || op == BF_MaxAllComp || op == BF_MaxChildC || op == BF_MinChildC))  // SAC 1/25/02  // SAC 10/18/14
@@ -12358,9 +12585,15 @@ int GetObjectMatchingData( int iObjClassIdx, std::string& sObjName, int iObjCrea
 int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error )
 {	int iNumObjsCreated = 0;
 	long lIsMultiFamily, lProj_RunScope;
-	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:IsMultiFamily" ), lIsMultiFamily ))
+   long lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "ResProj:IsMultiFamily" );    // SAC 11/17/21
+   if (lDBID_IsMultiFamily < 1)
+      lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "Proj:IsMultiFamily" );
+   long lDBID_RunScope = BEMPX_GetDatabaseID( "ResProj:RunScope" );
+   if (lDBID_RunScope < 1)
+      lDBID_RunScope = BEMPX_GetDatabaseID( "Proj:RunScope" );
+	if (!BEMPX_GetInteger( lDBID_IsMultiFamily, lIsMultiFamily ))
 		sErrMsg = QString( "CreateSCSysRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:IsMultiFamily" );
-	else if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lProj_RunScope ))
+	else if (!BEMPX_GetInteger( lDBID_RunScope, lProj_RunScope ))
 		sErrMsg = QString( "CreateSCSysRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:RunScope" );
 	else
 	{
@@ -12415,6 +12648,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
       long lDBID_SCSysRpt_HtPumpSystem         = GetPropertyDBID_LogError( "SCSysRpt", "HtPumpSystem",         iCID_SCSysRpt, iNumErrors, sTmp );  // BEMP_Obj,  1,  0,  0, "",    0,  1, "HVACHtPump",  1, "",  8004, "Heat pump component"    
 //      long lDBID_SCSysRpt_HtPumpSysUnitTypeIdx = GetPropertyDBID_LogError( "SCSysRpt", "HtPumpSysUnitTypeIdx", iCID_SCSysRpt, iNumErrors, sTmp );  // BEMP_Int,  1,  0,  0, "",    0,  0,                        8004, "1-based index of this heat pump unit type in parent HVACSys object" 
 //      long lDBID_SCSysRpt_HtPumpSysUnitTypeCnt = GetPropertyDBID_LogError( "SCSysRpt", "HtPumpSysUnitTypeCnt", iCID_SCSysRpt, iNumErrors, sTmp );  // BEMP_Int,  1,  0,  0, "",    0,  0,                        8004, "1-based index of the heat pump unit count associated w/ this SCSysRpt object" 
+      long lDBID_SCSysRpt_CentralHtgClgSystem  = GetPropertyDBID_LogError( "SCSysRpt", "CentralHtgClgSystem",  iCID_SCSysRpt, iNumErrors, sTmp );  // BEMP_Obj,  1,  0,  0, "",    0,  1, "ResCentralHtgClgSys",  1, "",  8004, "Central Htg/Clg component",  ""    ; SAC 03/16/22
       long lDBID_SCSysRpt_HVACFanRef           = GetPropertyDBID_LogError( "SCSysRpt", "HVACFanRef",           iCID_SCSysRpt, iNumErrors, sTmp );  // BEMP_Obj,  1,  0,  0, "",    0,  1, "HVACFan",     0, "",  8010, "Heat/Cool fan associated w/ this SCSysRpt object"    
       long lDBID_SCSysRpt_HVACDistRef          = GetPropertyDBID_LogError( "SCSysRpt", "HVACDistRef",          iCID_SCSysRpt, iNumErrors, sTmp );  // BEMP_Obj,  1,  0,  0, "",    0,  1, "HVACDist",    0, "",  8010, "Heat/Cool distribution (ducts) associated w/ this SCSysRpt object"    
       long lDBID_SCSysRpt_SCSysTypeVal         = GetPropertyDBID_LogError( "SCSysRpt", "SCSysTypeVal",         iCID_SCSysRpt, iNumErrors, sTmp );  // BEMP_Int,  1,  0,  0, "",    0,  0,                        1003, "Type of parent HVACSys"   
@@ -12436,6 +12670,9 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 		long lDBID_DUT_NumHtPumpEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumHtPumpEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Int,  1,  0,  0, "",    0,  0,                        8004, "Number of heat pump unit types"    
 		long lDBID_DUT_HVACHtPumpRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACHtPumpRef",       iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Obj,  5,  1,  0, "",    0,  1, "HVACHtPump",  0, "",  8004, "Heat pump component that serves this equip zone type"    
 		long lDBID_DUT_HtPumpEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "HtPumpEquipCount",    iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Int,  5,  1,  0, "",    0,  0,                        8004, "Number of units for this heat pump type"    
+		long lDBID_DUT_NumCentralEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumCentralEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );     // SAC 03/16/22
+		long lDBID_DUT_HVACCentralRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACCentralRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
+		long lDBID_DUT_CentralEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "CentralEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DUT_HVACFanRef          = GetPropertyDBID_LogError( "DwellUnitType", "HVACFanRef",          iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Obj,  1,  0,  0, "",    0,  1, "HVACFan",     0, "",  8010, "Heat/Cool fan that serves this equip zone type"    
 		long lDBID_DUT_HVACDistRef         = GetPropertyDBID_LogError( "DwellUnitType", "HVACDistRef",         iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Obj,  1,  0,  0, "",    0,  1, "HVACDist",    0, "",  8010, "Heat/Cool distribution (ducts) that serves this equip zone type"    
 		long lDBID_DUT_HeatEquipDucted     = GetPropertyDBID_LogError( "DwellUnitType", "HeatEquipDucted",     iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Int,  1,  0,  0, "",    0,  0,                        3208, "Whether or not (1/0) heating equipment is ducted"    
@@ -12490,17 +12727,22 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 									long lType;
 									if (BEMPX_GetInteger( lDBID_DUT_HVACSysType, lType, 0, -1, iDUTIdx ))
 									{
-										bool bIsHP = (lType == 2);		int iEqp, iCnt, iM1Idx;
+										bool bIsHP = (lType == 2), bIsCentral = (lType == 4);		int iEqp, iCnt, iM1Idx;
 										long lHtDucted=0, lClDucted=0, lEqpCountsMustAlign=0, lDuctStatus=0, lSCSysStatus;
 										QString sDistribName, sFanName;
 										BEMPX_GetString( lDBID_DUT_HVACDistRef, sDistribName, FALSE, 0, -1, iDUTIdx );
 										BEMPX_GetString( lDBID_DUT_HVACFanRef , sFanName    , FALSE, 0, -1, iDUTIdx );
 										if (!sDistribName.isEmpty())
-										{	BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipDucted : lDBID_DUT_HeatEquipDucted), lHtDucted, 0, -1, iDUTIdx );
-											if (bIsHP)
-												lClDucted = lHtDucted;
-											else
-												BEMPX_GetInteger( lDBID_DUT_CoolEquipDucted, lClDucted, 0, -1, iDUTIdx );
+										{  if (bIsCentral)
+                                 {  lHtDucted = lClDucted = 1;
+                                 }
+                                 else
+                                 {	BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipDucted : lDBID_DUT_HeatEquipDucted), lHtDucted, 0, -1, iDUTIdx );
+											   if (bIsHP)
+												   lClDucted = lHtDucted;
+											   else
+												   BEMPX_GetInteger( lDBID_DUT_CoolEquipDucted, lClDucted, 0, -1, iDUTIdx );
+                                 }
 										//	BEMObject* pDistribObj = BEMPX_GetObjectByName( iCID_HVACDist, iError, sDistribName, BEMO_User, iBEMProcIdx );
 										//	if (pDistribObj && pDistribObj->getClass())
 										//	{	int iDistribObjIdx = BEMPX_GetObjectIndex( pDistribObj->getClass(), pDistribObj, iBEMProcIdx );
@@ -12522,10 +12764,10 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 										vector<string> saHtUnitName, saClUnitName;
 										long lNumSysTypes = 0, lEqpCnt;		QString sEqpName;
 										// first load Heating/HtPump system info
-										if (BEMPX_GetInteger( (bIsHP ? lDBID_DUT_NumHtPumpEquipTypes : lDBID_DUT_NumHeatEquipTypes), lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
+										if (BEMPX_GetInteger( (bIsHP ? lDBID_DUT_NumHtPumpEquipTypes : (bIsCentral ? lDBID_DUT_NumCentralEquipTypes : lDBID_DUT_NumHeatEquipTypes)), lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
 											for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
-											{	if (	BEMPX_GetString(  (bIsHP ? lDBID_DUT_HVACHtPumpRef    : lDBID_DUT_HVACHeatRef   )+iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
-														BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipCount : lDBID_DUT_HeatEquipCount)+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
+											{	if (	BEMPX_GetString(  (bIsHP ? lDBID_DUT_HVACHtPumpRef    : (bIsCentral ? lDBID_DUT_HVACCentralRef    : lDBID_DUT_HVACHeatRef   ))+iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
+														BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipCount : (bIsCentral ? lDBID_DUT_CentralEquipCount : lDBID_DUT_HeatEquipCount))+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
 												{	laHtUnitCnt.push_back( lEqpCnt );
 													saHtUnitName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
 												}
@@ -12535,8 +12777,9 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 											//			saHtUnitName.push_back(   (const char*) sEqpName );
 											//		}
 											}
+
 										// then load Cooling system info
-										if (!bIsHP && BEMPX_GetInteger( lDBID_DUT_NumCoolEquipTypes, lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
+										if (!bIsHP && !bIsCentral && BEMPX_GetInteger( lDBID_DUT_NumCoolEquipTypes, lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
 											for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
 											{	if (	BEMPX_GetString(  lDBID_DUT_HVACCoolRef   +iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
 														BEMPX_GetInteger( lDBID_DUT_CoolEquipCount+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
@@ -12588,7 +12831,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 												faData.push_back( -99996 );
 											}
 										// heating equip
-											laDBIDs.push_back( (bIsHP ? lDBID_SCSysRpt_HtPumpSystem : lDBID_SCSysRpt_HeatSystem) );
+											laDBIDs.push_back( (bIsHP ? lDBID_SCSysRpt_HtPumpSystem : (bIsCentral ? lDBID_SCSysRpt_CentralHtgClgSystem : lDBID_SCSysRpt_HeatSystem)) );
 											laData.push_back( -1 );
 											if (iHtgIdx >= 0)
 											{	iaDataTypes.push_back( BEMP_Str );
@@ -12630,7 +12873,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 										// SCSysTypeVal
 											laDBIDs.push_back( lDBID_SCSysRpt_SCSysTypeVal );
 											iaDataTypes.push_back( BEMP_Int );
-											laData.push_back( (bIsHP ? 2 : 1) );	// 2-"Heat Pump Heating and Cooling System"  /  1-"Other Heating and Cooling System"
+											laData.push_back( (bIsHP ? 2 : (bIsCentral ? 4 : 1)) );	// 4-"Central HtgClg"  /  2-"Heat Pump Heating and Cooling System"  /  1-"Other Heating and Cooling System"
 											saData.push_back( "" );
 											faData.push_back( -1 );
 										// Status  - SAC 12/14/15
@@ -13016,31 +13259,37 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error )		// SAC 3/14/14
 {	int iNumObjsCreated = 0;
 	long lIsMultiFamily;
-	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:IsMultiFamily" ), lIsMultiFamily ))
+   bool bHaveResProj = true;
+   long lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "ResProj:IsMultiFamily" );    // SAC 11/17/21
+   if (lDBID_IsMultiFamily < 1)
+   {  lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "Proj:IsMultiFamily" );
+      bHaveResProj = false;
+   }
+	if (!BEMPX_GetInteger( lDBID_IsMultiFamily, lIsMultiFamily ))
 		sErrMsg = QString( "CreateDHWRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:IsMultiFamily" );
 	else
-	{
+	{  QString qsDHWSys = (bHaveResProj ? "ResDHWSys" : "DHWSys" );
 		int iNumErrors = 0, iError;		QString sTmp, sDHWSysRptName;
 	//	int iCID_Proj      = GetObjectID_LogError( "Proj",      iNumErrors, sTmp );
-		int iCID_DHWSys    = GetObjectID_LogError( "DHWSys",    iNumErrors, sTmp );
-		int iCID_DHWSysRpt = GetObjectID_LogError( "DHWSysRpt", iNumErrors, sTmp );
+		int iCID_DHWSys    = GetObjectID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), iNumErrors, sTmp );
+		int iCID_DHWSysRpt = GetObjectID_LogError(                "DHWSysRpt"                      , iNumErrors, sTmp );
 		int iCID_DwellUnit     = GetObjectID_LogError( "DwellUnit",     iNumErrors, sTmp );
 		int iCID_DwellUnitType = GetObjectID_LogError( "DwellUnitType", iNumErrors, sTmp );
 		int iCID_Zone          = GetObjectID_LogError( "Zone",          iNumErrors, sTmp );
 
-		long lDBID_DHWSys_Name             = GetPropertyDBID_LogError( "DHWSys", "Name",             iCID_DHWSys, iNumErrors, sTmp );
-		long lDBID_DHWSys_TotNumDHWHeaters = GetPropertyDBID_LogError( "DHWSys", "TotNumDHWHeaters", iCID_DHWSys, iNumErrors, sTmp );
-      long lDBID_DHWSys_SystemType       = GetPropertyDBID_LogError( "DHWSys", "SystemType",       iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Sym,  1,  0,  0, "",     0,                        8001, "DHW system type"    
-   //   long lDBID_DHWSys_IsNew   		       = GetPropertyDBID_LogError( "DHWSys", "IsNew",                iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "flag set if this object is New"
-   //   long lDBID_DHWSys_IsAltered   	       = GetPropertyDBID_LogError( "DHWSys", "IsAltered",            iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "flag set if this object is Altered"
-   //   long lDBID_DHWSys_IsExisting   	    = GetPropertyDBID_LogError( "DHWSys", "IsExisting",           iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "flag set if this object is Existing"
-   //   long lDBID_DHWSys_IsVerified   	    = GetPropertyDBID_LogError( "DHWSys", "IsVerified",           iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "existing conditions will be HERS verified"
-      long lDBID_DHWSys_FloorAreaServed  = GetPropertyDBID_LogError( "DHWSys", "FloorAreaServed",  iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Flt,  6,  0,  0, "ft2",  0,  0,   8008, "Floor area served by this system" 
-      long lDBID_DHWSys_NumDHWHeaters    = GetPropertyDBID_LogError( "DHWSys", "NumDHWHeaters",    iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int, 
-      long lDBID_DHWSys_HeaterMult       = GetPropertyDBID_LogError( "DHWSys", "HeaterMult",       iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  6, 
-      long lDBID_DHWSys_DHWHeater        = GetPropertyDBID_LogError( "DHWSys", "DHWHeater",        iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Obj,  6,  1,  0, "",     1, "DHWHeater",   
-      long lDBID_DHWSys_CentralDHW       =      BEMPX_GetDatabaseID( "DHWSys:CentralDHW" );			// SAC 2/20/20 (Res tic #1197)
-      long lDBID_DHWSys_CentralDHWType   =      BEMPX_GetDatabaseID( "DHWSys:CentralDHWType" );		// SAC 2/20/20 (Res tic #1197)
+		long lDBID_DHWSys_Name             = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "Name",             iCID_DHWSys, iNumErrors, sTmp );
+		long lDBID_DHWSys_TotNumDHWHeaters = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "TotNumDHWHeaters", iCID_DHWSys, iNumErrors, sTmp );
+      long lDBID_DHWSys_SystemType       = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "SystemType",       iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Sym,  1,  0,  0, "",     0,                        8001, "DHW system type"    
+   //   long lDBID_DHWSys_IsNew   		       = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "IsNew",                iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "flag set if this object is New"
+   //   long lDBID_DHWSys_IsAltered   	       = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "IsAltered",            iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "flag set if this object is Altered"
+   //   long lDBID_DHWSys_IsExisting   	    = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "IsExisting",           iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "flag set if this object is Existing"
+   //   long lDBID_DHWSys_IsVerified   	    = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "IsVerified",           iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",     0,                        3008, "existing conditions will be HERS verified"
+      long lDBID_DHWSys_FloorAreaServed  = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "FloorAreaServed",  iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Flt,  6,  0,  0, "ft2",  0,  0,   8008, "Floor area served by this system" 
+      long lDBID_DHWSys_NumDHWHeaters    = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "NumDHWHeaters",    iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int, 
+      long lDBID_DHWSys_HeaterMult       = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "HeaterMult",       iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  6, 
+      long lDBID_DHWSys_DHWHeater        = GetPropertyDBID_LogError( (const char*) qsDHWSys.toLocal8Bit().constData(), "DHWHeater",        iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Obj,  6,  1,  0, "",     1, "DHWHeater",   
+      long lDBID_DHWSys_CentralDHW       =      BEMPX_GetDatabaseID( "CentralDHW"    , iCID_DHWSys );			// SAC 2/20/20 (Res tic #1197)
+      long lDBID_DHWSys_CentralDHWType   =      BEMPX_GetDatabaseID( "CentralDHWType", iCID_DHWSys );		// SAC 2/20/20 (Res tic #1197)
 
       long lDBID_DHWSysRpt_DHWHeaterRef  = GetPropertyDBID_LogError( "DHWSysRpt", "DHWHeaterRef",  iCID_DHWSysRpt, iNumErrors, sTmp );  // BEMP_Obj,  1,  0,  0, "",    0,  1, "DHWHeater",  
       long lDBID_DHWSysRpt_DHWHeaterIdx  = GetPropertyDBID_LogError( "DHWSysRpt", "DHWHeaterIdx",  iCID_DHWSysRpt, iNumErrors, sTmp );  // BEMP_Int,  1,  0,  0, "",    0,  0,               
@@ -13301,7 +13550,10 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 int CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpError* error )		// SAC 3/26/14
 {	int iNumObjsCreated = 0;
 	long lIsMultiFamily;
-	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:IsMultiFamily" ), lIsMultiFamily ))
+   long lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "ResProj:IsMultiFamily" );    // SAC 11/17/21
+   if (lDBID_IsMultiFamily < 1)
+      lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "Proj:IsMultiFamily" );
+	if (!BEMPX_GetInteger( lDBID_IsMultiFamily, lIsMultiFamily ))
 		sErrMsg = QString( "CreateIAQRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:IsMultiFamily" );
 	else
 	{	int iNumErrors = 0, iError;		QString sTmp, sIAQRptName;
@@ -13595,6 +13847,9 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 		long lDBID_DwellUnitType_NumHtPumpEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumHtPumpEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HVACHtPumpRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACHtPumpRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HtPumpEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "HtPumpEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
+		long lDBID_DwellUnitType_NumCentralEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumCentralEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );     // SAC 03/16/22
+		long lDBID_DwellUnitType_HVACCentralRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACCentralRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
+		long lDBID_DwellUnitType_CentralEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "CentralEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HVACFanRef          = GetPropertyDBID_LogError( "DwellUnitType", "HVACFanRef"         , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HVACDistRef         = GetPropertyDBID_LogError( "DwellUnitType", "HVACDistRef"        , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_PreventCoolingSim   = GetPropertyDBID_LogError( "DwellUnitType", "PreventCoolingSim"  , iCID_DwellUnitType, iNumErrors, sTmp );		// SAC 8/5/15
@@ -13616,6 +13871,9 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 		long lDBID_HVACSys_HtPumpSystemCount    = GetPropertyDBID_LogError( "HVACSys", "HtPumpSystemCount"   , iCID_HVACSys, iNumErrors, sTmp );
 		long lDBID_HVACSys_HtPumpSystem         = GetPropertyDBID_LogError( "HVACSys", "HtPumpSystem"        , iCID_HVACSys, iNumErrors, sTmp );
 //		long lDBID_HVACSys_HtPumpDucted         = GetPropertyDBID_LogError( "HVACSys", "HtPumpDucted"        , iCID_HVACSys, iNumErrors, sTmp );
+		long lDBID_HVACSys_NumCentralEquipTypes = GetPropertyDBID_LogError( "HVACSys", "NumCentralEquipTypes", iCID_HVACSys, iNumErrors, sTmp );     // SAC 03/16/22
+		long lDBID_HVACSys_CentralEquipCount    = GetPropertyDBID_LogError( "HVACSys", "CentralEquipCount"   , iCID_HVACSys, iNumErrors, sTmp );
+		long lDBID_HVACSys_HVACCentralRef       = GetPropertyDBID_LogError( "HVACSys", "HVACCentralRef"      , iCID_HVACSys, iNumErrors, sTmp );
 		long lDBID_HVACSys_DistribSystem        = GetPropertyDBID_LogError( "HVACSys", "DistribSystem"       , iCID_HVACSys, iNumErrors, sTmp );
 		long lDBID_HVACSys_Fan                  = GetPropertyDBID_LogError( "HVACSys", "Fan"                 , iCID_HVACSys, iNumErrors, sTmp );
 
@@ -13631,6 +13889,7 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 			int iMaxHVACSysHeatRefs   = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_HVACSys_HeatSystem   /*, int iBEMProcIdx=-1*/ );
 			int iMaxHVACSysCoolRefs   = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_HVACSys_CoolSystem   /*, int iBEMProcIdx=-1*/ );
 			int iMaxHVACSysHtPumpRefs = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_HVACSys_HtPumpSystem /*, int iBEMProcIdx=-1*/ );
+			int iMaxHVACSysCentralHtgClgRefs = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_HVACSys_HVACCentralRef /*, int iBEMProcIdx=-1*/ );     // SAC 03/16/22
 			for (int iZnIdx=0; (sErrMsg.isEmpty() && iZnIdx < lNumZones); iZnIdx++)
 			{	BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iCID_Zone ), sZnName, FALSE, 0, -1, iZnIdx );		assert( !sZnName.isEmpty() );
 		// SAC 8/26/14 - added logic to get Zone:HVACSysStatus, apply that status to HVACSys objects created to serve this Zone, and assign the created HVACSys to the proper assignment property (based on status)
@@ -13685,6 +13944,33 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 												for (iEqpIdx=0; (sErrMsg.isEmpty() && iEqpIdx < lEqpNum); iEqpIdx++)
 												{	BEMPX_GetObject(  lDBID_DwellUnitType_HVACHtPumpRef   +iEqpIdx, pEqpObj  ,    -1, iDUTIdx );		assert( (pEqpObj && pEqpObj->getClass()) );
 													BEMPX_GetInteger( lDBID_DwellUnitType_HtPumpEquipCount+iEqpIdx, lEqpCount, 0, -1, iDUTIdx );
+													if (pEqpObj && pEqpObj->getClass() && lEqpCount > 0)
+													{	int iEqpObjIdx = BEMPX_GetObjectIndex( pEqpObj->getClass(), pEqpObj );				assert( iEqpObjIdx >= 0 );
+														if (iEqpObjIdx < 0)
+														{	assert( FALSE );	// bogus equipment object
+														}
+														else
+														{	int iEqpArrIdx = StringInArray( saHeatNames, pEqpObj->getName() );
+															if (iEqpArrIdx < 0)	// not already in the list...
+															{	saHeatNames.push_back( pEqpObj->getName() );
+																laHeatCount.push_back( (lEqpCount * lDUCount) );
+															}
+															else	// simply increment count...
+																laHeatCount[iEqpArrIdx] += (lEqpCount * lDUCount);
+													}	}
+													else
+													{	assert( FALSE );	// bogus equipment object or count
+												}	}
+											}
+											else if (lHVACSysType == 4)      // SAC 03/16/22
+											{	// process ResCentralHtgClg equipment
+												if (!BEMPX_GetInteger( lDBID_DwellUnitType_NumCentralEquipTypes, lEqpNum, 0, -1, iDUTIdx ))
+												{	assert( FALSE );
+													lEqpNum = 0;
+												}
+												for (iEqpIdx=0; (sErrMsg.isEmpty() && iEqpIdx < lEqpNum); iEqpIdx++)
+												{	BEMPX_GetObject(  lDBID_DwellUnitType_HVACCentralRef   +iEqpIdx, pEqpObj  ,    -1, iDUTIdx );		assert( (pEqpObj && pEqpObj->getClass()) );
+													BEMPX_GetInteger( lDBID_DwellUnitType_CentralEquipCount+iEqpIdx, lEqpCount, 0, -1, iDUTIdx );
 													if (pEqpObj && pEqpObj->getClass() && lEqpCount > 0)
 													{	int iEqpObjIdx = BEMPX_GetObjectIndex( pEqpObj->getClass(), pEqpObj );				assert( iEqpObjIdx >= 0 );
 														if (iEqpObjIdx < 0)
@@ -13824,7 +14110,28 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 								if (BEMPX_SetBEMData( lDBID_HVACSys_Type, BEMP_Int, (void*) &lHVACSysType, BEMO_User, iHVACSysIdx ) < 0)
 									sErrMsg = QString( "Error encountered attempting to set HVACSys '%1' Type to %2" ).arg( sHVACSysName, QString::number( lHVACSysType ) );
 								else
-								{	if (lHVACSysType != 2)	// Heat/Cool
+								{
+									if (lHVACSysType == 2)	// Heat Pump
+									{	assert( saHeatNames.size() == laHeatCount.size() && saHeatNames.size() < iMaxHVACSysHtPumpRefs );
+										lEqpCount = min( saHeatNames.size(), iMaxHVACSysHtPumpRefs );
+										BEMPX_SetBEMData( lDBID_HVACSys_NumHtPumpSystemTypes, BEMP_Int, (void*) &lEqpCount, BEMO_User, iHVACSysIdx );
+										for (iEqpIdx=0; (sErrMsg.isEmpty() && iEqpIdx < saHeatNames.size() && iEqpIdx < iMaxHVACSysHtPumpRefs); iEqpIdx++)
+										{	lEqpCount = laHeatCount[iEqpIdx];
+											if (BEMPX_SetBEMData( lDBID_HVACSys_HtPumpSystem     +iEqpIdx, BEMP_Str, (void*) saHeatNames[iEqpIdx].toLocal8Bit().constData(), BEMO_User, iHVACSysIdx ) < 0 ||
+												 BEMPX_SetBEMData( lDBID_HVACSys_HtPumpSystemCount+iEqpIdx, BEMP_Int, (void*)               &lEqpCount                      , BEMO_User, iHVACSysIdx ) < 0)
+											{	assert( FALSE );
+									}	}	}
+									else if (lHVACSysType == 4)	// ResCentralHtgClg - SAC 03/16/22
+									{	assert( saHeatNames.size() == laHeatCount.size() && saHeatNames.size() < iMaxHVACSysCentralHtgClgRefs );
+										lEqpCount = min( saHeatNames.size(), iMaxHVACSysCentralHtgClgRefs );
+										BEMPX_SetBEMData( lDBID_HVACSys_NumCentralEquipTypes, BEMP_Int, (void*) &lEqpCount, BEMO_User, iHVACSysIdx );
+										for (iEqpIdx=0; (sErrMsg.isEmpty() && iEqpIdx < saHeatNames.size() && iEqpIdx < iMaxHVACSysCentralHtgClgRefs); iEqpIdx++)
+										{	lEqpCount = laHeatCount[iEqpIdx];
+											if (BEMPX_SetBEMData( lDBID_HVACSys_HVACCentralRef   +iEqpIdx, BEMP_Str, (void*) saHeatNames[iEqpIdx].toLocal8Bit().constData(), BEMO_User, iHVACSysIdx ) < 0 ||
+												 BEMPX_SetBEMData( lDBID_HVACSys_CentralEquipCount+iEqpIdx, BEMP_Int, (void*)               &lEqpCount                      , BEMO_User, iHVACSysIdx ) < 0)
+											{	assert( FALSE );
+									}	}	}
+                           else	// Heat/Cool
 									{	assert( saHeatNames.size() == laHeatCount.size() && saHeatNames.size() < iMaxHVACSysHeatRefs );
 										lEqpCount = min( saHeatNames.size(), iMaxHVACSysHeatRefs );
 										BEMPX_SetBEMData( lDBID_HVACSys_NumHeatSystemTypes, BEMP_Int, (void*) &lEqpCount, BEMO_User, iHVACSysIdx );
@@ -13847,16 +14154,6 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 										if (lPreventCoolingSim > 0)
 											BEMPX_SetBEMData( lDBID_HVACSys_PreventCoolingSim, BEMP_Int, (void*) &lPreventCoolingSim, BEMO_User, iHVACSysIdx );
 									}
-									else	// Heat Pump
-									{	assert( saHeatNames.size() == laHeatCount.size() && saHeatNames.size() < iMaxHVACSysHtPumpRefs );
-										lEqpCount = min( saHeatNames.size(), iMaxHVACSysHtPumpRefs );
-										BEMPX_SetBEMData( lDBID_HVACSys_NumHtPumpSystemTypes, BEMP_Int, (void*) &lEqpCount, BEMO_User, iHVACSysIdx );
-										for (iEqpIdx=0; (sErrMsg.isEmpty() && iEqpIdx < saHeatNames.size() && iEqpIdx < iMaxHVACSysHtPumpRefs); iEqpIdx++)
-										{	lEqpCount = laHeatCount[iEqpIdx];
-											if (BEMPX_SetBEMData( lDBID_HVACSys_HtPumpSystem     +iEqpIdx, BEMP_Str, (void*) saHeatNames[iEqpIdx].toLocal8Bit().constData(), BEMO_User, iHVACSysIdx ) < 0 ||
-												 BEMPX_SetBEMData( lDBID_HVACSys_HtPumpSystemCount+iEqpIdx, BEMP_Int, (void*)               &lEqpCount                      , BEMO_User, iHVACSysIdx ) < 0)
-											{	assert( FALSE );
-									}	}	}
 
 									if (!sFan.isEmpty())
 										BEMPX_SetBEMData( lDBID_HVACSys_Fan,           BEMP_Str, (void*) sFan.toLocal8Bit().constData()    , BEMO_User, iHVACSysIdx );

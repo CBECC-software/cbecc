@@ -282,6 +282,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bStoreDetailedResultsToModelInput= (GetCSVOptionValue( "StoreDetailedResultsToModelInput", 0,  saCSVOptions ) > 0);	// SAC 5/11/15
    long iDHWCalcMethodAnalOpt		=  GetCSVOptionValue( "DHWCalcMethod"         ,  -1,  saCSVOptions );		// SAC 7/15/15
    long lEnableResearchMode		=  GetCSVOptionValue( "EnableResearchMode"    ,   0,  saCSVOptions );		// SAC 5/14/16
+   long lEnableMixedFuelCompare	=  GetCSVOptionValue( "EnableMixedFuelCompare",   0,  saCSVOptions );		// SAC 12/28/21 (MxdFuel)
    long lSimulateCentralDHWBranches = GetCSVOptionValue( "SimulateCentralDHWBranches",   1,  saCSVOptions );		// SAC 10/30/19		// SAC 11/6/19 - default 0->1
    long lAllowNegativeDesignRatings = GetCSVOptionValue( "AllowNegativeDesignRatings",   0,  saCSVOptions );		// SAC 1/11/18
    long lEnableCO2DesignRatings  =  GetCSVOptionValue( "EnableCO2DesignRatings",   0,  saCSVOptions );		// SAC 1/30/18
@@ -720,6 +721,21 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					else if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
 				      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
 				}
+
+      		long lDBID_Proj_EnableMixedFuelCompare = BEMPX_GetDatabaseID( "EnableMixedFuelCompare", BEMPX_GetDBComponentID( "Proj" ) );      // SAC 12/28/21 (MxdFuel)
+      		if (lDBID_Proj_EnableMixedFuelCompare > 0)
+      		{	long lEMFC;  int iBEMErr;
+      			if (!BEMPX_GetInteger( lDBID_Proj_EnableMixedFuelCompare, lEMFC, -1 ))
+      				lEMFC = -1;
+      			if (lEnableMixedFuelCompare == 0 && lEMFC > 0)
+      			{	// This file was last SAVED w/ EnableMixedFuelCompare true, but current INI file does not include EnableMixedFuelCompare setting
+      		      BEMPX_WriteLogFile( "Warning: EnableMixedFuelCompare is selected in this project file but not available in the current software installation." );
+                  BEMPX_DefaultProperty( lDBID_Proj_EnableMixedFuelCompare, iBEMErr );    // re-default flag in proj data
+      		   }
+      			else if (lEMFC < -0.5 && lEnableMixedFuelCompare > 0)  // only set EnableMixedFuelCompare if CSV option TRUE and it is NOT specified in the input file
+      		      BEMPX_SetBEMData( lDBID_Proj_EnableMixedFuelCompare, BEMP_Int, (void*) &lEnableMixedFuelCompare, BEMO_User );  // , -1, BEMS_ProgDefault );
+      		}
+
 			   //	long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
 			   //	if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
 			   //    				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
@@ -1175,6 +1191,13 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), lEnableResearchMode, 0 );
 
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lEnableMixedFuelCompare > 0)     // SAC 12/28/21 (MxdFuel)
+		{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:EnableMixedFuelCompare" ), BEMP_Int, (void*) &lEnableMixedFuelCompare );
+			lvPropSetDBID.push_back( BEMPX_GetDatabaseID( "Proj:EnableMixedFuelCompare" ) );		ivPropSetDataType.push_back( BEMP_Int );		ivPropSetStatus.push_back( BEMS_UserDefined );
+			lvPropSetLData.push_back( lEnableMixedFuelCompare );		dvPropSetFData.push_back( -1 );		svPropSetSData.push_back( "" );
+		}
+		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableMixedFuelCompare" ), lEnableMixedFuelCompare, 0 );
+
 	   // SAC 10/30/19 - 
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lSimulateCentralDHWBranches == 0)		// SAC 11/6/19 - default 0->1
 		{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SimulateCentralDHWBranches" ), BEMP_Int, (void*) &lSimulateCentralDHWBranches );
@@ -1355,7 +1378,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		   // further defaulting/setup of ComplianceReport* booleans
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:CompRptPDFWritten" ), iError );   //, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:CompRptXMLWritten" ), iError );   //, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
-			if (lAnalysisType != 13)
+			if (lAnalysisType < 13)   // was: != 13) - SAC 12/29/21 (MxdFuel)
 			{	bComplianceReportPDF = false;
 				bComplianceReportXML = false;
 			}
@@ -1373,11 +1396,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		   //	sfPctDoneFollowingSimulations = 98 - (bComplianceReportPDF ?  4.0 / (lAllOrientations ? 3 : 1) : 0) -
 		   //													 (bComplianceReportXML ? 10.0 / (lAllOrientations ? 3 : 1) : 0);  // SAC 8/19/13 - re-initialize value added to enable slower progress reporting when generating reports
 
-					assert( ( !bFullCompAnalSpecified || ( bFullComplianceAnalysis && lAnalysisType == 13) ||
-																	 (!bFullComplianceAnalysis && lAnalysisType != 13) ) );  // what if these options not consistent ???
+					assert( ( !bFullCompAnalSpecified || ( bFullComplianceAnalysis && lAnalysisType >= 13) ||          // was =13 & !=13 - SAC 12/29/21 (MxdFuel)
+																	 (!bFullComplianceAnalysis && lAnalysisType <  13) ) );  // what if these options not consistent ???
 			if (!bFullCompAnalSpecified)
-				bFullComplianceAnalysis = (lAnalysisType == 13);
-			else if (!bFullComplianceAnalysis && lAnalysisType == 13)
+				bFullComplianceAnalysis = (lAnalysisType >= 13);         // was: == 13); - SAC 12/29/21 (MxdFuel)
+			else if (!bFullComplianceAnalysis && lAnalysisType >= 13)   // was: == 13)  - SAC 12/29/21 (MxdFuel)
 				bFullComplianceAnalysis = true;  // set bFullComplianceAnalysis to true if project data indicates...
 		}
 
@@ -1447,6 +1470,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			double dTargetDesignRtg;
 			if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:TargetDesignRtg" ), dTargetDesignRtg, -999 ) && dTargetDesignRtg > -998)
 				sfPctDoneFollowingSimulations = (sfPctDoneFollowingSimulations - 2) / 2;
+                  // DEBUGGING TargetEDR
+                  //BEMPX_WriteLogFile( QString( "   target EDR = %1 / sfPctDoneFollowingSimulations = %2" ).arg( QString::number(dTargetDesignRtg), QString::number(sfPctDoneFollowingSimulations) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
 
 	   // Set last run date parameter   - SAC 10/22/14 - moved UP from below to get it set properly prior to exporting the Proposed model for reporting purposes
@@ -1827,7 +1852,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			{	iBEMPIdx[iRunType[iNumRuns-(lAllOrientations>0?4:1)]]  = (bFirstModelCopyCreated ? 1 : 0);		// to keep track of BEMProcIdx of main Proposed model
 				iFirstPropModelRunType = iRunType[iNumRuns-(lAllOrientations>0?4:1)];		assert( bFirstModelCopyCreated );
 		}	}
-		if (lAnalysisType == 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting
+		if (lAnalysisType >= 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting    // was: == 13) - SAC 12/29/21 (MxdFuel)
 		{	iRunIdxFinalCF1R = iNumRuns;		// SAC 4/15/20
 			pszRunAbbrev[iNumRuns] = pszRunAbbrev_s;		iRunType[iNumRuns++] = CRM_StdDesign;
 		}
@@ -1945,7 +1970,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
          //* DEBUGGING */	qsDbgMO = QString( "   about to simulate %1 prelim runs" ).arg( QString::number( iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 			if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
+         {  SetCSEMessageProcessingType( 0 );   // 0=>CEC Res / 1=>CEC NRes - SAC 11/19/21
 				cseRunMgr.DoRuns();
+         }
 							dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
          //* DEBUGGING */	qsDbgMO = QString( "   back from simulation of %1 prelim runs" ).arg( QString::number( iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 
@@ -2329,7 +2356,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
       //* DEBUGGING */	qsDbgMO = QString( "   about to launch CSE for %1 runs" ).arg( QString::number( iNumRuns-iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 		if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
+      {  SetCSEMessageProcessingType( 0 );   // 0=>CEC Res / 1=>CEC NRes - SAC 11/19/21
 			cseRunMgr.DoRuns();
+      }
 						dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
       //* DEBUGGING */	qsDbgMO = QString( "   back from CSE for %1 runs" ).arg( QString::number( iNumRuns-iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 
@@ -2599,6 +2628,8 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 								}	}
 						}	}
 
+                  // DEBUGGING TargetEDR
+                  //BEMPX_WriteLogFile( QString( "      iRunIdx %1 / iRunIdxDesignRtg %2" ).arg( QString::number(iRunIdx), QString::number(iRunIdxDesignRtg) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	// SAC 4/13/17 - 
 	if (iRunIdx == iRunIdxDesignRtg /*(iNumRuns-1)*/ && ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)	// SAC 11/7/19
 	{
@@ -2643,11 +2674,13 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 			if (sqt_win && sqt_progress)
 			{	sqt_progress->setValue( (int) slCurrentProgress );
 				sqt_win->repaint();
-//BEMMessageBox( "Adjust analysis progress to skip TEDR run", "Target Design Rating" );
+                  //BEMMessageBox( "Adjust analysis progress to skip TEDR run", "Target Design Rating" );
 		}	}
-		
+
 		int iRunIdx2 = iNumPrelimRuns;
 		double dSavePctDoneFollowingFirstSim = sfPctDoneFollowingSimulations;
+                  // DEBUGGING TargetEDR
+                  //BEMPX_WriteLogFile( QString( "         iRunIdx2 %1 / baTDR_OK[12] %2 / laTDR_Data[0] %3 / baTDR_OK[1] %4" ).arg( QString::number(iRunIdx2), QString::number(baTDR_OK[12]), QString::number(laTDR_Data[0]), QString::number(baTDR_OK[1]) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		while (baTDR_OK[12]/*TDRIterNum*/ && laTDR_Data[0] > 0 && baTDR_OK[1]/*TDRPVMult*/ && ResRetVal_ContinueProcessing( iRetVal ))
 		{	assert( laTDR_Data[0] <= laTDR_Data[1] );
 
@@ -2881,6 +2914,8 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 				}
 
 			}  // end of for loop over runs (#2)
+                  // DEBUGGING TargetEDR
+                  //BEMPX_WriteLogFile( QString( "         iRunIdx2 %1 / baTDR_OK[12] %2 / laTDR_Data[0] %3 / baTDR_OK[1] %4" ).arg( QString::number(iRunIdx2), QString::number(baTDR_OK[12]), QString::number(laTDR_Data[0]), QString::number(baTDR_OK[1]) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}  // end of: while (baTDR_OK[12]/*TDRIterNum*/ && baTDR_OK[1]/*TDRPVMult*/ && ResRetVal_ContinueProcessing( iRetVal ))
 	   // Confirm PVWDCSizeMultiplier not stored in USER model...
 
@@ -3151,6 +3186,8 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 					sNoSignMsg = "Compliance report will be generated without security measures due to analysis option SimulateCentralDHWBranches overriding default behavior";
             else if (!sShuffleSFamDHWMsg_Invalid.isEmpty())
 					sNoSignMsg = "Compliance report will be generated without security measures due to " + sShuffleSFamDHWMsg_Invalid;      // SAC 06/24/21
+				else if (lEnableMixedFuelCompare > 0)		// SAC 12/28/21 (MxdFuel)
+					sNoSignMsg = "Compliance report will be generated without security measures due to analysis option EnableMixedFuelCompare being enabled";
 				else if (iRetVal >= BEMAnal_CECRes_MinErrorWithResults)		// SAC 12/12/16
 				{	switch (iRetVal)
 					{	case  BEMAnal_CECRes_ModelRptError			:	sNoSignMsg = "Compliance report will be generated without security measures due to error generating model report";		break;
@@ -3529,7 +3566,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 			sAnalResLogMsg += sResTemp4;
 		}
 
-		if (!bInitHourlyResults || !bPerformRangeChecks || bIgnoreFileReadErrors || (lBypassRuleLimits > 0) ||
+		if (!bInitHourlyResults || !bPerformRangeChecks || bIgnoreFileReadErrors || (lBypassRuleLimits > 0) || (lEnableMixedFuelCompare > 0) ||   // SAC 12/28/21 (MxdFuel)
 			 (lEnableResearchMode > 0) || bCSEIncludeFileUsed || iSimSpeedOption > 0 || bDHWCalcMethodUserSpecified)
 			sAnalResLogMsg += " (result not certified due to analysis option(s))";
 	}
@@ -3643,7 +3680,8 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 	{	int iError;
 		if (iResultsFormatVersion == -1)
 			iResultsFormatVersion = CSVFmtVer_CECRes;
-		bExpectStdDesResults = (sAnalysisType.indexOf( "Standard" ) > 0 || sAnalysisType.indexOf( "Compliance" ) > 0);
+		bExpectStdDesResults = (sAnalysisType.indexOf( "Standard" ) > 0 || sAnalysisType.indexOf( "Compliance" ) > 0 ||
+                              sAnalysisType.indexOf( "Baseline Comparison" ) > 0);     // SAC 12/29/21 (MxdFuel)
 		long lDesignRatingCalcs;		// SAC 3/31/15
 		bExpectDesignRatingResults = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingCalcs" ), lDesignRatingCalcs ) && lDesignRatingCalcs > 0);
 		int iBEMBaseModelCount = BEMPX_GetModelCount();   // SAC 3/28/16
@@ -3678,7 +3716,7 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 		BEMObject* pEUseSummaryObj = NULL;
 		int iEUseSummaryObjIdx = -1, iOrientIdx = 0;	// SAC 1/14/18 - fix to orientation-specific results retrieval
 		QString qsEUseSummaryName;
-		if (iRetVal==0 && lAnalysisType == 13)
+		if (iRetVal==0 && lAnalysisType >= 13)    // was: == 13) - SAC 12/29/21 (MxdFuel)
 		{	if (lAllOrientations > 0)  // SAC 8/6/13
 				iEnergyUseObjectSets = 4;
 
@@ -3734,7 +3772,7 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				qsEUseSummaryName = pEUseSummaryObj->getName();
 		}
 
-		if (iRetVal==0 && lAnalysisType == 13 && iEUseSummaryObjIdx >= 0)
+		if (iRetVal==0 && lAnalysisType >= 13 && iEUseSummaryObjIdx >= 0)    // was: == 13 - SAC 12/29/21 (MxdFuel)
 		{			sPassFail = "--";  // return PassFail string if full analysis not executed
 					if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PassFail" ), sPassFail, FALSE, 0, BEMP_Str, iEUseSummaryObjIdx ) && bExpectStdDesResults)
 						iRetVal = 4;

@@ -51,11 +51,12 @@ static char THIS_FILE[] = __FILE__;
 #include "BEMCmpMgr.h"
 #include "BEMCM_I.h"
 #include "memLkRpt.h"
+#include "BEMCmpMgrCom.h"
 
 #ifdef _DEBUG
 bool ebLogAnalysisMsgs = true;      // SAC 10/28/21 (MFam)
 #elif  CODEYEAR2022
-bool ebLogAnalysisMsgs = true;
+bool ebLogAnalysisMsgs = false;  //true;
 #else
 bool ebLogAnalysisMsgs = false;
 #endif
@@ -704,6 +705,11 @@ void SetProgressMessage( QString str, bool bBatchMode )
 // 	}
 // }
 
+extern int eiCSEMessageProcessingType = 0;  // 0=>CEC Res / 1=>CEC NRes - SAC 11/19/21
+extern void SetCSEMessageProcessingType( int iMPT )   // 0=>CEC Res / 1=>CEC NRes - SAC 11/19/21
+{   eiCSEMessageProcessingType = iMPT;
+}
+
 double sfPctDoneFollowingSimulations = 98;  // SAC 8/19/13 - added to enable slower progress reporting when generating reports
 bool sbLogCSECallbacks = true;
 int siCallbackCount = 0;
@@ -742,35 +748,79 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 	}
 
 	if (bCalcProgress)
-	{	int i=-1;
-		bool bFound=false, bError=false, bIncrementProgress=false;
-		float fValSumThusFar = 0;
+	{
+   	bool bFound=false, bError=false, bIncrementProgress=false, bBatchMode = false;
 		long iProgVal = 0;
-		while (!bFound && pszCSEProgressMsgs[++i] != NULL)
-		{	fValSumThusFar += faCSEProgressVals[i];
-			if (!strncmp(  pszCSEProgressMsgs[  i], msg, strlen(pszCSEProgressMsgs[i]) ))  // SAC 8/19/13 - fix bug where 'msg', when set to ' Reports' includes a trailing LF character
-			{	bFound = true;
-				iProgVal = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCSEProgressValSum / siNumProgressRuns) * sfPctDoneFollowingSimulations /*98*/));
-				//		if (sbLogCSECallbacks)  // SAC 5/5/17 - debugging progress of iterating runs
-				//			BEMPX_WriteLogFile( QString( "              si1ProgressRunNum: %1  siNumProgressRuns: %2  fValSumThusFar: %3  fCSEProgressValSum: %4  sfPctDoneFollowingSimulations: %5" ).arg( 
-				//						QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns), QString::number(fValSumThusFar), QString::number(fCSEProgressValSum),
-				//						QString::number(sfPctDoneFollowingSimulations) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}
-		}
-		if (!bFound && !strncmp( msg, "Error", 5 ))
-		{	bError = true;
-			siNumProgressErrors++;
-		}
-	//	if (sbLogCSECallbacks)  // SAC 5/5/17 - debugging progress of iterating runs
-	//		BEMPX_WriteLogFile( QString( "              iProgVal: %1  slCurrentProgress: %2  sbFreezeProgress: %3" ).arg( QString::number(iProgVal), QString::number(slCurrentProgress), (sbFreezeProgress ? "true" : "false") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		QString sProgMsg;
+      int i=-1;
 
-		// prevent progress from slipping backwards
-		if (iProgVal > slCurrentProgress && !sbFreezeProgress)
-		{	slCurrentProgress = iProgVal;
-			bIncrementProgress = true;
-		}
-		else
-			iProgVal = slCurrentProgress;
+      if (eiCSEMessageProcessingType == 1)  // processing for CBECC-COM/MFam analysis - SAC 11/19/21
+      {
+      	int iProgressType = (siNumProgressRuns > 1 ? BCM_NRP_Type_Batch : BCM_NRP_Type_Comp);
+   		long lNRPStep    = BCM_NRP_Step_MSim;
+   		long lNRPModel   = BCM_NRP_Model_ap | BCM_NRP_Model_ab;
+   		//long lNRPSimProg = BCM_NRP_Prog(  lProgressID );
+     		long lNRPSimProg = BCM_NRP_Prog_CSENone;
+   		while (!bFound && pszCSEProgressMsgs[++i] != NULL)
+   		{	if (!strncmp(  pszCSEProgressMsgs[  i], msg, strlen(pszCSEProgressMsgs[i]) ))  
+   			{	bFound = true;
+               lNRPSimProg = BCM_NRP_Prog_CSEInit + i;
+         }  }
+   		if (!bFound && !strncmp( msg, "Error", 5 ))
+   		{	bError = true;
+   			siNumProgressErrors++;
+   		}
+         else if (lNRPSimProg == BCM_NRP_Prog_CSEWarmup)
+            lNRPSimProg = BCM_NRP_Prog_CSEInit;  // don't have progress entries for CSE Warmup... - SAC 11/19/21
+			long lProgressID = BCM_NRP_ComplianceProgressID( iProgressType, lNRPStep, lNRPModel /*lModels*/, lNRPSimProg /*lSimProg*/ );
+   		int iNRPIdx = GetCECNResProgressIndex( lNRPStep, lNRPModel, lNRPSimProg );				assert( iNRPIdx >= 0 );
+   		if (iNRPIdx < 0)
+   			iNRPIdx = 0;
+   		if (faCECNResProgressVals != NULL && fCECNResProgressValSum > 0.01)
+   			iProgVal = (int) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((faCECNResCumulativeProgressSum[iNRPIdx] / fCECNResProgressValSum / siNumProgressRuns) * 98));
+
+			SetCECNResProgressMessage( sProgMsg, lNRPStep, lNRPModel, lNRPSimProg );
+         bBatchMode = (iProgressType == BCM_NRP_Type_Batch);
+         bIncrementProgress = (iProgVal > 0 && !sbFreezeProgress);
+// TEMP - test/debug - SAC 11/18/21
+//BEMPX_WriteLogFile( QString( "              CSE_ProcessMessage() - iProgVal: %1  found: %2  iNRPIdx: %3  fCECNResProgressValSum: %4  sbFreezeProgress: %5  sProgMsg: '%6'" ).arg( 
+//              QString::number(iProgVal), (bFound ? "true" : "false"), QString::number(iNRPIdx), QString::number(fCECNResProgressValSum), (sbFreezeProgress ? "true" : "false"), sProgMsg ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         if (ebLogAnalysisProgress)    // SAC 01/14/22
+            BEMPX_WriteLogFile( QString( "              analysis progress: %1%  (%2/%3)  %4  (ID: %5 - CSE_ProcessMessage)" ).arg( 
+                     QString::number(iProgVal), QString::number(faCECNResCumulativeProgressSum[iNRPIdx]), QString::number(fCECNResProgressValSum), sProgMsg, QString::number(lProgressID) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+      }
+      else
+      {
+         sProgMsg = msg;
+         bBatchMode = (siNumProgressRuns > 1);
+   		float fValSumThusFar = 0;
+   		while (!bFound && pszCSEProgressMsgs[++i] != NULL)
+   		{	fValSumThusFar += faCSEProgressVals[i];
+   			if (!strncmp(  pszCSEProgressMsgs[  i], msg, strlen(pszCSEProgressMsgs[i]) ))  // SAC 8/19/13 - fix bug where 'msg', when set to ' Reports' includes a trailing LF character
+   			{	bFound = true;
+   				iProgVal = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCSEProgressValSum / siNumProgressRuns) * sfPctDoneFollowingSimulations /*98*/));
+   				//		if (sbLogCSECallbacks)  // SAC 5/5/17 - debugging progress of iterating runs
+   				//			BEMPX_WriteLogFile( QString( "              si1ProgressRunNum: %1  siNumProgressRuns: %2  fValSumThusFar: %3  fCSEProgressValSum: %4  sfPctDoneFollowingSimulations: %5" ).arg( 
+   				//						QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns), QString::number(fValSumThusFar), QString::number(fCSEProgressValSum),
+   				//						QString::number(sfPctDoneFollowingSimulations) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   			}
+   		}
+   		if (!bFound && !strncmp( msg, "Error", 5 ))
+   		{	bError = true;
+   			siNumProgressErrors++;
+   		}
+   	//	if (sbLogCSECallbacks)  // SAC 5/5/17 - debugging progress of iterating runs
+   	//		BEMPX_WriteLogFile( QString( "              iProgVal: %1  slCurrentProgress: %2  sbFreezeProgress: %3" ).arg( QString::number(iProgVal), QString::number(slCurrentProgress), (sbFreezeProgress ? "true" : "false") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+// TEMP - test/debug - SAC 11/18/21
+//BEMPX_WriteLogFile( QString( "              CSE_ProcessMessage() - iProgVal: %1  slCurrentProgress: %2  sbFreezeProgress: %3  Msg: '%4'" ).arg( QString::number(iProgVal), QString::number(slCurrentProgress), (sbFreezeProgress ? "true" : "false"), szCSECallbackMsg ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   		// prevent progress from slipping backwards
+   		if (iProgVal > slCurrentProgress && !sbFreezeProgress)
+   		{	slCurrentProgress = iProgVal;
+   			bIncrementProgress = true;
+   		}
+   		else
+   			iProgVal = slCurrentProgress;
+      }
 
 // QT Progress Dialog stuff
 #ifdef CM_QTGUI
@@ -778,7 +828,7 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 		{	if (bFound)
 			{	if (bIncrementProgress)
 				{	sqt_progress->setValue( (int) iProgVal );
-					SetProgressMessage( msg, (siNumProgressRuns > 1) /*bBatchMode*/ );
+					SetProgressMessage( (const char*) sProgMsg.toLocal8Bit().constData(), bBatchMode );
 					sqt_progress->setLabelText( sqProgressMsg );
 				}
 				sqt_win->repaint();
@@ -786,7 +836,7 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 					iRetVal = CSE_ABORT;
 			}
 			else if (bError)
-			{	SetProgressMessage( msg, (siNumProgressRuns > 1) /*bBatchMode*/ );
+			{	SetProgressMessage( (const char*) sProgMsg.toLocal8Bit().constData(), bBatchMode );
 				sqt_progress->setLabelText( sqProgressMsg );
 				sqt_win->repaint();
 		}	}
@@ -848,6 +898,222 @@ void ClearCSEProgressMap()		// SAC 1/12/18
 {	mapCSECallback.clear();
 	for(int i=0; pszCSEProgressMsgs[i]; i++)
 		mapCSECallback[pszCSEProgressMsgs[i]] = 0;
+}
+
+
+// moved from BEMCmpMgrCom.cpp to enable access during Res/MFam analysis - SAC 11/29/21
+////////////////////////////////////////////////////////////////////////////////
+// CEC Non-res analysis progress data & routines
+
+int BCM_NRP_NumModels( int iModels )
+{	return	(iModels & BCM_NRP_Model_1  ? 1 : 0) + (iModels & BCM_NRP_Model_2  ? 1 : 0) + (iModels & BCM_NRP_Model_3  ? 1 : 0) + (iModels & BCM_NRP_Model_4  ? 1 : 0) + (iModels & BCM_NRP_Model_5  ? 1 : 0) +
+				(iModels & BCM_NRP_Model_6  ? 1 : 0) + (iModels & BCM_NRP_Model_7  ? 1 : 0) + (iModels & BCM_NRP_Model_8  ? 1 : 0) + (iModels & BCM_NRP_Model_9  ? 1 : 0) + (iModels & BCM_NRP_Model_10 ? 1 : 0) +
+				(iModels & BCM_NRP_Model_11 ? 1 : 0) + (iModels & BCM_NRP_Model_12 ? 1 : 0) + (iModels & BCM_NRP_Model_13 ? 1 : 0) ;
+}
+int BCM_NRP_NumProgressModels( long lNRP )
+{	return	(BCM_NRP_Model( lNRP ) & BCM_NRP_Model_1  ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_2  ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_3  ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_4  ? 1 : 0) +
+				(BCM_NRP_Model( lNRP ) & BCM_NRP_Model_5  ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_6  ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_7  ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_8  ? 1 : 0) +
+				(BCM_NRP_Model( lNRP ) & BCM_NRP_Model_9  ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_10 ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_11 ? 1 : 0) + (BCM_NRP_Model( lNRP ) & BCM_NRP_Model_12 ? 1 : 0) +
+				(BCM_NRP_Model( lNRP ) & BCM_NRP_Model_13 ? 1 : 0) ;
+}
+
+																	    //    BCM_NRP_Step_Init,  BCM_NRP_Step_Read,    BCM_NRP_Step_MPrep,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,    BCM_NRP_Step_Store,  BCM_NRP_Step_Report,  BCM_NRP_Step_Done
+const char* pszCECNResProgressMsgs[]					    = { " Initialization",  " Read Project",      " Model Prep:  ",    " Translation:  ",    " Simulation:  ",   " Sim Results:  ",       " Model Storage",    " Report Generation", " Completed",   NULL  };
+
+long			laCECNResProgressSteps[]					    = {   BCM_NRP_Step_Init,  BCM_NRP_Step_Read,    BCM_NRP_Step_MPrep,  BCM_NRP_Step_MPrep,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,  BCM_NRP_Step_MSimRes,   BCM_NRP_Step_MPrep,  BCM_NRP_Step_MPrep,  BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,     BCM_NRP_Step_MSim,      BCM_NRP_Step_MTrans,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,   BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,   BCM_NRP_Step_MSimRes,   BCM_NRP_Step_Store,  BCM_NRP_Step_Report,  0 };
+long			laCECNResProgressModels[]					    = {                0,                  0,       BCM_NRP_Model_zp,    BCM_NRP_Model_zb,    BCM_NRP_Model_zp,     BCM_NRP_Model_zb,     BCM_NRP_Model_zp,   BCM_NRP_Model_zb,   BCM_NRP_Model_zp,      BCM_NRP_Model_zb,       BCM_NRP_Model_ap,    BCM_NRP_Model_ab,    BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ap,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,      BCM_NRP_Model_ab,       BCM_NRP_Model_ap,     BCM_NRP_Model_ab,     BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,       BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,    BCM_NRP_Model_ab,                   0,                   0,        0 };
+long			laCECNResProgressSimProg[]					    = {                0,                  0,                   0,                    0,                  0,                     0,                   0,                   0,                 0,                     0,                       0,                   0,      BCM_NRP_Prog_CSEInit,  BCM_NRP_Prog_CSEJan,   BCM_NRP_Prog_CSEFeb,   BCM_NRP_Prog_CSEMar,   BCM_NRP_Prog_CSEApr,   BCM_NRP_Prog_CSEMay,   BCM_NRP_Prog_CSEJun,   BCM_NRP_Prog_CSEJul,   BCM_NRP_Prog_CSEAug,   BCM_NRP_Prog_CSESep,   BCM_NRP_Prog_CSEOct,   BCM_NRP_Prog_CSENov,   BCM_NRP_Prog_CSEDec,   BCM_NRP_Prog_CSERpt,   BCM_NRP_Prog_CSEInit,  BCM_NRP_Prog_CSEJan,   BCM_NRP_Prog_CSEFeb,   BCM_NRP_Prog_CSEMar,   BCM_NRP_Prog_CSEApr,   BCM_NRP_Prog_CSEMay,   BCM_NRP_Prog_CSEJun,   BCM_NRP_Prog_CSEJul,   BCM_NRP_Prog_CSEAug,   BCM_NRP_Prog_CSESep,   BCM_NRP_Prog_CSEOct,   BCM_NRP_Prog_CSENov,   BCM_NRP_Prog_CSEDec,   BCM_NRP_Prog_CSERpt,                 0,                    0,                    0,     BCM_NRP_Prog_Jan,   BCM_NRP_Prog_Feb,   BCM_NRP_Prog_Mar,   BCM_NRP_Prog_Apr,   BCM_NRP_Prog_May,   BCM_NRP_Prog_Jun,   BCM_NRP_Prog_Jul,   BCM_NRP_Prog_Aug,   BCM_NRP_Prog_Sep,   BCM_NRP_Prog_Oct,   BCM_NRP_Prog_Nov,   BCM_NRP_Prog_Dec,               0,                       0,     BCM_NRP_Prog_Jan,   BCM_NRP_Prog_Feb,   BCM_NRP_Prog_Mar,   BCM_NRP_Prog_Apr,   BCM_NRP_Prog_May,   BCM_NRP_Prog_Jun,   BCM_NRP_Prog_Jul,   BCM_NRP_Prog_Aug,   BCM_NRP_Prog_Sep,   BCM_NRP_Prog_Oct,   BCM_NRP_Prog_Nov,   BCM_NRP_Prog_Dec,                0,                      0,                   0,        0 };
+float       faCECNResProgressVals_SerlAllSims[]        = {                1,                  3,                   2,                    2,                  3,                     3,                   5,                   5,                 2,                     2,                       2,                   2,                   2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                     2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                      3,                    3,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  2,                      3,                  12,          };
+float       fCECNResProgressValSum_SerlAllSims         =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  5 +                  5 +                2 +                    2 +                      2 +                  2 +                  2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                    2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                     3 +                   3 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 2 +                     3 +                 12            ;
+float       faCECNResProgressVals_SerlZBAPABSims[]     = {                1,                  3,                   2,                    2,                  3,                     3,                   1,                   5,                 2,                     2,                       2,                   2,                   2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                     2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                      3,                    3,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  2,                      3,                  12,          };
+float       fCECNResProgressValSum_SerlZBAPABSims      =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  1 +                  5 +                2 +                    2 +                      2 +                  2 +                  2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                    2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                     3 +                   3 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 2 +                     3 +                 12            ;
+float       faCECNResProgressVals_SerlZPAPSims[]       = {                1,                  3,                   2,                    2,                  3,                     0,                   5,                   0,                 2,                     2,                       2,                   2,                   2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  2,                      3,                  12,          };
+float       fCECNResProgressValSum_SerlZPAPSims        =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  5 +                  0 +                2 +                    2 +                      2 +                  2 +                  2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     3 +                 12            ;
+float       faCECNResProgressVals_SerlAPSim[]          = {                1,                  3,                   2,                    2,                  3,                     0,                   1,                   0,                 2,                     2,                       2,                   2,                   2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  2,                      3,                  12,          };
+float       fCECNResProgressValSum_SerlAPSim           =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  1 +                  0 +                2 +                    2 +                      2 +                  2 +                  2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     3 +                 12            ;
+float       faCECNResProgressVals_ParlAllSims_Both[]   = {                1,                  3,                   2,                    2,                  3,                     3,                   1,                   5,                 2,                     2,                       2,                   2,                   3,                     3,                     3,                     3,                     3,                     3,                     3,                     3,                     3,                     3,                     3,                     3,                     3,                     3,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    3,                    2,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                 2,                       1,                  0,                  0,                  0,                  0,                  0,                  0,                  1,                  0,                  0,                  0,                  0,                  0,                  2,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlAllSims_Both    =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  1 +                  5 +                2 +                    2 +                      2 +                  2 +                  3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    3 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   3 +                   2 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                2 +                      1 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 1 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlZPAPSims_Both[]  = {                1,                  3,                   2,                    2,                  3,                     0,                   5,                   0,                 2,                     0,                       2,                   2,                   2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  2,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlZPAPSims_Both   =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  5 +                  0 +                2 +                    0 +                      2 +                  2 +                  2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlAPSims_Both[]    = {                1,                  3,                   2,                    2,                  0,                     0,                   0,                   0,                 0,                     0,                       2,                   2,                   2,                     2,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     3,                     2,                     2,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  2,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlAPSims_Both     =                  1 +                 3 +                  2 +                   2 +                 0 +                    0 +                  0 +                  0 +                0 +                    0 +                      2 +                  2 +                  2 +                    2 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    3 +                    2 +                    2 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlAllSims_EPls[]   = {                1,                  3,                   2,                    2,                  3,                     3,                   1,                   5,                 2,                     2,                       2,                   2,                   0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    3,                    2,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                 2,                       1,                  0,                  0,                  0,                  0,                  0,                  0,                  1,                  0,                  0,                  0,                  0,                  0,                  2,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlAllSims_EPls    =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  1 +                  5 +                2 +                    2 +                      2 +                  2 +                  0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   3 +                   2 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                2 +                      1 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 1 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlZPAPSims_EPls[]  = {                1,                  3,                   2,                    2,                  3,                     0,                   5,                   0,                 2,                     0,                       2,                   2,                   0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  2,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlZPAPSims_EPls   =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  5 +                  0 +                2 +                    0 +                      2 +                  2 +                  0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlAPSims_EPls[]    = {                1,                  3,                   2,                    2,                  0,                     0,                   0,                   0,                 0,                     0,                       2,                   2,                   0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  2,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlAPSims_EPls     =                  1 +                 3 +                  2 +                   2 +                 0 +                    0 +                  0 +                  0 +                0 +                    0 +                      2 +                  2 +                  0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 2 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlAllSims_CSE[]    = {                1,                  3,                   0,                    0,                  0,                     0,                   0,                   0,                 2,                     2,                       2,                   2,                   4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      0,                    0,                    0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 0,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlAllSims_CSE     =                  1 +                 3 +                  0 +                   0 +                 0 +                    0 +                  0 +                  0 +                2 +                    2 +                      2 +                  2 +                  4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     0 +                   0 +                   0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                0 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlZPAPSims_CSE[]   = {                1,                  3,                   0,                    0,                  0,                     0,                   0,                   0,                 2,                     2,                       2,                   2,                   4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      0,                    0,                    0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 0,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlZPAPSims_CSE    =                  1 +                 3 +                  0 +                   0 +                 0 +                    0 +                  0 +                  0 +                2 +                    2 +                      2 +                  2 +                  4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     0 +                   0 +                   0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                0 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                     5 +                 12            ;
+float       faCECNResProgressVals_ParlAPSims_CSE[]     = {                1,                  3,                   0,                    0,                  0,                     0,                   0,                   0,                 2,                     2,                       2,                   2,                   4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     4,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      0,                    0,                    0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 0,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                      5,                  12,          };
+float       fCECNResProgressValSum_ParlAPSims_CSE      =                  1 +                 3 +                  0 +                   0 +                 0 +                    0 +                  0 +                  0 +                2 +                    2 +                      2 +                  2 +                  4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    4 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                    0 +                     0 +                   0 +                   0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                0 +                      0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                     5 +                 12            ;
+float       faCECNResCumulativeProgressSumLoc[]        = {                0,                  0,                   0,                    0,                  0,                     0,                   0,                   0,                 0,                     0,                       0,                   0,                   0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                     0,                      0,                    0,                    0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 0,                       0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                      0,                   0,        0, 0, 0 };
+float* faCECNResCumulativeProgressSum = &faCECNResCumulativeProgressSumLoc[0];
+bool ebLogAnalysisProgress = false;    // SAC 01/14/22
+
+//const char** pszCECNResProgressMsgs=NULL;
+float *faCECNResProgressVals=NULL, fCECNResProgressValSum=0;
+
+//#define  NUM_CECNResProgressEntries  25
+//float  faCECNResCumulativeProgressSum[NUM_CECNResProgressEntries];
+void SetCECNResCumulativeProgressSum()
+{	int idx = 0;
+//	while (++idx < NUM_CECNResProgressEntries)
+	while (laCECNResProgressSteps[++idx] > 0)
+		faCECNResCumulativeProgressSum[idx] = faCECNResCumulativeProgressSum[idx-1] + faCECNResProgressVals[idx-1];
+}
+
+void SetCECNResProgressMessage( QString& sMsg, long lNRPStep, long lNRPModels, long lSimProg )
+{	sMsg = pszCECNResProgressMsgs[lNRPStep-1];
+	if (lNRPModels > 0)
+	{	int iNumModels = BCM_NRP_NumModels( lNRPModels );		int iModelsFound = 0;
+		if (lNRPModels & BCM_NRP_Model_zp)
+		{	iModelsFound++;
+			sMsg += "zp";
+			if (iModelsFound < iNumModels-1)				sMsg += ", ";
+			else if (iModelsFound == iNumModels-1)		sMsg += " & ";
+		}
+		if (lNRPModels & BCM_NRP_Model_zb)
+		{	iModelsFound++;
+			sMsg += "zb";
+			if (iModelsFound < iNumModels-1)				sMsg += ", ";
+			else if (iModelsFound == iNumModels-1)		sMsg += " & ";
+		}
+		if (lNRPModels & BCM_NRP_Model_ap)
+		{	iModelsFound++;
+			sMsg += "ap";
+			if (iModelsFound < iNumModels-1)				sMsg += ", ";
+			else if (iModelsFound == iNumModels-1)		sMsg += " & ";
+		}
+		if (lNRPModels & BCM_NRP_Model_ab)
+		{	iModelsFound++;
+			sMsg += "ab";
+			if (iModelsFound < iNumModels-1)				sMsg += ", ";
+			else if (iModelsFound == iNumModels-1)		sMsg += " & ";
+		}
+		assert( iModelsFound == iNumModels );
+	}
+	if (lSimProg > 0)		// SAC 2/18/19 - added SimProg component to track monthly sim progress
+	{	switch (lSimProg)
+		{	case	BCM_NRP_Prog_Init		:	sMsg += " - Init";	break;
+			case	BCM_NRP_Prog_Warmup	:	sMsg += " - Warmup";	break;
+			case	BCM_NRP_Prog_Jan   	:	sMsg += " - Jan";		break;
+			case	BCM_NRP_Prog_Feb   	:	sMsg += " - Feb";		break;
+			case	BCM_NRP_Prog_Mar   	:	sMsg += " - Mar";		break;
+			case	BCM_NRP_Prog_Apr   	:	sMsg += " - Apr";		break;
+			case	BCM_NRP_Prog_May   	:	sMsg += " - May";		break;
+			case	BCM_NRP_Prog_Jun   	:	sMsg += " - Jun";		break;
+			case	BCM_NRP_Prog_Jul   	:	sMsg += " - Jul";		break;
+			case	BCM_NRP_Prog_Aug  	:	sMsg += " - Aug";		break;
+			case	BCM_NRP_Prog_Sep  	:	sMsg += " - Sep";		break;
+			case	BCM_NRP_Prog_Oct  	:	sMsg += " - Oct";		break;
+			case	BCM_NRP_Prog_Nov  	:	sMsg += " - Nov";		break;
+			case	BCM_NRP_Prog_Dec  	:	sMsg += " - Dec";		break;
+			case	BCM_NRP_Prog_Rpt		:	sMsg += " - Rptg";	break;
+			case	BCM_NRP_Prog_CSEInit		:	sMsg += " CSE - Init";	break;      // SAC 11/19/21
+			case	BCM_NRP_Prog_CSEWarmup	:	sMsg += " CSE - Warmup";	break;
+			case	BCM_NRP_Prog_CSEJan   	:	sMsg += " CSE - Jan";		break;
+			case	BCM_NRP_Prog_CSEFeb   	:	sMsg += " CSE - Feb";		break;
+			case	BCM_NRP_Prog_CSEMar   	:	sMsg += " CSE - Mar";		break;
+			case	BCM_NRP_Prog_CSEApr   	:	sMsg += " CSE - Apr";		break;
+			case	BCM_NRP_Prog_CSEMay   	:	sMsg += " CSE - May";		break;
+			case	BCM_NRP_Prog_CSEJun   	:	sMsg += " CSE - Jun";		break;
+			case	BCM_NRP_Prog_CSEJul   	:	sMsg += " CSE - Jul";		break;
+			case	BCM_NRP_Prog_CSEAug  	:	sMsg += " CSE - Aug";		break;
+			case	BCM_NRP_Prog_CSESep  	:	sMsg += " CSE - Sep";		break;
+			case	BCM_NRP_Prog_CSEOct  	:	sMsg += " CSE - Oct";		break;
+			case	BCM_NRP_Prog_CSENov  	:	sMsg += " CSE - Nov";		break;
+			case	BCM_NRP_Prog_CSEDec  	:	sMsg += " CSE - Dec";		break;
+			case	BCM_NRP_Prog_CSERpt		:	sMsg += " CSE - Rptg";	break;
+	}	}
+}
+
+void SetCECNResProgressMessage( QString& sMsg, long lProgressID )
+{	long lNRPStep    = BCM_NRP_Step(  lProgressID );
+	long lNRPModel   = BCM_NRP_Model( lProgressID );
+	long lNRPSimProg = BCM_NRP_Prog(  lProgressID );	// SAC 2/18/19 - added SimProg component to track monthly sim progress
+	SetCECNResProgressMessage( sMsg, lNRPStep, lNRPModel, lNRPSimProg );
+}
+
+void SetCECNResProgressVal_Parallel( bool bAll, bool bZP, bool bAP, bool bEPlusSim, bool bCSESim )  // SAC 11/19/21
+{	//pszCECNResProgressMsgs = pszCECNResProgressMsgs_Parl;
+	if (bAll)
+	{	if (bEPlusSim && bCSESim)
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlAllSims_Both;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlAllSims_Both;
+      }
+      else if (bCSESim)
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlAllSims_CSE;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlAllSims_CSE;
+      }
+      else
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlAllSims_EPls;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlAllSims_EPls;
+   }  }
+	else if (bZP && bAP)
+	{	if (bEPlusSim && bCSESim)
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlZPAPSims_Both;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlZPAPSims_Both;
+      }
+      else if (bCSESim)
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlZPAPSims_CSE;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlZPAPSims_CSE;
+      }
+      else
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlZPAPSims_EPls;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlZPAPSims_EPls;
+   }  }
+	else
+	{	if (bEPlusSim && bCSESim)
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlAPSims_Both;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlAPSims_Both;
+      }
+      else if (bCSESim)
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlAPSims_CSE;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlAPSims_CSE;
+      }
+      else
+      {  faCECNResProgressVals  = faCECNResProgressVals_ParlAPSims_EPls;
+		   fCECNResProgressValSum = fCECNResProgressValSum_ParlAPSims_EPls;
+   }  }
+	SetCECNResCumulativeProgressSum();
+}
+void SetCECNResProgressVal_Serial( bool bZP, bool bAP, bool bZB, bool bAB )
+{	//pszCECNResProgressMsgs = pszCECNResProgressMsgs_Serl;
+	if (!bZP && bAP && !bZB && !bAB)
+   {  faCECNResProgressVals  = faCECNResProgressVals_SerlAPSim;
+      fCECNResProgressValSum = fCECNResProgressValSum_SerlAPSim;
+	}
+	else if (bZP && bAP && !bZB && !bAB)
+   {  faCECNResProgressVals  = faCECNResProgressVals_SerlZPAPSims;
+      fCECNResProgressValSum = fCECNResProgressValSum_SerlZPAPSims;
+	}
+	else if (!bZP && bAP && bZB && bAB)
+   {  faCECNResProgressVals  = faCECNResProgressVals_SerlZBAPABSims;
+      fCECNResProgressValSum = fCECNResProgressValSum_SerlZBAPABSims;
+	}
+	else
+   {  faCECNResProgressVals  = faCECNResProgressVals_SerlAllSims;
+      fCECNResProgressValSum = fCECNResProgressValSum_SerlAllSims;
+	}
+	SetCECNResCumulativeProgressSum();
+}
+
+int GetCECNResProgressIndex( long lStep, long lModel, long lSimProg )
+{	int iRetVal = -2;
+	for (int i=0; iRetVal < -1; i++)
+	{
+		if (laCECNResProgressSteps[i] == 0)
+			iRetVal = -1;
+		else if (laCECNResProgressSteps[i] == lStep)
+		{	if ( ( laCECNResProgressModels[i] == 0 ||
+				   (laCECNResProgressModels[i] & lModel)) &&
+				  ( laCECNResProgressSimProg[i] == lSimProg ) )
+				iRetVal = i;
+	}	}
+	return iRetVal;
 }
 
 
@@ -1882,7 +2148,15 @@ int CheckSiteAccessViaHttpLib(   const char* pszSite, const char* pszCACertPath,
 //			if (iRetVal >= 0 && FileExists( szTempFileName ))		// if still looping or errant return code, then DELETE the temp file site status was written to
 //				DeleteFile( szTempFileName );
 	}														if (bVerbose)
-																qsVerbose += QString("download loop retval %L1 >> ").arg(iRetVal);
+                                             {  switch ( iRetVal )      // revised messages to describe meaning of httplib site access retval - SAC 01/25/22
+                                                {  case  -1 :  qsVerbose += QString("response received (w/o proxy server settings), but data returned not 'true' >> ");   break;
+                                                   case  -2 :  qsVerbose += QString("response received using supplied proxy server settings, but data returned not 'true' >> ");   break;
+                                                   case  -3 :  qsVerbose += QString("response received using proxy server settings retrieved from operating system, but data returned not 'true' >> ");   break;
+                                                   case -11 :  qsVerbose += QString("site accessible (w/o proxy server settings) >> ");   break;
+                                                   case -12 :  qsVerbose += QString("site accessible using supplied proxy server settings >> ");   break;
+                                                   case -13 :  qsVerbose += QString("site accessible using proxy server settings retrieved from operating system >> ");   break;
+                                                   default  :  qsVerbose += QString("site access loop return value %L1 >> ").arg(iRetVal);   break;
+                                             }  }
 
 // download to string, not file...?
 //	// CHECK FOR OUTPUT FILE containing 'true' - indicating report gen site up and functioning
@@ -2286,8 +2560,9 @@ int GenerateReportViaQt(	const char* pszOutPathFile, const char* pszURL, const c
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef CECRPTGEN
 
-bool CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName /*=NULL*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
-{	return ParseTitle24ReportXML( xmlFileName, pdfFileName, rptElemName, bSupressAllMessageBoxes );
+bool CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName /*=NULL*/, BOOL bSupressAllMessageBoxes /*=FALSE*/,
+                                      const char** saPayloadAttribs/*=NULL*/, QString** qsaPayloadAttribStrings /*=NULL*/ )    // SAC 12/05/21
+{	return ParseTitle24ReportXML( xmlFileName, pdfFileName, rptElemName, bSupressAllMessageBoxes, saPayloadAttribs, qsaPayloadAttribStrings );
 }
 
 int  CMX_ExtractErrorsFromReportXML( const char* xmlFileName, QString& sErrors, BOOL bPostToProjectLog /*=TRUE*/, BOOL bPostToBEMProc /*=TRUE*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )

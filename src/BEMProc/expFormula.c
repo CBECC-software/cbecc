@@ -533,6 +533,10 @@ static FuncTable functable[] =
    {                "#PSHAPV",     EXP_BEMPFunc, BF_PS_HAPropsVld, VAR_ARGS },  /* SAC 05/26/21 - added */
    { "Psych_HAProps",              EXP_BEMPFunc, BF_PS_HAProps,    VAR_ARGS },  /* SAC 05/21/21 - added */
    {                "#PSHAP",      EXP_BEMPFunc, BF_PS_HAProps,    VAR_ARGS },  /* SAC 05/21/21 - added */
+   { "NumUniqueChildVals",         EXP_BEMPFunc, BF_NUnqChldVals,  VAR_ARGS },  /* SAC 12/31/21 (MFam) - added */
+   {                "#NUCV",       EXP_BEMPFunc, BF_NUnqChldVals,  VAR_ARGS },  /* SAC 12/31/21 (MFam) - added */
+   { "CreateCompFor",              EXP_BEMPFunc, BF_Cr8CompFor,    VAR_ARGS },  /* SAC 04/27/22 - added */
+   {                "#CCF",        EXP_BEMPFunc, BF_Cr8CompFor,    VAR_ARGS },  /* SAC 04/27/22 - added */
    { NULL,                         0,           0,              0 }
 };
 

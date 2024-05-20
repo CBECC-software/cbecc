@@ -472,7 +472,8 @@ bool DecodeBase64_ORIGINAL_VERSION( const char* outFileName, const char* data )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName /*=NULL*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
+bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName /*=NULL*/, BOOL bSupressAllMessageBoxes /*=FALSE*/,
+                            const char** saPayloadAttribs /*=NULL*/, QString** qsaPayloadAttribStrings /*=NULL*/ )    // SAC 12/05/21
 			//			QString& sRulesetFilename, BOOL bReturnRulesetFilename,
          //         int iMaxDBIDSetFailures, int* piDBIDSetFailures,  // SAC 5/12/00 - enable UI reporting of failed data setting
          //         BOOL bSupressAllMessageBoxes /*=FALSE*/,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
@@ -495,7 +496,7 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 		QString sErrMsg;
 		int iXMLElementCount = 0;
 		bool bDoneProcessingFile = false, bFoundReport = false;
-		QString sElemName;
+		QString sElemName, sPayldTransID, sPayldDocNR, sPayldProcDateTime;
 		while (bRetVal && sErrMsg.isEmpty() && !bDoneProcessingFile && !stream.atEnd())
 		{
 			stream.readNext();
@@ -519,6 +520,7 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 					case QXmlStreamReader::Invalid               : assert( FALSE );   break;  // see what conditions we end up here
 					case QXmlStreamReader::StartElement          : {	iXMLElementCount++;
 																						sElemName = stream.name().toLocal8Bit().constData();
+                                                                        //BEMPX_WriteLogFile( QString( "              ParseTitle24ReportXML() - StartElement %1  iXMLElementCount %2" ).arg( sElemName, QString::number(iXMLElementCount) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 																						if (iXMLElementCount == 1 && sElemName.compare("Title24", Qt::CaseInsensitive) != 0 &&
 																															  sElemName.compare("ComplianceDocumentPackage", Qt::CaseInsensitive) != 0)  // SAC 11/21/18
 																						{	// ERROR - not a proper Title24 report XML file (??)
@@ -532,24 +534,21 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 																						else if (sElemName.compare(sRptElemName, Qt::CaseInsensitive) == 0)
 																						{	// found Report element
 																							bFoundReport = true;
-
-						//																	QXmlStreamAttributes attribs = stream.attributes();
-						//																	assert( attribs.size() == 0 );  // only element having attributes is 'RulesetFilename' processed (ignored) above
-						//																	int iBEMClassIdx = BEMPX_GetDBComponentID( sElemName.toLocal8Bit().constData() );
-						//																	int iBEMMapGroupID = -1;		// SAC 5/7/14
-						//																	if (iBEMClassIdx < 1)
-						//																		iBEMMapGroupID = FindOldCompMapGroupID( pCompMap, sElemName, lFileVersion, NULL );
-						//																	if (iBEMClassIdx < 1 && iBEMMapGroupID < 0)
-						//																	{	bRetVal = false;
-						//																		sErrMsg = QString( "ERROR:  Invalid object type '%1' encountered on line %2 of SDDXML file:  %3" ).arg( sElemName, QString::number(stream.lineNumber()), xmlFileName );
-						//																	}
-						//																	else
-						//																	{	if (bReturnRulesetFilename)
-						//																			bDoneProcessingFile = true;  // if we have reached the point where a BEMBase object is being created, we are beyond where the ruleset filename should be specified
-						//																		else
-						//																			bRetVal = ReadXMLComponent( xmlFileName, stream, sElemName, iBEMClassIdx, bIsUserInputMode, iBEMProcIdx, sErrMsg, bStoreData, piObjPropCounts,
-						//																													pStraightMap, lDBIDVersion, lFileVersion, pCompMap, pPropMap, &ivMapCompsCreated, iDBIDSetFailureIdx, iMaxDBIDSetFailures, piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures );
-						//																	}
+																						}
+																						else if (sElemName.compare("Payload", Qt::CaseInsensitive) == 0 && saPayloadAttribs != NULL && qsaPayloadAttribStrings != NULL)
+																						{	// found Payload element & returning payload arribs requested
+                                                                     QXmlStreamAttributes payLdAttribs = stream.attributes();
+                                                                     int iPayldIdx = -1;
+                                                                     while (saPayloadAttribs[++iPayldIdx] != NULL && qsaPayloadAttribStrings[iPayldIdx] != NULL)
+                                                                        *qsaPayloadAttribStrings[iPayldIdx] = payLdAttribs.value(QLatin1String(saPayloadAttribs[iPayldIdx])).toString();
+                                                                     //QXmlStreamAttributes payLdAttribs = stream.attributes();
+                                                                     //sPayldTransID      = payLdAttribs.value(QLatin1String("complianceDocumentGUID")).toString();
+                                                                     //sPayldDocNR        = payLdAttribs.value(QLatin1String("payloadDocumentNR")).toString();
+                                                                     //sPayldProcDateTime = payLdAttribs.value(QLatin1String("processedDate")).toString();
+                                                                     //if (sPayldDocNR.indexOf("NRCCPRF") < 0)
+                                                                     //{  sPayldTransID.clear();  sPayldDocNR.clear();  sPayldProcDateTime.clear();
+                                                                     //}
+                                                                     //BEMPX_WriteLogFile( QString( "                       sPayldTransID '%1'  sPayldDocNR '%2'  sPayldProcDateTime '%3'" ).arg( sPayldTransID, sPayldDocNR, sPayldProcDateTime ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 																						}
 																						else
 																						{	// ignore data in other elements, such as:  Payload / SDDXML
@@ -589,11 +588,8 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 																					//}
 																					if (bFoundReport)
 																					{	QString sPDFEncodedData = stream.text().toLocal8Bit().constData();
-
-//  <Report id="Sign2">JVBERi0xL
 																						if (!sPDFEncodedData.isEmpty())
 																							bRetVal = DecodeBase64ToFile( pdfFileName, sPDFEncodedData.toLocal8Bit().constData() );
-
 																						bFoundReport = false;
 																						bDoneProcessingFile = true;  // once we have found & saved the PDF report, bail
 																					}

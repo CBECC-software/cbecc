@@ -289,9 +289,8 @@ int BEMPX_RetrieveCSEHourlyResults( const char* pszFilename, const char* pResMet
    	try
    	{  // open file
    	   BEMTextIO file( pszFilename, BEMTextIO::load );
-   	
-//sLogMsg.Format( "   RetrieveCSEResults():  Parsing CSE results file:  '%s'", saResultFiles[i] );
-//BEMPX_WriteLogFile( sLogMsg );
+
+//BEMPX_WriteLogFile( QString( "   BEMPX_RetrieveCSEHourlyResults():  Parsing CSE results file for meter '%1' & mult %2:  '%3'" ).arg( pResMeter, QString::number( (pdResultMult==NULL ? -999.0 : *pdResultMult) ), pszFilename ) );
 
 			int iFld;
 		   std::vector<bool> vbIncl;
@@ -447,9 +446,8 @@ int BEMRun::readCSEHourlyResults( const char* pszFilename, const char** ppResMet
    	try
    	{  // open file
    	   BEMTextIO file( pszFilename, BEMTextIO::load );
-   	
-//sLogMsg.Format( "   RetrieveCSEResults():  Parsing CSE results file:  '%s'", saResultFiles[i] );
-//BEMPX_WriteLogFile( sLogMsg );
+
+            // BEMPX_WriteLogFile( QString( "   BEMRun::readCSEHourlyResults():  Parsing CSE results file:  '%1'" ).arg( pszFilename ) );
 
 			int iFld, iaResFieldIdx[ BEMRun_NumEnduses ];
    	   try
@@ -549,7 +547,19 @@ int BEMRun::readCSEHourlyResults( const char* pszFilename, const char** ppResMet
 																	if (sEU.isEmpty())
 																		iaResFieldIdx[iFld] = -1;
 																	else
-																	{	int iEUFldIdx = m_hourlyResults[ iThisMtrIdx ].getHourlyResultEnduseIndex( sEU.toLocal8Bit().constData() );
+																	{
+                                                      // KLUDGE to re-map certain MtrElec2 enduses (rather than major mod to all CSE hourly results reading routines) - SAC 04/13/22 (Com tic #3366)
+                                                      if (ppResMeters && iMtrMapIdx >= 0)
+                                                      {  QString sChkMtrName = ppResMeters[iMtrMapIdx];
+                                                         if (!sChkMtrName.compare("MtrElec2"))
+                                                         {  if (!saColTitles[iFld+5].compare("Lit"))
+                                                               sEU = "ResIndoor Lighting";
+                                                            else if (!saColTitles[iFld+5].compare("FanV"))
+                                                               sEU = "ResProcess Motors";
+                                                      }  }       	//	if (ppResMeters && iMtrMapIdx >= 0)
+                                                               	//		BEMPX_WriteLogFile( QString( "      readCSEHourlyResults:  ppResMeters[iMtrMapIdx] %1  |  saColTitles[iFld+5] %2  |  sEU %3" ).arg( ppResMeters[iMtrMapIdx], saColTitles[iFld+5], sEU ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+                                                      int iEUFldIdx = m_hourlyResults[ iThisMtrIdx ].getHourlyResultEnduseIndex( sEU.toLocal8Bit().constData() );
 																		if (iEUFldIdx >= 0)
 			//	{
 																			iaResFieldIdx[iFld] = iEUFldIdx;

@@ -1217,16 +1217,16 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
                            const char* pszCustMtrFuelLbls[] = { "(kWh),", "(kBtu)," };
 
 #define NumCustMeters  6
-                           const char* pszCustMtrColLbls[] = { "Nonresidential Electricity,,,,,,,,,,", "Residential Electricity,,,,,,,,,,", "Mixed Electricty,,,,,,,,,,", "Nonresidential Gas,,,,,", "Residential Gas,,,,,", "Mixed Gas,,,,,"      };
+                           const char* pszCustMtrColLbls[] = { "Nonresidential Electricity,,,,,,,,,,,,,", "Residential Electricity,,,,,,,,,,,,,", "Mixed Electricty,,,,,,,,,,,,,", "Nonresidential Gas,,,,,,", "Residential Gas,,,,,,", "Mixed Gas,,,,,,"      };
                            const char* pszCustMtrNames[]   = { "NONRESELECMETER"           , "RESELECMETER"           , "MIXEDELECMETER"  , "NONRESGASMETER"    , "RESGASMETER"    , "MIXEDGASMETER"  };
                            int iaCustMtrFuelIdx[]          = {         0                   ,      0                   ,        0          ,        1            ,     1            ,       1          };
                            int iaFirstCustMtrColIdx[]      = {        -1                   ,     -1                   ,       -1          ,       -1            ,    -1            ,      -1          };  // set during processing
-#define NumCustMtrEnduses     8
-#define NumCustGasMtrEnduses  3
-                           const char* pszMtrEUColLbls[]   = { "Spc Heat,", "Spc Cool,", "Indr Fans,", "Heat Rej,", "Pump&Misc,", "Dom HW,", "Lighting,", "Process,", "Comp Tot,", "TOTAL,"      };
-                           const char* pszMtrEnduseNames[] = { "SPCHEAT"  , "SPCCOOL"  , "INDRFANS"  , "HEATREJ"  , "PUMPMISC"  , "DOMHW"  , "LIGHTING" , "PROCESS"  };
-                           int iaMtrGasUseIdx[]            = {     0      ,    -1      ,    -1       ,    -1      ,    -1       ,     1    ,    -1      ,     2      };
-                           bool baComplianceEnduse[]       = {   true     ,   true     ,   true      ,   true     ,   true      ,   true   ,   true     ,   false    };
+#define NumCustMtrEnduses    11     // expanded single 'PROCESS' non-compliance enduse out to full tracking set of 4 (total 8->11) - SAC 11/08/21 
+#define NumCustGasMtrEnduses  4     // 3->4 - SAC 11/08/21
+                           const char* pszMtrEUColLbls[]   = { "Spc Heat,", "Spc Cool,", "Indr Fans,", "Heat Rej,", "Pump&Misc,", "Dom HW,", "Lighting,", "Recept,", "Process,", "Other Ltg,", "Proc Mtr,", "Comp Tot,", "TOTAL,"      };
+                           const char* pszMtrEnduseNames[] = { "SPCHEAT"  , "SPCCOOL"  , "INDRFANS"  , "HEATREJ"  , "PUMPMISC"  , "DOMHW"  , "LIGHTING" , "RECEPT" , "PROCESS" , "OTHRLTG"   , "PROCMTRS"  };
+                           int iaMtrGasUseIdx[]            = {     0      ,    -1      ,    -1       ,    -1      ,    -1       ,     1    ,    -1      ,     2    ,     3     ,     -1      ,     -1      };
+                           bool baComplianceEnduse[]       = {   true     ,   true     ,   true      ,   true     ,   true      ,   true   ,   true     ,   false  ,   false   ,    false    ,    false    };
 
                            //double daCustMtrHrlyRes[              (3*(NumCustMtrEnduses+2)) + (3*(NumCustGasMtrEnduses+2)) ][8760];
                            int iMtr, iTotNumCustMtrHrlyResCols = (3*(NumCustMtrEnduses+2)) + (3*(NumCustGasMtrEnduses+2));

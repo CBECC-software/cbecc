@@ -1,0 +1,6614 @@
+RulesetFilename   "T24N_2022.bin"  
+
+Proj   "MF36 Restructure Prototype"  
+   BldgEngyModelVersion = 16
+   CreateDate = 1647925402
+   ModDate = 1654846866
+   RunDate = 1654846867
+   RunDateFmt = "18:39, Thu, Mar 17, 2022"
+   RunDateISO = "2022-03-17T18:39:29-06:00"
+   GasType = "NaturalGas"
+   CliZn = "ClimateZone11"
+   ZipCode = 96080
+   WeatherStation = "CTZ11S22A"
+   DDWeatherFile = "C:/projects/cbecc-com-code/branches/CBECC-Com_MFamRestructure/CBECC-Com64/Data/EPW/CTZ12S22A.ddy"
+   AnnualWeatherFile = "C:/projects/cbecc-com-code/branches/CBECC-Com_MFamRestructure/CBECC-Com64/Data/EPW/CTZ12S22A.epw"
+   AnnualWeatherFileNoPath = "CTZ12S22A.epw"
+   ExcptCondNoClgSys = "No"
+   ExcptCondRtdCap = "No"
+   ExcptCondNarrative = "No"
+   UseExcptDsgnModel = 0
+   ProjRemarks = "Dwelling Units zoned by orientation by Aaron Boranian on March 17, 2022."
+   AutoHardSize = 1
+   AutoEffInput = 1
+   DefaultDayltgCtrls = 0
+   SimVarsThrmlZn = 0
+   SimVarsHVACSec = 0
+   SimVarsHVACSecTempFlow = 0
+   RunTitle = "MF36 Restructure Prototype"
+   AnalysisType = "Title24Compliance"
+   CompOptDHW = 1
+   ResDwellUnits = 1
+   SoftwareVersion = "CBECC 2022.1.0 (1250)"
+   ProjFileName = "MF36_Prop_NGAS-CZ12_Restructure - Zoned - Latest.cibd22"
+   ResultsCurrentMessage = "(not current)"
+   DebugScreen = 1
+   ..
+
+ResProj   "2019 Prototype 39372ft2 Prop Mixed"  
+   StdDesignFuel_Ckg = "Proposed"
+   StdDesignFuel_Dry = "Proposed"
+   StdDesignFuel_HVAC = "Electricity"
+   StdDesignFuel_DHW = "Proposed"
+   StdDesignCompactDistrib = 0
+   StdDesignDrnWtrHtRecov = 0
+   StdDesignHPWHLocOverride = 0
+   StdDesignWinPerfAdjust = 0
+   CALGreen = 0
+   InCmntySlrProjTerritory = 0
+   PVCompCredit = 0
+   PVWDCSysSize = ( 1, 0, 0, 0, 0 )
+   AllowExcessPVEDR = 0
+   ReducedPVReq = 0
+   BattMaxCap = 0
+   BattGridHarmCredit = 0
+   SimSpeedOption = "Compliance"
+   ReportInclPropOnly = 0
+   SpecifyTargetDRtg = 0
+   Address = "1516 Ninth St"
+   RunScope = "Newly Constructed"
+   WeatherFileName = "CTZ12S22A.epw"
+   IsMultiFamily = 1
+   CentralMFamLaundry = 1
+   DfltMFamLaundryZn = "- none -"
+   UseDefaultACH50 = 1
+   Status = "New"
+   IsVerified = 0
+   ProjInclKitchen = 1
+   InsulConsQuality = "Yes"
+   AllOrientations = 0
+   FrontOrientation = 0
+   HasGarage = 0
+   IAQSupInletsAccessible = 1
+   IAQHasFID = 1
+   StdDesignIAQType[1] = "Bal w/ Ht Recov"
+   StdDesignIAQFanPwr[1] = 0.6
+   StdIAQHtRec_SRE[1] = 67
+   StdIAQHtRec_ASRE[1] = 72
+   UnitClVentOption = "- none -"
+   ApplRefrigZone[1] = "- none -"
+   ApplWasherZone[1] = "- none -"
+   ApplDryerZone[1] = "- none -"
+   ApplCookZone[1] = "- none -"
+   ApplDishZone[1] = "- none -"
+   Appl_HaveRefrig[1] = 1
+   Appl_HaveDish[1] = 1
+   Appl_HaveCook[1] = 1
+   Appl_HaveWasher[1] = 1
+   Appl_HaveDryer[1] = 1
+   HERSDist = "2019 Prototype 39372ft2 Prop Mixed-hers-dist-proj"
+   HERSFan = "2019 Prototype 39372ft2 Prop Mixed-hers-fan-proj"
+   HERSDHW = "2019 Prototype 39372ft2 Prop Mixed-hers-dhw-proj"
+   HERSProj = "2019 Prototype 39372ft2 Prop Mixed-hers-proj"
+   SpeclFeatrs = "2019 Prototype 39372ft2 Prop Mixed-specl-featrs"
+   CSERpt_ZnDataDump = 0
+   CSERpt_HVACDescrip = 0
+   CSERpt_ZnEnergy = 0
+   CSERpt_HtPumpHtg = 0
+   CSERpt_Mtr_All = 0
+   CSERpt_Mtr_Elec = 0
+   CSERpt_Mtr_NGas = 0
+   CSERpt_Mtr_Othr = 0
+   CSERpt_ZnEnergy_DD = 0
+   CSERpt_Mtr_All_DD = 0
+   CSERpt_Mtr_Elec_DD = 0
+   CSERpt_Mtr_NGas_DD = 0
+   CSERpt_Mtr_Othr_DD = 0
+   CSERpt_ZnEnergy_CD = 0
+   CSERpt_Mtr_All_CD = 0
+   CSERpt_Mtr_Elec_CD = 0
+   CSERpt_Mtr_NGas_CD = 0
+   CSERpt_Mtr_Othr_CD = 0
+   CSERpt_ZnEnergy_HD = 0
+   CSERpt_Mtr_All_HD = 0
+   CSERpt_Mtr_Elec_HD = 0
+   CSERpt_Mtr_NGas_HD = 0
+   CSERpt_Mtr_Othr_HD = 0
+   ..
+
+SchDay   "CARes2013 InsLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.023, 0.019, 0.015, 0.017, 0.021, 0.031, 0.042, 0.041, 0.034, 
+          0.029, 0.027, 0.025, 0.021, 0.021, 0.021, 0.026, 0.031, 0.044, 
+          0.084, 0.118, 0.113, 0.096, 0.063, 0.038 )
+   ..
+
+SchDay   "CARes2013 Occupancy Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.035, 0.035, 0.035, 0.035, 0.035, 0.059, 0.082, 0.055, 0.027, 
+          0.014, 0.014, 0.014, 0.014, 0.014, 0.019, 0.027, 0.041, 0.055, 
+          0.068, 0.082, 0.082, 0.07, 0.053, 0.035 )
+   ..
+
+SchDay   "CARes2013 Equipment Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.037, 0.035, 0.034, 0.034, 0.032, 0.036, 0.042, 0.044, 0.037, 
+          0.032, 0.033, 0.033, 0.032, 0.033, 0.035, 0.037, 0.044, 0.053, 
+          0.058, 0.06, 0.062, 0.06, 0.052, 0.045 )
+   ..
+
+SchDay   "CARes2013 ExtLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+          0.25, 0.25, 0.25, 0.25 )
+   ..
+
+SchDay   "CARes2013 SZ Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Liv Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Slp Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 65, 65, 65, 65, 65, 65, 
+          65, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 SZ Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Liv Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Slp Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+Bldg   "Building"  
+   TreeState = 252
+   TotStoryCnt = 3
+   AboveGrdStoryCnt = 3
+   ..
+
+ResZnGrp   "ResZn Group F1"  
+   ..
+
+ResZn   "F1 Res Zn N"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 2850
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F1 Res Zn N Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 950
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn N Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 25.686
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Res Zn N Slab"  
+   Status = "New"
+   Area = 2850
+   Perimeter = 95
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+DwellUnit   "F1 1-Bed N"  
+   DwellUnitTypeRef = "1-Bed Type"
+   Count = 2
+   CondFlrArea = 720
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 1-Bed N 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F1 1-Bed N 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 1-Bed N 1/2 | DHW Gas"  
+   DwellUnitRptName = "F1 1-Bed N-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F1 1-Bed N 2/2 | DHW Gas"  
+   DwellUnitRptName = "F1 1-Bed N-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 1-Bed N-(1/2)"  
+   ..
+
+DwellUnitRpt   "F1 1-Bed N-(2/2)"  
+   ..
+
+DwellUnit   "F1 3-Bed N"  
+   DwellUnitTypeRef = "3-Bed Type"
+   Count = 1
+   CondFlrArea = 1410
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 3-Bed N | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 3-Bed N | DHW Gas"  
+   DwellUnitRptName = "F1 3-Bed N-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 3-Bed N-(1/1)"  
+   ..
+
+ResIntWall   "F1 Res Zn N To F1 Res Zn NW Int Wall Left"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn NW"
+   ..
+
+ResIntWall   "F1 Res Zn N To F1 Corridor Int Wall Right"  
+   Status = "New"
+   Area = 230
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResZn   "F1 Res Zn NE"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F1 Res Zn NE Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn NE Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F1 Res Zn NE Wall Right"  
+   Status = "New"
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn NE Win Right"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Res Zn NE Slab"  
+   Status = "New"
+   Area = 1054
+   Perimeter = 65
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+DwellUnit   "F1 2-Bed NE"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 2-Bed NE | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 2-Bed NE | DHW Gas"  
+   DwellUnitRptName = "F1 2-Bed NE-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 2-Bed NE-(1/1)"  
+   ..
+
+ResIntWall   "F1 Res Zn NE To F1 Res Zn SE Int Wall Front"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn SE"
+   ..
+
+ResIntWall   "F1 Res Zn NE To F1 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResZn   "F1 Res Zn NW"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F1 Res Zn NW Wall Left"  
+   Status = "New"
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn NW Win Left"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F1 Res Zn NW Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn NW Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Res Zn NW Slab"  
+   Status = "New"
+   Area = 1054
+   Perimeter = 65
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+DwellUnit   "F1 2-Bed NW"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 2-Bed NW | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 2-Bed NW | DHW Gas"  
+   DwellUnitRptName = "F1 2-Bed NW-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 2-Bed NW-(1/1)"  
+   ..
+
+ResIntWall   "F1 Res Zn NW To F1 Res Zn SW Int Wall Front"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn SW"
+   ..
+
+ResIntWall   "F1 Res Zn NW To F1 Corridor Int Wall Right"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResZn   "F1 Res Zn S"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 2850
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F1 Res Zn S Wall Front"  
+   TreeState = 254
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 950
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn S Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 18.627
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Res Zn S Slab"  
+   Status = "New"
+   Area = 2850
+   Perimeter = 95
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+DwellUnit   "F1 1-Bed S"  
+   DwellUnitTypeRef = "1-Bed Type"
+   Count = 2
+   CondFlrArea = 720
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 1-Bed S 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F1 1-Bed S 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 1-Bed S 1/2 | DHW Gas"  
+   DwellUnitRptName = "F1 1-Bed S-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F1 1-Bed S 2/2 | DHW Gas"  
+   DwellUnitRptName = "F1 1-Bed S-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 1-Bed S-(1/2)"  
+   ..
+
+DwellUnitRpt   "F1 1-Bed S-(2/2)"  
+   ..
+
+DwellUnit   "F1 3-Bed S"  
+   DwellUnitTypeRef = "3-Bed Type"
+   Count = 1
+   CondFlrArea = 1410
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 3-Bed S | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 3-Bed S | DHW Gas"  
+   DwellUnitRptName = "F1 3-Bed S-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 3-Bed S-(1/1)"  
+   ..
+
+ResIntWall   "F1 Res Zn S To F1 Res Zn SW Int Wall Left"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn SW"
+   ..
+
+ResZn   "F1 Res Zn SE"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F1 Res Zn SE Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn SE Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F1 Res Zn SE Wall Right"  
+   Status = "New"
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn SE Win Right"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Res Zn SE Slab"  
+   Status = "New"
+   Area = 1054
+   Perimeter = 65
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+DwellUnit   "F1 2-Bed SE"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 2-Bed SE | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 2-Bed SE | DHW Gas"  
+   DwellUnitRptName = "F1 2-Bed SE-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 2-Bed SE-(1/1)"  
+   ..
+
+ResIntWall   "F1 Res Zn SE To F1 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResZn   "F1 Res Zn SW"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F1 Res Zn SW Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn SW Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F1 Res Zn SW Wall Left"  
+   Status = "New"
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Res Zn SW Win Left"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Res Zn SW Slab"  
+   Status = "New"
+   Area = 1054
+   Perimeter = 65
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+DwellUnit   "F1 2-Bed SW"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F1 2-Bed SW | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F1 2-Bed SW | DHW Gas"  
+   DwellUnitRptName = "F1 2-Bed SW-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F1 2-Bed SW-(1/1)"  
+   ..
+
+ResIntWall   "F1 Res Zn SW To F1 Corridor Int Wall Right"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResOtherZn   "F1 Business Center"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Convention, Conference, Multipurpose and Meeting Area"
+   VentSpcFunc = "General - Conference/meeting"
+   ozHVACSystem = "F1 Business Cent AirSys"
+   Area = 324
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F1 Business Center To F1 Leasing Office Int Wall Front"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Leasing Office"
+   ..
+
+ResIntWall   "F1 Business Center To F1 Lobby Int Wall Left"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Lobby"
+   ..
+
+ResIntWall   "F1 Business Center To F1 Corridor Int Wall Back"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResIntWall   "F1 Business Center To F1 Res Zn SE Int Wall Right"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn SE"
+   ..
+
+ResSlabFlr   "F1 Business Center Slab"  
+   Status = "New"
+   Area = 324
+   Perimeter = 0
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResOtherZn   "F1 Corridor"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Corridor Area"
+   VentSpcFunc = "Residential - Common corridors"
+   ozHVACSystem = "F1 Corridor AirSys"
+   Area = 1444
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F1 Corridor To F1 Res Zn S Int Wall Front"  
+   Status = "New"
+   Area = 950
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn S"
+   ..
+
+ResSlabFlr   "F1 Corridor Slab"  
+   Status = "New"
+   Area = 1444
+   Perimeter = 0
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResIntWall   "F1 Corridor To F1 Res Zn N Int Wall Back"  
+   Status = "New"
+   Area = 950
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn N"
+   ..
+
+ResOtherZn   "F1 Fitness Center"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Exercise/Fitness Center and Gymnasium Areas"
+   VentSpcFunc = "Sports/Entertainment - Gym, sports arena (play area)"
+   ozHVACSystem = "F1 Fitness Cente AirSys"
+   Area = 324
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F1 Fitness Center To F1 Corridor Int Wall Front"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResIntWall   "F1 Fitness Center To F1 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResIntWall   "F1 Fitness Center To F1 Res Zn NE Int Wall Right"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn NE"
+   ..
+
+ResSlabFlr   "F1 Fitness Center Slab"  
+   Status = "New"
+   Area = 324
+   Perimeter = 0
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResOtherZn   "F1 Laundry"  
+   Type = "Conditioned"
+   SpcFunc = "Laundry Area"
+   VentSpcFunc = "Lodging - Laundry rooms, central"
+   ozHVACSystem = "F1 Laundry AirSys"
+   ozDHWSys = "DHW Gas"
+   Area = 108
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F1 Laundry To F1 Fitness Center Int Wall Front"  
+   Status = "New"
+   Area = 90
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Fitness Center"
+   ..
+
+ResIntWall   "F1 Laundry To F1 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 40
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResExtWall   "F1 Laundry Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 90
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "F1 Laundry To F1 Mech Rm Int Wall Right"  
+   Status = "New"
+   Area = 120
+   Construction = "Interior Wall adjacent Unconditioned"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Mech Rm"
+   ..
+
+ResSlabFlr   "F1 Laundry Slab"  
+   Status = "New"
+   Area = 108
+   Perimeter = 9
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResOtherZn   "F1 Leasing Office"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Office Area (<250 square feet)"
+   VentSpcFunc = "Office - Office space"
+   ozHVACSystem = "F1 Leasing Offic AirSys"
+   Area = 216
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F1 Leasing Office To F1 Lobby Int Wall Left"  
+   Status = "New"
+   Area = 120
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Lobby"
+   ..
+
+ResIntWall   "F1 Leasing Office To F1 Res Zn SE Int Wall Right"  
+   Status = "New"
+   Area = 120
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn SE"
+   ..
+
+ResExtWall   "F1 Leasing Office Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 180
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Leasing Office Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 3.529
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Leasing Office Slab"  
+   Status = "New"
+   Area = 216
+   Perimeter = 18
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResOtherZn   "F1 Lobby"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Lobby, Main Entry"
+   VentSpcFunc = "Residential - Common corridors"
+   ozHVACSystem = "F1 Lobby AirSys"
+   Area = 540
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F1 Lobby To F1 Res Zn S Int Wall Left"  
+   Status = "New"
+   Area = 300
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn S"
+   ..
+
+ResExtWall   "F1 Lobby Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 180
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F1 Lobby Glass Door Front"  
+   Status = "New"
+   WinType = "Glass Door"
+   SpecMethod = "Overall Window Area"
+   Area = 40
+   exArea = 40
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResWin   "F1 Lobby Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 0.863
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResSlabFlr   "F1 Lobby Slab"  
+   Status = "New"
+   Area = 540
+   Perimeter = 18
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResOpening   "F1 Lobby To F1 Corridor Opening Back"  
+   Outside = "F1 Corridor"
+   Width = 18
+   Height = 9
+   BottomHt = 0
+   ..
+
+ResOtherZn   "F1 Mech Rm"  
+   Type = "Unconditioned"
+   SpcFunc = "Electrical, Mechanical, Telephone Rooms"
+   VentSpcFunc = "Misc - Telephone closets"
+   ozHVACSystem = "- none -"
+   Area = 108
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   IAQOption = "Individual IAQ Fans"
+   IAQFanRef[1] = "F1 Mech Rm-IAQFan"
+   ..
+
+ResIntWall   "F1 Mech Rm To F1 Fitness Center Int Wall Front"  
+   Status = "New"
+   Area = 90
+   Construction = "Interior Wall adjacent Unconditioned"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Fitness Center"
+   ..
+
+ResExtWall   "F1 Mech Rm Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 90
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResSlabFlr   "F1 Mech Rm Slab"  
+   Status = "New"
+   Area = 108
+   Perimeter = 9
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResIntWall   "F1 Mech Rm To F1 Res Zn NE Int Wall Right"  
+   Status = "New"
+   Area = 120
+   Construction = "Interior Wall adjacent Unconditioned"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn NE"
+   ..
+
+ResOtherZn   "F1 Stairs"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Stairwell"
+   VentSpcFunc = "Residential - Common corridors"
+   ozHVACSystem = "F1 Stairs AirSys"
+   Area = 144
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 0.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F1 Stairs To F1 Corridor Int Wall Front"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResIntWall   "F1 Stairs To F1 Res Zn N Int Wall Left"  
+   Status = "New"
+   Area = 80
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn N"
+   ..
+
+ResExtWall   "F1 Stairs Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 180
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResSlabFlr   "F1 Stairs Slab"  
+   Status = "New"
+   Area = 144
+   Perimeter = 18
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+ResIntWall   "F1 Stairs To F1 Laundry Int Wall Right"  
+   Status = "New"
+   Area = 80
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Laundry"
+   ..
+
+ResZnGrp   "ResZn Group F2"  
+   TreeState = 254
+   ..
+
+ResZn   "F2 Res Zn N"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 3390
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F2 Res Zn N Wall Back"  
+   TreeState = 254
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 1130
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn N Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 25.686
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResIntFlr   "F2 Res Zn N To F1 Res Zn N Int Floor"  
+   Status = "New"
+   Area = 2850
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn N"
+   ..
+
+DwellUnit   "F2 1-Bed N"  
+   DwellUnitTypeRef = "1-Bed Type"
+   Count = 2
+   CondFlrArea = 720
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 1-Bed N 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F2 1-Bed N 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 1-Bed N 1/2 | DHW Gas"  
+   DwellUnitRptName = "F2 1-Bed N-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F2 1-Bed N 2/2 | DHW Gas"  
+   DwellUnitRptName = "F2 1-Bed N-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 1-Bed N-(1/2)"  
+   ..
+
+DwellUnitRpt   "F2 1-Bed N-(2/2)"  
+   ..
+
+DwellUnit   "F2 3-Bed N"  
+   DwellUnitTypeRef = "3-Bed Type"
+   Count = 1
+   CondFlrArea = 1410
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 3-Bed N | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 3-Bed N | DHW Gas"  
+   DwellUnitRptName = "F2 3-Bed N-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 3-Bed N-(1/1)"  
+   ..
+
+DwellUnit   "F2 Studio N"  
+   DwellUnitTypeRef = "Studio Type"
+   Count = 1
+   CondFlrArea = 540
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 Studio N | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 Studio N | DHW Gas"  
+   DwellUnitRptName = "F2 Studio N-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 Studio N-(1/1)"  
+   ..
+
+ResIntFlr   "F2 Res Zn N To F1 Fitness Center Int Floor"  
+   Status = "New"
+   Area = 324
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Fitness Center"
+   ..
+
+ResIntFlr   "F2 Res Zn N To F1 Laundry Int Floor"  
+   Status = "New"
+   Area = 108
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Laundry"
+   ..
+
+ResIntFlr   "F2 Res Zn N To F1 Mech Rm Int Floor"  
+   Status = "New"
+   Area = 108
+   FloorZ = 10.7
+   Construction = "Interior Floor above Unconditioned"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Mech Rm"
+   ..
+
+ResIntWall   "F2 Res Zn N To F2 Res Zn NW Int Wall Left"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn NW"
+   ..
+
+ResIntWall   "F2 Res Zn N To F2 Res Zn NE Int Wall Right"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn NE"
+   ..
+
+ResZn   "F2 Res Zn NE"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F2 Res Zn NE Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn NE Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exNFRCUfactor = 0.3
+   exNFRCSHGC = 0.23
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F2 Res Zn NE Wall Right"  
+   Status = "New"
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn NE Win Right"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResIntFlr   "F2 Res Zn NE To F1 Res Zn NE Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn NE"
+   ..
+
+DwellUnit   "F2 2-Bed NE"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 2-Bed NE | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 2-Bed NE | DHW Gas"  
+   DwellUnitRptName = "F2 2-Bed NE-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 2-Bed NE-(1/1)"  
+   ..
+
+ResIntWall   "F2 Res Zn NE To F2 Res Zn SE Int Wall Front"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn SE"
+   ..
+
+ResIntWall   "F2 Res Zn NE To F2 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Corridor"
+   ..
+
+ResZn   "F2 Res Zn NW"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F2 Res Zn NW Wall Left"  
+   Status = "New"
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn NW Win Left"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F2 Res Zn NW Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn NW Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResIntFlr   "F2 Res Zn NW To F1 Res Zn NW Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn NW"
+   ..
+
+DwellUnit   "F2 2-Bed NW"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 2-Bed NW | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 2-Bed NW | DHW Gas"  
+   DwellUnitRptName = "F2 2-Bed NW-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 2-Bed NW-(1/1)"  
+   ..
+
+ResIntWall   "F2 Res Zn NW To F2 Res Zn SW Int Wall Front"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn SW"
+   ..
+
+ResIntWall   "F2 Res Zn NW To F2 Corridor Int Wall Right"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Corridor"
+   ..
+
+ResZn   "F2 Res Zn S"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 3930
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F2 Res Zn S Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 1310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn S Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 25.686
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResIntFlr   "F2 Res Zn S To F1 Res Zn S Int Floor"  
+   Status = "New"
+   Area = 2850
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn S"
+   ..
+
+DwellUnit   "F2 1-Bed S"  
+   DwellUnitTypeRef = "1-Bed Type"
+   Count = 2
+   CondFlrArea = 720
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 1-Bed S 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F2 1-Bed S 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 1-Bed S 1/2 | DHW Gas"  
+   DwellUnitRptName = "F2 1-Bed S-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F2 1-Bed S 2/2 | DHW Gas"  
+   DwellUnitRptName = "F2 1-Bed S-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 1-Bed S-(1/2)"  
+   ..
+
+DwellUnitRpt   "F2 1-Bed S-(2/2)"  
+   ..
+
+DwellUnit   "F2 3-Bed S"  
+   DwellUnitTypeRef = "3-Bed Type"
+   Count = 1
+   CondFlrArea = 1410
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 3-Bed S | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 3-Bed S | DHW Gas"  
+   DwellUnitRptName = "F2 3-Bed S-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 3-Bed S-(1/1)"  
+   ..
+
+DwellUnit   "F2 Studio S"  
+   DwellUnitTypeRef = "Studio Type"
+   Count = 2
+   CondFlrArea = 540
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 Studio S 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F2 Studio S 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 Studio S 1/2 | DHW Gas"  
+   DwellUnitRptName = "F2 Studio S-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F2 Studio S 2/2 | DHW Gas"  
+   DwellUnitRptName = "F2 Studio S-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 Studio S-(1/2)"  
+   ..
+
+DwellUnitRpt   "F2 Studio S-(2/2)"  
+   ..
+
+ResIntFlr   "F2 Res Zn S To F1 Business Center Int Floor"  
+   Status = "New"
+   Area = 324
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Business Center"
+   ..
+
+ResIntFlr   "F2 Res Zn S To F1 Leasing Office Int Floor"  
+   Status = "New"
+   Area = 216
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Leasing Office"
+   ..
+
+ResIntFlr   "F2 Res Zn S To F1 Lobby Int Floor"  
+   Status = "New"
+   Area = 540
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Lobby"
+   ..
+
+ResIntWall   "F2 Res Zn S To F2 Res Zn SW Int Wall Left"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn SW"
+   ..
+
+ResIntWall   "F2 Res Zn S To F2 Res Zn SE Int Wall Right"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn SE"
+   ..
+
+ResZn   "F2 Res Zn SE"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F2 Res Zn SE Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn SE Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F2 Res Zn SE Wall Right"  
+   Status = "New"
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn SE Win Right"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResIntFlr   "F2 Res Zn SE To F1 Res Zn SE Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn SE"
+   ..
+
+DwellUnit   "F2 2-Bed SE"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 2-Bed SE | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 2-Bed SE | DHW Gas"  
+   DwellUnitRptName = "F2 2-Bed SE-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 2-Bed SE-(1/1)"  
+   ..
+
+ResIntWall   "F2 Res Zn SE To F2 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Corridor"
+   ..
+
+ResZn   "F2 Res Zn SW"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F2 Res Zn SW Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn SW Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F2 Res Zn SW Wall Left"  
+   Status = "New"
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F2 Res Zn SW Win Left"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResIntFlr   "F2 Res Zn SW To F1 Res Zn SW Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Res Zn SW"
+   ..
+
+DwellUnit   "F2 2-Bed SW"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F2 2-Bed SW | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F2 2-Bed SW | DHW Gas"  
+   DwellUnitRptName = "F2 2-Bed SW-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F2 2-Bed SW-(1/1)"  
+   ..
+
+ResIntWall   "F2 Res Zn SW To F2 Corridor Int Wall Right"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Corridor"
+   ..
+
+ResOtherZn   "F2 Corridor"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Corridor Area"
+   VentSpcFunc = "Residential - Common corridors"
+   ozHVACSystem = "F2 Corridor AirSys"
+   Area = 1444
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntFlr   "F2 Corridor To F1 Corridor Int Floor"  
+   Status = "New"
+   Area = 1444
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F1 Corridor"
+   ..
+
+ResIntWall   "F2 Corridor To F2 Res Zn S Int Wall Front"  
+   Status = "New"
+   Area = 1310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn S"
+   ..
+
+ResIntWall   "F2 Corridor To F2 Res Zn N Int Wall Left"  
+   Status = "New"
+   Area = 230
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn N"
+   ..
+
+ResIntWall   "F2 Corridor To F2 Res Zn N Int Wall Back"  
+   Status = "New"
+   Area = 1130
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn N"
+   ..
+
+ResIntWall   "F2 Corridor To F2 Res Zn N Int Wall Right"  
+   Status = "New"
+   Area = 230
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn N"
+   ..
+
+ResOtherZn   "F2 Stairs"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Stairwell"
+   VentSpcFunc = "Residential - Common corridors"
+   ozHVACSystem = "F2 Stairs AirSys"
+   Area = 144
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F2 Stairs To F2 Corridor Int Wall Front"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Corridor"
+   ..
+
+ResIntWall   "F2 Stairs To F2 Res Zn N Int Wall Left"  
+   Status = "New"
+   Area = 80
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn N"
+   ..
+
+ResExtWall   "F2 Stairs Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 180
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntFlr   "F2 Stairs To F1 Stairs Int Floor Hole"  
+   Status = "New"
+   Area = 144
+   FloorZ = 10.7
+   Construction = "Interior Floor"
+   IsPartySurface = 0
+   OtherSideModeled = 1
+   Outside = "F1 Stairs"
+   ..
+
+ResIntWall   "F2 Stairs To F2 Res Zn N Int Wall Right"  
+   Status = "New"
+   Area = 80
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn N"
+   ..
+
+ResZnGrp   "ResZn Group F3"  
+   ..
+
+ResZn   "F3 Res Zn N"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 3390
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F3 Res Zn N Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 1130
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn N Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 25.686
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResCathedralCeiling   "F3 Res Zn N Cathedral Ceiling"  
+   Area = 3390
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntFlr   "F3 Res Zn N To F2 Res Zn N Int Floor"  
+   Status = "New"
+   Area = 3390
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn N"
+   ..
+
+DwellUnit   "F3 1-Bed N"  
+   DwellUnitTypeRef = "1-Bed Type"
+   Count = 2
+   CondFlrArea = 720
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 1-Bed N 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F3 1-Bed N 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 1-Bed N 1/2 | DHW Gas"  
+   DwellUnitRptName = "F3 1-Bed N-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F3 1-Bed N 2/2 | DHW Gas"  
+   DwellUnitRptName = "F3 1-Bed N-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 1-Bed N-(1/2)"  
+   ..
+
+DwellUnitRpt   "F3 1-Bed N-(2/2)"  
+   ..
+
+DwellUnit   "F3 3-Bed N"  
+   DwellUnitTypeRef = "3-Bed Type"
+   Count = 1
+   CondFlrArea = 1410
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 3-Bed N | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 3-Bed N | DHW Gas"  
+   DwellUnitRptName = "F3 3-Bed N-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 3-Bed N-(1/1)"  
+   ..
+
+DwellUnit   "F3 Studio N"  
+   DwellUnitTypeRef = "Studio Type"
+   Count = 1
+   CondFlrArea = 540
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 Studio N | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 Studio N | DHW Gas"  
+   DwellUnitRptName = "F3 Studio N-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 Studio N-(1/1)"  
+   ..
+
+ResIntWall   "F3 Res Zn N To F3 Res Zn NW Int Wall Left"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn NW"
+   ..
+
+ResIntWall   "F3 Res Zn N To F3 Res Zn NE Int Wall Right"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn NE"
+   ..
+
+ResZn   "F3 Res Zn NE"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F3 Res Zn NE Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn NE Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F3 Res Zn NE Wall Right"  
+   Status = "New"
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn NE Win Right"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResCathedralCeiling   "F3 Res Zn NE Cathedral Ceiling"  
+   Area = 1054
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntFlr   "F3 Res Zn NE To F2 Res Zn NE Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn NE"
+   ..
+
+DwellUnit   "F3 2-Bed NE"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 2-Bed NE | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 2-Bed NE | DHW Gas"  
+   DwellUnitRptName = "F3 2-Bed NE-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 2-Bed NE-(1/1)"  
+   ..
+
+ResIntWall   "F3 Res Zn NE To F3 Res Zn SE Int Wall Front"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn SE"
+   ..
+
+ResIntWall   "F3 Res Zn NE To F3 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Corridor"
+   ..
+
+ResZn   "F3 Res Zn NW"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F3 Res Zn NW Wall Left"  
+   Status = "New"
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn NW Win Left"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F3 Res Zn NW Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn NW Win Back"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResCathedralCeiling   "F3 Res Zn NW Cathedral Ceiling"  
+   Area = 1054
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntFlr   "F3 Res Zn NW To F2 Res Zn NW Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn NW"
+   ..
+
+DwellUnit   "F3 2-Bed NW"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 2-Bed NW | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 2-Bed NW | DHW Gas"  
+   DwellUnitRptName = "F3 2-Bed NW-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 2-Bed NW-(1/1)"  
+   ..
+
+ResIntWall   "F3 Res Zn NW To F3 Res Zn SW Int Wall Front"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn SW"
+   ..
+
+ResIntWall   "F3 Res Zn NW To F3 Corridor Int Wall Right"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Corridor"
+   ..
+
+ResZn   "F3 Res Zn S"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 3930
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F3 Res Zn S Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 1310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn S Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 25.686
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResCathedralCeiling   "F3 Res Zn S Cathedral Ceiling"  
+   Area = 3930
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntFlr   "F3 Res Zn S To F2 Res Zn S Int Floor"  
+   Status = "New"
+   Area = 3930
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn S"
+   ..
+
+DwellUnit   "F3 1-Bed S"  
+   DwellUnitTypeRef = "1-Bed Type"
+   Count = 2
+   CondFlrArea = 720
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 1-Bed S 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F3 1-Bed S 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 1-Bed S 1/2 | DHW Gas"  
+   DwellUnitRptName = "F3 1-Bed S-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F3 1-Bed S 2/2 | DHW Gas"  
+   DwellUnitRptName = "F3 1-Bed S-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 1-Bed S-(1/2)"  
+   ..
+
+DwellUnitRpt   "F3 1-Bed S-(2/2)"  
+   ..
+
+DwellUnit   "F3 3-Bed S"  
+   DwellUnitTypeRef = "3-Bed Type"
+   Count = 1
+   CondFlrArea = 1410
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 3-Bed S | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 3-Bed S | DHW Gas"  
+   DwellUnitRptName = "F3 3-Bed S-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 3-Bed S-(1/1)"  
+   ..
+
+DwellUnit   "F3 Studio S"  
+   DwellUnitTypeRef = "Studio Type"
+   Count = 2
+   CondFlrArea = 540
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 Studio S 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResSCSysRpt   "F3 Studio S 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 Studio S 1/2 | DHW Gas"  
+   DwellUnitRptName = "F3 Studio S-(1/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+ResDHWSysRpt   "F3 Studio S 2/2 | DHW Gas"  
+   DwellUnitRptName = "F3 Studio S-(2/2)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 Studio S-(1/2)"  
+   ..
+
+DwellUnitRpt   "F3 Studio S-(2/2)"  
+   ..
+
+ResIntWall   "F3 Res Zn S To F3 Res Zn SW Int Wall Left"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn SW"
+   ..
+
+ResIntWall   "F3 Res Zn S To F3 Res Zn SE Int Wall Right"  
+   Status = "New"
+   Area = 310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn SE"
+   ..
+
+ResZn   "F3 Res Zn SE"  
+   TreeState = 254
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F3 Res Zn SE Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn SE Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F3 Res Zn SE Wall Right"  
+   Status = "New"
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn SE Win Right"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 1.33
+   LeftFinDistL = 1
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 1.33
+   exLeftFinDistL = 1
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResCathedralCeiling   "F3 Res Zn SE Cathedral Ceiling"  
+   Area = 1054
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntFlr   "F3 Res Zn SE To F2 Res Zn SE Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn SE"
+   ..
+
+DwellUnit   "F3 2-Bed SE"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 2-Bed SE | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 2-Bed SE | DHW Gas"  
+   DwellUnitRptName = "F3 2-Bed SE-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 2-Bed SE-(1/1)"  
+   ..
+
+ResIntWall   "F3 Res Zn SE To F3 Corridor Int Wall Left"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Corridor"
+   ..
+
+ResZn   "F3 Res Zn SW"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys2Status = "New"
+   DHWSys2Verified = 0
+   FloorArea = 1054
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   ..
+
+ResExtWall   "F3 Res Zn SW Wall Front"  
+   Status = "New"
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 310
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn SW Win Front"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.078
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 27.34
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResExtWall   "F3 Res Zn SW Wall Left"  
+   Status = "New"
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 340
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "F3 Res Zn SW Win Left"  
+   Status = "New"
+   WinType = "ResidentialWindowType 1"
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Height = 5
+   Width = 3
+   Multiplier = 6.667
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 9.63
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 0
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ResCathedralCeiling   "F3 Res Zn SW Cathedral Ceiling"  
+   Area = 1054
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntFlr   "F3 Res Zn SW To F2 Res Zn SW Int Floor"  
+   Status = "New"
+   Area = 1054
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Res Zn SW"
+   ..
+
+DwellUnit   "F3 2-Bed SW"  
+   DwellUnitTypeRef = "2-Bed Type"
+   Count = 1
+   CondFlrArea = 1054
+   WasherZoneRef = "F1 Laundry"
+   DryerZoneRef = "F1 Laundry"
+   ..
+
+ResSCSysRpt   "F3 2-Bed SW | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"  
+   HtPumpSystem = "Heat Pump System - Res"
+   HVACFanRef = "HVAC Fan - Furnace"
+   HVACDistRef = "Air Distribution System - Res"
+   ..
+
+ResDHWSysRpt   "F3 2-Bed SW | DHW Gas"  
+   DwellUnitRptName = "F3 2-Bed SW-(1/1)"
+   DHWSysRef = "DHW Gas"
+   DHWHeaterRef = "Gas"
+   DHWHeaterIdx = 1
+   DHWHeaterCnt = 3
+   ..
+
+DwellUnitRpt   "F3 2-Bed SW-(1/1)"  
+   ..
+
+ResIntWall   "F3 Res Zn SW To F3 Corridor Int Wall Right"  
+   Status = "New"
+   Area = 30
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Corridor"
+   ..
+
+ResOtherZn   "F3 Corridor"  
+   Type = "Conditioned"
+   SpcFunc = "Corridor Area"
+   VentSpcFunc = "Residential - Common corridors"
+   ozHVACSystem = "F3 Corridor AirSys"
+   Area = 1444
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntFlr   "F3 Corridor To F2 Corridor Int Floor"  
+   Status = "New"
+   Area = 1444
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F2 Corridor"
+   ..
+
+ResIntWall   "F3 Corridor To F3 Res Zn S Int Wall Front"  
+   Status = "New"
+   Area = 1310
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn S"
+   ..
+
+ResCathedralCeiling   "F3 Corridor Cathedral Ceiling"  
+   Area = 1444
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntWall   "F3 Corridor To F3 Res Zn N Int Wall Left"  
+   Status = "New"
+   Area = 230
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn N"
+   ..
+
+ResIntWall   "F3 Corridor To F3 Res Zn N Int Wall Back"  
+   Status = "New"
+   Area = 1130
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn N"
+   ..
+
+ResIntWall   "F3 Corridor To F3 Res Zn N Int Wall Right"  
+   Status = "New"
+   Area = 230
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn N"
+   ..
+
+ResOtherZn   "F3 Stairs"  
+   TreeState = 254
+   Type = "Conditioned"
+   SpcFunc = "Stairwell"
+   VentSpcFunc = "Residential - Common corridors"
+   ozHVACSystem = "F3 Stairs AirSys"
+   Area = 144
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20.7
+   NumStories = 1
+   DryerFuel = "Gas"
+   ..
+
+ResIntWall   "F3 Stairs To F3 Corridor Int Wall Front"  
+   Status = "New"
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Corridor"
+   ..
+
+ResIntWall   "F3 Stairs To F3 Res Zn N Int Wall Left"  
+   Status = "New"
+   Area = 80
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn N"
+   ..
+
+ResExtWall   "F3 Stairs Wall Back"  
+   Status = "New"
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 180
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResCathedralCeiling   "F3 Stairs Cathedral Ceiling"  
+   Area = 144
+   RoofRise = 1
+   Orientation = "Front"
+   Construction = "Cathedral Ceiling"
+   RoofSolReflect = 0.63
+   ..
+
+ResIntFlr   "F3 Stairs To F2 Stairs Int Floor Hole"  
+   Status = "New"
+   Area = 144
+   FloorZ = 20.7
+   Construction = "Interior Floor"
+   IsPartySurface = 0
+   OtherSideModeled = 1
+   Outside = "F2 Stairs"
+   ..
+
+ResIntWall   "F3 Stairs To F3 Res Zn N Int Wall Right"  
+   Status = "New"
+   Area = 80
+   Construction = "IntWall Cons"
+   IsPartySurface = 1
+   OtherSideModeled = 1
+   Outside = "F3 Res Zn N"
+   ..
+
+AirSys   "F1 Business Cent AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F1 Business Center"
+   OptStart = 0
+   ..
+
+AirSeg   "F1 Business Cent SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F1 Business Cent ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F1 Business Cent HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F1 Business Cent HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F1 Business Cent HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F1 Business Cent SupFan"  
+   ..
+
+AirSeg   "F1 Business Cent RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F1 Business Cent TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F1 Business Center"
+   ..
+
+OACtrl   "F1 Business Cent OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F1 Business Cent SupAirSeg"
+   AirSegRetRef = "F1 Business Cent RetAirSeg"
+   ..
+
+AirSys   "F1 Corridor AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F1 Corridor"
+   OptStart = 0
+   ..
+
+AirSeg   "F1 Corridor SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F1 Corridor ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F1 Corridor HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F1 Corridor HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F1 Corridor HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F1 Corridor SupFan"  
+   ..
+
+AirSeg   "F1 Corridor RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F1 Corridor TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F1 Corridor"
+   ..
+
+OACtrl   "F1 Corridor OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F1 Corridor SupAirSeg"
+   AirSegRetRef = "F1 Corridor RetAirSeg"
+   ..
+
+AirSys   "F1 Fitness Cente AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F1 Fitness Center"
+   OptStart = 0
+   ..
+
+AirSeg   "F1 Fitness Cente SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F1 Fitness Cente ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F1 Fitness Cente HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F1 Fitness Cente HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F1 Fitness Cente HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F1 Fitness Cente SupFan"  
+   ..
+
+AirSeg   "F1 Fitness Cente RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F1 Fitness Cente TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F1 Fitness Center"
+   ..
+
+OACtrl   "F1 Fitness Cente OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F1 Fitness Cente SupAirSeg"
+   AirSegRetRef = "F1 Fitness Cente RetAirSeg"
+   ..
+
+AirSys   "F1 Laundry AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F1 Laundry"
+   OptStart = 0
+   ..
+
+AirSeg   "F1 Laundry SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F1 Laundry ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F1 Laundry HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F1 Laundry HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F1 Laundry HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F1 Laundry SupFan"  
+   ..
+
+AirSeg   "F1 Laundry RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F1 Laundry TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F1 Laundry"
+   ..
+
+OACtrl   "F1 Laundry OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F1 Laundry SupAirSeg"
+   AirSegRetRef = "F1 Laundry RetAirSeg"
+   ..
+
+AirSys   "F1 Leasing Offic AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F1 Leasing Office"
+   OptStart = 0
+   ..
+
+AirSeg   "F1 Leasing Offic SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F1 Leasing Offic ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F1 Leasing Offic HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F1 Leasing Offic HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F1 Leasing Offic HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F1 Leasing Offic SupFan"  
+   ..
+
+AirSeg   "F1 Leasing Offic RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F1 Leasing Offic TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F1 Leasing Office"
+   ..
+
+OACtrl   "F1 Leasing Offic OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F1 Leasing Offic SupAirSeg"
+   AirSegRetRef = "F1 Leasing Offic RetAirSeg"
+   ..
+
+AirSys   "F1 Lobby AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F1 Lobby"
+   OptStart = 0
+   ..
+
+AirSeg   "F1 Lobby SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F1 Lobby ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F1 Lobby HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F1 Lobby HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F1 Lobby HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F1 Lobby SupFan"  
+   ..
+
+AirSeg   "F1 Lobby RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F1 Lobby TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F1 Lobby"
+   ..
+
+OACtrl   "F1 Lobby OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F1 Lobby SupAirSeg"
+   AirSegRetRef = "F1 Lobby RetAirSeg"
+   ..
+
+AirSys   "F1 Stairs AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F1 Stairs"
+   OptStart = 0
+   ..
+
+AirSeg   "F1 Stairs SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F1 Stairs ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F1 Stairs HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F1 Stairs HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F1 Stairs HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F1 Stairs SupFan"  
+   ..
+
+AirSeg   "F1 Stairs RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F1 Stairs TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F1 Stairs"
+   ..
+
+OACtrl   "F1 Stairs OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F1 Stairs SupAirSeg"
+   AirSegRetRef = "F1 Stairs RetAirSeg"
+   ..
+
+AirSys   "F2 Corridor AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F2 Corridor"
+   OptStart = 0
+   ..
+
+AirSeg   "F2 Corridor SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F2 Corridor ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F2 Corridor HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F2 Corridor HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F2 Corridor HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F2 Corridor SupFan"  
+   ..
+
+AirSeg   "F2 Corridor RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F2 Corridor TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F2 Corridor"
+   ..
+
+OACtrl   "F2 Corridor OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F2 Corridor SupAirSeg"
+   AirSegRetRef = "F2 Corridor RetAirSeg"
+   ..
+
+AirSys   "F2 Stairs AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F2 Stairs"
+   OptStart = 0
+   ..
+
+AirSeg   "F2 Stairs SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F2 Stairs ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F2 Stairs HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F2 Stairs HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F2 Stairs HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F2 Stairs SupFan"  
+   ..
+
+AirSeg   "F2 Stairs RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F2 Stairs TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F2 Stairs"
+   ..
+
+OACtrl   "F2 Stairs OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F2 Stairs SupAirSeg"
+   AirSegRetRef = "F2 Stairs RetAirSeg"
+   ..
+
+AirSys   "F3 Corridor AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F3 Corridor"
+   OptStart = 0
+   ..
+
+AirSeg   "F3 Corridor SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F3 Corridor ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F3 Corridor HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F3 Corridor HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F3 Corridor HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F3 Corridor SupFan"  
+   ..
+
+AirSeg   "F3 Corridor RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F3 Corridor TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F3 Corridor"
+   ..
+
+OACtrl   "F3 Corridor OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F3 Corridor SupAirSeg"
+   AirSegRetRef = "F3 Corridor RetAirSeg"
+   ..
+
+AirSys   "F3 Stairs AirSys"  
+   Type = "SZHP"
+   ResHVACAutoSizing = 1
+   CtrlZnRef = "F3 Stairs"
+   OptStart = 0
+   ..
+
+AirSeg   "F3 Stairs SupAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "F3 Stairs ClgCoil"  
+   Type = "DirectExpansion"
+   DXSEER = 14
+   ..
+
+CoilHtg   "F3 Stairs HtgCoil"  
+   Type = "HeatPump"
+   HtPumpHSPF = 8.2
+   HtPumpSuppCoilHtgRef = "F3 Stairs HPSuppHtgCoil"
+   ..
+
+CoilHtg   "F3 Stairs HPSuppHtgCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "F3 Stairs SupFan"  
+   ..
+
+AirSeg   "F3 Stairs RetAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "F3 Stairs TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "F3 Stairs"
+   ..
+
+OACtrl   "F3 Stairs OACtrl"  
+   EconoCtrlMthd = "NoEconomizer"
+   AirSegSupRef = "F3 Stairs SupAirSeg"
+   AirSegRetRef = "F3 Stairs RetAirSeg"
+   ..
+
+PVArray   "PV Array"  
+   DCSysSize = 79.4
+   CalFlexibleInstallOpt = "CFI1"
+   ..
+
+EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"  
+   Title1[2] = "Proposed"
+   Title1[3] = "Proposed"
+   Title1[4] = "Proposed"
+   Title1[5] = "Standard"
+   Title1[6] = "Standard"
+   Title1[7] = "Standard"
+   Title1[8] = "Compliance"
+   Title1[11] = "Proposed"
+   Title1[12] = "Standard"
+   Title1[13] = "Compliance"
+   Title1[17] = "Prop Design"
+   Title1[18] = "Prop Design"
+   Title1[19] = "Prop Design"
+   Title1[20] = "Std Design"
+   Title1[21] = "Std Design"
+   Title1[22] = "Std Design"
+   Title1[23] = "CO2"
+   Title2[2] = "Design"
+   Title2[3] = "Design"
+   Title2[4] = "Design TDV"
+   Title2[5] = "Design"
+   Title2[6] = "Design"
+   Title2[7] = "Design TDV"
+   Title2[8] = "TDV Margin"
+   Title2[11] = "Source Energy"
+   Title2[12] = "Source Energy"
+   Title2[13] = "Src Margin"
+   Title2[17] = "Electric CO2"
+   Title2[18] = "Fuel CO2"
+   Title2[19] = "Total CO2"
+   Title2[20] = "Electric CO2"
+   Title2[21] = "Fuel CO2"
+   Title2[22] = "Total CO2"
+   Title2[23] = "Emissions"
+   Title3[1] = "End Use"
+   Title3[2] = "Site (MWh)"
+   Title3[3] = "Site (MBtu)"
+   Title3[4] = "(kBtu/ft²-yr)"
+   Title3[5] = "Site (MWh)"
+   Title3[6] = "Site (MBtu)"
+   Title3[7] = "(kBtu/ft²-yr)"
+   Title3[8] = "(kBtu/ft²-yr)"
+   Title3[11] = "(kBtu/ft²-yr)"
+   Title3[12] = "(kBtu/ft²-yr)"
+   Title3[13] = "(kBtu/ft²-yr)"
+   Title3[17] = "Emis. (tonne)"
+   Title3[18] = "Emis. (tonne)"
+   Title3[19] = "Emis. (tonne)"
+   Title3[20] = "Emis. (tonne)"
+   Title3[21] = "Emis. (tonne)"
+   Title3[22] = "Emis. (tonne)"
+   Title3[23] = "Margin (tonne)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "8.4"
+   Enduse1[3] = "--"
+   Enduse1[4] = "6.25"
+   Enduse1[5] = "8.4"
+   Enduse1[6] = "--"
+   Enduse1[7] = "6.25"
+   Enduse1[8] = "--"
+   Enduse1[9] = "--"
+   Enduse1[10] = "--"
+   Enduse1[11] = "0.86"
+   Enduse1[12] = "0.86"
+   Enduse1[13] = "--"
+   Enduse1[17] = "2.07"
+   Enduse1[19] = "2.07"
+   Enduse1[20] = "2.07"
+   Enduse1[22] = "2.07"
+   Enduse1[23] = "0.00"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "25.9"
+   Enduse2[3] = "--"
+   Enduse2[4] = "29.25"
+   Enduse2[5] = "25.9"
+   Enduse2[6] = "--"
+   Enduse2[7] = "29.25"
+   Enduse2[8] = "--"
+   Enduse2[9] = "14.6"
+   Enduse2[10] = "14.6"
+   Enduse2[11] = "1.31"
+   Enduse2[12] = "1.31"
+   Enduse2[13] = "--"
+   Enduse2[17] = "3.17"
+   Enduse2[19] = "3.17"
+   Enduse2[20] = "3.17"
+   Enduse2[22] = "3.17"
+   Enduse2[23] = "0.00"
+   Enduse3[1] = "Indoor Fans"
+   Enduse3[2] = "28.7"
+   Enduse3[3] = "--"
+   Enduse3[4] = "21.29"
+   Enduse3[5] = "28.7"
+   Enduse3[6] = "--"
+   Enduse3[7] = "21.28"
+   Enduse3[8] = "-0.01"
+   Enduse3[9] = "4.9"
+   Enduse3[10] = "4.9"
+   Enduse3[11] = "1.82"
+   Enduse3[12] = "1.82"
+   Enduse3[13] = "--"
+   Enduse3[17] = "4.39"
+   Enduse3[19] = "4.39"
+   Enduse3[20] = "4.39"
+   Enduse3[22] = "4.39"
+   Enduse3[23] = "0.00"
+   Enduse4[1] = "Heat Rejection"
+   Enduse4[2] = "--"
+   Enduse4[3] = "--"
+   Enduse4[4] = "--"
+   Enduse4[5] = "--"
+   Enduse4[6] = "--"
+   Enduse4[7] = "--"
+   Enduse4[8] = "--"
+   Enduse4[9] = "--"
+   Enduse4[10] = "--"
+   Enduse4[11] = "--"
+   Enduse4[12] = "--"
+   Enduse4[13] = "--"
+   Enduse4[23] = "0.00"
+   Enduse5[1] = "Pumps & Misc."
+   Enduse5[2] = "3.3"
+   Enduse5[3] = "--"
+   Enduse5[4] = "2.43"
+   Enduse5[5] = "3.3"
+   Enduse5[6] = "--"
+   Enduse5[7] = "2.43"
+   Enduse5[8] = "--"
+   Enduse5[9] = "--"
+   Enduse5[10] = "--"
+   Enduse5[11] = "0.32"
+   Enduse5[12] = "0.32"
+   Enduse5[13] = "--"
+   Enduse5[17] = "0.78"
+   Enduse5[19] = "0.78"
+   Enduse5[20] = "0.78"
+   Enduse5[22] = "0.78"
+   Enduse5[23] = "0.00"
+   Enduse6[1] = "Domestic Hot Water"
+   Enduse6[2] = "0.4"
+   Enduse6[3] = "319.9"
+   Enduse6[4] = "29.35"
+   Enduse6[5] = "0.4"
+   Enduse6[6] = "322.9"
+   Enduse6[7] = "29.61"
+   Enduse6[8] = "0.26"
+   Enduse6[9] = "0.0"
+   Enduse6[10] = "0.0"
+   Enduse6[11] = "7.15"
+   Enduse6[12] = "7.22"
+   Enduse6[13] = "0.07"
+   Enduse6[17] = "0.04"
+   Enduse6[19] = "0.04"
+   Enduse6[20] = "0.04"
+   Enduse6[22] = "0.04"
+   Enduse6[23] = "0.00"
+   Enduse7[1] = "Indoor Lighting"
+   Enduse7[2] = "22.9"
+   Enduse7[3] = "--"
+   Enduse7[4] = "15.71"
+   Enduse7[5] = "22.9"
+   Enduse7[6] = "--"
+   Enduse7[7] = "15.71"
+   Enduse7[8] = "--"
+   Enduse7[9] = "2.7"
+   Enduse7[10] = "2.7"
+   Enduse7[11] = "1.44"
+   Enduse7[12] = "1.44"
+   Enduse7[13] = "--"
+   Enduse7[17] = "3.48"
+   Enduse7[19] = "3.48"
+   Enduse7[20] = "3.48"
+   Enduse7[22] = "3.48"
+   Enduse7[23] = "0.00"
+   Enduse8[1] = "Total Compliance"
+   Enduse8[2] = "-31.1"
+   Enduse8[3] = "319.9"
+   Enduse8[4] = "44.04"
+   Enduse8[5] = "-31.1"
+   Enduse8[6] = "322.9"
+   Enduse8[7] = "44.28"
+   Enduse8[8] = "0.24"
+   Enduse8[9] = "19.4"
+   Enduse8[10] = "19.4"
+   Enduse8[11] = "11.21"
+   Enduse8[12] = "11.28"
+   Enduse8[13] = "0.07"
+   Enduse8[17] = "8.56"
+   Enduse8[19] = "8.56"
+   Enduse8[20] = "8.56"
+   Enduse8[22] = "8.56"
+   Enduse8[23] = "0.00"
+   Enduse9[1] = "Receptacle"
+   Enduse9[2] = "59.8"
+   Enduse9[3] = "--"
+   Enduse9[4] = "42.52"
+   Enduse9[5] = "59.8"
+   Enduse9[6] = "--"
+   Enduse9[7] = "42.52"
+   Enduse9[8] = "--"
+   Enduse9[9] = "9.1"
+   Enduse9[10] = "9.1"
+   Enduse9[11] = "4.00"
+   Enduse9[12] = "4.00"
+   Enduse9[13] = "--"
+   Enduse9[17] = "9.68"
+   Enduse9[19] = "9.68"
+   Enduse9[20] = "9.68"
+   Enduse9[22] = "9.68"
+   Enduse9[23] = "0.00"
+   Enduse10[1] = "Process"
+   Enduse10[2] = "26.0"
+   Enduse10[3] = "135.0"
+   Enduse10[4] = "30.13"
+   Enduse10[5] = "26.0"
+   Enduse10[6] = "135.0"
+   Enduse10[7] = "30.13"
+   Enduse10[8] = "--"
+   Enduse10[9] = "3.9"
+   Enduse10[10] = "3.9"
+   Enduse10[11] = "4.58"
+   Enduse10[12] = "4.58"
+   Enduse10[13] = "--"
+   Enduse10[17] = "3.80"
+   Enduse10[19] = "3.80"
+   Enduse10[20] = "3.80"
+   Enduse10[22] = "3.80"
+   Enduse10[23] = "0.00"
+   Enduse11[1] = "Other Ltg"
+   Enduse11[2] = "9.4"
+   Enduse11[3] = "--"
+   Enduse11[4] = "7.40"
+   Enduse11[5] = "9.4"
+   Enduse11[6] = "--"
+   Enduse11[7] = "7.40"
+   Enduse11[8] = "--"
+   Enduse11[9] = "2.5"
+   Enduse11[10] = "2.5"
+   Enduse11[11] = "0.74"
+   Enduse11[12] = "0.74"
+   Enduse11[13] = "--"
+   Enduse11[17] = "1.80"
+   Enduse11[19] = "1.80"
+   Enduse11[20] = "1.80"
+   Enduse11[22] = "1.80"
+   Enduse11[23] = "0.00"
+   Enduse12[1] = "Process Motors"
+   Enduse12[2] = "--"
+   Enduse12[3] = "--"
+   Enduse12[4] = "--"
+   Enduse12[5] = "--"
+   Enduse12[6] = "--"
+   Enduse12[7] = "--"
+   Enduse12[8] = "--"
+   Enduse12[9] = "--"
+   Enduse12[10] = "--"
+   Enduse12[11] = "--"
+   Enduse12[12] = "--"
+   Enduse12[13] = "--"
+   Enduse12[23] = "0.00"
+   Enduse13[1] = "Photovoltaics"
+   Enduse13[2] = "-120.7"
+   Enduse13[3] = "--"
+   Enduse13[4] = "-60.24"
+   Enduse13[5] = "-120.7"
+   Enduse13[6] = "--"
+   Enduse13[7] = "-60.25"
+   Enduse13[8] = "-0.01"
+   Enduse13[9] = "-2.8"
+   Enduse13[10] = "-2.8"
+   Enduse13[11] = "-1.69"
+   Enduse13[12] = "-1.69"
+   Enduse13[13] = "--"
+   Enduse13[17] = "-5.37"
+   Enduse13[19] = "-5.37"
+   Enduse13[20] = "-5.37"
+   Enduse13[22] = "-5.37"
+   Enduse13[23] = "0.00"
+   Enduse14[1] = "Battery"
+   Enduse14[2] = "--"
+   Enduse14[3] = "--"
+   Enduse14[4] = "--"
+   Enduse14[5] = "--"
+   Enduse14[6] = "--"
+   Enduse14[7] = "--"
+   Enduse14[8] = "--"
+   Enduse14[9] = "--"
+   Enduse14[10] = "--"
+   Enduse14[11] = "--"
+   Enduse14[12] = "--"
+   Enduse14[13] = "--"
+   Enduse14[23] = "0.00"
+   Enduse15[1] = "TOTAL"
+   Enduse15[2] = "64.1"
+   Enduse15[3] = "454.9"
+   Enduse15[4] = "124.09"
+   Enduse15[5] = "64.1"
+   Enduse15[6] = "457.9"
+   Enduse15[7] = "124.33"
+   Enduse15[8] = "0.24"
+   Enduse15[9] = "34.9"
+   Enduse15[10] = "34.9"
+   Enduse15[11] = "20.53"
+   Enduse15[12] = "20.60"
+   Enduse15[13] = "0.07"
+   Enduse15[17] = "23.84"
+   Enduse15[19] = "23.84"
+   Enduse15[20] = "23.84"
+   Enduse15[22] = "23.84"
+   Enduse15[23] = "0.00"
+   Enduse16[1] = "Efficiency Compliance"
+   Enduse16[2] = "89.6"
+   Enduse16[3] = "319.9"
+   Enduse16[4] = "104.28"
+   Enduse16[5] = "89.6"
+   Enduse16[6] = "322.9"
+   Enduse16[7] = "104.53"
+   Enduse16[8] = "0.25"
+   Enduse16[9] = "22.2"
+   Enduse16[10] = "22.2"
+   Enduse16[11] = "12.90"
+   Enduse16[12] = "12.97"
+   Enduse16[13] = "0.07"
+   Enduse16[17] = "13.93"
+   Enduse16[19] = "13.93"
+   Enduse16[20] = "13.93"
+   Enduse16[22] = "13.93"
+   Enduse16[23] = "0.00"
+   ZoneUMLHsLoaded = ( 0, 0 )
+   SimSummary[1] = "CSE Successful"
+   SimSummary[3] = "CSE Successful"
+   PassFail = "PASS"
+   MetricPassFail[1] = "Pass"
+   MetricPassFail[2] = "Pass"
+   MetricPassFail[3] = "Pass"
+   ComplyMessage = "COMPLIES"
+   StdPVBatteryMsg = "Standard Design PV Capacity: 79.4 kWdc  /  (no battery)"
+   PctSavingsTDV = 0.193035
+   PctSavingsEffTDV = 0.239166
+   PctSavingsCmpTDV = 0.542005
+   PctSavTDVLbl = "0.2"
+   PctSavEffTDVLbl = "0.2"
+   PctSavCmpTDVLbl = "0.5"
+   PctSavingsSrc = 0.339806
+   PctSavingsEffSrc = 0.539707
+   PctSavingsCmpSrc = 0.620567
+   PctSavSrcLbl = "0.3"
+   PctSavEffSrcLbl = "0.5"
+   PctSavCmpSrcLbl = "0.6"
+   MarginkW = 0
+   PVBattResultsValid = 1
+   PropDHWNames_SSF[1] = "DHWSolarSystem 1"
+   PropDHW_SSF[1] = 0.358
+   StdDHW_SSF = 0.351
+   DHW_SSF_Summary = ( "DHW SSF:", "0.36 Prop", "0.35 Std" )
+   PropPV_Total = 120717
+   PropPV_Export = 52334.4
+   PropPV_PctExport = 43.3531
+   StdPV_Total = 120744
+   StdPV_Export = 52365.6
+   StdPV_PctExport = 43.3691
+   ..
+
+ResConsAssm   "Exterior Wall Cons"  
+   TreeState = 254
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 21"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- specify R-value -"
+   SheathInsulLayerRVal = 4
+   WallExtFinishLayer = "Synthetic Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+ResConsAssm   "IntWall Cons"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation (vertical) -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+ResConsAssm   "Interior Floor"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x12 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+ResConsAssm   "Cathedral Ceiling"  
+   CanAssignTo = "Cathedral Ceilings"
+   RoofingLayer = "5 PSF (Normal Gravel)"
+   AbvDeckInsulLayer = "- no insulation -"
+   CavityLayer = "R 38"
+   FrameLayer = "2x12 @ 24 in. O.C."
+   ..
+
+ResConsAssm   "Interior Floor above Unconditioned"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+ResConsAssm   "Interior Wall adjacent Unconditioned"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 11"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+ResMat   "SoftWood"  
+   Density = 35
+   SpecHeat = 0.39
+   Conductivity = 0.08167
+   ConductivityCT = 0.0012
+   RValPerInch = 1.0204
+   ..
+
+ResMat   "Steel"  
+   Density = 489
+   SpecHeat = 0.12
+   Conductivity = 26.2
+   RValPerInch = 0.00318
+   ..
+
+ResMat   "SIPSskin"  
+   Thickness = 0.4375
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+ResMat   "Ceiling Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Other Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Gypsum Board"  
+   Thickness = 0.5
+   Density = 40
+   SpecHeat = 0.27
+   Conductivity = 0.09167
+   ConductivityCT = 0.0001217
+   RValPerInch = 0.9091
+   ..
+
+ResMat   "Insul-R4-D1.5-SH0.35-C0.02083"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.0208325
+   ConductivityQII = 0.0208325
+   ConductivityCT = 0.00175
+   ..
+
+ResMat   "Synthetic Stucco"  
+   Thickness = 0.375
+   Density = 58
+   SpecHeat = 0.2
+   Conductivity = 0.2
+   RValPerInch = 0.5333
+   ..
+
+ResMat   "Carpet"  
+   Thickness = 0.5
+   Density = 12.3
+   SpecHeat = 0.34
+   Conductivity = 0.02
+   RValPerInch = 4.1667
+   ..
+
+ResMat   "Wood layer"  
+   Thickness = 0.5
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+ResMat   "5 PSF Roof"  
+   Thickness = 0.5
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+ResMat   "TileGap"  
+   Thickness = 0.75
+   Density = 0.075
+   SpecHeat = 0.24
+   Conductivity = 0.07353
+   RValPerInch = 1.1333
+   ..
+
+ResMat   "10 PSF Roof"  
+   Thickness = 1
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+ResMat   "VertWallCavity"  
+   Thickness = 3.5
+   Density = 0.075
+   SpecHeat = 0.24
+   Conductivity = 0.314
+   ConductivityCT = 0.00397
+   RValPerInch = 1.1333
+   ..
+
+ResMat   "3 Coat Stucco"  
+   Thickness = 0.875
+   Density = 116
+   SpecHeat = 0.2
+   Conductivity = 0.4167
+   RValPerInch = 0.2686
+   ..
+
+ResMat   "Ins-R21-D1.5-SH0.2-C0.02183"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0218254
+   ConductivityQII = 0.0218254
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R9.1-D1.5-SH0.2-C0.03205"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0320513
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R13-D1.5-SH0.2-C0.02244"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0224376
+   ConductivityQII = 0.0224376
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "FrameGap"  
+   Density = 0
+   SpecHeat = 0
+   Conductivity = 200
+   RValPerInch = 0.000417
+   ..
+
+ResMat   "Ins-R18-D1.5-SH0.2-C0.0162"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0162037
+   ConductivityQII = 0.0162037
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R18-D1.5-SH0.2-C0.02546"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.025463
+   ConductivityQII = 0.025463
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Concrete"  
+   Density = 144
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+ResMat   "Light Roof"  
+   Thickness = 0.2
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+ResMat   "Ins-R18-D1.5-SH0.2-C0.02546 24"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.025463
+   ConductivityQII = 0.025463
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R38-D1.5-SH0.2-C0.01206"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0120614
+   ConductivityQII = 0.0120614
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R38-D1.5-SH0.2-C0.02467"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0246711
+   ConductivityQII = 0.0246711
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Insul-R2-D1.5-SH0.35-C0.04167"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.041665
+   ConductivityQII = 0.041665
+   ConductivityCT = 0.00175
+   ..
+
+ResMat   "Ins-R37-D1.5-SH0.2-C0.02534"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0253378
+   ConductivityQII = 0.0253378
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R35-D1.5-SH0.2-C0.02679"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0267857
+   ConductivityQII = 0.0267857
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R30-D1.5-SH0.2-C0.03125"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.03125
+   ConductivityQII = 0.03125
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R30-D1.5-SH0.2-C0.02014"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0201389
+   ConductivityQII = 0.0201389
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R25-D1.5-SH0.2-C0.02417"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0241667
+   ConductivityQII = 0.0241667
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R30-D1.5-SH0.2-C0.02569"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0256944
+   ConductivityQII = 0.0256944
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R28-D1.5-SH0.2-C0.02753"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0275298
+   ConductivityQII = 0.0275298
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R28-D1.5-SH0.2-C0.02158"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0215774
+   ConductivityQII = 0.0215774
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R37-D1.5-SH0.2-C0.02083"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0208333
+   ConductivityQII = 0.0208333
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R21-D1.5-SH0.2-C0.01389"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0138889
+   ConductivityQII = 0.0138889
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R15-D1.5-SH0.2-C0.01944"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0194444
+   ConductivityQII = 0.0194444
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R14-D1.5-SH0.2-C0.03274"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0327381
+   ConductivityQII = 0.0327381
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R15-D1.5-SH0.2-C0.03056"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0305556
+   ConductivityQII = 0.0305556
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Insul-R3-D1.5-SH0.35-C0.02778"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.0277767
+   ConductivityQII = 0.0277767
+   ConductivityCT = 0.00175
+   ..
+
+ResMat   "Ins-R25-D1.5-SH0.2-C0.0375"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0375
+   ConductivityQII = 0.0375
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R25-D1.5-SH0.2-C0.03083"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0308333
+   ConductivityQII = 0.0308333
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Insul-R0.07-D1.5-SH0.35-C1.19043"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 1.19043
+   ConductivityQII = 1.19043
+   ConductivityCT = 0.00175
+   ..
+
+ResMat   "Ins-R15-D1.5-SH0.2-C0.04028"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0402778
+   ConductivityQII = 0.0402778
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R15-D1.5-SH0.2-C0.05139"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0513889
+   ConductivityQII = 0.0513889
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R15-D1.5-SH0.2-C0.0625"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0625
+   ConductivityQII = 0.0625
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R38-D1.5-SH0.2-C0.0159"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0158991
+   ConductivityQII = 0.0158991
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Ins-R21-D1.5-SH0.2-C0.04464"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0446429
+   ConductivityQII = 0.0446429
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R21-D1.5-SH0.2-C0.02877"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0287698
+   ConductivityQII = 0.0287698
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R21-D1.5-SH0.2-C0.03671"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0367063
+   ConductivityQII = 0.0367063
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R11-D1.5-SH0.2-C0.02652"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0265152
+   ConductivityQII = 0.0265152
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R19-D1.5-SH0.2-C0.04934"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0493421
+   ConductivityQII = 0.0493421
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R18-D1.5-SH0.2-C0.05208"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0520833
+   ConductivityQII = 0.0520833
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R11-D1.5-SH0.2-C0.04167"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0416667
+   ConductivityQII = 0.0416667
+   ConductivityCT = 0.0032537
+   ..
+
+ResWinType   "ResidentialWindowType 1"  
+   ..
+
+ResWinType   "Glass Door"  
+   SpecMethod = "Overall Window Area"
+   Area = 20
+   Height = 4.47214
+   Width = 4.47214
+   ModelFinsOverhang = 0
+   OverhangDepth = 0
+   OverhangDistUp = 0
+   OverhangExL = 0
+   OverhangExR = 0
+   OverhangFlap = 0
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   ..
+
+DwellUnitType   "1-Bed Type"  
+   NumBedrooms = 1
+   CondFlrArea = 720
+   WasherOption = "Central"
+   DryerOption = "Central"
+   DryerFuel = "Gas"
+   CookFuel = "Gas"
+   IAQOption = "Individual IAQ Fans"
+   IAQFanRef[1] = "1-Bed IAQ Fan"
+   IAQFanCnt = ( 1, 1, 1, 1 )
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   NumHeatEquipTypes = 1
+   HVACHeatRef[1] = "Heating Component - Res"
+   HeatEquipCount[1] = 1
+   NumCoolEquipTypes = 1
+   HVACCoolRef[1] = "Cooling Component - Res"
+   CoolEquipCount[1] = 1
+   NumHtPumpEquipTypes = 1
+   HVACHtPumpRef[1] = "Heat Pump System - Res"
+   HtPumpEquipCount[1] = 1
+   HVACFanRef = "HVAC Fan - Heat Pump"
+   HVACDistRef = "Air Distribution System - Res"
+   NumDHWSysTypes = 1
+   DHWSysRef[1] = "DHW Gas"
+   TotShowersServed[1] = 1
+   TotBathsServed[1] = 1
+   CompactDistrib = "not compact"
+   ServesAsDHWHtr = 0
+   DHWSystemType = "Standard"
+   DHWAmbientCond = "Unconditioned"
+   DHWSolFracType = "- none -"
+   SCSysRptRef[1] = "F3 1-Bed S 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"
+   SCSysRptRef[2] = "F3 1-Bed S 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"
+   SCSysRptCount[1] = 1
+   SCSysRptCount[2] = 1
+   ..
+
+DwellUnitType   "2-Bed Type"  
+   NumBedrooms = 2
+   CondFlrArea = 1054
+   WasherOption = "Central"
+   DryerOption = "Central"
+   DryerFuel = "Gas"
+   CookFuel = "Gas"
+   IAQOption = "Individual IAQ Fans"
+   IAQFanRef[1] = "2-Bed IAQ Fan"
+   IAQFanCnt = ( 1, 1, 1, 1 )
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   NumHeatEquipTypes = 1
+   HVACHeatRef[1] = "Heating Component - Res"
+   HeatEquipCount[1] = 1
+   NumCoolEquipTypes = 1
+   HVACCoolRef[1] = "Cooling Component - Res"
+   CoolEquipCount[1] = 1
+   NumHtPumpEquipTypes = 1
+   HVACHtPumpRef[1] = "Heat Pump System - Res"
+   HtPumpEquipCount[1] = 1
+   HVACFanRef = "HVAC Fan - Heat Pump"
+   HVACDistRef = "Air Distribution System - Res"
+   NumDHWSysTypes = 1
+   DHWSysRef[1] = "DHW Gas"
+   TotShowersServed[1] = 1
+   TotBathsServed[1] = 1
+   CompactDistrib = "Expanded Credit (HERS req'd)"
+   CDNumFloorsServed = 1
+   UsrSpecCmpctDist = 1
+   UsrCompactFactor = 0.6
+   UserSpecCmpctDist[1] = 1
+   UserCompactFactor[1] = 0.6
+   CDServesMBathFix[1] = 1
+   CDServesKitFix[1] = 1
+   CDServesThirdFix[1] = 1
+   ServesAsDHWHtr = 0
+   DHWSystemType = "Standard"
+   DHWAmbientCond = "Unconditioned"
+   DHWSolFracType = "- none -"
+   SCSysRptRef[1] = "F3 2-Bed SW | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"
+   SCSysRptCount[1] = 1
+   ..
+
+DwellUnitType   "3-Bed Type"  
+   NumBedrooms = 3
+   CondFlrArea = 1410
+   WasherOption = "Central"
+   DryerOption = "Central"
+   DryerFuel = "Gas"
+   CookFuel = "Gas"
+   IAQOption = "Individual IAQ Fans"
+   IAQFanRef[1] = "3-Bed IAQ Fan"
+   IAQFanCnt = ( 1, 1, 1, 1 )
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   NumHeatEquipTypes = 1
+   HVACHeatRef[1] = "Heating Component - Res"
+   HeatEquipCount[1] = 1
+   NumCoolEquipTypes = 1
+   HVACCoolRef[1] = "Cooling Component - Res"
+   CoolEquipCount[1] = 1
+   NumHtPumpEquipTypes = 1
+   HVACHtPumpRef[1] = "Heat Pump System - Res"
+   HtPumpEquipCount[1] = 1
+   HVACFanRef = "HVAC Fan - Heat Pump"
+   HVACDistRef = "Air Distribution System - Res"
+   NumDHWSysTypes = 1
+   DHWSysRef[1] = "DHW Gas"
+   TotShowersServed[1] = 1
+   TotBathsServed[1] = 1
+   CompactDistrib = "Expanded Credit (HERS req'd)"
+   CDNumFloorsServed = 1
+   UsrSpecCmpctDist = 1
+   UsrCompactFactor = 0.6
+   UserSpecCmpctDist[1] = 1
+   UserCompactFactor[1] = 0.6
+   CDServesMBathFix[1] = 1
+   CDServesKitFix[1] = 1
+   CDServesThirdFix[1] = 1
+   ServesAsDHWHtr = 0
+   DHWSystemType = "Standard"
+   DHWAmbientCond = "Unconditioned"
+   DHWSolFracType = "- none -"
+   SCSysRptRef[1] = "F3 3-Bed S | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"
+   SCSysRptCount[1] = 1
+   ..
+
+DwellUnitType   "Studio Type"  
+   NumBedrooms = 0
+   CondFlrArea = 540
+   WasherOption = "Central"
+   DryerOption = "Central"
+   DryerFuel = "Gas"
+   CookFuel = "Gas"
+   IAQOption = "Individual IAQ Fans"
+   IAQFanRef[1] = "Studio IAQ Fan"
+   IAQFanCnt = ( 1, 1, 1, 1 )
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   NumHeatEquipTypes = 1
+   HVACHeatRef[1] = "Heating Component - Res"
+   HeatEquipCount[1] = 1
+   NumCoolEquipTypes = 1
+   HVACCoolRef[1] = "Cooling Component - Res"
+   CoolEquipCount[1] = 1
+   NumHtPumpEquipTypes = 1
+   HVACHtPumpRef[1] = "Heat Pump System - Res"
+   HtPumpEquipCount[1] = 1
+   HVACFanRef = "HVAC Fan - Heat Pump"
+   HVACDistRef = "Air Distribution System - Res"
+   NumDHWSysTypes = 1
+   DHWSysRef[1] = "DHW Gas"
+   TotShowersServed[1] = 1
+   TotBathsServed[1] = 1
+   CompactDistrib = "Expanded Credit (HERS req'd)"
+   CDNumFloorsServed = 1
+   UsrSpecCmpctDist = 1
+   UsrCompactFactor = 0.6
+   UserSpecCmpctDist[1] = 1
+   UserCompactFactor[1] = 0.6
+   CDServesMBathFix[1] = 1
+   CDServesKitFix[1] = 1
+   CDServesThirdFix[1] = 1
+   ServesAsDHWHtr = 0
+   DHWSystemType = "Standard"
+   DHWAmbientCond = "Unconditioned"
+   DHWSolFracType = "- none -"
+   SCSysRptRef[1] = "F3 Studio S 1/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"
+   SCSysRptRef[2] = "F3 Studio S 2/2 | :Heat Pump System - Res:Air Distribution System - Res:HVAC Fan - Furnace:2:3"
+   SCSysRptCount[1] = 1
+   SCSysRptCount[2] = 1
+   ..
+
+ResHtgSys   "Heating Component - Res"  
+   Type = "CntrlFurnace - Fuel-fired central furnace"
+   AFUE = 80
+   AutoSize = 1
+   ..
+
+ResClgSys   "Cooling Component - Res"  
+   Type = "SplitAirCond - Split air conditioning system"
+   SEER = 14
+   EER = 11.7
+   CFMperTon = 350
+   ACCharge = "Verified"
+   RefrigerantType = "R410A"
+   AutoSize = 1
+   UseEERinAnalysis = 1
+   IsMultiSpeed = 0
+   IsZonal = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System - Res"  
+   Type = "SplitHeatPump - Central split heat pump"
+   HSPF = 8.2
+   AutoSize = 1
+   Cap47 = 24000
+   Cap17 = 12000
+   SEER = 14
+   EER = 11.7
+   CFMperTon = 350
+   RefrigerantType = "R410A"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   VCHPDucts = "Unducted"
+   HtgSizingFactor = 0.75
+   HERSHtPumpRef = "HeatpumpSystem-Res-hers-htpump"
+   ..
+
+ResDistSys   "Air Distribution System - Res"  
+   Type = "Ducts located entirely in conditioned space"
+   Status = "New"
+   DefaultSystem = 1
+   HasBypassDuct = 0
+   HERSCheck = "AirDistributionSystem-Res-hers-dist"
+   IsLessThanFortyFt = 0
+   ..
+
+ResFanSys   "HVAC Fan - Heat Pump"  
+   Type = "Single Speed Fan"
+   DefaultSystem = 0
+   WperCFMCool = 0.45
+   HERSCheck = "HVACFan-HeatPump-hers-fan"
+   ..
+
+ResFanSys   "HVAC Fan - Furnace"  
+   Type = "Single Speed Fan"
+   DefaultSystem = 0
+   WperCFMCool = 0.45
+   HERSCheck = "HVAC Fan - Furnace-hers-fan"
+   ..
+
+ResIAQFan   "2-Bed IAQ Fan"  
+   IAQCFM = 54.14
+   WperCFMIAQ = 0.6
+   IAQFanType = "Balanced"
+   IncludesRecov = 1
+   SensRecovEff = 67
+   AdjSensRecovEff = 72
+   SetPerfByHVIInterp = 0
+   ..
+
+ResIAQFan   "1-Bed IAQ Fan"  
+   IAQCFM = 36.6
+   WperCFMIAQ = 0.6
+   IAQFanType = "Balanced"
+   IncludesRecov = 1
+   SensRecovEff = 67
+   AdjSensRecovEff = 72
+   SetPerfByHVIInterp = 0
+   ..
+
+ResIAQFan   "3-Bed IAQ Fan"  
+   IAQCFM = 72.3
+   WperCFMIAQ = 0.6
+   IAQFanType = "Balanced"
+   IncludesRecov = 1
+   SensRecovEff = 67
+   AdjSensRecovEff = 72
+   SetPerfByHVIInterp = 0
+   ..
+
+ResIAQFan   "Studio IAQ Fan"  
+   IAQCFM = 31.2
+   WperCFMIAQ = 0.6
+   IAQFanType = "Balanced"
+   IncludesRecov = 1
+   SensRecovEff = 67
+   AdjSensRecovEff = 72
+   SetPerfByHVIInterp = 0
+   ..
+
+ResIAQFan   "F1 Mech Rm-IAQFan"  
+   IAQCFM = 16.2
+   WperCFMIAQ = 0.186
+   IAQFanType = "Exhaust"
+   IncludesRecov = 0
+   ..
+
+ResDHWSys   "DHW Gas"  
+   SystemType = "Standard"
+   MFamDistType = "Multi-family: Recirculating with no control (continuous pumping)"
+   CentralRecircType = "Central with Recirculation"
+   CentralDHW = 1
+   CentralDHWType = "Other"
+   UseMaxDurNumHtrs = 0
+   CHPWHSysDescrip = "- select system description -"
+   CHPWHCompType = "- select CHPWH type -"
+   CHPWHNEEABrand = "n/a"
+   CHPWHNEEAModel = "n/a"
+   CHPWHTankLoc = "- select tank location -"
+   CHPWHSrcAirLoc = "- select source air location -"
+   CHPWHLoopTankConfig = "None (return to Primary)"
+   CHPWHLoopTankType = "Electric Resistance"
+   CHPWHLoopTankCompType = "- select CHPWH type -"
+   CHPWHLoopTankNEEABrand = "n/a"
+   CHPWHLoopTankNEEAModel = "n/a"
+   DHWHeater[1] = "Gas"
+   HeaterMult[2] = 0
+   HeaterMult[3] = 0
+   BranchLossModel = "Attached to Hot Water Draws"
+   TotShowersServed = 1
+   TotBathsServed = 1
+   DHWSolarSysRef = "DHWSolarSystem 1"
+   DemRespControl = "Basic"
+   HERSCheck = "DHWGas-hers-dhw"
+   ..
+
+ResDHWSys   "DHW Heat Pump"  
+   SystemType = "Standard"
+   MFamDistType = "Multi-family: Recirculating with no control (continuous pumping)"
+   CentralDHW = 1
+   CentralDHWType = "HPWH"
+   UseMaxDurNumHtrs = 0
+   CHPWHSysDescrip = "Single Pass Primary"
+   CHPWHCompType = "Sanden GS3-45HPA-US  (4kW cap @ 40F)"
+   CHPWHNEEABrand = "n/a"
+   CHPWHNEEAModel = "n/a"
+   CHPWHAutosize = 0
+   CHPWHNumComp = 6
+   CHPWHTotTankVol = 480
+   CHPWHTankCount = 1
+   CHPWHTankRVal = 16
+   CHPWHTankLoc = "Zone"
+   CHPWHTankZone = "F1 Mech Rm"
+   CHPWHSrcAirLoc = "Outside"
+   CHPWHLoopTankConfig = "None (return to Primary)"
+   CHPWHLoopTankType = "Electric Resistance"
+   CHPWHLoopTankCompType = "- select CHPWH type -"
+   CHPWHLoopTankNEEABrand = "n/a"
+   CHPWHLoopTankNEEAModel = "n/a"
+   CHPWHLoopTankCompCnt = 1
+   CHPWHLoopTankVol = 300
+   CHPWHLoopTankTankCnt = 1
+   CHPWHLoopTankRVal = 16
+   CHPWHLoopTankLoc = "Zone"
+   CHPWHLoopTankZone = "F1 Mech Rm"
+   HeaterMult[1] = 1
+   RecircPumpPwr = 621.667
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   LoopHeater = "LoopTank2"
+   TotShowersServed = 1
+   TotBathsServed = 1
+   DemRespControl = "Basic"
+   HERSCheck = "DHWHeatpump-hers-dhw"
+   ..
+
+ResDHWSys   "DHW Electric"  
+   TreeState = 253
+   SystemType = "Standard"
+   CentralDHW = 0
+   UseMaxDurNumHtrs = 0
+   CHPWHSysDescrip = "- select system description -"
+   CHPWHCompType = "- select CHPWH type -"
+   CHPWHNEEABrand = "n/a"
+   CHPWHNEEAModel = "n/a"
+   CHPWHTankLoc = "- select tank location -"
+   CHPWHSrcAirLoc = "- select source air location -"
+   CHPWHLoopTankConfig = "None (return to Primary)"
+   CHPWHLoopTankType = "Electric Resistance"
+   CHPWHLoopTankCompType = "- select CHPWH type -"
+   CHPWHLoopTankNEEABrand = "n/a"
+   CHPWHLoopTankNEEAModel = "n/a"
+   DHWHeater[1] = "Electric"
+   HeaterMult[1] = 1
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   TotShowersServed = 1
+   TotBathsServed = 1
+   SolFracType = "- none -"
+   DemRespControl = "Basic"
+   HERSCheck = "DHWElectric-hers-dhw"
+   ..
+
+ResWtrHtr   "Gas"  
+   HeaterElementType = "Gas"
+   TankType = "Commercial Packaged Boiler"
+   HPWHCategory = "Non-UEF Rated"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   HPWHComModel = "n/a"
+   IntInsulRVal = 0
+   ExtInsulRVal = 12
+   AmbientCond = "Unconditioned"
+   StandbyLossFrac = 0.02
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "Heatpump"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Sanden"
+   HPWHModel = "GS3-45HPA-US & SAN-83SSAQA  (83 gal)"
+   TankOutside = 0
+   TankZone = "F1 Res Zn N"
+   ASHPTSrcOutside = 1
+   EnergyFactor = 0.59
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "Electric"  
+   HeaterElementType = "Electric Resistance"
+   TankType = "Consumer Instantaneous (UEF)"
+   HPWHCategory = "Non-UEF Rated"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   EnergyFactor = 0.92
+   TankVolume = 0
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   RecovEff = 99
+   RatedFlow = 2
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResLpTankHtr   "LoopTank2"  
+   whEF = 0.97
+   whResHtPwr = 20000
+   whVol = 300
+   TankOutside = 0
+   TankZone = "F1 Laundry"
+   ..
+
+DHWSolSys   "DHWSolarSystem 1"  
+   RatingProgram = "SRCC OG-100 (solar collectors)"
+   SystemName = "min comp"
+   RatedSSF = 0.35
+   Manufacturer = "SunEarth, Inc."
+   Brand = "Empire"
+   Model = "EC-40-1.5"
+   CountFlt = 6.831
+   Azimuth = 180
+   Tilt = 40
+   ..
+
+HERSCool   "2019 Prototype 39372ft2 Prop Mixed-hers-cool-proj"  
+   ..
+
+HERSCool   "2019 Prototype 39372ft2 Prop Mixed-hers-cool-proj 2"  
+   ..
+
+HERSHeat   "2019 Prototype 39372ft2 Prop Mixed-hers-heat-proj"  
+   ..
+
+HERSHeat   "2019 Prototype 39372ft2 Prop Mixed-hers-heat-proj 2"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-Res-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F1 Corridor-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F1 Business Center-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F1 Fitness Center-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F1 Laundry-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F1 Leasing Office-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F1 Lobby-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-Stairs-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F2 Corridor-hers-htpump"  
+   ..
+
+HERSHtPump   "HeatpumpSystem-F3 Corridor-hers-htpump"  
+   ..
+
+HERSDist   "AirDistributionSystem-Res-hers-dist"  
+   ..
+
+HERSDist   "AirDistributionSystem-NonRes-hers-dist"  
+   ..
+
+HERSDist   "2019 Prototype 39372ft2 Prop Mixed-hers-dist-proj"  
+   ..
+
+HERSFan   "HVACFan-HeatPump-hers-fan"  
+   ..
+
+HERSFan   "2019 Prototype 39372ft2 Prop Mixed-hers-fan-proj"  
+   ..
+
+HERSFan   "HVAC Fan - Furnace-hers-fan"  
+   ..
+
+HERSDHWSys   "DHWGas-hers-dhw"  
+   ..
+
+HERSDHWSys   "DHWHeatpump-hers-dhw"  
+   ..
+
+HERSDHWSys   "DHWElectric-hers-dhw"  
+   ..
+
+HERSDHWSys   "2019 Prototype 39372ft2 Prop Mixed-hers-dhw-proj"  
+   ..
+
+HERSOther   "2019 Prototype 39372ft2 Prop Mixed-hers-proj"  
+   ..
+
+SpeclFtr   "2019 Prototype 39372ft2 Prop Mixed-specl-featrs"  
+   ..
+
+ResIAQVentRpt   "F1 1-Bed N 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 1-Bed N"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 1-Bed N 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 1-Bed N"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 3-Bed N 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 3-Bed N"
+   DwellUnitTypeRef = "3-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "3-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 2-Bed NE 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 2-Bed NE"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 2-Bed NW 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 2-Bed NW"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 1-Bed S 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 1-Bed S"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 1-Bed S 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 1-Bed S"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 3-Bed S 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 3-Bed S"
+   DwellUnitTypeRef = "3-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "3-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 2-Bed SE 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 2-Bed SE"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F1 2-Bed SW 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F1 2-Bed SW"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 1-Bed N 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 1-Bed N"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 1-Bed N 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 1-Bed N"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 3-Bed N 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 3-Bed N"
+   DwellUnitTypeRef = "3-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "3-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 Studio N 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 Studio N"
+   DwellUnitTypeRef = "Studio Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "Studio IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 2-Bed NE 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 2-Bed NE"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 2-Bed NW 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 2-Bed NW"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 1-Bed S 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 1-Bed S"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 1-Bed S 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 1-Bed S"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 3-Bed S 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 3-Bed S"
+   DwellUnitTypeRef = "3-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "3-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 Studio S 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 Studio S"
+   DwellUnitTypeRef = "Studio Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "Studio IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 Studio S 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 Studio S"
+   DwellUnitTypeRef = "Studio Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "Studio IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 2-Bed SE 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 2-Bed SE"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F2 2-Bed SW 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F2 2-Bed SW"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 1-Bed N 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 1-Bed N"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 1-Bed N 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 1-Bed N"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 3-Bed N 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 3-Bed N"
+   DwellUnitTypeRef = "3-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "3-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 Studio N 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 Studio N"
+   DwellUnitTypeRef = "Studio Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "Studio IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 2-Bed NE 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 2-Bed NE"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 2-Bed NW 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 2-Bed NW"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 1-Bed S 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 1-Bed S"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 1-Bed S 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 1-Bed S"
+   DwellUnitTypeRef = "1-Bed Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "1-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 3-Bed S 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 3-Bed S"
+   DwellUnitTypeRef = "3-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "3-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 Studio S 1/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 Studio S"
+   DwellUnitTypeRef = "Studio Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "Studio IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 Studio S 2/2 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 Studio S"
+   DwellUnitTypeRef = "Studio Type"
+   DwellingUnitCnt = 2
+   IAQFanRef = "Studio IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 2-Bed SE 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 2-Bed SE"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+ResIAQVentRpt   "F3 2-Bed SW 1/1 fan 1/1 cnt 1/1"  
+   DwellUnitRef = "F3 2-Bed SW"
+   DwellUnitTypeRef = "2-Bed Type"
+   DwellingUnitCnt = 1
+   IAQFanRef = "2-Bed IAQ Fan"
+   IAQFanIdx = 1
+   IAQFanCnt = 1
+   ..
+
+
+END_OF_FILE

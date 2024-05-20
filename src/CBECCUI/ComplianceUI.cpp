@@ -539,6 +539,7 @@ void CComplianceUIApp::OnFileNew()
 				pCUIDoc->SetModifiedFlag( FALSE );
 	}	}
 
+   elProjAnalysisVersion = 0;     // SAC 05/30/22
    CWinApp::OnFileNew();
 
 	if (ebAppInitialized)
@@ -702,9 +703,9 @@ void CAboutDlg::OnPaint()
 			//"}";
 #ifdef UI_CANRES
 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
-			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC-Com LICENSE AGREEMENT     (modified BSD)\\par "
+			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC LICENSE AGREEMENT     (modified BSD)\\par "
 			"\\par "
-			"Copyright (c) 2012-2019, California Energy Commission\\par "
+			"Copyright (c) 2012-2022, California Energy Commission\\par "
 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
 			"All rights reserved.\\par "
 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
@@ -723,7 +724,7 @@ void CAboutDlg::OnPaint()
 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC-Res LICENSE AGREEMENT     (modified BSD)\\par "
 			"\\par "
-			"Copyright (c) 2012-2019, California Energy Commission\\par "
+			"Copyright (c) 2012-2022, California Energy Commission\\par "
 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
 			"All rights reserved.\\par "
 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
@@ -760,7 +761,7 @@ void CAboutDlg::OnPaint()
 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC LICENSE AGREEMENT     (modified BSD)\\par "
 			"\\par "
-			"Copyright (c) 2012-2019, California Energy Commission\\par "
+			"Copyright (c) 2012-2022, California Energy Commission\\par "
 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
 			"All rights reserved.\\par "
 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "

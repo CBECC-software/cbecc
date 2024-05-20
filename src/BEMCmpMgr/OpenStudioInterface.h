@@ -39,6 +39,7 @@
 typedef struct
 {
    char*       sEnduseName;
+   char*       sResEnduseName;   // SAC 10/30/21 (MFam)
    char*       sEnduseAbbrev;		// SAC 8/21/14 - added for hourly results CSV export
    int         iaEndUseIdx[6];
    int         iSumIntoCompliance;
@@ -50,10 +51,20 @@ typedef struct
 	double      daTDSTotal[3];		// SAC 8/26/18 - A2030
 	double      daSupply[3];		// SAC 9/7/18 - A2030 [Elec,TDV,TDS]
 	double      dElecDemand;		// SAC 10/8/16
+	double      daResEnduseTotal[3];    // SAC 10/30/21 (MFam)
+	double      daResTDVTotal[3];
+	double      daResSrcTotal[3];		
+	double      daResSrcPrmTotal[3];	
+	double      daResCO2Total[3];		
+	double      daResTDSTotal[3];		
+	double      daResSupply[3];		
+	double      dResElecDemand;		
 } EndUseMap;
-#define  NUM_T24_NRES_EndUses     15	// SAC 7/14/18 - 13->15 for PV/Batt
+#define  NUM_T24_NRES_EndUses_19  15	// SAC 7/14/18 - 13->15 for PV/Batt
+#define  NUM_T24_NRES_EndUses     16	// added IDX_T24_NRES_EU_EffTot for 2022 analysis - SAC 12/11/21
 #define  IDX_T24_NRES_EU_CompTot   7
 #define  IDX_T24_NRES_EU_Total    14	// SAC 7/15/18 - 12->14 for PV/Batt
+#define  IDX_T24_NRES_EU_EffTot   15   // SAC 12/11/21
 #define  IDX_T24_NRES_EU_DHW (IDX_T24_NRES_EU_CompTot-2) // assumes DHW placed second before CompTotal enduse - SAC 9/15/20
 #define  IDX_T24_NRES_EU_PV  (IDX_T24_NRES_EU_Total-2)   // assumes PV & Battery come right before TOTAL enduse
 #define  IDX_T24_NRES_EU_BT  (IDX_T24_NRES_EU_Total-1)
@@ -63,6 +74,14 @@ extern EndUseMap esEUMap_CECNonRes[ NUM_T24_NRES_EndUses+1 ];
 extern const char* pszaEPlusFuelNames[NUM_T24_NRES_Fuels];
 
 enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,	CT_NumTypes  };	// SAC 10/2/14 - SAC 4/13/15 - SAC 1/30/20
+
+typedef struct
+{  char*       sEnergyUsePropName;
+   int         iEUseSummaryEnduseArray;
+   int         iEUseSummaryEnduseDecPrec;
+   double      dEUseSummaryEnduseMult;
+	double      dAdjust;
+} EnergyUseAdjust;
 
 extern double CMX_GetEnergyPlusVersion( const char* pszEPlusPath=NULL );
 //extern bool   CMX_IsEnergyPlusVersionInstalled( int iMajor, int iMinor=-1, int iBuild=-1 );  // SAC 12/27/13
@@ -134,7 +153,7 @@ class COSRunInfo
 	   COSRunInfo()	{	}
 		void InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char* pszSDDFile, const char* pszRunID, const char* pszLongRunID, bool bIsStdRun, bool bPostEquipCapsToBEMBase,
 										bool bSimulateModel, int iBEMProcIdx=-1, const char* pszIDFToSimulate=NULL, int iCodeType=CT_T24N, bool bSimOutVarsCSV=false,
-										bool bEvalReportRulesFollowingSim=false );
+										bool bEvalReportRulesFollowingSim=false, bool bSkippingEPlusSim=false );
 
 		bool	StoreHourlyResults()				{	return m_bStoreHourlyResults;		}
 		bool	SimulatingFixedIDF()				{	return m_bSimulatingFixedIDF;		}
@@ -158,6 +177,8 @@ class COSRunInfo
 		long			RunPeriodYear()	{	return					m_lRunPeriodYear;	}	// SAC 3/1/19
 		bool			SimOutVarsCSV()	{	return					m_bSimOutVarsCSV;	}	// SAC 4/12/16
 		bool			EvalReportRulesFollowingSim()	{	return	m_bEvalReportRulesFollowingSim;	}	// SAC 2/18/20
+		bool			SkippingEPlusSim()   {	return m_bSkippingEPlusSim;	}	   // SAC 12/08/21
+		QString     SimStatusMsg()			{	return m_sSimStatusMsg;		}        // SAC 12/08/21
 
 		int			NumQuickAnalysisPeriods()		{	return			(int) m_qaData.m_iNumQuickAnalysisPeriods;	}
 		double		QuickAnalysisResultsMult()		{	return			m_qaData.m_fQuickAnalysisResultsMult;			}
@@ -168,6 +189,10 @@ class COSRunInfo
 		int			QuickAnalysisPeriodEndDOWk(    int iDaIdx )	{	return	(int) ((iDaIdx >= 0 && iDaIdx < MAX_NUM_QANALPERIODS) ? m_qaData.m_iQuickAnalysisPeriodBeginDOWk[ iDaIdx] : -1);	}
 
       void        SetStoreHourlyResults( bool bSHR )	{	m_bStoreHourlyResults = bSHR;  return;  }    // SAC 10/29/21 (MFam)
+
+      void     AddToSimStatusMsg( QString sMsg )   {  if (!m_sSimStatusMsg.isEmpty())     // SAC 12/08/21
+                                                         m_sSimStatusMsg += ", ";
+                                                      m_sSimStatusMsg += sMsg;      return;  }
 
 		QuickAnalysisInfo  m_qaData;
 
@@ -196,6 +221,8 @@ class COSRunInfo
 		long		m_lRunPeriodYear;		// SAC 3/1/19
 		bool		m_bSimOutVarsCSV;		// SAC 4/12/16
 		bool     m_bEvalReportRulesFollowingSim;	// SAC 2/18/20
+      bool     m_bSkippingEPlusSim;    // SAC 12/08/21
+		QString	m_sSimStatusMsg;        // SAC 12/08/21
 };
 
 // SAC 7/23/18 - new routine to enable split of results processing needed for integration of PV/Battery simulation via CSE

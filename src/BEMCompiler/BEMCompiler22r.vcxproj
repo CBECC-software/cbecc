@@ -92,6 +92,14 @@
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IgnoreImportLibrary>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\..\bin\Release_VC142x64\</OutDir>
+    <IntDir>..\..\bin\BEMCompiler_VC142\22r\x64\Release\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\..\bin\Debug_VC142x64\</OutDir>
+    <IntDir>..\..\bin\BEMCompiler_VC142\22r\x64\Debug\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\vendor\Qt_5.15.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -152,7 +160,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_NO_DEBUG;QT_WIDGETS_LIB;BEMPROC_EXPORTS;CBECC_RES22;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_WIN32;_WIN64;QT_NO_DEBUG;QT_WIDGETS_LIB;BEMPROC_EXPORTS;CBECC_RES22;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -163,7 +171,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmain.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC142x64\BEMProc22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -256,7 +264,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmaind.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC142x64\BEMProc22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\Qt_5.15.0\lib-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <GenerateDebugInformation>true</GenerateDebugInformation>

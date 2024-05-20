@@ -840,6 +840,22 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 			else if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
 		      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
 		}
+
+	   long lEnableMixedFuelCompare = ReadProgInt( "options", "EnableMixedFuelCompare", 0 );     // SAC 12/28/21 (MxdFuel)
+		long lDBID_Proj_EnableMixedFuelCompare = BEMPX_GetDatabaseID( "EnableMixedFuelCompare", BEMPX_GetDBComponentID( "Proj" ) );
+		if (lDBID_Proj_EnableMixedFuelCompare > 0)
+		{	long lEMFC;  int iBEMErr;
+			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableMixedFuelCompare, lEMFC, -1 ))
+				lEMFC = -1;
+			if (lEnableMixedFuelCompare == 0 && lEMFC > 0)
+			{	// This file was last SAVED w/ EnableMixedFuelCompare true, but current INI file does not include EnableMixedFuelCompare setting
+		      AfxMessageBox( "EnableMixedFuelCompare is selected in this project file but not available in the current software installation. Exit program without saving the project file to retain this feature." );
+            BEMPX_DefaultProperty( lDBID_Proj_EnableMixedFuelCompare, iBEMErr );    // re-default flag in proj data
+		   }
+			else if (lEMFC < -0.5 && lEnableMixedFuelCompare > 0)  // only set EnableMixedFuelCompare if INI setting TRUE and if NOT specified in input file
+		      BEMPX_SetBEMData( lDBID_Proj_EnableMixedFuelCompare, BEMP_Int, (void*) &lEnableMixedFuelCompare, BEMO_User );  // , -1, BEMS_ProgDefault );
+		}
+
 	// SAC 10/7/13 - additional flags to toggle on/off INI-controlled features
 	// SAC 8/7/14 - change INI default for EnableVarFlowOAV & EnableFixedFlowOAV from 0 -> 1
 		long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
@@ -878,6 +894,17 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 - added
 		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
 	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
+#endif
+#ifdef UI_CANRES      // EnableResearchMode for CBECC-22 - SAC 02/25/22
+		long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) );	
+      if (lDBID_Proj_EnableResearchMode > 0)
+      {  long lEnableResearchMode = ReadProgInt( "options", "EnableResearchMode", 0 );
+			long lERM;
+			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ))
+				lERM = -1;
+			if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
+		      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
+		}
 #endif
 
 		long lNumFileOpenDefaultingRounds = ReadProgInt( "options", "NumFileOpenDefaultingRounds", 3 );		// SAC 4/11/18
@@ -949,6 +976,9 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 
+		if (elDBID_Proj_AnalysisVersion < 1 || !BEMPX_SetDataInteger( elDBID_Proj_AnalysisVersion, elProjAnalysisVersion ))     // SAC 05/30/22
+         elProjAnalysisVersion = 0;
+
       eiCurAnalysisStep = AS_None;
 		CString sInputFile = GetPathName();
 
@@ -971,6 +1001,15 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 		}
 
 		SetRulesetCodeYear();  // SAC 6/12/19
+
+#ifdef UI_CARES      // remove MFam stuff from CBECC-Res 2022 - SAC 01/20/22 (tic #1323)
+      if (elRulesetCodeYear >= 2022 && elDBID_Proj_IsMultiFamily > 0 &&
+          BEMPX_GetInteger( elDBID_Proj_IsMultiFamily, iSpecVal, iErr ) > 0)
+      {  CString sMFamMsg;		sMFamMsg.Format( "This project describes a Multifamily building, but analysis of these buildings is not supported in CBECC-Res starting with the 2022 code cycle. "
+                                               "Analysis of this building should be performed using CBECC-%d software.", (elRulesetCodeYear % 100) );
+         AfxMessageBox( sMFamMsg ); 
+      }
+#endif
 
 
 //	else	// SAC 10/29/12 - added else to ensure tree view is updated even if errors occurred during project open

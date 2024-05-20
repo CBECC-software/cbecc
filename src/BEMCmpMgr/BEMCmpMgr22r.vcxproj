@@ -114,14 +114,14 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;YYDEBUG;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN32;_WIN64;_DEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;YYDEBUG;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;..\..\bin\vendor\openssl-1.1.1h\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libcrypto.lib;libssl.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5Widgetsd.lib;..\..\bin\Debug_VC142\BEMProc22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;..\..\bin\vendor\openssl-1.1.1h\lib-x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;crypt32.lib;libcrypto.lib;libssl.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5Widgetsd.lib;..\..\bin\Debug_VC142x64\BEMProc22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <PreBuildEvent>
@@ -164,16 +164,16 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN32;_WIN64;NDEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;CODEYEAR2022;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libcrypto.lib;libssl.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5Widgets.lib;..\..\bin\Release_VC142\BEMProc22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib;..\..\bin\vendor\openssl-1.1.1h\lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;crypt32.lib;libcrypto.lib;libssl.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5Widgets.lib;..\..\bin\Release_VC142x64\BEMProc22r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;..\..\bin\vendor\openssl-1.1.1h\lib-x64\Release</AdditionalLibraryDirectories>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <PreBuildEvent>

@@ -217,6 +217,14 @@ IDB_TREERESNET          BITMAP  DISCARDABLE     "res\\t_RESNET_1.bmp"
 IDB_TREERESNET2         BITMAP  DISCARDABLE     "res\\t_RESNET_2.bmp"
 IDB_TREERPROJ           BITMAP  DISCARDABLE     "res\\t_rproj_1.bmp"
 IDB_TREERPROJ2          BITMAP  DISCARDABLE     "res\\t_rproj_2.bmp"
+IDB_TREERESZNGRP        BITMAP  DISCARDABLE     "res\\t_ResZnGrp_1.bmp"
+IDB_TREERESZNGRP2       BITMAP  DISCARDABLE     "res\\t_ResZnGrp_2.bmp"
+IDB_TREERESZN           BITMAP  DISCARDABLE     "res\\t_ResZn_1.bmp"
+IDB_TREERESZN2          BITMAP  DISCARDABLE     "res\\t_ResZn_2.bmp"
+IDB_TREERESOTHZN        BITMAP  DISCARDABLE     "res\\t_ResOthZn_1.bmp"
+IDB_TREERESOTHZN2       BITMAP  DISCARDABLE     "res\\t_ResOthZn_2.bmp"
+IDB_TREERESDWELL        BITMAP  DISCARDABLE     "res\\t_ResDwell_1.bmp"
+IDB_TREERESDWELL2       BITMAP  DISCARDABLE     "res\\t_ResDwell_2.bmp"
 IDB_HELP20              BITMAP                  "res\\Help20.bmp"
 IDB_HELP20G             BITMAP                  "res\\Help20G.bmp"
 IDB_HELP24              BITMAP                  "res\\Help24.bmp"
@@ -574,8 +582,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     GROUPBOX        "General Information",IDC_WIZFRAME,5,5,377,182
     PUSHBUTTON      "&Help",IDC_WIZHELP,50,194,37,14
-    PUSHBUTTON      "« &Previous Screen",IDC_PREVSCREEN,97,194,77,14
-    DEFPUSHBUTTON   "&Next Screen »",IDC_NEXTTOPIC,186,194,67,14
+    PUSHBUTTON      "ï¿½ &Previous Screen",IDC_PREVSCREEN,97,194,77,14
+    DEFPUSHBUTTON   "&Next Screen ï¿½",IDC_NEXTTOPIC,186,194,67,14
     PUSHBUTTON      "&Finish",IDOK,341,194,41,14
 END
 
@@ -611,7 +619,7 @@ CAPTION "Compliance Analysis Completed"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "View Compliance Reports",IDOK,7,33,99,14
-    PUSHBUTTON      "Return to CBECC-Com",IDCANCEL,118,33,99,14
+    PUSHBUTTON      "Return to CBECC",IDCANCEL,118,33,99,14
     RTEXT           "Compliance Result:",IDC_STATIC,19,11,83,12
     CTEXT           "???",IDC_RESULT,106,9,71,12,0,WS_EX_CLIENTEDGE
 END
@@ -650,15 +658,15 @@ BEGIN
                     WS_BORDER,10,25,175,12
 END
 
-IDD_EVALRULELIST DIALOG DISCARDABLE  0, 0, 148, 175
+IDD_EVALRULELIST DIALOG DISCARDABLE  0, 0, 298, 275
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Evaluate Compliance Rulelist"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "&Close",IDOK,93,157,48,12
-    LISTBOX         IDC_RULELISTS,9,16,129,132,WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "&Close",IDOK,243,257,48,12
+    LISTBOX         IDC_RULELISTS,9,16,279,232,WS_VSCROLL | WS_TABSTOP
     LTEXT           "Available Rulelist(s):",IDC_STATIC,9,6,126,8
-    PUSHBUTTON      "&Evaluate",IDC_EVALRULELIST,38,157,48,12
+    PUSHBUTTON      "&Evaluate",IDC_EVALRULELIST,188,257,48,12
 END
 
 IDD_POSTWIZHINT DIALOG DISCARDABLE  0, 0, 267, 150
@@ -703,8 +711,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2022,56,0,1212		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2022,56,0,1212	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
+ FILEVERSION 2022,1000,0,1250		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2022,1000,0,1250	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC-Com version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -722,15 +730,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (2022)\0"
-            VALUE "FileVersion", "2022.0.5 RV (1212)\0"
+            VALUE "FileVersion", "2022.1.0 (1250)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
-            VALUE "LegalCopyright", "Copyright (C) 2012-2021, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2022, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-22.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (2022)\0"
-            VALUE "ProductVersion", "2022.0.5 RV\0"
-            VALUE "SpecialBuild", "build 1212\0"
+            VALUE "ProductVersion", "2022.1.0\0"
+            VALUE "SpecialBuild", "build 1250\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -864,13 +872,13 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAME           "CBECC 2022\n\nCBECC 2022\nCBECC-Com Files (*.cibd22)\n.cibd22\nCBECC-22.Document\nCBECC-22 Document"
+    IDR_MAINFRAME           "CBECC 2022\n\nCBECC 2022\nCBECC-22 Files (*.cibd22)\n.cibd22\nCBECC-22.Document\nCBECC-22 Document"
     IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAMEDEV        "CBECC 2022\n\nCBECC 2022\nCBECC-Com Files (*.cibd22)\n.cibd22\nCBECC-22.Document\nCBECC-22 Document"
+    IDR_MAINFRAMEDEV        "CBECC 2022\n\nCBECC 2022\nCBECC-22 Files (*.cibd22)\n.cibd22\nCBECC-22.Document\nCBECC-22 Document"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -1073,7 +1081,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDM_VIEW_BUDGET         "View the budget building design for the current project\nBudget Building Design"
     IDM_WRITEINPDETAILS     "Write input details file (<project file>.ib2)\nWrite Input Details File"
-    ID_TOOL_BUILDNUM        "Display CBECC-Com version and build number"
+    ID_TOOL_BUILDNUM        "Display CBECC version and build number"
     IDM_TOOLS_EVALLIST      "Evaluate selected compliance rulelist"
     IDM_ANALRANGECHECKS     "Range check all inputs at beginning of compliance analysis"
     IDM_POSTWIZHELP         "Check if viewing post-wizard compliance checklist help is desired."

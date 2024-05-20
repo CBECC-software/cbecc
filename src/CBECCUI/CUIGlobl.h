@@ -427,6 +427,9 @@ extern long elDBID_Proj_DefaultOptionInp;		// SAC 4/11/18
 extern long elDBID_Proj_DefaultOptionObj;
 extern long elDBID_Proj_DefaultOptionDone;
 
+extern long elDBID_Proj_AnalysisVersion;     // SAC 05/30/22
+extern long elProjAnalysisVersion;  
+
 // BEM Defaulting Options...
 #define  DefaultOption_Nothing   0
 #define  DefaultOption_Object    1
@@ -713,7 +716,7 @@ extern int eiBDBCID_DwellUnitType;
 extern int eiBDBCID_DwellUnit;
 extern int eiBDBCID_ResOtherZn;
 extern int eiBDBCID_ResAttic;
-extern int eiBDBCID_ResGarage;
+//extern int eiBDBCID_ResGarage;
 extern int eiBDBCID_ResCrawlSpc;
 extern int eiBDBCID_ResExtWall;
 extern int eiBDBCID_ResIntWall;
@@ -730,13 +733,16 @@ extern int eiBDBCID_ResOpening;
 extern int eiBDBCID_ResWin;
 extern int eiBDBCID_ResSkylt;
 extern int eiBDBCID_ResDr;
+extern int eiBDBCID_ResHVACSys;     // SAC 11/02/21
 extern int eiBDBCID_ResHtgSys;      // SAC 08/18/21
 extern int eiBDBCID_ResClgSys;
 extern int eiBDBCID_ResHtPumpSys;
+extern int eiBDBCID_ResCentralHtgClgSys;  // SAC 12/31/21 (MFam)
 extern int eiBDBCID_ResDistSys;
 extern int eiBDBCID_ResDuctSeg;
 extern int eiBDBCID_ResFanSys;
 extern int eiBDBCID_ResIAQFan;
+extern int eiBDBCID_ResCentralVentSys;    // SAC 12/31/21 (MFam)
 extern int eiBDBCID_ResClVentFan;
 
 #endif   // UI_CANRES

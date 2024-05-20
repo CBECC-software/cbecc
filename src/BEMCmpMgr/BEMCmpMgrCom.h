@@ -175,25 +175,47 @@ long BEMCMPMGR_API __cdecl CMX_TranslateToSDD( const char* pszInputPathFile, con
 
 // D:	simulation progress - valid range 0-99
 	#define	BCM_NRP_Prog( lNRP )			(long) (lNRP % BCM_NRP_CMult)
-	#define	BCM_NRP_Prog_None				 0		// blank
-	#define	BCM_NRP_Prog_Init				 1		// Initialization
-	#define	BCM_NRP_Prog_Warmup			 2		// Warmup
-	#define	BCM_NRP_Prog_Jan   			 3		// Jan
-	#define	BCM_NRP_Prog_Feb   			 4		// Feb
-	#define	BCM_NRP_Prog_Mar   			 5		// Mar
-	#define	BCM_NRP_Prog_Apr   			 6		// Apr
-	#define	BCM_NRP_Prog_May   			 7		// May
-	#define	BCM_NRP_Prog_Jun   			 8		// Jun
-	#define	BCM_NRP_Prog_Jul   			 9		// Jul
-	#define	BCM_NRP_Prog_Aug  			10		// Aug
-	#define	BCM_NRP_Prog_Sep  			11		// Sep
-	#define	BCM_NRP_Prog_Oct  			12		// Oct
-	#define	BCM_NRP_Prog_Nov  			13		// Nov
-	#define	BCM_NRP_Prog_Dec  			14		// Dec
-	#define	BCM_NRP_Prog_Rpt				15		// Reporting
+	#define	BCM_NRP_Prog_CSENone			 0		// blank             // for CSE progress reporting in CBECC22 - SAC 11/19/21
+	#define	BCM_NRP_Prog_CSEInit			 1		// Initialization
+	#define	BCM_NRP_Prog_CSEWarmup		 2		// Warmup
+	#define	BCM_NRP_Prog_CSEJan   		 3		// Jan
+	#define	BCM_NRP_Prog_CSEFeb   		 4		// Feb
+	#define	BCM_NRP_Prog_CSEMar   		 5		// Mar
+	#define	BCM_NRP_Prog_CSEApr   		 6		// Apr
+	#define	BCM_NRP_Prog_CSEMay   		 7		// May
+	#define	BCM_NRP_Prog_CSEJun   		 8		// Jun
+	#define	BCM_NRP_Prog_CSEJul   		 9		// Jul
+	#define	BCM_NRP_Prog_CSEAug  		10		// Aug
+	#define	BCM_NRP_Prog_CSESep  		11		// Sep
+	#define	BCM_NRP_Prog_CSEOct  		12		// Oct
+	#define	BCM_NRP_Prog_CSENov  		13		// Nov
+	#define	BCM_NRP_Prog_CSEDec  		14		// Dec
+	#define	BCM_NRP_Prog_CSERpt			15		// Reporting
+	#define	BCM_NRP_Prog_None				16		// blank
+	#define	BCM_NRP_Prog_Init				17		// Initialization
+	#define	BCM_NRP_Prog_Warmup			18		// Warmup
+	#define	BCM_NRP_Prog_Jan   			19		// Jan
+	#define	BCM_NRP_Prog_Feb   			20		// Feb
+	#define	BCM_NRP_Prog_Mar   			21		// Mar
+	#define	BCM_NRP_Prog_Apr   			22		// Apr
+	#define	BCM_NRP_Prog_May   			23		// May
+	#define	BCM_NRP_Prog_Jun   			24		// Jun
+	#define	BCM_NRP_Prog_Jul   			25		// Jul
+	#define	BCM_NRP_Prog_Aug  			26		// Aug
+	#define	BCM_NRP_Prog_Sep  			27		// Sep
+	#define	BCM_NRP_Prog_Oct  			28		// Oct
+	#define	BCM_NRP_Prog_Nov  			29		// Nov
+	#define	BCM_NRP_Prog_Dec  			30		// Dec
+	#define	BCM_NRP_Prog_Rpt				31		// Reporting
 
 //	E:	1-based index of run being performed
 //	F:	Total number of batch runs to be performed
+
+// moved to bemcm_i.h to enable access during Res/MFam analysis - SAC 11/29/21
+//extern int GetCECNResProgressIndex( long lStep, long lModel, long lSimProg );
+//extern void SetCECNResProgressMessage( QString& sMsg, long lNRPStep, long lNRPModels, long lSimProg );
+//extern float *faCECNResProgressVals, fCECNResProgressValSum;
+//extern float *faCECNResCumulativeProgressSum;
 
 extern int /*CALLBACK*/ CECNRes_ProgressIncrement( long lProgressID );
 extern int /*CALLBACK*/ S901G_ProgressIncrement( long lProgressID );
