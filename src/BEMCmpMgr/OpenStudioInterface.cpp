@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include "memLkRpt.h"
 #include "EPlusRunMgr.h"
+#include "BEMCmpMgrProgress.h"   // SAC 06/20/22
 
 using namespace OS_Wrap;
 
@@ -3103,7 +3104,7 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 
 // SAC 8/18/15
 int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
-															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
+															const char* pszModelkitPath, OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
 													// other general args
 															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose /*=FALSE*/, // BOOL bPerformRangeChecks=TRUE,
                           							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
@@ -3115,7 +3116,7 @@ int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* psz
 	OSWrapLib osWrap;
 	COSRunInfo osRunInfo[MultEPlusSim_MaxSims];
 	int iSimRetVal = PerformSimulation_EnergyPlus_Multiple( osWrap, &osRunInfo[0], sErrMsg, pszEPlusPath, NULL /*pszWthrPath*/, pszSimProcessDir,
-															pSimInfo, iNumSimInfo, bVerbose, FALSE /*bDurationStats*/, pdTranslationTime, pdSimulationTime,
+															pszModelkitPath, pSimInfo, iNumSimInfo, bVerbose, FALSE /*bDurationStats*/, pdTranslationTime, pdSimulationTime,
 															iSimulationStorage, dEPlusVer, pszEPlusVerStr, iEPlusVerStrLen, pszOpenStudioVerStr,
 															iOpenStudioVerStrLen, iCodeType, bIncludeOutputDiagnostics, iProgressType );
 	if (iSimRetVal == 0)
@@ -3128,7 +3129,7 @@ int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* psz
 
 int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
-															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
+															const char* pszModelkitPath, OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
 													// other general args
 															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose /*=FALSE*/, // BOOL bPerformRangeChecks=TRUE,
                           							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
@@ -3363,6 +3364,60 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 					         BEMPX_SetActiveModel( iSaveActiveBEMProcIdx );
                   }
             }  }
+
+            // Modelkit processing:  ID = 1 => HybridCooling  - SAC 06/22/22
+            long lModelkitProcessingID = 0;
+				if (lSimRetVal == 0 && FileExists( qsIDFPathFile ) &&
+                BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ModelkitProcessingID" ), lModelkitProcessingID, 0, -1, 0, BEMO_User, osRunInfo[iSI].BEMProcIdx() ) &&
+                lModelkitProcessingID > 0)
+            {
+                        //bVerbose = TRUE;
+               QString sModelkitPath = pszModelkitPath;
+               QString sModelkitBatPathFile        = sModelkitPath + QString("modelkit-catalyst\\bin\\modelkit.bat");
+               QString sModelkitRubyScriptPathFile = sModelkitPath + QString("hybrid-hvac.rb");
+               QString sModelkitProcpath  = pszSimProcessDir;
+               QString sMkIDFPathFile     = QString( "%1%2" ).arg( sModelkitProcpath, oswSimInfo[iSI].pszSDDXMLFileName );
+					sMkIDFPathFile = qsIDFPathFile.left( qsIDFPathFile.length()-4 );
+               QString sMkIDFFilenameNoExt   = sMkIDFPathFile.right( sMkIDFPathFile.length() - sModelkitProcpath.length() );
+               QString sMkSupportCSVPathFile = sMkIDFPathFile + QString( " - HybridHVAC.csv" );
+					sMkIDFPathFile += ".idf";
+
+                        //BEMPX_WriteLogFile( QString( "calling CMX_ExecuteModelkitBat:\n   sModelkitBatPathFile = %1\n   sModelkitRubyScriptPathFile = %2\n   sModelkitProcpath = %3\n   sMkIDFFilenameNoExt = %4\n   " ).arg(
+                        //            sModelkitBatPathFile, sModelkitRubyScriptPathFile, sModelkitProcpath, sMkIDFFilenameNoExt ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+               lSimRetVal = 91;   // Modelkit processing called for but Modelkit not found
+               if (!DirectoryExists( sModelkitPath ))
+                  sErrMsg = QString( "Error: Modelkit processing called for but Modelkit path not found:  %1" ).arg( sModelkitPath );
+               else if (!FileExists( sModelkitBatPathFile ))
+                  sErrMsg = QString( "Error: Modelkit processing called for but Modelkit .bat file not found:  %1" ).arg( sModelkitBatPathFile );
+               else if (!FileExists( sModelkitRubyScriptPathFile ))
+                  sErrMsg = QString( "Error: Modelkit processing called for but Modelkit ruby script not found:  %1" ).arg( sModelkitRubyScriptPathFile );
+               else if (qsIDFPathFile.compare( sMkIDFPathFile, Qt::CaseInsensitive ))
+                  sErrMsg = QString( "Error: Modelkit processing IDF path/filename inconsistency:  '%1' vs. '%2'" ).arg( sMkIDFPathFile, qsIDFPathFile );
+               else if (!FileExists( sMkSupportCSVPathFile ))
+                  sErrMsg = QString( "Error: Modelkit processing called for but model HybridHVAC.csv file not found:  %1" ).arg( sMkSupportCSVPathFile );
+               else
+               {  lSimRetVal = 0;  // restore non-error state
+
+                  QString sMkInitIDFPathFile = sMkSupportCSVPathFile.left( sMkSupportCSVPathFile.length()-4 ) + QString("-initial.idf");
+                  if (FileExists( sMkInitIDFPathFile ))
+                     DeleteFile( sMkInitIDFPathFile.toLocal8Bit().constData() );    // CMX_ExecuteModelkitBat will fail if ...initial.idf already exists
+
+                  char pszModelkitBatRetString[1024] = "\0";
+                  int iModelkitBatRetVal = CMX_ExecuteModelkitBat( sModelkitBatPathFile.toLocal8Bit().constData(), sModelkitRubyScriptPathFile.toLocal8Bit().constData(), 
+                                                sModelkitProcpath.toLocal8Bit().constData(), sMkIDFFilenameNoExt.toLocal8Bit().constData(), bVerbose /*bVerboseOutput*/,
+                                                pszModelkitBatRetString, 1023 );
+                  if (iModelkitBatRetVal > 0)
+                  {  lSimRetVal = 92;     // Modelkit processing error encountered
+                     if (strlen( pszModelkitBatRetString ) > 0)
+                        sErrMsg = QString( "Error: Modelkit processing error encountered (returned %1) on '%2':  %3" ).arg( QString::number( iModelkitBatRetVal ), sMkIDFFilenameNoExt, pszModelkitBatRetString );
+                     else
+                        sErrMsg = QString( "Error: Modelkit processing error encountered (returned %1) on '%2'" ).arg( QString::number( iModelkitBatRetVal ), sMkIDFFilenameNoExt );
+                  }
+                  else if (bVerbose && strlen( pszModelkitBatRetString ) > 0)
+                     BEMMessageBox( QString( "Modelkit processing on %1 successful:  %2" ).arg( sMkIDFFilenameNoExt, pszModelkitBatRetString ) );
+               }
+            }  // end of Modelkit processing - SAC 06/23/22
 
 			// Execute AnalysisActions that pertain to ActOnSimInput - SAC 3/10/20
 				if (lSimRetVal == 0 && FileExists( qsIDFPathFile ))

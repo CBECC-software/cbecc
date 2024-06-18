@@ -682,7 +682,9 @@ double BEMPROC_API __cdecl BEMPX_GetHourlyResultArray( char* pszErrMsgBuffer, in
 int    BEMPROC_API __cdecl BEMPX_GetHourlyResultArrayPtr( double** ppDbl, char* pszErrMsgBuffer, int iErrMsgBufferLen, const char* pszRunName,
 																						  const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx=-1 );
 double BEMPROC_API __cdecl BEMPX_AddHourlyResultArray( double* pDbl, const char* pszRunName, const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx=-1, BOOL bAddIfNotExist=FALSE );
-double BEMPROC_API __cdecl BEMPX_SumIntoHourlyResultArray( double* pDbl, const char* pszRunName, const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx=-1, BOOL bAddIfNotExist=FALSE );
+double BEMPROC_API __cdecl BEMPX_SumIntoHourlyResultArray( double* pDbl, const char* pszRunName, const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx=-1,
+                                                           BOOL bAddIfNotExist=FALSE, double dMult=1.0 );      // added dMult argument - SAC 09/10/22 (CUAC)
+double BEMPROC_API __cdecl BEMPX_ScaleHourlyResultArray( double pMult, const char* pszRunName, const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx=-1 );   // SAC 09/10/22 (CUAC)
 int    BEMPROC_API __cdecl BEMPX_WriteHourlyResultsSummary( const char* pszHourlyResultsPathFile, bool bSilent, int iBEMProcIdx );  // SAC 8/5/13
 
 // SAC 5/7/13 - routine to retrieve 0-based index of transform based on short name

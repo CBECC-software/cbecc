@@ -765,13 +765,16 @@ BOOL CBEMPUIScreenData::PageHasActiveControls( CBEMPUIPage* pPage )
        pPage->m_iFirstCtrlIdx <= pPage->m_iLastCtrlIdx)
    {
       for (int i=pPage->m_iFirstCtrlIdx; (!bRetVal && i<=pPage->m_iLastCtrlIdx); i++)
-         if (m_apControls[i]->m_lDBID > 0)
+      {  if (m_apControls[i]->m_lDBID > 0)
          {
             if (BEMPX_GetPropertyID( m_apControls[i]->m_lDBID ) == 0)
                bRetVal = (BEMPX_GetArrayID( m_apControls[i]->m_lDBID ) != BEM_PARAM0_ACTIVE);
             else
                bRetVal = BEMPX_GetCompDisplay( m_apControls[i]->m_lDBID, 0 );
          }
+         else if (m_apControls[i]->m_uiCtrlType == TDCT_Button)      // add logic to register Buttons as active ctrls - SAC 08/18/22 (CUAC)
+            bRetVal = TRUE;
+      }
    }
    return bRetVal;
 }

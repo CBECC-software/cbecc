@@ -55,7 +55,11 @@ static char THIS_FILE[] = __FILE__;
 #include "BEMCmpMgrCom.h"
 #include "BEMCM_I.h"
 #include "OpenStudioInterface.h"
+#include "ModelkitInterface.h"      // SAC 06/16/22
 #include "memLkRpt.h"
+#include "BEMCmpMgrProgress.h"      // SAC 06/20/22
+#include "CUAC_Analysis.h"          // SAC 09/09/22
+
 
 static int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, const char* pszModelName, char* pszErrMsgBuffer /*=NULL*/,
 													int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/ );
@@ -1804,12 +1808,20 @@ static const char* pszMeters[Com_NumCSEMeters+1]			= { "MtrElec",     "MtrNatGas
 static const char* pszMeters_ComMap[Com_NumCSEMeters+1]	= { "Electricity", "NaturalGas", "OtherFuel", "Electricity", NULL };		// SAC 5/31/16 - added to enable retrieval of CSE results to -Com analysis
 double         sdaMeterMults_ComMap[Com_NumCSEMeters+1]	= {    0.293,         0.01,         0.01,        0.293,      0.0  };		// SAC 6/1/16 - added to convert units of CSE results to -Com analysis (1/3.412 for elec)  // SAC 6/29/16 - inc NG & Oth fuel mults by 10 fixing MBtu->therms
 
+#define  Com_NumCSEMeters_CUAC  24     // SAC 09/08/22 (CUAC)
+static const char* pszCUACMeters[Com_NumCSEMeters_CUAC+1]			= { "MtrElec",     "MtrNatGas",  "MtrOther",   "MtrElec_0bedrm", "MtrNatGas_0bedrm", "MtrOther_0bedrm",  "MtrElec_1bedrm", "MtrNatGas_1bedrm", "MtrOther_1bedrm",  "MtrElec_2bedrm", "MtrNatGas_2bedrm", "MtrOther_2bedrm",  "MtrElec_3bedrm", "MtrNatGas_3bedrm", "MtrOther_3bedrm",  "MtrElec_4bedrm", "MtrNatGas_4bedrm", "MtrOther_4bedrm",  "MtrElec_5bedrm", "MtrNatGas_5bedrm", "MtrOther_5bedrm",  "MtrElec_6bedrm", "MtrNatGas_6bedrm", "MtrOther_6bedrm",    NULL };
+static const char* pszCUACMeters_ComMap[Com_NumCSEMeters_CUAC+1]	= { "Electricity", "NaturalGas", "OtherFuel",  "Elec_0bedrm",    "Gas_0bedrm",       "Gas_0bedrm",       "Elec_1bedrm",    "Gas_1bedrm",       "Gas_1bedrm",       "Elec_2bedrm",    "Gas_2bedrm",       "Gas_2bedrm",       "Elec_3bedrm",    "Gas_3bedrm",       "Gas_3bedrm",       "Elec_4bedrm",    "Gas_4bedrm",       "Gas_4bedrm",       "Elec_5bedrm",    "Gas_5bedrm",       "Gas_5bedrm",       "Elec_6bedrm",    "Gas_6bedrm",       "Gas_6bedrm",         NULL };	
+double         sdaCUACMeterMults_ComMap[Com_NumCSEMeters_CUAC+1]	= {    0.293,         0.01,         0.01,         0.293,            0.01,               0.01,               0.293,            0.01,               0.01,               0.293,            0.01,               0.01,               0.293,            0.01,               0.01,               0.293,            0.01,               0.01,               0.293,            0.01,               0.01,               0.293,            0.01,               0.01,              0.0  };	
+
 //static const char* pszCSEDHWEnduseList[] = { /*"Tot", "Clg", "Htg", "HPBU",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook", "User1",*/ "User2",            /* "PV",            "BT",*/    NULL };	// added to facilitate retrieval of Res DHW separate from other enduses - SAC 10/8/20 (tic #3218)
 static const char* pszCSEEnduseList19[]    = { /*"Tot", "Clg", "Htg", "HPBU",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook", "User1",*/ "User2",               "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
 static const char* pszCSEEUList_ComMap19[] = { /* NULL,  NULL,  NULL,   NULL,*/ "Domestic Hot Water", "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,   NULL ,*/ "Domestic Hot Water",  "Photovoltaics", "Battery", NULL }; 				// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
 // created separate 22+ CSE results mapping (below) to cover ALL enduses - SAC 10/28/21 (MFam)
-static const char* pszCSEEnduseList[]      = { /*"Tot",*/ "Clg",              "Htg",              "HPBU",             "Dhw",                   "DhwBU",                 "DhwMFL",                "FanC",           "FanH",           "FanV",           "Fan",            "Aux",              "Proc",       "Lit",          "Rcp",           "Ext",        "Refr",       "Dish",       "Dry",        "Wash",       "Cook",       /*"User2",*/ "User2",                 "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
-static const char* pszCSEEUList_ComMap[]   = { /* NULL,*/ "ResSpace Cooling", "ResSpace Heating", "ResSpace Heating", "ResDomestic Hot Water", "ResDomestic Hot Water", "ResDomestic Hot Water", "ResIndoor Fans", "ResIndoor Fans", "ResIndoor Fans", "ResIndoor Fans", "ResPumps & Misc.", "ResProcess", "ResOther Ltg", "ResReceptacle", "ResProcess", "ResProcess", "ResProcess", "ResProcess", "ResProcess", "ResProcess", /*  NULL ,*/ "ResDomestic Hot Water", "Photovoltaics", "Battery", NULL }; 		// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
+static const char* pszCSEEnduseList[]      = { /*"Tot",*/ "Clg",              "Htg",              "HPBU",             "Dhw",                   "DhwBU",                 "DhwMFL",                "FanC",           "FanH",           "FanV",           "Fan",            "Aux",              "Proc",       "Lit",          "Rcp",           "Ext",        "Refr",         "Dish",       "Dry",        "Wash",       "Cook",       /*"User2",*/ "User2",                 "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
+static const char* pszCSEEUList_ComMap[]   = { /* NULL,*/ "ResSpace Cooling", "ResSpace Heating", "ResSpace Heating", "ResDomestic Hot Water", "ResDomestic Hot Water", "ResDomestic Hot Water", "ResIndoor Fans", "ResIndoor Fans", "ResIndoor Fans", "ResIndoor Fans", "ResPumps & Misc.", "ResProcess", "ResOther Ltg", "ResReceptacle", "ResProcess", "ResProcess",   "ResProcess", "ResProcess", "ResProcess", "ResProcess", /*  NULL ,*/ "ResDomestic Hot Water", "Photovoltaics", "Battery", NULL }; 		// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
+static const char* pszCSEEUList_CUACMap[]  = { /* NULL,*/ "Cooling",          "Heating",          "Heating",          "DHW",                   "DHW",                   "DHW",                   "Cooling",        "Heating",        "Ventilation",    "Ventilation",    "HVAC Other",       "Plug Loads", "Lighting",     "Plug Loads",    "Plug Loads", "Refrigerator", "Dishwasher", "Dryer",      "Washer",     "Cooking",    /*  NULL ,*/ "DHW",                   "Photovoltaics", "Battery", NULL };       // CSE enduse mapping for CUAC - SAC 09/07/22
+static const char* pszCSEEnduseList_PVBatt[]  = { /*"Tot", "Clg",              "Htg",              "HPBU",             "Dhw",                   "DhwBU",                 "DhwMFL",                "FanC",           "FanH",           "FanV",           "Fan",            "Aux",              "Proc",       "Lit",          "Rcp",           "Ext",        "Refr",         "Dish",       "Dry",        "Wash",       "Cook",       "User2",  "User2", */     "PV",            "BT",      NULL };   // SAC 09/08/22 (CUAC)
+static const char* pszCSEEUList_PVBatt[]      = { /* NULL, "Cooling",          "Heating",          "Heating",          "DHW",                   "DHW",                   "DHW",                   "Cooling",        "Heating",        "Ventilation",    "Ventilation",    "HVAC Other",       "Plug Loads", "Lighting",     "Plug Loads",    "Plug Loads", "Refrigerator", "Dishwasher", "Dryer",      "Washer",     "Cooking",      NULL ,  "DHW",   */     "Photovoltaics", "Battery", NULL }; 
 
 static int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, long lDBID_ReportFileAppend, int iObjIdx, bool /*bProcessCurrentSelection*/,
 									QVector<QString>& saModelReportOptions, bool bVerbose, bool bSilent );
@@ -1829,7 +1841,7 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
                   QString sCSEexe, QString sCSEEXEPath, QString qsCSEName, QString sAnnualWeatherFile,
                   int iCodeType, int iRulesetCodeYear, long lAnalysisType, int iDontAbortOnErrorsThruStep, int iAnalStep, bool bProposedOnly, bool bStoreBEMDetails,
                   bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, QString& sCSEIncludeFileDBID, QString& sCSEVersion, char* pszErrorMsg, int iErrorMsgLen,
-                  bool& bAbort, int& iRetVal, QString& sErrMsg, QString& sStdDsgnCSEResultsPathFile )
+                  bool& bAbort, int& iRetVal, QString& sErrMsg, QString& sStdDsgnCSEResultsPathFile, long iCUACReportID )     // added iCUACReportID argument - SAC 09/08/22 (CUAC)
 {
 	int iCID_Proj = BEMPX_GetDBComponentID( "Proj" );
    QString sLogMsg;
@@ -2069,15 +2081,19 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
                                              bool bIsSizingRun = (BEMPX_GetInteger( lDBID_ResProj_HVACSizingNeeded, lCSEHVACSizingReqd, 0, -1, 0, BEMO_User, posSimInfo[iSR]->iBEMProcIdx ) &&
                                                                   lCSEHVACSizingReqd > 0);
 
-                                             const char** ppCSEEnduses  = (bPerformFullCSESim ? pszCSEEnduseList    : pszCSEEnduseList19   );   // SAC 10/28/21 (MFam)
-                                             const char** ppCSEComEUMap = (bPerformFullCSESim ? pszCSEEUList_ComMap : pszCSEEUList_ComMap19);
+                                             const char** ppCSEMeters  = (iCUACReportID > 0 ? pszCUACMeters            : pszMeters        );       // SAC 09/08/22 (CUAC)
+                                             const char** ppCSEMtrsMap = (iCUACReportID > 0 ? pszCUACMeters_ComMap     : pszMeters_ComMap );
+                                             double*      pdMeterMults = (iCUACReportID > 0 ? sdaCUACMeterMults_ComMap : sdaMeterMults_ComMap );
+
+                                             const char** ppCSEEnduses  = (lSimPVBattOnly > 0 ? pszCSEEnduseList_PVBatt : (iCUACReportID > 0 ? pszCSEEnduseList     : (bPerformFullCSESim ? pszCSEEnduseList    : pszCSEEnduseList19   )));   // SAC 10/28/21 (MFam)
+                                             const char** ppCSEComEUMap = (lSimPVBattOnly > 0 ? pszCSEEUList_PVBatt     : (iCUACReportID > 0 ? pszCSEEUList_CUACMap : (bPerformFullCSESim ? pszCSEEUList_ComMap : pszCSEEUList_ComMap19)));
 
 															// Retrieve CSE simulation results
 															if (iRetVal == 0 /*&& iCSESimRetVal == 0*/ && !bIsSizingRun)
 															{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
 																int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), -1 /*lRunNumber-1*/,
 																											sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData(), posSimInfo[iSR]->iBEMProcIdx /*-1*/,
-																											pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, ppCSEEnduses, ppCSEComEUMap, false /*bInitResults*/ );	// SAC 5/31/16  // SAC 7/23/18
+																											ppCSEMeters, ppCSEMtrsMap, pdMeterMults, ppCSEEnduses, ppCSEComEUMap, false /*bInitResults*/ );	// SAC 5/31/16  // SAC 7/23/18
 
 																if (iHrlyResRetVal > 0 && iRunType[0] == CRM_StdDesign)		// SAC 10/8/20 (tic #3218)
 																	sStdDsgnCSEResultsPathFile = cseRun.GetOutFile( CSERun::OutFileCSV );
@@ -2349,8 +2365,8 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 //											77 : Error applying AnalysisAction(s) to building model
 //											78	: Error in sizing standard design DHW solar system using CSE
 //											79	: Error in determining TDV of DHWSolarSys system(s) using CSE
-//											80 : Analysis aborted - user chose not to overwrite NRCCPRF XML reporting file
-//											81 : Error(s) encountered performing NRCCPRF XML export prep rules
+//											80 : Analysis aborted - user chose not to overwrite NRCC/LMCC-PRF XML reporting file
+//											81 : Error(s) encountered performing NRCC/LMCC-PRF XML export prep rules
 //											82 : Error evaluating PreSim (sim input editing) rules
 //											83 : Error evaluating ProposedCompliance residential rules
 //											84	: Error evaluating ProposedInput_MFam residential rules  (BEMAnal_CECRes_EvalPropInp3Error)
@@ -2360,6 +2376,9 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 //											88	: Error evaluating OneTimeAnalysisPrep rules  (BEMAnal_CECRes_EvalAnalPrepError)
 //											89	: Error evaluating ProposedModelCodeAdditions rules  (BEMAnal_CECRes_EvalCodeAddError)
 //											90 : Unable to open/delete/write CSE load-passing CSV file from prior E+ simulation
+//											91 : Modelkit processing called for but Modelkit not found
+//											92 : Modelkit processing error encountered
+//											93	: Error evaluating GenerateDDYFromWeatherData rules
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2446,7 +2465,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bSimulateCSEOnly	   		=  (GetCSVOptionValue( "SimulateCSEOnly"            ,   0,  saCSVOptions ) > 0);	// SAC 3/10/20
 	bool bReportGenVerbose	   		=  (GetCSVOptionValue( "ReportGenVerbose"           ,   0,  saCSVOptions ) > 0);	// SAC 3/20/20
    long lIsBatchProcessing          =   GetCSVOptionValue( "IsBatchProcessing"          ,   0,  saCSVOptions );		// SAC 03/19/21
-	bool bReportGenNRCCPRFXML	 		=  (GetCSVOptionValue( "ReportGenNRCCPRFXML"        ,   0,  saCSVOptions ) > 0);	// SAC 04/10/21
+	bool bReportGenNRCCPRFXML	 		=  (GetCSVOptionValue( "ReportGenNRCCPRFXML"        ,   1,  saCSVOptions ) > 0);	// SAC 04/10/21  // switched default to 1 - SAC 08/31/22
    long lLogAnalysisProgressOption  =   GetCSVOptionValue( "LogAnalysisProgress"        ,  -1,  saCSVOptions );		// SAC 01/14/22
    long lEnableResearchMode	      =   GetCSVOptionValue( "EnableResearchMode"         ,   0,  saCSVOptions );		// SAC 02/26/22
 	bool bAllowAnalysisAbort			=  true;		//(GetCSVOptionValue( "AllowAnalysisAbort"         ,   1,  saCSVOptions ) > 0);	// SAC 4/5/15
@@ -2504,6 +2523,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	{	BEMPX_WriteLogFile( QString::asprintf( "File specified in IDFToSimulate option not found:  %s", sIDFToSimulate.toLocal8Bit().constData() ) );
 		sIDFToSimulate.clear();
 	}
+
+   QString sModelkitPath;     // HybridCooling - SAC 06/23/22
+   GetCSVOptionString( "ModelkitPath", sModelkitPath, saCSVOptions );
+
+   long iCUACReportID = GetCSVOptionValue( "CUACReportID", 0, saCSVOptions );		// value > 0 => doing CUAC analysis & reporting - SAC 08/19/22 (CUAC)
+   int iCUAC_BEMProcIdx = -1;
+   //if (iCUACReportID > 0)  // test
+   //   BEMMessageBox( QString::asprintf( "CUACReportID %ld", iCUACReportID ) );
 
 	int iCID_Proj = BEMPX_GetDBComponentID( "Proj" );
 	QString sDebugRuleEvalCSV;		// SAC 1/9/14 - ported from Res analysis - ability to specify targeted rule eval debug info
@@ -2586,6 +2613,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	if (sEPlusPath.isEmpty())
 	//	sEPlusPath = "EPlus\\";
 		sEPlusPath = sCompMgrDLLPath + "EPlus\\";
+	if (sModelkitPath.isEmpty())     // HybridCooling - SAC 06/23/22
+		sModelkitPath = sCompMgrDLLPath + "Modelkit\\";
+   else if (sModelkitPath.right(1).compare('/')!=0 && sModelkitPath.right(1).compare('\\')!=0)
+      sModelkitPath += "\\";  // ensure ModelkitPath contains trailing slash/backslash
 	QString sDHWWeatherPath		= pszDHWWeatherPath;
 	QString sProcessingPath		= pszProcessingPath;
 	QString sModelPathFile		= pszModelPathFile;
@@ -2615,7 +2646,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	QString sNRCCXMLFileName = sModelPathFile;	// SAC 11/26/20
 	if (sNRCCXMLFileName.lastIndexOf('.'))
 		sNRCCXMLFileName  = sNRCCXMLFileName.left( sNRCCXMLFileName.lastIndexOf('.') );
-	sNRCCXMLFileName += " - NRCCPRF.xml";
+   // sNRCCXMLFileName += " - NRCCPRF.xml";   - moved down, after loading model when we know NRCC vs. LMCC - SAC 08/24/22 (LMCC)
 	int iNRCCXMLClassID = 0;
 
 	// UMLH check stuff
@@ -2666,7 +2697,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
    QVector<QString> saCopyAcrossModelClassPrefixes;      // added to copy NRCCPRF objects into each subsequent model - SAC 11/24/20
 	if (iCodeType == CT_T24N)
-      saCopyAcrossModelClassPrefixes.push_back( QString( "nrcc" ) );
+   {  saCopyAcrossModelClassPrefixes.push_back( QString( "nrcc" ) );
+      saCopyAcrossModelClassPrefixes.push_back( QString( "cf1r" ) );    // added to include CF1R objects for LMCC reporting - SAC 08/22/22 (LMCC)
+   }
 
 	// initialize progress dialog settings
 	if (iCodeType == CT_T24N)
@@ -3114,6 +3147,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
    {  long lDBID_IsBatchProcessing = BEMPX_GetDatabaseID( "IsBatchProcessing", iCID_Proj );
       if (lDBID_IsBatchProcessing > 0)
    	   BEMPX_SetBEMData( lDBID_IsBatchProcessing, BEMP_Int, (void*) &lIsBatchProcessing, BEMO_User, 0, BEMS_ProgDefault );     // -> BEMS_ProgDefault - SAC 03/25/21
+   }
+
+   // storage of CUACReportID to enable ruleset access of CUAC analysis indicator - SAC 08/19/22
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iCUACReportID > 0)
+   {  long lDBID_CUACReportID = BEMPX_GetDatabaseID( "CUACReportID", iCID_Proj );
+      if (lDBID_CUACReportID > 0)
+   	   BEMPX_SetBEMData( lDBID_CUACReportID, BEMP_Int, (void*) &iCUACReportID, BEMO_User, 0, BEMS_ProgDefault ); 
    }
 
   // SAC 8/23/18 - moved up from below initial defaulting for newly opened model to ensure certain properties (CSE_Name) are defauted before being retrieved/referenced
@@ -3580,17 +3620,62 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		BOOL bXMLInputWriteOK = xmlResultsFile.WriteModel( FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, "User Input" /*pszModelName*/, -1 /*iBEMProcIdx*/, true /*bOnlyValidInputs*/ );		assert( bXMLInputWriteOK );
 	}
 
+   // finish defining output NRCC/LMCC XML report filename - SAC 08/24/22 (LMCC)
+   long lIsLowRiseMFam=0, lDBID_IsLowRiseMFam = BEMPX_GetDatabaseID( "IsLowRiseMFam", iCID_Proj );
+   QString qsSchemaXMLFileDescrip;
+   if (iRulesetCodeYear >= 2022 && lDBID_IsLowRiseMFam > 0 && BEMPX_GetInteger( lDBID_IsLowRiseMFam, lIsLowRiseMFam ) && lIsLowRiseMFam > 0)
+   {  sNRCCXMLFileName   += " - LMCCPRF.xml";     // replaced NRCC w/ " - LMCCPRF.xml";  - SAC 10/17/22
+      qsSchemaXMLFileDescrip = "LMCCPRF report XML";
+   }
+   else
+   {  sNRCCXMLFileName   += " - NRCCPRF.xml";
+      qsSchemaXMLFileDescrip = "NRCCPRF report XML";
+   }
 	iNRCCXMLClassID = (iCodeType != CT_T24N ? 0 : BEMPX_GetDBComponentID("nrccComplianceDocumentPackage"));
-	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && FileExists( sNRCCXMLFileName ))	// SAC 11/26/20
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && FileExists( sNRCCXMLFileName ) && iCUACReportID < 1)	// SAC 11/26/20
 	{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 	  	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-						 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "NRCCPRF report XML", sNRCCXMLFileName.toLocal8Bit().constData(), "analysis" );
+						 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( qsSchemaXMLFileDescrip.toLocal8Bit().constData(), sNRCCXMLFileName.toLocal8Bit().constData(), "analysis" );
 		if (!OKToWriteOrDeleteFile( sNRCCXMLFileName.toLocal8Bit().constData(), sLogMsg, bSilent ))
-		{	sErrMsg = QString( "ERROR:  Analysis aborting - user chose not to overwrite the NRCCPRF report XML file:  %1" ).arg( sNRCCXMLFileName );
+		{	sErrMsg = QString( "ERROR:  Analysis aborting - user chose not to overwrite the %1 file:  %2" ).arg( qsSchemaXMLFileDescrip, sNRCCXMLFileName );
 //											80 : Analysis aborted - user chose not to overwrite NRCCPRF XML reporting file
 			ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 80 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 	}	}
-	BEMXMLWriter xmlNRCCPRFFile( ((!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty()) ? sNRCCXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_NRCCXML );
+	BEMXMLWriter xmlNRCCPRFFile( ((!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && iCUACReportID < 1) ? sNRCCXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_NRCCXML );
+
+
+
+
+	// SAC 9/9/18 - store certain path and filenames to BEMBase for reference during analysis (ported from Res analysis)
+   // moved UP from below in order to set PRIOR TO calling rules to generate the DDY file for this run - SAC 09/06/22
+	if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
+	{	//QString sBatchPath, sBatchFile, sModelFile;
+		//if (sModelFileOnly.lastIndexOf('.') > 0)
+		//	sModelFile = sModelFileOnly.left( sModelFileOnly.lastIndexOf('.') );
+		//else
+		//	sModelFile = sModelFileOnly;
+		//GetCSVOptionString( "BatchPath", sBatchPath, saCSVOptions );
+		//GetCSVOptionString( "BatchFile", sBatchFile, saCSVOptions );
+		//if (sBatchPath.isEmpty())
+		//	sBatchPath = sProcessPath;
+		//if (sBatchFile.isEmpty())
+		//	sBatchFile = sModelFile + QString(" - analysis");
+
+		//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:BatchPath"      ), BEMP_QStr, (void*) &sBatchPath    , BEMO_User, 0, BEMS_ProgDefault );
+		//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:BatchFile"      ), BEMP_QStr, (void*) &sBatchFile    , BEMO_User, 0, BEMS_ProgDefault );
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelPath"      ), BEMP_QStr, (void*) &sModelPathOnly,  BEMO_User, 0, BEMS_ProgDefault );
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelFile"      ), BEMP_QStr, (void*) &sModelFileOnly,  BEMO_User, 0, BEMS_ProgDefault );
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ProcessingPath" ), BEMP_QStr, (void*) &sProcessingPath, BEMO_User, 0, BEMS_ProgDefault );
+	}
+
+   if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())      // SAC 09/06/22
+   {  long lGenerateWthrLocDDY=0, lDBID_GenerateWthrLocDDY = BEMPX_GetDatabaseID( "Proj:GenerateWeatherLocationDDY" );
+      if (lDBID_GenerateWthrLocDDY > 0 && BEMPX_GetInteger( lDBID_GenerateWthrLocDDY, lGenerateWthrLocDDY ) && lGenerateWthrLocDDY > 0)
+      {  int iGenDDYRetVal = LocalEvaluateRuleset( sErrMsg, 93, "GenerateDDYFromWeatherData", bVerbose, pCompRuleDebugInfo );   // sets up MFam HVACSys objects based on DwellUnitType equipment assignments
+                           //											93	: Error evaluating GenerateDDYFromWeatherData rules
+         if (iGenDDYRetVal > 0)
+            iRetVal = iGenDDYRetVal;
+   }  }
 
 	bool bResearchMode = false;
 	bool bProposedOnly = false;		// SAC 9/6/13
@@ -3600,6 +3685,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bEnablePVBattSim = false;	// SAC 4/3/19
    bool bHaveStdPVSim = false;      // SAC 12/08/21
 	long lNumUserSpecMats = 0;			// SAC 12/16/21
+	long lNumAutosizedResHtPumps = 0;   // SAC 10/15/22
+	long lNumResVCHP2HtPumps = 0;       // SAC 10/15/22
 	QString sReadVarsESOexe, sReadVarsESOrvi;		// SAC 4/11/16
 	QString sExcptDsgnModelFile;	// SAC 12/19/14
 	QString sAnnualWeatherFile;
@@ -3628,16 +3715,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			bResearchMode = (sAT.indexOf("research") >= 0);
 			bChkCode = !bResearchMode;
 			bProposedOnly = (sAT.indexOf("proposedonly") >= 0);      // SAC 9/6/13
-			if ((bProposedOnly || bResearchMode) && iAnalysisThruStep > 7)
+			if ((bProposedOnly || bResearchMode || iCUACReportID > 0) && iAnalysisThruStep > 7)
 			{	iAnalysisThruStep = 7;
-											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - AnalysisThruStep being set to #%d due to Proj:AnalysisType = %s", iAnalysisThruStep, sATcopy.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - AnalysisThruStep being set to #%d due to Proj:AnalysisType = %s (or other special processing modes)", iAnalysisThruStep, sATcopy.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			}
 
 		// further defaulting/setup of CompReport* booleans
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "CompReportPDFWritten", iCID_Proj ), iError );   //, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "CompReportXMLWritten", iCID_Proj ), iError );   //, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "CompReportStdWritten", iCID_Proj ), iError );   //, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
-			if (bResearchMode || bProposedOnly)
+			if (bResearchMode || bProposedOnly || iCUACReportID > 0)
 			{	bComplianceReportPDF = false;
 				bComplianceReportXML = false;
 				bComplianceReportStd = false;
@@ -3752,6 +3839,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (lDBID_Proj_NumUserSpecMats > 0)
 			BEMPX_GetInteger( lDBID_Proj_NumUserSpecMats, lNumUserSpecMats );
 
+		long lDBID_Proj_NumAutosizedResHtPumps = BEMPX_GetDatabaseID( "NumAutosizedResHtPumps", iCID_Proj );     // SAC 10/15/22
+		if (lDBID_Proj_NumAutosizedResHtPumps > 0)
+			BEMPX_GetInteger( lDBID_Proj_NumAutosizedResHtPumps, lNumAutosizedResHtPumps );
+		long lDBID_Proj_NumResVCHP2HtPumps = BEMPX_GetDatabaseID( "NumResVCHP2HtPumps", iCID_Proj );	            // SAC 10/15/22
+		if (lDBID_Proj_NumResVCHP2HtPumps > 0)
+			BEMPX_GetInteger( lDBID_Proj_NumResVCHP2HtPumps, lNumResVCHP2HtPumps );
+
       // SAC 9/3/13 - moved up here (above CHECKCODE) from below so that weather file hash checks can occur via CHECKCODE
 		//sErrMsg.clear();
 		if (!bAbort && !BEMPX_AbortRuleEvaluation())
@@ -3767,27 +3861,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 //											14 : Error encountered initializing weather file locations and/or names
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 14 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 		}	}
-
-	// SAC 9/9/18 - store certain path and filenames to BEMBase for reference during analysis (ported from Res analysis)
-		if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
-		{	//QString sBatchPath, sBatchFile, sModelFile;
-			//if (sModelFileOnly.lastIndexOf('.') > 0)
-			//	sModelFile = sModelFileOnly.left( sModelFileOnly.lastIndexOf('.') );
-			//else
-			//	sModelFile = sModelFileOnly;
-			//GetCSVOptionString( "BatchPath", sBatchPath, saCSVOptions );
-			//GetCSVOptionString( "BatchFile", sBatchFile, saCSVOptions );
-			//if (sBatchPath.isEmpty())
-			//	sBatchPath = sProcessPath;
-			//if (sBatchFile.isEmpty())
-			//	sBatchFile = sModelFile + QString(" - analysis");
-
-			//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:BatchPath"      ), BEMP_QStr, (void*) &sBatchPath    , BEMO_User, 0, BEMS_ProgDefault );
-			//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:BatchFile"      ), BEMP_QStr, (void*) &sBatchFile    , BEMO_User, 0, BEMS_ProgDefault );
-			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelPath"      ), BEMP_QStr, (void*) &sModelPathOnly,  BEMO_User, 0, BEMS_ProgDefault );
-			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelFile"      ), BEMP_QStr, (void*) &sModelFileOnly,  BEMO_User, 0, BEMS_ProgDefault );
-			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ProcessingPath" ), BEMP_QStr, (void*) &sProcessingPath, BEMO_User, 0, BEMS_ProgDefault );
-		}
 
 	// SAC 9/3/13 - added weather file hash check logic
 		BOOL bWthrHashesSet = FALSE;
@@ -4009,7 +4082,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					long lDisableMandOccSensorCtrl;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandOccSensorCtrl", iCID_Proj ), lDisableMandOccSensorCtrl ))		// SAC 11/1/19 - new cause for disabling report security
 						lDisableMandOccSensorCtrl = 0;
-			#define  NumRptSecOff  23
+			#define  NumRptSecOff  25
 					int iRptSecOffIdx[NumRptSecOff];
 					bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
 													(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
@@ -4033,7 +4106,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 													(lDisableMandOccSensorCtrl > 0),			// flag (Proj:DisableMandOccSensorCtrl) disabling mandatory occupancy control sensor checks  - SAC 11/1/19
 													(bSimulateCSEOnly),  						// causes analysis to skip past EPlus simulations
 													(lNumUserSpecMats > 0), 		         // # of Mats defined by user-specified properties and used to describe simulated surfaces in the building - SAC 12/16/21
-                                       (lEnableResearchMode > 0) };           // EnableResearchMode activated
+                                       (lEnableResearchMode > 0),             // EnableResearchMode activated
+                                       (lNumAutosizedResHtPumps > 0),         // Autosized Res HtPumps - SAC 10/15/22
+                                       (lNumResVCHP2HtPumps > 0) };           // VCHP2 Res HtPumps - SAC 10/15/22
 					for (iRF=0; iRF < NumRptSecOff; iRF++)
 					{	if (bRptSecOff[iRF])
 							iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
@@ -4082,6 +4157,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									case 20 :	sLogMsg =        "      SimulateCSEOnly flag causing EnergyPlus simulations to be skipped";		break;	// SAC 3/11/20
 									case 21 :	sLogMsg = QString::asprintf( "      %ld Material object(s) include user-specified properties that are not allowed in permit analysis", lNumUserSpecMats );		break;	// SAC 12/16/21
 									case 22 :	sLogMsg =        "      EnableResearchMode flag activated";		break;	// SAC 02/26/22
+                           case 23 :   sLogMsg = QString::asprintf( "      %ld Residential heat pump object(s) are configured for auto-sizing which is not allowed in permit analysis", lNumAutosizedResHtPumps );		break;	// SAC 10/15/22
+                           case 24 :   sLogMsg = QString::asprintf( "      %ld Residential heat pump object(s) are specified as 'VCHP - Detailed' which is not allowed in permit analysis", lNumResVCHP2HtPumps );		break;	// SAC 10/15/22
 									default :	sLogMsg.clear();		break;
 								}
 								if (!sLogMsg.isEmpty())
@@ -4392,7 +4469,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 		assert( BEMPX_GetActiveModel() == 0 );
 
-		if (bResearchMode || bProposedOnly)  // SAC 11/22/16 - was: iNumRuns < 4)
+		if (bResearchMode || bProposedOnly || iCUACReportID > 0)  // SAC 11/22/16 - was: iNumRuns < 4)
 		{	// second round of progress dialog setting initialization
 			if (iCodeType == CT_T24N)
 			{	if (bParallelSimulations)
@@ -4464,7 +4541,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		BOOL bModelInitialized[]   = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };				assert( iNumRuns <= 10 );
 		BOOL bSizingRunSimulated[] = { FALSE, FALSE, FALSE, FALSE, FALSE };
 		bool bModelToBeSimulated[] = { true, (iNumRuns > 1), (iNumRuns > 2), (iNumRuns > 3), (iNumRuns > 4), (iNumRuns > 5), (iNumRuns > 6), (iNumRuns > 7), (iNumRuns > 8), (iNumRuns > 9) };
-		if (bProposedOnly)  // SAC 11/22/16 - new logic to handle bProposedOnly analysis
+		if (bProposedOnly || iCUACReportID > 0)  // SAC 11/22/16 - new logic to handle bProposedOnly analysis
 		{	if (iCodeType == CT_T24N)
 			{	assert( iNumRuns == 4 );
 				bModelToBeSimulated[1] = false;  bModelToBeSimulated[3] = false;  // toggle OFF baseline sizing and annunal runs
@@ -4864,6 +4941,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							osSimInfo[iSimRunIdx].iBEMProcIdx					= osRunInfo[iSimRunIdx].BEMProcIdx();
 							osSimInfo[iSimRunIdx].iOrientationIdx				= 0;		// 90.1 only
 							osSimInfo[iSimRunIdx].iRunIdx							= iRun;
+                     if (osRunInfo[iSimRunIdx].RunID().compare("ap") == 0)       // SAC 09/09/22 (CUAC)
+                        iCUAC_BEMProcIdx = osRunInfo[iSimRunIdx].BEMProcIdx();
 							// SAC 4/12/16 - integrate bSimOutVarsCSV initialization so that multi-orient runs work w/out INI toggle for each orientation
 							if (iCodeType == CT_T24N)
 							{	switch (osRunInfo[iSimRunIdx].OSRunIdx())		// SAC 5/27/15 - new progress reporting mods
@@ -4966,7 +5045,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                              sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,
                                              iCodeType, iRulesetCodeYear, lAnalysisType, iDontAbortOnErrorsThruStep, iAnalStep, bProposedOnly, bStoreBEMDetails,
                                              bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, sCSEIncludeFileDBID, sCSEVersion, pszErrorMsg, iErrorMsgLen,
-                                             bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile );
+                                             bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile, iCUACReportID );
                         }  }
 
                            //BEMMessageBox( QString::asprintf( "Pause following first CSE run loop:  bPerformFullCSESim %s / bStoreHourlyResults %s / lDBID_Proj_ExcludePVBattFromSim %ld / lDBID_Proj_SimPVBattOnly %ld",
@@ -5007,7 +5086,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                  //  BEMMessageBox( "Pausing before E+ simulation(s)" );
 								//	iSimRetVal = CMX_PerformSimulation_EnergyPlus_Multiple(	sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
 									iSimRetVal = PerformSimulation_EnergyPlus_Multiple( osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
-																					sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
+																					sProcessingPath.toLocal8Bit().constData(), sModelkitPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
 																			// remaining general arguments
 																					bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
 																					(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
@@ -5057,7 +5136,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                           sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,
                                           iCodeType, iRulesetCodeYear, lAnalysisType, iDontAbortOnErrorsThruStep, iAnalStep, bProposedOnly, bStoreBEMDetails,
                                           bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, sCSEIncludeFileDBID, sCSEVersion, pszErrorMsg, iErrorMsgLen,
-                                          bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile );
+                                          bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile, iCUACReportID );
                         }
                         // store CSE run summaries
                         for (iSR=0; iSR <= iSimRunIdx; iSR++)	// loop over runs just simulated in CSE above
@@ -5721,7 +5800,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{
 			iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
    							if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
-									BEMPX_WriteLogFile( "  PerfAnal_NRes - NRCCPRF XML prep rules", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									BEMPX_WriteLogFile( QString( "  PerfAnal_NRes - %1 prep rules" ).arg( qsSchemaXMLFileDescrip ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
    		BOOL bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_NRCCPRF" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );     // SAC 11/27/20    //, &saPreAnalChkWarningMsgs );
 			BEMPX_RefreshLogFile();
 			if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs && iDontAbortOnErrorsThruStep < 8)
@@ -5755,7 +5834,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																					false /*bOnlyValidInputs*/, true /*bWritePropertiesDefinedByRuleset*/, false /*bUseReportPrecisionSettings*/, BEMFT_NRCCXML /*iFileType*/ );
 																	assert( bXMLWriteOK );
 				if (bVerbose || pCompRuleDebugInfo != NULL)  // SAC 1/31/13
-				{	sLogMsg = QString( "      Writing of NRCCPRF report XML file successful: %1" ).arg( (bXMLWriteOK ? "True" : "False") );
+				{	sLogMsg = QString( "      Writing of %1 file successful: %2" ).arg( qsSchemaXMLFileDescrip, (bXMLWriteOK ? "True" : "False") );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 				xmlNRCCPRFFile.Close();
@@ -5775,6 +5854,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		// possible mods needed here OR where 'PASS' originally set if we need to switch result to FAIL when iNumPropClgUMLHViolations or iNumPropHtgUMLHViolations > 0 - SAC 4/6/20
 
 		}
+
+      // perform CUAC analysis/calcs - SAC 09/09/22
+      if (iRetVal == 0 && iCUACReportID > 0)
+      {
+         CUAC_AnalysisProcessing( sProcessingPath, sModelPathOnly, sModelFileOnly, iRulesetCodeYear, bStoreBEMDetails, bSilent, bVerbose,
+                                  bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx );
+                        //   CSERunLoop( iSimRunIdx, posSimInfo, pqsCSESimStatusMsg, bStoreHourlyResults, sProcessingPath, sModelPathOnly, sModelFileOnly, bSecureT24NRptGenActivated,
+                        //                  bPerformFullCSESim, bBypassRecircDHW, lNumPVArraysChk, bEnablePVBattSim, pszUIVersionString,
+                        //                  sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,
+                        //                  iCodeType, iRulesetCodeYear, lAnalysisType, iDontAbortOnErrorsThruStep, iAnalStep, bProposedOnly, bStoreBEMDetails,
+                        //                  bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, sCSEIncludeFileDBID, sCSEVersion, pszErrorMsg, iErrorMsgLen,
+                        //                  bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile, iCUACReportID );
+      }
 
 	// AnalysisAction - End / AfterAnalPostProc processing   - SAC 11/17/20
 		if (iRetVal == 0 && !bAbort)
@@ -6062,30 +6154,30 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                         else if (FileExists( sOutRptFN ))      // added code to DELETE the old report file(s) prior to new report generation - SAC 10/01/21
                            DeleteFile( sOutRptFN.toLocal8Bit().constData() );
 						}	}
-            // no mods to BEMBase for NRCC-PRF reporting - until it is the main report generated - SAC 04/10/21
-				//		if (lRptIDNum > 0 && lRptIDNum != iOrigRptIDNum)
-				//			// update RptIDNum in database to reflect report(s) removed from generation list in above loop
-				//      	BEMPX_SetBEMData( lDBID_RptIDNum, BEMP_Int, (void*) &lRptIDNum, BEMO_User, -1, BEMS_ProgDefault );
+                  // no mods to BEMBase for NRCC-PRF reporting - until it is the main report generated - SAC 04/10/21  // restored - SAC 10/19/22
+						if (lRptIDNum > 0 && lRptIDNum != iOrigRptIDNum)
+							// update RptIDNum in database to reflect report(s) removed from generation list in above loop
+				      	BEMPX_SetBEMData( lDBID_RptIDNum, BEMP_Int, (void*) &lRptIDNum, BEMO_User, -1, BEMS_ProgDefault );
 
-            // restore once the NRCC-PRF report is the MAIN permit report - until then bSendRptSignature will be set above - SAC 04/10/21
-				//		if (lRptIDNum > 0 && bSendRptSignature && (!bHaveResult || !bResultIsPass ||		// toggle OFF report security if compliance result is undefined or 'Fail'
-				//																 iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0))		// prevent signature when UMLH limits exceeded
-				//		{	// SAC 8/28/17 - prevent report signature if compliance result NOT PASS
-				//			if (!bHaveResult)
-				//				sLogMsg = "Compliance report will be generated without security measures due to compliance result not calculated";
-				//			else if (!bResultIsPass)
-				//				sLogMsg = "Compliance report will be generated without security measures due to non-passing compliance result";
-				//			else if (iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0)		// SAC 4/6/20
-				//			{	if (iNumPropClgUMLHViolations > 0 && iNumPropHtgUMLHViolations > 0)
-				//					sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling and %2 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations), QString::number(iNumPropHtgUMLHViolations) );
-				//				else if (iNumPropClgUMLHViolations > 0)
-				//					sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations) );
-				//				else
-				//					sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropHtgUMLHViolations) );
-				//			}
-				//			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				//			bSendRptSignature = false;
-				//		}
+                  // restore once the NRCC-PRF report is the MAIN permit report - until then bSendRptSignature will be set above - SAC 04/10/21  // restored - SAC 10/19/22
+						if (lRptIDNum > 0 && bSendRptSignature && (!bHaveResult || !bResultIsPass ||		// toggle OFF report security if compliance result is undefined or 'Fail'
+																				 iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0))		// prevent signature when UMLH limits exceeded
+						{	// SAC 8/28/17 - prevent report signature if compliance result NOT PASS
+							if (!bHaveResult)
+								sLogMsg = "Compliance report will be generated without security measures due to compliance result not calculated";
+							else if (!bResultIsPass)
+								sLogMsg = "Compliance report will be generated without security measures due to non-passing compliance result";
+							else if (iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0)		// SAC 4/6/20
+							{	if (iNumPropClgUMLHViolations > 0 && iNumPropHtgUMLHViolations > 0)
+									sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling and %2 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations), QString::number(iNumPropHtgUMLHViolations) );
+								else if (iNumPropClgUMLHViolations > 0)
+									sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations) );
+								else
+									sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropHtgUMLHViolations) );
+							}
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+							bSendRptSignature = false;
+						}
 
 						if (lRptIDNum > 0)  // baDoRpt[iRpt])
 						{
@@ -7739,12 +7831,20 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 	{	QString sTmpAnnWthr, sTmpDDY;   bool bWthrOverride=false;
 	   BEMPX_GetString( lDBID_Proj_AnnualWeatherFile, sTmpAnnWthr );
 	   BEMPX_GetString( lDBID_Proj_DDWeatherFile    , sTmpDDY );
+      QString sWeatherStationFileBase, sWeatherLocationDDYFile;   long lGenerateWeatherLocationDDY=0;     // SAC 09/06/22
+      BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherStationFileBase" ), sWeatherStationFileBase );
+      BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherLocationDDYFile" ), sWeatherLocationDDYFile );
+      BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GenerateWeatherLocationDDY" ), lGenerateWeatherLocationDDY );
 	   if (!sTmpAnnWthr.isEmpty() && sTmpDDY.isEmpty() && sTmpAnnWthr.indexOf('/') < 0 && sTmpAnnWthr.indexOf('\\') < 0)
 		{	sWeatherStation = sTmpAnnWthr;	// SAC 2/1/20 - use AnnualWeatherFile as basis of annual & DDY sim weather files
 			bWthrOverride = true;
 		}
 		else
-		   BEMPX_GetString( lDBID_Proj_WeatherStation, sWeatherStation );
+		{  if (!sWeatherStationFileBase.isEmpty())         // SAC 09/06/22
+            sWeatherStation = sWeatherStationFileBase;
+         else
+            BEMPX_GetString( lDBID_Proj_WeatherStation, sWeatherStation );
+      }
 		if (!DirectoryExists( sWthrPath ))
 		{	iRetVal = 2;
 			sErrMsg = QString::asprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Path containing weather files not found:  '%s'", sWthrPath.toLocal8Bit().constData() );
@@ -7763,10 +7863,13 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 			}
 			else if (lDBID_Proj_WeatherFileAppend > 0)
 			   BEMPX_GetString( lDBID_Proj_WeatherFileAppend, sWeatherFileAppend );
-			else
+			else if (sWeatherStationFileBase.isEmpty())     // only append the generic "_CZ2010" if sWeatherStationFileBase not specified - SAC 09/06/22
 				sWeatherFileAppend = "_CZ2010";
 			sAnnualWeatherFile = sWthrPath + sWeatherStation + sWeatherFileAppend + ".epw";
-			sDDWeatherFile     = sWthrPath + sWeatherStation + sWeatherFileAppend + ".ddy";
+         if (lGenerateWeatherLocationDDY > 0 && !sWeatherLocationDDYFile.isEmpty())       // SAC 09/06/22
+            sDDWeatherFile  = sWeatherLocationDDYFile;
+         else
+			   sDDWeatherFile  = sWthrPath + sWeatherStation + sWeatherFileAppend + ".ddy";
 
 			long lDBID_Proj_WeatherFileDownloadURL = BEMPX_GetDatabaseID( "Proj:WeatherFileDownloadURL" );		// SAC 9/15/14 - mods to enable internet download of wthr files (for S901G)
 			if ( ( (bAnnual && !FileExists( sAnnualWeatherFile.toLocal8Bit().constData() )) || (bDDY && !FileExists( sDDWeatherFile.toLocal8Bit().constData() )) ) && lDBID_Proj_WeatherFileDownloadURL && bAllowWthrDownload &&
@@ -7866,6 +7969,7 @@ int WriteCSVHourlyResultsHeader( const char* pszHourlyResultsPathFile, const cha
 {	int iRetVal = 0;
 	double fCondFloorArea=0.0, fNonresFlrArea=0.0, fResFlrArea=0.0;
    long lEngyCodeYearNum=0;
+   bool bEchoNResData = true, bEchoResData = false;  // SAC 07/19/22
    QString sRunTitle;
 	if (!BEMPX_GetFloat(	 BEMPX_GetDatabaseID( "Bldg:TotCondFlrArea"  ), fCondFloorArea  ,       0, -1, 0, BEMO_User,          iBEMProcIdx ))
    {  iRetVal = 1;
@@ -7876,6 +7980,8 @@ int WriteCSVHourlyResultsHeader( const char* pszHourlyResultsPathFile, const cha
       BEMPX_GetFloat(   BEMPX_GetDatabaseID( "Bldg:NonResFlrArea"   ), fNonresFlrArea  , 0, -1, 0, BEMO_User, iBEMProcIdx );
       BEMPX_GetFloat(   BEMPX_GetDatabaseID( "Bldg:ResFlrArea"      ), fResFlrArea     , 0, -1, 0, BEMO_User, iBEMProcIdx );
       BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEngyCodeYearNum, 0, -1, 0, BEMO_User, iBEMProcIdx );
+      bEchoNResData = (fNonresFlrArea > 1);     // SAC 07/19/22
+      bEchoResData  = (fResFlrArea    > 1);
 
 		QString sOverwriteMsg;
 		sOverwriteMsg = QString::asprintf(	"The hourly CSV results file '%s' is opened in another application.  This file must be closed in that "
@@ -7907,12 +8013,11 @@ int WriteCSVHourlyResultsHeader( const char* pszHourlyResultsPathFile, const cha
 		if (pszEPlusVerStr && strlen( pszEPlusVerStr ) > 0)
 			sEPlusVer = pszEPlusVerStr;
 		else
-			sEPlusVer = "???";
+			sEPlusVer = (bEchoResData && !bEchoNResData) ? "n/a" : "???";     // SAC 07/19/22
 		if (pszOpenStudioVerStr && strlen( pszOpenStudioVerStr ) > 0)
 			sOSVer = pszOpenStudioVerStr;
 		else
-			sOSVer = "???";
-
+			sOSVer = (bEchoResData && !bEchoNResData) ? "n/a" : "???";     // SAC 07/19/22
 		QString qsCSEName;	// SAC 12/17/17
 		if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSENme"  ),	qsCSEName  ))
 			qsCSEName = "CSE";
@@ -8178,8 +8283,9 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    							daMtrEUData[iMtr][iEU] = &daZero[0];   // this combination of meter & enduse does not have results, so assign 8760 of zeroes
 
                      // retrieve Residential-only hourly results - SAC 11/01/21 (MFam)
+                     // added logic to ensure that PV & Battery results retrieved for runs where bEchoResData=true & bEchoNResData=false - SAC 07/19/22
                      if (iEUO[iEUOM][iEU] < 0 || !bEchoResData || esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sResEnduseName == NULL ||
-                         strcmp( esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sEnduseName, esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sResEnduseName ) == 0)
+                         (bEchoNResData && strcmp( esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sEnduseName, esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sResEnduseName ) == 0))
    							daMtrEUResData[iMtr][iEU] = &daZero[0];  
    						else if (BEMPX_GetHourlyResultArrayPtr( &daMtrEUResData[iMtr][iEU], NULL, 0, pszModelName, pszaEPlusFuelNames[iMtr],
    	 																esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sResEnduseName, iBEMProcIdx ) == 0 && daMtrEUResData[iMtr][iEU] != NULL)
@@ -8646,7 +8752,7 @@ static char szT24NCSV2[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Complia
 										" Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Ene"
 										"rgy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,TDV by Fuel (k"
 										"TDV/ft2),,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak De"
-										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
+										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC/LMCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
 										",,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,"
 										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1117 chars
 static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Results Set,Area (SqFt),Area (SqFt),Analysis Type,Elapsed Time,Fail,Margin,Time,Rul"
@@ -8739,6 +8845,18 @@ const char* GetResultsCSVHeader_NonRes( int i1HdrIdx, int iCodeType )	// SAC 12/
 	}
 	return pszRetVal;
 }
+
+
+
+int CMX_ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptPathFile,  
+                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, bool bVerboseOutput,
+                        char* pszReturnStr, int iReturnStrLength )
+{
+   return ExecuteModelkitBat(	sModelkitBatPathFile, sModelkitRubyScriptPathFile, sIDFPath,
+                              sIDFFilenameNoExt, bVerboseOutput, pszReturnStr, iReturnStrLength );
+}
+
+
 
 
 

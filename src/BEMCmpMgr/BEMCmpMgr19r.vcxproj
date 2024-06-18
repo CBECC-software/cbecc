@@ -199,11 +199,11 @@
     <ClInclude Include="zip.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BEMCmpMgr.cpp" />
-    <ClCompile Include="BEMCmpMgrRes.cpp" />
+    <ClCompile Include="BEMCmpMgr_19.cpp" />
+    <ClCompile Include="BEMCmpMgrRes_19.cpp" />
     <ClCompile Include="BEMCmpMgrSecure.cpp" />
     <ClCompile Include="bemcm_LoadModel.cpp" />
-    <ClCompile Include="CSERunMgr.cpp" />
+    <ClCompile Include="CSERunMgr_19.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>

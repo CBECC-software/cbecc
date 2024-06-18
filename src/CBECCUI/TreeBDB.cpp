@@ -404,10 +404,10 @@ static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_B
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
 static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #elif UI_PROGYEAR2022	// SAC 6/19/19
-static int  siNumArchComps = 54;      // was: 28;  before CBECC_Res integration - SAC 04/27/21
+static int  siNumArchComps = 54;      // was: 28;  before CBECC_Res integration - SAC 04/27/21   // SAC 07/26/22 (CUAC)
 static int  siNumArchFolders = 14;    // was: 10;  before CBECC_Res integration - SAC 04/27/21
 static int  siaMode0[]  = { 2, siNumArchComps-siNumArchFolders, siNumArchComps };
-static int* siapMode0[] = { &eiBDBCID_ResProj, &eiBDBCID_Building, &eiBDBCID_Story, 
+static int* siapMode0[] = { &eiBDBCID_ResProj, /*&eiBDBCID_CUAC,*/ &eiBDBCID_Building, &eiBDBCID_Story, 
    // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
    &eiBDBCID_ResZnGrp, 
                             &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
@@ -433,7 +433,7 @@ static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_S
 static int  siNumHVACComps = 45;
 static int  siNumHVACFolders = 18;
 static int  siaMode1[]  = { 7, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
-static int* siapMode1[] = { &eiBDBCID_ResProj, &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_ResHVACSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
+static int* siapMode1[] = { &eiBDBCID_ResProj, /*&eiBDBCID_CUAC,*/ &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_ResHVACSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
                             &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
@@ -489,7 +489,7 @@ static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_
 #elif UI_PROGYEAR2022	// SAC 6/19/19
 // { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
 static int  siaLibMode0[]  = { 2, siNumArchComps-siNumArchFolders, siNumArchComps };
-static int* siapLibMode0[] = { &eiBDBCID_ResProj, &eiBDBCID_Building, &eiBDBCID_Story, 
+static int* siapLibMode0[] = { &eiBDBCID_ResProj, /*&eiBDBCID_CUAC,*/ &eiBDBCID_Building, &eiBDBCID_Story, 
    // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
    &eiBDBCID_ResZnGrp, 
                             &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
@@ -513,7 +513,7 @@ static int* siapLibFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCI
                               NULL };
 
 static int  siaLibMode1[]  = { 7, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
-static int* siapLibMode1[] = { &eiBDBCID_ResProj, &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_ResHVACSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
+static int* siapLibMode1[] = { &eiBDBCID_ResProj, /*&eiBDBCID_CUAC,*/ &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_ResHVACSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
 									 &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, /*&eiBDBCID_BlrHtPump,*/ &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
@@ -638,6 +638,7 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
 {
    if      (iBDBClass == eiBDBCID_Project )              return  14;
    else if (iBDBClass == eiBDBCID_ResProj )              return 132;    // SAC 10/20/21 (MFam)
+   else if (iBDBClass == eiBDBCID_CUAC )                 return 132;    // SAC 07/26/22 (CUAC)
    else if (iBDBClass == eiBDBCID_SchDay)                return  82;
    else if (iBDBClass == eiBDBCID_ThrmlEngyStorModeSchDay) return  82;
    else if (iBDBClass == eiBDBCID_SchWeek)               return  80;
@@ -3224,12 +3225,17 @@ void CTreeBDB::OnQuickEdit()
 				if (pMainWnd && (pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame))) && iBDBClass == eiBDBCID_Proj)
 					((CMainFrame*)pMainWnd)->AutoSaveAsPrecheck( iBDBClass );		// SAC 9/30/20
 
+#ifdef UI_CANRES
+            int iNumResProjObjs = (iBDBClass == eiBDBCID_Proj && eiBDBCID_ResProj > 0) ? BEMPX_GetNumObjects( eiBDBCID_ResProj ) : -1;    // force tree update when ResProj or CUAC created during Proj dialog display - SAC 07/27/22
+            //int iNumCUACObjs    = (iBDBClass == eiBDBCID_Proj && eiBDBCID_CUAC    > 0) ? BEMPX_GetNumObjects( eiBDBCID_CUAC    ) : -1;
+#endif
             m_bTreeCurrent = TRUE;
 				int iTabCtrlWd, iTabCtrlHt;
 				VERIFY( GetDialogTabDimensions( iBDBClass, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 				CString sDialogCaption;
 				GetDialogCaption( iBDBClass, sDialogCaption );   // SAC 1/8/12
 //            CBEMDialog td( iBDBClass, this );
+                  //AfxMessageBox ( "accessing dialog from TreeBDB" );
             CSACBEMProcDialog td( iBDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
                            //   0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, 99 /*iMaxTabs*/,
@@ -3241,6 +3247,13 @@ void CTreeBDB::OnQuickEdit()
 										(elDefaultOptionInp < DefaultOption_Model) );	// SAC 4/18/18
             if (td.DoModal() == IDOK)
             {}
+
+#ifdef UI_CANRES
+            if (iBDBClass == eiBDBCID_Proj &&
+                ( (iNumResProjObjs == 0 && BEMPX_GetNumObjects( eiBDBCID_ResProj ) > 0) ||
+                  false ))   // (iNumCUACObjs    == 0 && BEMPX_GetNumObjects( eiBDBCID_CUAC    ) > 0) ))
+               m_bTreeCurrent = false;       // force tree update when ResProj or CUAC created during Proj dialog display - SAC 07/27/22
+#endif
 
             if (!m_bTreeCurrent)
                PopulateBDBTree( m_iTreeMode, iBDBClass );

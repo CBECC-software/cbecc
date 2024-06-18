@@ -1,13 +1,13 @@
 RulesetFilename   "CA Res 2022.bin"  
 
 Proj   "EAA Example 3"  
-   BEMVersion = 10
-   SoftwareVersion = "CBECC-Res 2022.1.0 RC (1243)"
-   SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
+   BEMVersion = 11
+   SoftwareVersion = "CBECC-Res 2022.2.0 RC (1271)"
+   SoftwareVersionDetail = "CBECC-Res 2022.2.0 RV (1263)"
    CreateDate = 1556213272
-   ModDate = 1653618812
+   ModDate = 1665517917
    RunDate = 1474307407
-   ProjFileName = "EAAExample3.ribd22"
+   ProjFileName = "EAAExample.ribd22"
    RunTitle = "Ex HVAC Altered DHW"
    AnalysisType = "Proposed and Standard"
    CALGreen = 0
@@ -81,13 +81,13 @@ Proj   "EAA Example 3"
    Description = "Addition 225 ft2"
    UseDefaultACH50 = 1
    ACH50 = 5
-   Status = "New"
+   Status = "Altered"
    IsVerified = 0
    IsAddAlone = 0
    AdditionCFAFrac = 1
    AlterIncl2Categs = 0
    ProjInclKitchen = 0
-   InsulConsQuality = "No"
+   InsulConsQuality = "Yes"
    NumBedrooms = 3
    NumAddBedrooms = 0
    AllOrientations = 0
@@ -135,6 +135,7 @@ Proj   "EAA Example 3"
    Appl_RefrigUsage[1] = 565
    ApplRefrigEffMethod[1] = "from # bedrooms/unit"
    ApplDishUsageMethod[1] = "from # bedrooms/unit"
+   ResultsCurrentMsg = "(not current)"
    BypassMessageBoxes = 1
    CSERpt_ZnDataDump = 0
    CSERpt_HVACDescrip = 0
@@ -183,9 +184,9 @@ Zone   "House"
 
 CeilingBelowAttic   "Ceiling (below attic)"  
    Status = "Altered"
-   IsVerified = 1
+   IsVerified = 0
    Area = 1440
-   Construction = "R-38 Ceiling"
+   Construction = "R-49 Ceiling"
    exConstruction = "Ceiling R11"
    AtticZone = "Attic"
    ..
@@ -210,6 +211,8 @@ Win   "Alter F1"
    Height = 4
    Width = 6
    Multiplier = 1
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.23
    UfactorSHGCSource = "NFRC"
    ExteriorShade = "Insect Screen (default)"
    exArea = 24
@@ -256,6 +259,8 @@ Win   "Alter F2"
    Height = 4
    Width = 8
    Multiplier = 1
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.23
    UfactorSHGCSource = "NFRC"
    ExteriorShade = "Insect Screen (default)"
    exArea = 32
@@ -660,7 +665,7 @@ CeilingBelowAttic   "Addition Ceiling"
    Status = "New"
    IsVerified = 0
    Area = 225
-   Construction = "R-38 Ceiling"
+   Construction = "R-49 Ceiling-2"
    AtticZone = "Addtn Attic"
    ..
 
@@ -670,7 +675,7 @@ ExtWall   "Add Wall Left"
    Orientation = "Left"
    OrientationValue = 90
    Area = 120
-   Construction = "R-19 + R5"
+   Construction = "R-21+ R5"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -727,7 +732,7 @@ ExtWall   "Add Back Wall"
    Orientation = "Back"
    OrientationValue = 180
    Area = 120
-   Construction = "R-19 + R5"
+   Construction = "R-21+ R5"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -784,7 +789,7 @@ ExtWall   "Add Wall Right"
    Orientation = "Right"
    OrientationValue = 270
    Area = 120
-   Construction = "R-19 + R5"
+   Construction = "R-21+ R5"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -921,35 +926,35 @@ EUseSummary   "EUSummary"
    Title3[29] = "Emis. (kg)"
    Title3[30] = "Margin (kg)"
    Enduse1[1] = "Space Heating"
-   Enduse1[2] = "274"
-   Enduse1[3] = "332.4"
-   Enduse1[4] = "79.71"
-   Enduse1[5] = "237"
-   Enduse1[6] = "373.0"
-   Enduse1[7] = "88.20"
-   Enduse1[8] = "8.49"
-   Enduse1[10] = "0.00"
-   Enduse1[11] = "0.00"
-   Enduse1[23] = "63"
-   Enduse1[24] = "1,944"
-   Enduse1[25] = "2,007"
-   Enduse1[27] = "55"
-   Enduse1[28] = "2,181"
-   Enduse1[29] = "2,236"
-   Enduse1[30] = "229"
+   Enduse1[2] = "216"
+   Enduse1[3] = "340.3"
+   Enduse1[4] = "80.44"
+   Enduse1[5] = "214"
+   Enduse1[6] = "336.6"
+   Enduse1[7] = "79.58"
+   Enduse1[8] = "-0.86"
+   Enduse1[10] = "0.10"
+   Enduse1[11] = "0.10"
+   Enduse1[23] = "50"
+   Enduse1[24] = "1,990"
+   Enduse1[25] = "2,040"
+   Enduse1[27] = "50"
+   Enduse1[28] = "1,968"
+   Enduse1[29] = "2,018"
+   Enduse1[30] = "-22"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "3,165"
-   Enduse2[4] = "124.39"
-   Enduse2[5] = "4,031"
-   Enduse2[7] = "143.90"
-   Enduse2[8] = "19.51"
-   Enduse2[10] = "1.88"
-   Enduse2[11] = "2.30"
-   Enduse2[23] = "391"
-   Enduse2[25] = "391"
-   Enduse2[27] = "461"
-   Enduse2[29] = "461"
-   Enduse2[30] = "70"
+   Enduse2[2] = "3,034"
+   Enduse2[4] = "120.86"
+   Enduse2[5] = "3,177"
+   Enduse2[7] = "123.75"
+   Enduse2[8] = "2.89"
+   Enduse2[10] = "0.30"
+   Enduse2[11] = "0.31"
+   Enduse2[23] = "378"
+   Enduse2[25] = "378"
+   Enduse2[27] = "389"
+   Enduse2[29] = "389"
+   Enduse2[30] = "11"
    Enduse3[1] = "IAQ Ventilation"
    Enduse3[4] = "0.00"
    Enduse3[7] = "0.00"
@@ -990,23 +995,23 @@ EUseSummary   "EUSummary"
    Enduse6[5] = "395"
    Enduse6[7] = "7.33"
    Enduse6[8] = "0.00"
-   Enduse6[10] = "0.10"
-   Enduse6[11] = "0.10"
+   Enduse6[10] = "0.07"
+   Enduse6[11] = "0.07"
    Enduse6[23] = "75"
    Enduse6[25] = "75"
    Enduse6[27] = "75"
    Enduse6[29] = "75"
    Enduse6[30] = "0"
    Enduse7[1] = "Appl. & Cooking"
-   Enduse7[2] = "778"
+   Enduse7[2] = "777"
    Enduse7[3] = "43.1"
    Enduse7[4] = "21.87"
-   Enduse7[5] = "779"
+   Enduse7[5] = "778"
    Enduse7[6] = "43.1"
-   Enduse7[7] = "21.89"
-   Enduse7[8] = "0.02"
-   Enduse7[10] = "0.12"
-   Enduse7[11] = "0.12"
+   Enduse7[7] = "21.88"
+   Enduse7[8] = "0.01"
+   Enduse7[10] = "0.09"
+   Enduse7[11] = "0.09"
    Enduse7[23] = "113"
    Enduse7[24] = "252"
    Enduse7[25] = "365"
@@ -1020,8 +1025,8 @@ EUseSummary   "EUSummary"
    Enduse8[5] = "2,026"
    Enduse8[7] = "34.14"
    Enduse8[8] = "0.00"
-   Enduse8[10] = "0.30"
-   Enduse8[11] = "0.30"
+   Enduse8[10] = "0.27"
+   Enduse8[11] = "0.27"
    Enduse8[23] = "336"
    Enduse8[25] = "336"
    Enduse8[27] = "336"
@@ -1041,39 +1046,39 @@ EUseSummary   "EUSummary"
    Enduse9[29] = "19"
    Enduse9[30] = "0"
    Enduse10[1] = "TOTAL"
-   Enduse10[2] = "6,815"
-   Enduse10[3] = "484.4"
-   Enduse10[4] = "293.58"
-   Enduse10[5] = "7,645"
-   Enduse10[6] = "525.0"
-   Enduse10[7] = "321.60"
-   Enduse10[8] = "28.02"
-   Enduse10[10] = "2.44"
-   Enduse10[11] = "2.85"
-   Enduse10[23] = "1,009"
-   Enduse10[24] = "2,832"
-   Enduse10[25] = "3,841"
-   Enduse10[27] = "1,071"
-   Enduse10[28] = "3,069"
-   Enduse10[29] = "4,140"
-   Enduse10[30] = "299"
+   Enduse10[2] = "6,626"
+   Enduse10[3] = "492.3"
+   Enduse10[4] = "290.78"
+   Enduse10[5] = "6,766"
+   Enduse10[6] = "488.6"
+   Enduse10[7] = "292.82"
+   Enduse10[8] = "2.04"
+   Enduse10[10] = "0.86"
+   Enduse10[11] = "0.87"
+   Enduse10[23] = "983"
+   Enduse10[24] = "2,878"
+   Enduse10[25] = "3,861"
+   Enduse10[27] = "994"
+   Enduse10[28] = "2,856"
+   Enduse10[29] = "3,850"
+   Enduse10[30] = "-11"
    Enduse11[1] = "Compliance Total"
-   Enduse11[2] = "3,519"
-   Enduse11[3] = "441.3"
-   Enduse11[4] = "228.49"
-   Enduse11[5] = "4,348"
-   Enduse11[6] = "481.8"
-   Enduse11[7] = "256.49"
-   Enduse11[8] = "28.00"
-   Enduse11[10] = "1.89"
-   Enduse11[11] = "2.31"
-   Enduse11[23] = "466"
-   Enduse11[24] = "2,580"
-   Enduse11[25] = "3,046"
-   Enduse11[27] = "528"
-   Enduse11[28] = "2,817"
-   Enduse11[29] = "3,345"
-   Enduse11[30] = "299"
+   Enduse11[2] = "3,331"
+   Enduse11[3] = "449.2"
+   Enduse11[4] = "225.69"
+   Enduse11[5] = "3,471"
+   Enduse11[6] = "445.4"
+   Enduse11[7] = "227.72"
+   Enduse11[8] = "2.03"
+   Enduse11[10] = "0.41"
+   Enduse11[11] = "0.42"
+   Enduse11[23] = "440"
+   Enduse11[24] = "2,626"
+   Enduse11[25] = "3,066"
+   Enduse11[27] = "451"
+   Enduse11[28] = "2,604"
+   Enduse11[29] = "3,055"
+   Enduse11[30] = "-11"
    Enduse13[1] = "Photovoltaics"
    Enduse13[4] = "0.00"
    Enduse13[7] = " "
@@ -1103,27 +1108,27 @@ EUseSummary   "EUSummary"
    SummaryCol2[1] = "Compliance"
    SummaryCol2[2] = "Total"
    SummaryCol2[3] = "(kTDV/ft²-yr)"
-   SummaryCol2[4] = "256.49"
-   SummaryCol2[5] = "228.49"
+   SummaryCol2[4] = "227.72"
+   SummaryCol2[5] = "225.69"
    SummaryCol3[1] = "Compliance"
    SummaryCol3[2] = "Margin"
    SummaryCol3[3] = "(kTDV/ft²-yr)"
-   SummaryCol3[5] = "28.00"
-   MarginkW[1] = 0.41
-   MarginkWh = 830.2
-   MarginTherms = 40.54
-   PctSavingskW = 14.4
-   PctSavingskWh = 10.9
-   PctSavingsTherms = 7.7
-   PctSavingsTDV = 8.7
-   PctSavingsCmpTDV = 10.9
-   PctSavkWLbl = "14.4"
-   PctSavkWhLbl = "10.9"
-   PctSavThermsLbl = "7.7"
-   PctSavTDVLbl = "8.7"
-   PctSavCmpTDVLbl = "10.9"
-   PropElecDemand[1] = 2.44259
-   StdElecDemand = 2.85486
+   SummaryCol3[5] = "2.03"
+   MarginkW[1] = 0.01
+   MarginkWh = 140.8
+   MarginTherms = -3.72
+   PctSavingskW = 1.1
+   PctSavingskWh = 2.1
+   PctSavingsTherms = -0.8
+   PctSavingsTDV = 0.7
+   PctSavingsCmpTDV = 0.9
+   PctSavkWLbl = "1.1"
+   PctSavkWhLbl = "2.1"
+   PctSavThermsLbl = "-0.8"
+   PctSavTDVLbl = "0.7"
+   PctSavCmpTDVLbl = "0.9"
+   PropElecDemand[1] = 0.862669
+   StdElecDemand = 0.872202
    StdDesignPVSize = 0
    PropPV_Total = 0
    PropPV_Export = 0
@@ -1137,18 +1142,18 @@ EUseSummary   "EUSummary"
    CO2TotalUnitLabel = "kg"
    MeetsTier1 = 0
    MeetsTier2 = 0
-   PropElecCarbon[1] = 1.00847
-   PropFuelCarbon[1] = 2.83265
-   PropFinalCarbon[1] = 3.84112
-   PropExclExpCarbon[1] = 3.84112
+   PropElecCarbon[1] = 0.981952
+   PropFuelCarbon[1] = 2.87872
+   PropFinalCarbon[1] = 3.86067
+   PropExclExpCarbon[1] = 3.86067
    PropExportCarbon[1] = 0
    PropSelfConsCarbon[1] = 0
-   PropNoSolFlxCarbon[1] = 3.84112
-   StdFinalCarbon = 4.14122
-   StdExclExpCarbon = 4.14122
+   PropNoSolFlxCarbon[1] = 3.86067
+   StdFinalCarbon = 3.85044
+   StdExclExpCarbon = 3.85044
    StdExportCarbon = 0
    StdSelfConsCarbon = 0
-   StdNoSolFlxCarbon = 4.14122
+   StdNoSolFlxCarbon = 3.85044
    HideCompSummary = 1
    HideEDRs = 1
    HideC02Emissions = 0
@@ -1430,7 +1435,7 @@ Cons   "R-38 Ceiling"
    RoofingType = "all others"
    ..
 
-Cons   "R-19 + R5"  
+Cons   "R-21+ R5"  
    Type = "Wood Framed Wall"
    RoofingLayer = "Light Roof (Asphalt Shingle)"
    AbvDeckInsulLayer = "- no insulation -"
@@ -1447,7 +1452,7 @@ Cons   "R-19 + R5"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
-   CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
+   CavityLayer = "R 21"
    FrameLayer = "2x6 @ 16 in. O.C."
    SheathInsulLayer = "R5 Sheathing"
    WallExtFinishLayer = "Synthetic Stucco"
@@ -1572,6 +1577,97 @@ Cons   "R-19 Wall Stucco"
    FrameLayer = "2x6 @ 16 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
    WallExtFinishLayer = "3 Coat Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "R-49 Ceiling"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 49"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Tile RB"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTileAirGap)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "- select inside finish -"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 1
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   CavInsulOverFrame = 0
+   ..
+
+Cons   "R-49 Ceiling-2"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   CavityLayer = "R 49"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
@@ -1766,6 +1862,70 @@ Mat   "Ins-R15-D1.5-SH0.2-C0.01944"
    ConductivityCT = 0.0032537
    ..
 
+Mat   "Ins-R9.1-D1.5-SH0.2-C0.03205 24"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0405728
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R9.1-D1.5-SH0.2-C0.03205 25"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0320513
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R18-D1.5-SH0.2-C0.02546 26"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.025463
+   ConductivityQII = 0.025463
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R13-D1.5-SH0.2-C0.02244 27"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0224376
+   ConductivityQII = 0.0224376
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R15-D1.5-SH0.2-C0.01944 28"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0194444
+   ConductivityQII = 0.0194444
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "TileGap"  
+   Thickness = 0.75
+   Density = 0.075
+   SpecHeat = 0.24
+   Conductivity = 0.07353
+   RValPerInch = 1.1333
+   ..
+
+Mat   "10 PSF Roof"  
+   Thickness = 1
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+Mat   "Ins-R21-D1.5-SH0.2-C0.02183"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0218254
+   ConductivityQII = 0.0218254
+   ConductivityCT = 0.0032537
+   ..
+
 WindowType   "Ex Oper Wood Single"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
    NFRCUfactor = 0.99
@@ -1852,8 +2012,8 @@ WindowType   "Ex Fix Metal Single"
 
 WindowType   "Oper Vinyl Low-E"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
-   NFRCUfactor = 0.32
-   NFRCSHGC = 0.25
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.23
    ExteriorShade = "Insect Screen (default)"
    ModelFinsOverhang = 1
    OverhangDepth = 0
@@ -1873,8 +2033,8 @@ WindowType   "Oper Vinyl Low-E"
 
 WindowType   "Fix Vinyl Low-E"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
-   NFRCUfactor = 0.32
-   NFRCSHGC = 0.25
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.23
    ExteriorShade = "Insect Screen (default)"
    ModelFinsOverhang = 1
    OverhangDepth = 0
@@ -1916,7 +2076,7 @@ WindowType   "Glass Block"
 WindowType   "French Door Vinyl Low-E"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
    NFRCUfactor = 0.3
-   NFRCSHGC = 0.22
+   NFRCSHGC = 0.23
    ExteriorShade = "Insect Screen (default)"
    ModelFinsOverhang = 1
    OverhangDepth = 0
@@ -1937,7 +2097,7 @@ WindowType   "French Door Vinyl Low-E"
 WindowType   "SGD"  
    SpecMethod = "Overall Window Area"
    NFRCUfactor = 0.3
-   NFRCSHGC = 0.22
+   NFRCSHGC = 0.23
    ExteriorShade = "Insect Screen (default)"
    ModelFinsOverhang = 0
    OverhangDepth = 0
@@ -1986,11 +2146,14 @@ HVACSys   "Ex System"
 HVACHeat   "Ex Furnace"  
    Type = "CntrlFurnace - Fuel-fired central furnace"
    AFUE = 75
+   ElecSpcHtgExcpt = "- select applicable exception -"
    ..
 
 HVACCool   "Ex Cooling"  
    Type = "SplitAirCond - Split air conditioning system"
+   EffMetric = "SEER/EER"
    SEER = 8
+   SEER2 = 14.3
    EER = 7.06
    CFMperTon = 350
    ACCharge = "Not Verified"
@@ -2004,11 +2167,11 @@ HVACDist   "Ducts"
    Type = "Ducts located in attic (Ventilated and Unventilated)"
    Status = "Existing + New"
    IsVerified = 0
-   DefaultSystem = 0
-   DuctLeakage = "Existing (not specified)"
+   DefaultSystem = 1
+   DuctLeakage = "Sealed and tested"
    DuctLeakageVal = 5
    HasBypassDuct = 0
-   DuctInsRvalOpt = "6.0"
+   DuctInsRvalOpt = "8.0"
    exDuctInsRvalOpt = "2.1"
    SupplyDuctLoc = "Attic"
    ReturnDuctLoc = "Attic"
@@ -2018,12 +2181,13 @@ HVACDist   "Ducts"
    DuctDesign = 0
    LowLkgAH = 0
    IsLessThanFortyFt = 1
+   IsLessThan25Ft = 0
    ..
 
 HVACFan   "HVAC Fan"  
    Type = "Single Speed PSC Furnace Fan"
    DefaultSystem = 0
-   WperCFMCool = 0.58
+   WperCFMCool = 0.45
    ..
 
 DHWSys   "Alter DHW"  

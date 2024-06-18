@@ -304,7 +304,7 @@
 #define IDM_RELOADSCREENS               32856
 #define ID_INDICATOR_DATASTATUS         32857
 #define ID_INDICATOR_DATATYPE           32858
-#define IDM_TOOLS_T24DHWSIM             32859
+#define IDM_TOOLS_TEST                  32859
 #define IDM_HELP_OVERVIEW               32860
 #define IDM_TOOLS_T24COMPRPT            32861
 #define IDM_TOOLS_BATCH                 32862

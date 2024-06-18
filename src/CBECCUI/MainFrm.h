@@ -67,6 +67,7 @@ public:
    BOOL  m_bDoingWizard;
    BOOL  m_bDoingSummaryReport;
    BOOL  m_bPerformingAnalysis;	// SAC 4/1/15
+   BOOL  m_bPerformingCUACAnalysis;	// SAC 08/19/22 (CUAC)
    BOOL  m_bDoingCustomRuleEval;	// SAC 1/28/18
    int   m_iNumInitRESNETBldgObjs;	// SAC 9/29/20
 
@@ -234,6 +235,8 @@ protected:
 	afx_msg void OnToolsReport_BuildingSummary_T24();
 	afx_msg void OnUpdateToolsBatchProcessing(CCmdUI* pCmdUI);
 	afx_msg void OnToolsBatchProcessing();
+	afx_msg void OnUpdateToolsRunTest(CCmdUI* pCmdUI);
+	afx_msg void OnToolsRunTest();
 	afx_msg void OnUpdateToolsGenerateFileHashes(CCmdUI* pCmdUI);
 	afx_msg void OnToolsGenerateFileHashes();
 	afx_msg void OnUpdateToolsGenerateMECH1ReportRecords(CCmdUI* pCmdUI);
@@ -547,6 +550,7 @@ protected:
    afx_msg LRESULT OnSetStatusMessage( WPARAM wParam, LPARAM lParam );
    afx_msg LRESULT OnCreateBldgComponent( WPARAM wParam, LPARAM );
    afx_msg LRESULT OnButtonPressed( WPARAM wParam, LPARAM lParam );
+   afx_msg LRESULT OnDlgCloseAction( WPARAM wParam, LPARAM lParam );    // SAC 08/19/22 (CUAC)
    afx_msg LRESULT OnLoadScreenData( WPARAM, LPARAM );
    afx_msg LRESULT OnBEMGridOpen(  WPARAM wClass, LPARAM l1Occur);   // SAC 3/15/18
    afx_msg LRESULT OnBEMGridClose( WPARAM wClass, LPARAM l1Occur);

@@ -52,6 +52,7 @@ static char THIS_FILE[] = __FILE__;
 #include "BEMCM_I.h"
 #include "memLkRpt.h"
 #include "BEMCmpMgrCom.h"
+#include "BEMCmpMgrProgress.h"   // SAC 06/20/22
 
 #ifdef _DEBUG
 bool ebLogAnalysisMsgs = true;      // SAC 10/28/21 (MFam)
@@ -1538,17 +1539,30 @@ int CopyAnalysisResultsObjects( QString& sErrMsg, const char* pszRunID, int iBEM
       if (bIncludeEnergyUseObjs)
          iObjClsToCopy.push_back( BEMPX_GetDBComponentID( "EnergyUse" ) );
 		int iClsPrfxIdx, iObjClsIdx, iError, iNumClasses=BEMPX_GetNumClasses();
+      //if (psaCopyClassPrefixes)
+      //   for (iClsPrfxIdx = 0; iClsPrfxIdx < (int) psaCopyClassPrefixes->size(); iClsPrfxIdx++)
+      //      for (iObjClsIdx = 1; iObjClsIdx <= iNumClasses; iObjClsIdx++)
+      //      {  BEMClass* pClass = BEMPX_GetClass( iObjClsIdx, iError, iBEMProcIdxSrc );
+      //         QString sClassName = (pClass==NULL ? "" : pClass->getShortName());
+      //         if (sClassName.left( psaCopyClassPrefixes->at(iClsPrfxIdx).length() ).compare( psaCopyClassPrefixes->at(iClsPrfxIdx) ) == 0)
+      //         {  iObjClsToCopy.push_back( iObjClsIdx );
+      //                  // debugging
+      //                  //BEMPX_WriteLogFile( QString("   copying from BEMProc %1 to %2: %3-%4  (%5)").arg( QString::number(iBEMProcIdxSrc), QString::number(iBEMProcIdxDest), QString::number(iObjClsIdx), sClassName, QString::number(BEMPX_GetNumObjects( iObjClsIdx, BEMO_User, iBEMProcIdxSrc )) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+      //         }
+      //      }
+      // revised class looping to run only once through classes (rather than once through psaCopyClassPrefixes vector) so that objects retain original creation order - SAC 08/22/22 (LMCC)
       if (psaCopyClassPrefixes)
-         for (iClsPrfxIdx = 0; iClsPrfxIdx < (int) psaCopyClassPrefixes->size(); iClsPrfxIdx++)
-            for (iObjClsIdx = 1; iObjClsIdx <= iNumClasses; iObjClsIdx++)
-            {  BEMClass* pClass = BEMPX_GetClass( iObjClsIdx, iError, iBEMProcIdxSrc );
-               QString sClassName = (pClass==NULL ? "" : pClass->getShortName());
+         for (iObjClsIdx = 1; iObjClsIdx <= iNumClasses; iObjClsIdx++)
+         {  BEMClass* pClass = BEMPX_GetClass( iObjClsIdx, iError, iBEMProcIdxSrc );
+            QString sClassName = (pClass==NULL ? "" : pClass->getShortName());
+            for (iClsPrfxIdx = 0; iClsPrfxIdx < (int) psaCopyClassPrefixes->size(); iClsPrfxIdx++)
                if (sClassName.left( psaCopyClassPrefixes->at(iClsPrfxIdx).length() ).compare( psaCopyClassPrefixes->at(iClsPrfxIdx) ) == 0)
                {  iObjClsToCopy.push_back( iObjClsIdx );
-// debugging
-//BEMPX_WriteLogFile( QString("   copying from BEMProc %1 to %2: %3-%4  (%5)").arg( QString::number(iBEMProcIdxSrc), QString::number(iBEMProcIdxDest), QString::number(iObjClsIdx), sClassName, QString::number(BEMPX_GetNumObjects( iObjClsIdx, BEMO_User, iBEMProcIdxSrc )) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                        // debugging
+                        //BEMPX_WriteLogFile( QString("   copying from BEMProc %1 to %2: %3-%4  (%5)").arg( QString::number(iBEMProcIdxSrc), QString::number(iBEMProcIdxDest), QString::number(iObjClsIdx), sClassName, QString::number(BEMPX_GetNumObjects( iObjClsIdx, BEMO_User, iBEMProcIdxSrc )) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                }
-            }
+         }
+
       iObjClsToCopy.push_back( 0 );
       iObjClsIdx = -1;
 		while (iObjClsToCopy[++iObjClsIdx] > 0)

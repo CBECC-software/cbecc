@@ -56,6 +56,7 @@ static char THIS_FILE[] = __FILE__;
 #include <fstream>      // fstream
 #include "memLkRpt.h"
 #include "zip.h"			// SAC 9/29/20
+#include "BEMCmpMgrProgress.h"   // SAC 06/20/22
 
 #define CSE_MULTI_RUN
 

@@ -23,7 +23,7 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
+#pragma code_page(1253)
 #endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
@@ -52,7 +52,7 @@ BEGIN
     "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
     "#ifdef _WIN32\r\n"
     "LANGUAGE 9, 1\r\n"
-    "#pragma code_page(1252)\r\n"
+    "#pragma code_page(1253)\r\n"
     "#endif\r\n"
     "#include ""res\\CBECC-Com.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
     "#include ""afxres.rc""         // Standard components\r\n"
@@ -327,7 +327,7 @@ BEGIN
         MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
         MENUITEM "&Show Model Grid...",         IDM_TOOLS_SHOWGRID
         MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
-        MENUITEM "View T-24 Standard Model &Report", IDM_TOOLS_VIEWT24STDRPT
+//        MENUITEM "View T-24 Standard Model &Report", IDM_TOOLS_VIEWT24STDRPT   - removed - SAC 10/19/22
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
@@ -338,7 +338,7 @@ BEGIN
         MENUITEM "Review &Unmet Load Hours Violations", IDM_TOOLS_REVIEWUMLH
         MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
-        MENUITEM "Generate T-24 &Standard Model Report", IDM_TOOLS_T24STDRPT
+//        MENUITEM "Generate T-24 &Standard Model Report", IDM_TOOLS_T24STDRPT   - removed - SAC 10/19/22
         MENUITEM SEPARATOR
         MENUITEM "&Batch Processing...",        IDM_TOOLS_BATCH
     END
@@ -414,7 +414,7 @@ BEGIN
         MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
         MENUITEM "&Show Model Grid...",         IDM_TOOLS_SHOWGRID
         MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
-        MENUITEM "View T-24 Standard Model &Report", IDM_TOOLS_VIEWT24STDRPT
+//        MENUITEM "View T-24 Standard Model &Report", IDM_TOOLS_VIEWT24STDRPT   - removed - SAC 10/19/22
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
@@ -441,7 +441,7 @@ BEGIN
         MENUITEM "Review &Unmet Load Hours Violations", IDM_TOOLS_REVIEWUMLH
         MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
-        MENUITEM "Generate T-24 &Standard Model Report", IDM_TOOLS_T24STDRPT
+//        MENUITEM "Generate T-24 &Standard Model Report", IDM_TOOLS_T24STDRPT   - removed - SAC 10/19/22
         MENUITEM "&Generate SHA-256 File Hashes...", IDM_TOOLS_FILEHASH
 //        MENUITEM "&Generate Public Key",        IDM_TOOLS_PUBLICKEY
         MENUITEM "&Key Prep",                   IDM_TOOLS_KEYPREP
@@ -717,8 +717,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2019,2008,0,1250		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2019,2008,0,1250	//   examples:  2019,1007,0,### => 2019.1.0 RC (###) / 2019,1010,0,### => 2019.1.1 (###) / 2019,1024,0,### => 2019.1.2 Beta (###)
+ FILEVERSION 2019,2016,0,1272		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2019,2016,0,1272	//   examples:  2019,1007,0,### => 2019.1.0 RC (###) / 2019,1010,0,### => 2019.1.1 (###) / 2019,1024,0,### => 2019.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC-Com version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -736,15 +736,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (commercial 2019)\0"
-            VALUE "FileVersion", "2019.2.0 SP1 (1250)\0"
+            VALUE "FileVersion", "2019.2.1 RV (1272)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2022, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-Com19.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (commercial 2019)\0"
-            VALUE "ProductVersion", "2019.2.0 SP1\0"
-            VALUE "SpecialBuild", "build 1250\0"
+            VALUE "ProductVersion", "2019.2.1 RV\0"
+            VALUE "SpecialBuild", "build 1272\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -1110,7 +1110,7 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE 9, 1
-#pragma code_page(1252)
+#pragma code_page(1253)
 #endif
 #include "res\CBECC-Com.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components

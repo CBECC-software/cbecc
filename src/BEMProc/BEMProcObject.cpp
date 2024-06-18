@@ -516,7 +516,7 @@ int BEMRun::readCSEHourlyResults( const char* pszFilename, const char** ppResMet
 													}	}
 //																strcpy_s( m_hourlyResults[ iMeterIdx ].m_sMeterName, BEMRun_MeterNameLen, saCSVFields[0] );
 
-													if (iRetVal >= 0)
+													if (iRetVal >= 0 && iThisMtrIdx >= 0)     // added check of iThisMtrIdx to prevent crash when = -1 - SAC 09/07/22 (CUAC)
 													{	iNumEUs = iNumFields-5;
 									//					if (sMtr.isEmpty()) // Meter NOT added => no need to RE-initialize enduse list
 									//					{	if (iNumFields >= (m_hourlyResults[ iThisMtrIdx ].getNumEnduses() + 5))		// was: != - switched to enable ignoring certain enduses

@@ -569,6 +569,9 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 						int iLastDataCol = -1;
 						int iFieldIdx = -1;
 						bInBetweenReadingRecords=FALSE;
+#ifdef _DEBUG
+                  QString qsDbgMsg;    // SAC 09/01/22 (Res tic #1338)
+#endif
 						while (iCurLine == iColLabelLine)
 						{
 							sField = file.ReadCSVString( TRUE /*bReadToFollowingDelimeter*/, FALSE /*bSkipBlankEntries*/, NULL /*BOOL* pbStrQuoted*/ );
@@ -582,11 +585,21 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 								{	baIsDataColumn.push_back( true );
 									iLastDataCol = iFieldIdx;
 									m_columnTitles.push_back( (const char*) sField.toLocal8Bit().constData() );
+#ifdef _DEBUG
+                           if (m_columnTitles.size() < 2)
+                              qsDbgMsg = QString("      Col Titles:  %1").arg(sField);
+                           else if (m_columnTitles.size() <= 7)
+                              qsDbgMsg += QString("  <|>  %1").arg(sField);
+#endif
 								}
 							}
 							else
 								file.SkipToBeginningOfLine();	// SAC 10/19/12
 						}
+#ifdef _DEBUG
+                  qsDbgMsg += "\n";
+                  errorFile.write( qsDbgMsg.toLocal8Bit().constData(), qsDbgMsg.length() );
+#endif
 						bInBetweenReadingRecords=TRUE;
 						// file should be positioned at beginning of line FOLLOWING the column label line
 						file.Advance( FALSE /*bSkipLeadingDelimeters*/ );	// should skip past comment lines
@@ -709,6 +722,12 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 										}
 										else
 										{
+#ifdef _DEBUG
+                                 if (i == 0)
+                                    qsDbgMsg = QString("         rec %1, line %2:  %3").arg( QString::number(iDataRowIdx), QString::number(file.GetLineCount()), saFields[i] );
+                                 else if (i < 7)
+                                    qsDbgMsg += QString("  <|>  %1").arg( saFields[i] );
+#endif
 											if (i < (int) baForceString.size() && baForceString[i] == true)		// don't bother checking for numeric vs. string - force to string - SAC 1/14/20
             								pNewData[i].setString( saFields[i].toLocal8Bit().constData() );
             							else
@@ -733,7 +752,12 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 									else
 		         			   {	m_data.push_back( pNewData );  // add this row of data to m_data array
 		         			   	iDataRowIdx++;
-								}	}
+									}
+#ifdef _DEBUG
+                           qsDbgMsg += "\n";
+                           errorFile.write( qsDbgMsg.toLocal8Bit().constData(), qsDbgMsg.length() );
+#endif
+                        }
 								else if (pNewData)
 									delete [] pNewData;
 								pNewData = NULL;

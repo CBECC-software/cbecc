@@ -281,6 +281,7 @@ static QString FuncName( int iFuncID )
 		case  BF_PS_HAProps     :  return "Psych_HAProps";                
 		case  BF_NUnqChldVals   :  return "NumUniqueChildVals";     /* SAC 12/31/21 (MFam) - added */
 		case  BF_Cr8CompFor     :  return "CreateCompFor";          
+		case  BF_ExpFileConcat  :  return "ExportFileConcat"; 
 
 		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
 	}
@@ -2251,6 +2252,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_CloseExpFile : // SAC 9/15/15 - added CloseExportFile() - single argument is index of export file to close, -1 to close ALL files, return number of files closed successfully
       case BF_WriteExpFile : // SAC 9/15/15 - added WriteToExportFile() - same arguments as other message/log functions w/ additional first argument = export file index (0-N) (file pointer provided in ruleset data)
       case BF_WriteSimInp  : // SAC 3/10/20 - added WriteToSimInput() - same arguments as other message/log functions (sim input file open/close handled outside ruleset functions)
+      case BF_ExpFileConcat : // added ExportFileConcat() - first argument = export file index (0-N) (same as WriteToExportFile) / 2nd arg is name of file to concatenate onto export file - SAC 06/28/22
          break;
 
       case BF_RetCSVVal    : // SAC 4/10/20 - added RetrieveCSVValue( PathFilename, RecordNum, SearchString, ColsFollowing )
@@ -4602,10 +4604,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
       case BF_WriteExpFile : // SAC 9/15/15 - added WriteToExportFile() - same arguments as other message/log functions w/ additional first argument = export file index (0-N) (file pointer provided in ruleset data)
       case BF_WriteSimInp  : // SAC 3/10/20 - added WriteToSimInput() - same arguments as other message/log functions (sim input file open/close handled outside ruleset functions)
       case BF_AppendMsg   : // SAC 5/21/20 - added AppendMessage( AbortAnalysis (Obj:Prop/0/1), LogMessage (Obj:Prop/0/1), MsgCount ("Obj:Prop"/"none"), MsgArray ("Obj:Prop"/"none"), LogPrepend ("str"/"none"), <Format() arguments> ) 
+      case BF_ExpFileConcat : // added ExportFileConcat() - first argument = export file index (0-N) (same as WriteToExportFile) / 2nd arg is name of file to concatenate onto export file - SAC 06/28/22
          {  // SAC 5/14/01 - variable args where 1st is format string followed by up to 6 string or numeric arguments to sprintf()
             // First check for valid number of arguments
             ExpNode* pNode[31];
-            int iPriorArgs = (op == BF_WriteExpFile ?  1 : (op == BF_AppendMsg ?  5 :  0 ));		// SAC 5/21/20
+            int iPriorArgs = ((op == BF_WriteExpFile || op == BF_ExpFileConcat) ?  1 : (op == BF_AppendMsg ?  5 :  0 ));		// SAC 5/21/20
             int iMinArgs =  1 + iPriorArgs;
             int iMaxArgs = 30 + iPriorArgs;
             assert( nArgs >= iMinArgs && nArgs <= iMaxArgs );	// SAC 3/23/12 - cranked up max # arguments to 30 (to enable day schedule definitions)
@@ -4655,11 +4658,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                long lDBID_MsgArray=0, lDBID_MsgCount=0;		int iLogMsg=0, iPostError=0;		// SAC 5/21/20 - AppendMessage() arguments
                QString sAMLogPrepend;		// SAC 5/22/20
                bool bReturnUnchanged=false;		// SAC 5/22/20
-					if (op == BF_WriteExpFile)  // SAC 9/15/15 - process first WriteToExportFile() argument - export file index
+					if (op == BF_WriteExpFile || op == BF_ExpFileConcat)  // SAC 9/15/15 - process first WriteToExportFile() argument - export file index
 					{  ExpNode* pXFINode = ExpxStackPop( stack );
                   if (pXFINode == NULL  ||  pXFINode->type != EXP_Value)
                   {  bArgsOK = FALSE;
-                     ExpSetErr( error, EXP_RuleProc, "Invalid WriteToExportFile() function argument #1 - must be integer export file index (0-N)." );
+                     ExpSetErr( error, EXP_RuleProc, QString( "Invalid %1() function argument #1 - must be integer export file index (0-N)." ).arg( FuncName(op) ) );
                   }
                   else if (pXFINode)
                   	iExpFileIdx = (int) pXFINode->fValue;
@@ -4744,11 +4747,15 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                // now assemble string from arguments
                QString sRetStr;
                bool bFmtOK = true;	// SAC 4/25/16 - added to handle unsuccessful string formatting
-               bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile || op == BF_WriteSimInp || op == BF_FormatNL);  // SAC 3/8/17   // SAC 12/11/20
+               bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile || op == BF_ExpFileConcat || op == BF_WriteSimInp || op == BF_FormatNL);  // SAC 3/8/17   // SAC 12/11/20   // SAC 06/28/22
                if (bArgsOK)
                {
-                  QString sFormat = (char*) pNode[0]->pValue;
-						bFmtOK = ProcessFormatStatement( sRetStr, sFormat, &pNode[1], nArgs-1, error, bPreserveNewlines );	// SAC 1/26/15 - populate formatted string via subordinate routine to enable access from other routine(s)
+                  if (op == BF_ExpFileConcat)
+                     sRetStr = (char*) pNode[0]->pValue;  // argument simply path\filename that may not format properly due to backslashes - SAC 06/28/22
+                  else
+                  {  QString sFormat = (char*) pNode[0]->pValue;
+						   bFmtOK = ProcessFormatStatement( sRetStr, sFormat, &pNode[1], nArgs-1, error, bPreserveNewlines );	// SAC 1/26/15 - populate formatted string via subordinate routine to enable access from other routine(s)
+                  }
 
                   // now perform the appropriate action with the resulting string
                   if (bFmtOK && sRetStr.length() > 0 && op != BF_Format && op != BF_FormatNL)
@@ -4888,7 +4895,16 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									if (iWrtRetVal != 0)
 									{	QString sErrMsg = QString( "Invalid export file index (%1) or file not open:  '%2'" ).arg( QString::number( iExpFileIdx ), sRetStr );
 										ExpSetErr( error, EXP_RuleProc, sErrMsg );
-									}
+								}	}
+								else if (op == BF_ExpFileConcat)  // added ExportFileConcat() - first argument = export file index (0-N) (same as WriteToExportFile) / 2nd arg is name of file to concatenate onto export file - SAC 06/28/22
+								{	if (!FileExists( sRetStr.toLocal8Bit().constData() ))
+                              ExpSetErr( error, EXP_RuleProc, QString( "File to concatenate onto export file not found:  %1" ).arg( sRetStr ) );
+                           else
+                           {  int iWrtRetVal = ruleSet.exportFileConcat( iExpFileIdx, sRetStr );		assert( iWrtRetVal == 0 );
+									   if (iWrtRetVal != 0)
+									   {	QString sErrMsg = QString( "Invalid export file index (%1) or file writing error:  '%2'" ).arg( QString::number( iExpFileIdx ), sRetStr );
+									   	ExpSetErr( error, EXP_RuleProc, sErrMsg );
+                           }  }
 							}	}
                   }
                }
@@ -12670,9 +12686,9 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 		long lDBID_DUT_NumHtPumpEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumHtPumpEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Int,  1,  0,  0, "",    0,  0,                        8004, "Number of heat pump unit types"    
 		long lDBID_DUT_HVACHtPumpRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACHtPumpRef",       iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Obj,  5,  1,  0, "",    0,  1, "HVACHtPump",  0, "",  8004, "Heat pump component that serves this equip zone type"    
 		long lDBID_DUT_HtPumpEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "HtPumpEquipCount",    iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Int,  5,  1,  0, "",    0,  0,                        8004, "Number of units for this heat pump type"    
-		long lDBID_DUT_NumCentralEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumCentralEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );     // SAC 03/16/22
-		long lDBID_DUT_HVACCentralRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACCentralRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
-		long lDBID_DUT_CentralEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "CentralEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
+		long lDBID_DUT_NumCentralEquipTypes = BEMPX_GetDatabaseID( "DwellUnitType:NumCentralEquipTypes" );   // GetPropertyDBID_LogError( "DwellUnitType", "NumCentralEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );     // SAC 03/16/22   // switched to NOT report errors (for 2019 compatibility)
+		long lDBID_DUT_HVACCentralRef       = BEMPX_GetDatabaseID( "DwellUnitType:HVACCentralRef"       );   // GetPropertyDBID_LogError( "DwellUnitType", "HVACCentralRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
+		long lDBID_DUT_CentralEquipCount    = BEMPX_GetDatabaseID( "DwellUnitType:CentralEquipCount"    );   // GetPropertyDBID_LogError( "DwellUnitType", "CentralEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DUT_HVACFanRef          = GetPropertyDBID_LogError( "DwellUnitType", "HVACFanRef",          iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Obj,  1,  0,  0, "",    0,  1, "HVACFan",     0, "",  8010, "Heat/Cool fan that serves this equip zone type"    
 		long lDBID_DUT_HVACDistRef         = GetPropertyDBID_LogError( "DwellUnitType", "HVACDistRef",         iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Obj,  1,  0,  0, "",    0,  1, "HVACDist",    0, "",  8010, "Heat/Cool distribution (ducts) that serves this equip zone type"    
 		long lDBID_DUT_HeatEquipDucted     = GetPropertyDBID_LogError( "DwellUnitType", "HeatEquipDucted",     iCID_DwellUnitType, iNumErrors, sTmp );   // BEMP_Int,  1,  0,  0, "",    0,  0,                        3208, "Whether or not (1/0) heating equipment is ducted"    
@@ -12690,294 +12706,500 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 			else
 				sErrMsg = QString( "Error initializing CreateSCSysRptObjects database ID %1" ).arg( sTmp );
 		}
-		else if (lIsMultiFamily > 0)
-	// SAC 7/1/14 - added separate path for creating MFam SCSysRpt objects
-		{	QString sZnName, sDUName, sDUTName;
-			BEMObject *pDUObj, *pDUTObj;
-			int iNumZones      = BEMPX_GetNumObjects( iCID_Zone      );
-			for (int iZnIdx=0; (sErrMsg.isEmpty() && iZnIdx < iNumZones); iZnIdx++)
-			{	//VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iCID_Zone ), sZnName, FALSE, 0, -1, iZnIdx ) && !sZnName.isEmpty() );
-				int iNumDUChildren = (int) BEMPX_GetNumChildren( iCID_Zone, iZnIdx, BEMO_User, iCID_DwellUnit /*, iBEMProcIdx=-1*/ );
-				if (iNumDUChildren < 1)
-					sErrMsg = QString( "CreateSCSysRptObjects Error:  No DwellUnit children found for Zone '%1'" ).arg( sZnName );
-				else
-				{	long lDUCount, lZoneHVACStatus;
-					BEMPX_GetInteger( lDBID_Zone_HVACSysStatus, lZoneHVACStatus, 0, -1, iZnIdx );		assert( lZoneHVACStatus > 0 );	// SAC 12/23/15
-					for (int i1DUChld=1; (sErrMsg.isEmpty() && i1DUChld <= iNumDUChildren); i1DUChld++)
-					{	BEM_ObjType otDU;
-						int iDUIdx = BEMPX_GetChildObjectIndex( iCID_Zone, iCID_DwellUnit, iError, otDU, i1DUChld, iZnIdx /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );
-						if (iDUIdx < 0)
-							sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving object index of DwellUnit child #%1 of Zone '%2'" ).arg( QString::number( i1DUChld ), sZnName );
-						else
-						{	BEMPX_GetString( lDBID_DU_Name, sDUName, FALSE, 0, -1, iDUIdx );		assert( !sDUName.isEmpty() );
-							pDUObj = BEMPX_GetObjectByClass( iCID_DwellUnit, iError, iDUIdx );
-							if (pDUObj == NULL)
-								sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to retrieve pointer to DwellUnit object #%1 '%2'" ).arg( QString::number( iDUIdx+1 ), sDUName );
-							else if (!BEMPX_GetObject( lDBID_DU_DwellUnitTypeRef, pDUTObj, -1, iDUIdx /*, int iObjType=BEMO_User, int iBEMProcIdx=-1*/ ) || pDUTObj==NULL || pDUTObj->getClass()==NULL)
-								sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving DwellUnitTypeRef of DwellUnit '%1'" ).arg( sDUName );
-							else if (!BEMPX_GetInteger( lDBID_DU_Count, lDUCount, 0, -1, iDUIdx ) || lDUCount < 1)
-							{	// IGNORE invalid DwellUnit:Count ???
-							}
-							else
-							{	int iDUTIdx = BEMPX_GetObjectIndex( pDUTObj->getClass(), pDUTObj /*, int iBEMProcIdx=-1*/ );			assert( iDUTIdx >= 0 );
-								if (iDUTIdx < 0)
-									sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving object index of DwellUnitTypeRef referenced by DwellUnit '%1'" ).arg( sDUName );
-								else
-								{	BEMPX_GetString( lDBID_DUT_Name, sDUTName, FALSE, 0, -1, iDUTIdx );		assert( !sDUTName.isEmpty() );
-									long lType;
-									if (BEMPX_GetInteger( lDBID_DUT_HVACSysType, lType, 0, -1, iDUTIdx ))
-									{
-										bool bIsHP = (lType == 2), bIsCentral = (lType == 4);		int iEqp, iCnt, iM1Idx;
-										long lHtDucted=0, lClDucted=0, lEqpCountsMustAlign=0, lDuctStatus=0, lSCSysStatus;
-										QString sDistribName, sFanName;
-										BEMPX_GetString( lDBID_DUT_HVACDistRef, sDistribName, FALSE, 0, -1, iDUTIdx );
-										BEMPX_GetString( lDBID_DUT_HVACFanRef , sFanName    , FALSE, 0, -1, iDUTIdx );
-										if (!sDistribName.isEmpty())
-										{  if (bIsCentral)
-                                 {  lHtDucted = lClDucted = 1;
-                                 }
-                                 else
-                                 {	BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipDucted : lDBID_DUT_HeatEquipDucted), lHtDucted, 0, -1, iDUTIdx );
-											   if (bIsHP)
-												   lClDucted = lHtDucted;
-											   else
-												   BEMPX_GetInteger( lDBID_DUT_CoolEquipDucted, lClDucted, 0, -1, iDUTIdx );
-                                 }
-										//	BEMObject* pDistribObj = BEMPX_GetObjectByName( iCID_HVACDist, iError, sDistribName, BEMO_User, iBEMProcIdx );
-										//	if (pDistribObj && pDistribObj->getClass())
-										//	{	int iDistribObjIdx = BEMPX_GetObjectIndex( pDistribObj->getClass(), pDistribObj, iBEMProcIdx );
-										//		if (iDistribObjIdx >= 0)
-										//			BEMPX_GetInteger( lDBID_HVACDist_Type, lDistribType, 0, -1, iDistribObjIdx );
-										//	}
-											if (lClDucted > 0 || lHtDucted > 0)
-											{	BEMObject* pDistObj = NULL;
-												if (BEMPX_GetObject( lDBID_DUT_HVACDistRef, pDistObj, -1, iDUTIdx ) && pDistObj && pDistObj->getClass())
-												{	int iDistIdx = BEMPX_GetObjectIndex( pDistObj->getClass(), pDistObj /*, int iBEMProcIdx=-1*/ );			assert( iDistIdx >= 0 );
-													if (iDistIdx >= 0)
-														BEMPX_GetInteger( lDBID_HVACDist_Status, lDuctStatus, 0, -1, iDistIdx );
-											}	}
-										}
-										BEMPX_GetInteger( lDBID_DUT_EqpCountsMustAlign, lEqpCountsMustAlign, 0, -1, iDUTIdx );
+		else if (lIsMultiFamily > 0)              // SAC 7/1/14 - added separate path for creating MFam SCSysRpt objects
+		{  long lCompCodeBase = 0;
+         if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CompCodeBase" ), lCompCodeBase ) && lCompCodeBase >= 2022)
+         {  // new logic to create ResSCSysRpt objects for 2022+ analysis (children of DwellUnitType, not DwellUnit) - SAC 10/07/22 (tic #3393)
+            int iNumDUTs = BEMPX_GetNumObjects( iCID_DwellUnitType );
+            for (int iDUTIdx=0; (sErrMsg.isEmpty() && iDUTIdx < iNumDUTs); iDUTIdx++)
+            {  long lNumAssigningDUs = 0;
+     			   BEMObject *pDUTObj = BEMPX_GetObjectByClass( iCID_DwellUnitType, iError, iDUTIdx );          assert( pDUTObj );
+               if (pDUTObj && BEMPX_GetInteger( BEMPX_GetDatabaseID( "DwellUnitType:NumAssigningDUs" ), lNumAssigningDUs, 0, -1, iDUTIdx ) && lNumAssigningDUs >= 1)
+               {
 
-								// SAC 11/14/14 - revisions to ignore UnitTypeIdx values and store but don't create unique array elements for Count of equipment
-										vector<long> laHtUnitCnt, laClUnitCnt;		// laHtUnitCntIdx, laClUnitCntIdx, laHtUnitTypIdx, laClUnitTypIdx, 
-										vector<string> saHtUnitName, saClUnitName;
-										long lNumSysTypes = 0, lEqpCnt;		QString sEqpName;
-										// first load Heating/HtPump system info
-										if (BEMPX_GetInteger( (bIsHP ? lDBID_DUT_NumHtPumpEquipTypes : (bIsCentral ? lDBID_DUT_NumCentralEquipTypes : lDBID_DUT_NumHeatEquipTypes)), lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
-											for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
-											{	if (	BEMPX_GetString(  (bIsHP ? lDBID_DUT_HVACHtPumpRef    : (bIsCentral ? lDBID_DUT_HVACCentralRef    : lDBID_DUT_HVACHeatRef   ))+iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
-														BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipCount : (bIsCentral ? lDBID_DUT_CentralEquipCount : lDBID_DUT_HeatEquipCount))+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
-												{	laHtUnitCnt.push_back( lEqpCnt );
-													saHtUnitName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
-												}
-											//		for (iCnt=0; iCnt < lEqpCnt; iCnt++)
-											//		{	laHtUnitTypIdx.push_back( iEqp+1 );
-											//			laHtUnitCntIdx.push_back( iCnt+1 );
-											//			saHtUnitName.push_back(   (const char*) sEqpName );
-											//		}
-											}
+                  QString sDUTName;
 
-										// then load Cooling system info
-										if (!bIsHP && !bIsCentral && BEMPX_GetInteger( lDBID_DUT_NumCoolEquipTypes, lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
-											for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
-											{	if (	BEMPX_GetString(  lDBID_DUT_HVACCoolRef   +iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
-														BEMPX_GetInteger( lDBID_DUT_CoolEquipCount+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
-												{	laClUnitCnt.push_back( lEqpCnt );
-													saClUnitName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
-												}
-											//		for (iCnt=0; iCnt < lEqpCnt; iCnt++)
-											//		{	laClUnitTypIdx.push_back( iEqp+1 );
-											//			laClUnitCntIdx.push_back( iCnt+1 );
-											//			saClUnitName.push_back(   (const char*) sEqpName );
-											//		}
-											}
+			   						BEMPX_GetString( lDBID_DUT_Name, sDUTName, FALSE, 0, -1, iDUTIdx );		assert( !sDUTName.isEmpty() );
+			   						long lType;
+			   						if (BEMPX_GetInteger( lDBID_DUT_HVACSysType, lType, 0, -1, iDUTIdx ))
+			   						{
+                                 long lDUTHVACSysStatus = 0;      // SAC 10/09/22 (tic #3393)
+                                 BEMPX_GetInteger( BEMPX_GetDatabaseID( "DwellUnitType:HVACSysStatus" ), lDUTHVACSysStatus, 0, -1, iDUTIdx );
 
-					// SAC 11/14/14 - no longer match heat/cool equipment w/ unmatched equip types or counts
-					//					int iNumSCSysRptObjsToCreate = laHtUnitTypIdx.size();
-					//					if (!bIsHP && laHtUnitTypIdx.size() != laClUnitTypIdx.size())
-					//					{	// we have an inconsistent number of Ht/Cl units, log a message to that effect
-					//						sTmp = QString( "CreateSCSysRptObjects Warning:  Inconsistent number of heating unit types/counts (%1) and cooling types/counts (%2) for DwellUnit object '%3'" ).arg( QString::number( laHtUnitTypIdx.size() ), QString::number( laClUnitTypIdx.size() ), sDUName );
-					//						BEMPX_WriteLogFile( sTmp );
-			   	//	
-					//				// ??? - fill smaller array w/ name/type/count of last item in that array, up to the size of the larger array ???
-			   	//	
-					//						if (laHtUnitTypIdx.size() < laClUnitTypIdx.size())
-					//							iNumSCSysRptObjsToCreate = laClUnitTypIdx.size();
-					//					}
+			   							bool bIsHP = (lType == 2), bIsCentral = (lType == 4);		int iEqp, iCnt, iM1Idx;
+			   							long lHtDucted=0, lClDucted=0, lEqpCountsMustAlign=0, lDuctStatus=0, lSCSysStatus;
+			   							QString sDistribName, sFanName;
+			   							BEMPX_GetString( lDBID_DUT_HVACDistRef, sDistribName, FALSE, 0, -1, iDUTIdx );
+			   							BEMPX_GetString( lDBID_DUT_HVACFanRef , sFanName    , FALSE, 0, -1, iDUTIdx );
+			   							if (!sDistribName.isEmpty())
+			   							{  if (bIsCentral)
+                                    {  lHtDucted = lClDucted = 1;
+                                    }
+                                    else
+                                    {	BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipDucted : lDBID_DUT_HeatEquipDucted), lHtDucted, 0, -1, iDUTIdx );
+			   								   if (bIsHP)
+			   									   lClDucted = lHtDucted;
+			   								   else
+			   									   BEMPX_GetInteger( lDBID_DUT_CoolEquipDucted, lClDucted, 0, -1, iDUTIdx );
+                                    }
+			   								if (lClDucted > 0 || lHtDucted > 0)
+			   								{	BEMObject* pDistObj = NULL;
+			   									if (BEMPX_GetObject( lDBID_DUT_HVACDistRef, pDistObj, -1, iDUTIdx ) && pDistObj && pDistObj->getClass())
+			   									{	int iDistIdx = BEMPX_GetObjectIndex( pDistObj->getClass(), pDistObj /*, int iBEMProcIdx=-1*/ );			assert( iDistIdx >= 0 );
+			   										if (iDistIdx >= 0)
+			   											BEMPX_GetInteger( lDBID_HVACDist_Status, lDuctStatus, 0, -1, iDistIdx );
+			   								}	}
+			   							}
+			   							BEMPX_GetInteger( lDBID_DUT_EqpCountsMustAlign, lEqpCountsMustAlign, 0, -1, iDUTIdx );
 
-										vector<long> laSCSysRptCnt;
-										vector<string> saSCSysRptName;
-										int iEqpLoopCnt = (int) saHtUnitName.size() + (lEqpCountsMustAlign == 0 ? (int) saClUnitName.size() : 0);
-										for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iEqpLoopCnt); iEqp++)
-										{	int iHtgIdx = (iEqp < (int) saHtUnitName.size() ? iEqp : -1);
-											int iClgIdx = (lEqpCountsMustAlign == 0 ? iEqp - (int) saHtUnitName.size() : iHtgIdx);
-											if (iClgIdx >= 0 && (int) saClUnitName.size() < (iClgIdx+1))	// SAC 12/23/15 - prevent accessing saClUnitName when not available (for no-cooling systems)
-												iClgIdx = -1;
-											long lCount = 0;
-											vector<long> laDBIDs, laData;		vector<int> iaDataTypes;		vector<std::string> saData;		vector<double> faData;
-										// cooling equip
-											laDBIDs.push_back( lDBID_SCSysRpt_CoolSystem );
-											laData.push_back( -1 );
-											if (iClgIdx >= 0)
-											{	iaDataTypes.push_back( BEMP_Str );
-												saData.push_back( saClUnitName[iClgIdx] );
-												faData.push_back( -1 );
-												lCount = laClUnitCnt[iClgIdx];
-											}
-											else
-											{	iaDataTypes.push_back( BEMP_Flt );
-												saData.push_back( "" );
-												faData.push_back( -99996 );
-											}
-										// heating equip
-											laDBIDs.push_back( (bIsHP ? lDBID_SCSysRpt_HtPumpSystem : (bIsCentral ? lDBID_SCSysRpt_CentralHtgClgSystem : lDBID_SCSysRpt_HeatSystem)) );
-											laData.push_back( -1 );
-											if (iHtgIdx >= 0)
-											{	iaDataTypes.push_back( BEMP_Str );
-												saData.push_back( saHtUnitName[iHtgIdx] );
-												faData.push_back( -1 );
-												lCount = laHtUnitCnt[iHtgIdx];
-											}
-											else
-											{	iaDataTypes.push_back( BEMP_Flt );
-												saData.push_back( "" );
-												faData.push_back( -99996 );
-											}
-										// distrib equip
-											laDBIDs.push_back( lDBID_SCSysRpt_HVACDistRef );
-											laData.push_back( -1 );
-											if (!sDistribName.isEmpty() && ((iHtgIdx >= 0 && lHtDucted > 0) || (iClgIdx >= 0 && lClDucted > 0)))
-											{	iaDataTypes.push_back( BEMP_Str );
-												saData.push_back( (const char*) sDistribName.toLocal8Bit().constData() );
-												faData.push_back( -1 );
-											}
-											else
-											{	iaDataTypes.push_back( BEMP_Flt );
-												saData.push_back( "" );
-												faData.push_back( -99996 );
-											}
-										// fan
-											laDBIDs.push_back( lDBID_SCSysRpt_HVACFanRef );
-											laData.push_back( -1 );
-											if (!sFanName.isEmpty() && ((iHtgIdx >= 0 && lHtDucted > 0) || (iClgIdx >= 0 && lClDucted > 0)))		// same logic for including Fan as we have for Distrib ??
-											{	iaDataTypes.push_back( BEMP_Str );
-												saData.push_back( (const char*) sFanName.toLocal8Bit().constData() );
-												faData.push_back( -1 );
-											}
-											else
-											{	iaDataTypes.push_back( BEMP_Flt );
-												saData.push_back( "" );
-												faData.push_back( -99996 );
-											}
-										// SCSysTypeVal
-											laDBIDs.push_back( lDBID_SCSysRpt_SCSysTypeVal );
-											iaDataTypes.push_back( BEMP_Int );
-											laData.push_back( (bIsHP ? 2 : (bIsCentral ? 4 : 1)) );	// 4-"Central HtgClg"  /  2-"Heat Pump Heating and Cooling System"  /  1-"Other Heating and Cooling System"
-											saData.push_back( "" );
-											faData.push_back( -1 );
-										// Status  - SAC 12/14/15
-											lSCSysStatus = (lZoneHVACStatus == 1 /*Existing*/ && lDuctStatus == 4 /*Existing+New*/) ? 4 : lZoneHVACStatus;
-											laDBIDs.push_back( lDBID_SCSysRpt_Status );
-											iaDataTypes.push_back( BEMP_Int );
-											saData.push_back( "" );
-											faData.push_back( -1 );
-											if (lProj_RunScope == 1)
-												laData.push_back( 3 );	// 3-"New"
-											else if (lSCSysStatus > 0)
-												laData.push_back( lSCSysStatus );
-											else
-											{	assert( FALSE );	// shouldn't happen
-												laData.push_back( 3 );	// 3-"New"
-											}
+      			   					// SAC 11/14/14 - revisions to ignore UnitTypeIdx values and store but don't create unique array elements for Count of equipment
+			   							vector<long> laHtUnitCnt, laClUnitCnt;		// laHtUnitCntIdx, laClUnitCntIdx, laHtUnitTypIdx, laClUnitTypIdx, 
+			   							vector<string> saHtUnitName, saClUnitName;
+			   							long lNumSysTypes = 0, lEqpCnt;		QString sEqpName;
+			   							// first load Heating/HtPump system info
+			   							if (BEMPX_GetInteger( (bIsHP ? lDBID_DUT_NumHtPumpEquipTypes : (bIsCentral ? lDBID_DUT_NumCentralEquipTypes : lDBID_DUT_NumHeatEquipTypes)), lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
+			   								for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
+			   								{	if (	BEMPX_GetString(  (bIsHP ? lDBID_DUT_HVACHtPumpRef    : (bIsCentral ? lDBID_DUT_HVACCentralRef    : lDBID_DUT_HVACHeatRef   ))+iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
+			   											BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipCount : (bIsCentral ? lDBID_DUT_CentralEquipCount : lDBID_DUT_HeatEquipCount))+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
+			   									{	laHtUnitCnt.push_back( lEqpCnt );
+			   										saHtUnitName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
+			   								}  }
 
-											for (int iCnt=1; (iCnt <= lDUCount && sErrMsg.isEmpty()); iCnt++)		// SAC 12/14/15 - create unique SCSysRpt object for each <count> of each DwellUnit
-											{
-											// Find or create ScSysRpt object
-												//std::string sSCSysRptName;
-												//int iRptObjRetVal = GetObjectMatchingData( iCID_SCSysRpt, sSCSysRptName, 1 /*iObjCreateOption*/, laDBIDs, iaDataTypes, saData, faData, laData, -1, NULL /*parent*/, BEMO_User );
-												std::string sSCSysRptName;
-												if (lDUCount > 1)
-													sSCSysRptName = boost::str( boost::format( "%s %d/%d | " ) % sDUName.toLocal8Bit().constData() % iCnt % lDUCount );
-												else
-													sSCSysRptName = boost::str( boost::format( "%s | " ) % sDUName.toLocal8Bit().constData() );
-												int iRptObjRetVal = GetObjectMatchingData( iCID_SCSysRpt, sSCSysRptName, 2 /*iObjCreateOption*/, laDBIDs, iaDataTypes, saData, faData, laData, -1, pDUObj /*parent*/, BEMO_User );
-																					assert( iRptObjRetVal == 0 || iRptObjRetVal == 1 );
-												if (iRptObjRetVal == 1)
-													iNumObjsCreated++;
-												else if (iRptObjRetVal > 10)
-													sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving/creating SCSysRpt object #%1 for DwellUnitType '%2'" ).arg( QString::number( iEqp+1 ), sDUName );
-												int iSCSysIdx = (saSCSysRptName.size() < 1 || iRptObjRetVal == 1) ? (int) saSCSysRptName.size() : -1;
-												if (iSCSysIdx < 0)
-												{	for (int iSR=0; (iSCSysIdx < 0 && iSR < (int) saSCSysRptName.size()); iSR++)
-													{	if (sSCSysRptName == saSCSysRptName[iSR])
-															iSCSysIdx = iSR;
-													}
-													if (iSCSysIdx < 0)
-														iSCSysIdx = (int) saSCSysRptName.size();
-												}																							assert( iSCSysIdx >= 0 );
-												if (iSCSysIdx < (int) saSCSysRptName.size())
-													laSCSysRptCnt[iSCSysIdx] = laSCSysRptCnt[iSCSysIdx] + lCount;		// SCSysRpt already referenced in array, so just increment count
-												else
-												{	saSCSysRptName.push_back( sSCSysRptName );		// add SCSysRpt & count to arrays
-													laSCSysRptCnt.push_back(  lCount );
-												}
-											// SAC 6/24/16 - added equipment count in order to get accurate overall equipment count across the entire model
-												int iSCSysObjIdx = (iRptObjRetVal == 1 ? BEMPX_GetNumObjects( iCID_SCSysRpt )-1 : -1);			assert( iSCSysObjIdx >= 0 );
-												long lEqpCnt = laSCSysRptCnt[iSCSysIdx];
-												BEMPX_SetBEMData( lDBID_SCSysRpt_DUEquipCnt, BEMP_Int, (void*) &lEqpCnt, BEMO_User, iSCSysObjIdx );
-											}	// end of loop over DwellUnit:Count
-										}	// end of loop over possible SCSysRpt obejcts (found or created)
+			   							// then load Cooling system info
+			   							if (!bIsHP && !bIsCentral && BEMPX_GetInteger( lDBID_DUT_NumCoolEquipTypes, lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
+			   								for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
+			   								{	if (	BEMPX_GetString(  lDBID_DUT_HVACCoolRef   +iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
+			   											BEMPX_GetInteger( lDBID_DUT_CoolEquipCount+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
+			   									{	laClUnitCnt.push_back( lEqpCnt );
+			   										saClUnitName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
+			   								}  }
 
-							// now STORE array of SCSysRpt objects and counts back to the DwellUnitType
-										int iNumSCSysRpts = (saSCSysRptName.size() <= 10 ? (int) saSCSysRptName.size() : 10);				assert( saSCSysRptName.size() <= 10 ); // if > 10, need to increase size of DwellUnitType:SCSysRpt* properties
-										for (int iSR=0; (sErrMsg.isEmpty() && iSR < iNumSCSysRpts); iSR++)
-										{	QString sSCSysName = saSCSysRptName[iSR].c_str();
-											long lSCSysCnt = laSCSysRptCnt[iSR];
-											if (sSCSysName.isEmpty() || lSCSysCnt < 1)
-												sErrMsg = QString( "CreateSCSysRptObjects Error:  Invalid data encountered for SCSysRpt reference #%1 of DwellUnitType '%2'" ).arg( QString::number( iSR+1 ), sDUName );
-											else if (BEMPX_SetBEMData( lDBID_DUT_SCSysRptRef   + iSR, BEMP_Str, (void*) sSCSysName.toLocal8Bit().constData(), BEMO_User, iDUTIdx ) < 0 ||
-														BEMPX_SetBEMData( lDBID_DUT_SCSysRptCount + iSR, BEMP_Int, (void*)               &lSCSysCnt            , BEMO_User, iDUTIdx ) < 0 )
-												sErrMsg = QString( "CreateSCSysRptObjects Error encountered storing SCSysRpt reference #%1 for DwellUnitType '%2'" ).arg( QString::number( iSR+1 ), sDUName );
-										}
+			   							vector<long> laSCSysRptCnt;
+			   							vector<string> saSCSysRptName;
+			   							int iEqpLoopCnt = (int) saHtUnitName.size() + (lEqpCountsMustAlign == 0 ? (int) saClUnitName.size() : 0);
+			   							for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iEqpLoopCnt); iEqp++)
+			   							{	int iHtgIdx = (iEqp < (int) saHtUnitName.size() ? iEqp : -1);
+			   								int iClgIdx = (lEqpCountsMustAlign == 0 ? iEqp - (int) saHtUnitName.size() : iHtgIdx);
+			   								if (iClgIdx >= 0 && (int) saClUnitName.size() < (iClgIdx+1))	// SAC 12/23/15 - prevent accessing saClUnitName when not available (for no-cooling systems)
+			   									iClgIdx = -1;
+			   								long lCount = 0;
+			   								vector<long> laDBIDs, laData;		vector<int> iaDataTypes;		vector<std::string> saData;		vector<double> faData;
+			   							   // cooling equip
+			   								laDBIDs.push_back( lDBID_SCSysRpt_CoolSystem );
+			   								laData.push_back( -1 );
+			   								if (iClgIdx >= 0)
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( saClUnitName[iClgIdx] );
+			   									faData.push_back( -1 );
+			   									lCount = laClUnitCnt[iClgIdx];
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							   // heating equip
+			   								laDBIDs.push_back( (bIsHP ? lDBID_SCSysRpt_HtPumpSystem : (bIsCentral ? lDBID_SCSysRpt_CentralHtgClgSystem : lDBID_SCSysRpt_HeatSystem)) );
+			   								laData.push_back( -1 );
+			   								if (iHtgIdx >= 0)
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( saHtUnitName[iHtgIdx] );
+			   									faData.push_back( -1 );
+			   									lCount = laHtUnitCnt[iHtgIdx];
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							   // distrib equip
+			   								laDBIDs.push_back( lDBID_SCSysRpt_HVACDistRef );
+			   								laData.push_back( -1 );
+			   								if (!sDistribName.isEmpty() && ((iHtgIdx >= 0 && lHtDucted > 0) || (iClgIdx >= 0 && lClDucted > 0)))
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( (const char*) sDistribName.toLocal8Bit().constData() );
+			   									faData.push_back( -1 );
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							   // fan
+			   								laDBIDs.push_back( lDBID_SCSysRpt_HVACFanRef );
+			   								laData.push_back( -1 );
+			   								if (!sFanName.isEmpty() && ((iHtgIdx >= 0 && lHtDucted > 0) || (iClgIdx >= 0 && lClDucted > 0)))		// same logic for including Fan as we have for Distrib ??
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( (const char*) sFanName.toLocal8Bit().constData() );
+			   									faData.push_back( -1 );
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							   // SCSysTypeVal
+			   								laDBIDs.push_back( lDBID_SCSysRpt_SCSysTypeVal );
+			   								iaDataTypes.push_back( BEMP_Int );
+			   								laData.push_back( (bIsHP ? 2 : (bIsCentral ? 4 : 1)) );	// 4-"Central HtgClg"  /  2-"Heat Pump Heating and Cooling System"  /  1-"Other Heating and Cooling System"
+			   								saData.push_back( "" );
+			   								faData.push_back( -1 );
+			   							   // Status  - SAC 12/14/15
+			   								lSCSysStatus = (lDUTHVACSysStatus == 1 /*Existing*/ && lDuctStatus == 4 /*Existing+New*/) ? 4 : lDUTHVACSysStatus;
+			   								laDBIDs.push_back( lDBID_SCSysRpt_Status );
+			   								iaDataTypes.push_back( BEMP_Int );
+			   								saData.push_back( "" );
+			   								faData.push_back( -1 );
+			   								if (lProj_RunScope == 1)
+			   									laData.push_back( 3 );	// 3-"New"
+			   								else if (lSCSysStatus > 0)
+			   									laData.push_back( lSCSysStatus );
+			   								else
+			   								{	assert( FALSE );	// shouldn't happen
+			   									laData.push_back( 3 );	// 3-"New"
+			   								}
 
-					// OLD method of creating individual SCSysRpt object for EVERY SINGLE Ht, Cl or HtCl combo
-					//				// CREATE SCSysRpt objects
-					//					for (int iDUCntIdx=1; (sErrMsg.isEmpty() && iDUCntIdx <= lDUCount); iDUCntIdx++)
-					//						for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iNumSCSysRptObjsToCreate); iEqp++)
-					//						{	sSCSysRptName = QString( "%s %1/%2 eqp %3/%4" ).arg( sDUName, QString::number( iDUCntIdx ), QString::number( lDUCount ), QString::number( iEqp+1 ), QString::number( iNumSCSysRptObjsToCreate ) );
-					//							pSCSysRptObj = BEMPX_CreateObject( iCID_SCSysRpt, sSCSysRptName, pDUObj, BEMO_User, FALSE );
-					//							if (pSCSysRptObj == NULL || pSCSysRptObj->getClass() == NULL)
-					//								sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to create SCSysRpt object #%1 '%2'" ).arg( QString::number( iNumObjsCreated+1 ), sSCSysRptName );
-					//							else
-					//							{	iM1Idx = BEMPX_GetObjectIndex( pSCSysRptObj->getClass(), pSCSysRptObj );
-					//								if (iM1Idx < 0)
-					//									sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to access index of SCSysRpt object '%1'" ).arg( sSCSysRptName );
-					//								else
-					//								{	// set heating/ht pump unit data
-					//									if (iEqp < (int) laHtUnitTypIdx.size())
-					//									{	if (BEMPX_SetBEMData( (bIsHP ? lDBID_SCSysRpt_HtPumpSystem         : lDBID_SCSysRpt_HeatSystem        ), BEMP_Str, (void*) ((const char*) saHtUnitName[iEqp].c_str()), BEMO_User, iM1Idx ) < 0 ||
-					//											 BEMPX_SetBEMData( (bIsHP ? lDBID_SCSysRpt_HtPumpSysUnitTypeIdx : lDBID_SCSysRpt_HeatSysUnitTypeIdx), BEMP_Int, (void*)             &laHtUnitTypIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 ||
-					//											 BEMPX_SetBEMData( (bIsHP ? lDBID_SCSysRpt_HtPumpSysUnitTypeCnt : lDBID_SCSysRpt_HeatSysUnitTypeCnt), BEMP_Int, (void*)             &laHtUnitCntIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 )
-					//											sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to set %1 equip data of SCSysRpt object '%2'" ).arg( (bIsHP ? "heating" : "heat pump"), sSCSysRptName );
-					//									}
-					//									// set cooling unit data
-					//									if (iEqp < (int) laClUnitTypIdx.size())
-					//									{	if (BEMPX_SetBEMData( lDBID_SCSysRpt_CoolSystem        , BEMP_Str, (void*) ((const char*) saClUnitName[iEqp].c_str()), BEMO_User, iM1Idx ) < 0 ||
-					//											 BEMPX_SetBEMData( lDBID_SCSysRpt_CoolSysUnitTypeIdx, BEMP_Int, (void*)             &laClUnitTypIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 ||
-					//											 BEMPX_SetBEMData( lDBID_SCSysRpt_CoolSysUnitTypeCnt, BEMP_Int, (void*)             &laClUnitCntIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 )
-					//											sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to set %1 equip data of SCSysRpt object '%2'" ).arg( "cooling", sSCSysRptName );
-					//									}
-					//							// note: no SCSysRpt:HVACSysRef set here since HVACSys objects don't (necessarily) exist @ this point (& that not how systems are created)
-					//									if (sErrMsg.isEmpty())
-					//										iNumObjsCreated++;
-					//						}	}	}
+			   								//for (int iCnt=1; (iCnt <= lDUCount && sErrMsg.isEmpty()); iCnt++)		// SAC 12/14/15 - create unique SCSysRpt object for each <count> of each DwellUnit
+			   								//{
+			   								   // Find or create ScSysRpt object
+			   									//std::string sSCSysRptName;
+			   									//int iRptObjRetVal = GetObjectMatchingData( iCID_SCSysRpt, sSCSysRptName, 1 /*iObjCreateOption*/, laDBIDs, iaDataTypes, saData, faData, laData, -1, NULL /*parent*/, BEMO_User );
+			   									std::string sSCSysRptName;
+			   									//if (lDUCount > 1)
+			   									//	sSCSysRptName = boost::str( boost::format( "%s %d/%d | " ) % sDUName.toLocal8Bit().constData() % iCnt % lDUCount );
+			   									//else
+			   										sSCSysRptName = boost::str( boost::format( "%s | " ) % sDUTName.toLocal8Bit().constData() );
+			   									int iRptObjRetVal = GetObjectMatchingData( iCID_SCSysRpt, sSCSysRptName, 2 /*iObjCreateOption*/, laDBIDs, iaDataTypes, saData, faData, laData, -1, pDUTObj /*parent*/, BEMO_User );
+			   																		assert( iRptObjRetVal == 0 || iRptObjRetVal == 1 );
+			   									if (iRptObjRetVal == 1)
+			   										iNumObjsCreated++;
+			   									else if (iRptObjRetVal > 10)
+			   										sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving/creating SCSysRpt object #%1 for DwellUnitType '%2'" ).arg( QString::number( iEqp+1 ), sDUTName );
+			   									int iSCSysIdx = (saSCSysRptName.size() < 1 || iRptObjRetVal == 1) ? (int) saSCSysRptName.size() : -1;
+			   									if (iSCSysIdx < 0)
+			   									{	for (int iSR=0; (iSCSysIdx < 0 && iSR < (int) saSCSysRptName.size()); iSR++)
+			   										{	if (sSCSysRptName == saSCSysRptName[iSR])
+			   												iSCSysIdx = iSR;
+			   										}
+			   										if (iSCSysIdx < 0)
+			   											iSCSysIdx = (int) saSCSysRptName.size();
+			   									}																							assert( iSCSysIdx >= 0 );
+			   									if (iSCSysIdx < (int) saSCSysRptName.size())
+			   										laSCSysRptCnt[iSCSysIdx] = laSCSysRptCnt[iSCSysIdx] + lCount;		// SCSysRpt already referenced in array, so just increment count
+			   									else
+			   									{	saSCSysRptName.push_back( sSCSysRptName );		// add SCSysRpt & count to arrays
+			   										laSCSysRptCnt.push_back(  lCount );
+			   									}
+			   								   // SAC 6/24/16 - added equipment count in order to get accurate overall equipment count across the entire model
+			   									int iSCSysObjIdx = (iRptObjRetVal == 1 ? BEMPX_GetNumObjects( iCID_SCSysRpt )-1 : -1);			assert( iSCSysObjIdx >= 0 );
+			   									long lEqpCnt = laSCSysRptCnt[iSCSysIdx];
+			   									BEMPX_SetBEMData( lDBID_SCSysRpt_DUEquipCnt, BEMP_Int, (void*) &lEqpCnt, BEMO_User, iSCSysObjIdx );
+			   								//}	// end of loop over DwellUnit:Count
+			   							}	// end of loop over possible SCSysRpt obejcts (found or created)
 
-									}	// if valid DwellUnitType type
-						}	}	}
-					}	// loop over DU children of Zone
-				}
-			}	// loop over zones
+			   				         // now STORE array of SCSysRpt objects and counts back to the DwellUnitType
+			   							int iNumSCSysRpts = (saSCSysRptName.size() <= 10 ? (int) saSCSysRptName.size() : 10);				assert( saSCSysRptName.size() <= 10 ); // if > 10, need to increase size of DwellUnitType:SCSysRpt* properties
+			   							for (int iSR=0; (sErrMsg.isEmpty() && iSR < iNumSCSysRpts); iSR++)
+			   							{	QString sSCSysName = saSCSysRptName[iSR].c_str();
+			   								long lSCSysCnt = laSCSysRptCnt[iSR];
+			   								if (sSCSysName.isEmpty() || lSCSysCnt < 1)
+			   									sErrMsg = QString( "CreateSCSysRptObjects Error:  Invalid data encountered for SCSysRpt reference #%1 of DwellUnitType '%2'" ).arg( QString::number( iSR+1 ), sDUTName );
+			   								else if (BEMPX_SetBEMData( lDBID_DUT_SCSysRptRef   + iSR, BEMP_Str, (void*) sSCSysName.toLocal8Bit().constData(), BEMO_User, iDUTIdx ) < 0 ||
+			   											BEMPX_SetBEMData( lDBID_DUT_SCSysRptCount + iSR, BEMP_Int, (void*)               &lSCSysCnt            , BEMO_User, iDUTIdx ) < 0 )
+			   									sErrMsg = QString( "CreateSCSysRptObjects Error encountered storing SCSysRpt reference #%1 for DwellUnitType '%2'" ).arg( QString::number( iSR+1 ), sDUTName );
+			   							}
+			   						}	// if valid DwellUnitType type
+
+         }  }  }
+         else
+         {  // 2019 & earlier MFam creation
+            QString sZnName, sDUName, sDUTName;
+			   BEMObject *pDUObj, *pDUTObj;
+			   int iNumZones      = BEMPX_GetNumObjects( iCID_Zone      );
+			   for (int iZnIdx=0; (sErrMsg.isEmpty() && iZnIdx < iNumZones); iZnIdx++)
+			   {	//VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iCID_Zone ), sZnName, FALSE, 0, -1, iZnIdx ) && !sZnName.isEmpty() );
+			   	int iNumDUChildren = (int) BEMPX_GetNumChildren( iCID_Zone, iZnIdx, BEMO_User, iCID_DwellUnit /*, iBEMProcIdx=-1*/ );
+			   	if (iNumDUChildren < 1)
+			   		sErrMsg = QString( "CreateSCSysRptObjects Error:  No DwellUnit children found for Zone '%1'" ).arg( sZnName );
+			   	else
+			   	{	long lDUCount, lZoneHVACStatus;
+			   		BEMPX_GetInteger( lDBID_Zone_HVACSysStatus, lZoneHVACStatus, 0, -1, iZnIdx );		assert( lZoneHVACStatus > 0 );	// SAC 12/23/15
+			   		for (int i1DUChld=1; (sErrMsg.isEmpty() && i1DUChld <= iNumDUChildren); i1DUChld++)
+			   		{	BEM_ObjType otDU;
+			   			int iDUIdx = BEMPX_GetChildObjectIndex( iCID_Zone, iCID_DwellUnit, iError, otDU, i1DUChld, iZnIdx /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );
+			   			if (iDUIdx < 0)
+			   				sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving object index of DwellUnit child #%1 of Zone '%2'" ).arg( QString::number( i1DUChld ), sZnName );
+			   			else
+			   			{	BEMPX_GetString( lDBID_DU_Name, sDUName, FALSE, 0, -1, iDUIdx );		assert( !sDUName.isEmpty() );
+			   				pDUObj = BEMPX_GetObjectByClass( iCID_DwellUnit, iError, iDUIdx );
+			   				if (pDUObj == NULL)
+			   					sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to retrieve pointer to DwellUnit object #%1 '%2'" ).arg( QString::number( iDUIdx+1 ), sDUName );
+			   				else if (!BEMPX_GetObject( lDBID_DU_DwellUnitTypeRef, pDUTObj, -1, iDUIdx /*, int iObjType=BEMO_User, int iBEMProcIdx=-1*/ ) || pDUTObj==NULL || pDUTObj->getClass()==NULL)
+			   					sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving DwellUnitTypeRef of DwellUnit '%1'" ).arg( sDUName );
+			   				else if (!BEMPX_GetInteger( lDBID_DU_Count, lDUCount, 0, -1, iDUIdx ) || lDUCount < 1)
+			   				{	// IGNORE invalid DwellUnit:Count ???
+			   				}
+			   				else
+			   				{	int iDUTIdx = BEMPX_GetObjectIndex( pDUTObj->getClass(), pDUTObj /*, int iBEMProcIdx=-1*/ );			assert( iDUTIdx >= 0 );
+			   					if (iDUTIdx < 0)
+			   						sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving object index of DwellUnitTypeRef referenced by DwellUnit '%1'" ).arg( sDUName );
+			   					else
+			   					{	BEMPX_GetString( lDBID_DUT_Name, sDUTName, FALSE, 0, -1, iDUTIdx );		assert( !sDUTName.isEmpty() );
+			   						long lType;
+			   						if (BEMPX_GetInteger( lDBID_DUT_HVACSysType, lType, 0, -1, iDUTIdx ))
+			   						{
+			   							bool bIsHP = (lType == 2), bIsCentral = (lType == 4);		int iEqp, iCnt, iM1Idx;
+			   							long lHtDucted=0, lClDucted=0, lEqpCountsMustAlign=0, lDuctStatus=0, lSCSysStatus;
+			   							QString sDistribName, sFanName;
+			   							BEMPX_GetString( lDBID_DUT_HVACDistRef, sDistribName, FALSE, 0, -1, iDUTIdx );
+			   							BEMPX_GetString( lDBID_DUT_HVACFanRef , sFanName    , FALSE, 0, -1, iDUTIdx );
+			   							if (!sDistribName.isEmpty())
+			   							{  if (bIsCentral)
+                                    {  lHtDucted = lClDucted = 1;
+                                    }
+                                    else
+                                    {	BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipDucted : lDBID_DUT_HeatEquipDucted), lHtDucted, 0, -1, iDUTIdx );
+			   								   if (bIsHP)
+			   									   lClDucted = lHtDucted;
+			   								   else
+			   									   BEMPX_GetInteger( lDBID_DUT_CoolEquipDucted, lClDucted, 0, -1, iDUTIdx );
+                                    }
+			   							//	BEMObject* pDistribObj = BEMPX_GetObjectByName( iCID_HVACDist, iError, sDistribName, BEMO_User, iBEMProcIdx );
+			   							//	if (pDistribObj && pDistribObj->getClass())
+			   							//	{	int iDistribObjIdx = BEMPX_GetObjectIndex( pDistribObj->getClass(), pDistribObj, iBEMProcIdx );
+			   							//		if (iDistribObjIdx >= 0)
+			   							//			BEMPX_GetInteger( lDBID_HVACDist_Type, lDistribType, 0, -1, iDistribObjIdx );
+			   							//	}
+			   								if (lClDucted > 0 || lHtDucted > 0)
+			   								{	BEMObject* pDistObj = NULL;
+			   									if (BEMPX_GetObject( lDBID_DUT_HVACDistRef, pDistObj, -1, iDUTIdx ) && pDistObj && pDistObj->getClass())
+			   									{	int iDistIdx = BEMPX_GetObjectIndex( pDistObj->getClass(), pDistObj /*, int iBEMProcIdx=-1*/ );			assert( iDistIdx >= 0 );
+			   										if (iDistIdx >= 0)
+			   											BEMPX_GetInteger( lDBID_HVACDist_Status, lDuctStatus, 0, -1, iDistIdx );
+			   								}	}
+			   							}
+			   							BEMPX_GetInteger( lDBID_DUT_EqpCountsMustAlign, lEqpCountsMustAlign, 0, -1, iDUTIdx );
+
+			   					// SAC 11/14/14 - revisions to ignore UnitTypeIdx values and store but don't create unique array elements for Count of equipment
+			   							vector<long> laHtUnitCnt, laClUnitCnt;		// laHtUnitCntIdx, laClUnitCntIdx, laHtUnitTypIdx, laClUnitTypIdx, 
+			   							vector<string> saHtUnitName, saClUnitName;
+			   							long lNumSysTypes = 0, lEqpCnt;		QString sEqpName;
+			   							// first load Heating/HtPump system info
+			   							if (BEMPX_GetInteger( (bIsHP ? lDBID_DUT_NumHtPumpEquipTypes : (bIsCentral ? lDBID_DUT_NumCentralEquipTypes : lDBID_DUT_NumHeatEquipTypes)), lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
+			   								for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
+			   								{	if (	BEMPX_GetString(  (bIsHP ? lDBID_DUT_HVACHtPumpRef    : (bIsCentral ? lDBID_DUT_HVACCentralRef    : lDBID_DUT_HVACHeatRef   ))+iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
+			   											BEMPX_GetInteger( (bIsHP ? lDBID_DUT_HtPumpEquipCount : (bIsCentral ? lDBID_DUT_CentralEquipCount : lDBID_DUT_HeatEquipCount))+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
+			   									{	laHtUnitCnt.push_back( lEqpCnt );
+			   										saHtUnitName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
+			   									}
+			   								//		for (iCnt=0; iCnt < lEqpCnt; iCnt++)
+			   								//		{	laHtUnitTypIdx.push_back( iEqp+1 );
+			   								//			laHtUnitCntIdx.push_back( iCnt+1 );
+			   								//			saHtUnitName.push_back(   (const char*) sEqpName );
+			   								//		}
+			   								}
+
+			   							// then load Cooling system info
+			   							if (!bIsHP && !bIsCentral && BEMPX_GetInteger( lDBID_DUT_NumCoolEquipTypes, lNumSysTypes, 0, -1, iDUTIdx ) && lNumSysTypes > 0)
+			   								for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
+			   								{	if (	BEMPX_GetString(  lDBID_DUT_HVACCoolRef   +iEqp, sEqpName, FALSE, 0, -1, iDUTIdx ) && !sEqpName.isEmpty() &&
+			   											BEMPX_GetInteger( lDBID_DUT_CoolEquipCount+iEqp, lEqpCnt ,        0, -1, iDUTIdx ) && lEqpCnt > 0)
+			   									{	laClUnitCnt.push_back( lEqpCnt );
+			   										saClUnitName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
+			   									}
+			   								//		for (iCnt=0; iCnt < lEqpCnt; iCnt++)
+			   								//		{	laClUnitTypIdx.push_back( iEqp+1 );
+			   								//			laClUnitCntIdx.push_back( iCnt+1 );
+			   								//			saClUnitName.push_back(   (const char*) sEqpName );
+			   								//		}
+			   								}
+
+			   		// SAC 11/14/14 - no longer match heat/cool equipment w/ unmatched equip types or counts
+			   		//					int iNumSCSysRptObjsToCreate = laHtUnitTypIdx.size();
+			   		//					if (!bIsHP && laHtUnitTypIdx.size() != laClUnitTypIdx.size())
+			   		//					{	// we have an inconsistent number of Ht/Cl units, log a message to that effect
+			   		//						sTmp = QString( "CreateSCSysRptObjects Warning:  Inconsistent number of heating unit types/counts (%1) and cooling types/counts (%2) for DwellUnit object '%3'" ).arg( QString::number( laHtUnitTypIdx.size() ), QString::number( laClUnitTypIdx.size() ), sDUName );
+			   		//						BEMPX_WriteLogFile( sTmp );
+			      	//	
+			   		//				// ??? - fill smaller array w/ name/type/count of last item in that array, up to the size of the larger array ???
+			      	//	
+			   		//						if (laHtUnitTypIdx.size() < laClUnitTypIdx.size())
+			   		//							iNumSCSysRptObjsToCreate = laClUnitTypIdx.size();
+			   		//					}
+
+			   							vector<long> laSCSysRptCnt;
+			   							vector<string> saSCSysRptName;
+			   							int iEqpLoopCnt = (int) saHtUnitName.size() + (lEqpCountsMustAlign == 0 ? (int) saClUnitName.size() : 0);
+			   							for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iEqpLoopCnt); iEqp++)
+			   							{	int iHtgIdx = (iEqp < (int) saHtUnitName.size() ? iEqp : -1);
+			   								int iClgIdx = (lEqpCountsMustAlign == 0 ? iEqp - (int) saHtUnitName.size() : iHtgIdx);
+			   								if (iClgIdx >= 0 && (int) saClUnitName.size() < (iClgIdx+1))	// SAC 12/23/15 - prevent accessing saClUnitName when not available (for no-cooling systems)
+			   									iClgIdx = -1;
+			   								long lCount = 0;
+			   								vector<long> laDBIDs, laData;		vector<int> iaDataTypes;		vector<std::string> saData;		vector<double> faData;
+			   							// cooling equip
+			   								laDBIDs.push_back( lDBID_SCSysRpt_CoolSystem );
+			   								laData.push_back( -1 );
+			   								if (iClgIdx >= 0)
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( saClUnitName[iClgIdx] );
+			   									faData.push_back( -1 );
+			   									lCount = laClUnitCnt[iClgIdx];
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							// heating equip
+			   								laDBIDs.push_back( (bIsHP ? lDBID_SCSysRpt_HtPumpSystem : (bIsCentral ? lDBID_SCSysRpt_CentralHtgClgSystem : lDBID_SCSysRpt_HeatSystem)) );
+			   								laData.push_back( -1 );
+			   								if (iHtgIdx >= 0)
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( saHtUnitName[iHtgIdx] );
+			   									faData.push_back( -1 );
+			   									lCount = laHtUnitCnt[iHtgIdx];
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							// distrib equip
+			   								laDBIDs.push_back( lDBID_SCSysRpt_HVACDistRef );
+			   								laData.push_back( -1 );
+			   								if (!sDistribName.isEmpty() && ((iHtgIdx >= 0 && lHtDucted > 0) || (iClgIdx >= 0 && lClDucted > 0)))
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( (const char*) sDistribName.toLocal8Bit().constData() );
+			   									faData.push_back( -1 );
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							// fan
+			   								laDBIDs.push_back( lDBID_SCSysRpt_HVACFanRef );
+			   								laData.push_back( -1 );
+			   								if (!sFanName.isEmpty() && ((iHtgIdx >= 0 && lHtDucted > 0) || (iClgIdx >= 0 && lClDucted > 0)))		// same logic for including Fan as we have for Distrib ??
+			   								{	iaDataTypes.push_back( BEMP_Str );
+			   									saData.push_back( (const char*) sFanName.toLocal8Bit().constData() );
+			   									faData.push_back( -1 );
+			   								}
+			   								else
+			   								{	iaDataTypes.push_back( BEMP_Flt );
+			   									saData.push_back( "" );
+			   									faData.push_back( -99996 );
+			   								}
+			   							// SCSysTypeVal
+			   								laDBIDs.push_back( lDBID_SCSysRpt_SCSysTypeVal );
+			   								iaDataTypes.push_back( BEMP_Int );
+			   								laData.push_back( (bIsHP ? 2 : (bIsCentral ? 4 : 1)) );	// 4-"Central HtgClg"  /  2-"Heat Pump Heating and Cooling System"  /  1-"Other Heating and Cooling System"
+			   								saData.push_back( "" );
+			   								faData.push_back( -1 );
+			   							// Status  - SAC 12/14/15
+			   								lSCSysStatus = (lZoneHVACStatus == 1 /*Existing*/ && lDuctStatus == 4 /*Existing+New*/) ? 4 : lZoneHVACStatus;
+			   								laDBIDs.push_back( lDBID_SCSysRpt_Status );
+			   								iaDataTypes.push_back( BEMP_Int );
+			   								saData.push_back( "" );
+			   								faData.push_back( -1 );
+			   								if (lProj_RunScope == 1)
+			   									laData.push_back( 3 );	// 3-"New"
+			   								else if (lSCSysStatus > 0)
+			   									laData.push_back( lSCSysStatus );
+			   								else
+			   								{	assert( FALSE );	// shouldn't happen
+			   									laData.push_back( 3 );	// 3-"New"
+			   								}
+
+			   								for (int iCnt=1; (iCnt <= lDUCount && sErrMsg.isEmpty()); iCnt++)		// SAC 12/14/15 - create unique SCSysRpt object for each <count> of each DwellUnit
+			   								{
+			   								// Find or create ScSysRpt object
+			   									//std::string sSCSysRptName;
+			   									//int iRptObjRetVal = GetObjectMatchingData( iCID_SCSysRpt, sSCSysRptName, 1 /*iObjCreateOption*/, laDBIDs, iaDataTypes, saData, faData, laData, -1, NULL /*parent*/, BEMO_User );
+			   									std::string sSCSysRptName;
+			   									if (lDUCount > 1)
+			   										sSCSysRptName = boost::str( boost::format( "%s %d/%d | " ) % sDUName.toLocal8Bit().constData() % iCnt % lDUCount );
+			   									else
+			   										sSCSysRptName = boost::str( boost::format( "%s | " ) % sDUName.toLocal8Bit().constData() );
+			   									int iRptObjRetVal = GetObjectMatchingData( iCID_SCSysRpt, sSCSysRptName, 2 /*iObjCreateOption*/, laDBIDs, iaDataTypes, saData, faData, laData, -1, pDUObj /*parent*/, BEMO_User );
+			   																		assert( iRptObjRetVal == 0 || iRptObjRetVal == 1 );
+			   									if (iRptObjRetVal == 1)
+			   										iNumObjsCreated++;
+			   									else if (iRptObjRetVal > 10)
+			   										sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving/creating SCSysRpt object #%1 for DwellUnitType '%2'" ).arg( QString::number( iEqp+1 ), sDUName );
+			   									int iSCSysIdx = (saSCSysRptName.size() < 1 || iRptObjRetVal == 1) ? (int) saSCSysRptName.size() : -1;
+			   									if (iSCSysIdx < 0)
+			   									{	for (int iSR=0; (iSCSysIdx < 0 && iSR < (int) saSCSysRptName.size()); iSR++)
+			   										{	if (sSCSysRptName == saSCSysRptName[iSR])
+			   												iSCSysIdx = iSR;
+			   										}
+			   										if (iSCSysIdx < 0)
+			   											iSCSysIdx = (int) saSCSysRptName.size();
+			   									}																							assert( iSCSysIdx >= 0 );
+			   									if (iSCSysIdx < (int) saSCSysRptName.size())
+			   										laSCSysRptCnt[iSCSysIdx] = laSCSysRptCnt[iSCSysIdx] + lCount;		// SCSysRpt already referenced in array, so just increment count
+			   									else
+			   									{	saSCSysRptName.push_back( sSCSysRptName );		// add SCSysRpt & count to arrays
+			   										laSCSysRptCnt.push_back(  lCount );
+			   									}
+			   								// SAC 6/24/16 - added equipment count in order to get accurate overall equipment count across the entire model
+			   									int iSCSysObjIdx = (iRptObjRetVal == 1 ? BEMPX_GetNumObjects( iCID_SCSysRpt )-1 : -1);			assert( iSCSysObjIdx >= 0 );
+			   									long lEqpCnt = laSCSysRptCnt[iSCSysIdx];
+			   									BEMPX_SetBEMData( lDBID_SCSysRpt_DUEquipCnt, BEMP_Int, (void*) &lEqpCnt, BEMO_User, iSCSysObjIdx );
+			   								}	// end of loop over DwellUnit:Count
+			   							}	// end of loop over possible SCSysRpt obejcts (found or created)
+
+			   				// now STORE array of SCSysRpt objects and counts back to the DwellUnitType
+			   							int iNumSCSysRpts = (saSCSysRptName.size() <= 10 ? (int) saSCSysRptName.size() : 10);				assert( saSCSysRptName.size() <= 10 ); // if > 10, need to increase size of DwellUnitType:SCSysRpt* properties
+			   							for (int iSR=0; (sErrMsg.isEmpty() && iSR < iNumSCSysRpts); iSR++)
+			   							{	QString sSCSysName = saSCSysRptName[iSR].c_str();
+			   								long lSCSysCnt = laSCSysRptCnt[iSR];
+			   								if (sSCSysName.isEmpty() || lSCSysCnt < 1)
+			   									sErrMsg = QString( "CreateSCSysRptObjects Error:  Invalid data encountered for SCSysRpt reference #%1 of DwellUnitType '%2'" ).arg( QString::number( iSR+1 ), sDUName );
+			   								else if (BEMPX_SetBEMData( lDBID_DUT_SCSysRptRef   + iSR, BEMP_Str, (void*) sSCSysName.toLocal8Bit().constData(), BEMO_User, iDUTIdx ) < 0 ||
+			   											BEMPX_SetBEMData( lDBID_DUT_SCSysRptCount + iSR, BEMP_Int, (void*)               &lSCSysCnt            , BEMO_User, iDUTIdx ) < 0 )
+			   									sErrMsg = QString( "CreateSCSysRptObjects Error encountered storing SCSysRpt reference #%1 for DwellUnitType '%2'" ).arg( QString::number( iSR+1 ), sDUName );
+			   							}
+
+			   		// OLD method of creating individual SCSysRpt object for EVERY SINGLE Ht, Cl or HtCl combo
+			   		//				// CREATE SCSysRpt objects
+			   		//					for (int iDUCntIdx=1; (sErrMsg.isEmpty() && iDUCntIdx <= lDUCount); iDUCntIdx++)
+			   		//						for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iNumSCSysRptObjsToCreate); iEqp++)
+			   		//						{	sSCSysRptName = QString( "%s %1/%2 eqp %3/%4" ).arg( sDUName, QString::number( iDUCntIdx ), QString::number( lDUCount ), QString::number( iEqp+1 ), QString::number( iNumSCSysRptObjsToCreate ) );
+			   		//							pSCSysRptObj = BEMPX_CreateObject( iCID_SCSysRpt, sSCSysRptName, pDUObj, BEMO_User, FALSE );
+			   		//							if (pSCSysRptObj == NULL || pSCSysRptObj->getClass() == NULL)
+			   		//								sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to create SCSysRpt object #%1 '%2'" ).arg( QString::number( iNumObjsCreated+1 ), sSCSysRptName );
+			   		//							else
+			   		//							{	iM1Idx = BEMPX_GetObjectIndex( pSCSysRptObj->getClass(), pSCSysRptObj );
+			   		//								if (iM1Idx < 0)
+			   		//									sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to access index of SCSysRpt object '%1'" ).arg( sSCSysRptName );
+			   		//								else
+			   		//								{	// set heating/ht pump unit data
+			   		//									if (iEqp < (int) laHtUnitTypIdx.size())
+			   		//									{	if (BEMPX_SetBEMData( (bIsHP ? lDBID_SCSysRpt_HtPumpSystem         : lDBID_SCSysRpt_HeatSystem        ), BEMP_Str, (void*) ((const char*) saHtUnitName[iEqp].c_str()), BEMO_User, iM1Idx ) < 0 ||
+			   		//											 BEMPX_SetBEMData( (bIsHP ? lDBID_SCSysRpt_HtPumpSysUnitTypeIdx : lDBID_SCSysRpt_HeatSysUnitTypeIdx), BEMP_Int, (void*)             &laHtUnitTypIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 ||
+			   		//											 BEMPX_SetBEMData( (bIsHP ? lDBID_SCSysRpt_HtPumpSysUnitTypeCnt : lDBID_SCSysRpt_HeatSysUnitTypeCnt), BEMP_Int, (void*)             &laHtUnitCntIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 )
+			   		//											sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to set %1 equip data of SCSysRpt object '%2'" ).arg( (bIsHP ? "heating" : "heat pump"), sSCSysRptName );
+			   		//									}
+			   		//									// set cooling unit data
+			   		//									if (iEqp < (int) laClUnitTypIdx.size())
+			   		//									{	if (BEMPX_SetBEMData( lDBID_SCSysRpt_CoolSystem        , BEMP_Str, (void*) ((const char*) saClUnitName[iEqp].c_str()), BEMO_User, iM1Idx ) < 0 ||
+			   		//											 BEMPX_SetBEMData( lDBID_SCSysRpt_CoolSysUnitTypeIdx, BEMP_Int, (void*)             &laClUnitTypIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 ||
+			   		//											 BEMPX_SetBEMData( lDBID_SCSysRpt_CoolSysUnitTypeCnt, BEMP_Int, (void*)             &laClUnitCntIdx[iEqp]         , BEMO_User, iM1Idx ) < 0 )
+			   		//											sErrMsg = QString( "CreateSCSysRptObjects Error:  Unable to set %1 equip data of SCSysRpt object '%2'" ).arg( "cooling", sSCSysRptName );
+			   		//									}
+			   		//							// note: no SCSysRpt:HVACSysRef set here since HVACSys objects don't (necessarily) exist @ this point (& that not how systems are created)
+			   		//									if (sErrMsg.isEmpty())
+			   		//										iNumObjsCreated++;
+			   		//						}	}	}
+
+			   						}	// if valid DwellUnitType type
+			   			}	}	}
+			   		}	// loop over DU children of Zone
+			   	}
+			   }	// loop over zones
+         }
 		}
 
 		else
@@ -13847,9 +14069,9 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 		long lDBID_DwellUnitType_NumHtPumpEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumHtPumpEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HVACHtPumpRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACHtPumpRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HtPumpEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "HtPumpEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
-		long lDBID_DwellUnitType_NumCentralEquipTypes = GetPropertyDBID_LogError( "DwellUnitType", "NumCentralEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );     // SAC 03/16/22
-		long lDBID_DwellUnitType_HVACCentralRef       = GetPropertyDBID_LogError( "DwellUnitType", "HVACCentralRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
-		long lDBID_DwellUnitType_CentralEquipCount    = GetPropertyDBID_LogError( "DwellUnitType", "CentralEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
+		long lDBID_DwellUnitType_NumCentralEquipTypes = BEMPX_GetDatabaseID( "DwellUnitType:NumCentralEquipTypes" );   // GetPropertyDBID_LogError( "DwellUnitType", "NumCentralEquipTypes", iCID_DwellUnitType, iNumErrors, sTmp );     // SAC 03/16/22   // switched to NOT report errors (for 2019 compatibility)
+		long lDBID_DwellUnitType_HVACCentralRef       = BEMPX_GetDatabaseID( "DwellUnitType:HVACCentralRef"       );   // GetPropertyDBID_LogError( "DwellUnitType", "HVACCentralRef"      , iCID_DwellUnitType, iNumErrors, sTmp );
+		long lDBID_DwellUnitType_CentralEquipCount    = BEMPX_GetDatabaseID( "DwellUnitType:CentralEquipCount"    );   // GetPropertyDBID_LogError( "DwellUnitType", "CentralEquipCount"   , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HVACFanRef          = GetPropertyDBID_LogError( "DwellUnitType", "HVACFanRef"         , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_HVACDistRef         = GetPropertyDBID_LogError( "DwellUnitType", "HVACDistRef"        , iCID_DwellUnitType, iNumErrors, sTmp );
 		long lDBID_DwellUnitType_PreventCoolingSim   = GetPropertyDBID_LogError( "DwellUnitType", "PreventCoolingSim"  , iCID_DwellUnitType, iNumErrors, sTmp );		// SAC 8/5/15
@@ -13871,9 +14093,9 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 		long lDBID_HVACSys_HtPumpSystemCount    = GetPropertyDBID_LogError( "HVACSys", "HtPumpSystemCount"   , iCID_HVACSys, iNumErrors, sTmp );
 		long lDBID_HVACSys_HtPumpSystem         = GetPropertyDBID_LogError( "HVACSys", "HtPumpSystem"        , iCID_HVACSys, iNumErrors, sTmp );
 //		long lDBID_HVACSys_HtPumpDucted         = GetPropertyDBID_LogError( "HVACSys", "HtPumpDucted"        , iCID_HVACSys, iNumErrors, sTmp );
-		long lDBID_HVACSys_NumCentralEquipTypes = GetPropertyDBID_LogError( "HVACSys", "NumCentralEquipTypes", iCID_HVACSys, iNumErrors, sTmp );     // SAC 03/16/22
-		long lDBID_HVACSys_CentralEquipCount    = GetPropertyDBID_LogError( "HVACSys", "CentralEquipCount"   , iCID_HVACSys, iNumErrors, sTmp );
-		long lDBID_HVACSys_HVACCentralRef       = GetPropertyDBID_LogError( "HVACSys", "HVACCentralRef"      , iCID_HVACSys, iNumErrors, sTmp );
+		long lDBID_HVACSys_NumCentralEquipTypes = BEMPX_GetDatabaseID( "HVACSys:NumCentralEquipTypes" );   // GetPropertyDBID_LogError( "HVACSys", "NumCentralEquipTypes", iCID_HVACSys, iNumErrors, sTmp );     // SAC 03/16/22   // switched to NOT report errors (for 2019 compatibility)
+		long lDBID_HVACSys_CentralEquipCount    = BEMPX_GetDatabaseID( "HVACSys:CentralEquipCount"    );   // GetPropertyDBID_LogError( "HVACSys", "CentralEquipCount"   , iCID_HVACSys, iNumErrors, sTmp );
+		long lDBID_HVACSys_HVACCentralRef       = BEMPX_GetDatabaseID( "HVACSys:HVACCentralRef"       );   // GetPropertyDBID_LogError( "HVACSys", "HVACCentralRef"      , iCID_HVACSys, iNumErrors, sTmp );
 		long lDBID_HVACSys_DistribSystem        = GetPropertyDBID_LogError( "HVACSys", "DistribSystem"       , iCID_HVACSys, iNumErrors, sTmp );
 		long lDBID_HVACSys_Fan                  = GetPropertyDBID_LogError( "HVACSys", "Fan"                 , iCID_HVACSys, iNumErrors, sTmp );
 
@@ -13962,7 +14184,7 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 													{	assert( FALSE );	// bogus equipment object or count
 												}	}
 											}
-											else if (lHVACSysType == 4)      // SAC 03/16/22
+											else if (lHVACSysType == 4 && lDBID_HVACSys_NumCentralEquipTypes > 0)      // SAC 03/16/22
 											{	// process ResCentralHtgClg equipment
 												if (!BEMPX_GetInteger( lDBID_DwellUnitType_NumCentralEquipTypes, lEqpNum, 0, -1, iDUTIdx ))
 												{	assert( FALSE );
@@ -14121,7 +14343,7 @@ int CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, E
 												 BEMPX_SetBEMData( lDBID_HVACSys_HtPumpSystemCount+iEqpIdx, BEMP_Int, (void*)               &lEqpCount                      , BEMO_User, iHVACSysIdx ) < 0)
 											{	assert( FALSE );
 									}	}	}
-									else if (lHVACSysType == 4)	// ResCentralHtgClg - SAC 03/16/22
+									else if (lHVACSysType == 4 && lDBID_HVACSys_NumCentralEquipTypes > 0)	// ResCentralHtgClg - SAC 03/16/22
 									{	assert( saHeatNames.size() == laHeatCount.size() && saHeatNames.size() < iMaxHVACSysCentralHtgClgRefs );
 										lEqpCount = min( saHeatNames.size(), iMaxHVACSysCentralHtgClgRefs );
 										BEMPX_SetBEMData( lDBID_HVACSys_NumCentralEquipTypes, BEMP_Int, (void*) &lEqpCount, BEMO_User, iHVACSysIdx );

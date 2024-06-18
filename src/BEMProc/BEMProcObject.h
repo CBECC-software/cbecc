@@ -52,8 +52,8 @@
 #endif
 #define	BEMRun_RunNameLen				  32
 #define	BEMRun_RunAbbrevLen			  16
-#define	BEMRun_NumMeters				   4
-#define	BEMRun_MeterNameLen			  16
+#define	BEMRun_NumMeters				  16   // 4->16 - SAC 09/07/22 (CUAC)
+#define	BEMRun_MeterNameLen			  20   // 16->20 - SAC 09/07/22 (CUAC)
 #define	BEMRun_EnduseNameLen			  32	 // SAC 4/15/15 - 16->32 to accommodate nonres' 'Domestic Hot Water'
 #define	BEMRun_NumHourlyResults		8760
 
@@ -82,6 +82,10 @@ public:
 												m_hourly[i] += d;
 												m_total     += d;  }
 	double  getTotal()				{	return m_total;  }
+
+	void    scaleValues( double dMult )    {  for (int i=0; i < BEMRun_NumHourlyResults; i++)    // SAC 09/10/22 (CUAC)
+													        m_hourly[i] *= dMult;
+                                             m_total *= dMult;  }
 
 private:
    char		m_enduseName[ BEMRun_EnduseNameLen ];

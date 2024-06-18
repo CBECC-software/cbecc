@@ -194,17 +194,18 @@
     <ClInclude Include="CSERunMgr.h" />
     <ClInclude Include="EPlusRunMgr.h" />
     <ClInclude Include="exec-stream.h" />
-    <ClInclude Include="OpenStudioInterface.h" />
+    <ClInclude Include="ModelkitInterface.h" />
+    <ClInclude Include="OpenStudioInterface_19.h" />
     <ClInclude Include="Qt_FileDownloader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BEMCmpMgr.cpp" />
-    <ClCompile Include="BEMCmpMgrCom.cpp" />
+    <ClCompile Include="BEMCmpMgr_19.cpp" />
+    <ClCompile Include="BEMCmpMgrCom_19.cpp" />
     <ClCompile Include="BEMCmpMgrSecure.cpp" />
     <ClCompile Include="bemcm_LoadModel.cpp" />
-    <ClCompile Include="CSERunMgr.cpp" />
+    <ClCompile Include="CSERunMgr_19.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -219,7 +220,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="EPlusRunMgr.cpp" />
+    <ClCompile Include="EPlusRunMgr_19.cpp" />
     <ClCompile Include="exec-stream.cpp" />
     <ClCompile Include="FileCheck.cpp" />
     <ClCompile Include="moc_Qt_FileManager19c.cpp">
@@ -244,7 +245,8 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeaderOutputFile>
     </ClCompile>
-    <ClCompile Include="OpenStudioInterface.cpp" />
+    <ClCompile Include="ModelkitInterface.cpp" />
+    <ClCompile Include="OpenStudioInterface_19.cpp" />
     <ClCompile Include="ParseT24ReportXML.cpp" />
     <ClCompile Include="Qt_FileDownloader.cpp" />
     <ClCompile Include="ReportGen.cpp" />

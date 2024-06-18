@@ -702,13 +702,15 @@ void CButtonCtl::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
 //      GetParentFrame()->PostMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (long) pPar );
 // SAC 6/27/01 - revised button press message to return value indicating whether or not data was changed
       int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (LPARAM) pPar );
-      if (iBtnPressRetVal > 0)
+      if (iBtnPressRetVal == 1)
       {
          // Post-processing following mods
          m_bUpdatingData = TRUE;  // SAC 2/5/99
          GetParent()->SendMessage( WM_DATAMODIFIED, 1, m_lUseDBID );
          m_bUpdatingData = FALSE;  // SAC 2/5/99
       }
+      else if (iBtnPressRetVal > 1)
+         GetParent()->PostMessage( WM_DLGCLOSEACTION, 0, iBtnPressRetVal );
    }
    else
       CButton::OnKeyUp( nChar, nRepCnt, nFlags );
@@ -808,13 +810,15 @@ void CButtonCtl::OnLButtonUp( UINT nFlags, CPoint point )
 //      GetParentFrame()->PostMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (long) pPar );
 // SAC 6/27/01 - revised button press message to return value indicating whether or not data was changed
       int iBtnPressRetVal = GetParentFrame()->SendMessage( WM_BUTTONPRESSED, MAKEWPARAM( (WORD) m_lNavOrVal, m_wSecNavID ), (LPARAM) pPar );
-      if (iBtnPressRetVal > 0)
+      if (iBtnPressRetVal == 1)
       {
          // Post-processing following mods
          m_bUpdatingData = TRUE;  // SAC 2/5/99
          GetParent()->SendMessage( WM_DATAMODIFIED, 1, m_lUseDBID );
          m_bUpdatingData = FALSE;  // SAC 2/5/99
       }
+      else if (iBtnPressRetVal > 1)
+         GetParent()->PostMessage( WM_DLGCLOSEACTION, 0, iBtnPressRetVal );
    }
    else
       CButton::OnLButtonUp( nFlags, point );

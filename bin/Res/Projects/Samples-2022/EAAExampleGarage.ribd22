@@ -1,13 +1,13 @@
 RulesetFilename   "CA Res 2022.bin"  
 
 Proj   "EAA Example 3"  
-   BEMVersion = 10
-   SoftwareVersion = "CBECC-Res 2022.1.0 RC (1243)"
-   SoftwareVersionDetail = "CBECC-Res 2022.0.6 Alpha (1229)"
+   BEMVersion = 11
+   SoftwareVersion = "CBECC-Res 2022.2.0 RC (1271)"
+   SoftwareVersionDetail = "CBECC-Res 2022.2.0 RV (1263)"
    CreateDate = 1556730321
-   ModDate = 1653618903
+   ModDate = 1665518000
    RunDate = 1474307407
-   ProjFileName = "EAAExample3wGarage.ribd22"
+   ProjFileName = "EAAExampleGarage.ribd22"
    RunTitle = "Ex HVAC Altered DHW"
    AnalysisType = "Proposed and Standard"
    CALGreen = 0
@@ -87,7 +87,7 @@ Proj   "EAA Example 3"
    AdditionCFAFrac = 1
    AlterIncl2Categs = 0
    ProjInclKitchen = 0
-   InsulConsQuality = "No"
+   InsulConsQuality = "Yes"
    NumBedrooms = 3
    NumAddBedrooms = 0
    AllOrientations = 0
@@ -135,6 +135,7 @@ Proj   "EAA Example 3"
    Appl_RefrigUsage[1] = 565
    ApplRefrigEffMethod[1] = "from # bedrooms/unit"
    ApplDishUsageMethod[1] = "from # bedrooms/unit"
+   ResultsCurrentMsg = "(not current)"
    BypassMessageBoxes = 1
    CSERpt_ZnDataDump = 0
    CSERpt_HVACDescrip = 0
@@ -688,7 +689,7 @@ ExtWall   "Add Wall Left"
    Orientation = "Left"
    OrientationValue = 90
    Area = 120
-   Construction = "R-19 + R5"
+   Construction = "R-21 + R5"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -745,7 +746,7 @@ ExtWall   "Add Back Wall"
    Orientation = "Back"
    OrientationValue = 180
    Area = 120
-   Construction = "R-19 + R5"
+   Construction = "R-21 + R5"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -802,7 +803,7 @@ ExtWall   "Add Wall Right"
    Orientation = "Right"
    OrientationValue = 270
    Area = 120
-   Construction = "R-19 + R5"
+   Construction = "R-21 + R5"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1019,35 +1020,35 @@ EUseSummary   "EUSummary"
    Title3[29] = "Emis. (kg)"
    Title3[30] = "Margin (kg)"
    Enduse1[1] = "Space Heating"
-   Enduse1[2] = "316"
-   Enduse1[3] = "383.3"
-   Enduse1[4] = "91.90"
-   Enduse1[5] = "251"
-   Enduse1[6] = "395.9"
-   Enduse1[7] = "93.60"
-   Enduse1[8] = "1.70"
-   Enduse1[10] = "0.00"
-   Enduse1[11] = "0.00"
-   Enduse1[23] = "73"
-   Enduse1[24] = "2,241"
-   Enduse1[25] = "2,314"
-   Enduse1[27] = "59"
-   Enduse1[28] = "2,315"
-   Enduse1[29] = "2,374"
-   Enduse1[30] = "60"
+   Enduse1[2] = "254"
+   Enduse1[3] = "399.3"
+   Enduse1[4] = "94.38"
+   Enduse1[5] = "250"
+   Enduse1[6] = "393.7"
+   Enduse1[7] = "93.08"
+   Enduse1[8] = "-1.30"
+   Enduse1[10] = "0.11"
+   Enduse1[11] = "0.11"
+   Enduse1[23] = "59"
+   Enduse1[24] = "2,335"
+   Enduse1[25] = "2,394"
+   Enduse1[27] = "58"
+   Enduse1[28] = "2,302"
+   Enduse1[29] = "2,360"
+   Enduse1[30] = "-34"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "3,891"
-   Enduse2[4] = "143.37"
-   Enduse2[5] = "4,084"
-   Enduse2[7] = "147.97"
-   Enduse2[8] = "4.60"
-   Enduse2[10] = "2.29"
-   Enduse2[11] = "2.35"
-   Enduse2[23] = "462"
-   Enduse2[25] = "462"
-   Enduse2[27] = "474"
-   Enduse2[29] = "474"
-   Enduse2[30] = "12"
+   Enduse2[2] = "3,906"
+   Enduse2[4] = "144.01"
+   Enduse2[5] = "4,003"
+   Enduse2[7] = "145.44"
+   Enduse2[8] = "1.43"
+   Enduse2[10] = "0.36"
+   Enduse2[11] = "0.37"
+   Enduse2[23] = "461"
+   Enduse2[25] = "461"
+   Enduse2[27] = "468"
+   Enduse2[29] = "468"
+   Enduse2[30] = "7"
    Enduse3[1] = "IAQ Ventilation"
    Enduse3[4] = "0.00"
    Enduse3[7] = "0.00"
@@ -1088,8 +1089,8 @@ EUseSummary   "EUSummary"
    Enduse6[5] = "426"
    Enduse6[7] = "7.90"
    Enduse6[8] = "0.00"
-   Enduse6[10] = "0.11"
-   Enduse6[11] = "0.11"
+   Enduse6[10] = "0.08"
+   Enduse6[11] = "0.08"
    Enduse6[23] = "81"
    Enduse6[25] = "81"
    Enduse6[27] = "81"
@@ -1103,8 +1104,8 @@ EUseSummary   "EUSummary"
    Enduse7[6] = "43.1"
    Enduse7[7] = "25.00"
    Enduse7[8] = "0.00"
-   Enduse7[10] = "0.16"
-   Enduse7[11] = "0.16"
+   Enduse7[10] = "0.10"
+   Enduse7[11] = "0.10"
    Enduse7[23] = "139"
    Enduse7[24] = "252"
    Enduse7[25] = "392"
@@ -1118,8 +1119,8 @@ EUseSummary   "EUSummary"
    Enduse8[5] = "2,026"
    Enduse8[7] = "34.14"
    Enduse8[8] = "0.00"
-   Enduse8[10] = "0.30"
-   Enduse8[11] = "0.30"
+   Enduse8[10] = "0.27"
+   Enduse8[11] = "0.27"
    Enduse8[23] = "336"
    Enduse8[25] = "336"
    Enduse8[27] = "336"
@@ -1139,39 +1140,39 @@ EUseSummary   "EUSummary"
    Enduse9[29] = "19"
    Enduse9[30] = "0"
    Enduse10[1] = "TOTAL"
-   Enduse10[2] = "7,797"
-   Enduse10[3] = "535.3"
-   Enduse10[4] = "328.45"
-   Enduse10[5] = "7,926"
-   Enduse10[6] = "547.9"
-   Enduse10[7] = "334.75"
-   Enduse10[8] = "6.30"
-   Enduse10[10] = "2.89"
-   Enduse10[11] = "2.95"
-   Enduse10[23] = "1,122"
-   Enduse10[24] = "3,129"
-   Enduse10[25] = "4,252"
-   Enduse10[27] = "1,120"
-   Enduse10[28] = "3,203"
-   Enduse10[29] = "4,324"
-   Enduse10[30] = "72"
+   Enduse10[2] = "7,750"
+   Enduse10[3] = "551.3"
+   Enduse10[4] = "331.57"
+   Enduse10[5] = "7,844"
+   Enduse10[6] = "545.7"
+   Enduse10[7] = "331.70"
+   Enduse10[8] = "0.13"
+   Enduse10[10] = "0.96"
+   Enduse10[11] = "0.96"
+   Enduse10[23] = "1,107"
+   Enduse10[24] = "3,223"
+   Enduse10[25] = "4,331"
+   Enduse10[27] = "1,113"
+   Enduse10[28] = "3,190"
+   Enduse10[29] = "4,304"
+   Enduse10[30] = "-27"
    Enduse11[1] = "Compliance Total"
-   Enduse11[2] = "4,287"
-   Enduse11[3] = "492.1"
-   Enduse11[4] = "259.66"
-   Enduse11[5] = "4,416"
-   Enduse11[6] = "504.7"
-   Enduse11[7] = "265.96"
-   Enduse11[8] = "6.30"
-   Enduse11[10] = "2.30"
-   Enduse11[11] = "2.36"
-   Enduse11[23] = "547"
-   Enduse11[24] = "2,877"
-   Enduse11[25] = "3,424"
-   Enduse11[27] = "545"
-   Enduse11[28] = "2,951"
-   Enduse11[29] = "3,496"
-   Enduse11[30] = "72"
+   Enduse11[2] = "4,240"
+   Enduse11[3] = "508.2"
+   Enduse11[4] = "262.78"
+   Enduse11[5] = "4,333"
+   Enduse11[6] = "502.5"
+   Enduse11[7] = "262.91"
+   Enduse11[8] = "0.13"
+   Enduse11[10] = "0.48"
+   Enduse11[11] = "0.49"
+   Enduse11[23] = "532"
+   Enduse11[24] = "2,971"
+   Enduse11[25] = "3,503"
+   Enduse11[27] = "538"
+   Enduse11[28] = "2,938"
+   Enduse11[29] = "3,476"
+   Enduse11[30] = "-27"
    Enduse13[1] = "Photovoltaics"
    Enduse13[4] = "0.00"
    Enduse13[7] = " "
@@ -1201,27 +1202,27 @@ EUseSummary   "EUSummary"
    SummaryCol2[1] = "Compliance"
    SummaryCol2[2] = "Total"
    SummaryCol2[3] = "(kTDV/ft²-yr)"
-   SummaryCol2[4] = "265.96"
-   SummaryCol2[5] = "259.66"
+   SummaryCol2[4] = "262.91"
+   SummaryCol2[5] = "262.78"
    SummaryCol3[1] = "Compliance"
    SummaryCol3[2] = "Margin"
    SummaryCol3[3] = "(kTDV/ft²-yr)"
-   SummaryCol3[5] = "6.30"
-   MarginkW[1] = 0.05
-   MarginkWh = 129.1
-   MarginTherms = 12.61
-   PctSavingskW = 1.9
-   PctSavingskWh = 1.6
-   PctSavingsTherms = 2.3
-   PctSavingsTDV = 1.9
-   PctSavingsCmpTDV = 2.4
-   PctSavkWLbl = "1.9"
-   PctSavkWhLbl = "1.6"
-   PctSavThermsLbl = "2.3"
-   PctSavTDVLbl = "1.9"
-   PctSavCmpTDVLbl = "2.4"
-   PropElecDemand[1] = 2.89324
-   StdElecDemand = 2.94798
+   SummaryCol3[5] = "0.13"
+   MarginkW[1] = 0.01
+   MarginkWh = 93.8
+   MarginTherms = -5.64
+   PctSavingskW = 0.5
+   PctSavingskWh = 1.2
+   PctSavingsTherms = -1
+   PctSavingsTDV = 0
+   PctSavingsCmpTDV = 0
+   PctSavkWLbl = "0.5"
+   PctSavkWhLbl = "1.2"
+   PctSavThermsLbl = "-1.0"
+   PctSavTDVLbl = "-"
+   PctSavCmpTDVLbl = "-"
+   PropElecDemand[1] = 0.95793
+   StdElecDemand = 0.963041
    StdDesignPVSize = 0
    PropPV_Total = 0
    PropPV_Export = 0
@@ -1235,18 +1236,18 @@ EUseSummary   "EUSummary"
    CO2TotalUnitLabel = "kg"
    MeetsTier1 = 0
    MeetsTier2 = 0
-   PropElecCarbon[1] = 1.12155
-   PropFuelCarbon[1] = 3.13
-   PropFinalCarbon[1] = 4.25155
-   PropExclExpCarbon[1] = 4.25155
+   PropElecCarbon[1] = 1.10678
+   PropFuelCarbon[1] = 3.22374
+   PropFinalCarbon[1] = 4.33052
+   PropExclExpCarbon[1] = 4.33052
    PropExportCarbon[1] = 0
    PropSelfConsCarbon[1] = 0
-   PropNoSolFlxCarbon[1] = 4.25155
-   StdFinalCarbon = 4.32354
-   StdExclExpCarbon = 4.32354
+   PropNoSolFlxCarbon[1] = 4.33052
+   StdFinalCarbon = 4.30376
+   StdExclExpCarbon = 4.30376
    StdExportCarbon = 0
    StdSelfConsCarbon = 0
-   StdNoSolFlxCarbon = 4.32354
+   StdNoSolFlxCarbon = 4.30376
    HideCompSummary = 1
    HideEDRs = 1
    HideC02Emissions = 0
@@ -1528,7 +1529,7 @@ Cons   "R-38 Ceiling"
    RoofingType = "all others"
    ..
 
-Cons   "R-19 + R5"  
+Cons   "R-21 + R5"  
    Type = "Wood Framed Wall"
    RoofingLayer = "Light Roof (Asphalt Shingle)"
    AbvDeckInsulLayer = "- no insulation -"
@@ -1545,7 +1546,7 @@ Cons   "R-19 + R5"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
-   CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
+   CavityLayer = "R 21"
    FrameLayer = "2x6 @ 16 in. O.C."
    SheathInsulLayer = "R5 Sheathing"
    WallExtFinishLayer = "Synthetic Stucco"
@@ -1827,6 +1828,38 @@ Mat   "Ins-R18-D1.5-SH0.2-C0.02546"
    ConductivityCT = 0.0032537
    ..
 
+Mat   "Ins-R9.1-D1.5-SH0.2-C0.03205 23"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0320513
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R18-D1.5-SH0.2-C0.02546 24"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.025463
+   ConductivityQII = 0.025463
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R13-D1.5-SH0.2-C0.02244 25"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0224376
+   ConductivityQII = 0.0224376
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R21-D1.5-SH0.2-C0.02183"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0218254
+   ConductivityQII = 0.0218254
+   ConductivityCT = 0.0032537
+   ..
+
 WindowType   "Ex Oper Wood Single"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
    NFRCUfactor = 0.99
@@ -1934,8 +1967,8 @@ WindowType   "Oper Vinyl Low-E"
 
 WindowType   "Fix Vinyl Low-E"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
-   NFRCUfactor = 0.32
-   NFRCSHGC = 0.25
+   NFRCUfactor = 0.3
+   NFRCSHGC = 0.23
    ExteriorShade = "Insect Screen (default)"
    ModelFinsOverhang = 1
    OverhangDepth = 0
@@ -1977,7 +2010,7 @@ WindowType   "Glass Block"
 WindowType   "French Door Vinyl Low-E"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
    NFRCUfactor = 0.3
-   NFRCSHGC = 0.22
+   NFRCSHGC = 0.23
    ExteriorShade = "Insect Screen (default)"
    ModelFinsOverhang = 1
    OverhangDepth = 0
@@ -1998,7 +2031,7 @@ WindowType   "French Door Vinyl Low-E"
 WindowType   "SGD"  
    SpecMethod = "Overall Window Area"
    NFRCUfactor = 0.3
-   NFRCSHGC = 0.22
+   NFRCSHGC = 0.23
    ExteriorShade = "Insect Screen (default)"
    ModelFinsOverhang = 0
    OverhangDepth = 0
@@ -2047,11 +2080,14 @@ HVACSys   "Ex System"
 HVACHeat   "Ex Furnace"  
    Type = "CntrlFurnace - Fuel-fired central furnace"
    AFUE = 75
+   ElecSpcHtgExcpt = "- select applicable exception -"
    ..
 
 HVACCool   "Ex Cooling"  
    Type = "SplitAirCond - Split air conditioning system"
+   EffMetric = "SEER/EER"
    SEER = 8
+   SEER2 = 14.3
    EER = 7.06
    CFMperTon = 350
    ACCharge = "Not Verified"
@@ -2066,7 +2102,7 @@ HVACDist   "Ducts"
    Status = "Existing + New"
    IsVerified = 0
    DefaultSystem = 0
-   DuctLeakage = "Existing (not specified)"
+   DuctLeakage = "Sealed and tested"
    DuctLeakageVal = 5
    HasBypassDuct = 0
    DuctInsRvalOpt = "6.0"
@@ -2079,12 +2115,13 @@ HVACDist   "Ducts"
    DuctDesign = 0
    LowLkgAH = 0
    IsLessThanFortyFt = 1
+   IsLessThan25Ft = 0
    ..
 
 HVACFan   "HVAC Fan"  
    Type = "Single Speed PSC Furnace Fan"
    DefaultSystem = 0
-   WperCFMCool = 0.58
+   WperCFMCool = 0.45
    ..
 
 DHWSys   "Alter DHW"  

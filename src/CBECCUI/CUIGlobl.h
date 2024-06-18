@@ -563,6 +563,7 @@ extern int eiBDBCID_PVArrayShade;
 extern int eiBDBCID_Battery;
 
 extern int eiBDBCID_ResProj;     // SAC 10/20/21 (MFam)
+extern int eiBDBCID_CUAC;        // SAC 07/26/22 (CUAC)
 extern int eiBDBCID_Building;
 extern int eiBDBCID_Story;
 extern int eiBDBCID_Space;

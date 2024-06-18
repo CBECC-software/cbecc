@@ -192,8 +192,10 @@
     <ClInclude Include="BEMCmpMgrCom.h" />
     <ClInclude Include="bemcm_I.h" />
     <ClInclude Include="CSERunMgr.h" />
+    <ClInclude Include="CUAC_Analysis.h" />
     <ClInclude Include="EPlusRunMgr.h" />
     <ClInclude Include="exec-stream.h" />
+    <ClInclude Include="ModelkitInterface.h" />
     <ClInclude Include="OpenStudioInterface.h" />
     <ClInclude Include="Qt_FileDownloader.h" />
     <ClInclude Include="stdafx.h" />
@@ -205,6 +207,7 @@
     <ClCompile Include="BEMCmpMgrSecure.cpp" />
     <ClCompile Include="bemcm_LoadModel.cpp" />
     <ClCompile Include="CSERunMgr.cpp" />
+    <ClCompile Include="CUAC_Analysis.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -244,6 +247,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="ModelkitInterface.cpp" />
     <ClCompile Include="OpenStudioInterface.cpp" />
     <ClCompile Include="ParseT24ReportXML.cpp" />
     <ClCompile Include="Qt_FileDownloader.cpp" />

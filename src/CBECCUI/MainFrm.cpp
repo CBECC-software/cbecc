@@ -198,6 +198,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_RPT_BLDGSUMMARYT24, OnToolsReport_BuildingSummary_T24)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_BATCH, OnUpdateToolsBatchProcessing)
 	ON_COMMAND(IDM_TOOLS_BATCH, OnToolsBatchProcessing)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_TEST, OnUpdateToolsRunTest)
+	ON_COMMAND(IDM_TOOLS_TEST, OnToolsRunTest)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_FILEHASH, OnUpdateToolsGenerateFileHashes)
 	ON_COMMAND(IDM_TOOLS_FILEHASH, OnToolsGenerateFileHashes)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_PUBLICKEY, OnUpdateToolsGeneratePublicKey)
@@ -534,6 +536,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
    ON_MESSAGE( WM_APICOMPANALYSIS, OnPerformAPIAnalysisMsg )
 
    ON_MESSAGE( WM_BUTTONPRESSED,    OnButtonPressed )
+   ON_MESSAGE( WM_DLGCLOSEACTION,   OnDlgCloseAction )
+
    ON_MESSAGE( WM_QUICKMENU,        OnQuickMenu )
    ON_MESSAGE( WM_SETSTATUSMESSAGE, OnSetStatusMessage )
    ON_MESSAGE( WM_CREATECOMPONENT,  OnCreateBldgComponent )
@@ -565,6 +569,7 @@ CMainFrame::CMainFrame()
    m_bDoingWizard = FALSE;
    m_bDoingSummaryReport = FALSE;  // SAC 6/19/13
    m_bPerformingAnalysis = FALSE;	// SAC 4/1/15
+   m_bPerformingCUACAnalysis = FALSE;	// SAC 08/19/22 (CUAC)
    m_bDoingCustomRuleEval = FALSE;	// SAC 1/28/18
    m_iNumInitRESNETBldgObjs = 0;		// SAC 9/29/20
 	gridDialog = NULL;
@@ -1003,7 +1008,6 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM /*lParam*/, L
 /////////////////////////////////////////////////////////////////////////////
 
 static int siSubordTabbedDlgsDisplayed = 0;	// SAC 10/29/14 - added to prevent too many subordinate tabbed dialogs from being displayed at a time - max ~2 (?)
-
 LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 {
    long lRetVal = 1;
@@ -1508,6 +1512,81 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 	 */
 		}	}
 
+      // moved from UI_CARES only section to here for CBECC access - SAC 09/28/22
+		else if (wAction == 3036)		// SAC 4/7/19 - reused 3036 value to serve as dialog to collect HVACDist DuctSeg child data
+		{
+#ifdef UI_CARES
+         int iBDBCID_HVACDist = eiBDBCID_HVACDist;
+					long lRunScope=0;
+					BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope );
+					bool bIsEAARun = (lRunScope == 2);
+#elif UI_CANRES
+         int iBDBCID_HVACDist = eiBDBCID_ResDistSys;
+					long lRunScope=0;
+					BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "ResProj:RunScope" ), lRunScope );
+					bool bIsEAARun = (lRunScope == 2);
+#endif  // UI_CARES or UI_CANRES
+			//BEMMessageBox( "Duct design" );
+			int iHVACDistObjIdx = BEMPX_GetActiveObjectIndex( iBDBCID_HVACDist );
+			int iDuctSegCID = BEMPX_GetDBComponentID( "DuctSeg" );			ASSERT( iDuctSegCID > 0 );
+			if (iDuctSegCID > 0 && iBDBCID_HVACDist > 0 && iHVACDistObjIdx >= 0)
+			{	if (!QAppInitialized())
+					AfxMessageBox( "Error encountered initializing QT Application." );
+				else
+				{
+
+				// if active HVACDist doesn't have at least one child DuctSeg, then create one BEFORE opening grid
+					int iNumDuctSegKids = BEMPX_GetNumChildren( iBDBCID_HVACDist, iHVACDistObjIdx, BEMO_User, iDuctSegCID );
+					if (iNumDuctSegKids < 1)
+					{	CWaitCursor wait;
+						int iError;
+						BEMObject* pParentObj = BEMPX_GetObjectByClass( iBDBCID_HVACDist, iError, iHVACDistObjIdx );			ASSERT( pParentObj );
+						if (pParentObj)
+						{	BEMObject* pNewObj = BEMPX_CreateObject( iDuctSegCID, "seg" /*NULL:LPCSTR lpszName*/, pParentObj );
+															//	BEM_ObjType objType = BEMO_User, bool bDefaultParent = TRUE,
+															//	bool bAutoCreate = TRUE, int iBEMProcIdx=-1, BOOL bIgnoreMaxDefinable=FALSE,
+															//	int i0ChildIdx =-1 );  // SAC 5/29/14 - added i0ChildIdx in place of BOOL bMakeFirstChild = FALSE );
+							if (pNewObj)
+							   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+   									NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+   									0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+						}
+					}
+
+					CWnd* pFocusWnd=NULL;
+					if (pDlg)
+					{	pFocusWnd = pDlg->GetFocus();
+						pDlg->EnableWindow( FALSE );
+					}
+
+				//	QString qsDlgMsg;
+				//	VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iBDBCID_HVACDist ), qsDlgMsg, FALSE, 0, -1, iHVACDistObjIdx ) && !qsDlgMsg.isEmpty() );
+				//	if (qsDlgMsg.isEmpty())
+				//		qsDlgMsg = "<unknown>";
+				//	qsDlgMsg = "  Describe each duct segment of HVACDist '" + qsDlgMsg;
+				//	qsDlgMsg += "':";
+
+					long lDuctDesignDlgMsgDBID = BEMPX_GetDatabaseID( "DuctDesignDlgMsg", iBDBCID_HVACDist );
+					BEMGridDialog gridDuctSeg( this, iDuctSegCID, -1, iDuctSegCID, (bIsEAARun ? 3037 : 3036), 
+														iBDBCID_HVACDist, iHVACDistObjIdx, lDuctDesignDlgMsgDBID );
+					gridDuctSeg.setModal(true);
+					gridDuctSeg.exec();
+				//	gridDuctSeg.open();
+
+					if (pDlg)
+					{	pDlg->EnableWindow( TRUE );
+						if (pFocusWnd)
+					      pFocusWnd->SetFocus();
+						else
+					      pDlg->SetFocus();
+					}
+
+//			BEMMessageBox( "Duct design" );
+
+			}	}
+		}
+
+
 #ifdef UI_CARES
       else if (wAction >= 171 && wAction <= 194)
       {	int iDlgHt = 600, iDlgWd = 770;  // Present dialog to collect Multifamily Dwelling Unit data
@@ -1594,71 +1673,64 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 	//								ebIncludeLongCompParamStrInToolTip );
    //      dlgProj.DoModal();
 	//	}
-		else if (wAction == 3036)		// SAC 4/7/19 - reused 3036 value to serve as dialog to collect HVACDist DuctSeg child data
-		{
-			//BEMMessageBox( "Duct design" );
-			int iHVACDistObjIdx = BEMPX_GetActiveObjectIndex( eiBDBCID_HVACDist );
-			int iDuctSegCID = BEMPX_GetDBComponentID( "DuctSeg" );			ASSERT( iDuctSegCID > 0 );
-			if (iDuctSegCID > 0 && eiBDBCID_HVACDist > 0 && iHVACDistObjIdx >= 0)
-			{	if (!QAppInitialized())
-					AfxMessageBox( "Error encountered initializing QT Application." );
-				else
-				{
-
-				// if active HVACDist doesn't have at least one child DuctSeg, then create one BEFORE opening grid
-					int iNumDuctSegKids = BEMPX_GetNumChildren( eiBDBCID_HVACDist, iHVACDistObjIdx, BEMO_User, iDuctSegCID );
-					if (iNumDuctSegKids < 1)
-					{	CWaitCursor wait;
-						int iError;
-						BEMObject* pParentObj = BEMPX_GetObjectByClass( eiBDBCID_HVACDist, iError, iHVACDistObjIdx );			ASSERT( pParentObj );
-						if (pParentObj)
-						{	BEMObject* pNewObj = BEMPX_CreateObject( iDuctSegCID, "seg" /*NULL:LPCSTR lpszName*/, pParentObj );
-															//	BEM_ObjType objType = BEMO_User, bool bDefaultParent = TRUE,
-															//	bool bAutoCreate = TRUE, int iBEMProcIdx=-1, BOOL bIgnoreMaxDefinable=FALSE,
-															//	int i0ChildIdx =-1 );  // SAC 5/29/14 - added i0ChildIdx in place of BOOL bMakeFirstChild = FALSE );
-							if (pNewObj)
-							   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
-   									NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
-   									0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
-						}
-					}
-
-					CWnd* pFocusWnd=NULL;
-					if (pDlg)
-					{	pFocusWnd = pDlg->GetFocus();
-						pDlg->EnableWindow( FALSE );
-					}
-
-				//	QString qsDlgMsg;
-				//	VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", eiBDBCID_HVACDist ), qsDlgMsg, FALSE, 0, -1, iHVACDistObjIdx ) && !qsDlgMsg.isEmpty() );
-				//	if (qsDlgMsg.isEmpty())
-				//		qsDlgMsg = "<unknown>";
-				//	qsDlgMsg = "  Describe each duct segment of HVACDist '" + qsDlgMsg;
-				//	qsDlgMsg += "':";
-
-					long lRunScope=0;
-					BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope );
-					bool bIsEAARun = (lRunScope == 2);
-
-					long lDuctDesignDlgMsgDBID = BEMPX_GetDatabaseID( "DuctDesignDlgMsg", eiBDBCID_HVACDist );
-					BEMGridDialog gridDuctSeg( this, iDuctSegCID, -1, iDuctSegCID, (bIsEAARun ? 3037 : 3036), 
-														eiBDBCID_HVACDist, iHVACDistObjIdx, lDuctDesignDlgMsgDBID );
-					gridDuctSeg.setModal(true);
-					gridDuctSeg.exec();
-				//	gridDuctSeg.open();
-
-					if (pDlg)
-					{	pDlg->EnableWindow( TRUE );
-						if (pFocusWnd)
-					      pFocusWnd->SetFocus();
-						else
-					      pDlg->SetFocus();
-					}
-
-//			BEMMessageBox( "Duct design" );
-
-			}	}
-		}
+      // moved from here to above for CBECC access - SAC 09/28/22
+		// else if (wAction == 3036)		// SAC 4/7/19 - reused 3036 value to serve as dialog to collect HVACDist DuctSeg child data
+		// {
+		// 	//BEMMessageBox( "Duct design" );
+		// 	int iHVACDistObjIdx = BEMPX_GetActiveObjectIndex( eiBDBCID_HVACDist );
+		// 	int iDuctSegCID = BEMPX_GetDBComponentID( "DuctSeg" );			ASSERT( iDuctSegCID > 0 );
+		// 	if (iDuctSegCID > 0 && eiBDBCID_HVACDist > 0 && iHVACDistObjIdx >= 0)
+		// 	{	if (!QAppInitialized())
+		// 			AfxMessageBox( "Error encountered initializing QT Application." );
+		// 		else
+		// 		{
+		// 		// if active HVACDist doesn't have at least one child DuctSeg, then create one BEFORE opening grid
+		// 			int iNumDuctSegKids = BEMPX_GetNumChildren( eiBDBCID_HVACDist, iHVACDistObjIdx, BEMO_User, iDuctSegCID );
+		// 			if (iNumDuctSegKids < 1)
+		// 			{	CWaitCursor wait;
+		// 				int iError;
+		// 				BEMObject* pParentObj = BEMPX_GetObjectByClass( eiBDBCID_HVACDist, iError, iHVACDistObjIdx );			ASSERT( pParentObj );
+		// 				if (pParentObj)
+		// 				{	BEMObject* pNewObj = BEMPX_CreateObject( iDuctSegCID, "seg" /*NULL:LPCSTR lpszName*/, pParentObj );
+		// 													//	BEM_ObjType objType = BEMO_User, bool bDefaultParent = TRUE,
+		// 													//	bool bAutoCreate = TRUE, int iBEMProcIdx=-1, BOOL bIgnoreMaxDefinable=FALSE,
+		// 													//	int i0ChildIdx =-1 );  // SAC 5/29/14 - added i0ChildIdx in place of BOOL bMakeFirstChild = FALSE );
+		// 					if (pNewObj)
+		// 					   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+   	// 								NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+   	// 								0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+		// 				}
+		// 			}
+		// 			CWnd* pFocusWnd=NULL;
+		// 			if (pDlg)
+		// 			{	pFocusWnd = pDlg->GetFocus();
+		// 				pDlg->EnableWindow( FALSE );
+		// 			}
+		// 		//	QString qsDlgMsg;
+		// 		//	VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", eiBDBCID_HVACDist ), qsDlgMsg, FALSE, 0, -1, iHVACDistObjIdx ) && !qsDlgMsg.isEmpty() );
+		// 		//	if (qsDlgMsg.isEmpty())
+		// 		//		qsDlgMsg = "<unknown>";
+		// 		//	qsDlgMsg = "  Describe each duct segment of HVACDist '" + qsDlgMsg;
+		// 		//	qsDlgMsg += "':";
+		// 			long lRunScope=0;
+		// 			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope );
+		// 			bool bIsEAARun = (lRunScope == 2);
+		// 			long lDuctDesignDlgMsgDBID = BEMPX_GetDatabaseID( "DuctDesignDlgMsg", eiBDBCID_HVACDist );
+		// 			BEMGridDialog gridDuctSeg( this, iDuctSegCID, -1, iDuctSegCID, (bIsEAARun ? 3037 : 3036), 
+		// 												eiBDBCID_HVACDist, iHVACDistObjIdx, lDuctDesignDlgMsgDBID );
+		// 			gridDuctSeg.setModal(true);
+		// 			gridDuctSeg.exec();
+		// 		//	gridDuctSeg.open();
+		// 			if (pDlg)
+		// 			{	pDlg->EnableWindow( TRUE );
+		// 				if (pFocusWnd)
+		// 			      pFocusWnd->SetFocus();
+		// 				else
+		// 			      pDlg->SetFocus();
+		// 			}
+      //          //			BEMMessageBox( "Duct design" );
+		// 	}	}
+		// }
 
 #elif UI_CANRES
 
@@ -1766,6 +1838,28 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 			}
          lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff
 		}
+      else if (wAction >= 3040 && wAction <= 3049)    // consolidate Proj dialog tabs via subordinate dialogs - SAC 08/18/22 (CUAC)
+      {  int iDlgHt = 600, iDlgWd = 600;
+         GetDialogTabDimensions( eiBDBCID_Proj, iDlgWd, iDlgHt );
+         // adjustments consistent w/ those made for tabbed dialogs in BEMProcUI - SAC 08/18/22 (CUAC)
+         int iDoneBtnHt = FontY(40);
+         int iPaddedBorderWd = GetSystemMetrics(SM_CXPADDEDBORDER);	
+         iDlgWd = FontX(iDlgWd) +   (eiTabDlgCtrlMarg * 2) +   (iPaddedBorderWd * 2) + 8;
+         iDlgHt = FontY(iDlgHt) + /*(eiTabDlgCtrlMarg * 3) +*/ (iPaddedBorderWd * 2) + GetSystemMetrics(SM_CYCAPTION) + iDoneBtnHt + 8;
+			CString sDialogCaption;
+			GetDialogCaption( eiBDBCID_Proj, sDialogCaption );
+         CSACDlg dlgProjSub( pDlg, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         dlgProjSub.DoModal();
+      }
       else if (wAction == 3050)
       {
 			CString sDialogCaption;
@@ -1809,11 +1903,25 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
    									iActiveObjIdx_ResOtherZn /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ ) ? 1 : 0);
          }
 		}
+		else if (wAction == 3068)		// button to initiate CUAC analysis and/or reporting - SAC 08/19/22 (CUAC)
+      {  lRetVal = 2;   // should cause dialog to close plus initiation of analysis
+      }
 
 #endif  // UI_CARES or UI_CANRES
 
    }
    return lRetVal;
+}
+
+LRESULT CMainFrame::OnDlgCloseAction( WPARAM, LPARAM lParam )     // SAC 08/19/22 (CUAC)
+{
+   if (lParam == 2)
+   {  m_bPerformingCUACAnalysis = TRUE;	// SAC 08/19/22 (CUAC)
+      //AfxMessageBox( "OnDlgCloseAction(2)" );
+      OnPerformAnalysis(0,0);
+      m_bPerformingCUACAnalysis = FALSE;
+   }
+   return 1;
 }
 
 
@@ -2231,6 +2339,7 @@ void CMainFrame::OnQuickEdit()
 
       CWnd* pWnd = GetFocus();
 //      CBEMDialog td( siQuickCr8Class, pWnd );
+            //AfxMessageBox ( "accessing dialog from MainFrm" );
       CSACBEMProcDialog td( siQuickCr8Class, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
                         0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, iMaxTabs,
@@ -3276,7 +3385,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
                                                 {  "ReportStandardUMLHs"         ,  "ReportStandardUMLHs"         ,    0   },  // SAC 11/11/19
                                                 {  "ReportAllUMLHZones"          ,  "ReportAllUMLHZones"          ,    0   },  // SAC 11/11/19
                                                 {  "SimulateCSEOnly"             ,  "SimulateCSEOnly"             ,    0   },  // SAC 3/10/20
-                                                {  "ReportGenNRCCPRFXML"         ,  "ReportGenNRCCPRFXML"         ,    0   },  // SAC 04/10/21
+                                                {  "ReportGenNRCCPRFXML"         ,  "ReportGenNRCCPRFXML"         ,    1   },  // SAC 04/10/21  // switched default to 1 - SAC 08/31/22
                                                 {  "LogAnalysisProgress"         ,  "LogAnalysisProgress"         ,   -1   },  // SAC 01/14/22 (MFam)
 																{  NULL, NULL, -1  }  };
 
@@ -3318,6 +3427,13 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "EnableResearchMode,%d,", iEnableResearchMode );
 			sOptionsCSVString += sOptTemp;
 		}
+
+      if (m_bPerformingCUACAnalysis)      // SAC 08/19/22 (CUAC)
+      {  long lCUAC_RptOption=0, lDBID_CUAC_RptOption = BEMPX_GetDatabaseID( "CUAC:RptOption" );	
+         if (lDBID_CUAC_RptOption > 0 && BEMPX_SetDataInteger( lDBID_CUAC_RptOption, lCUAC_RptOption ) && lCUAC_RptOption > 0)
+         {	sOptTemp.Format( "CUACReportID,%d,", lCUAC_RptOption );
+            sOptionsCSVString += sOptTemp;
+      }  }
 
 	// Add loop to check/add rule-based reporting options based on the enumerations currently available in the ruleset data model
 		long lDBID_Proj_RuleReportType = BEMPX_GetDatabaseID( "RuleReportType", BEMPX_GetDBComponentID( "Proj" ) );					ASSERT( lDBID_Proj_RuleReportType > 0 );
@@ -4803,6 +4919,36 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 #endif
 
 	return qsErrMsg.isEmpty();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+void CMainFrame::OnUpdateToolsRunTest(CCmdUI* pCmdUI)		// SAC 06/16/22
+{
+	bool bEnableRunTest = false;
+#ifdef UI_CANRES
+	bEnableRunTest = true;
+#endif
+   pCmdUI->Enable( bEnableRunTest );
+}
+
+void CMainFrame::OnToolsRunTest()		// SAC 06/16/22
+{
+#ifdef UI_CANRES
+   std::string sModelkitBatPathFile        = "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC-Com_MFamRestructure\\CBECC-Com64\\Modelkit\\modelkit-catalyst\\bin\\modelkit.bat";
+   std::string sModelkitRubyScriptPathFile = "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC-Com_MFamRestructure\\CBECC-Com64\\Modelkit\\hybrid-hvac.rb";
+   std::string sIDFPath          = "D:\\Dev\\CBECC-VS19\\bin\\Com\\Projects\\test\\2022\\ModelkitHybridHVAC\\1\\";
+   std::string sIDFFilenameNoExt = "020012-OffSml-CECStd - ap";
+   char pszModelkitBatRetString[1024] = "\0";
+   int iModelkitBatRetVal = CMX_ExecuteModelkitBat( sModelkitBatPathFile.c_str(), sModelkitRubyScriptPathFile.c_str(), 
+                        sIDFPath.c_str(), sIDFFilenameNoExt.c_str(), true /*bVerboseOutput*/,
+                        pszModelkitBatRetString, 1023 );
+   if (strlen( pszModelkitBatRetString ) > 0)
+      BEMMessageBox( QString( "Modelkit test returned %1:  %2" ).arg( QString::number( iModelkitBatRetVal ), pszModelkitBatRetString ) );  
+   else
+      BEMMessageBox( QString( "Modelkit test returned %1:  (no message)" ).arg( QString::number( iModelkitBatRetVal ) ) );  
+#endif
+   return;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -6387,7 +6533,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
    	bContinue = FALSE;
 
 	bool bRptGenOfflineConfirmed = false;
-	if (bContinue && BEMPX_GetUIActiveFlag() && ReadProgInt( "options", "EnableRptGenStatusChecks", 1 /*default*/ ) > 0)
+	if (bContinue && BEMPX_GetUIActiveFlag() && !m_bPerformingCUACAnalysis && ReadProgInt( "options", "EnableRptGenStatusChecks", 1 /*default*/ ) > 0)
 	{	CString sNoRptGenMsg;
 		int iRptsToGen = CheckWhichReportsToGenerate( sNoRptGenMsg );
 		if (iRptsToGen > 0 && !CheckReportGenAccess( false ))
@@ -7620,7 +7766,12 @@ void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 	// added based on above - SAC 05/26/22
 	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEnergyCodeYr );
    if (lEnergyCodeYr >= 2022)
-      sDefaultResFNWord = "NRCCPRF";
+   {  long lIsLowRiseMFam=0, lDBID_IsLowRiseMFam = BEMPX_GetDatabaseID( "Proj:IsLowRiseMFam" );    // SAC 10/17/22
+      if (lDBID_IsLowRiseMFam > 0 && BEMPX_GetInteger( lDBID_IsLowRiseMFam, lIsLowRiseMFam ) && lIsLowRiseMFam > 0)
+         sDefaultResFNWord = "LMCCPRF";
+      else
+         sDefaultResFNWord = "NRCCPRF";
+   }
 #endif
 	// SAC 1/31/19 - revised above code to be sensitive to Res INI option ComplianceReportPrompt
 	sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", sDefaultResFNWord );
@@ -7755,7 +7906,7 @@ void CMainFrame::OnToolsT24ComplianceReport()		// SAC 5/17/13
 	int iReportID = 0, iSecRptID = -1;
 #elif UI_CANRES
 	int iReportID = 1, iSecRptID = -1;
-   if (ReadProgInt( "options", "ReportGenNRCCPRFXML", 0 /*default*/ ) > 0)
+   if (ReadProgInt( "options", "ReportGenNRCCPRFXML", 1 /*default*/ ) > 0)  // switched default to 1 - SAC 08/31/22
       iSecRptID = 4;
 #else
 	int iReportID = -1, iSecRptID = -1;
@@ -7885,7 +8036,14 @@ void CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SA
    	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEnergyCodeYr );
 		sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYr >= 2022 ? "NRCCPRF" : "AnalysisResults") );
       if (iReportID == 4 || sDefaultResFNWord.Find("NRCCPRF") == 0)  // SAC 04/13/21
-      {  sDefaultResFNWord = "NRCCPRF";
+      {  //sDefaultResFNWord = "NRCCPRF";
+         if (lEnergyCodeYr >= 2022)    // SAC 10/19/22
+         {  long lIsLowRiseMFam=0, lDBID_IsLowRiseMFam = BEMPX_GetDatabaseID( "Proj:IsLowRiseMFam" );    // SAC 10/17/22
+            if (lDBID_IsLowRiseMFam > 0 && BEMPX_GetInteger( lDBID_IsLowRiseMFam, lIsLowRiseMFam ) && lIsLowRiseMFam > 0)
+               sDefaultResFNWord = "LMCCPRF";
+            else
+               sDefaultResFNWord = "NRCCPRF";
+         }
          bSchemaBasedRptGen = true;
       }
 #endif
@@ -8034,7 +8192,7 @@ void CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SA
 	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenApp"        ), sRptGenApp        );
 	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenService"    ), sRptGenService    );
 	      			}
-                  if (iReportID == 4 || sDefaultResFNWord.Find("NRCCPRF") == 0)  // SAC 04/13/21   // SAC 05/26/22
+                  if (iReportID == 4 || sDefaultResFNWord.Find("NRCCPRF") == 0 || sDefaultResFNWord.Find("LMCCPRF") == 0)  // SAC 04/13/21   // SAC 05/26/22   // SAC 10/19/22
                   {	BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenCompReport" ), sRptGenCompReport );
       	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenServer"     ), sRptGenServer     ); 
       	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenApp"        ), sRptGenApp        ); 

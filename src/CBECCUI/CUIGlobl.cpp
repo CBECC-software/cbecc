@@ -2470,6 +2470,7 @@ int eiBDBCID_PVArrayShade = 0;
 int eiBDBCID_Battery = 0;
 
 int eiBDBCID_ResProj = 0;     // SAC 10/20/21 (MFam)
+int eiBDBCID_CUAC = 0;        // SAC 07/26/22 (CUAC)
 int eiBDBCID_Building = 0;
 int eiBDBCID_Story = 0;
 int eiBDBCID_Space = 0;
@@ -2634,6 +2635,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
 	     if (iBDBClass == eiBDBCID_Proj    )				{  iTabCtrlWd = 1010;    iTabCtrlHt = 580;   }	// SAC 11/8/14  // wd 900->1010 - SAC 04/21/22
 	else if (iBDBClass == eiBDBCID_ResProj)         	{  iTabCtrlWd =  960;    iTabCtrlHt = 460;   }	// SAC 10/20/21 (MFam)
+	else if (iBDBClass == eiBDBCID_CUAC)            	{  iTabCtrlWd =  960;    iTabCtrlHt = 460;   }	// SAC 07/26/22 (CUAC)
 	else if (iBDBClass == eiBDBCID_EUseSummary)			{  iTabCtrlWd =  900;    iTabCtrlHt = 555;   }	// SAC 12/28/17  // SAC 9/15/20 - ht 495->515  // wd: 810->900 - SAC 12/08/21  // wd: 515->555 - SAC 12/12/21
 	else if (iBDBClass == eiBDBCID_AirSys  )				{  iTabCtrlWd =  910;    iTabCtrlHt = 580;   }  // added - SAC 05/17/22
 	else if (iBDBClass == eiBDBCID_AirSeg  )				{  iTabCtrlWd =  520;    iTabCtrlHt = 530;   }  // wider - SAC 05/17/22
@@ -2691,7 +2693,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_ResWin)     	      {	iTabCtrlWd = 650;		iTabCtrlHt = 610;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_ResSkylt)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
 	else if (iBDBClass == eiBDBCID_ResDr)     	      {  iTabCtrlWd = 550;    iTabCtrlHt = 360;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 300;   }
-	else if (iBDBClass == eiBDBCID_ResHVACSys)			{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
+	else if (iBDBClass == eiBDBCID_ResHVACSys)			{	iTabCtrlWd = 900;		iTabCtrlHt = 540;   }   // wd 750->900 - SAC 10/10/22
 	else if (iBDBClass == eiBDBCID_ResHtgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }      // SAC 08/18/21
 	else if (iBDBClass == eiBDBCID_ResClgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
 	else if (iBDBClass == eiBDBCID_ResHtPumpSys)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21
@@ -2702,7 +2704,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_ResCentralVentSys)	{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 12/31/21 (MFam)
 	else if (iBDBClass == eiBDBCID_ResClVentFan)	  		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
    // integrated Res DHW UI into Com - SAC 10/12/21 (MFam)
-	else if (iBDBClass == eiBDBCID_ResDHWSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20
+	else if (iBDBClass == eiBDBCID_ResDHWSys)	   		{  iTabCtrlWd = 750;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20  - wd 600->750 SAC 10/10/22
 	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 480;   }	// SAC 1/12/20 (Res tic #1013)  - SAC 6/11/20 (tic #1210)
 	else if (iBDBClass == eiBDBCID_ResDWHRSys)	   	{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_ResWtrHtr)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 600;   }	// Ht was 440 - increased to allow for UEF water heater labels   // ht 540->600 - SAC 01/31/21
@@ -3191,6 +3193,7 @@ void InitBEMDBIDs()
 	eiBDBCID_Battery            = BEMPX_GetDBComponentID( "Battery"      );
 
    eiBDBCID_ResProj            = BEMPX_GetDBComponentID( "ResProj" );         // SAC 10/20/21 (MFam)
+   eiBDBCID_CUAC               = BEMPX_GetDBComponentID( "CUAC" );            // SAC 07/26/22 (CUAC)
    eiBDBCID_Building           = BEMPX_GetDBComponentID( "Building" );
    eiBDBCID_Story              = BEMPX_GetDBComponentID( "Story" );
    eiBDBCID_Space              = BEMPX_GetDBComponentID( "Space" );

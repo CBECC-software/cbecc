@@ -73,7 +73,7 @@ extern EndUseMap esEUMap_CECNonRes[ NUM_T24_NRES_EndUses+1 ];
 #define  NUM_T24_NRES_Fuels        3
 extern const char* pszaEPlusFuelNames[NUM_T24_NRES_Fuels];
 
-enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,	CT_NumTypes  };	// SAC 10/2/14 - SAC 4/13/15 - SAC 1/30/20
+//enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,	CT_NumTypes  };	// SAC 10/2/14 - SAC 4/13/15 - SAC 1/30/20
 
 typedef struct
 {  char*       sEnergyUsePropName;
@@ -129,7 +129,7 @@ typedef struct
 #define  MultEPlusSim_MaxSims  10		// corresponding define in OS_Wrap/OS_Wrap.cpp
 
 extern int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* pszEPlusPath, const char* pszWthrPath, const char* pszSimProcessDir,
-															OS_SimInfo** pSimInfo, int iNumSimInfo,
+															const char* pszModelkitPath, OS_SimInfo** pSimInfo, int iNumSimInfo,
 													// other general args
 															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose=FALSE, // BOOL bPerformRangeChecks=TRUE,
                           							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
@@ -228,7 +228,7 @@ class COSRunInfo
 // SAC 7/23/18 - new routine to enable split of results processing needed for integration of PV/Battery simulation via CSE
 extern int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
-															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
+															const char* pszModelkitPath, OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
 													// other general args
 															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose=FALSE, // BOOL bPerformRangeChecks=TRUE,
                           							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14

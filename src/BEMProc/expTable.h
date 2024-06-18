@@ -53,7 +53,7 @@
 using std::string;
 using std::vector;
 
-#define  BEMP_TABLEID_MULT  100
+#define  BEMP_TABLEID_MULT  1000    // 100 -> 1000 to accommodate tables w/ > 100 columns (ASHRAE weather) - SAC 09/01/22 (Res tic #1338)
 
 
 /////////////////////////////////////////////////////////////////////////////

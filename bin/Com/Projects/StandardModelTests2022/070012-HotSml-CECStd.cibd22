@@ -1,13 +1,11 @@
 RulesetFilename   "T24N_2022.bin"  
 
 Proj   "070012-HotSml-CECStd22"  
-   BldgEngyModelVersion = 16
+   BldgEngyModelVersion = 17
    CreateDate = 1466465847
-   ModDate = 1654852215
-   RunDate = 1654852216
+   ModDate = 1666150750
+   RunDate = 1666150751
    ZipCode = 95814
-   DDWeatherFile = "C:/360Local/CBECC-COM/CBECC-Com13/Data/EPW/SACRAMENTO-EXECUTIVE_724830_CZ2010.ddy"
-   AnnualWeatherFile = "C:/360Local/CBECC-COM/CBECC-Com13/Data/EPW/SACRAMENTO-EXECUTIVE_724830_CZ2010.epw"
    HVACAutoSizing = 0
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -17,7 +15,7 @@ Proj   "070012-HotSml-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.1.0 (1250)"
+   SoftwareVersion = "CBECC 2022.2.0 (1273)"
    ProjFileName = "070012-HotSml-CECStd19.cibd"
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
@@ -12348,6 +12346,7 @@ ThrmlZn   "GuestRoom424 Thermal Zone"
    ..
 
 AirSys   "BaseAirSys5"  
+   TreeState = 253
    Type = "PVAV"
    CtrlSysType = "DDCToZone"
    ReheatCtrlMthd = "DualMaximum"
@@ -12562,7 +12561,6 @@ AirSys   "BaseAirSys5-2"
    CtrlSysType = "DDCToZone"
    ReheatCtrlMthd = "DualMaximum"
    OptStart = 1
-   ClRstSupHi = 60
    ..
 
 AirSeg   "BaseSys5 SupAirSeg-2"  
@@ -12664,7 +12662,6 @@ AirSys   "BaseAirSys5-3"
    CtrlSysType = "DDCToZone"
    ReheatCtrlMthd = "DualMaximum"
    OptStart = 1
-   ClRstSupHi = 60
    ..
 
 AirSeg   "BaseSys5 SupAirSeg-3"  
@@ -12768,7 +12765,6 @@ AirSys   "BaseAirSys5-4"
    CtrlSysType = "DDCToZone"
    ReheatCtrlMthd = "DualMaximum"
    OptStart = 1
-   ClRstSupHi = 60
    ..
 
 AirSeg   "BaseSys5 SupAirSeg-4"  
@@ -12870,13 +12866,14 @@ OACtrl   "BaseSys5 OACtrl-4"
    ..
 
 ZnSys   "GuestRoom101_SZAC"  
-   TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom101_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom101_SZAC CoilHtg"  
@@ -12890,11 +12887,13 @@ Fan   "GuestRoom101_SZAC Fan"
 ZnSys   "GuestRoom102_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom102_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom102_SZAC CoilHtg"  
@@ -12908,11 +12907,13 @@ Fan   "GuestRoom102_SZAC Fan"
 ZnSys   "GuestRoom103_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom103_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom103_SZAC CoilHtg"  
@@ -12926,11 +12927,13 @@ Fan   "GuestRoom103_SZAC Fan"
 ZnSys   "GuestRoom104_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom104_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom104_SZAC CoilHtg"  
@@ -12944,11 +12947,13 @@ Fan   "GuestRoom104_SZAC Fan"
 ZnSys   "GuestRoom105_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom105_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom105_SZAC CoilHtg"  
@@ -12962,11 +12967,13 @@ Fan   "GuestRoom105_SZAC Fan"
 ZnSys   "GuestRoom201_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom201_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom201_SZAC CoilHtg"  
@@ -12980,12 +12987,14 @@ Fan   "GuestRoom201_SZAC Fan"
 ZnSys   "GuestRoom202_205_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom202_205_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom202_205_SZAC CoilHtg"  
@@ -12999,12 +13008,14 @@ Fan   "GuestRoom202_205_SZAC Fan"
 ZnSys   "GuestRoom206_208_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 3
    ..
 
 CoilClg   "GuestRoom206_208_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom206_208_SZAC CoilHtg"  
@@ -13018,12 +13029,14 @@ Fan   "GuestRoom206_208_SZAC Fan"
 ZnSys   "GuestRoom209_212_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom209_212_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom209_212_SZAC CoilHtg"  
@@ -13037,11 +13050,13 @@ Fan   "GuestRoom209_212_SZAC Fan"
 ZnSys   "GuestRoom213_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom213_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom213_SZAC CoilHtg"  
@@ -13055,11 +13070,13 @@ Fan   "GuestRoom213_SZAC Fan"
 ZnSys   "GuestRoom214_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom214_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom214_SZAC CoilHtg"  
@@ -13073,12 +13090,14 @@ Fan   "GuestRoom214_SZAC Fan"
 ZnSys   "GuestRoom215_218_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom215_218_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom215_218_SZAC CoilHtg"  
@@ -13092,11 +13111,13 @@ Fan   "GuestRoom215_218_SZAC Fan"
 ZnSys   "GuestRoom219_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom219_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom219_SZAC CoilHtg"  
@@ -13110,12 +13131,14 @@ Fan   "GuestRoom219_SZAC Fan"
 ZnSys   "GuestRoom220_223_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom220_223_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom220_223_SZAC CoilHtg"  
@@ -13129,11 +13152,13 @@ Fan   "GuestRoom220_223_SZAC Fan"
 ZnSys   "GuestRoom224_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom224_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom224_SZAC CoilHtg"  
@@ -13147,11 +13172,13 @@ Fan   "GuestRoom224_SZAC Fan"
 ZnSys   "GuestRoom301_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom301_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom301_SZAC CoilHtg"  
@@ -13165,12 +13192,14 @@ Fan   "GuestRoom301_SZAC Fan"
 ZnSys   "GuestRoom302_305_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom302_305_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom302_305_SZAC CoilHtg"  
@@ -13184,12 +13213,14 @@ Fan   "GuestRoom302_305_SZAC Fan"
 ZnSys   "GuestRoom306_308_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 3
    ..
 
 CoilClg   "GuestRoom306_308_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom306_308_SZAC CoilHtg"  
@@ -13203,12 +13234,14 @@ Fan   "GuestRoom306_308_SZAC Fan"
 ZnSys   "GuestRoom309_312_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom309_312_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom309_312_SZAC CoilHtg"  
@@ -13222,11 +13255,13 @@ Fan   "GuestRoom309_312_SZAC Fan"
 ZnSys   "GuestRoom313_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom313_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom313_SZAC CoilHtg"  
@@ -13240,11 +13275,13 @@ Fan   "GuestRoom313_SZAC Fan"
 ZnSys   "GuestRoom314_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom314_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom314_SZAC CoilHtg"  
@@ -13258,12 +13295,14 @@ Fan   "GuestRoom314_SZAC Fan"
 ZnSys   "GuestRoom315_318_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom315_318_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom315_318_SZAC CoilHtg"  
@@ -13277,11 +13316,13 @@ Fan   "GuestRoom315_318_SZAC Fan"
 ZnSys   "GuestRoom319_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom319_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom319_SZAC CoilHtg"  
@@ -13295,12 +13336,14 @@ Fan   "GuestRoom319_SZAC Fan"
 ZnSys   "GuestRoom320_323_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom320_323_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom320_323_SZAC CoilHtg"  
@@ -13314,11 +13357,13 @@ Fan   "GuestRoom320_323_SZAC Fan"
 ZnSys   "GuestRoom324_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom324_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom324_SZAC CoilHtg"  
@@ -13332,11 +13377,13 @@ Fan   "GuestRoom324_SZAC Fan"
 ZnSys   "GuestRoom401_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom401_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom401_SZAC CoilHtg"  
@@ -13350,12 +13397,14 @@ Fan   "GuestRoom401_SZAC Fan"
 ZnSys   "GuestRoom402_405_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom402_405_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom402_405_SZAC CoilHtg"  
@@ -13369,12 +13418,14 @@ Fan   "GuestRoom402_405_SZAC Fan"
 ZnSys   "GuestRoom406_408_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 3
    ..
 
 CoilClg   "GuestRoom406_408_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom406_408_SZAC CoilHtg"  
@@ -13388,12 +13439,14 @@ Fan   "GuestRoom406_408_SZAC Fan"
 ZnSys   "GuestRoom409_412_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom409_412_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom409_412_SZAC CoilHtg"  
@@ -13407,11 +13460,13 @@ Fan   "GuestRoom409_412_SZAC Fan"
 ZnSys   "GuestRoom413_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom413_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom413_SZAC CoilHtg"  
@@ -13425,11 +13480,13 @@ Fan   "GuestRoom413_SZAC Fan"
 ZnSys   "GuestRoom414_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom414_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom414_SZAC CoilHtg"  
@@ -13443,12 +13500,14 @@ Fan   "GuestRoom414_SZAC Fan"
 ZnSys   "GuestRoom415_418_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom415_418_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom415_418_SZAC CoilHtg"  
@@ -13462,11 +13521,13 @@ Fan   "GuestRoom415_418_SZAC Fan"
 ZnSys   "GuestRoom419_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom419_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom419_SZAC CoilHtg"  
@@ -13480,12 +13541,14 @@ Fan   "GuestRoom419_SZAC Fan"
 ZnSys   "GuestRoom420_423_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom420_423_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom420_423_SZAC CoilHtg"  
@@ -13499,11 +13562,13 @@ Fan   "GuestRoom420_423_SZAC Fan"
 ZnSys   "GuestRoom424_SZAC"  
    TreeState = 253
    Type = "SZAC"
+   SubType = "Packaged1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom424_SZAC CoilClg"  
    Type = "DirectExpansion"
+   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom424_SZAC CoilHtg"  
@@ -13863,6 +13928,7 @@ WtrHtr   "WaterHeaterGas"
    StorCap = 28.1777
    UEF = 0.678
    RE = 0.8
+   CapRtd = 35029.2
    IsUEFRtd = 0
    ..
 
@@ -13882,7 +13948,8 @@ FluidSeg   "SHWMakeupElec"
 WtrHtr   "WaterHeaterElec"  
    FluidSegOutRef = "SHWSupplyElec"
    FluidSegMakeupRef = "SHWMakeupElec"
-   StorCap = 0.82233
+   StorCap = 1.82233
+   RE = 0.99
    FuelSrc = "Electricity"
    ..
 
@@ -13909,13 +13976,14 @@ Blr   "Base Blr"
    FluidSegOutRef = "BaseHWPrimSupSeg"
    EntTempDsgn = 120
    LvgTempDsgn = 160
-   CapRtd = 157550
+   CapRtd = 157625
    AFUE = 0.82
    ThrmlEff = 0.8225
    ..
 
 Pump   "Base HW Pump"  
    SpdCtrl = "VariableSpeed"
+   FlowMin = 0
    MtrHP = 0.25
    ..
 
@@ -13927,13 +13995,14 @@ Blr   "Base Blr-2"
    FluidSegOutRef = "BaseHWPrimSupSeg"
    EntTempDsgn = 120
    LvgTempDsgn = 160
-   CapRtd = 157550
+   CapRtd = 157625
    AFUE = 0.82
    ThrmlEff = 0.8225
    ..
 
 Pump   "Base HW Pump-2"  
    SpdCtrl = "VariableSpeed"
+   FlowMin = 0
    MtrHP = 0.25
    ..
 
@@ -14054,60 +14123,60 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "0.0"
-   Enduse1[3] = "295.2"
-   Enduse1[4] = "25.95"
+   Enduse1[3] = "300.6"
+   Enduse1[4] = "26.38"
    Enduse1[5] = "0.0"
-   Enduse1[6] = "302.8"
-   Enduse1[7] = "26.57"
-   Enduse1[8] = "0.62"
+   Enduse1[6] = "300.6"
+   Enduse1[7] = "26.38"
+   Enduse1[8] = "--"
    Enduse1[9] = "--"
    Enduse1[10] = "--"
-   Enduse1[11] = "6.08"
-   Enduse1[12] = "6.23"
-   Enduse1[13] = "0.15"
+   Enduse1[11] = "6.19"
+   Enduse1[12] = "6.19"
+   Enduse1[13] = "--"
    Enduse1[17] = "0.00"
-   Enduse1[18] = "17.26"
-   Enduse1[19] = "17.26"
+   Enduse1[18] = "17.58"
+   Enduse1[19] = "17.58"
    Enduse1[20] = "0.00"
-   Enduse1[21] = "17.71"
-   Enduse1[22] = "17.71"
-   Enduse1[23] = "0.45"
+   Enduse1[21] = "17.58"
+   Enduse1[22] = "17.58"
+   Enduse1[23] = "0.00"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "41.4"
+   Enduse2[2] = "41.2"
    Enduse2[3] = "--"
-   Enduse2[4] = "39.74"
-   Enduse2[5] = "40.7"
+   Enduse2[4] = "40.62"
+   Enduse2[5] = "41.2"
    Enduse2[6] = "--"
-   Enduse2[7] = "39.44"
-   Enduse2[8] = "-0.30"
-   Enduse2[9] = "17.4"
-   Enduse2[10] = "17.4"
-   Enduse2[11] = "1.57"
-   Enduse2[12] = "1.54"
-   Enduse2[13] = "-0.03"
-   Enduse2[17] = "4.13"
-   Enduse2[19] = "4.13"
-   Enduse2[20] = "4.03"
-   Enduse2[22] = "4.03"
-   Enduse2[23] = "-0.10"
+   Enduse2[7] = "40.64"
+   Enduse2[8] = "0.02"
+   Enduse2[9] = "17.6"
+   Enduse2[10] = "17.6"
+   Enduse2[11] = "1.56"
+   Enduse2[12] = "1.56"
+   Enduse2[13] = "--"
+   Enduse2[17] = "4.08"
+   Enduse2[19] = "4.08"
+   Enduse2[20] = "4.09"
+   Enduse2[22] = "4.09"
+   Enduse2[23] = "0.01"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "35.9"
+   Enduse3[2] = "36.1"
    Enduse3[3] = "--"
-   Enduse3[4] = "25.61"
-   Enduse3[5] = "36.2"
+   Enduse3[4] = "25.88"
+   Enduse3[5] = "36.1"
    Enduse3[6] = "--"
    Enduse3[7] = "25.88"
-   Enduse3[8] = "0.27"
-   Enduse3[9] = "6.2"
+   Enduse3[8] = "--"
+   Enduse3[9] = "6.3"
    Enduse3[10] = "6.3"
    Enduse3[11] = "2.00"
-   Enduse3[12] = "2.01"
-   Enduse3[13] = "0.01"
-   Enduse3[17] = "5.24"
-   Enduse3[19] = "5.24"
-   Enduse3[20] = "5.26"
-   Enduse3[22] = "5.26"
-   Enduse3[23] = "0.02"
+   Enduse3[12] = "2.00"
+   Enduse3[13] = "--"
+   Enduse3[17] = "5.25"
+   Enduse3[19] = "5.25"
+   Enduse3[20] = "5.25"
+   Enduse3[22] = "5.25"
+   Enduse3[23] = "0.00"
    Enduse4[1] = "Heat Rejection"
    Enduse4[2] = "--"
    Enduse4[3] = "--"
@@ -14137,9 +14206,9 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse5[13] = "--"
    Enduse5[17] = "0.01"
    Enduse5[19] = "0.01"
-   Enduse5[20] = "0.02"
-   Enduse5[22] = "0.02"
-   Enduse5[23] = "0.01"
+   Enduse5[20] = "0.01"
+   Enduse5[22] = "0.01"
+   Enduse5[23] = "0.00"
    Enduse6[1] = "Domestic Hot Water"
    Enduse6[2] = "0.6"
    Enduse6[3] = "542.2"
@@ -14154,12 +14223,12 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse6[12] = "11.57"
    Enduse6[13] = "0.40"
    Enduse6[17] = "0.04"
-   Enduse6[18] = "31.70"
-   Enduse6[19] = "31.74"
+   Enduse6[18] = "31.71"
+   Enduse6[19] = "31.75"
    Enduse6[20] = "0.53"
    Enduse6[21] = "32.29"
    Enduse6[22] = "32.82"
-   Enduse6[23] = "1.08"
+   Enduse6[23] = "1.07"
    Enduse7[1] = "Indoor Lighting"
    Enduse7[2] = "36.7"
    Enduse7[3] = "--"
@@ -14180,24 +14249,24 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
    Enduse8[2] = "75.1"
-   Enduse8[3] = "837.4"
-   Enduse8[4] = "142.55"
-   Enduse8[5] = "77.8"
-   Enduse8[6] = "854.9"
-   Enduse8[7] = "145.96"
-   Enduse8[8] = "3.41"
-   Enduse8[9] = "28.6"
-   Enduse8[10] = "29.0"
-   Enduse8[11] = "22.43"
-   Enduse8[12] = "22.96"
-   Enduse8[13] = "0.53"
-   Enduse8[17] = "13.64"
-   Enduse8[18] = "48.96"
-   Enduse8[19] = "62.60"
-   Enduse8[20] = "14.06"
-   Enduse8[21] = "50.00"
-   Enduse8[22] = "64.06"
-   Enduse8[23] = "1.46"
+   Enduse8[3] = "842.8"
+   Enduse8[4] = "144.13"
+   Enduse8[5] = "78.2"
+   Enduse8[6] = "852.7"
+   Enduse8[7] = "146.97"
+   Enduse8[8] = "2.84"
+   Enduse8[9] = "28.8"
+   Enduse8[10] = "29.2"
+   Enduse8[11] = "22.53"
+   Enduse8[12] = "22.93"
+   Enduse8[13] = "0.40"
+   Enduse8[17] = "13.60"
+   Enduse8[18] = "49.29"
+   Enduse8[19] = "62.89"
+   Enduse8[20] = "14.10"
+   Enduse8[21] = "49.87"
+   Enduse8[22] = "63.97"
+   Enduse8[23] = "1.08"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "132.1"
    Enduse9[3] = "1.4"
@@ -14302,44 +14371,44 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
    Enduse15[2] = "254.6"
-   Enduse15[3] = "838.8"
-   Enduse15[4] = "260.60"
-   Enduse15[5] = "257.3"
-   Enduse15[6] = "856.3"
-   Enduse15[7] = "264.01"
-   Enduse15[8] = "3.41"
-   Enduse15[9] = "56.6"
-   Enduse15[10] = "57.0"
-   Enduse15[11] = "33.43"
-   Enduse15[12] = "33.96"
-   Enduse15[13] = "0.53"
-   Enduse15[17] = "42.40"
-   Enduse15[18] = "49.04"
-   Enduse15[19] = "91.44"
-   Enduse15[20] = "42.82"
-   Enduse15[21] = "50.08"
-   Enduse15[22] = "92.90"
-   Enduse15[23] = "1.46"
+   Enduse15[3] = "844.2"
+   Enduse15[4] = "262.18"
+   Enduse15[5] = "257.7"
+   Enduse15[6] = "854.1"
+   Enduse15[7] = "265.02"
+   Enduse15[8] = "2.84"
+   Enduse15[9] = "56.8"
+   Enduse15[10] = "57.2"
+   Enduse15[11] = "33.53"
+   Enduse15[12] = "33.93"
+   Enduse15[13] = "0.40"
+   Enduse15[17] = "42.36"
+   Enduse15[18] = "49.37"
+   Enduse15[19] = "91.73"
+   Enduse15[20] = "42.86"
+   Enduse15[21] = "49.95"
+   Enduse15[22] = "92.81"
+   Enduse15[23] = "1.08"
    Enduse16[1] = "Efficiency Compliance"
    Enduse16[2] = "114.7"
-   Enduse16[3] = "837.4"
-   Enduse16[4] = "160.68"
-   Enduse16[5] = "117.4"
-   Enduse16[6] = "854.9"
-   Enduse16[7] = "164.09"
-   Enduse16[8] = "3.41"
-   Enduse16[9] = "29.2"
-   Enduse16[10] = "29.6"
-   Enduse16[11] = "22.92"
-   Enduse16[12] = "23.45"
-   Enduse16[13] = "0.53"
-   Enduse16[17] = "14.91"
-   Enduse16[18] = "48.96"
-   Enduse16[19] = "63.87"
-   Enduse16[20] = "15.33"
-   Enduse16[21] = "50.00"
-   Enduse16[22] = "65.33"
-   Enduse16[23] = "1.46"
+   Enduse16[3] = "842.8"
+   Enduse16[4] = "162.26"
+   Enduse16[5] = "117.8"
+   Enduse16[6] = "852.7"
+   Enduse16[7] = "165.10"
+   Enduse16[8] = "2.84"
+   Enduse16[9] = "29.5"
+   Enduse16[10] = "29.8"
+   Enduse16[11] = "23.02"
+   Enduse16[12] = "23.42"
+   Enduse16[13] = "0.40"
+   Enduse16[17] = "14.87"
+   Enduse16[18] = "49.29"
+   Enduse16[19] = "64.16"
+   Enduse16[20] = "15.37"
+   Enduse16[21] = "49.87"
+   Enduse16[22] = "65.24"
+   Enduse16[23] = "1.08"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 0  'CorridorFlr1 Thermal Zone'
@@ -14372,39 +14441,39 @@ clg: 0  htg: 0  'RearStairsFlr4 Thermal Zone'
 clg: 0  htg: 0  'RearStorageFlr4 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom101 Thermal Zone'
 clg: 0  htg: 6  'GuestRoom102 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom103 Thermal Zone'
-clg: 0  htg: 9  'GuestRoom104 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom103 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom104 Thermal Zone'
 clg: 0  htg: 7  'GuestRoom105 Thermal Zone'
-clg: 0  htg: 6  'GuestRoom201 Thermal Zone'
+clg: 0  htg: 3  'GuestRoom201 Thermal Zone'
 clg: 0  htg: 3  'GuestRoom202_205 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom206_208 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom209_212 Thermal Zone'
-clg: 0  htg: 3  'GuestRoom213 Thermal Zone'
-clg: 0  htg: 5  'GuestRoom214 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom215_218 Thermal Zone'
-clg: 0  htg: 2  'GuestRoom219 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom220_223 Thermal Zone'
-clg: 0  htg: 3  'GuestRoom224 Thermal Zone'
-clg: 0  htg: 11  'GuestRoom301 Thermal Zone'
+clg: 0  htg: 2  'GuestRoom213 Thermal Zone'
+clg: 0  htg: 4  'GuestRoom214 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom215_218 Thermal Zone'
+clg: 0  htg: 1  'GuestRoom219 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom220_223 Thermal Zone'
+clg: 0  htg: 2  'GuestRoom224 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom301 Thermal Zone'
 clg: 0  htg: 6  'GuestRoom302_305 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom306_308 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom309_312 Thermal Zone'
-clg: 0  htg: 4  'GuestRoom313 Thermal Zone'
-clg: 0  htg: 6  'GuestRoom314 Thermal Zone'
-clg: 0  htg: 11  'GuestRoom315_318 Thermal Zone'
-clg: 0  htg: 5  'GuestRoom319 Thermal Zone'
-clg: 0  htg: 10  'GuestRoom320_323 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom306_308 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom309_312 Thermal Zone'
+clg: 0  htg: 3  'GuestRoom313 Thermal Zone'
+clg: 0  htg: 5  'GuestRoom314 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom315_318 Thermal Zone'
+clg: 0  htg: 4  'GuestRoom319 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom320_323 Thermal Zone'
 clg: 0  htg: 5  'GuestRoom324 Thermal Zone'
-clg: 0  htg: 25  'GuestRoom401 Thermal Zone'
-clg: 0  htg: 21  'GuestRoom402_405 Thermal Zone'
+clg: 0  htg: 21  'GuestRoom401 Thermal Zone'
+clg: 0  htg: 20  'GuestRoom402_405 Thermal Zone'
 clg: 0  htg: 21  'GuestRoom406_408 Thermal Zone'
-clg: 0  htg: 21  'GuestRoom409_412 Thermal Zone'
-clg: 0  htg: 14  'GuestRoom413 Thermal Zone'
-clg: 0  htg: 16  'GuestRoom414 Thermal Zone'
+clg: 0  htg: 19  'GuestRoom409_412 Thermal Zone'
+clg: 0  htg: 13  'GuestRoom413 Thermal Zone'
+clg: 0  htg: 15  'GuestRoom414 Thermal Zone'
 clg: 0  htg: 21  'GuestRoom415_418 Thermal Zone'
-clg: 0  htg: 16  'GuestRoom419 Thermal Zone'
-clg: 0  htg: 21  'GuestRoom420_423 Thermal Zone'
-clg: 0  htg: 15  'GuestRoom424 Thermal Zone'", 
+clg: 0  htg: 14  'GuestRoom419 Thermal Zone'
+clg: 0  htg: 20  'GuestRoom420_423 Thermal Zone'
+clg: 0  htg: 14  'GuestRoom424 Thermal Zone'", 
                  "clg: 0  htg: 0  'CorridorFlr1 Thermal Zone'
 clg: 0  htg: 0  'EmployeeLoungeFlr1 Thermal Zone'
 clg: 0  htg: 0  'ExerciseCenterFlr1 Thermal Zone'
@@ -14435,59 +14504,59 @@ clg: 0  htg: 0  'RearStairsFlr4 Thermal Zone'
 clg: 0  htg: 0  'RearStorageFlr4 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom101 Thermal Zone'
 clg: 0  htg: 6  'GuestRoom102 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom103 Thermal Zone'
-clg: 0  htg: 9  'GuestRoom104 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom103 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom104 Thermal Zone'
 clg: 0  htg: 7  'GuestRoom105 Thermal Zone'
-clg: 0  htg: 6  'GuestRoom201 Thermal Zone'
+clg: 0  htg: 3  'GuestRoom201 Thermal Zone'
 clg: 0  htg: 3  'GuestRoom202_205 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom206_208 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom209_212 Thermal Zone'
-clg: 0  htg: 3  'GuestRoom213 Thermal Zone'
-clg: 0  htg: 5  'GuestRoom214 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom215_218 Thermal Zone'
-clg: 0  htg: 2  'GuestRoom219 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom220_223 Thermal Zone'
-clg: 0  htg: 3  'GuestRoom224 Thermal Zone'
-clg: 0  htg: 11  'GuestRoom301 Thermal Zone'
+clg: 0  htg: 2  'GuestRoom213 Thermal Zone'
+clg: 0  htg: 4  'GuestRoom214 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom215_218 Thermal Zone'
+clg: 0  htg: 1  'GuestRoom219 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom220_223 Thermal Zone'
+clg: 0  htg: 2  'GuestRoom224 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom301 Thermal Zone'
 clg: 0  htg: 6  'GuestRoom302_305 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom306_308 Thermal Zone'
-clg: 0  htg: 7  'GuestRoom309_312 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom306_308 Thermal Zone'
+clg: 0  htg: 6  'GuestRoom309_312 Thermal Zone'
 clg: 0  htg: 3  'GuestRoom313 Thermal Zone'
-clg: 0  htg: 6  'GuestRoom314 Thermal Zone'
-clg: 0  htg: 11  'GuestRoom315_318 Thermal Zone'
-clg: 0  htg: 5  'GuestRoom319 Thermal Zone'
-clg: 0  htg: 9  'GuestRoom320_323 Thermal Zone'
+clg: 0  htg: 5  'GuestRoom314 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom315_318 Thermal Zone'
+clg: 0  htg: 4  'GuestRoom319 Thermal Zone'
+clg: 0  htg: 8  'GuestRoom320_323 Thermal Zone'
 clg: 0  htg: 5  'GuestRoom324 Thermal Zone'
-clg: 0  htg: 25  'GuestRoom401 Thermal Zone'
-clg: 0  htg: 21  'GuestRoom402_405 Thermal Zone'
+clg: 0  htg: 21  'GuestRoom401 Thermal Zone'
+clg: 0  htg: 20  'GuestRoom402_405 Thermal Zone'
 clg: 0  htg: 21  'GuestRoom406_408 Thermal Zone'
-clg: 0  htg: 20  'GuestRoom409_412 Thermal Zone'
-clg: 0  htg: 14  'GuestRoom413 Thermal Zone'
-clg: 0  htg: 16  'GuestRoom414 Thermal Zone'
+clg: 0  htg: 19  'GuestRoom409_412 Thermal Zone'
+clg: 0  htg: 13  'GuestRoom413 Thermal Zone'
+clg: 0  htg: 15  'GuestRoom414 Thermal Zone'
 clg: 0  htg: 21  'GuestRoom415_418 Thermal Zone'
-clg: 0  htg: 15  'GuestRoom419 Thermal Zone'
-clg: 0  htg: 21  'GuestRoom420_423 Thermal Zone'
-clg: 0  htg: 15  'GuestRoom424 Thermal Zone'" )
-   SimSummary[1] = "CSE Successful, E+ Successful (306 warnings)"
-   SimSummary[3] = "CSE Successful, E+ Successful (260 warnings)"
+clg: 0  htg: 14  'GuestRoom419 Thermal Zone'
+clg: 0  htg: 20  'GuestRoom420_423 Thermal Zone'
+clg: 0  htg: 14  'GuestRoom424 Thermal Zone'" )
+   SimSummary[1] = "CSE Successful, E+ Successful (307 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (261 warnings)"
    PassFail = "PASS"
    MetricPassFail[1] = "Pass"
    MetricPassFail[2] = "Pass"
    MetricPassFail[3] = "Pass"
    ComplyMessage = "COMPLIES"
    StdPVBatteryMsg = "Standard Design PV Capacity: 25.3 kWdc  /  Battery System Capacity: 29.4 kWh  (power 6.93 kW)"
-   PctSavingsTDV = 1.29162
-   PctSavingsEffTDV = 2.07813
-   PctSavingsCmpTDV = 2.33626
-   PctSavTDVLbl = "1.3"
-   PctSavEffTDVLbl = "2.1"
-   PctSavCmpTDVLbl = "2.3"
-   PctSavingsSrc = 1.56066
-   PctSavingsEffSrc = 2.26013
-   PctSavingsCmpSrc = 2.30836
-   PctSavSrcLbl = "1.6"
-   PctSavEffSrcLbl = "2.3"
-   PctSavCmpSrcLbl = "2.3"
+   PctSavingsTDV = 1.07162
+   PctSavingsEffTDV = 1.72017
+   PctSavingsCmpTDV = 1.93237
+   PctSavTDVLbl = "1.1"
+   PctSavEffTDVLbl = "1.7"
+   PctSavCmpTDVLbl = "1.9"
+   PctSavingsSrc = 1.1789
+   PctSavingsEffSrc = 1.70794
+   PctSavingsCmpSrc = 1.74444
+   PctSavSrcLbl = "1.2"
+   PctSavEffSrcLbl = "1.7"
+   PctSavCmpSrcLbl = "1.7"
    MarginkW = 0.4
    PVBattResultsValid = 1
    PropDHWNames_SSF[1] = "DHW Solar System 1"

@@ -41,6 +41,7 @@
 #ifdef OSWRAPPER
 #include "OpenStudioInterface.h"
 #endif
+#include "BEMCmpMgrProgress.h"   // SAC 06/20/22
 
 using namespace std;
 #include <string>

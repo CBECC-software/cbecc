@@ -39,9 +39,9 @@
 #include "bemcm_I.h"
 #include "..\BEMProc\BEMClass.h"
 #include "..\BEMProc\BEMPropertyType.h"
-#ifdef OSWRAPPER
-#include "OpenStudioInterface.h"
-#endif
+//#ifdef OSWRAPPER
+//#include "OpenStudioInterface.h"
+//#endif
 #include "memLkRpt.h"
 
 

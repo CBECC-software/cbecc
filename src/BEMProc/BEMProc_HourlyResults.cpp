@@ -334,7 +334,8 @@ double BEMPX_AddHourlyResultArray(	double* pDbl, const char* pszRunName, const c
 	return dRetVal;
 }
 
-double BEMPX_SumIntoHourlyResultArray( double* pDbl, const char* pszRunName, const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx /*=-1*/, BOOL bAddIfNotExist /*=FALSE*/ )
+double BEMPX_SumIntoHourlyResultArray( double* pDbl, const char* pszRunName, const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx /*=-1*/,
+                                       BOOL bAddIfNotExist /*=FALSE*/, double dMult /*=1.0*/ )      // added dMult argument - SAC 09/10/22 (CUAC)
 {	double dRetVal = -99999.0;
 	BEMRunHourlyResultMeter* pMeter = GetHourlyResultMeter( pszRunName, pszMeterName, iBEMProcIdx, bAddIfNotExist );
 	if (pMeter && pMeter->getNumEnduses()+1 < BEMRun_NumEnduses && strlen( pszEnduse ) < BEMRun_EnduseNameLen)
@@ -348,12 +349,33 @@ double BEMPX_SumIntoHourlyResultArray( double* pDbl, const char* pszRunName, con
 			//pEnduse->m_dTotal = 0.0;
 			dRetVal = -pEnduse->getTotal();
 			for (int iHr=0; iHr<8760; iHr++)
-				pEnduse->addIntoHourly( iHr, pDbl[iHr] );
+				pEnduse->addIntoHourly( iHr, (pDbl[iHr] * dMult) );
 			dRetVal += pEnduse->getTotal();
 		}
 	}
 	return dRetVal;
 }
+
+double BEMPX_ScaleHourlyResultArray( double dMult, const char* pszRunName, const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx /*=-1*/ )    // SAC 09/10/22 (CUAC)
+{	double dRetVal = -99999.0;
+	BEMRunHourlyResultMeter* pMeter = GetHourlyResultMeter( pszRunName, pszMeterName, iBEMProcIdx, FALSE /*bAddIfNotExist*/ );
+	if (pMeter && pMeter->getNumEnduses()+1 < BEMRun_NumEnduses && strlen( pszEnduse ) < BEMRun_EnduseNameLen)
+	{	BEMRunHourlyResultEnduse* pEnduse = GetHourlyResultEnduse( pMeter, pszEnduse );
+		if (pEnduse == NULL && pMeter->getNumEnduses() < BEMRun_NumEnduses)
+		{	// enduse by this name does not yet exist... 
+			//pEnduse = pMeter->addHourlyResultEnduse( pszEnduse );
+		}
+		if (pEnduse)
+		{	// scale existing enduse
+         pEnduse->scaleValues( dMult );
+			dRetVal = pEnduse->getTotal();
+		}
+	}
+	return dRetVal;
+}
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -385,7 +407,7 @@ int BEMPX_WriteHourlyResultsSummary( const char* pszHourlyResultsPathFile, bool 
 							if (pMtr == NULL)
 								iRetVal = -3;
 							else
-							{	fprintf( fp_Summary, "    Meter: '%s'   NumMeters:%3d\n", pMtr->getName(), pMtr->getNumEnduses() );
+							{	fprintf( fp_Summary, "    Meter: '%s'   NumEnduses:%3d\n", pMtr->getName(), pMtr->getNumEnduses() );
 								iRetVal++;
 								int iEU=0;
 								for (; (iRetVal >= 0 && iEU < pMtr->getNumEnduses()); iEU++)

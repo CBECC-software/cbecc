@@ -176,6 +176,9 @@ inline double Divide(double n,double d)
 // Message to initiate an automatic Save As process - SAC 9/29/20
 #define WM_AUTOSAVEAS        WM_APP+58
 
+// Message sent from ButtonClick to initiate dialog close + MainFrm action - SAC 08/19/22 (CUAC)
+#define WM_DLGCLOSEACTION    WM_APP+59
+
 // SAC 2/7/00 - added message to have wizard dialog post message to parent to handle help system calls
 #define WM_PARENTHELP        WM_APP+1001
 

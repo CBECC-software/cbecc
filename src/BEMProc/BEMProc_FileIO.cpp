@@ -2248,6 +2248,10 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
    {
       pProp = pObj->getProperty(iProp);
 
+      // allow partial arrays when writing data to CSE input files - SAC 09/02/22 (Res tic #1338)
+      if (m_iFileType == BEMFT_CSE && pProp->getDataStatus() == BEMS_Undefined)
+         break;
+
       QString sData;
       // convert this property's value to a string
       PropertyToString( pObj, pProp, sData, iBEMProcIdx );
@@ -2287,7 +2291,7 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
    m_file.WriteToken( sLine.toLocal8Bit().constData(), sLine.length() );
 
    if (m_iFileType == BEMFT_CSE)    // SAC 05/21/22
-   {  m_file.WriteToken( ";", 1 );
+   {  // m_file.WriteToken( ";", 1 );   - removed - not sure why it is here?? - SAC 09/02/22
 		if (m_iPropertyCommentOption == 1)
 		{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
 										pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
@@ -2442,11 +2446,14 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	   BEMProperty* pProp = pObj->getProperty(iProp);
 
    	   QString sPropType = pProp->getType()->getShortName();
+         bool bCSEExpressionProperty = false;      // SAC 09/02/22 (Res tic #1338)
          bool bContinueWritingProp = (!bWriteOnlyCSEExpressionProperties ||      // workaround for CSE object COPY bug requiring re-write of expressions - SAC 05/19/21
                                       m_iFileType != BEMFT_CSE || (sPropType.right(2).compare("_x") == 0 &&
                                                                    sPropType.indexOf("wsDayUse") < 0));
 			if (pProp && m_iFileType == BEMFT_CSE && sPropType.right(2).compare("_x") == 0)
-				sPropType = sPropType.left( sPropType.length()-2 );
+			{	sPropType = sPropType.left( sPropType.length()-2 );
+            bCSEExpressionProperty = true;
+         }
 			if (pProp && m_iFileType == BEMFT_CSE && sPropType.left(6).compare("alter_") == 0)	// SAC 12/4/19 - remove pre-pended 'alter_' from property name written to CSE input
 				sPropType = sPropType.right( sPropType.length()-6 );
 
@@ -2536,7 +2543,8 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	            m_file.WriteToken( " = ", 3 );
    	            WriteParenPropertyArray( pObj, pProp, iProp/*pos*/, iBEMProcIdx, iIndentSpcs );  // SAC 1/22/02
    	         }
-   	         else if (m_iFileType == BEMFT_CSE && pProp->getType()->getNumValues() == 24 &&   // SAC 8/9/12 - special case for CSE hourly profiles that can be written as just a single value
+   	         else if (m_iFileType == BEMFT_CSE &&
+                        (pProp->getType()->getNumValues() == 24 || !bCSEExpressionProperty) &&   // added logic to cover other arrays of data - SAC 09/02/22 (Res tic #1338)   // SAC 8/9/12 - special case for CSE hourly profiles that can be written as just a single value
 					         pProp->getDataStatus() > BEMS_Undefined)
 					{	BEMProperty* pPropNext = pObj->getProperty(iProp+1);
 						if (pPropNext->getDataStatus() == BEMS_Undefined)
@@ -2549,6 +2557,12 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	         		PropertyToString( pObj, pProp, sData, iBEMProcIdx );
    	         		if (sData.length() > 0)
    	         		{  m_file.WriteToken( sData.toLocal8Bit().constData(), sData.length() );
+                  		if (m_iPropertyCommentOption == 1)     // added echo of comment when desired - SAC 09/02/22 (Res tic #1338)
+                  		{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
+                  										pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
+                  			if (!pProp->getType()->getUnitsLabel().isEmpty() || bWrtDescrip)
+                  				WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), pProp->getType()->getUnitsLabel(), 40, 4 );
+                  		}
    	         		   m_file.NewLine();
    	         		}
    	         		else
@@ -2556,7 +2570,13 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 							}
 						}
 						else
-						{	assert( FALSE );  // situation where first two array elements are defined but at least one subsequent one is not!
+						{	//assert( FALSE );  // situation where first two array elements are defined but at least one subsequent one is not!
+                     // added code to write CSE array as simple comma delimited list for however many items defined - SAC 09/02/22 (Res tic #1338)
+      	            m_file.WriteToken( sIndent.toLocal8Bit().constData(), sIndent.length() );
+      	            m_file.WriteToken( sPropType.toLocal8Bit().constData(), sPropType.length() );
+      	            m_file.WriteToken( " = ", 3 );
+                     int iTempProp = iProp;
+      	            WriteParenPropertyArray( pObj, pProp, iTempProp/*pos*/, iBEMProcIdx, iIndentSpcs );  // SAC 1/22/02
 						}
    	
 			         iProp += (pProp->getType()->getNumValues()-1);
@@ -2870,6 +2890,8 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 
 	if (bCSECHPWHSizingRunReqd)		// SAC 07/07/21
 	{	AddToSpecificProperties( "wsSolarSys" );
+      AddToSpecificProperties( "whZone" );         // added from DHWPreRunReqd list in case heaters have zone assignments - SAC 10/02/22
+		AddToSpecificProperties( "whASHPSrcZn" );
    }
 	if (bCSEDHWPreRunReqd)		// SAC 3/22/16
 	{	AddToSpecificProperties( "whZone" );
@@ -3057,7 +3079,8 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
                RemoveFromSpecificProperties( "wsSolarSys" );
             }
 
-         	if ((bCSEDHWPreRunReqd || bCSEDHWSolarPreRunReqd) && pClass->getShortName().compare("cseDHWSYS", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0)
+         	if ( (bCSEDHWPreRunReqd || bCSEDHWSolarPreRunReqd || bCSECHPWHSizingRunReqd) &&     // added bCSECHPWHSizingRunReqd check - SAC 10/02/22
+                 pClass->getShortName().compare("cseDHWSYS", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0 )
          	{	if (!bCSECHPWHSizingRunReqd)
                {  m_file.WriteWholeRecord( " verbose = -1          // suppress progress messages" );
 					   m_file.WriteWholeRecord( " RUN                   // perform DHW (or DHWSolar) pre-run calcs" );
@@ -4738,6 +4761,7 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 {	int iNumAfterChildrenProps = 0;
 	//QString sClassName = pObj->getClass()->getShortName();
 	QString sClassName = (bWritePrevNames && pObj->getClass()->getNumPreviousNames() > 0 ? pObj->getClass()->getPreviousName(0) : pObj->getClass()->getShortName());    // SAC 08/06/21 (MFam)
+   long lDBID_UseObjectName = BEMPX_GetDatabaseID( QString( "%1:noXMLoutput_UseObjectName" ).arg( sClassName ) );    // SAC 10/09/22 (tic #3393)
 	if (BEMPX_IsHPXML( iFileType ))
 	{	assert( sClassName.left(3).compare("hpx") == 0 );
 		if (sClassName.left(3).compare("hpx") == 0)
@@ -4751,12 +4775,16 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 			sClassName = sClassName.right( sClassName.length()-4 );
 	}
 	else if (BEMPX_IsNRCCXML( iFileType ))       // SAC 11/23/20
-	{	assert( sClassName.left(4).compare("nrcc") == 0 );
+	{	assert( (sClassName.left(4).compare("nrcc") == 0 || sClassName.left(4).compare("cf1r") == 0) );
 		if (sClassName.left(10).compare("nrcctblRow") == 0)
 			sClassName = "Row";
 		else if (sClassName.left(9).compare("nrcccomp_") == 0)         // 'nrcccomp_ObjectType' -->> 'comp:ObjectType' - SAC 04/27/22
 			sClassName = "comp:" + sClassName.right( sClassName.length()-9 );
 		else if (sClassName.left(4).compare("nrcc") == 0)
+			sClassName = sClassName.right( sClassName.length()-4 );
+		else if (sClassName.left(10).compare("cf1rtblRow") == 0)       // added handling of CF1R obejcts in NRCC/LMCC XMl files - SAC 08/22/22 (LMCC)
+			sClassName = "Row";
+		else if (sClassName.left(4).compare("cf1r") == 0)
 			sClassName = sClassName.right( sClassName.length()-4 );
 	}
 	else if (BEMPX_IsRESNETXML( iFileType ))		// SAC 5/20/20
@@ -4764,6 +4792,12 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 		if (sClassName.left(3).compare("rnx") == 0)
 			sClassName = sClassName.right( sClassName.length()-3 );
 	}
+   if (lDBID_UseObjectName > 0)
+   {  QString sUseObjectName;
+      int iObjIdx = BEMPX_GetObjectIndex( pObj->getClass(), pObj, iBEMProcIdx );
+      if (BEMPX_GetString( lDBID_UseObjectName, sUseObjectName, FALSE, 0, -1, iObjIdx, BEMO_User, NULL, 0, iBEMProcIdx ) && !sUseObjectName.isEmpty())
+         sClassName = sUseObjectName;
+   }
  	stream.writeStartElement( QString(sClassName) );
 
 	int iFirstProp = 0;
@@ -5000,7 +5034,7 @@ bool MustWriteComponent_XML( BEMObject* pObj, int iFileMode /*bool bIsInputMode*
          if (BEMPX_GetInteger( lDBID_ExcludeProp, lExclude, 0, -1, iObjIdx, BEMO_User, iBEMProcIdx ) && lExclude > 0)
             bRetVal = false;
       }
-      // also bail on object output if class type begins 'cf1r' or 'nrcc' (T24 reporting obejcts) - SAC 04-26-22
+      // also bail on object output if class type begins 'cf1r' or 'nrcc' (T24 reporting objects) - SAC 04/26/22
       if (bRetVal)
       {  QString qsClassName = pObj->getClass()->getShortName();
          if (qsClassName.length() > 4 && (qsClassName.indexOf( "nrcc" )==0 || qsClassName.indexOf( "cf1r" )==0))
@@ -5102,7 +5136,8 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
    	   if ( (iError >= 0) && (pClass != NULL) &&
    	   	  (!BEMPX_IsHPXML(     iFileType ) || pClass->getShortName().indexOf("hpx" )==0) &&		// SAC 12/2/15 - when in HPXML writing mode, only write objects whose class name begins w/ "hpx"
    	   	  (!BEMPX_IsCF1RXML(   iFileType ) || pClass->getShortName().indexOf("cf1r")==0) &&	   // SAC 3/6/18 - when in CF1RXML writing mode, only write objects whose class name begins w/ "cf1r"
-   	   	  (!BEMPX_IsNRCCXML(   iFileType ) || pClass->getShortName().indexOf("nrcc")==0) &&	   // when in NRCCXML writing mode, only write objects whose class name begins w/ "nrcc" - SAC 11/23/20
+   	   	  (!BEMPX_IsNRCCXML(   iFileType ) || pClass->getShortName().indexOf("nrcc")==0    	   // when in NRCCXML writing mode, only write objects whose class name begins w/ "nrcc" - SAC 11/23/20
+   	   	                                   || pClass->getShortName().indexOf("cf1r")==0) &&	   // added writing of "cf1r" objects for NRCCXML files - SAC 08/22/22 (LMCC)
    	   	  (!BEMPX_IsRESNETXML( iFileType ) || pClass->getShortName().indexOf("rnx" )==0) &&	   // SAC 5/20/20 - when in RESNETXML writing mode, only write objects whose class name begins w/ "rnx"
    	          // don't write class objects tagged as AutoCreate to INPUT file
    	        ( (iFileMode != BEMFM_INPUT /*!bIsInputMode*/) || (!pClass->getAutoCreate()) ) )

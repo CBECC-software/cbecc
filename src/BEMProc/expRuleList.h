@@ -839,6 +839,23 @@ public:
 												else
 													fprintf( m_pfExportFile[iEFIdx], (const char*) str.toLocal8Bit().constData() );
 												return 0;  }
+	int  exportFileConcat( int iEFIdx, QString& fileName )      // SAC 06/28/22
+											{	if (iEFIdx < 0 || iEFIdx >= NUM_RULE_EXPORTFILES)
+													return -1;		// -1 => invalid file index
+												else if (m_pfExportFile[iEFIdx] == NULL)
+													return -2;		// -2 => file not opened for writing
+												else
+                                    {  FILE*	pFileToConcat = NULL;
+                                       fopen_s( &pFileToConcat, fileName.toLocal8Bit().constData(), "r" );
+                                       if (pFileToConcat == NULL)
+													   return -3;		// -3 => error opening file (to concatenate)
+                                       else
+                                       {  char ch;
+                                          while((ch = fgetc( pFileToConcat )) != EOF)
+                                             fputc( ch, m_pfExportFile[iEFIdx] );
+                                          fclose( pFileToConcat );
+                                    }  }
+												return 0;  }
 	int  openExportFile( int iEFIdx, const char* pszFileName, const char* pszFileMode )
 											{	if (iEFIdx < 0 || iEFIdx >= NUM_RULE_EXPORTFILES)
 													return -1;		// -1 => invalid file index

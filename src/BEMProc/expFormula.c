@@ -537,6 +537,8 @@ static FuncTable functable[] =
    {                "#NUCV",       EXP_BEMPFunc, BF_NUnqChldVals,  VAR_ARGS },  /* SAC 12/31/21 (MFam) - added */
    { "CreateCompFor",              EXP_BEMPFunc, BF_Cr8CompFor,    VAR_ARGS },  /* SAC 04/27/22 - added */
    {                "#CCF",        EXP_BEMPFunc, BF_Cr8CompFor,    VAR_ARGS },  /* SAC 04/27/22 - added */
+   { "ExportFileConcat",           EXP_BEMPFunc, BF_ExpFileConcat, VAR_ARGS },  /* SAC 06/28/22 - added */
+   {                "#XFC",        EXP_BEMPFunc, BF_ExpFileConcat, VAR_ARGS },  /* SAC 06/28/22 - added */
    { NULL,                         0,           0,              0 }
 };
 

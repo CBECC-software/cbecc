@@ -1,16 +1,16 @@
 RulesetFilename   "T24N_2022.bin"  
 
 Proj   "MF36 Restructure Prototype"  
-   BldgEngyModelVersion = 16
+   BldgEngyModelVersion = 17
    CreateDate = 1647927975
-   ModDate = 1654847674
-   RunDate = 1654847675
+   ModDate = 1666157457
+   RunDate = 1666157458
    RunDateFmt = "18:39, Thu, Mar 17, 2022"
    RunDateISO = "2022-03-17T18:39:29-06:00"
    GasType = "NaturalGas"
    CliZn = "ClimateZone15"
    ZipCode = 92240
-   WeatherStation = "CTZ15S22A"
+   WeatherStation = "PALM SPRINGS"
    DDWeatherFile = "C:/projects/cbecc-com-code/branches/CBECC-Com_MFamRestructure/CBECC-Com64/Data/EPW/CTZ12S22A.ddy"
    AnnualWeatherFile = "C:/projects/cbecc-com-code/branches/CBECC-Com_MFamRestructure/CBECC-Com64/Data/EPW/CTZ12S22A.epw"
    AnnualWeatherFileNoPath = "CTZ12S22A.epw"
@@ -29,7 +29,7 @@ Proj   "MF36 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2022.1.0 (1250)"
+   SoftwareVersion = "CBECC 2022.2.0 (1273)"
    ProjFileName = "MF36_Prop_NGAS-CZ12_Restructure - Zoned - Latest.cibd22"
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
@@ -67,7 +67,6 @@ ResProj   "2019 Prototype 39372ft2 Prop Mixed"
    ProjInclKitchen = 1
    InsulConsQuality = "Yes"
    AllOrientations = 0
-   FrontOrientation = 0
    HasGarage = 0
    IAQSupInletsAccessible = 1
    IAQHasFID = 1
@@ -4291,6 +4290,8 @@ ResIntWall   "F3 Stairs To F3 Res Zn N Int Wall Right"
 
 AirSys   "F1 Business Cent AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Business Center"
    OptStart = 0
@@ -4335,6 +4336,8 @@ OACtrl   "F1 Business Cent OACtrl"
 
 AirSys   "F1 Corridor AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Corridor"
    OptStart = 0
@@ -4379,6 +4382,8 @@ OACtrl   "F1 Corridor OACtrl"
 
 AirSys   "F1 Fitness Cente AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Fitness Center"
    OptStart = 0
@@ -4423,6 +4428,8 @@ OACtrl   "F1 Fitness Cente OACtrl"
 
 AirSys   "F1 Laundry AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Laundry"
    OptStart = 0
@@ -4467,6 +4474,8 @@ OACtrl   "F1 Laundry OACtrl"
 
 AirSys   "F1 Leasing Offic AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Leasing Office"
    OptStart = 0
@@ -4511,6 +4520,8 @@ OACtrl   "F1 Leasing Offic OACtrl"
 
 AirSys   "F1 Lobby AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Lobby"
    OptStart = 0
@@ -4555,6 +4566,8 @@ OACtrl   "F1 Lobby OACtrl"
 
 AirSys   "F1 Stairs AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Stairs"
    OptStart = 0
@@ -4599,6 +4612,8 @@ OACtrl   "F1 Stairs OACtrl"
 
 AirSys   "F2 Corridor AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F2 Corridor"
    OptStart = 0
@@ -4643,6 +4658,8 @@ OACtrl   "F2 Corridor OACtrl"
 
 AirSys   "F2 Stairs AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F2 Stairs"
    OptStart = 0
@@ -4687,6 +4704,8 @@ OACtrl   "F2 Stairs OACtrl"
 
 AirSys   "F3 Corridor AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F3 Corridor"
    OptStart = 0
@@ -4731,6 +4750,8 @@ OACtrl   "F3 Corridor OACtrl"
 
 AirSys   "F3 Stairs AirSys"  
    Type = "SZHP"
+   SubType = "Packaged1Phase"
+   EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F3 Stairs"
    OptStart = 0
@@ -4850,41 +4871,41 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse1[22] = "0.03"
    Enduse1[23] = "0.00"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "65.6"
+   Enduse2[2] = "61.7"
    Enduse2[3] = "--"
-   Enduse2[4] = "56.59"
-   Enduse2[5] = "65.6"
+   Enduse2[4] = "53.40"
+   Enduse2[5] = "61.7"
    Enduse2[6] = "--"
-   Enduse2[7] = "56.59"
-   Enduse2[8] = "--"
-   Enduse2[9] = "22.0"
-   Enduse2[10] = "22.0"
-   Enduse2[11] = "3.10"
-   Enduse2[12] = "3.10"
+   Enduse2[7] = "53.47"
+   Enduse2[8] = "0.07"
+   Enduse2[9] = "20.9"
+   Enduse2[10] = "20.9"
+   Enduse2[11] = "2.90"
+   Enduse2[12] = "2.90"
    Enduse2[13] = "--"
-   Enduse2[17] = "7.50"
-   Enduse2[19] = "7.50"
-   Enduse2[20] = "7.50"
-   Enduse2[22] = "7.50"
+   Enduse2[17] = "7.02"
+   Enduse2[19] = "7.02"
+   Enduse2[20] = "7.02"
+   Enduse2[22] = "7.02"
    Enduse2[23] = "0.00"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "35.3"
+   Enduse3[2] = "34.4"
    Enduse3[3] = "--"
-   Enduse3[4] = "25.20"
-   Enduse3[5] = "35.2"
+   Enduse3[4] = "24.59"
+   Enduse3[5] = "34.4"
    Enduse3[6] = "--"
-   Enduse3[7] = "25.19"
-   Enduse3[8] = "-0.01"
-   Enduse3[9] = "6.0"
-   Enduse3[10] = "6.0"
-   Enduse3[11] = "2.12"
-   Enduse3[12] = "2.11"
-   Enduse3[13] = "-0.01"
-   Enduse3[17] = "5.12"
-   Enduse3[19] = "5.12"
-   Enduse3[20] = "5.11"
-   Enduse3[22] = "5.11"
-   Enduse3[23] = "-0.01"
+   Enduse3[7] = "24.60"
+   Enduse3[8] = "0.01"
+   Enduse3[9] = "5.9"
+   Enduse3[10] = "5.9"
+   Enduse3[11] = "2.06"
+   Enduse3[12] = "2.06"
+   Enduse3[13] = "--"
+   Enduse3[17] = "4.98"
+   Enduse3[19] = "4.98"
+   Enduse3[20] = "4.98"
+   Enduse3[22] = "4.98"
+   Enduse3[23] = "0.00"
    Enduse4[1] = "Heat Rejection"
    Enduse4[2] = "--"
    Enduse4[3] = "--"
@@ -4954,23 +4975,23 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[22] = "3.50"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "-53.4"
+   Enduse8[2] = "-58.2"
    Enduse8[3] = "270.9"
-   Enduse8[4] = "30.41"
-   Enduse8[5] = "-53.3"
+   Enduse8[4] = "26.61"
+   Enduse8[5] = "-58.0"
    Enduse8[6] = "263.1"
-   Enduse8[7] = "29.73"
-   Enduse8[8] = "-0.68"
-   Enduse8[9] = "27.8"
-   Enduse8[10] = "27.8"
-   Enduse8[11] = "9.61"
-   Enduse8[12] = "9.43"
-   Enduse8[13] = "-0.18"
-   Enduse8[17] = "7.31"
-   Enduse8[19] = "7.31"
-   Enduse8[20] = "7.30"
-   Enduse8[22] = "7.30"
-   Enduse8[23] = "-0.01"
+   Enduse8[7] = "26.02"
+   Enduse8[8] = "-0.59"
+   Enduse8[9] = "26.5"
+   Enduse8[10] = "26.6"
+   Enduse8[11] = "9.35"
+   Enduse8[12] = "9.18"
+   Enduse8[13] = "-0.17"
+   Enduse8[17] = "6.69"
+   Enduse8[19] = "6.69"
+   Enduse8[20] = "6.69"
+   Enduse8[22] = "6.69"
+   Enduse8[23] = "0.00"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "59.8"
    Enduse9[3] = "--"
@@ -5072,41 +5093,41 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[13] = "--"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "42.7"
+   Enduse15[2] = "37.9"
    Enduse15[3] = "405.9"
-   Enduse15[4] = "109.38"
-   Enduse15[5] = "42.8"
+   Enduse15[4] = "105.58"
+   Enduse15[5] = "38.1"
    Enduse15[6] = "398.1"
-   Enduse15[7] = "108.70"
-   Enduse15[8] = "-0.68"
-   Enduse15[9] = "43.3"
-   Enduse15[10] = "43.3"
-   Enduse15[11] = "18.99"
-   Enduse15[12] = "18.81"
-   Enduse15[13] = "-0.18"
-   Enduse15[17] = "22.81"
-   Enduse15[19] = "22.81"
-   Enduse15[20] = "22.80"
-   Enduse15[22] = "22.80"
-   Enduse15[23] = "-0.01"
+   Enduse15[7] = "104.99"
+   Enduse15[8] = "-0.59"
+   Enduse15[9] = "42.0"
+   Enduse15[10] = "42.1"
+   Enduse15[11] = "18.73"
+   Enduse15[12] = "18.56"
+   Enduse15[13] = "-0.17"
+   Enduse15[17] = "22.19"
+   Enduse15[19] = "22.19"
+   Enduse15[20] = "22.19"
+   Enduse15[22] = "22.19"
+   Enduse15[23] = "0.00"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "125.0"
+   Enduse16[2] = "120.2"
    Enduse16[3] = "270.9"
-   Enduse16[4] = "122.70"
-   Enduse16[5] = "125.0"
+   Enduse16[4] = "118.90"
+   Enduse16[5] = "120.3"
    Enduse16[6] = "263.1"
-   Enduse16[7] = "122.00"
-   Enduse16[8] = "-0.70"
-   Enduse16[9] = "30.8"
-   Enduse16[10] = "30.7"
-   Enduse16[11] = "12.74"
-   Enduse16[12] = "12.56"
-   Enduse16[13] = "-0.18"
-   Enduse16[17] = "16.40"
-   Enduse16[19] = "16.40"
-   Enduse16[20] = "16.39"
-   Enduse16[22] = "16.39"
-   Enduse16[23] = "-0.01"
+   Enduse16[7] = "118.29"
+   Enduse16[8] = "-0.61"
+   Enduse16[9] = "29.5"
+   Enduse16[10] = "29.5"
+   Enduse16[11] = "12.48"
+   Enduse16[12] = "12.31"
+   Enduse16[13] = "-0.17"
+   Enduse16[17] = "15.78"
+   Enduse16[19] = "15.78"
+   Enduse16[20] = "15.78"
+   Enduse16[22] = "15.78"
+   Enduse16[23] = "0.00"
    ZoneUMLHsLoaded = ( 0, 0 )
    SimSummary[1] = "CSE Successful"
    SimSummary[3] = "CSE Successful"
@@ -5116,30 +5137,30 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    MetricPassFail[3] = "Fail"
    ComplyMessage = "DOES NOT COMPLY"
    StdPVBatteryMsg = "Standard Design PV Capacity: 104.4 kWdc  /  (no battery)"
-   PctSavingsTDV = -0.625575
-   PctSavingsEffTDV = -0.57377
-   PctSavingsCmpTDV = -2.28725
+   PctSavingsTDV = -0.561958
+   PctSavingsEffTDV = -0.515682
+   PctSavingsCmpTDV = -2.26749
    PctSavTDVLbl = "-0.6"
-   PctSavEffTDVLbl = "-0.6"
+   PctSavEffTDVLbl = "-0.5"
    PctSavCmpTDVLbl = "-2.3"
-   PctSavingsSrc = -0.956938
-   PctSavingsEffSrc = -1.43312
-   PctSavingsCmpSrc = -1.9088
-   PctSavSrcLbl = "-1.0"
+   PctSavingsSrc = -0.915948
+   PctSavingsEffSrc = -1.38099
+   PctSavingsCmpSrc = -1.85185
+   PctSavSrcLbl = "-0.9"
    PctSavEffSrcLbl = "-1.4"
    PctSavCmpSrcLbl = "-1.9"
-   MarginkW = 0
+   MarginkW = 0.1
    PVBattResultsValid = 1
    PropDHWNames_SSF[1] = "DHWSolarSystem 1"
    PropDHW_SSF[1] = 0.325
    StdDHW_SSF = 0.351
    DHW_SSF_Summary = ( "DHW SSF:", "0.33 Prop", "0.35 Std" )
    PropPV_Total = 178352
-   PropPV_Export = 80002.7
-   PropPV_PctExport = 44.8567
+   PropPV_Export = 81848.7
+   PropPV_PctExport = 45.8917
    StdPV_Total = 178320
-   StdPV_Export = 79970.1
-   StdPV_PctExport = 44.8464
+   StdPV_Export = 81726.1
+   StdPV_PctExport = 45.8311
    ..
 
 ResConsAssm   "Exterior Wall Cons"  
@@ -5778,12 +5799,6 @@ DwellUnitType   "1-Bed Type"
    IAQFanRef[1] = "1-Bed IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
    HVACSysType = "Heat Pump Heating and Cooling System"
-   NumHeatEquipTypes = 1
-   HVACHeatRef[1] = "Heating Component - Res"
-   HeatEquipCount[1] = 1
-   NumCoolEquipTypes = 1
-   HVACCoolRef[1] = "Cooling Component - Res"
-   CoolEquipCount[1] = 1
    NumHtPumpEquipTypes = 1
    HVACHtPumpRef[1] = "Heat Pump System - Res"
    HtPumpEquipCount[1] = 1
@@ -5815,12 +5830,6 @@ DwellUnitType   "2-Bed Type"
    IAQFanRef[1] = "2-Bed IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
    HVACSysType = "Heat Pump Heating and Cooling System"
-   NumHeatEquipTypes = 1
-   HVACHeatRef[1] = "Heating Component - Res"
-   HeatEquipCount[1] = 1
-   NumCoolEquipTypes = 1
-   HVACCoolRef[1] = "Cooling Component - Res"
-   CoolEquipCount[1] = 1
    NumHtPumpEquipTypes = 1
    HVACHtPumpRef[1] = "Heat Pump System - Res"
    HtPumpEquipCount[1] = 1
@@ -5858,12 +5867,6 @@ DwellUnitType   "3-Bed Type"
    IAQFanRef[1] = "3-Bed IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
    HVACSysType = "Heat Pump Heating and Cooling System"
-   NumHeatEquipTypes = 1
-   HVACHeatRef[1] = "Heating Component - Res"
-   HeatEquipCount[1] = 1
-   NumCoolEquipTypes = 1
-   HVACCoolRef[1] = "Cooling Component - Res"
-   CoolEquipCount[1] = 1
    NumHtPumpEquipTypes = 1
    HVACHtPumpRef[1] = "Heat Pump System - Res"
    HtPumpEquipCount[1] = 1
@@ -5901,12 +5904,6 @@ DwellUnitType   "Studio Type"
    IAQFanRef[1] = "Studio IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
    HVACSysType = "Heat Pump Heating and Cooling System"
-   NumHeatEquipTypes = 1
-   HVACHeatRef[1] = "Heating Component - Res"
-   HeatEquipCount[1] = 1
-   NumCoolEquipTypes = 1
-   HVACCoolRef[1] = "Cooling Component - Res"
-   CoolEquipCount[1] = 1
    NumHtPumpEquipTypes = 1
    HVACHtPumpRef[1] = "Heat Pump System - Res"
    HtPumpEquipCount[1] = 1
@@ -5937,12 +5934,12 @@ DwellUnitType   "Studio Type"
 
 ResHtgSys   "Heating Component - Res"  
    Type = "CntrlFurnace - Fuel-fired central furnace"
-   AFUE = 80
    AutoSize = 1
    ..
 
 ResClgSys   "Cooling Component - Res"  
    Type = "SplitAirCond - Split air conditioning system"
+   EffMetric = "SEER2/EER2"
    SEER = 14
    EER = 11.7
    CFMperTon = 350
@@ -5956,6 +5953,7 @@ ResClgSys   "Cooling Component - Res"
 
 ResHtPumpSys   "Heat Pump System - Res"  
    Type = "SplitHeatPump - Central split heat pump"
+   EffMetric = "HSPF2/SEER2/EER2"
    HSPF = 8.2
    AutoSize = 1
    Cap47 = 24000

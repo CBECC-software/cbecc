@@ -1251,6 +1251,7 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR" ) * BEMF_ClassIDMult) );
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDESCOND" ) * BEMF_ClassIDMult) );      // SAC 10/11/22
 
 			laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iSIdx+1 );			// Main cseDHWSYS being sized
 			for (int iS2Idx=0; (sErrorMsg.isEmpty() && iS2Idx < iNumCSEDHWSystems); iS2Idx++)
@@ -1685,6 +1686,7 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR" ) * BEMF_ClassIDMult) );
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDESCOND" ) * BEMF_ClassIDMult) );      // SAC 10/11/22
 
    		//	laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
 	   	// SAC 4/7/20 - revision to write only DHWSYS objects that reference a DHWSOLARSYS (or are a slave of central system w/ solarsys reference)
@@ -2158,6 +2160,7 @@ bool CSERunMgr::T24Res_DHWNoSolarSysRun( QString sProjFileAlone, QString sRunID,
 				laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
 				//laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
 				//laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR" ) * BEMF_ClassIDMult) );
+				laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDESCOND" ) * BEMF_ClassIDMult) );                  // SAC 10/11/22
 
 				laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
 
@@ -2448,6 +2451,7 @@ int CSERunMgr::SetupRunFinish(
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS"			)	* BEMF_ClassIDMult) );
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR"	)	* BEMF_ClassIDMult) );
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSYS"					) * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
+					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDESCOND"					) * BEMF_ClassIDMult) );			// SAC 10/11/22
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseEXPORTFILE"				) * BEMF_ClassIDMult) );
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseEXPORT"					) * BEMF_ClassIDMult) );
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseREPORT"					) * BEMF_ClassIDMult) );
@@ -2681,6 +2685,10 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
    long lCSEHVACSizingReqd = 0;     // prevent DHW HPWH & solar sizing runs while in the process of HVAC sizing runs - SAC 05/12/22
    bool bIsCSEHVACSizingRun = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:HVACSizingNeeded" ), lCSEHVACSizingReqd, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lCSEHVACSizingReqd > 0);
 
+   long lEngyCodeYearNum;
+   if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEngyCodeYearNum, 0, -1, 0, BEMO_User, iBEMProcIdx ))
+      lEngyCodeYearNum = 2019;
+
    QString sRunIDProcFileAppend = "-cse";
    long lSimPVBattOnly=0, lDBID_Proj_SimPVBattOnly = BEMPX_GetDatabaseID( "Proj:CSE_SimPVBattOnly" );    // SAC 01/23/22 (MFam)
    if (lDBID_Proj_SimPVBattOnly > 0 && BEMPX_GetInteger( lDBID_Proj_SimPVBattOnly, lSimPVBattOnly, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lSimPVBattOnly > 0)
@@ -2757,7 +2765,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 	if (iRetVal == 0)
 	{
-   	if (m_lAnalysisType > 0)   // SAC 03/03/22 - need to evaluate ProposedInput_MFam for ResDHWSys defaulting, even when not full CSE sim ... was:  && bPerformFullCSESim)     // SAC 10/26/21 (MFam)
+   	if (m_lAnalysisType > 0 && (bPerformFullCSESim || lEngyCodeYearNum >= 2022))   // SAC 03/03/22 - need to evaluate ProposedInput_MFam for ResDHWSys defaulting, even when not full CSE sim ... was:  && bPerformFullCSESim)     // SAC 10/26/21 (MFam)   // SAC 06/16/22
       {
    		// try evaluating prop & postprop rulelists EVERY time
    		iRetVal = LocalEvaluateRuleset(		sErrorMsg, 84, "ProposedInput_MFam", m_bVerbose, m_pCompRuleDebugInfo );		// generic project defaulting

@@ -77,7 +77,7 @@ extern void TrimRight( QString& str, QString sRemove=QString("") );
 
 // Maximum length of data lines used by textio module.  Additional 
 // characters after maximum length are ignored.
-const int TextioMaxLine = 4095;   // SAC 11/11/19 - increased from 2047 -> 4095  // SAC 10/20/05 - increased from 1024 -> 2047  -  SAC 8/14/03 - upped limit from 512 to 1024   // 132;
+const int TextioMaxLine = 8191;   // 4095->8191 - SAC 08/15/22  // SAC 11/11/19 - increased from 2047 -> 4095  // SAC 10/20/05 - increased from 1024 -> 2047  -  SAC 8/14/03 - upped limit from 512 to 1024   // 132;
 
 const UINT DefIntLen   = 8;
 const UINT DefFloatLen = 9;

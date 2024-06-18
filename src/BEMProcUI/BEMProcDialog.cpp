@@ -210,6 +210,7 @@ BEGIN_MESSAGE_MAP(CSACBEMProcDialog, CDialog)
    ON_MESSAGE( WM_DISPLAYMODS, DisplayMods )
 
    ON_MESSAGE( WM_DATAMODIFIED, OnDataModified )
+   ON_MESSAGE( WM_DLGCLOSEACTION,   OnDlgCloseAction )
 
    ON_MESSAGE( WM_QMRESTOREDEFAULT, OnQMRestoreDefault )
 
@@ -543,6 +544,14 @@ LRESULT CSACBEMProcDialog::DisplayMods( WPARAM, LPARAM )
    // Now loop over all controls and re-display labels that display data that may have been updated
    PaintTabCtrlStuff( TRUE, FALSE );
 
+   return 1;
+}
+
+
+LRESULT CSACBEMProcDialog::OnDlgCloseAction( WPARAM wParam, LPARAM lParam )     // SAC 08/19/22 (CUAC)
+{
+   GetParentFrame()->PostMessage( WM_DLGCLOSEACTION, wParam, lParam );
+   CDialog::OnOK();	
    return 1;
 }
 

@@ -170,6 +170,7 @@ protected:
 
    afx_msg LRESULT OnQMRestoreDefault( WPARAM uiDBInstP1, LPARAM lDBID );
    afx_msg LRESULT OnDataModified( WPARAM wEval, LPARAM lDBID );
+   afx_msg LRESULT OnDlgCloseAction( WPARAM wParam, LPARAM lParam );    // SAC 08/19/22 (CUAC)
 
    // SAC 1/29/99 - added for F1 and Shift-F1 (arrow) context help functionality
    afx_msg LRESULT OnSetContextHelpID( WPARAM wHelpID, LPARAM );
