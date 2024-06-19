@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "040012-OffLrg-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414971672
-   ModDate = 1666150379
-   RunDate = 1666150380
+   ModDate = 1674218846
+   RunDate = 1674218847
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -14,7 +14,8 @@ Proj   "040012-OffLrg-CECStd22"
    DefaultDayltgCtrls = 1
    AnalysisType = "Title24Compliance"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.0 (1273)"
+   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
 
@@ -141,7 +142,6 @@ FenCons   "Base_AllCZ_FixedWindowU34"
    ..
 
 Bldg   "Large Office"  
-   TreeState = 253
    TotStoryCnt = 13
    AboveGrdStoryCnt = 12
    ..
@@ -3952,14 +3952,14 @@ CoilHtg   "BaseSys6 CoilHtg"
 
 Fan   "BaseSys6 Fan"  
    CtrlMthd = "VariableSpeedDrive"
-   PwrIdx = 0.5413
+   PwrIdx = 0.541296
    ..
 
 AirSeg   "BaseSys6 RetAirSeg"  
    ..
 
 Fan   "BaseSys6 RetFan"  
-   PwrIdx = 0.5413
+   PwrIdx = 0.541296
    ..
 
 TrmlUnit   "BaseVAVTrmlUnit"  
@@ -3987,7 +3987,7 @@ HtRcvry   "BaseHtRcvry-Basement"
    ..
 
 AirSys   "BaseAirSys6-Bot"  
-   Type = "PVAV"
+   Type = "VAV"
    CtrlSysType = "DDCToZone"
    ReheatCtrlMthd = "DualMaximum"
    OptStart = 1
@@ -4012,14 +4012,14 @@ CoilHtg   "BaseSys6 CoilHtg-Bot"
 
 Fan   "BaseSys6 Fan-Bot"  
    CtrlMthd = "VariableSpeedDrive"
-   PwrIdx = 0.5385
+   PwrIdx = 0.538511
    ..
 
 AirSeg   "BaseSys6 RetAirSeg-Bot"  
    ..
 
 Fan   "BaseSys6 RetFan-Bot"  
-   PwrIdx = 0.5385
+   PwrIdx = 0.538511
    ..
 
 TrmlUnit   "BaseVAVTrmlUnit-2"  
@@ -4129,6 +4129,7 @@ CoilHtg   "BaseSys6 CoilHtg-Mid"
 
 Fan   "BaseSys6 Fan-Mid"  
    CtrlMthd = "VariableSpeedDrive"
+   PwrIdx = 0.947
    ..
 
 AirSeg   "BaseSys6 RetAirSeg-Mid"  
@@ -4239,6 +4240,7 @@ CoilHtg   "BaseSys6 CoilHtg-Hi"
 
 Fan   "BaseSys6 Fan-Hi"  
    CtrlMthd = "VariableSpeedDrive"
+   PwrIdx = 0.947
    ..
 
 AirSeg   "BaseSys6 RetAirSeg-Hi"  
@@ -4346,14 +4348,14 @@ CoilHtg   "BaseSys6 CoilHtg-Top"
 
 Fan   "BaseSys6 Fan-Top"  
    CtrlMthd = "VariableSpeedDrive"
-   PwrIdx = 0.5367
+   PwrIdx = 0.536836
    ..
 
 AirSeg   "BaseSys6 RetAirSeg-Top"  
    ..
 
 Fan   "BaseSys6 RetFan-Top"  
-   PwrIdx = 0.5367
+   PwrIdx = 0.536836
    ..
 
 TrmlUnit   "BaseVAVTrmlUnit-17"  
@@ -4514,6 +4516,7 @@ Pump   "Base HW Pump-2"
    ..
 
 FluidSys   "BaseCWSystem"  
+   TreeState = 253
    Type = "CondenserWater"
    CtrlType = "DDC"
    FixedSupTemp = 70
@@ -4554,7 +4557,6 @@ Pump   "Base CW Pump-2"
    ..
 
 FluidSys   "BaseChWSystem"  
-   TreeState = 253
    Type = "ChilledWater"
    CtrlType = "DDC"
    TempCtrl = "OutsideAirReset"
@@ -4695,169 +4697,169 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "0.2"
-   Enduse1[3] = "2,785.8"
-   Enduse1[4] = "15.31"
+   Enduse1[3] = "2,808.9"
+   Enduse1[4] = "15.42"
    Enduse1[5] = "0.2"
-   Enduse1[6] = "2,786.5"
-   Enduse1[7] = "15.32"
-   Enduse1[8] = "0.01"
-   Enduse1[9] = "--"
-   Enduse1[10] = "--"
-   Enduse1[11] = "5.21"
-   Enduse1[12] = "5.21"
-   Enduse1[13] = "--"
+   Enduse1[6] = "2,806.5"
+   Enduse1[7] = "15.41"
+   Enduse1[8] = "-0.01"
+   Enduse1[9] = "0.1"
+   Enduse1[10] = "0.1"
+   Enduse1[11] = "5.25"
+   Enduse1[12] = "5.24"
+   Enduse1[13] = "-0.01"
    Enduse1[17] = "0.05"
-   Enduse1[18] = "156.12"
-   Enduse1[19] = "156.17"
+   Enduse1[18] = "157.42"
+   Enduse1[19] = "157.47"
    Enduse1[20] = "0.05"
-   Enduse1[21] = "156.17"
-   Enduse1[22] = "156.22"
-   Enduse1[23] = "0.05"
+   Enduse1[21] = "157.29"
+   Enduse1[22] = "157.34"
+   Enduse1[23] = "-0.13"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "303.0"
+   Enduse2[2] = "292.3"
    Enduse2[3] = "--"
-   Enduse2[4] = "22.78"
-   Enduse2[5] = "303.0"
+   Enduse2[4] = "20.88"
+   Enduse2[5] = "292.3"
    Enduse2[6] = "--"
-   Enduse2[7] = "22.79"
-   Enduse2[8] = "0.01"
-   Enduse2[9] = "98.9"
-   Enduse2[10] = "98.8"
-   Enduse2[11] = "0.97"
-   Enduse2[12] = "0.97"
+   Enduse2[7] = "20.88"
+   Enduse2[8] = "--"
+   Enduse2[9] = "18.3"
+   Enduse2[10] = "18.3"
+   Enduse2[11] = "0.87"
+   Enduse2[12] = "0.87"
    Enduse2[13] = "--"
-   Enduse2[17] = "29.82"
-   Enduse2[19] = "29.82"
-   Enduse2[20] = "29.81"
-   Enduse2[22] = "29.81"
-   Enduse2[23] = "-0.01"
+   Enduse2[17] = "26.67"
+   Enduse2[19] = "26.67"
+   Enduse2[20] = "26.67"
+   Enduse2[22] = "26.67"
+   Enduse2[23] = "0.00"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "306.5"
+   Enduse3[2] = "303.0"
    Enduse3[3] = "--"
-   Enduse3[4] = "16.60"
-   Enduse3[5] = "306.4"
+   Enduse3[4] = "15.58"
+   Enduse3[5] = "303.0"
    Enduse3[6] = "--"
-   Enduse3[7] = "16.60"
+   Enduse3[7] = "15.58"
    Enduse3[8] = "--"
-   Enduse3[9] = "41.5"
-   Enduse3[10] = "41.5"
-   Enduse3[11] = "1.26"
-   Enduse3[12] = "1.25"
-   Enduse3[13] = "-0.01"
-   Enduse3[17] = "38.57"
-   Enduse3[19] = "38.57"
-   Enduse3[20] = "38.55"
-   Enduse3[22] = "38.55"
-   Enduse3[23] = "-0.02"
+   Enduse3[9] = "23.2"
+   Enduse3[10] = "23.1"
+   Enduse3[11] = "1.20"
+   Enduse3[12] = "1.20"
+   Enduse3[13] = "--"
+   Enduse3[17] = "36.74"
+   Enduse3[19] = "36.74"
+   Enduse3[20] = "36.75"
+   Enduse3[22] = "36.75"
+   Enduse3[23] = "0.01"
    Enduse4[1] = "Heat Rejection"
-   Enduse4[2] = "35.9"
+   Enduse4[2] = "35.0"
    Enduse4[3] = "--"
-   Enduse4[4] = "2.85"
-   Enduse4[5] = "35.9"
+   Enduse4[4] = "2.76"
+   Enduse4[5] = "35.0"
    Enduse4[6] = "--"
-   Enduse4[7] = "2.85"
+   Enduse4[7] = "2.76"
    Enduse4[8] = "--"
-   Enduse4[9] = "13.9"
-   Enduse4[10] = "13.9"
-   Enduse4[11] = "0.13"
-   Enduse4[12] = "0.13"
+   Enduse4[9] = "3.2"
+   Enduse4[10] = "3.2"
+   Enduse4[11] = "0.12"
+   Enduse4[12] = "0.12"
    Enduse4[13] = "--"
-   Enduse4[17] = "3.85"
-   Enduse4[19] = "3.85"
-   Enduse4[20] = "3.85"
-   Enduse4[22] = "3.85"
+   Enduse4[17] = "3.57"
+   Enduse4[19] = "3.57"
+   Enduse4[20] = "3.57"
+   Enduse4[22] = "3.57"
    Enduse4[23] = "0.00"
    Enduse5[1] = "Pumps & Misc."
-   Enduse5[2] = "97.8"
+   Enduse5[2] = "95.7"
    Enduse5[3] = "--"
-   Enduse5[4] = "6.27"
-   Enduse5[5] = "97.8"
+   Enduse5[4] = "6.08"
+   Enduse5[5] = "95.6"
    Enduse5[6] = "--"
-   Enduse5[7] = "6.27"
-   Enduse5[8] = "--"
-   Enduse5[9] = "28.0"
-   Enduse5[10] = "28.0"
-   Enduse5[11] = "0.41"
-   Enduse5[12] = "0.41"
+   Enduse5[7] = "6.07"
+   Enduse5[8] = "-0.01"
+   Enduse5[9] = "9.0"
+   Enduse5[10] = "9.0"
+   Enduse5[11] = "0.39"
+   Enduse5[12] = "0.39"
    Enduse5[13] = "--"
-   Enduse5[17] = "12.55"
-   Enduse5[19] = "12.55"
-   Enduse5[20] = "12.55"
-   Enduse5[22] = "12.55"
-   Enduse5[23] = "0.00"
+   Enduse5[17] = "11.92"
+   Enduse5[19] = "11.92"
+   Enduse5[20] = "11.90"
+   Enduse5[22] = "11.90"
+   Enduse5[23] = "-0.02"
    Enduse6[1] = "Domestic Hot Water"
    Enduse6[2] = "131.9"
    Enduse6[3] = "--"
-   Enduse6[4] = "6.77"
+   Enduse6[4] = "6.53"
    Enduse6[5] = "131.9"
    Enduse6[6] = "--"
-   Enduse6[7] = "6.77"
+   Enduse6[7] = "6.53"
    Enduse6[8] = "--"
-   Enduse6[9] = "16.7"
-   Enduse6[10] = "16.7"
-   Enduse6[11] = "0.54"
-   Enduse6[12] = "0.54"
+   Enduse6[9] = "7.6"
+   Enduse6[10] = "7.6"
+   Enduse6[11] = "0.53"
+   Enduse6[12] = "0.53"
    Enduse6[13] = "--"
-   Enduse6[17] = "16.50"
-   Enduse6[19] = "16.50"
-   Enduse6[20] = "16.50"
-   Enduse6[22] = "16.50"
+   Enduse6[17] = "16.15"
+   Enduse6[19] = "16.15"
+   Enduse6[20] = "16.15"
+   Enduse6[22] = "16.15"
    Enduse6[23] = "0.00"
    Enduse7[1] = "Indoor Lighting"
-   Enduse7[2] = "579.7"
+   Enduse7[2] = "578.1"
    Enduse7[3] = "--"
-   Enduse7[4] = "30.22"
-   Enduse7[5] = "579.7"
+   Enduse7[4] = "29.12"
+   Enduse7[5] = "578.1"
    Enduse7[6] = "--"
-   Enduse7[7] = "30.22"
+   Enduse7[7] = "29.12"
    Enduse7[8] = "--"
-   Enduse7[9] = "88.4"
-   Enduse7[10] = "88.4"
-   Enduse7[11] = "2.45"
-   Enduse7[12] = "2.45"
+   Enduse7[9] = "37.4"
+   Enduse7[10] = "37.4"
+   Enduse7[11] = "2.41"
+   Enduse7[12] = "2.41"
    Enduse7[13] = "--"
-   Enduse7[17] = "75.16"
-   Enduse7[19] = "75.16"
-   Enduse7[20] = "75.16"
-   Enduse7[22] = "75.16"
+   Enduse7[17] = "73.97"
+   Enduse7[19] = "73.97"
+   Enduse7[20] = "73.97"
+   Enduse7[22] = "73.97"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "621.0"
-   Enduse8[3] = "2,785.8"
-   Enduse8[4] = "65.99"
-   Enduse8[5] = "620.9"
-   Enduse8[6] = "2,786.5"
-   Enduse8[7] = "66.01"
-   Enduse8[8] = "0.02"
-   Enduse8[9] = "259.3"
-   Enduse8[10] = "259.2"
-   Enduse8[11] = "9.40"
-   Enduse8[12] = "9.39"
-   Enduse8[13] = "-0.01"
-   Enduse8[17] = "128.25"
-   Enduse8[18] = "156.12"
-   Enduse8[19] = "284.37"
-   Enduse8[20] = "128.22"
-   Enduse8[21] = "156.17"
-   Enduse8[22] = "284.39"
-   Enduse8[23] = "0.02"
+   Enduse8[2] = "-993.9"
+   Enduse8[3] = "2,808.9"
+   Enduse8[4] = "-2.71"
+   Enduse8[5] = "601.6"
+   Enduse8[6] = "2,806.5"
+   Enduse8[7] = "61.71"
+   Enduse8[8] = "64.42"
+   Enduse8[9] = "66.5"
+   Enduse8[10] = "87.3"
+   Enduse8[11] = "6.72"
+   Enduse8[12] = "9.23"
+   Enduse8[13] = "2.51"
+   Enduse8[17] = "44.88"
+   Enduse8[18] = "157.42"
+   Enduse8[19] = "202.30"
+   Enduse8[20] = "121.96"
+   Enduse8[21] = "157.29"
+   Enduse8[22] = "279.25"
+   Enduse8[23] = "76.95"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "2,135.6"
    Enduse9[3] = "--"
-   Enduse9[4] = "107.24"
+   Enduse9[4] = "102.01"
    Enduse9[5] = "2,135.6"
    Enduse9[6] = "--"
-   Enduse9[7] = "107.24"
+   Enduse9[7] = "102.01"
    Enduse9[8] = "--"
-   Enduse9[9] = "274.9"
-   Enduse9[10] = "274.9"
-   Enduse9[11] = "7.72"
-   Enduse9[12] = "7.72"
+   Enduse9[9] = "95.7"
+   Enduse9[10] = "95.7"
+   Enduse9[11] = "7.55"
+   Enduse9[12] = "7.55"
    Enduse9[13] = "--"
-   Enduse9[17] = "237.01"
-   Enduse9[19] = "237.01"
-   Enduse9[20] = "237.01"
-   Enduse9[22] = "237.01"
+   Enduse9[17] = "231.89"
+   Enduse9[19] = "231.89"
+   Enduse9[20] = "231.89"
+   Enduse9[22] = "231.89"
    Enduse9[23] = "0.00"
    Enduse10[1] = "Process"
    Enduse10[2] = "--"
@@ -4902,107 +4904,107 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse12[13] = "--"
    Enduse12[23] = "0.00"
    Enduse13[1] = "Photovoltaics"
-   Enduse13[2] = "-839.7"
+   Enduse13[2] = "-2,440.5"
    Enduse13[3] = "--"
-   Enduse13[4] = "-32.87"
+   Enduse13[4] = "-95.52"
    Enduse13[5] = "-839.7"
    Enduse13[6] = "--"
    Enduse13[7] = "-32.87"
-   Enduse13[8] = "--"
-   Enduse13[9] = "-18.9"
-   Enduse13[10] = "-18.9"
-   Enduse13[11] = "-1.17"
+   Enduse13[8] = "62.65"
+   Enduse13[9] = "-5.9"
+   Enduse13[10] = "-2.0"
+   Enduse13[11] = "-3.40"
    Enduse13[12] = "-1.17"
-   Enduse13[13] = "--"
-   Enduse13[17] = "-35.90"
-   Enduse13[19] = "-35.90"
+   Enduse13[13] = "2.23"
+   Enduse13[17] = "-104.35"
+   Enduse13[19] = "-104.35"
    Enduse13[20] = "-35.90"
    Enduse13[22] = "-35.90"
-   Enduse13[23] = "0.00"
+   Enduse13[23] = "68.45"
    Enduse14[1] = "Battery"
-   Enduse14[2] = "5.7"
+   Enduse14[2] = "10.4"
    Enduse14[3] = "--"
-   Enduse14[4] = "-1.94"
-   Enduse14[5] = "5.7"
+   Enduse14[4] = "-3.56"
+   Enduse14[5] = "5.2"
    Enduse14[6] = "--"
-   Enduse14[7] = "-1.94"
-   Enduse14[8] = "--"
-   Enduse14[9] = "-9.2"
-   Enduse14[10] = "-9.2"
-   Enduse14[11] = "-0.40"
-   Enduse14[12] = "-0.40"
-   Enduse14[13] = "--"
-   Enduse14[17] = "-12.35"
-   Enduse14[19] = "-12.35"
-   Enduse14[20] = "-12.35"
-   Enduse14[22] = "-12.35"
-   Enduse14[23] = "0.00"
+   Enduse14[7] = "-1.77"
+   Enduse14[8] = "1.79"
+   Enduse14[9] = "-26.2"
+   Enduse14[10] = "-9.3"
+   Enduse14[11] = "-0.65"
+   Enduse14[12] = "-0.36"
+   Enduse14[13] = "0.29"
+   Enduse14[17] = "-19.84"
+   Enduse14[19] = "-19.84"
+   Enduse14[20] = "-11.20"
+   Enduse14[22] = "-11.20"
+   Enduse14[23] = "8.64"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "2,756.6"
-   Enduse15[3] = "2,785.8"
-   Enduse15[4] = "173.23"
-   Enduse15[5] = "2,756.5"
-   Enduse15[6] = "2,786.5"
-   Enduse15[7] = "173.25"
-   Enduse15[8] = "0.02"
-   Enduse15[9] = "534.2"
-   Enduse15[10] = "534.1"
-   Enduse15[11] = "17.12"
-   Enduse15[12] = "17.11"
-   Enduse15[13] = "-0.01"
-   Enduse15[17] = "365.26"
-   Enduse15[18] = "156.12"
-   Enduse15[19] = "521.38"
-   Enduse15[20] = "365.23"
-   Enduse15[21] = "156.17"
-   Enduse15[22] = "521.40"
-   Enduse15[23] = "0.02"
+   Enduse15[2] = "1,141.7"
+   Enduse15[3] = "2,808.9"
+   Enduse15[4] = "99.30"
+   Enduse15[5] = "2,737.2"
+   Enduse15[6] = "2,806.5"
+   Enduse15[7] = "163.72"
+   Enduse15[8] = "64.42"
+   Enduse15[9] = "162.2"
+   Enduse15[10] = "183.0"
+   Enduse15[11] = "14.27"
+   Enduse15[12] = "16.78"
+   Enduse15[13] = "2.51"
+   Enduse15[17] = "276.77"
+   Enduse15[18] = "157.42"
+   Enduse15[19] = "434.19"
+   Enduse15[20] = "353.85"
+   Enduse15[21] = "157.29"
+   Enduse15[22] = "511.14"
+   Enduse15[23] = "76.95"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "1,455.0"
-   Enduse16[3] = "2,785.8"
-   Enduse16[4] = "100.80"
-   Enduse16[5] = "1,454.9"
-   Enduse16[6] = "2,786.5"
-   Enduse16[7] = "100.82"
-   Enduse16[8] = "0.02"
-   Enduse16[9] = "287.4"
-   Enduse16[10] = "287.3"
-   Enduse16[11] = "10.97"
-   Enduse16[12] = "10.96"
+   Enduse16[2] = "1,436.2"
+   Enduse16[3] = "2,808.9"
+   Enduse16[4] = "96.37"
+   Enduse16[5] = "1,436.1"
+   Enduse16[6] = "2,806.5"
+   Enduse16[7] = "96.35"
+   Enduse16[8] = "-0.02"
+   Enduse16[9] = "98.7"
+   Enduse16[10] = "98.6"
+   Enduse16[11] = "10.77"
+   Enduse16[12] = "10.76"
    Enduse16[13] = "-0.01"
-   Enduse16[17] = "176.50"
-   Enduse16[18] = "156.12"
-   Enduse16[19] = "332.62"
-   Enduse16[20] = "176.47"
-   Enduse16[21] = "156.17"
-   Enduse16[22] = "332.64"
-   Enduse16[23] = "0.02"
+   Enduse16[17] = "169.07"
+   Enduse16[18] = "157.42"
+   Enduse16[19] = "326.49"
+   Enduse16[20] = "169.06"
+   Enduse16[21] = "157.29"
+   Enduse16[22] = "326.35"
+   Enduse16[23] = "-0.14"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 4  'Basement Thermal Zone'
-clg: 1  htg: 2  'Core_bottom Thermal Zone'
-clg: 1  htg: 1  'Perimeter_bot_ZN_1 Thermal Zone'
+clg: 1  htg: 1  'Core_bottom Thermal Zone'
+clg: 2  htg: 1  'Perimeter_bot_ZN_1 Thermal Zone'
 clg: 1  htg: 1  'Perimeter_bot_ZN_2 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_bot_ZN_3 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_bot_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'GroundFloor_Plenum Thermal Zone'
-clg: 0  htg: 14  'Core_mid Thermal Zone'
+clg: 0  htg: 13  'Core_mid Thermal Zone'
 clg: 0  htg: 10  'Perimeter_mid_ZN_1 Thermal Zone'
 clg: 0  htg: 10  'Perimeter_mid_ZN_2 Thermal Zone'
-clg: 0  htg: 11  'Perimeter_mid_ZN_3 Thermal Zone'
-clg: 0  htg: 11  'Perimeter_mid_ZN_4 Thermal Zone'
+clg: 0  htg: 10  'Perimeter_mid_ZN_3 Thermal Zone'
+clg: 0  htg: 10  'Perimeter_mid_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'MidFloor_Plenum Thermal Zone'
-clg: 0  htg: 15  'Core_hi Thermal Zone'
+clg: 0  htg: 13  'Core_hi Thermal Zone'
 clg: 0  htg: 10  'Perimeter_hi_ZN_1 Thermal Zone'
 clg: 0  htg: 10  'Perimeter_hi_ZN_2 Thermal Zone'
-clg: 0  htg: 11  'Perimeter_hi_ZN_3 Thermal Zone'
-clg: 0  htg: 11  'Perimeter_hi_ZN_4 Thermal Zone'
+clg: 0  htg: 10  'Perimeter_hi_ZN_3 Thermal Zone'
+clg: 0  htg: 10  'Perimeter_hi_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'HiFloor_Plenum Thermal Zone'
-clg: 0  htg: 2  'Core_top Thermal Zone'
-clg: 1  htg: 4  'Perimeter_top_ZN_1 Thermal Zone'
-clg: 0  htg: 4  'Perimeter_top_ZN_2 Thermal Zone'
-clg: 0  htg: 4  'Perimeter_top_ZN_3 Thermal Zone'
-clg: 0  htg: 4  'Perimeter_top_ZN_4 Thermal Zone'
+clg: 0  htg: 3  'Core_top Thermal Zone'
+clg: 0  htg: 5  'Perimeter_top_ZN_1 Thermal Zone'
+clg: 0  htg: 5  'Perimeter_top_ZN_2 Thermal Zone'
+clg: 0  htg: 5  'Perimeter_top_ZN_3 Thermal Zone'
+clg: 0  htg: 5  'Perimeter_top_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'", 
                  "clg: 0  htg: 4  'Basement Thermal Zone'
 clg: 1  htg: 1  'Core_bottom Thermal Zone'
@@ -5011,52 +5013,54 @@ clg: 1  htg: 1  'Perimeter_bot_ZN_2 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_bot_ZN_3 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_bot_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'GroundFloor_Plenum Thermal Zone'
-clg: 0  htg: 11  'Core_mid Thermal Zone'
-clg: 0  htg: 7  'Perimeter_mid_ZN_1 Thermal Zone'
-clg: 0  htg: 7  'Perimeter_mid_ZN_2 Thermal Zone'
-clg: 0  htg: 7  'Perimeter_mid_ZN_3 Thermal Zone'
-clg: 0  htg: 7  'Perimeter_mid_ZN_4 Thermal Zone'
+clg: 0  htg: 12  'Core_mid Thermal Zone'
+clg: 0  htg: 8  'Perimeter_mid_ZN_1 Thermal Zone'
+clg: 0  htg: 8  'Perimeter_mid_ZN_2 Thermal Zone'
+clg: 0  htg: 9  'Perimeter_mid_ZN_3 Thermal Zone'
+clg: 0  htg: 8  'Perimeter_mid_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'MidFloor_Plenum Thermal Zone'
-clg: 0  htg: 11  'Core_hi Thermal Zone'
-clg: 0  htg: 7  'Perimeter_hi_ZN_1 Thermal Zone'
-clg: 0  htg: 7  'Perimeter_hi_ZN_2 Thermal Zone'
-clg: 0  htg: 7  'Perimeter_hi_ZN_3 Thermal Zone'
-clg: 0  htg: 8  'Perimeter_hi_ZN_4 Thermal Zone'
+clg: 0  htg: 12  'Core_hi Thermal Zone'
+clg: 0  htg: 9  'Perimeter_hi_ZN_1 Thermal Zone'
+clg: 0  htg: 9  'Perimeter_hi_ZN_2 Thermal Zone'
+clg: 0  htg: 9  'Perimeter_hi_ZN_3 Thermal Zone'
+clg: 0  htg: 9  'Perimeter_hi_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'HiFloor_Plenum Thermal Zone'
-clg: 0  htg: 1  'Core_top Thermal Zone'
-clg: 0  htg: 2  'Perimeter_top_ZN_1 Thermal Zone'
-clg: 0  htg: 2  'Perimeter_top_ZN_2 Thermal Zone'
-clg: 0  htg: 2  'Perimeter_top_ZN_3 Thermal Zone'
-clg: 0  htg: 2  'Perimeter_top_ZN_4 Thermal Zone'
+clg: 0  htg: 2  'Core_top Thermal Zone'
+clg: 0  htg: 4  'Perimeter_top_ZN_1 Thermal Zone'
+clg: 0  htg: 4  'Perimeter_top_ZN_2 Thermal Zone'
+clg: 0  htg: 4  'Perimeter_top_ZN_3 Thermal Zone'
+clg: 0  htg: 4  'Perimeter_top_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'" )
-   SimSummary[1] = "CSE Successful, E+ Successful (2 severe errors, 232 warnings)"
-   SimSummary[3] = "CSE Successful, E+ Successful (2 severe errors, 230 warnings)"
+   SimSummary[1] = "CSE Successful, E+ Successful (2 severe errors, 228 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (2 severe errors, 228 warnings)"
    PassFail = "FAIL"
-   MetricPassFail[1] = "Pass"
+   MetricPassFail[1] = "Fail"
    MetricPassFail[2] = "Pass"
-   MetricPassFail[3] = "Fail"
+   MetricPassFail[3] = "Pass"
    ComplyMessage = "DOES NOT COMPLY"
    StdPVBatteryMsg = "Standard Design PV Capacity: 536.9 kWdc  /  Battery System Capacity: 949.5 kWh  (power 225.52 kW)"
-   PctSavingsTDV = 0.011544
-   PctSavingsEffTDV = 0.0198373
-   PctSavingsCmpTDV = 0.0302984
-   PctSavTDVLbl = "0.0"
-   PctSavEffTDVLbl = "0.0"
-   PctSavCmpTDVLbl = "0.0"
-   PctSavingsSrc = -0.0584454
-   PctSavingsEffSrc = -0.0912409
-   PctSavingsCmpSrc = -0.106496
-   PctSavSrcLbl = "-0.1"
+   PctSavingsTDV = 39.3477
+   PctSavingsEffTDV = -0.0207577
+   PctSavingsCmpTDV = 104.392
+   PctSavTDVLbl = "39.3"
+   PctSavEffTDVLbl = "-0.0"
+   PctSavCmpTDVLbl = "104.4"
+   PctSavingsSrc = 14.9583
+   PctSavingsEffSrc = -0.0929368
+   PctSavingsCmpSrc = 27.1939
+   PctSavSrcLbl = "15.0"
    PctSavEffSrcLbl = "-0.1"
-   PctSavCmpSrcLbl = "-0.1"
-   MarginkW = -0.1
+   PctSavCmpSrcLbl = "27.2"
+   MarginkW = 20.8
    PVBattResultsValid = 1
-   PropPV_Total = 839685
-   PropPV_Export = 68256.4
-   PropPV_PctExport = 8.12881
+   PropPV_Total = 2.44048e+06
+   PropPV_Export = 499925
+   PropPV_PctExport = 20.4847
    StdPV_Total = 839685
-   StdPV_Export = 68270
-   StdPV_PctExport = 8.13043
+   StdPV_Export = 69782
+   StdPV_PctExport = 8.3105
+   NRCCPRFPayldTransID = "aeab95a6-ea43-4b62-a88a-4ce9677c516d"
+   NRCCPRFPayldProcDate = "2023-01-20T04:47:27"
    ..
 
 

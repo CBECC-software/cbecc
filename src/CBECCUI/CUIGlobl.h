@@ -275,7 +275,8 @@ extern BOOL DirectoryExists( const char* pszDirName );
 extern void CreateAndChangeDirectory( const char* pszDirName, BOOL bRemoveDir = FALSE );
 extern BOOL OKToWriteOrDeleteFile( const char* pszFileName, const char* pszUserMsg, bool bSilent=false );
 extern bool AppendToTextFile(	const char* output, const char* psFileName, const char* psFileType, const char* psWriteAction,
-										const char** ppCSVColumnLabels=NULL, bool bBlankFile=false, BOOL bSupressAllMessageBoxes=FALSE );
+										const char** ppCSVColumnLabels=NULL, bool bBlankFile=false, BOOL bSupressAllMessageBoxes=FALSE,
+                              int iHeaderSubstID=0 );    // added iHeaderSubstID - SAC 01/30/23
 
 
 /////////////////////////////////////////////////////////////////////////////

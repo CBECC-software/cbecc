@@ -2,9 +2,9 @@ RulesetFilename   "T24N_2022.bin"
 
 Proj   "MF88 Restructure Prototype"  
    BldgEngyModelVersion = 17
-   CreateDate = 1665096111
-   ModDate = 1666157916
-   RunDate = 1666157917
+   CreateDate = 1674248755
+   ModDate = 1674496054
+   RunDate = 1674496055
    RunDateFmt = "18:13, Wed, Mar 23, 2022"
    RunDateISO = "2022-03-23T18:13:41Z"
    GasType = "NaturalGas"
@@ -30,8 +30,9 @@ Proj   "MF88 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2022.2.0 (1273)"
+   SoftwareVersion = "CBECC 2022.2.1 (1287)"
    ProjFileName = "MF88Unit_5Story_ELEC-CZ12.cibd22"
+   CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
    ..
@@ -194,6 +195,7 @@ Bldg   "Building"
    ..
 
 Story   "Building Story Nonresidential"  
+   TreeState = 254
    ..
 
 Spc   "F1 Retail N Core"  
@@ -279,7 +281,7 @@ CartesianPt   "CartesianPoint 344"
 
 IntWall   "Surface 127"  
    AdjacentSpcRef = "F1 Retail NW Inner Core"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 79"  
@@ -302,7 +304,7 @@ CartesianPt   "CartesianPoint 348"
    ..
 
 ExtWall   "Surface 128"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 80"  
@@ -348,6 +350,7 @@ CartesianPt   "CartesianPoint 356"
    ..
 
 Spc   "F1 Retail NE Core"  
+   TreeState = 254
    ThrmlZnRef = "Thermal Zone: F1 Retail NE"
    Vol = 14400
    SpcFuncDefaultsRef = "Retail Space"
@@ -398,7 +401,7 @@ CartesianPt   "CartesianPoint 364"
 
 IntWall   "Surface 143"  
    AdjacentSpcRef = "F1 Retail NE Inner"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 84"  
@@ -421,7 +424,7 @@ CartesianPt   "CartesianPoint 368"
    ..
 
 ExtWall   "Surface 144"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 85"  
@@ -468,7 +471,7 @@ CartesianPt   "CartesianPoint 376"
 
 IntWall   "Surface 145"  
    AdjacentSpcRef = "F1 Retail NE Outer"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 87"  
@@ -491,6 +494,7 @@ CartesianPt   "CartesianPoint 380"
    ..
 
 Spc   "F1 Retail NE Inner"  
+   TreeState = 254
    ThrmlZnRef = "Thermal Zone: F1 Retail NE"
    Vol = 14400
    SpcFuncDefaultsRef = "Retail Space"
@@ -540,7 +544,7 @@ CartesianPt   "CartesianPoint 388"
    ..
 
 ExtWall   "Surface 137"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 90"  
@@ -586,6 +590,7 @@ CartesianPt   "CartesianPoint 396"
    ..
 
 Spc   "F1 Retail NE Outer"  
+   TreeState = 254
    ThrmlZnRef = "Thermal Zone: F1 Retail NE"
    Vol = 14400
    SpcFuncDefaultsRef = "Retail Space"
@@ -637,7 +642,7 @@ CartesianPt   "CartesianPoint 404"
    ..
 
 ExtWall   "Surface 150"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 94"  
@@ -683,7 +688,7 @@ CartesianPt   "CartesianPoint 412"
    ..
 
 ExtWall   "Surface 151"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 96"  
@@ -729,6 +734,7 @@ CartesianPt   "CartesianPoint 420"
    ..
 
 Spc   "F1 Retail NW Inner Core"  
+   TreeState = 254
    ThrmlZnRef = "Thermal Zone: F1 Retail N-NW"
    Vol = 14400
    SpcFuncDefaultsRef = "Retail Space"
@@ -779,7 +785,7 @@ CartesianPt   "CartesianPoint 428"
 
 IntWall   "Surface 118"  
    AdjacentSpcRef = "F1 Retail NW Outer Core"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 100"  
@@ -802,7 +808,7 @@ CartesianPt   "CartesianPoint 432"
    ..
 
 ExtWall   "Surface 119"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 101"  
@@ -848,6 +854,7 @@ CartesianPt   "CartesianPoint 440"
    ..
 
 Spc   "F1 Retail NW Outer"  
+   TreeState = 254
    ThrmlZnRef = "Thermal Zone: F1 Retail N-NW"
    Vol = 14400
    SpcFuncDefaultsRef = "Retail Space"
@@ -899,7 +906,7 @@ CartesianPt   "CartesianPoint 448"
    ..
 
 ExtWall   "Surface 105"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 105"  
@@ -945,7 +952,7 @@ CartesianPt   "CartesianPoint 456"
    ..
 
 ExtWall   "Surface 106"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 107"  
@@ -992,7 +999,7 @@ CartesianPt   "CartesianPoint 464"
 
 IntWall   "Surface 107"  
    AdjacentSpcRef = "F1 Retail NW Outer Core"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 109"  
@@ -1065,7 +1072,7 @@ CartesianPt   "CartesianPoint 476"
    ..
 
 ExtWall   "Surface 111"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 112"  
@@ -1139,7 +1146,7 @@ CartesianPt   "CartesianPoint 488"
    ..
 
 ExtWall   "Surface 10"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 115"  
@@ -1185,7 +1192,7 @@ CartesianPt   "CartesianPoint 496"
    ..
 
 ExtWall   "Surface 11"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 117"  
@@ -1256,7 +1263,7 @@ CartesianPt   "CartesianPoint 508"
 
 IntWall   "Surface 8"  
    AdjacentSpcRef = "F1 Retail SE Top"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 120"  
@@ -1279,7 +1286,7 @@ CartesianPt   "CartesianPoint 512"
    ..
 
 ExtWall   "Surface 9"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 121"  
@@ -1377,7 +1384,7 @@ CartesianPt   "CartesianPoint 528"
    ..
 
 ExtWall   "Surface 20"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 125"  
@@ -1423,7 +1430,7 @@ CartesianPt   "CartesianPoint 536"
    ..
 
 ExtWall   "Surface 22"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 127"  
@@ -1521,7 +1528,7 @@ CartesianPt   "CartesianPoint 552"
    ..
 
 ExtWall   "Surface 2"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 131"  
@@ -1568,7 +1575,7 @@ CartesianPt   "CartesianPoint 560"
 
 IntWall   "Surface 3"  
    AdjacentSpcRef = "F1 Retail SW Core"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 133"  
@@ -1591,7 +1598,7 @@ CartesianPt   "CartesianPoint 564"
    ..
 
 ExtWall   "Surface 4"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 134"  
@@ -1637,7 +1644,7 @@ CartesianPt   "CartesianPoint 572"
    ..
 
 ExtWall   "Surface 5"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 136"  
@@ -1735,7 +1742,7 @@ CartesianPt   "CartesianPoint 588"
    ..
 
 ExtWall   "Surface 15"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 140"  
@@ -1782,7 +1789,7 @@ CartesianPt   "CartesianPoint 596"
 
 IntWall   "Surface 16"  
    AdjacentSpcRef = "F1 Retail SW Top"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 142"  
@@ -1805,7 +1812,7 @@ CartesianPt   "CartesianPoint 600"
    ..
 
 ExtWall   "Surface 17"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 143"  
@@ -1920,7 +1927,7 @@ CartesianPt   "CartesianPoint 620"
 
 IntWall   "Surface 29"  
    AdjacentSpcRef = "F1 Stairs W"
-   ConsAssmRef = "WoodFramedInteriorWallU099"
+   ConsAssmRef = "MetalFrameWallInterior"
    ..
 
 PolyLp   "PolyLoop 147"  
@@ -1943,7 +1950,7 @@ CartesianPt   "CartesianPoint 624"
    ..
 
 ExtWall   "Surface 30"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 148"  
@@ -1989,7 +1996,7 @@ CartesianPt   "CartesianPoint 632"
    ..
 
 ExtWall   "Surface 32"  
-   ConsAssmRef = "NonResConcreteExteriorWall"
+   ConsAssmRef = "MetalFrameWallU055"
    ..
 
 PolyLp   "PolyLoop 150"  
@@ -2039,8 +2046,9 @@ ResZnGrp   "ResZn Group F1"
    ..
 
 ResOtherZn   "F1 Business Center"  
+   TreeState = 254
    Type = "Conditioned"
-   SpcFunc = "Convention, Conference, Multipurpose and Meeting Area"
+   SpcFunc = "Conference, Multipurpose and Meeting Area"
    VentSpcFunc = "General - Conference/meeting"
    ozHVACSystem = "F1 Business Cent AirSys"
    Area = 360
@@ -13306,7 +13314,7 @@ AirSeg   "BaseSys5 RetAirSeg"
    ..
 
 OACtrl   "BaseSys5 OACtrl"  
-   EconoCtrlMthd = "DifferentialDryBulb"
+   EconoCtrlMthd = "FixedDryBulb"
    EconoIntegration = "Integrated"
    AirSegSupRef = "BaseSys5 SupAirSeg"
    AirSegRetRef = "BaseSys5 RetAirSeg"
@@ -13359,7 +13367,7 @@ CoilHtg   "BaseVAVBox CoilHtg-10"
 AirSys   "F1 Business Cent AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Business Center"
@@ -13406,7 +13414,7 @@ OACtrl   "F1 Business Cent OACtrl"
 AirSys   "F1 Corridor AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Corridor"
@@ -13454,7 +13462,7 @@ OACtrl   "F1 Corridor OACtrl"
 AirSys   "F1 Fitness Cente AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Fitness Center"
@@ -13502,7 +13510,7 @@ OACtrl   "F1 Fitness Cente OACtrl"
 AirSys   "F1 Leasing Offic AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Leasing Office"
@@ -13550,7 +13558,7 @@ OACtrl   "F1 Leasing Offic OACtrl"
 AirSys   "F1 Lobby AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Lobby"
@@ -13598,7 +13606,7 @@ OACtrl   "F1 Lobby OACtrl"
 AirSys   "F1 Stairs E AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Stairs E"
@@ -13646,7 +13654,7 @@ OACtrl   "F1 Stairs E OACtrl"
 AirSys   "F1 Stairs W AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F1 Stairs W"
@@ -13694,7 +13702,7 @@ OACtrl   "F1 Stairs W OACtrl"
 AirSys   "F2 Corridor AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F2 Corridor"
@@ -13743,7 +13751,7 @@ OACtrl   "F2 Corridor OACtrl"
 AirSys   "F2 Break Room AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F2 Break Room"
@@ -13791,7 +13799,7 @@ OACtrl   "F2 Break Room OACtrl"
 AirSys   "F2 Stairs E AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F2 Stairs E"
@@ -13839,7 +13847,7 @@ OACtrl   "F2 Stairs E OACtrl"
 AirSys   "F2 Stairs W AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F2 Stairs W"
@@ -13886,7 +13894,7 @@ OACtrl   "F2 Stairs W OACtrl"
 AirSys   "F3 Corridor AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F3 Corridor"
@@ -13935,7 +13943,7 @@ OACtrl   "F3 Corridor OACtrl"
 AirSys   "F3 Break Room AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F3 Break Room"
@@ -13983,7 +13991,7 @@ OACtrl   "F3 Break Room OACtrl"
 AirSys   "F3 Stairs E AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F3 Stairs E"
@@ -14031,7 +14039,7 @@ OACtrl   "F3 Stairs E OACtrl"
 AirSys   "F3 Stairs W AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F3 Stairs W"
@@ -14079,7 +14087,7 @@ OACtrl   "F3 Stairs W OACtrl"
 AirSys   "F4 Corridor AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F4 Corridor"
@@ -14128,7 +14136,7 @@ OACtrl   "F4 Corridor OACtrl"
 AirSys   "F4 Break Room AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F4 Break Room"
@@ -14176,7 +14184,7 @@ OACtrl   "F4 Break Room OACtrl"
 AirSys   "F4 Stairs E AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F4 Stairs E"
@@ -14224,7 +14232,7 @@ OACtrl   "F4 Stairs E OACtrl"
 AirSys   "F4 Stairs W AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F4 Stairs W"
@@ -14272,7 +14280,7 @@ OACtrl   "F4 Stairs W OACtrl"
 AirSys   "F5 Corridor AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F5 Corridor"
@@ -14321,7 +14329,7 @@ OACtrl   "F5 Corridor OACtrl"
 AirSys   "F5 Break Room AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F5 Break Room"
@@ -14369,7 +14377,7 @@ OACtrl   "F5 Break Room OACtrl"
 AirSys   "F5 Stairs E AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F5 Stairs E"
@@ -14417,7 +14425,7 @@ OACtrl   "F5 Stairs E OACtrl"
 AirSys   "F5 Stairs W AirSys"  
    TreeState = 253
    Type = "SZHP"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    EffMetric = "SEER2/EER2/HSPF2"
    ResHVACAutoSizing = 1
    CtrlZnRef = "F5 Stairs W"
@@ -14549,14 +14557,6 @@ ConsAssm   "NonResConcreteExteriorWall"
    MatRef[8] = "- none -"
    ..
 
-ConsAssm   "WoodFramedInteriorWallU099"  
-   SpecMthd = "Layers"
-   ExtRoughness = "MediumSmooth"
-   MatRef[1] = "Gypsum Board - 1/2 in."
-   MatRef[2] = "WoodFrameWall16inOC R11.25"
-   MatRef[3] = "Gypsum Board - 1/2 in."
-   ..
-
 FenCons   "Nonres Fixed Window"  
    FenProdType = "FixedWindow"
    SHGC = 0.22
@@ -14570,6 +14570,7 @@ SpcFuncDefaults   "Retail Space"
    ..
 
 FluidSys   "Nonresidential Elec DHW System"  
+   TreeState = 253
    Type = "ServiceHotWater"
    ..
 
@@ -14588,6 +14589,7 @@ WtrHtr   "Nonres Elec Water Heater"
    ..
 
 FluidSys   "Nonresidential Gas DHW System"  
+   TreeState = 253
    Type = "ServiceHotWater"
    ..
 
@@ -14606,7 +14608,9 @@ WtrHtr   "Nonres Gas Water Heater"
    ..
 
 FluidSys   "BaseHWSystem"  
+   TreeState = 253
    Type = "HotWater"
+   DsgnSupWtrTemp = 160
    ..
 
 FluidSeg   "BaseHW PriSupSeg"  
@@ -14618,7 +14622,6 @@ FluidSeg   "BaseHW PriRetSeg"
    ..
 
 Blr   "Base Blr"  
-   TreeState = 253
    Type = "HotWater"
    FuelSrc = "Gas"
    DraftType = "Natural"
@@ -14631,12 +14634,56 @@ Pump   "Pump 1"
    ..
 
 PVArray   "PV Array"  
-   DCSysSize = 236.2
+   DCSysSize = 265.4
    ..
 
 Batt   "Battery"  
-   MaxCap = 256.2
+   MaxCap = 297.5
    Ctrl = "Time of Use"
+   MaxChrgPwr = 71.29
+   MaxDschrgPwr = 71.29
+   ..
+
+ConsAssm   "MetalFrameWallU055"  
+   CompatibleSurfType = "ExteriorWall"
+   SpecMthd = "Layers"
+   ExtRoughness = "MediumRough"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R14.60"
+   MatRef[3] = "Compliance Insulation R1.41"
+   MatRef[4] = "Compliance Insulation R0.02"
+   MatRef[5] = "Compliance Insulation R0.02"
+   MatRef[6] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[7] = "Gypsum Board - 1/2 in."
+   ..
+
+Mat   "Compliance Insulation R14.60"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R14.60"
+   ..
+
+Mat   "Compliance Insulation R1.41"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R1.41"
+   ..
+
+Mat   "Air - Metal Wall Framing - 16 or 24 in. OC"  
+   CodeCat = "Air"
+   CodeItem = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   ..
+
+ConsAssm   "MetalFrameWallInterior"  
+   CompatibleSurfType = "InteriorWall"
+   SpecMthd = "Layers"
+   ExtRoughness = "MediumRough"
+   MatRef[1] = "Gypsum Board - 5/8 in."
+   MatRef[2] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[3] = "Gypsum Board - 5/8 in."
+   ..
+
+Mat   "Gypsum Board - 5/8 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 5/8 in."
    ..
 
 EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"  
@@ -14693,61 +14740,61 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Title3[22] = "Emis. (tonne)"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
-   Enduse1[2] = "12.7"
-   Enduse1[3] = "156.9"
-   Enduse1[4] = "7.24"
-   Enduse1[5] = "11.5"
-   Enduse1[6] = "113.6"
-   Enduse1[7] = "5.84"
-   Enduse1[8] = "-1.40"
-   Enduse1[9] = "--"
-   Enduse1[10] = "--"
-   Enduse1[11] = "1.74"
-   Enduse1[12] = "1.34"
-   Enduse1[13] = "-0.40"
-   Enduse1[17] = "3.07"
-   Enduse1[18] = "8.79"
-   Enduse1[19] = "11.86"
-   Enduse1[20] = "2.78"
-   Enduse1[21] = "6.37"
-   Enduse1[22] = "9.15"
-   Enduse1[23] = "-2.71"
+   Enduse1[2] = "11.0"
+   Enduse1[3] = "151.2"
+   Enduse1[4] = "6.62"
+   Enduse1[5] = "10.9"
+   Enduse1[6] = "118.8"
+   Enduse1[7] = "5.81"
+   Enduse1[8] = "-0.81"
+   Enduse1[9] = "4.3"
+   Enduse1[10] = "4.3"
+   Enduse1[11] = "1.63"
+   Enduse1[12] = "1.36"
+   Enduse1[13] = "-0.27"
+   Enduse1[17] = "2.67"
+   Enduse1[18] = "8.47"
+   Enduse1[19] = "11.14"
+   Enduse1[20] = "2.65"
+   Enduse1[21] = "6.66"
+   Enduse1[22] = "9.31"
+   Enduse1[23] = "-1.83"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "82.5"
+   Enduse2[2] = "80.1"
    Enduse2[3] = "--"
-   Enduse2[4] = "32.82"
-   Enduse2[5] = "83.6"
+   Enduse2[4] = "30.89"
+   Enduse2[5] = "81.8"
    Enduse2[6] = "--"
-   Enduse2[7] = "32.61"
-   Enduse2[8] = "-0.21"
-   Enduse2[9] = "39.8"
-   Enduse2[10] = "39.7"
-   Enduse2[11] = "1.39"
-   Enduse2[12] = "1.41"
+   Enduse2[7] = "31.35"
+   Enduse2[8] = "0.46"
+   Enduse2[9] = "7.9"
+   Enduse2[10] = "8.1"
+   Enduse2[11] = "1.30"
+   Enduse2[12] = "1.32"
    Enduse2[13] = "0.02"
-   Enduse2[17] = "9.67"
-   Enduse2[19] = "9.67"
-   Enduse2[20] = "9.80"
-   Enduse2[22] = "9.80"
-   Enduse2[23] = "0.13"
+   Enduse2[17] = "9.04"
+   Enduse2[19] = "9.04"
+   Enduse2[20] = "9.19"
+   Enduse2[22] = "9.19"
+   Enduse2[23] = "0.15"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "76.4"
+   Enduse3[2] = "76.2"
    Enduse3[3] = "--"
-   Enduse3[4] = "20.00"
-   Enduse3[5] = "78.1"
+   Enduse3[4] = "19.57"
+   Enduse3[5] = "77.7"
    Enduse3[6] = "--"
-   Enduse3[7] = "20.24"
-   Enduse3[8] = "0.24"
-   Enduse3[9] = "13.3"
-   Enduse3[10] = "13.5"
-   Enduse3[11] = "1.65"
-   Enduse3[12] = "1.66"
+   Enduse3[7] = "19.92"
+   Enduse3[8] = "0.35"
+   Enduse3[9] = "8.3"
+   Enduse3[10] = "8.3"
+   Enduse3[11] = "1.63"
+   Enduse3[12] = "1.64"
    Enduse3[13] = "0.01"
-   Enduse3[17] = "11.44"
-   Enduse3[19] = "11.44"
-   Enduse3[20] = "11.54"
-   Enduse3[22] = "11.54"
-   Enduse3[23] = "0.10"
+   Enduse3[17] = "11.30"
+   Enduse3[19] = "11.30"
+   Enduse3[20] = "11.38"
+   Enduse3[22] = "11.38"
+   Enduse3[23] = "0.08"
    Enduse4[1] = "Heat Rejection"
    Enduse4[2] = "--"
    Enduse4[3] = "--"
@@ -14765,113 +14812,113 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse5[1] = "Pumps & Misc."
    Enduse5[2] = "8.4"
    Enduse5[3] = "--"
-   Enduse5[4] = "2.13"
+   Enduse5[4] = "2.14"
    Enduse5[5] = "7.7"
    Enduse5[6] = "--"
    Enduse5[7] = "1.97"
-   Enduse5[8] = "-0.16"
-   Enduse5[9] = "--"
-   Enduse5[10] = "--"
+   Enduse5[8] = "-0.17"
+   Enduse5[9] = "2.5"
+   Enduse5[10] = "2.4"
    Enduse5[11] = "0.28"
    Enduse5[12] = "0.26"
    Enduse5[13] = "-0.02"
-   Enduse5[17] = "1.92"
-   Enduse5[19] = "1.92"
+   Enduse5[17] = "1.94"
+   Enduse5[19] = "1.94"
    Enduse5[20] = "1.79"
    Enduse5[22] = "1.79"
-   Enduse5[23] = "-0.13"
+   Enduse5[23] = "-0.15"
    Enduse6[1] = "Domestic Hot Water"
    Enduse6[2] = "137.0"
    Enduse6[3] = "--"
-   Enduse6[4] = "32.69"
+   Enduse6[4] = "32.57"
    Enduse6[5] = "137.1"
    Enduse6[6] = "--"
-   Enduse6[7] = "32.57"
-   Enduse6[8] = "-0.12"
-   Enduse6[9] = "15.1"
-   Enduse6[10] = "14.1"
-   Enduse6[11] = "3.00"
-   Enduse6[12] = "2.98"
+   Enduse6[7] = "32.49"
+   Enduse6[8] = "-0.08"
+   Enduse6[9] = "20.2"
+   Enduse6[10] = "19.0"
+   Enduse6[11] = "2.99"
+   Enduse6[12] = "2.97"
    Enduse6[13] = "-0.02"
-   Enduse6[17] = "20.83"
-   Enduse6[19] = "20.83"
-   Enduse6[20] = "20.66"
-   Enduse6[22] = "20.66"
+   Enduse6[17] = "20.75"
+   Enduse6[19] = "20.75"
+   Enduse6[20] = "20.58"
+   Enduse6[22] = "20.58"
    Enduse6[23] = "-0.17"
    Enduse7[1] = "Indoor Lighting"
-   Enduse7[2] = "131.9"
+   Enduse7[2] = "131.7"
    Enduse7[3] = "--"
-   Enduse7[4] = "31.57"
+   Enduse7[4] = "30.82"
    Enduse7[5] = "134.9"
    Enduse7[6] = "--"
-   Enduse7[7] = "32.20"
-   Enduse7[8] = "0.63"
-   Enduse7[9] = "19.6"
-   Enduse7[10] = "19.9"
-   Enduse7[11] = "2.69"
-   Enduse7[12] = "2.72"
+   Enduse7[7] = "31.44"
+   Enduse7[8] = "0.62"
+   Enduse7[9] = "11.3"
+   Enduse7[10] = "11.4"
+   Enduse7[11] = "2.61"
+   Enduse7[12] = "2.64"
    Enduse7[13] = "0.03"
-   Enduse7[17] = "18.65"
-   Enduse7[19] = "18.65"
-   Enduse7[20] = "18.84"
-   Enduse7[22] = "18.84"
-   Enduse7[23] = "0.19"
+   Enduse7[17] = "18.13"
+   Enduse7[19] = "18.13"
+   Enduse7[20] = "18.33"
+   Enduse7[22] = "18.33"
+   Enduse7[23] = "0.20"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "83.3"
-   Enduse8[3] = "156.9"
-   Enduse8[4] = "60.34"
-   Enduse8[5] = "87.2"
-   Enduse8[6] = "113.6"
-   Enduse8[7] = "59.35"
-   Enduse8[8] = "-0.99"
-   Enduse8[9] = "35.2"
-   Enduse8[10] = "38.8"
-   Enduse8[11] = "8.02"
-   Enduse8[12] = "7.68"
-   Enduse8[13] = "-0.34"
-   Enduse8[17] = "41.52"
-   Enduse8[18] = "8.79"
-   Enduse8[19] = "50.31"
-   Enduse8[20] = "41.72"
-   Enduse8[21] = "6.37"
-   Enduse8[22] = "48.09"
-   Enduse8[23] = "-2.22"
+   Enduse8[2] = "34.8"
+   Enduse8[3] = "151.2"
+   Enduse8[4] = "45.76"
+   Enduse8[5] = "40.2"
+   Enduse8[6] = "118.8"
+   Enduse8[7] = "46.77"
+   Enduse8[8] = "1.01"
+   Enduse8[9] = "49.3"
+   Enduse8[10] = "48.7"
+   Enduse8[11] = "6.99"
+   Enduse8[12] = "6.81"
+   Enduse8[13] = "-0.18"
+   Enduse8[17] = "33.68"
+   Enduse8[18] = "8.47"
+   Enduse8[19] = "42.15"
+   Enduse8[20] = "34.30"
+   Enduse8[21] = "6.66"
+   Enduse8[22] = "40.96"
+   Enduse8[23] = "-1.19"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "207.5"
    Enduse9[3] = "--"
-   Enduse9[4] = "50.76"
+   Enduse9[4] = "49.91"
    Enduse9[5] = "207.5"
    Enduse9[6] = "--"
-   Enduse9[7] = "50.76"
+   Enduse9[7] = "49.91"
    Enduse9[8] = "--"
-   Enduse9[9] = "33.2"
-   Enduse9[10] = "33.2"
-   Enduse9[11] = "4.49"
-   Enduse9[12] = "4.49"
+   Enduse9[9] = "21.7"
+   Enduse9[10] = "21.7"
+   Enduse9[11] = "4.41"
+   Enduse9[12] = "4.41"
    Enduse9[13] = "--"
-   Enduse9[17] = "31.18"
-   Enduse9[19] = "31.18"
-   Enduse9[20] = "31.18"
-   Enduse9[22] = "31.18"
+   Enduse9[17] = "30.59"
+   Enduse9[19] = "30.59"
+   Enduse9[20] = "30.59"
+   Enduse9[22] = "30.59"
    Enduse9[23] = "0.00"
    Enduse10[1] = "Process"
-   Enduse10[2] = "144.5"
+   Enduse10[2] = "144.6"
    Enduse10[3] = "--"
-   Enduse10[4] = "34.56"
+   Enduse10[4] = "34.59"
    Enduse10[5] = "144.6"
    Enduse10[6] = "--"
    Enduse10[7] = "34.59"
-   Enduse10[8] = "0.03"
-   Enduse10[9] = "23.6"
-   Enduse10[10] = "23.6"
+   Enduse10[8] = "--"
+   Enduse10[9] = "13.5"
+   Enduse10[10] = "13.5"
    Enduse10[11] = "2.81"
    Enduse10[12] = "2.81"
    Enduse10[13] = "--"
-   Enduse10[17] = "19.51"
-   Enduse10[19] = "19.51"
+   Enduse10[17] = "19.53"
+   Enduse10[19] = "19.53"
    Enduse10[20] = "19.53"
    Enduse10[22] = "19.53"
-   Enduse10[23] = "0.02"
+   Enduse10[23] = "0.00"
    Enduse11[1] = "Other Ltg"
    Enduse11[2] = "22.8"
    Enduse11[3] = "--"
@@ -14880,8 +14927,8 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse11[6] = "--"
    Enduse11[7] = "6.25"
    Enduse11[8] = "--"
-   Enduse11[9] = "6.1"
-   Enduse11[10] = "6.1"
+   Enduse11[9] = "4.2"
+   Enduse11[10] = "4.2"
    Enduse11[11] = "0.62"
    Enduse11[12] = "0.62"
    Enduse11[13] = "--"
@@ -14909,81 +14956,81 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse12[22] = "9.96"
    Enduse12[23] = "0.00"
    Enduse13[1] = "Photovoltaics"
-   Enduse13[2] = "-369.4"
+   Enduse13[2] = "-415.0"
    Enduse13[3] = "--"
-   Enduse13[4] = "-63.93"
-   Enduse13[5] = "-369.3"
+   Enduse13[4] = "-71.84"
+   Enduse13[5] = "-415.1"
    Enduse13[6] = "--"
-   Enduse13[7] = "-63.92"
-   Enduse13[8] = "0.01"
-   Enduse13[9] = "-8.3"
-   Enduse13[10] = "-8.3"
-   Enduse13[11] = "-1.80"
-   Enduse13[12] = "-1.80"
+   Enduse13[7] = "-71.85"
+   Enduse13[8] = "-0.01"
+   Enduse13[9] = "-1.0"
+   Enduse13[10] = "-1.0"
+   Enduse13[11] = "-2.02"
+   Enduse13[12] = "-2.02"
    Enduse13[13] = "--"
-   Enduse13[17] = "-15.79"
-   Enduse13[19] = "-15.79"
-   Enduse13[20] = "-15.79"
-   Enduse13[22] = "-15.79"
+   Enduse13[17] = "-17.75"
+   Enduse13[19] = "-17.75"
+   Enduse13[20] = "-17.75"
+   Enduse13[22] = "-17.75"
    Enduse13[23] = "0.00"
    Enduse14[1] = "Battery"
-   Enduse14[2] = "3.8"
+   Enduse14[2] = "5.4"
    Enduse14[3] = "--"
-   Enduse14[4] = "-2.18"
-   Enduse14[5] = "3.6"
+   Enduse14[4] = "-5.01"
+   Enduse14[5] = "5.2"
    Enduse14[6] = "--"
-   Enduse14[7] = "-2.16"
-   Enduse14[8] = "0.02"
-   Enduse14[9] = "-44.3"
-   Enduse14[10] = "-40.1"
-   Enduse14[11] = "-0.93"
-   Enduse14[12] = "-0.89"
-   Enduse14[13] = "0.04"
-   Enduse14[17] = "-8.27"
-   Enduse14[19] = "-8.27"
-   Enduse14[20] = "-7.90"
-   Enduse14[22] = "-7.90"
-   Enduse14[23] = "0.37"
+   Enduse14[7] = "-4.36"
+   Enduse14[8] = "0.65"
+   Enduse14[9] = "-4.3"
+   Enduse14[10] = "-3.7"
+   Enduse14[11] = "-1.43"
+   Enduse14[12] = "-1.36"
+   Enduse14[13] = "0.07"
+   Enduse14[17] = "-12.40"
+   Enduse14[19] = "-12.40"
+   Enduse14[20] = "-11.87"
+   Enduse14[22] = "-11.87"
+   Enduse14[23] = "0.53"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "522.3"
-   Enduse15[3] = "156.9"
-   Enduse15[4] = "167.30"
-   Enduse15[5] = "526.3"
-   Enduse15[6] = "113.6"
-   Enduse15[7] = "166.34"
-   Enduse15[8] = "-0.96"
-   Enduse15[9] = "105.3"
-   Enduse15[10] = "108.9"
-   Enduse15[11] = "17.38"
-   Enduse15[12] = "17.04"
-   Enduse15[13] = "-0.34"
-   Enduse15[17] = "106.50"
-   Enduse15[18] = "8.79"
-   Enduse15[19] = "115.29"
-   Enduse15[20] = "106.72"
-   Enduse15[21] = "6.37"
-   Enduse15[22] = "113.09"
-   Enduse15[23] = "-2.20"
+   Enduse15[2] = "473.9"
+   Enduse15[3] = "151.2"
+   Enduse15[4] = "151.90"
+   Enduse15[5] = "479.3"
+   Enduse15[6] = "118.8"
+   Enduse15[7] = "152.91"
+   Enduse15[8] = "1.01"
+   Enduse15[9] = "96.0"
+   Enduse15[10] = "95.4"
+   Enduse15[11] = "16.27"
+   Enduse15[12] = "16.09"
+   Enduse15[13] = "-0.18"
+   Enduse15[17] = "98.09"
+   Enduse15[18] = "8.47"
+   Enduse15[19] = "106.56"
+   Enduse15[20] = "98.71"
+   Enduse15[21] = "6.66"
+   Enduse15[22] = "105.37"
+   Enduse15[23] = "-1.19"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "448.9"
-   Enduse16[3] = "156.9"
-   Enduse16[4] = "126.45"
-   Enduse16[5] = "452.9"
-   Enduse16[6] = "113.6"
-   Enduse16[7] = "125.43"
-   Enduse16[8] = "-1.02"
-   Enduse16[9] = "87.7"
-   Enduse16[10] = "87.2"
-   Enduse16[11] = "10.75"
-   Enduse16[12] = "10.37"
-   Enduse16[13] = "-0.38"
-   Enduse16[17] = "65.58"
-   Enduse16[18] = "8.79"
-   Enduse16[19] = "74.37"
-   Enduse16[20] = "65.41"
-   Enduse16[21] = "6.37"
-   Enduse16[22] = "71.78"
-   Enduse16[23] = "-2.59"
+   Enduse16[2] = "444.4"
+   Enduse16[3] = "151.2"
+   Enduse16[4] = "122.61"
+   Enduse16[5] = "450.1"
+   Enduse16[6] = "118.8"
+   Enduse16[7] = "122.98"
+   Enduse16[8] = "0.37"
+   Enduse16[9] = "54.6"
+   Enduse16[10] = "53.5"
+   Enduse16[11] = "10.44"
+   Enduse16[12] = "10.19"
+   Enduse16[13] = "-0.25"
+   Enduse16[17] = "63.83"
+   Enduse16[18] = "8.47"
+   Enduse16[19] = "72.30"
+   Enduse16[20] = "63.92"
+   Enduse16[21] = "6.66"
+   Enduse16[22] = "70.58"
+   Enduse16[23] = "-1.72"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 0  'Thermal Zone: F1 Retail N-NW'
@@ -14994,34 +15041,36 @@ clg: 0  htg: 0  'Thermal Zone: F1 Retail SW'",
 clg: 0  htg: 0  'Thermal Zone: F1 Retail NE'
 clg: 0  htg: 0  'Thermal Zone: F1 Retail SE'
 clg: 0  htg: 0  'Thermal Zone: F1 Retail SW'" )
-   SimSummary[1] = "CSE Successful, E+ Successful (138 warnings)"
+   SimSummary[1] = "CSE Successful, E+ Successful (137 warnings)"
    SimSummary[3] = "CSE Successful, E+ Successful (137 warnings)"
    PassFail = "FAIL"
-   MetricPassFail[1] = "Fail"
-   MetricPassFail[2] = "Fail"
+   MetricPassFail[1] = "Pass"
+   MetricPassFail[2] = "Pass"
    MetricPassFail[3] = "Fail"
    ComplyMessage = "DOES NOT COMPLY"
-   StdPVBatteryMsg = "Standard Design PV Capacity: 236.2 kWdc  /  Battery System Capacity: 256.3 kWh  (power 61.41 kW)"
-   PctSavingsTDV = -0.577131
-   PctSavingsEffTDV = -0.813203
-   PctSavingsCmpTDV = -1.66807
-   PctSavTDVLbl = "-0.6"
-   PctSavEffTDVLbl = "-0.8"
-   PctSavCmpTDVLbl = "-1.7"
-   PctSavingsSrc = -1.99531
-   PctSavingsEffSrc = -3.66442
-   PctSavingsCmpSrc = -4.42708
-   PctSavSrcLbl = "-2.0"
-   PctSavEffSrcLbl = "-3.7"
-   PctSavCmpSrcLbl = "-4.4"
-   MarginkW = 3.6
+   StdPVBatteryMsg = "Standard Design PV Capacity: 265.4 kWdc  /  Battery System Capacity: 297.5 kWh  (power 71.29 kW)"
+   PctSavingsTDV = 0.660519
+   PctSavingsEffTDV = 0.300862
+   PctSavingsCmpTDV = 2.1595
+   PctSavTDVLbl = "0.7"
+   PctSavEffTDVLbl = "0.3"
+   PctSavCmpTDVLbl = "2.2"
+   PctSavingsSrc = -1.11871
+   PctSavingsEffSrc = -2.45339
+   PctSavingsCmpSrc = -2.64317
+   PctSavSrcLbl = "-1.1"
+   PctSavEffSrcLbl = "-2.5"
+   PctSavCmpSrcLbl = "-2.6"
+   MarginkW = -0.6
    PVBattResultsValid = 1
-   PropPV_Total = 369376
-   PropPV_Export = 2711.21
-   PropPV_PctExport = 0.733996
-   StdPV_Total = 369317
-   StdPV_Export = 2333.97
-   StdPV_PctExport = 0.63197
+   PropPV_Total = 415040
+   PropPV_Export = 11563.6
+   PropPV_PctExport = 2.78615
+   StdPV_Total = 415118
+   StdPV_Export = 10160
+   StdPV_PctExport = 2.44748
+   NRCCPRFPayldTransID = "e39d0ce0-2a85-435a-8cf5-775e4f753cd7"
+   NRCCPRFPayldProcDate = "2023-01-23T09:47:14"
    ..
 
 ResConsAssm   "Res Exterior Wall Cons"  
@@ -15042,10 +15091,10 @@ ResConsAssm   "Res Exterior Wall Cons"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
-   CavityLayer = "R 21"
+   CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
    FrameLayer = "2x6 @ 16 in. O.C."
-   SheathInsulLayer = "R4 Sheathing"
-   SheathInsulLayerRVal = 1.8
+   SheathInsulLayer = "- specify R-value -"
+   SheathInsulLayerRVal = 5
    WallExtFinishLayer = "Synthetic Stucco"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
@@ -15941,6 +15990,14 @@ ResMat   "Ins-R38-D1.5-SH0.2-C0.02467"
    ConductivityCT = 0.00418
    ..
 
+ResMat   "Ins-R38-D1.5-SH0.2-C0.02467 83"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0246711
+   ConductivityQII = 0.0246711
+   ConductivityCT = 0.00418
+   ..
+
 ResWinType   "Operable"  
    SpecMethod = "Window Dimensions (required for fins/overhangs)"
    Area = 15
@@ -15992,6 +16049,8 @@ DwellUnitType   "1-Bed Type"
    DryerOption = "In-Unit"
    DryerFuel = "Electricity"
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
+   IAQHasFID = 1
    IAQOption = "Individual IAQ Fans"
    IAQFanRef[1] = "1-Bed IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
@@ -16030,6 +16089,8 @@ DwellUnitType   "2-Bed Type"
    DryerOption = "In-Unit"
    DryerFuel = "Electricity"
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
+   IAQHasFID = 1
    IAQOption = "Individual IAQ Fans"
    IAQFanRef[1] = "2-Bed IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
@@ -16070,6 +16131,8 @@ DwellUnitType   "3-Bed Type"
    DryerOption = "In-Unit"
    DryerFuel = "Electricity"
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
+   IAQHasFID = 1
    IAQOption = "Individual IAQ Fans"
    IAQFanRef[1] = "3-Bed IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
@@ -16108,6 +16171,8 @@ DwellUnitType   "Studio Type"
    DryerOption = "In-Unit"
    DryerFuel = "Electricity"
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
+   IAQHasFID = 1
    IAQOption = "Individual IAQ Fans"
    IAQFanRef[1] = "Studio IAQ Fan"
    IAQFanCnt = ( 1, 1, 1, 1 )
@@ -16396,7 +16461,6 @@ ResWtrHtr   "Electric"
    IntInsulRVal = 0
    ExtInsulRVal = 0
    AmbientCond = "Unconditioned"
-   RecovEff = 99
    RatedFlow = 2
    HasElecMiniTank = 0
    ElecMiniTankPower = 0

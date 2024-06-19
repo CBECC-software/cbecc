@@ -58,6 +58,8 @@ static char THIS_FILE[] = __FILE__;
 bool ebLogAnalysisMsgs = true;      // SAC 10/28/21 (MFam)
 #elif  CODEYEAR2022
 bool ebLogAnalysisMsgs = false;  //true;
+#elif  CODEYEAR2025
+bool ebLogAnalysisMsgs = false;  //true;
 #else
 bool ebLogAnalysisMsgs = false;
 #endif

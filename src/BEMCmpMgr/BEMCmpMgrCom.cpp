@@ -3201,6 +3201,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
       bPerformComSim = (lSimComFlag > 0);
    }
 
+   QString sBypassCompRptMsg;    // SAC 12/01/22
+   BEMPX_GetString( BEMPX_GetDatabaseID( "BypassCompRptMsg", iCID_Proj ), sBypassCompRptMsg );
+
 // SAC 6/12/15 - added new check for duplicate object names
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && bPerformDupObjNameCheck)
 	{	if (BEMPX_CheckForDuplicateObjectNames( pszAnalErrMsg, NRES_AnalErrMsg_Len, TRUE /*bWriteErrorsToLog*/, TRUE /*bSupressAllMessageBoxes*/ ) > 0)
@@ -3699,6 +3702,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
             iRetVal = iGenDDYRetVal;
    }  }
 
+   QString qsCompMetricLbl_Short = "TDV";
+   if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation()) 
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CompMetricLbl_Short", iCID_Proj ), qsCompMetricLbl_Short, FALSE, 0, -1, 0, BEMO_User, "TDV" );   // base metric label on new ruleset var - SAC 01/26/23
+
 	bool bResearchMode = false;
 	bool bProposedOnly = false;		// SAC 9/6/13
 	BOOL bCompletedAnalysisSteps = FALSE;
@@ -4036,13 +4043,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			int iNumRptSecOffTRUE = 0;
 			if (iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML) && !sXMLResultsFileName.isEmpty())
 			{	// SAC 7/5/16 - added code to check for any/all conditions where report generation will be prevented or not secure and prompt user of this condition before proceeding with analysis
-			#define  NumCantGenRpts  5
+			#define  NumCantGenRpts  6
 				int iCantGenRptIdx[NumCantGenRpts];
 				bool bCantGenRpt[] = {	!FileExists( sXMLResultsFileName.toLocal8Bit().constData() ),
 												false,	// defined below - check for report gen website not accessible
 												false,	// defined below - check for report gen offline
 												!sIDFToSimulate.isEmpty(),
-												(pbBypassOpenStudio[0] || pbBypassOpenStudio[1] || pbBypassOpenStudio[2] || pbBypassOpenStudio[3])  };
+												(pbBypassOpenStudio[0] || pbBypassOpenStudio[1] || pbBypassOpenStudio[2] || pbBypassOpenStudio[3]),
+                                    !sBypassCompRptMsg.isEmpty()  };    // SAC 12/01/22
 				if (iEnableRptGenStatusChecks > 0)
 				{	int iRptGenAvail = CMX_CheckSiteAccess( "Proj:RptGenCheckURL", sCACertPath.toLocal8Bit().constData(),
 															(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
@@ -4082,6 +4090,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								case  2 :	sLogMsg =       "      report generator offline";																break;
 								case  3 :	sLogMsg =       "      IDF file specified in analysis options overriding compliance models";		break;
 								case  4 :	sLogMsg =       "      one or more OpenStudio/EnergyPlus simulations being bypassed";				break;
+								case  5 :	sLogMsg = QString( "      %1" ).arg( sBypassCompRptMsg );				break;
 								default :	sLogMsg.clear();		break;
 							}
 							if (!sLogMsg.isEmpty())
@@ -6385,7 +6394,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	else if (!bHaveResult)
 		sAnalResLogMsg = "Analysis result unknown";
 	else
-	{	sAnalResLogMsg = QString::asprintf( "Analysis result:  %s  (TDV margin: %s)", sResTemp1.toLocal8Bit().constData(), sResTemp2.toLocal8Bit().constData() );
+	{	//sAnalResLogMsg = QString::asprintf( "Analysis result:  %s  (%s margin: %s)", sResTemp1.toLocal8Bit().constData(), (iRulesetCodeYear < 2025 ? "TDV" : "SLCC"), sResTemp2.toLocal8Bit().constData() );  // SAC 12/01/22
+      sAnalResLogMsg = QString::asprintf( "Analysis result:  %s  (%s margin: %s)", sResTemp1.toLocal8Bit().constData(), qsCompMetricLbl_Short.toLocal8Bit().constData(), sResTemp2.toLocal8Bit().constData() );  // SAC 12/01/22  // SAC 01/26/23
 		if (sResTemp2.indexOf(',') > 0)
 		{	sResTemp2  = '\"' + sResTemp2;
 			sResTemp2 += '\"';
@@ -6583,7 +6593,8 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 	BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PassFail"   ), sResTemp1, TRUE, 0, -1, iEUseSummaryIdx );
 	BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:Enduse8[8]" ), sResTemp2, TRUE, 0, -1, iEUseSummaryIdx );
 	BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:Name"   ), sEUseSummName, TRUE, 0, -1, iEUseSummaryIdx );
-
+   double dCompMarg = strtof( sResTemp2.toLocal8Bit().constData(), NULL );    // fix problem where CompMargin values outside +/-1k causing problems due to presence of comma in string - SAC 01/11/23
+   sResTemp2 = QString::number( dCompMarg );
 
 		QString sRunTitle, sWthrStn, sAnalType, sPropSimSummary, sStdSimSummary, sAppVer, sCmpMgrVer, sRulesetID, sRuleVer, sAnnWthrFile, sEPlusVer, sTimeStamp, sOSVer, sCSEVersion, sLogMsg, sBEMErr;
 		double dRptTotArea, dRptCndArea;   // SAC 2/19/17
@@ -6956,14 +6967,14 @@ static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Wea
 										"ns,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Coo"
 										"ling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL\n";   // 3102 chars
 
-static char szT24NCSV2_TDVdollars[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
-										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation ($/ft2),,,,,,,,,,,,,,,,TDV by Fuel ($/ft2),,,Cooling"
+static char szT24NCSV2_Dyn[] =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
+										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,%1 (%2) ($/ft2),,,,,,,,,,,,,,,,%3 by Fuel ($/ft2),,,Cooling"
 										" Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Ene"
-										"rgy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation ($/ft2),,,,,,,,,,,,,,,TDV by Fuel (k"
-										"TDV/ft2),,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak De"
+										"rgy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,%4 (%5) ($/ft2),,,,,,,,,,,,,,,%6 by Fuel ($"
+										"/ft2),,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak De"
 										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC/LMCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
 										",,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,"
-										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1117 chars
+										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // ??? chars   // enable dynamic labels - SAC 01/26/23
 
 static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model"
 										",,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";
@@ -6989,12 +7000,20 @@ int CMX_PopulateResultsHeader_CECNonRes(	char* pszHdr1, int iHdr1Len, char* pszH
 int CMX_PopulateResultsHeader_NonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len, int iCodeType )	// SAC 12/3/14
 {	int iRetVal = 0;
 	const char* pszaHdrs[3];
+   long lEngyCodeYearNum=0;
+   BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEngyCodeYearNum );  // SAC 12/01/22
 	if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
 	{	pszaHdrs[0] = szS901GCSV1;		pszaHdrs[1] = szS901GCSV2;		pszaHdrs[2] = szS901GCSV3;
 	}
 	else
 	{	pszaHdrs[0] = szT24NCSV1;		pszaHdrs[1] = szT24NCSV2;		pszaHdrs[2] = szT24NCSV3;
 	}
+
+   QString qsCompMetricLbl_Short, qsCompMetricLbl_Long, qsDynamic2ndHeader;         // base metric label on new ruleset var - SAC 01/26/23
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsCompMetricLbl_Short );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Long"  ), qsCompMetricLbl_Long  );
+   if (iCodeType != CT_S901G && iCodeType != CT_ECBC && !qsCompMetricLbl_Short.isEmpty() && !qsCompMetricLbl_Long.isEmpty())
+      qsDynamic2ndHeader = QString( szT24NCSV2_Dyn ).arg( qsCompMetricLbl_Long, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Long, qsCompMetricLbl_Short, qsCompMetricLbl_Short );
 
 #pragma warning(disable:4996)
 	if (pszHdr1 && iHdr1Len > 0)
@@ -7003,10 +7022,16 @@ int CMX_PopulateResultsHeader_NonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2
 			iRetVal = 1;
 	}
 	if (pszHdr2 && iHdr2Len > 0)
-	{	strncpy( pszHdr2, pszaHdrs[1], iHdr2Len-1 );
-		if (iRetVal == 0 && strlen( pszHdr2 ) < strlen( pszaHdrs[1] ))
-			iRetVal = 2;
-	}
+	{	if (!qsDynamic2ndHeader.isEmpty())     // SAC 01/26/23
+      {  strncpy( pszHdr2, qsDynamic2ndHeader.toLocal8Bit().constData(), iHdr2Len-1 );
+		   if (iRetVal == 0 && strlen( pszHdr2 ) < qsDynamic2ndHeader.length())
+			   iRetVal = 2;
+      }
+      else
+      {  strncpy( pszHdr2, pszaHdrs[1], iHdr2Len-1 );
+		   if (iRetVal == 0 && strlen( pszHdr2 ) < strlen( pszaHdrs[1] ))
+			   iRetVal = 2;
+	}  }
 	if (pszHdr3 && iHdr3Len > 0)
 	{	strncpy( pszHdr3, pszaHdrs[2], iHdr3Len-1 );
 		if (iRetVal == 0 && strlen( pszHdr3 ) < strlen( pszaHdrs[2] ))
@@ -7617,10 +7642,22 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							if (bWriteHdrs)
 							{	// WRITE HEADER RECORDS
                         csvFile.write( GetResultsCSVHeader_NonRes( 1, iCodeType ) );
-                        if (bRulesetNameIncl25 && iCodeType == CT_T24N)
-                           csvFile.write( szT24NCSV2_TDVdollars );      // kludge to select column labels replacing kTDV w/ $ for 2025 T24N - SAC 10/25/22
+
+                        //if (bRulesetNameIncl25 && iCodeType == CT_T24N)
+                        //   csvFile.write( szT24NCSV2_SLCC );      // kludge to select column labels replacing kTDV w/ $ for 2025 T24N - SAC 10/25/22
+                        //else
+                        //   csvFile.write( GetResultsCSVHeader_NonRes( 2, iCodeType ) );
+                        if (iCodeType == CT_T24N)
+                        {  QString qsCompMetricLbl_Short, qsCompMetricLbl_Long, qsDynamic2ndHeader;         // base metric label on new ruleset var - SAC 01/26/23
+                           BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsCompMetricLbl_Short );
+                           BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Long"  ), qsCompMetricLbl_Long  );
+                           if (!qsCompMetricLbl_Short.isEmpty() && !qsCompMetricLbl_Long.isEmpty())
+                              qsDynamic2ndHeader = QString( szT24NCSV2_Dyn ).arg( qsCompMetricLbl_Long, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Long, qsCompMetricLbl_Short, qsCompMetricLbl_Short );
+                           csvFile.write( qsDynamic2ndHeader.toLocal8Bit().constData() );
+                        }
                         else
                            csvFile.write( GetResultsCSVHeader_NonRes( 2, iCodeType ) );
+
                         csvFile.write( GetResultsCSVHeader_NonRes( 3, iCodeType ) );
 							}
 
@@ -8201,7 +8238,8 @@ int WriteCSVHourlyResultsHeader( const char* pszHourlyResultsPathFile, const cha
 			}
 			else
 			{  int iFirstDataRow = (lEngyCodeYearNum >= 2022 ? 19 : 18);
-            fprintf( fp_CSV, "%d,4,\"Row/Col hourly results data begin\"\n", iFirstDataRow  );
+            int iFirstDataCol = (lEngyCodeYearNum >= 2022 ?  5 :  4);      // insert DST column (#4) - SAC 11/11/22
+            fprintf( fp_CSV, "%d,%d,\"Row/Col hourly results data begin\"\n", iFirstDataRow, iFirstDataCol );
 				fprintf( fp_CSV, "\"%s\"\n", pszFileDescrip );
 				fprintf( fp_CSV, ",Software:,,\"%s\"\n",   sUIVer.toLocal8Bit().constData()     );
 				fprintf( fp_CSV, ",CompMgr:,,\"%s\"\n",    sCmpMgrVer.toLocal8Bit().constData() );
@@ -8255,20 +8293,22 @@ int CMX_ExportCSVHourlyResults_CECNonRes( const char* pszHourlyResultsPathFile, 
 //											 3 : Error encountered opening hourly CSV results file
 //											 4 : Unknown error writing hourly CSV results file
 //											 5 : Unexpected enduse count or index
-//											 6 : 
+//											 6 : RunPeriodYear (####) not compatible w/ daylight savings time labels (expecting 2009)
+//                                7 : 
 int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, int iCodeType /*=0*/, char* pszErrMsgBuffer /*=NULL*/,
 														int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/, const char* pszEPlusVerStr /*=NULL*/,
 														const char* pszOpenStudioVerStr /*=NULL*/ )
 {	int iRetVal = 0;
 	QString sErrMsg;
-	long lCliZnNum=0;
+	long lCliZnNum=0, lEngyCodeYearNum=0;
 	QString sAnalysisType, sWeatherStation;
 	BOOL bExpectStdDesResults = TRUE;
 	if (	!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), sAnalysisType   , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) ||
 			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"        ), lCliZnNum       ,       0, -1, 0, BEMO_User,          iBEMProcIdx ) ||
-			!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherStation"  ), sWeatherStation , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) )
+			!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherStation"  ), sWeatherStation , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) ||
+         !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEngyCodeYearNum,       0, -1, 0, BEMO_User,          iBEMProcIdx ) )
 	{	iRetVal = 1;
-		sErrMsg = "Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or Bldg:TotCondFlrArea";
+		sErrMsg = "Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or EngyCodeYearNum";
 	}
 	else if (NUM_T24_NRES_EndUses_19 != 15 || IDX_T24_NRES_EU_Total != 14)	// SAC 2/1/17 - added error check to prevent bomb below  // SAC 7/15/18 - updated expected total to 15 (for PV & Batt)
 	{	iRetVal = 5;
@@ -8279,9 +8319,29 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 		//BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:FuelTDVLabel" ), sFuelTDVLabel );
 	}
 
+	long lRunPeriodYear;    // insert DST column (#4) - SAC 11/11/22
+   int iDST_StMo=-1, iDST_StDa=-1, iDST_EndMo=-1, iDST_EndDa=-1;
+   QString sTimeType = "Std";
+	if ( lEngyCodeYearNum >= 2022 && BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RunPeriodYear" ), lRunPeriodYear ) && lRunPeriodYear > 0 )
+   {  long lDisableDayltSavTimeSim=0;
+      if ( BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DisableDayltSavTimeSim" ), lDisableDayltSavTimeSim ) && lDisableDayltSavTimeSim > 0 )
+      {  // do nothing - input property specifies NO DST simulation
+      }
+      else
+      {  if (lRunPeriodYear == 2009)
+         {  sTimeType = "DST";
+            iDST_StMo  =  3;    iDST_StDa  = 8;
+            iDST_EndMo = 11;    iDST_EndDa = 1;
+         }
+         else
+         {	iRetVal = 6;
+      		sErrMsg = QString("RunPeriodYear (%1) not compatible w/ daylight savings time labels (expecting 2009)").arg(QString::number(lRunPeriodYear));
+   }  }  }
+
 	if (iRetVal==0)
       iRetVal = WriteCSVHourlyResultsHeader( pszHourlyResultsPathFile, pszModelPathFile, pszModelName, iCodeType, bSilent, iBEMProcIdx,
 														   pszEPlusVerStr, pszOpenStudioVerStr, sErrMsg, "Hourly Results of CEC Compliance Manager" );
+
 	if (iRetVal==0)
 	{
    	FILE *fp_CSV;
@@ -8316,11 +8376,17 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
       			iEUO[1][iNumEUs-1] = IDX_T24_NRES_EU_Total;		iEUO[1][iNumEUs] = 0;		// bypass reporting of CompTotal enduse
       		}
 
+            QString sTDV="TDV", sKTDV="kTDV";      // revise TDV labels to SLCC & $ for 2025+ code vintage - SAC 11/29/22
+            BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), sTDV, FALSE, 0, -1, 0, BEMO_User, "TDV", 0, iBEMProcIdx );   // base metric label on new ruleset var - SAC 01/26/23
+            if (lEngyCodeYearNum >= 2025)
+            {  /*sTDV="SLCC";*/   sKTDV="$";
+            }
+
 				if (iCodeType == CT_T24N)		// SAC 10/7/14
 				{  if (lEngyCodeYearNum >= 2022 && (!bEchoNResData || !bEchoResData))
                {  // move PV & Battery out to right - no other changes
-                  fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,TDV Multipliers,,,Building Wide,\n" );	
-      	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,%s,%s\n",
+                  fprintf( fp_CSV,  ",,,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,%s Multipliers,,,Building Wide,\n", sTDV.toLocal8Bit().constData() );	
+      	         fprintf( fp_CSV,  ",,,Local Time,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,%s,%s\n",
    												esEUMap_CECNonRes[iEUO[0][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 3]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][10]].sEnduseAbbrev,
@@ -8332,14 +8398,15 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    												esEUMap_CECNonRes[iEUO[1][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][12]].sEnduseAbbrev,
                                        esEUMap_CECNonRes[iEUO[0][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][12]].sEnduseAbbrev );   // moved PV & Battery to very end, after TDV
-   	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+   	            fprintf( fp_CSV,  "Mo,Da,Hr,(%s),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
    														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
-   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kTDV/kWh),(kTDV/MBtu),(kTDV/MBtu),(kWh),(kWh)\n" );
+   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(%s/kWh),(%s/MBtu),(%s/MBtu),(kWh),(kWh)\n", sTimeType.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData() );
                }
                else if (lEngyCodeYearNum >= 2022)
                {  // move PV & Battery out to right, add separate col of TDV mults (for PV & Batt), and then write a complete set of more column headers for Res data
-                  fprintf( fp_CSV,  ",,,Nonres Site Electric Use,,,,,,,,,,,,,Nonres Site Natural Gas Use,,,,,,,,,,,,,Nonres Site Propane Use,,,,,,,,,,,,,Nonres TDV Multipliers,,,Building Wide,,TDV Mult.s,Residential Site Electric Use,,,,,,,,,,,,,Residential Site Natural Gas Use,,,,,,,,,,,,,Residential Site Propane Use,,,,,,,,,,,,,Res TDV Multipliers,\n" );
-      	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,%s,%s,PV/Battery,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,\n",
+                  fprintf( fp_CSV,  ",,,,Nonres Site Electric Use,,,,,,,,,,,,,Nonres Site Natural Gas Use,,,,,,,,,,,,,Nonres Site Propane Use,,,,,,,,,,,,,Nonres %s Multipliers,,,Building Wide,,%s Mult.s,Residential Site Electric Use,,,,,,,,,,,,,Residential Site Natural Gas Use,,,,,,,,,,,,,Residential Site Propane Use,,,,,,,,,,,,,Res %s Multipliers,\n",
+                                       sTDV.toLocal8Bit().constData(), sTDV.toLocal8Bit().constData(), sTDV.toLocal8Bit().constData() );
+      	         fprintf( fp_CSV,  ",,,Local Time,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,%s,%s,PV/Battery,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,\n",
    												esEUMap_CECNonRes[iEUO[0][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 3]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][10]].sEnduseAbbrev,	esEUMap_CECNonRes[iEUO[0][13]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][14]].sEnduseAbbrev,  
@@ -8359,12 +8426,13 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    												esEUMap_CECNonRes[iEUO[1][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 3]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[1][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][12]].sEnduseAbbrev );
-   	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+   	            fprintf( fp_CSV,  "Mo,Da,Hr,(%s),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
    														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
-   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kTDV/kWh),(kTDV/MBtu),(kTDV/MBtu),(kWh),(kWh),(kTDV/MBtu),"
+   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(%s/kWh),(%s/MBtu),(%s/MBtu),(kWh),(kWh),(%s/MBtu),"
                                              "(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
    														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
-   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kTDV/kWh),(kTDV/MBtu),(kTDV/MBtu),\n" );
+   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(%s/kWh),(%s/MBtu),(%s/MBtu),\n", sTimeType.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(),
+                                       sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData() );
                }
                else
                {  fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,TDV Multipliers,\n" );		// SAC 10/28/15 - 'Other Fuel' -> 'Propane'
@@ -8532,7 +8600,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 
 				   // EXPORT hourly results records
 					iYrHr = -1;
-					int iMo, iDa, iHr;
+					int iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr;
                if (lEngyCodeYearNum < 2022)     // 2019 and earlier
    					for (iMo=1; iMo<13; iMo++)
    						for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
@@ -8556,10 +8624,23 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    					for (iMo=1; iMo<13; iMo++)
    						for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
    							for (iHr=1; iHr<25; iHr++)
-   							{	iYrHr++;
-   				            fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+   							{  iLocTmMo = iMo;  iLocTmDa = iDa;
+                           if ( iDST_StMo < 0 || iMo < iDST_StMo || iMo > iDST_EndMo ||      // local time labeling - SAC 11/11/22
+                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 3))) ||
+                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  3))) )
+                              iLocTmHr = iHr;   // local time = Std time
+                           else if (iHr > 1)    // DST shifting mid-day
+                              iLocTmHr = iHr-1;
+                           else if (iDa > 1)    // DST shifting to prior day
+                           {  iLocTmDa = iDa-1;  iLocTmHr = 24;   
+                           }
+                           else                 // DST shifting to prior month
+                           {  iLocTmMo = iMo-1;  iLocTmDa = iNumDaysInMonth[iMo-2];  iLocTmHr = 24;   
+                           }
+                           iYrHr++;
+   				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"      // revised DST format to exclude trailing ':00' - SAC 11/12/22
    																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
+   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
    						daMtrEUData[0][ 0][iYrHr], daMtrEUData[0][ 1][iYrHr], daMtrEUData[0][ 2][iYrHr], daMtrEUData[0][ 3][iYrHr], daMtrEUData[0][ 4][iYrHr],
                      daMtrEUData[0][ 5][iYrHr], daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr],
                      daMtrEUData[0][10][iYrHr], daMtrEUData[0][13][iYrHr], daMtrEUData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery
@@ -8575,10 +8656,23 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    					for (iMo=1; iMo<13; iMo++)
    						for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
    							for (iHr=1; iHr<25; iHr++)
-   							{	iYrHr++;
-   				            fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+   							{	iLocTmMo = iMo;  iLocTmDa = iDa;
+                           if ( iDST_StMo < 0 || iMo < iDST_StMo || iMo > iDST_EndMo ||      // local time labeling - SAC 11/11/22
+                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 3))) ||
+                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  3))) )
+                              iLocTmHr = iHr;   // local time = Std time
+                           else if (iHr > 1)    // DST shifting mid-day
+                              iLocTmHr = iHr-1;
+                           else if (iDa > 1)    // DST shifting to prior day
+                           {  iLocTmDa = iDa-1;  iLocTmHr = 24;   
+                           }
+                           else                 // DST shifting to prior month
+                           {  iLocTmMo = iMo-1;  iLocTmDa = iNumDaysInMonth[iMo-2];  iLocTmHr = 24;   
+                           }
+                           iYrHr++;
+   				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
    																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
+   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
    						daMtrEUResData[0][ 0][iYrHr], daMtrEUResData[0][ 1][iYrHr], daMtrEUResData[0][ 2][iYrHr], daMtrEUResData[0][ 3][iYrHr], daMtrEUResData[0][ 4][iYrHr],
                      daMtrEUResData[0][ 5][iYrHr], daMtrEUResData[0][ 6][iYrHr], daMtrEUResData[0][ 7][iYrHr], daMtrEUResData[0][ 8][iYrHr], daMtrEUResData[0][ 9][iYrHr],
                      daMtrEUResData[0][10][iYrHr], daMtrEUResData[0][13][iYrHr], daMtrEUResData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery
@@ -8594,11 +8688,24 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    					for (iMo=1; iMo<13; iMo++)
    						for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
    							for (iHr=1; iHr<25; iHr++)
-   							{	iYrHr++;
-   				            fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+   							{	iLocTmMo = iMo;  iLocTmDa = iDa;
+                           if ( iDST_StMo < 0 || iMo < iDST_StMo || iMo > iDST_EndMo ||      // local time labeling - SAC 11/11/22
+                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 3))) ||
+                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  3))) )
+                              iLocTmHr = iHr;   // local time = Std time
+                           else if (iHr > 1)    // DST shifting mid-day
+                              iLocTmHr = iHr-1;
+                           else if (iDa > 1)    // DST shifting to prior day
+                           {  iLocTmDa = iDa-1;  iLocTmHr = 24;   
+                           }
+                           else                 // DST shifting to prior month
+                           {  iLocTmMo = iMo-1;  iLocTmDa = iNumDaysInMonth[iMo-2];  iLocTmHr = 24;   
+                           }
+                           iYrHr++;
+   				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
    																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
                                                       "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
+   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
    						daMtrEUData[0][ 0][iYrHr], daMtrEUData[0][ 1][iYrHr], daMtrEUData[0][ 2][iYrHr], daMtrEUData[0][ 3][iYrHr], daMtrEUData[0][ 4][iYrHr],    // NONRES data
                      daMtrEUData[0][ 5][iYrHr], daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr],
                      daMtrEUData[0][10][iYrHr], daMtrEUData[0][13][iYrHr], daMtrEUData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery

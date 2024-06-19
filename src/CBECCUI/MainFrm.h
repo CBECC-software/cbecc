@@ -227,6 +227,12 @@ protected:
 	afx_msg void OnToolsT24StandardModelReport();
 	afx_msg void OnUpdateToolsCAHPReport(CCmdUI* pCmdUI);
 	afx_msg void OnToolsCAHPReport();
+	afx_msg void OnUpdateToolsViewCUACSubmittalReport(CCmdUI* pCmdUI);
+	afx_msg void OnToolsViewCUACSubmittalReport();
+	afx_msg void OnUpdateToolsViewCUACDetailsReport(CCmdUI* pCmdUI);
+	afx_msg void OnToolsViewCUACDetailsReport();
+	afx_msg void OnUpdateToolsViewCUACDetailsCSV(CCmdUI* pCmdUI);
+	afx_msg void OnToolsViewCUACDetailsCSV();
 	afx_msg void OnUpdateToolsCheckReportGenAccess(CCmdUI* pCmdUI);
 	afx_msg void OnToolsCheckReportGenAccess();
 	afx_msg void OnUpdateToolsReport_BuildingSummary(CCmdUI* pCmdUI);
@@ -577,6 +583,9 @@ protected:
 	void ProcessCustomRulelistFile();
 	void EvalProposedRules( int iEvalOnlyClass, int iEvalOnlyObjIdx, CString* pDurationStr );
 	void RefreshDefaultsButtonPressed( int iBEMClassID, CWnd* pButton );
+   bool CUACAnalysisAvailable();		// SAC 01/20/23
+   void LoadCUACOutputFilename( long lDBID_CUAC_RptOption, const char* pszFileExt, const char* pszRptType, QString& qsPathFile );   // SAC 01/20/23
+   bool ViewCUACOuput( const char* pszOutPathFileProp, long lDBID_CUAC_RptOption, const char* pszFileExt, const char* pszRptType, const char* pszFileType );  // SAC 01/20/23
 
 	void PreventSystemSleepDuringAnalysis();		// SAC 10/21/20 - setup timer to prevent system sleep during analysis
 	void RestoreSystemSleepFollowingAnalysis();

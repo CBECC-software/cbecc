@@ -1,0 +1,1129 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+// Generated Help ID header file
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.hm"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1253)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1253)\r\n"
+    "#endif\r\n"
+    "#include ""res\\CBECC-Res.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""afxprint.rc""       // printing/print preview resources\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\CBECC-Res.ico"
+IDR_MAINFRAMEDEV        ICON    DISCARDABLE     "res\\CBECC-ResDev.ico"
+IDR_COMCHKTYPE          ICON    DISCARDABLE     "res\\CBECC-ResDoc.ico"
+IDI_WIZARD              ICON    DISCARDABLE     "res\\wizard.ico"
+IDI_MENU                ICON    DISCARDABLE     "res\\menu.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
+IDR_MAINFRAMEDEV        BITMAP  MOVEABLE PURE   "res\\ToolbarD.bmp"
+IDB_TREEUNKNWN          BITMAP  DISCARDABLE     "res\\t_unkn_1.bmp"
+IDB_TREEUNKNWN2         BITMAP  DISCARDABLE     "res\\t_unkn_2.bmp"
+IDB_TREESPACE           BITMAP  DISCARDABLE     "res\\t_spc_1.bmp"
+IDB_TREESPACE2          BITMAP  DISCARDABLE     "res\\t_spc_2.bmp"
+IDB_TREEEWALL           BITMAP  DISCARDABLE     "res\\t_ewal_1.bmp"
+IDB_TREEEWALL2          BITMAP  DISCARDABLE     "res\\t_ewal_2.bmp"
+IDB_TREEIWALL           BITMAP  DISCARDABLE     "res\\t_iwal_1.bmp"
+IDB_TREEIWALL2          BITMAP  DISCARDABLE     "res\\t_iwal_2.bmp"
+IDB_TREEUWALL           BITMAP  DISCARDABLE     "res\\t_uwal_1.bmp"
+IDB_TREEUWALL2          BITMAP  DISCARDABLE     "res\\t_uwal_2.bmp"
+IDB_TREEWIN             BITMAP  DISCARDABLE     "res\\t_win_1.bmp"
+IDB_TREEWIN2            BITMAP  DISCARDABLE     "res\\t_win_2.bmp"
+IDB_TREEDOOR            BITMAP  DISCARDABLE     "res\\t_door_1.bmp"
+IDB_TREEDOOR2           BITMAP  DISCARDABLE     "res\\t_door_2.bmp"
+IDB_TREEPROJ            BITMAP  DISCARDABLE     "res\\t_proj_1.bmp"
+IDB_TREEPROJ2           BITMAP  DISCARDABLE     "res\\t_proj_2.bmp"
+IDB_TREESITE            BITMAP  DISCARDABLE     "res\\t_site_1.bmp"
+IDB_TREESITE2           BITMAP  DISCARDABLE     "res\\t_site_2.bmp"
+IDB_TREEBLDG            BITMAP  DISCARDABLE     "res\\t_bldg_1.bmp"
+IDB_TREEBLDG2           BITMAP  DISCARDABLE     "res\\t_bldg_2.bmp"
+IDB_TREEFLR             BITMAP  DISCARDABLE     "res\\t_flr_1.bmp"
+IDB_TREEFLR2            BITMAP  DISCARDABLE     "res\\t_flr_2.bmp"
+IDB_TREEBLCK            BITMAP  DISCARDABLE     "res\\t_blck_1.bmp"
+IDB_TREEBLCK2           BITMAP  DISCARDABLE     "res\\t_blck_2.bmp"
+IDB_TREEAREA            BITMAP  DISCARDABLE     "res\\t_area_1.bmp"
+IDB_TREEAREA2           BITMAP  DISCARDABLE     "res\\t_area_2.bmp"
+IDB_TREEFAN             BITMAP  DISCARDABLE     "res\\t_fan_1.bmp"
+IDB_TREEFAN2            BITMAP  DISCARDABLE     "res\\t_fan_2.bmp"
+IDB_TREEAC              BITMAP  DISCARDABLE     "res\\t_ac_1.bmp"
+IDB_TREEAC2             BITMAP  DISCARDABLE     "res\\t_ac_2.bmp"
+IDB_TREEFURN            BITMAP  DISCARDABLE     "res\\t_furn_1.bmp"
+IDB_TREEFURN2           BITMAP  DISCARDABLE     "res\\t_furn_2.bmp"
+IDB_TREEBSHD            BITMAP  DISCARDABLE     "res\\t_BSHD_1.bmp"
+IDB_TREEBSHD2           BITMAP  DISCARDABLE     "res\\t_BSHD_2.bmp"
+IDB_TREELSYS            BITMAP  DISCARDABLE     "res\\t_LSYS_1.bmp"
+IDB_TREELSYS2           BITMAP  DISCARDABLE     "res\\t_LSYS_2.bmp"
+IDB_TREEHVAC            BITMAP  DISCARDABLE     "res\\t_HVAC_1.bmp"
+IDB_TREEHVAC2           BITMAP  DISCARDABLE     "res\\t_HVAC_2.bmp"
+IDB_TREEHPMP            BITMAP  DISCARDABLE     "res\\t_HPMP_1.bmp"
+IDB_TREEHPMP2           BITMAP  DISCARDABLE     "res\\t_HPMP_2.bmp"
+IDB_TREEECON            BITMAP  DISCARDABLE     "res\\t_ECON_1.bmp"
+IDB_TREEECON2           BITMAP  DISCARDABLE     "res\\t_ECON_2.bmp"
+IDB_TREEPLNT            BITMAP  DISCARDABLE     "res\\t_PLNT_1.bmp"
+IDB_TREEPLNT2           BITMAP  DISCARDABLE     "res\\t_PLNT_2.bmp"
+IDB_TREECTWR            BITMAP  DISCARDABLE     "res\\t_CTWR_1.bmp"
+IDB_TREECTWR2           BITMAP  DISCARDABLE     "res\\t_CTWR_2.bmp"
+IDB_TREECHLR            BITMAP  DISCARDABLE     "res\\t_CHLR_1.bmp"
+IDB_TREECHLR2           BITMAP  DISCARDABLE     "res\\t_CHLR_2.bmp"
+IDB_TREEBOIL            BITMAP  DISCARDABLE     "res\\t_BOIL_1.bmp"
+IDB_TREEBOIL2           BITMAP  DISCARDABLE     "res\\t_BOIL_2.bmp"
+IDB_TREEPUMP            BITMAP  DISCARDABLE     "res\\t_PUMP_1.bmp"
+IDB_TREEPUMP2           BITMAP  DISCARDABLE     "res\\t_PUMP_2.bmp"
+IDB_TREEEROOF           BITMAP  DISCARDABLE     "res\\t_roof_1.bmp"
+IDB_TREEEROOF2          BITMAP  DISCARDABLE     "res\\t_roof_2.bmp"
+IDB_TREEICEIL           BITMAP  DISCARDABLE     "res\\t_ceil_1.bmp"
+IDB_TREEICEIL2          BITMAP  DISCARDABLE     "res\\t_ceil_2.bmp"
+IDB_TREEFWALL           BITMAP  DISCARDABLE     "res\\t_fwal_1.bmp"
+IDB_TREEFWALL2          BITMAP  DISCARDABLE     "res\\t_fwal_2.bmp"
+IDB_TREESKY             BITMAP  DISCARDABLE     "res\\t_sky_1.bmp"
+IDB_TREESKY2            BITMAP  DISCARDABLE     "res\\t_sky_2.bmp"
+IDB_TREEFEWALL          BITMAP  DISCARDABLE     "res\\t_fewa_1.bmp"
+IDB_TREEFEWALL2         BITMAP  DISCARDABLE     "res\\t_fewa_2.bmp"
+IDB_TREEFIWALL          BITMAP  DISCARDABLE     "res\\t_fiwa_1.bmp"
+IDB_TREEFIWALL2         BITMAP  DISCARDABLE     "res\\t_fiwa_2.bmp"
+IDB_TREEFOLDER          BITMAP  DISCARDABLE     "res\\t_fldr_1.bmp"
+IDB_TREEFOLDER2         BITMAP  DISCARDABLE     "res\\t_fldr_2.bmp"
+IDB_TREEATTIC           BITMAP  DISCARDABLE     "res\\t_Atc_1.bmp"
+IDB_TREEATTIC2          BITMAP  DISCARDABLE     "res\\t_Atc_2.bmp"
+IDB_TREECONS            BITMAP  DISCARDABLE     "res\\t_Cons_1.bmp"
+IDB_TREECONS2           BITMAP  DISCARDABLE     "res\\t_Cons_2.bmp"
+IDB_TREEMAT             BITMAP  DISCARDABLE     "res\\t_Mat_1.bmp"
+IDB_TREEMAT2            BITMAP  DISCARDABLE     "res\\t_Mat_2.bmp"
+IDB_TREEDHWSYS          BITMAP  DISCARDABLE     "res\\t_DHWSys_1.bmp"
+IDB_TREEDHWSYS2         BITMAP  DISCARDABLE     "res\\t_DHWSys_2.bmp"
+IDB_TREEDHWHTR          BITMAP  DISCARDABLE     "res\\t_DHWHtr_1.bmp"
+IDB_TREEDHWHTR2         BITMAP  DISCARDABLE     "res\\t_DHWHtr_2.bmp"
+IDB_TREEPOLY            BITMAP  DISCARDABLE     "res\\t_poly_1.bmp"
+IDB_TREEPOLY2           BITMAP  DISCARDABLE     "res\\t_poly_2.bmp"
+IDB_TREESCHA            BITMAP  DISCARDABLE     "res\\t_SchA_1.bmp"
+IDB_TREESCHA2           BITMAP  DISCARDABLE     "res\\t_SchA_2.bmp"
+IDB_TREESCHW            BITMAP  DISCARDABLE     "res\\t_SchW_1.bmp"
+IDB_TREESCHW2           BITMAP  DISCARDABLE     "res\\t_SchW_2.bmp"
+IDB_TREESCHD            BITMAP  DISCARDABLE     "res\\t_SchD_1.bmp"
+IDB_TREESCHD2           BITMAP  DISCARDABLE     "res\\t_SchD_2.bmp"
+IDB_TREEAIRSEGS         BITMAP  DISCARDABLE     "res\\t_AirSeg_1.bmp"
+IDB_TREEAIRSEGS2        BITMAP  DISCARDABLE     "res\\t_AirSeg_2.bmp"
+IDB_TREEAIRSEGR         BITMAP  DISCARDABLE     "res\\t_AirSegR_1.bmp"
+IDB_TREEAIRSEGR2        BITMAP  DISCARDABLE     "res\\t_AirSegR_2.bmp"
+IDB_TREETERMUNIT        BITMAP  DISCARDABLE     "res\\t_TermU_1.bmp"
+IDB_TREETERMUNIT2       BITMAP  DISCARDABLE     "res\\t_TermU_2.bmp"
+IDB_TREEFLDSEG          BITMAP  DISCARDABLE     "res\\t_FldSeg_1.bmp"
+IDB_TREEFLDSEG2         BITMAP  DISCARDABLE     "res\\t_FldSeg_2.bmp"
+IDB_TREEZNSYS           BITMAP  DISCARDABLE     "res\\t_ZnSys_1.bmp"
+IDB_TREEZNSYS2          BITMAP  DISCARDABLE     "res\\t_ZnSys_2.bmp"
+IDB_TREESPCDFLT         BITMAP  DISCARDABLE     "res\\t_SpcDflt_1.bmp"
+IDB_TREESPCDFLT2        BITMAP  DISCARDABLE     "res\\t_SpcDflt_2.bmp"
+IDB_TREEDRCONS          BITMAP  DISCARDABLE     "res\\t_DrCons_1.bmp"
+IDB_TREEDRCONS2         BITMAP  DISCARDABLE     "res\\t_DrCons_2.bmp"
+IDB_TREEFENCONS         BITMAP  DISCARDABLE     "res\\t_FenCons_1.bmp"
+IDB_TREEFENCONS2        BITMAP  DISCARDABLE     "res\\t_FenCons_2.bmp"
+IDB_TREELUM             BITMAP  DISCARDABLE     "res\\t_Lum_1.bmp"
+IDB_TREELUM2            BITMAP  DISCARDABLE     "res\\t_Lum_2.bmp"
+IDB_TREEMECH1           BITMAP  DISCARDABLE     "res\\t_mech1_1.bmp"
+IDB_TREEMECH12          BITMAP  DISCARDABLE     "res\\t_mech1_2.bmp"
+IDB_TREEDHWRPT          BITMAP  DISCARDABLE     "res\\t_DHWSysRpt_1.bmp"
+IDB_TREEDHWRPT2         BITMAP  DISCARDABLE     "res\\t_DHWSysRpt_2.bmp"
+IDB_TREEIAQRPT          BITMAP  DISCARDABLE     "res\\t_IAQVentRpt_1.bmp"
+IDB_TREEIAQRPT2         BITMAP  DISCARDABLE     "res\\t_IAQVentRpt_2.bmp"
+IDB_TREEEVAPCLR         BITMAP  DISCARDABLE     "res\\t_EvapClr_1.bmp"
+IDB_TREEEVAPCLR2        BITMAP  DISCARDABLE     "res\\t_EvapClr_2.bmp"
+IDB_TREEDWLUTYP         BITMAP  DISCARDABLE     "res\\t_DwellUnitType_1.bmp"
+IDB_TREEDWLUTYP2        BITMAP  DISCARDABLE     "res\\t_DwellUnitType_2.bmp"
+IDB_TREEHX              BITMAP  DISCARDABLE     "res\\t_htexw_1.bmp"
+IDB_TREEHX2             BITMAP  DISCARDABLE     "res\\t_htexw_2.bmp"
+IDB_TREEHXA             BITMAP  DISCARDABLE     "res\\t_htexa_1.bmp"
+IDB_TREEHXA2            BITMAP  DISCARDABLE     "res\\t_htexa_2.bmp"
+IDB_TREETESC            BITMAP  DISCARDABLE     "res\\t_tesc_1.bmp"
+IDB_TREETESC2           BITMAP  DISCARDABLE     "res\\t_tesc_2.bmp"
+IDB_TREEPVA             BITMAP  DISCARDABLE     "res\\t_PVArray_1.bmp"
+IDB_TREEPVA2            BITMAP  DISCARDABLE     "res\\t_PVArray_2.bmp"
+IDB_TREEBATT            BITMAP  DISCARDABLE     "res\\t_Battery_1.bmp"
+IDB_TREEBATT2           BITMAP  DISCARDABLE     "res\\t_Battery_2.bmp"
+IDB_TREEPVAS            BITMAP  DISCARDABLE     "res\\t_PVArrayShade_1.bmp"
+IDB_TREEPVAS2           BITMAP  DISCARDABLE     "res\\t_PVArrayShade_2.bmp"
+IDB_TREEPVAG            BITMAP  DISCARDABLE     "res\\t_PVArrayGeom_1.bmp"
+IDB_TREEPVAG2           BITMAP  DISCARDABLE     "res\\t_PVArrayGeom_2.bmp"
+IDB_TREEDHWSS           BITMAP  DISCARDABLE     "res\\t_DHWSolarSys_1.bmp"
+IDB_TREEDHWSS2          BITMAP  DISCARDABLE     "res\\t_DHWSolarSys_2.bmp"
+IDB_TREEOPEN            BITMAP  DISCARDABLE     "res\\t_open_1.bmp"
+IDB_TREEOPEN2           BITMAP  DISCARDABLE     "res\\t_open_2.bmp"
+IDB_TREERESNET          BITMAP  DISCARDABLE     "res\\t_RESNET_1.bmp"
+IDB_TREERESNET2         BITMAP  DISCARDABLE     "res\\t_RESNET_2.bmp"
+IDB_HELP20              BITMAP                  "res\\Help20.bmp"
+IDB_HELP20G             BITMAP                  "res\\Help20G.bmp"
+IDB_HELP24              BITMAP                  "res\\Help24.bmp"
+IDB_HELP24G             BITMAP                  "res\\Help24G.bmp"
+IDB_DEFAULT20           BITMAP                  "res\\Default20.bmp"
+IDB_DEFAULT20G          BITMAP                  "res\\Default20G.bmp"
+IDB_DEFAULT24           BITMAP                  "res\\Default24.bmp"
+IDB_DEFAULT24G          BITMAP                  "res\\Default24G.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_REFRESH_DEFAULTS
+    SEPARATOR
+    BUTTON      ID_TOOL_WIZARD
+    BUTTON      ID_TOOL_ANALYSIS
+    BUTTON      ID_TOOL_RESULTS
+    BUTTON      ID_TOOL_REPORTS
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+IDR_MAINFRAMEDEV TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_REFRESH_DEFAULTS
+    SEPARATOR
+    BUTTON      ID_TOOL_WIZARD
+    BUTTON      ID_TOOL_ANALYSIS
+    BUTTON      ID_TOOL_RESULTS
+    BUTTON      ID_TOOL_REPORTS
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+    BUTTON      ID_CONTEXT_HELP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit Component",             IDM_EDITCOMPONENT
+        MENUITEM "C&reate Component",           IDM_CREATECOMP
+        MENUITEM "&Delete Component",           IDM_DELETECOMP
+    END
+    POPUP "&Ruleset"
+    BEGIN
+        MENUITEM "Compliance Ruleset",          ID_EDIT_SWITCHRULESET_1
+        , GRAYED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Program and Analysis &Options", IDM_TOOLS_OPTIONS
+        MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
+        MENUITEM "&Show Model Grid...",         IDM_TOOLS_SHOWGRID
+        MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
+        MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
+        MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
+        MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
+        MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
+        MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
+        MENUITEM "&Check Building Database",    IDM_CHECKDBASE
+        MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
+//        MENUITEM SEPARATOR
+//        MENUITEM "Generate &HVAC Equipment Report Records",  IDM_TOOLS_GENMECH1RECS
+//        MENUITEM "Generate &DHW Equipment Report Records",   IDM_TOOLS_GENDHWRECS
+//        MENUITEM "Generate &IAQ Ventilation Report Records", IDM_TOOLS_GENIAQRECS
+        MENUITEM SEPARATOR
+//        MENUITEM "Build &Number...",            ID_TOOL_BUILDNUM
+//        MENUITEM "&Display Detailed Inputs",    IDM_DISPLAYALLCTRLS
+        MENUITEM "&Building Summary Report (input model)", IDM_RPT_BLDGSUMMARY
+        MENUITEM "Building Summary Report (&proposed/standard)", IDM_RPT_BLDGSUMMARYT24
+        MENUITEM "Perform &Analysis",           IDM_PERFORMANALYSIS
+        MENUITEM "Re&view Analysis Results",    IDM_REVIEWRESULTS
+        MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
+        MENUITEM "&Generate CAHP Report", IDM_TOOLS_CAHPRPT
+        MENUITEM SEPARATOR
+        MENUITEM "&Batch Processing...",        IDM_TOOLS_BATCH
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_FINDER, GRAYED
+        MENUITEM "&Quick Start Guide",          IDM_HELP_OVERVIEW
+        MENUITEM "&User Manual",                IDM_HELP_USERMANUAL
+        MENUITEM "&CSE Simulation Engine Documentation",  IDM_HELP_CSEDOCU
+        MENUITEM "&Mandatory Requirements for Assemblies",  IDM_HELP_MANDREQASSEM
+        MENUITEM SEPARATOR
+        MENUITEM "&About California Building Energy Code Compliance...", ID_APP_ABOUT
+    END
+    MENUITEM "",                            65535
+END
+
+IDR_MAINFRAMEDEV MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Import Geometry...",         ID_FILE_IMPORTRESGEOM
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit Component",             IDM_EDITCOMPONENT
+        MENUITEM "C&reate Component",           IDM_CREATECOMP
+        MENUITEM "&Delete Component",           IDM_DELETECOMP
+    END
+    POPUP "&Ruleset"
+    BEGIN
+        MENUITEM "Compliance Ruleset",          ID_EDIT_SWITCHRULESET_1
+        , GRAYED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM "S&plit",                      ID_WINDOW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&User Input",                 IDM_VIEW_INPUT
+        MENUITEM "P&roposed",                   IDM_VIEW_PROPOSED
+        MENUITEM "&Budget",                     IDM_VIEW_BUDGET
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Program and Analysis &Options", IDM_TOOLS_OPTIONS
+        MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
+        MENUITEM "&Show Model Grid...",         IDM_TOOLS_SHOWGRID
+        MENUITEM "&Generate Model...",          IDM_TOOLS_GENMODEL
+        MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
+        MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
+        MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
+        MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
+        MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
+        MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
+        MENUITEM "&Check Building Database",    IDM_CHECKDBASE
+        MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
+//        MENUITEM SEPARATOR
+//        MENUITEM "Generate &HVAC Equipment Report Records",  IDM_TOOLS_GENMECH1RECS
+//        MENUITEM "Generate &DHW Equipment Report Records",   IDM_TOOLS_GENDHWRECS
+//        MENUITEM "Generate &IAQ Ventilation Report Records", IDM_TOOLS_GENIAQRECS
+        MENUITEM SEPARATOR
+        POPUP "&Write Simulation Input File"
+        BEGIN
+            MENUITEM "&Annual Simulation",          IDM_WRITEANNSIMINP
+            MENUITEM "&HVAC Sizing Simulation",     IDM_WRITEDDSIMINP
+        END
+        MENUITEM "Write &Input Details File (.ribd*-detail)", IDM_WRITEINPDETAILS
+        MENUITEM "Export &HPXML File (single)", IDM_EXPORTHPXML_SGL
+        MENUITEM "Rewrite Input File (no Ver or Mod updates)", IDM_REWRITEINPUT
+        MENUITEM "Reload &Screen Data",         IDM_RELOADSCREENS
+ //       MENUITEM "Build &Number...",            ID_TOOL_BUILDNUM
+ //       MENUITEM "&Display Detailed Inputs",    IDM_DISPLAYALLCTRLS
+        MENUITEM "&Building Summary Report (input model)", IDM_RPT_BLDGSUMMARY
+        MENUITEM "Building Summary Report (&proposed/standard)", IDM_RPT_BLDGSUMMARYT24
+        MENUITEM "Perform Analysis &Range Checks", IDM_ANALRANGECHECKS
+        MENUITEM "&Evaluate Rulelist",          IDM_TOOLS_EVALLIST
+//        MENUITEM "&T-24 DHW Simulation",        IDM_TOOLS_T24DHWSIM
+        MENUITEM "Perform &Analysis",           IDM_PERFORMANALYSIS
+        MENUITEM "Perform Analysis via API",    IDM_PERFORMAPIANALYSIS
+        MENUITEM "Re&view Analysis Results",    IDM_REVIEWRESULTS
+        MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
+        MENUITEM "&Generate CAHP Report", IDM_TOOLS_CAHPRPT
+        MENUITEM "&Generate SHA-256 File Hashes...", IDM_TOOLS_FILEHASH
+//        MENUITEM "&Generate Public Key",        IDM_TOOLS_PUBLICKEY
+        MENUITEM "&Key Prep",                   IDM_TOOLS_KEYPREP
+        MENUITEM "&Batch Processing...",        IDM_TOOLS_BATCH
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_FINDER, GRAYED
+        MENUITEM "&Quick Start Guide",          IDM_HELP_OVERVIEW
+        MENUITEM "&User Manual",                IDM_HELP_USERMANUAL
+        MENUITEM "&CSE Simulation Engine Documentation",  IDM_HELP_CSEDOCU
+        MENUITEM "&Mandatory Requirements for Assemblies",  IDM_HELP_MANDREQASSEM
+        MENUITEM SEPARATOR
+        MENUITEM "&About California Building Energy Code Compliance...", ID_APP_ABOUT
+    END
+    MENUITEM "",                            65535
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT
+    VK_F1,          ID_HELP,                VIRTKEY 
+END
+
+IDR_MAINFRAMEDEV ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT
+    VK_F1,          ID_HELP,                VIRTKEY 
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 274, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About CBECC-Res 2025"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,7,99,21,20
+    LTEXT           "California Building Energy Code Compliance 2025",IDC_VERSIONSTRING,36,
+                    105,190,8,SS_NOPREFIX
+    DEFPUSHBUTTON   "Done",IDOK,235,105,32,14,WS_GROUP
+    CONTROL         "",IDC_LICENSERTF,"RICHEDIT",ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_READONLY | WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP,7,7,260,86
+END
+
+IDD_MAINFORMVIEW DIALOGEX 0, 0, 128, 30
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tab1",IDC_MAINTAB,"SysTabControl32",TCS_TOOLTIPS | 
+                    WS_CLIPSIBLINGS | WS_TABSTOP,7,7,114,16,0,HIDC_MAINTAB
+END
+
+IDD_BLANKDLG DIALOG DISCARDABLE  0, 0, 20, 20
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_STATIC,0,0,0,0
+END
+
+IDD_BLANKDLG2 DIALOG DISCARDABLE  0, 0, 20, 20
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_STATIC,0,0,0,0
+END
+
+IDD_BDBDIALOG DIALOGEX 0, 0, 257, 135
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Building Model Data"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Close",IDOK,200,114,50,14
+END
+
+IDD_COMPTYPEDLG DIALOG DISCARDABLE  0, 0, 219, 89
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Component Type"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,108,72,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,167,72,50,14
+    LTEXT           "Select the type of building component you would like to edit:",
+                    IDC_LBL_COMPTYPE,7,5,205,9
+    COMBOBOX        IDC_COMPTYPE,34,16,152,113,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Select the building component you would like to delete:",
+                    IDC_LBL_COMPONENT,8,38,205,9
+    COMBOBOX        IDC_CTD_COMPONENT,34,48,152,113,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_WIZARD DIALOGEX 0, 0, 387, 213
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Building Creation Wizard"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "General Information",IDC_WIZFRAME,5,5,377,182
+    PUSHBUTTON      "&Help",IDC_WIZHELP,50,194,37,14
+    PUSHBUTTON      "� &Previous Screen",IDC_PREVSCREEN,97,194,77,14
+    DEFPUSHBUTTON   "&Next Screen �",IDC_NEXTTOPIC,186,194,67,14
+    PUSHBUTTON      "&Finish",IDOK,341,194,41,14
+END
+
+IDD_ANALYSISSTATUS DIALOG DISCARDABLE  0, 0, 197, 89
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Compliance Analysis Status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Abort Analysis",IDCANCEL,65,66,65,14
+    LTEXT           "Message1",IDC_MESSAGE1,10,9,175,12
+    LTEXT           "Message2",IDC_MESSAGE2,10,24,175,12
+    CONTROL         "Progress1",IDC_ANALPROGRESS,"msctls_progress32",
+                    WS_BORDER,10,45,175,12
+END
+
+IDD_BEMPROCERRORS DIALOG DISCARDABLE  0, 0, 467, 162
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Building Database Anamolies"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "&Resolve NotInput Issues",IDC_RESOLVENOTINPUTS,
+                    300,141,100,14,WS_DISABLED
+    DEFPUSHBUTTON   "&Done",IDCANCEL,410,141,50,14
+    LISTBOX         IDC_BDBERRLIST,10,18,445,114,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    LTEXT           "The following building databse anomalies were found:",
+                    IDC_BDBERRLABEL,10,6,355,9
+END
+
+IDD_ANALDONEDLG DIALOGEX 0, 0, 224, 54
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Compliance Analysis Completed"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "View Compliance Reports",IDOK,7,33,99,14
+    PUSHBUTTON      "Return to CBECC-Res",IDCANCEL,118,33,99,14
+    RTEXT           "Compliance Result:",IDC_STATIC,19,11,83,12
+    CTEXT           "???",IDC_RESULT,106,9,71,12,0,WS_EX_CLIENTEDGE
+END
+
+IDD_WTHRMISSINGDLG DIALOG DISCARDABLE  0, 0, 277, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Install From &CDROM",IDC_WTHRDLG_LOCAL,5,45,80,15
+    EDITTEXT        IDC_WTHR_CDROMPATH,145,55,120,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Install Over &Internet",IDC_WTHRDLG_FTP,5,80,80,15
+    EDITTEXT        IDC_WTHR_FTPSITE,145,90,120,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Abort Analysis",IDCANCEL,5,115,80,15
+    LTEXT           "Do not perform the compliance analysis.",IDC_STATIC,95,
+                    115,175,8
+    LTEXT           "Install the weather file via an internet connection.",
+                    IDC_STATIC,95,80,175,10
+    LTEXT           "Install the weather file from the installation CDROM.",
+                    IDC_STATIC,95,45,175,10
+    LTEXT           "Internet URL:",IDC_STATIC,95,92,45,10
+    LTEXT           "CDROM Path:",IDC_STATIC,95,57,45,10
+    LTEXT           "The following weather file is required to perform the compliance analysis for the selected location but was not found:",
+                    IDC_STATIC,10,5,250,15
+    LTEXT           "<weather filename>",IDC_WTHR_FILENAME,20,25,245,8
+END
+
+IDD_FTPSTATUS DIALOG DISCARDABLE  0, 0, 197, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "File Download Status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Abort Download",IDC_ABORTFTP,65,45,65,14
+    LTEXT           "Message1",IDC_MESSAGE1,10,9,175,12
+    CONTROL         "Progress1",IDC_FTPPROGRESS,"msctls_progress32",
+                    WS_BORDER,10,25,175,12
+END
+
+IDD_EVALRULELIST DIALOG DISCARDABLE  0, 0, 298, 275
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Evaluate Compliance Rulelist"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Close",IDOK,243,257,48,12
+    LISTBOX         IDC_RULELISTS,9,16,279,232,WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Available Rulelist(s):",IDC_STATIC,9,6,126,8
+    PUSHBUTTON      "&Evaluate",IDC_EVALRULELIST,188,257,48,12
+END
+
+// IDD_EVALRULELIST DIALOG DISCARDABLE  0, 0, 148, 175
+// STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+// CAPTION "Evaluate Compliance Rulelist"
+// FONT 8, "MS Sans Serif"
+// BEGIN
+//     DEFPUSHBUTTON   "&Close",IDOK,93,157,48,12
+//     LISTBOX         IDC_RULELISTS,9,16,129,132,WS_VSCROLL | WS_TABSTOP
+//     LTEXT           "Available Rulelist(s):",IDC_STATIC,9,6,126,8
+//     PUSHBUTTON      "&Evaluate",IDC_EVALRULELIST,38,157,48,12
+// END
+
+IDD_POSTWIZHINT DIALOG DISCARDABLE  0, 0, 267, 150
+STYLE WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "What Now?"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,209,129,50,14
+    CONTROL         "Show help following wizard",IDC_WHATNOW_SHOWHELP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,132,105,9
+    CONTROL         "",IDC_WHATNOW_RTF,"RICHEDIT",ES_MULTILINE | ES_READONLY | 
+                    WS_BORDER | WS_VSCROLL | WS_TABSTOP,5,5,255,115
+END
+
+IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 296, 98
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CBECC-Res 2025 Startup Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,126,75,35,16
+    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,170,75,76,16
+    PUSHBUTTON      "E&xit",IDCANCEL,254,75,35,16
+    CONTROL         "Open &Recent Project:",IDC_START_RECENT,"Button",
+                    BS_AUTORADIOBUTTON,12,9,125,8
+    COMBOBOX        IDC_START_FILELIST,36,20,231,116,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Select an Existing Project to Open",IDC_START_EXISTING,
+                    "Button",BS_AUTORADIOBUTTON,12,40,125,8
+    CONTROL         "Perform Batch &Processing",IDC_START_BATCH,"Button",
+                    BS_AUTORADIOBUTTON,12,56,100,8
+    CONTROL         "Start with a &Blank Project",IDC_START_BLANK,"Button",
+                    BS_AUTORADIOBUTTON,12,72,100,8
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2025,0036,0,1289		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2025,0036,0,1289	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
+ FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
+#ifdef _DEBUG
+ FILEFLAGS 0x21L
+#else
+ FILEFLAGS 0x20L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "California Energy Commission\0"
+            VALUE "FileDescription", "California Building Energy Code Compliance (residential 2025)\0"
+            VALUE "FileVersion", "2025.0.3 RV (1289)\0"
+            VALUE "InternalName", "California Building Energy Code Compliance\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2023, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "CBECC-Res25.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "California Building Energy Code Compliance (residential 2025)\0"
+            VALUE "ProductVersion", "2025.0.3 RV\0"
+            VALUE "SpecialBuild", "build 1289\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 267
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
+    END
+
+    IDD_MAINFORMVIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 121
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 23
+    END
+
+    IDD_BDBDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_COMPTYPEDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 212
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 82
+    END
+
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 382
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_ANALYSISSTATUS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 190
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 82
+    END
+
+    IDD_BEMPROCERRORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 360
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 155
+    END
+
+    IDD_ANALDONEDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 217
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 47
+    END
+
+    IDD_WTHRMISSINGDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 270
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_FTPSTATUS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 190
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 59
+    END
+
+    IDD_EVALRULELIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 141
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 168
+    END
+
+    IDD_POSTWIZHINT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 260
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_STARTUPLOAD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 289
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 107
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "CBECC-Res 2025\n\nCBECC-Res 2025\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
+    IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAMEDEV        "CBECC-Res 2025\n\nCBECC-Res 2025\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_VER_INFO_LANG       "\\StringFileInfo\\040904b0\\"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "CBECC-Res 2025"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+    AFX_IDS_HELPMODEMESSAGE "Select an object on which to get Help"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_CREATECOMP          "Create new building component"
+    IDM_RELOADSCREENS       "Reload screen definitions"
+    ID_INDICATOR_DATASTATUS " "
+    ID_INDICATOR_DATATYPE   " "
+    IDQM_ITEMHELP           "View help documentation describing this item."
+    IDQM_TOPICHELP          "View help documentation describing this topic."
+    IDQM_DEFAULT            "Restore the default value."
+    IDQM_COMMENT            "View and/or edit the critical default comment."
+    IDQM_CREATE             "Create a new building component."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDQM_REFRESHDFLT_OBJECT "Refresh defaults for selected object."
+    IDQM_REFRESHDFLT_MODEL  "Refresh defaults for the entire model."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_PERFORMANALYSIS     "Perform compliance analysis"
+    ID_EDIT_SWITCHRULESET_1 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_2 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_3 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_4 "Select this compliance ruleset"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Create a new document\nNew"
+    ID_FILE_OPEN            "Open an existing document\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the active document\nSave"
+    ID_FILE_SAVE_AS         "Save the active document with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Print the active document\nPrint"
+    ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
+    ID_REFRESH_DEFAULTS     "Refresh model defaults\nRefresh Defaults"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_HELP_INDEX           "Opens Help\nHelp Topics"
+    ID_HELP_FINDER          "List Help topics\nHelp Topics"
+    ID_HELP_USING           "Display instructions about how to use help\nHelp"
+    ID_CONTEXT_HELP         "Display help for clicked on buttons, menus and windows\nHelp"
+    ID_HELP                 "Display help for current task or command\nHelp"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_SWITCHRULESET_5 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_6 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_7 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_8 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_9 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_10 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_11 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_12 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_13 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_14 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_15 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_16 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_17 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_18 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_19 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_20 "Select this compliance ruleset"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_SWITCHRULESET_21 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_22 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_23 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_24 "Select this compliance ruleset"
+    ID_EDIT_SWITCHRULESET_25 "Select this compliance ruleset"
+    IDM_CHECKDBASE          "Check the building databsae for errors"
+    ID_TOOL_WIZARD          "Initiate the building creation wizard\nBuilding Wizard"
+    ID_TOOL_ANALYSIS        "Perform the compliance analysis\nPerform Analysis"
+    ID_TOOL_RESULTS         "View analysis results\nAnalysis Results"
+    ID_TOOL_REPORTS         "View the compliance reports\nCompliance Reports"
+    IDM_EDIT_DELETE         "Delete a building component"
+    IDM_DELETECOMP          "Delete an existing building component"
+    IDM_DISPLAYALLCTRLS     "Display all UI controls regardless of ruleset settings"
+    IDM_VIEW_INPUT          "View the user input building design for the current project\nUser Input Building Design"
+    IDM_VIEW_PROPOSED       "View the proposed building design for the current project\nProposed Building Design"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+    ID_FILE_MRU_FILE5       "Open this document"
+    ID_FILE_MRU_FILE6       "Open this document"
+    ID_FILE_MRU_FILE7       "Open this document"
+    ID_FILE_MRU_FILE8       "Open this document"
+    ID_FILE_MRU_FILE9       "Open this document"
+    ID_FILE_MRU_FILE10      "Open this document"
+    ID_FILE_MRU_FILE11      "Open this document"
+    ID_FILE_MRU_FILE12      "Open this document"
+    ID_FILE_MRU_FILE13      "Open this document"
+    ID_FILE_MRU_FILE14      "Open this document"
+    ID_FILE_MRU_FILE15      "Open this document"
+    ID_FILE_MRU_FILE16      "Open this document"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview mode\nCancel Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_EDITCOMPONENT       "Edit the data which describes an existing building component"
+    IDM_WRITESIMINPUT       "Write simulation input file"
+    IDM_WRITEANNSIMINP      "Write annual simulation input file"
+    IDM_WRITEDDSIMINP       "Write design day simulation input file"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_VIEW_BUDGET         "View the budget building design for the current project\nBudget Building Design"
+    IDM_WRITEINPDETAILS     "Write input details file (<project file>.ib2)\nWrite Input Details File"
+    ID_TOOL_BUILDNUM        "Display CBECC-Res 2025 version and build number"
+    IDM_TOOLS_EVALLIST      "Evaluate selected compliance rulelist"
+    IDM_ANALRANGECHECKS     "Range check all inputs at beginning of compliance analysis"
+    IDM_POSTWIZHELP         "Check if viewing post-wizard compliance checklist help is desired."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1253)
+#endif
+#include "res\CBECC-Res.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#include "afxprint.rc"       // printing/print preview resources
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

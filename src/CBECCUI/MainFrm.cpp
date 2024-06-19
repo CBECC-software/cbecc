@@ -190,6 +190,12 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_TOOLS_T24STDRPT, OnToolsT24StandardModelReport)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_CAHPRPT, OnUpdateToolsCAHPReport)
 	ON_COMMAND(IDM_TOOLS_CAHPRPT, OnToolsCAHPReport)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWCUACSUBRPT, OnUpdateToolsViewCUACSubmittalReport)
+	ON_COMMAND(IDM_TOOLS_VIEWCUACSUBRPT, OnToolsViewCUACSubmittalReport)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWCUACDETRPT, OnUpdateToolsViewCUACDetailsReport)
+	ON_COMMAND(IDM_TOOLS_VIEWCUACDETRPT, OnToolsViewCUACDetailsReport)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWCUACDETCSV, OnUpdateToolsViewCUACDetailsCSV)
+	ON_COMMAND(IDM_TOOLS_VIEWCUACDETCSV, OnToolsViewCUACDetailsCSV)
 	ON_UPDATE_COMMAND_UI(IDM_CHECKRPTGENACCESS, OnUpdateToolsCheckReportGenAccess)
 	ON_COMMAND(IDM_CHECKRPTGENACCESS, OnToolsCheckReportGenAccess)
 	ON_UPDATE_COMMAND_UI(IDM_RPT_BLDGSUMMARY, OnUpdateToolsReport_BuildingSummary)
@@ -1905,6 +1911,32 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 		}
 		else if (wAction == 3068)		// button to initiate CUAC analysis and/or reporting - SAC 08/19/22 (CUAC)
       {  lRetVal = 2;   // should cause dialog to close plus initiation of analysis
+      }
+
+      else if (wAction >= 3080 && wAction <= 3084)    // CUAC details subordinate dialogs - SAC 11/21/22 (CUAC)
+      {  int iDlgHt = 260, iDlgWd = 400;
+         if (wAction == 3083)    // SAC 12/08/22
+         {  iDlgHt = 490;   iDlgWd = 750;
+         }
+         //GetDialogTabDimensions( eiBDBCID_CUAC, iDlgWd, iDlgHt );
+         // adjustments consistent w/ those made for tabbed dialogs in BEMProcUI - SAC 08/18/22 (CUAC)
+         int iDoneBtnHt = FontY(40);
+         int iPaddedBorderWd = GetSystemMetrics(SM_CXPADDEDBORDER);	
+         iDlgWd = FontX(iDlgWd) +   (eiTabDlgCtrlMarg * 2) +   (iPaddedBorderWd * 2) + 8;
+         iDlgHt = FontY(iDlgHt) + /*(eiTabDlgCtrlMarg * 3) +*/ (iPaddedBorderWd * 2) + GetSystemMetrics(SM_CYCAPTION) + iDoneBtnHt + 8;
+			CString sDialogCaption;
+			GetDialogCaption( eiBDBCID_CUAC, sDialogCaption );
+         CSACDlg dlgCUAC( pDlg, eiBDBCID_CUAC, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         dlgCUAC.DoModal();
       }
 
 #endif  // UI_CARES or UI_CANRES
@@ -6689,12 +6721,24 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 																						25 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
-					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3328];
+#define ResSmryColLblLen1  2048
+#define ResSmryColLblLen2  4096
+#define ResSmryColLblLen3  3328
+					char pszCSVColLabel1[ResSmryColLblLen1], pszCSVColLabel2[ResSmryColLblLen2], pszCSVColLabel3[ResSmryColLblLen3];
 					VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 2048, pszCSVColLabel2, 4096, pszCSVColLabel3, 3328 ) == 0 );	// SAC 5/10/15
 					const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
 					CString sCSVResultSummary = pszCSVResultSummary;
 					// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
 					QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
+
+               QString qsFullRecord, qsSubst;      // string substitutions to support rule-defined complaince metric labels - SAC 01/31/23
+               if (lEnergyCodeYear >= 2025 && BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsSubst ) && !qsSubst.isEmpty())
+               {  qsFullRecord = QString( pszCSVColLabel1 ).arg( qsSubst, qsSubst, qsSubst, qsSubst, qsSubst, qsSubst );
+                  strncpy_s( pszCSVColLabel1, qsFullRecord.toLocal8Bit().constData(), ResSmryColLblLen1 );    pszCSVColLabel1[ResSmryColLblLen1-1] = '\0'; 
+                  qsFullRecord = QString( pszCSVColLabel2 ).arg( qsSubst, qsSubst, qsSubst, qsSubst );
+                  strncpy_s( pszCSVColLabel2, qsFullRecord.toLocal8Bit().constData(), ResSmryColLblLen2 );    pszCSVColLabel2[ResSmryColLblLen2-1] = '\0'; 
+               }
+
 					if (!sCSVLogFN.IsEmpty())
 					{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
 						             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
@@ -6704,7 +6748,8 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 																	false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
 					}
 					CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sDfltResFN, TRUE /*bGetPath*/ );
-					VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
+               // revise call to AppendToTextFile() to handle primary compliance metric label substitutions - SAC 01/30/23
+					VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels, false, FALSE, 0 ) );  // subst already made above - was: (lEnergyCodeYear >= 2025 ? 1 : 0) ) );
 				}
 				else
 				{	CString sErrResultMsg;		ASSERT( FALSE );
@@ -7986,8 +8031,19 @@ void CMainFrame::OnToolsT24ComplianceReport()		// SAC 5/17/13
       iSecRptID = 4;
 #else
 	int iReportID = -1, iSecRptID = -1;
-	AfxMessageBox( "Title-24 compliance report generation only available in 2013 Title-24 mode." );
+	AfxMessageBox( "Title-24 compliance report generation only available in Title-24 mode." );
 #endif
+
+	if (iReportID >= 0)     // prevent report gen when property in database (ruleset) indicates - SAC 12/02/22
+   {  QString sBypassCompRptMsg;
+      BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:BypassCompRptMsg" ), sBypassCompRptMsg );
+      if (!sBypassCompRptMsg.isEmpty())
+      {	QString sUserMsg = QString( "Compliance report(s) not generated due to %1." ).arg( sBypassCompRptMsg );
+         AfxMessageBox( sUserMsg.toLatin1().constData() );
+			//BEMPX_WriteLogFile( sUserMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         iReportID = iSecRptID = -1;
+   }  }
+
 	if (iReportID >= 0)
 	{	int iRptRetVal = GenerateReport( iReportID );
       if (iSecRptID >= 0 && iRptRetVal == 0)
@@ -8014,10 +8070,124 @@ void CMainFrame::OnToolsT24StandardModelReport()		// SAC 11/18/15
 	int iReportID = 3;
 #else
 	int iReportID = -1;
-	AfxMessageBox( "Title-24 standard model report generation only available in California Title-24 mode." );
+	AfxMessageBox( "Title-24 standard model report generation only available in California 2019 Title-24 mode." );
 #endif
 	if (iReportID >= 0)
 		GenerateReport( iReportID );
+}
+
+
+bool CMainFrame::CUACAnalysisAvailable()		// SAC 01/20/23
+{
+   long lCUACUIFlag;
+   BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CUACUIFlag" ), lCUACUIFlag, -1 );
+   QString qsUserMsg;
+   if (lCUACUIFlag <= 11)
+   {  switch (lCUACUIFlag)
+      {  case  -1 :  qsUserMsg = "This project is not (yet) setup to perform CUAC analysis. Make sure that the 'Includes Residential Dwelling Units' is selected on the main Project dialog tab and that all necessary CUAC inputs are specified in the 'CUAC' tab.";  break;
+         case   0 :  qsUserMsg = "California Utility Allowance Calculator (CUAC) features only available for Multifamily Residential projects. Make sure that the 'Includes Residential Dwelling Units' is selected on the main Project dialog tab and that all necessary CUAC inputs are specified in the 'CUAC' tab.";  break;
+         case   1 :  qsUserMsg = "Select the 'Enable CUAC Reporting' checkbox in the 'CUAC' tab of the Project data tabbed dialog to activate California Utility Allowance Calculator (CUAC) features";  break;
+         default  :  qsUserMsg = "There is invalid or missing CUAC data in this project. Make sure that all necessary data is entered in the 'CUAC' tab of the Project data tabbed dialog.";  break;
+      }
+      AfxMessageBox( qsUserMsg.toLocal8Bit().constData() );
+   }
+   return (qsUserMsg.isEmpty());
+}
+void CMainFrame::LoadCUACOutputFilename( long lDBID_CUAC_RptOption, const char* pszFileExt, const char* pszRptType, QString& qsPathFile )    // SAC 01/20/23
+{  long lRptOption;
+   if (lDBID_CUAC_RptOption < 1 || BEMPX_GetInteger( lDBID_CUAC_RptOption, lRptOption ))
+   {
+      CDocument* pDoc = GetActiveDocument();
+      if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+      {  CString sProjFileName = pDoc->GetPathName();
+         if (!sProjFileName.IsEmpty() && sProjFileName.ReverseFind('.') > 0)
+         {  QString sAddToFN = "CUAC";
+            if (pszRptType)
+            {  switch (lRptOption)
+               {  case  1 :  sAddToFN += QString(  " Draft %1" ).arg( pszRptType );   break;
+                  case  2 :  sAddToFN += QString(  " Final %1" ).arg( pszRptType );   break;
+                  case  3 :  sAddToFN += QString( " Annual %1" ).arg( pszRptType );   break;
+               }
+            }
+            qsPathFile = QString( "%1 - %2.%3" ).arg( (const char*) sProjFileName.Left( sProjFileName.ReverseFind('.') ), sAddToFN, pszFileExt );
+      }  }
+   }
+}
+bool CMainFrame::ViewCUACOuput( const char* pszOutPathFileProp, long lDBID_CUAC_RptOption, const char* pszFileExt, const char* pszRptType, const char* pszFileType )    // CUAC - SAC 01/20/23
+{  bool bInitiateAnalysis = false;
+   if (CUACAnalysisAvailable())
+   {
+      QString qsCUACOutFile;
+      BEMPX_GetString( BEMPX_GetDatabaseID( pszOutPathFileProp ), qsCUACOutFile );
+      if (qsCUACOutFile.isEmpty())
+         LoadCUACOutputFilename( lDBID_CUAC_RptOption, pszFileExt, pszRptType, qsCUACOutFile );
+      if (!qsCUACOutFile.isEmpty()  && FileExists( qsCUACOutFile.toLocal8Bit().constData()  ))
+      {  QString qsRptCaption = QString( "CUAC %1 %2" ).arg( pszRptType, pszFileType );
+         OpenFileViaShellExecute( qsCUACOutFile.toLocal8Bit().constData(), qsRptCaption.toLocal8Bit().constData() /*FileDescrip*/ );
+      }
+      else
+      {  QString qsUserMsg;
+         if (qsCUACOutFile.isEmpty())
+            qsUserMsg = QString( "CUAC %1 %2 path/filename not specified." ).arg( pszRptType, pszFileType );
+         else
+            qsUserMsg = QString( "CUAC %1 %2 file not found:  %3" ).arg( pszRptType, pszFileType, qsCUACOutFile );
+         qsUserMsg += QString( "\n\nWould you like to initiate CUAC analysis to enable access to the %1 %2?" ).arg( pszRptType, pszFileType );
+         QString qsMsgBoxCap = QString( "CUAC %1 %2" ).arg( pszRptType, pszFileType );
+         if (MessageBox( qsUserMsg.toLocal8Bit().constData(), qsMsgBoxCap.toLocal8Bit().constData(), MB_YESNO ) == IDYES)
+            bInitiateAnalysis = true;
+      }
+   }
+   return bInitiateAnalysis;
+}
+void CMainFrame::OnUpdateToolsViewCUACSubmittalReport(CCmdUI* pCmdUI)		// CUAC - SAC 01/20/23
+{
+#ifdef UI_CARES
+   pCmdUI->Enable( FALSE );
+#elif UI_CANRES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+void CMainFrame::OnToolsViewCUACSubmittalReport()		// SAC 01/20/23
+{
+   if (ViewCUACOuput( "CUAC:SubmitPDFPathFile", BEMPX_GetDatabaseID( "CUAC:RptOption" ), "pdf", "Submittal", "report" ))
+      OnDlgCloseAction( 0, 2 ); 
+	return;
+}
+
+void CMainFrame::OnUpdateToolsViewCUACDetailsReport(CCmdUI* pCmdUI)		// SAC 01/20/23
+{
+#ifdef UI_CARES
+   pCmdUI->Enable( FALSE );
+#elif UI_CANRES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+void CMainFrame::OnToolsViewCUACDetailsReport()		// SAC 01/20/23
+{
+   if (ViewCUACOuput( "CUAC:DetailsPDFPathFile", BEMPX_GetDatabaseID( "CUAC:RptOption" ), "pdf", "Details", "report" ))
+      OnDlgCloseAction( 0, 2 ); 
+	return;
+}
+
+void CMainFrame::OnUpdateToolsViewCUACDetailsCSV(CCmdUI* pCmdUI)		// SAC 01/20/23
+{
+#ifdef UI_CARES
+   pCmdUI->Enable( FALSE );
+#elif UI_CANRES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+void CMainFrame::OnToolsViewCUACDetailsCSV()		// SAC 01/20/23
+{
+   if (ViewCUACOuput( "CUAC:junk", 0, "csv", "Details", "CSV" ))
+      OnDlgCloseAction( 0, 2 ); 
+	return;
 }
 
 
@@ -8238,8 +8408,12 @@ int CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SAC
 						const char* pszNetComLibrary = (sNetComLibrary.IsEmpty() ? NULL : (const char*) sNetComLibrary );
 
 						// SAC 8/2/17 - code to ensure Proj:RptGenUI* properties setup for CBECC-*
-					   BOOL bRptGenUIEvalSuccessful = CMX_EvaluateRuleset( "ForceDefault_CodeVersion_RptGenUI", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose );
-					   assert( bRptGenUIEvalSuccessful );
+                  CString sRunAbbrev;
+	      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );   // prevent calling rulelist (which will re-default model) when Com's 'ab' model is loaded - SAC 01/23/23
+                  if (sRunAbbrev.IsEmpty() || sRunAbbrev.CompareNoCase("ab"))
+					   {  BOOL bRptGenUIEvalSuccessful = CMX_EvaluateRuleset( "ForceDefault_CodeVersion_RptGenUI", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose );
+					      assert( bRptGenUIEvalSuccessful );
+                  }
 
 	//					CString sReportName = (iReportID==0 ? "CF1R_NCB_PRF" : "NRCC_PRF_01");
 	//#ifdef UI_CARES

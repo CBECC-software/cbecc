@@ -171,7 +171,7 @@ public:
 
    void AddReverseReferencingChildren( HTREEITEM hParent, BEMObject* pParentObj,
                                        int i1ChildClass, long lChildDBID, int iChildSource );
-   void AddAssignedChildren( HTREEITEM hParent, int iParClass, int iParObjIdx, int iParSrc, long** plBDID );
+   void AddAssignedChildren( int iGParClass, HTREEITEM hParent, int iParClass, int iParObjIdx, int iParSrc, long** plBDID );
 
    BOOL OKToAddSpecialObjectToRoot( int i1Class, int i0ObjIdx );
 

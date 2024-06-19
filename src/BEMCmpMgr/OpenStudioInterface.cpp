@@ -1235,8 +1235,11 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                   BEMPX_GetFloat(   BEMPX_GetDatabaseID( "PropElecSupEnergy", iCID_EnergyUse ), dPropBattElecSupEnergy, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() );
                   BEMPX_GetFloat(   BEMPX_GetDatabaseID( "PropElecSupTDV",    iCID_EnergyUse ), dPropBattElecSupTDV   , 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() );
                            if (bHrlyDebugLogging)      // DEBUGGING - SAC 06/05/22
-                              BEMPX_WriteLogFile( QString( "      ProcessNonresSimulationResults() - Self Utilization calc prep: TotStdEffTDV %1 kTDV/sf | PropBattTDV %2 kTDV/sf | PropBattElec %3 MWh  | PropBattDemand %4 kW | PropBattCO2 %5 tonne | PropBattSrc %6 kBtu/sf" ).arg( 
-                                                   QString::number(dTotStdEffTDV), QString::number(dPropBattTDV), QString::number(dPropBattElec), QString::number(dPropBattDemand), QString::number(dPropBattCO2), QString::number(dPropBattSrc) ) );  
+                           {  QString sDbgTDVLbl /*= (lEngyCodeYearNum < 2025 ? "TDV" : "SLCC")*/, sDbgTDVUnitLbl = (lEngyCodeYearNum < 2025 ? "kTDV" : "$");      // SAC 12/01/22
+                              BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), sDbgTDVLbl, FALSE, 0, -1, 0, BEMO_User, "TDV", 0, osRunInfo.BEMProcIdx() );
+                              BEMPX_WriteLogFile( QString( "      ProcessNonresSimulationResults() - Self Utilization calc prep: TotStdEff%1 %2 %3/sf | PropBatt%4 %5 %6/sf | PropBattElec %7 MWh  | PropBattDemand %8 kW | PropBattCO2 %9 tonne | PropBattSrc %10 kBtu/sf" ).arg( 
+                                                   sDbgTDVLbl, QString::number(dTotStdEffTDV), sDbgTDVUnitLbl, sDbgTDVLbl, QString::number(dPropBattTDV), sDbgTDVUnitLbl, QString::number(dPropBattElec), QString::number(dPropBattDemand), QString::number(dPropBattCO2), QString::number(dPropBattSrc) ) );  
+                           }
                }
                if (dTotStdEffTDV > 0 && dPropBattTDV < 0)
                {
@@ -1249,8 +1252,11 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                   double dSU_PropBattSrc    = dFlex_SelfUtilSrcAdj = dSU_PropBattTDVFrac * dPropBattSrc;
                   double dSU_PropBattCO2    = dSU_PropBattTDVFrac * dPropBattCO2;
                            if (bHrlyDebugLogging)      // DEBUGGING - SAC 06/05/22
-                              BEMPX_WriteLogFile( QString( "      ProcessNonresSimulationResults() - Self Utilization calc: SUCreditEffCap %1 kTDV/sf | SUCreditEffTDV %2 kTDV/sf | PropBattTDVFrac %3" ).arg( 
-                                                   QString::number(dSelfUtil_EnergyEffCap), QString::number(dSelfUtil_EnergyEffTDV), QString::number(dSU_PropBattTDVFrac) ) );  
+                           {  QString sDbgTDVLbl /*= (lEngyCodeYearNum < 2025 ? "TDV" : "SLCC")*/, sDbgTDVUnitLbl = (lEngyCodeYearNum < 2025 ? "kTDV" : "$");      // SAC 12/01/22
+                              BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), sDbgTDVLbl, FALSE, 0, -1, 0, BEMO_User, "TDV", 0, osRunInfo.BEMProcIdx() );
+                              BEMPX_WriteLogFile( QString( "      ProcessNonresSimulationResults() - Self Utilization calc: SUCreditEffCap %1 %2/sf | SUCreditEff%3 %4 %5/sf | PropBatt%6Frac %7" ).arg( 
+                                                   QString::number(dSelfUtil_EnergyEffCap), sDbgTDVUnitLbl, sDbgTDVLbl, QString::number(dSelfUtil_EnergyEffTDV), sDbgTDVUnitLbl, sDbgTDVLbl, QString::number(dSU_PropBattTDVFrac) ) );  
+                           }
 
                   // start by adjusting BT & EffTot EnergyUse objects w/ Self Util adjustments
                   int iaSelfUtilEndUses[]   = { IDX_T24_NRES_EU_BT, IDX_T24_NRES_EU_EffTot, -1 };
@@ -1772,7 +1778,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                         bT24NComplyPasses = false;
                      assert( iT24NMetricIdx < MAX_T24N_METRIC );
                      if (iT24NMetricIdx < MAX_T24N_METRIC)
-                     {  saT24NCompMetrics[       iT24NMetricIdx  ] = "EffTDV";
+                     {  saT24NCompMetrics[       iT24NMetricIdx  ] = (lEngyCodeYearNum < 2025 ? "EffTDV" : "EffSLCC");     // SAC 12/01/22
                         saT24NCompMetricPassFail[iT24NMetricIdx  ] = (fCompMargin <= -0.001 ? "Fail" : "Pass");      // SAC 12/13/21
                         daT24NCompMargin[        iT24NMetricIdx  ] = fCompMargin;
                         daT24NCompPctMargin[     iT24NMetricIdx++] = fPctImprove;
@@ -1796,7 +1802,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                      bT24NComplyPasses = false;
                   assert( iT24NMetricIdx < MAX_T24N_METRIC );
                   if (iT24NMetricIdx < MAX_T24N_METRIC)
-                  {  saT24NCompMetrics[       iT24NMetricIdx  ] = "CmpTDV";
+                  {  saT24NCompMetrics[       iT24NMetricIdx  ] = (lEngyCodeYearNum < 2025 ? "CmpTDV" : "CmpSLCC");   // SAC 12/01/22
                      saT24NCompMetricPassFail[iT24NMetricIdx  ] = (fCompMargin <= -0.001 ? "Fail" : "Pass");      // SAC 12/13/21
                      daT24NCompMargin[        iT24NMetricIdx  ] = fCompMargin;
                      daT24NCompPctMargin[     iT24NMetricIdx++] = fPctImprove;
@@ -1888,20 +1894,38 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 									sRndTDVTotPctSav = QString::number(fRndTDVTotPctSav, 'f', 1);
 								if (fRndTDVCompTotPctSav <= -0.0001 || fRndTDVCompTotPctSav >= 0.0001)
 									sRndTDVCompTotPctSav = QString::number(fRndTDVCompTotPctSav, 'f', 1);
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsTDV",    iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsCmpTDV", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                        if (lEngyCodeYearNum < 2025)     // SAC 12/01/22
+								{  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsTDV",     iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsCmpTDV",  iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                        }
+                        else
+								{  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsSLCC",    iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsCmpSLCC", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                        }
 							}
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavTDVLbl"   , iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavCmpTDVLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                     if (lEngyCodeYearNum < 2025)     // SAC 12/01/22
+   						{  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavTDVLbl"   ,  iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+   							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavCmpTDVLbl",  iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                     }
+                     else
+   						{  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavSLCCLbl"   , iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+   							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavCmpSLCCLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                     }
                      if (lEngyCodeYearNum >= 2022)    // SAC 12/12/21
                      {	double fRndTDVEffTotPctSav  = (dRndStdTDVEffTot  > 0 ? ((dRndStdTDVEffTot - dRndPropTDVEffTot) * 100.0 / dRndStdTDVEffTot ) : 0);
    							QString sRndTDVEffTotPctSav  = "-";
    							if (osRunInfo.NumQuickAnalysisPeriods() < 1)
    							{	if (fRndTDVEffTotPctSav <= -0.0001 || fRndTDVEffTotPctSav >= 0.0001)
    									sRndTDVEffTotPctSav = QString::number(fRndTDVEffTotPctSav, 'f', 1);
-   								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsEffTDV", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVEffTotPctSav , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                           if (lEngyCodeYearNum < 2025)     // SAC 12/01/22
+      								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsEffTDV",  iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVEffTotPctSav , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                           else
+      								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsEffSLCC", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVEffTotPctSav , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
    							}
-   							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavEffTDVLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVEffTotPctSav , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                        if (lEngyCodeYearNum < 2025)     // SAC 12/01/22
+      							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavEffTDVLbl",  iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVEffTotPctSav , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+                        else
+      							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavEffSLCCLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVEffTotPctSav , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
                      }
 
 							if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
@@ -2084,9 +2108,13 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[6]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
 							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[7]", iCID_EUseSummary ), BEMP_Str, (lEngyCodeYearNum >= 2025 ? "($/ft²-yr)" : "(kBtu/ft²-yr)"), BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );   // updated TDV units for 2025 from kBtu/ft²-yr -> $/ft²-yr - SAC 10/25/22
 
+                     QString qsCompMargStr, qsCompMargTemp;
+                     BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsCompMargTemp, FALSE, 0, -1, 0, BEMO_User, "TDV", 0, osRunInfo.BEMProcIdx() );   // SAC 01/26/23
+                     qsCompMargStr = QString( "%1 Margin" ).arg( qsCompMargTemp );
 							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[8]", iCID_EUseSummary ), BEMP_Str, "Compliance"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[8]", iCID_EUseSummary ), BEMP_Str, "TDV Margin"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[8]", iCID_EUseSummary ), BEMP_Str, (lEngyCodeYearNum >= 2025 ? "($/ft²-yr)" : "(kBtu/ft²-yr)"), BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );   // updated TDV units for 2025 from kBtu/ft²-yr -> $/ft²-yr - SAC 10/25/22
+   						//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[8]", iCID_EUseSummary ), BEMP_Str, (lEngyCodeYearNum >= 2025 ? "SLCC Margin" : "TDV Margin"   ), BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );   // SAC 12/01/22
+   						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &qsCompMargStr , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );   // SAC 12/01/22
+   						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[8]", iCID_EUseSummary ), BEMP_Str, (lEngyCodeYearNum >= 2025 ? "($/ft²-yr)"  : "(kBtu/ft²-yr)"), BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );   // updated TDV units for 2025 from kBtu/ft²-yr -> $/ft²-yr - SAC 10/25/22
 
 							if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
 							{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[12]", iCID_EUseSummary ), BEMP_Str, "Standard"      , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );

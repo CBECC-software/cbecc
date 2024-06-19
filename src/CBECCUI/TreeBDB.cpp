@@ -808,6 +808,17 @@ static int  siaMode1[]  = { 3, 3, 15 };
 static int* siapMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IAQVentRpt, &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan,
 										&eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
 static int* siapFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, NULL };
+#elif UI_PROGYEAR2025      // SAC 11/12/22
+static int  siNumArchComps = 25;
+static int  siaMode0[]  = { 5, siNumArchComps-6, siNumArchComps };         // removed OtherZone, DwellUnitType & DwellUnit from 2022 Res UI - SAC 01/20/22 (tic #1323)   // removed 'Opening' from 2022 Res UI - SAC 05/26/22
+static int* siapMode0[] = { &eiBDBCID_RESNETBldg, &eiBDBCID_Attic, &eiBDBCID_Zone, /*&eiBDBCID_OtherZone,*/ &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, /*&eiBDBCID_DwellUnit,*/ /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+									 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, /*&eiBDBCID_Opening,*/ &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
+									 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, /*&eiBDBCID_DwellUnitType,*/ &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
+static int* siapFolder0[] = { /*&eiBDBCID_DwellUnitType,*/ &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
+static int  siaMode1[]  = { 3, 3, 15 };
+static int* siapMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IAQVentRpt, &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan,
+										&eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
+static int* siapFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, NULL };
 #else
 static int  siNumArchComps = 26;
 static int  siaMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
@@ -843,6 +854,16 @@ static int* siapLibMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IA
 											&eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
 static int* siapLibFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan,  &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ NULL };
 #elif UI_PROGYEAR2022
+static int  siaLibMode0[]  = { 5, siNumArchComps-6, siNumArchComps };      // removed OtherZone, DwellUnitType & DwellUnit from 2022 Res UI - SAC 01/20/22 (tic #1323)
+static int* siapLibMode0[] = { &eiBDBCID_RESNETBldg, &eiBDBCID_Attic, &eiBDBCID_Zone, /*&eiBDBCID_OtherZone,*/ &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, /*&eiBDBCID_DwellUnit,*/ /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, /*&eiBDBCID_Opening,*/ &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
+										 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, /*&eiBDBCID_DwellUnitType,*/ &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
+static int* siapLibFolder0[] = { /*&eiBDBCID_DwellUnitType,*/ &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
+static int  siaLibMode1[]  = { 3, 3, 13 };
+static int* siapLibMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IAQVentRpt, &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan,
+											&eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
+static int* siapLibFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan,  &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ NULL };
+#elif UI_PROGYEAR2025      // SAC 11/12/22
 static int  siaLibMode0[]  = { 5, siNumArchComps-6, siNumArchComps };      // removed OtherZone, DwellUnitType & DwellUnit from 2022 Res UI - SAC 01/20/22 (tic #1323)
 static int* siapLibMode0[] = { &eiBDBCID_RESNETBldg, &eiBDBCID_Attic, &eiBDBCID_Zone, /*&eiBDBCID_OtherZone,*/ &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, /*&eiBDBCID_DwellUnit,*/ /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, /*&eiBDBCID_Opening,*/ &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
@@ -1578,7 +1599,8 @@ static int IndexOfValueInArrayLong( CArray<long,long>* piArray, long iVal )   //
    return -1;
 }
 
-void CTreeBDB::AddAssignedChildren( HTREEITEM hParent, int iParClass, int iParObjIdx, int iParSrc, long** plDBID )
+// added iGParClass to enable custom (assigned) child inclusion below - SAC 12/12/22 (Res tic #1318)
+void CTreeBDB::AddAssignedChildren( int iGParClass, HTREEITEM hParent, int iParClass, int iParObjIdx, int iParSrc, long** plDBID )
 {
    int i=0;
 	CArray<long,long> laChildObjIDs;   // SAC 8/20/13
@@ -1595,12 +1617,18 @@ void CTreeBDB::AddAssignedChildren( HTREEITEM hParent, int iParClass, int iParOb
       if ( BEMPX_GetObject( lDBID, pChildObj, -1, iParObjIdx, (BEM_ObjType) iParSrc ) && pChildObj  &&  pChildObj->getClass()  &&
            // SAC 7/6/00 - added following check for compatibility with current tree mode
            ClassIsCompatibleWithMode( pChildObj->getClass()->get1BEMClassIdx() ) )
-      {	if (DBIDAssignmentCompatible( lDBID, iParClass, iParObjIdx, (BEM_ObjType) iParSrc ))	// SAC 12/9/13
+      {  bool bCustomCompat = true;
+         int iChildClassID = pChildObj->getClass()->get1BEMClassIdx();
+#ifdef UI_CARES
+         if (iGParClass == eiBDBCID_DHWSys && (iChildClassID == eiBDBCID_HVACDist || iChildClassID == eiBDBCID_HVACFan))
+            bCustomCompat = false;  // prevent child HVACDist & HVACFan when GrandPar is DHWSys - SAC 12/12/22 (Res tic #1318)
+#endif  // UI_CARES
+         if (bCustomCompat && DBIDAssignmentCompatible( lDBID, iParClass, iParObjIdx, (BEM_ObjType) iParSrc ))	// SAC 12/9/13
          {	int iChildOccur = BEMPX_GetObjectIndex( pChildObj->getClass(), pChildObj );
-				long lChildObjID = (pChildObj->getClass()->get1BEMClassIdx() * sdwObjClsMult) + iChildOccur;   // SAC 8/20/13 - added to prevent same child object form appearing multiple times under single parent object
+				long lChildObjID = (iChildClassID * sdwObjClsMult) + iChildOccur;   // SAC 8/20/13 - added to prevent same child object form appearing multiple times under single parent object
 				if (!ValueInArrayLong( &laChildObjIDs, lChildObjID ))
          	{	laChildObjIDs.Add( lChildObjID );
-					AddComponent( hParent, pChildObj->getClass()->get1BEMClassIdx(), iChildOccur, pChildObj->getObjectType(), pChildObj,
+					AddComponent( hParent, iChildClassID, iChildOccur, pChildObj->getObjectType(), pChildObj,
          	   	           lDBID, TDC_Reference );
 			}	}
       }
@@ -1692,6 +1720,9 @@ HTREEITEM CTreeBDB::AddComponent( HTREEITEM hParent, int iBDBClass, int iObjOccu
    if (lDBID > 0 && eCode != TDC_Child)
       AddToArrayData( dwItemData, (DWORD) lDBID, (WORD) eCode );
 
+   DWORD dwParentData = GetItemData( hParent );    // to enable custom (assigned) child inclusion below - SAC 12/12/22 (Res tic #1318)
+   int iParentClass = TreeRefToComponent( dwParentData );
+
    CString csText;
    SetItemString( pObj, csText );
 
@@ -1745,7 +1776,7 @@ HTREEITEM CTreeBDB::AddComponent( HTREEITEM hParent, int iBDBClass, int iObjOccu
       if (m_iTreeMode == TM_Lighting)
       {  // LIGHTING MODE
          // Add other assigned components
-         AddAssignedChildren( hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
+         AddAssignedChildren( iParentClass, hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
       }
       else if (m_iTreeMode == TM_Mechanical)
       {  // MECHANICAL MODE
@@ -1754,14 +1785,14 @@ HTREEITEM CTreeBDB::AddComponent( HTREEITEM hParent, int iBDBClass, int iObjOccu
             AddReverseReferencingChildren( hNewItem, pObj, eiBDBCID_Space, elDBID_Spc_HVACSystem, iSource );
 
          // Add other assigned HVAC components, such as Pumps, Fans, etc.
-         AddAssignedChildren( hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
+         AddAssignedChildren( iParentClass, hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
       }
 #endif  // UI_ASHRAE901E
 #ifdef UI_CARES
 //      if (m_iTreeMode == TM_Lighting)
 //      {  // LIGHTING MODE
 //         // Add other assigned components
-//         AddAssignedChildren( hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
+//         AddAssignedChildren( iParentClass, hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
 //      }
 //      else if (m_iTreeMode == TM_Mechanical)
 //      {  // MECHANICAL MODE
@@ -1771,12 +1802,12 @@ HTREEITEM CTreeBDB::AddComponent( HTREEITEM hParent, int iBDBClass, int iObjOccu
 //
 //         // Add other assigned HVAC components, such as Pumps, Fans, etc.
          // Add other assigned components, regardless of tab
-         AddAssignedChildren( hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
+         AddAssignedChildren( iParentClass, hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
 //      }
 #endif  // UI_CARES
 #ifdef UI_CANRES
          // Add other assigned components, regardless of tab
-         AddAssignedChildren( hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );		// SAC 1/31/20 (Com tic #3157)
+         AddAssignedChildren( iParentClass, hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );		// SAC 1/31/20 (Com tic #3157)
 #endif  // UI_CANRES
 
       // Expand item if BDBObject says to

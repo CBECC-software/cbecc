@@ -821,8 +821,10 @@ void WriteLineToDC( CDC* pDC, BOOL bColor, int fromX, int fromY, int toX, int to
 
 void WriteLineCtrlToDC( CDC* pDC, CBEMPUIControl* pCtrl, int iYOffset )
 {
-   WriteLineToDC( pDC, pCtrl->CanDisplay(), FontX( pCtrl->m_iX ), FontY( pCtrl->m_iY ) + iYOffset,
-                  FontX( pCtrl->m_iHeight), FontY( pCtrl->m_iWidth ) + iYOffset, pCtrl->m_lValue );
+   // Line w/ units DX = -1 => Don't Erase via writing w/ gray line - same logic as w/ labels - SAC 11/28/22
+   if (pCtrl->m_iUnitDX != -1 || pCtrl->CanDisplay())
+      WriteLineToDC( pDC, pCtrl->CanDisplay(), FontX( pCtrl->m_iX ), FontY( pCtrl->m_iY ) + iYOffset,
+                     FontX( pCtrl->m_iHeight), FontY( pCtrl->m_iWidth ) + iYOffset, pCtrl->m_lValue );
 }
 
 void WriteLabelToDC( CDC* pDC, CBEMPUIControl* pCtrl, long lCtrlDBIDOffset, int iYOffset )

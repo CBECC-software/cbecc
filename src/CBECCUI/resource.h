@@ -484,6 +484,9 @@
 #define IDQM_REFRESHDFLT_MODEL          33036
 #define ID_REFRESH_DEFAULTS             33037
 #define ID_FILE_IMPORTNRESGEOM          33038
+#define IDM_TOOLS_VIEWCUACSUBRPT        33039
+#define IDM_TOOLS_VIEWCUACDETRPT        33040
+#define IDM_TOOLS_VIEWCUACDETCSV        33041
 
 // Next default values for new objects
 // 
@@ -491,7 +494,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        332
-#define _APS_NEXT_COMMAND_VALUE         33039
+#define _APS_NEXT_COMMAND_VALUE         33042
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif

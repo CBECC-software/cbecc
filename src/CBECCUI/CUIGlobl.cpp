@@ -1311,7 +1311,8 @@ BOOL OKToWriteOrDeleteFile( const char* pszFileName, const char* pszUserMsg, boo
 
 // based on bool BEMPX_WriteLogFile()
 bool AppendToTextFile(	const char* output, const char* psFileName, const char* psFileType, const char* psWriteAction,
-								const char** ppCSVColumnLabels /*=NULL*/, bool bBlankFile /*=false*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
+								const char** ppCSVColumnLabels /*=NULL*/, bool bBlankFile /*=false*/, BOOL bSupressAllMessageBoxes /*=FALSE*/,
+                        int iHeaderSubstID /*=0*/ )    // added iHeaderSubstID - SAC 01/30/23
 {
    bool ok = TRUE;
 	if (psFileName && strlen( psFileName ))
@@ -1328,9 +1329,25 @@ bool AppendToTextFile(	const char* output, const char* psFileName, const char* p
 	         ok = (outFile.Open( psFileName, CFile::modeCreate | CFile::modeWrite ) != 0);
 				if (ppCSVColumnLabels)
 				{	int idx=-1;
-					while (ppCSVColumnLabels[++idx])
-		         	outFile.WriteString( (CString)ppCSVColumnLabels[idx] );
-				}
+               if (iHeaderSubstID < 1)
+   					while (ppCSVColumnLabels[++idx])
+	   	         	outFile.WriteString( (CString)ppCSVColumnLabels[idx] );
+               else
+               {  QString qsFullRecord, qsSubst;
+                  if (iHeaderSubstID == 1)
+                     BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsSubst );
+   					while (ppCSVColumnLabels[++idx])
+                  {  qsFullRecord.clear();
+                     if (iHeaderSubstID == 1 && idx == 0 && !qsSubst.isEmpty())
+                        qsFullRecord = QString( ppCSVColumnLabels[idx] ).arg( qsSubst, qsSubst, qsSubst, qsSubst, qsSubst, qsSubst );
+                     else if (iHeaderSubstID == 1 && idx == 1 && !qsSubst.isEmpty())
+                        qsFullRecord = QString( ppCSVColumnLabels[idx] ).arg( qsSubst, qsSubst, qsSubst, qsSubst );
+                     if (!qsFullRecord.isEmpty())
+                        outFile.WriteString( (CString) qsFullRecord.toLocal8Bit().constData() );
+                     else
+   	   	         	outFile.WriteString( (CString)ppCSVColumnLabels[idx] );
+                  }
+            }  }
 	      }
 	      else
 	      {
@@ -2655,7 +2672,10 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	     if (iBDBClass == eiBDBCID_Proj    )				{  iTabCtrlWd = 1010;    iTabCtrlHt = 580;   }	// SAC 11/8/14  // wd 900->1010 - SAC 04/21/22
 	else if (iBDBClass == eiBDBCID_ResProj)         	{  iTabCtrlWd =  960;    iTabCtrlHt = 460;   }	// SAC 10/20/21 (MFam)
 	else if (iBDBClass == eiBDBCID_CUAC)            	{  iTabCtrlWd =  960;    iTabCtrlHt = 460;   }	// SAC 07/26/22 (CUAC)
-	else if (iBDBClass == eiBDBCID_EUseSummary)			{  iTabCtrlWd =  900;    iTabCtrlHt = 555;   }	// SAC 12/28/17  // SAC 9/15/20 - ht 495->515  // wd: 810->900 - SAC 12/08/21  // wd: 515->555 - SAC 12/12/21
+	else if (iBDBClass == eiBDBCID_EUseSummary)			{  if (elRulesetCodeYear >= 2025)
+																			{	iTabCtrlWd = 1080;    iTabCtrlHt = 555;	}		// SAC 11/21/22 - accommodate additional columns in 2025 results 
+																			else
+																			{	iTabCtrlWd =  900;    iTabCtrlHt = 555;   }  }	// SAC 12/28/17  // SAC 9/15/20 - ht 495->515  // wd: 810->900 - SAC 12/08/21  // wd: 515->555 - SAC 12/12/21
 	else if (iBDBClass == eiBDBCID_AirSys  )				{  iTabCtrlWd =  910;    iTabCtrlHt = 580;   }  // added - SAC 05/17/22
 	else if (iBDBClass == eiBDBCID_AirSeg  )				{  iTabCtrlWd =  520;    iTabCtrlHt = 530;   }  // wider - SAC 05/17/22
 	else if (iBDBClass == eiBDBCID_FluidSeg)				{  iTabCtrlWd =  470;    iTabCtrlHt = 530;   }	// SAC 4/30/14
@@ -2688,7 +2708,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
                                              	  		{  iTabCtrlWd = 900;    iTabCtrlHt = 550;   }
    // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
 	else if (iBDBClass == eiBDBCID_ResZnGrp)           {  iTabCtrlWd = 900;    iTabCtrlHt = 550;   }
-	else if (iBDBClass == eiBDBCID_ResConsAssm)        {  iTabCtrlWd = 670;    iTabCtrlHt = 610;   }
+	else if (iBDBClass == eiBDBCID_ResConsAssm)        {  iTabCtrlWd = 670;    iTabCtrlHt = 640;   }   // Ht 610->640 - SAC 12/31/22 (DPHWall)
 	else if (iBDBClass == eiBDBCID_ResWinType)     	   {	iTabCtrlWd = 600;		iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_ResZn)     	      {  iTabCtrlWd = 750;    iTabCtrlHt = 450;   }
 	else if (iBDBClass == eiBDBCID_DwellUnitType)     	{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }

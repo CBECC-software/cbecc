@@ -124,7 +124,8 @@
 ;                              = -1  =>  integer value to be displayed as a date in long form ("%H:%M, %a, %b %d, %Y")
 ;                              = -2  =>  integer value to be displayed as a date in short form ("%m/%d/%y")
 ;                              = -3  =>  integer value to be displayed as a date in ISO format (i.e. 2018-06-12T17:22:34-07:00)
-;                              < -3  =>  0 decimal precision and no commas inserted for values > 999 (year such as 1998)
+;                              = -4  =>  integer value to be displayed as a date in form: m/d/yyyy HH:MM:SS A/P    - SAC 11/11/22
+;                              < -4  =>  0 decimal precision and no commas inserted for values > 999 (year such as 1998)
 ;           TDCT_Combo  : Val % 100  =>  Height of combobox when "closed"
 ;                         Val / 100  =>  Flag values providing the following functionality:
 ;                                               1  :  Prevent inclusion of "- none -"
@@ -218,6 +219,8 @@
 ;                         = -1 => Don't erase label via writing w/ gray text (when display condition = FALSE)
 ;                         > 0 & Label is LEFT justified  => Draw shadowline from ~8 pixels to the right
 ;                                                           of the label to th UnitsDX coordinate
+;           TDCT_Line   : = -1 => Don't erase line via drawing w/ background color (when display condition = FALSE) - SAC 11/28/22
+;                         >= 0 => Normal line display (selected color/width when active, else background color to erase)
 ;           TDCT_List   : > 0  =>  Navigation ID, similar to the navigation for Button controls
 ;           TDCT_IcnBtn : ID of icon to be displayed.  Valid values include:
 ;                           1  =>  Diskette (save)
@@ -341,32 +344,32 @@ MAINSCREEN,  15
    CTRL, "CompOptAlt",      1083, TDCT_Check,  310, 182,  22, 100,  0, FNT_STD, "Alterations",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagNew = 0, None,      -135,  0,  "Select this option if project includes Alterations to an Existing design"
    CTRL, "",                1095, TDCT_Line,    40, 207, 420, 207, -1, FNT_STD, "",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "CompOptEnve",     1084, TDCT_Check,   40, 215,  22,  80,  0, FNT_STD, "Envelope",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Envelope Compliance"
-   CTRL, "CompOptDHW",      1089, TDCT_Check,   40, 238,  22,  60,  0, FNT_STD, "DHW",                          TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,      -135,  0,  "Select this option if project includes Domestic Hot Water Compliance"
-   CTRL, "CompOptLtg",      1085, TDCT_Check,  140, 215,  22,  80,  0, FNT_STD, "Lighting",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Lighting Compliance"
-   CTRL, "CompOptPartLtg",  1086, TDCT_Check,  140, 238,  22, 120,  0, FNT_STD, "Partial Lighting",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Partial Lighting Compliance"
-   CTRL, "CompOptMech",     1087, TDCT_Check,  265, 215,  22, 100,  0, FNT_STD, "Mechanical",                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Mechanical Compliance"
-   CTRL, "CompOptPartMech", 1088, TDCT_Check,  265, 238,  22, 150,  0, FNT_STD, "Partial Mechanical",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Partial Mechanical Compliance"
+   CTRL, "CompOptDHW",      1085, TDCT_Check,   40, 238,  22,  60,  0, FNT_STD, "DHW",                          TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,      -135,  0,  "Select this option if project includes Domestic Hot Water Compliance"
+   CTRL, "CompOptLtg",      1086, TDCT_Check,  140, 215,  22,  80,  0, FNT_STD, "Lighting",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Lighting Compliance"
+   CTRL, "CompOptPartLtg",  1087, TDCT_Check,  140, 238,  22, 120,  0, FNT_STD, "Partial Lighting",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Partial Lighting Compliance"
+   CTRL, "CompOptMech",     1088, TDCT_Check,  265, 215,  22, 100,  0, FNT_STD, "Mechanical",                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Mechanical Compliance"
+   CTRL, "CompOptPartMech", 1089, TDCT_Check,  265, 238,  22, 150,  0, FNT_STD, "Partial Mechanical",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Partial Mechanical Compliance"
    CTRL, "CompTypeMsg",     1091, TDCT_Label,   40, 300,  18, 450, 25, FNT_BOLD, "",                            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,         0,  0,  ""
    CTRL, "CompType",        1092, TDCT_Edit,   130, 275,  25, 320, 25, FNT_STD, "Compliance Type:",             TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,    None,         0,  0,  ""
 
-   CTRL, "",                1041, TDCT_Label,  500, 162,  20, 300, -1, FNT_STD, "Multifamily Analysis Scope Options:",      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,     None,         0,  0,  ""
-   CTRL, "ResCompOptNew",   1042, TDCT_Check,  540, 182,  22,  80,  0, FNT_STD, "New       ",                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes New design only"
-   CTRL, "",                1055, TDCT_Line,   900, 207, 100, 207, -1, FNT_STD, "",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,              None,     None,         0,  0,  ""
-   CTRL, "ResCompOptEnve",  1047, TDCT_Check,  540, 215,  22,  80,  0, FNT_STD, "Envelope",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Envelope Compliance"
-   CTRL, "ResCompOptDHW",   1048, TDCT_Check,  880, 215,  22,  60,  0, FNT_STD, "DHW",                          TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Domestic Hot Water Compliance"
-   CTRL, "ResCompOptLtg",   1049, TDCT_Check,  640, 215,  22,  80,  0, FNT_STD, "Lighting",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Lighting Compliance"
-   CTRL, "ResCompOptMech",  1051, TDCT_Check,  765, 215,  22, 100,  0, FNT_STD, "Mechanical",                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Mechanical Compliance"
-   CTRL, "ResCompType",     1054, TDCT_Edit,   630, 275,  25, 320, 25, FNT_STD, "Compliance Type:",             TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,         0,  0,  ""
+   CTRL, "",                1041, TDCT_Label,  580, 162,  20, 300, -1, FNT_STD, "Multifamily Analysis Scope Options:",      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,     None,         0,  0,  ""
+   CTRL, "ResCompOptNew",   1042, TDCT_Check,  600, 182,  22,  80,  0, FNT_STD, "New       ",                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes New design only"
+   CTRL, "",                1055, TDCT_Line,   980, 207, 380, 207, -1, FNT_STD, "",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,              None,     None,         0,  0,  ""
+   CTRL, "ResCompOptEnve",  1043, TDCT_Check,  600, 215,  22,  80,  0, FNT_STD, "Envelope",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Envelope Compliance"
+   CTRL, "ResCompOptLtg",   1044, TDCT_Check,  600, 238,  22,  80,  0, FNT_STD, "Lighting",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Lighting Compliance"
+   CTRL, "ResCompOptMech",  1045, TDCT_Check,  700, 215,  22, 100,  0, FNT_STD, "Mechanical",                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Mechanical Compliance"
+   CTRL, "ResCompOptDHW",   1046, TDCT_Check,  700, 238,  22,  60,  0, FNT_STD, "DHW",                          TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,      -135,  0,  "Select this option if project includes Domestic Hot Water Compliance"
+   CTRL, "ResCompType",     1047, TDCT_Edit,   690, 275,  25, 280, 25, FNT_STD, "Compliance Type:",             TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,     None,         0,  0,  ""
 
-;   CTRL, "CompOptExist",    1043, TDCT_Check,  640, 182,  22,  90,  0, FNT_STD, "Existing  |",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,      -135,  0,  "Select this option if project includes Existing desing"
-;   CTRL, "CompOptAdd",      1044, TDCT_Check,  730, 182,  22,  80,  0, FNT_STD, "Addition",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagNew = 0, None,      -135,  0,  "Select this option if project includes Addition to an Existing design"
-;   CTRL, "CompOptAlt",      1045, TDCT_Check,  810, 182,  22, 100,  0, FNT_STD, "Alterations",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagNew = 0, None,      -135,  0,  "Select this option if project includes Alterations to an Existing design"
+;   CTRL, "ResCompOptExist",    1050, TDCT_Check,  700, 182,  22,  90,  0, FNT_STD, "Existing  |",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,      -135,  0,  "Select this option if project includes Existing desing"
+;   CTRL, "ResCompOptAdd",      1051, TDCT_Check,  790, 182,  22,  80,  0, FNT_STD, "Addition",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagNew = 0, None,      -135,  0,  "Select this option if project includes Addition to an Existing design"
+;   CTRL, "ResCompOptAlt",      1052, TDCT_Check,  870, 182,  22, 100,  0, FNT_STD, "Alterations",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagNew = 0, None,      -135,  0,  "Select this option if project includes Alterations to an Existing design"
 ;   CTRL, "CompOptPartLtg",  1050, TDCT_Check,  640, 238,  22, 120,  0, FNT_STD, "Partial Lighting",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Partial Lighting Compliance"
 ;   CTRL, "CompOptPartMech", 1052, TDCT_Check,  765, 238,  22, 150,  0, FNT_STD, "Partial Mechanical",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CompTypeFlagAlt = 0, None,      -135,  0,  "Select this option if project includes Partial Mechanical Compliance"
 ;   CTRL, "CompTypeMsg",     1053, TDCT_Label,  470, 275,  18, 450, 25, FNT_BOLD, "",                            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,         0,  0,  ""
 
    CTRL, "VentMult",        3071, TDCT_Edit,   120, 330,  25,  45,  3, FNT_STD, "Vent. Multiplier:",            TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
-   CTRL, "VentStd",         3072, TDCT_Combo,  320, 330, 300, 100, 50, FNT_STD, "Ventilation Standard:",        TA_LEFT,  -130, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
+   CTRL, "VentStd",         3072, TDCT_Edit,   320, 330,  25, 100, 25, FNT_STD, "Ventilation Standard:",        TA_LEFT,  -130, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,            None,          0,  0,  ""
    CTRL, "VentStdDesc",     3073, TDCT_Edit,   650, 330,  25, 240, 25, FNT_STD, "Ventilation Standard Description:",      TA_LEFT,  -200, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
 
    CTRL, "AirBarrier",      3076, TDCT_Combo,  120, 365, 300, 300, 30, FNT_STD, "Air Barrier:",        TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
@@ -376,7 +379,7 @@ MAINSCREEN,  15
    CTRL, "StAddress",       1062, TDCT_Edit,   110, 430,  25, 360, 99, FNT_STD, "Address:",                     TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
    CTRL, "City",            1063, TDCT_Edit,   540, 430,  25, 100, 99, FNT_STD, "City:",                        TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
    CTRL, "State",           1064, TDCT_Edit,   700, 430,  25,  70, 99, FNT_STD, "State:",                       TA_LEFT,   -40, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
-   CTRL, "ZipCode",         1065, TDCT_Edit,   850, 430,  25,  70, -4, FNT_STD, "Zip Code:",                    TA_LEFT,   -60, 4,     1, TA_LEFT, 4, 4,  None,       None,               0,  0,  ""
+   CTRL, "ZipCode",         1065, TDCT_Edit,   850, 430,  25,  70, -9, FNT_STD, "Zip Code:",                    TA_LEFT,   -60, 4,     1, TA_LEFT, 4, 4,  None,       None,               0,  0,  ""
    CTRL, "ZipCodeMsg",      1066, TDCT_Label,  660, 465,  20, 290,  0, FNT_STD, "",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
 
    CTRL, "CliZn",           1067, TDCT_Combo,  140, 460, 300, 120, 25, FNT_STD, "Climate Zone:",                 TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
@@ -534,6 +537,9 @@ MAINSCREEN,  15
    CTRL, "ZEROCode",                1033, TDCT_Check,  60,  365,  22, 240,  0, FNT_STD, "Generate ZERO Code results",         TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,   0,  0,  ""   ; SAC 8/25/18
 ;   CTRL, "PVBattSim",               1007, TDCT_Check,  60,  390,  22, 240,  0, FNT_STD, "Enable PV and Battery Simulation",   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,       None,   0,  0,  ""    
 
+; Daylight Saving Time 
+   CTRL, "DisableDayltSavTimeSim",  1034, TDCT_Check,  60,  390,  22, 300,  0, FNT_STD, "Disable Daylight Saving Time in simulation",         TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,   0,  0,  ""   ; SAC 8/25/18
+   
 ;  Apply Residential TDV, Source Energy and CO2 factors to projects containing HRR or Hotel/Motel spaces
 ;   CTRL, "ResTDVSrcEmisFac",         1040, TDCT_Check,  60,  415,  22, 680,  0, FNT_STD, "Enable application of Residential TDV, Source Energy and Emission Factors for HRR and Hotel/Motel Projects",   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,   0,  0,  ""    
 
@@ -562,43 +568,48 @@ MAINSCREEN,  15
      ;       Parameter               ID   Ctrl Type     X    Y    Ht   Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
      ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-	 CTRL, "SolAccessRfArea",        1001, TDCT_Edit,   190,  25,  25,  80,  11, FNT_STD, "Solar Access Roof Area:",                                 TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  None,       None,           0, 30,  "" 
-	 CTRL, "SolAccessRfAreaPVMsg",   1002, TDCT_Label,  310,  29,  20, 550,  -1, FNT_STD, "",                                                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,           0,  0,  "" 
-	 CTRL, "NResPVBattAreaMsg",      1003, TDCT_Label,   30,  59,  20,   0,  -1, FNT_STD, "",                                                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,           0,  0,  "" 
+   ; hide various inputs when DisableAllPVBattRequirements > 0 - SAC 01/18/23
+	 CTRL, "SolAccessRfArea",        1001, TDCT_Edit,   180,  25,  25,  80,  11, FNT_STD, "Solar Access Roof Area:",                                 TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  None,       DisableAllPVBattRequirements < 1,     0, 30,  "" 
+	 CTRL, "SolAccessRfAreaPVMsg",   1002, TDCT_Label,  300,  29,  20, 550,  -1, FNT_STD, "",                                                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       DisableAllPVBattRequirements < 1,     0,  0,  "" 
+	 CTRL, "NResPVBattAreaMsg",      1003, TDCT_Label,   20,  59,  20,   0,  -1, FNT_STD, "",                                                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,                                 0,  0,  "" 
 
 
+	 CTRL, "ReducedPVReq",           1021, TDCT_Check,   20, 122,  22, 178,   0, FNT_STD, "Reduced PV Requirement",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       DisableAllPVBattRequirements < 1,         0,  0,  "Whether or not an exception to standard PV requirements applies to this project (exception must be entered)"     
+	 CTRL, "ReducedPVReqVal",        1022, TDCT_Edit,   205, 120,  25,  50,  11, FNT_STD, "",                                   TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  ReducedPVReqExcpt > 100,    ReducedPVReq > 0.5,       0, 30,  "Reduced PV requirement capacity (when following exception applied)" 
+	 CTRL, "ReducedPVReqExcpt",      1023, TDCT_Combo,  105, 190, 200, 370,  11, FNT_STD, "Exception:",                         TA_LEFT,   -65, 4,     0, TA_LEFT, 4, 4,  None,                       ReducedPVReq > 0.5,     -66,  0,  "Exception describing why standard PV requirements don't apply to this project" 
+	 CTRL, "ReducedPVReqExcptDesc",  1027, TDCT_RTF,     55, 220,  95, 420,   0, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  ReducedPVReqExcpt = -99,    ReducedPVReq > 0.5 And ReducedPVReqExcpt > 0,  0,  0,  "Exception to standard design PV requirements"
 
-	 CTRL, "ReducedPVReq",           1021, TDCT_Check,   30, 122,  22, 178,   0, FNT_STD, "Reduced PV Requirement",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,                     0,  0,  "Whether or not an exception to standard PV requirements applies to this project (exception must be entered)"     
-	 CTRL, "ReducedPVReqVal",        1022, TDCT_Edit,   215, 120,  25,  50,  11, FNT_STD, "",                                   TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  ReducedPVReqExcpt > 100,    ReducedPVReq > 0.5,       0, 30,  "Reduced PV requirement capacity (when following exception applied)" 
-	 CTRL, "ReducedPVReqExcpt",      1023, TDCT_Combo,  115, 150, 200, 380,  11, FNT_STD, "Exception:",                         TA_LEFT,   -65, 4,     0, TA_LEFT, 4, 4,  None,                       ReducedPVReq > 0.5,     -66,  0,  "Exception describing why standard PV requirements don't apply to this project" 
-	 CTRL, "ReducedPVReqExcptDesc",  1027, TDCT_RTF,     65, 180,  95, 430,   0, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  ReducedPVReqExcpt = -99,    ReducedPVReq > 0.5 And ReducedPVReqExcpt > 0,  0,  0,  "Exception to standard design PV requirements"
-
-;	 CTRL, "ReducedPVReq",           1021, TDCT_Check,  450,  42,  22, 178,   0, FNT_STD, "Reduced PV Requirement",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       CommunitySolarProjID < 1,     0,  0,  "Whether or not an exception to standard PV requirements applies to this project (exception must be entered)"     
-;	 CTRL, "ReducedPVReqValue",      1022, TDCT_Edit,   635,  40,  25,  50,  11, FNT_STD, "",                                   TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       ReducedPVReq > 0.5,           0, 30,  "Reduced PV requirement capacity (when following exception applied)" 
-;	 CTRL, "ReducedPVReqExcept",     1023, TDCT_Combo,  535,  70, 200, 400,  11, FNT_STD, "Exception:",                         TA_LEFT,   -65, 4,     0, TA_LEFT, 4, 4,  None,       ReducedPVReq > 0.5,         -66,  0,  "Exception describing why standard PV requirements don't apply to this project" 
-;	 CTRL, "ReducedPVReqExcDesc",    1024, TDCT_RTF,    485,  98,  95, 448,   0, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  PVWInputs = -1,  ReducedPVReq > 0.5 And ReducedPVReqExcept > 0,  0,  0,  "Exception to standard design PV requirements"
-;	 CTRL, "ReducedPVReqMinVal",     1025, TDCT_Label,  725,  44,  20, 113,  -1, FNT_STD, "Min: ",                              TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       EnforceRedPVReqMin > 0,  0,  0,  " kW"  ; SAC 9/21/18 (tic #1045)
+;	 CTRL, "ReducedPVReq",           1021, TDCT_Check,  440,  42,  22, 178,   0, FNT_STD, "Reduced PV Requirement",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       CommunitySolarProjID < 1,     0,  0,  "Whether or not an exception to standard PV requirements applies to this project (exception must be entered)"     
+;	 CTRL, "ReducedPVReqValue",      1022, TDCT_Edit,   625,  40,  25,  50,  11, FNT_STD, "",                                   TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       ReducedPVReq > 0.5,           0, 30,  "Reduced PV requirement capacity (when following exception applied)" 
+;	 CTRL, "ReducedPVReqExcept",     1023, TDCT_Combo,  525,  70, 200, 400,  11, FNT_STD, "Exception:",                         TA_LEFT,   -65, 4,     0, TA_LEFT, 4, 4,  None,       ReducedPVReq > 0.5,         -66,  0,  "Exception describing why standard PV requirements don't apply to this project" 
+;	 CTRL, "ReducedPVReqExcDesc",    1024, TDCT_RTF,    475,  98,  95, 448,   0, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  PVWInputs = -1,  ReducedPVReq > 0.5 And ReducedPVReqExcept > 0,  0,  0,  "Exception to standard design PV requirements"
+;	 CTRL, "ReducedPVReqMinVal",     1025, TDCT_Label,  715,  44,  20, 113,  -1, FNT_STD, "Min: ",                              TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       EnforceRedPVReqMin > 0,  0,  0,  " kW"  ; SAC 9/21/18 (tic #1045)
 
 		; APB 05/18/22 - Add messages about new SARA limit on proposed PV kW (tic #3352)
-	 CTRL, "ReducedPVReqMsg1",        1024, TDCT_Label,  320, 124, 18, 450,  11, FNT_STD, "",                                    TA_LEFT,   452, 0,     0, TA_LEFT, 0, 0,  None,       None,     0,  0,  "" 
-	 CTRL, "ReducedPVReqMsg2",        1025, TDCT_Label,  515, 154, 18, 470,  11, FNT_STD, "",                                    TA_LEFT,   452, 0,     0, TA_LEFT, 0, 0,  None,       None,     0,  0,  "" 
-	 CTRL, "ReducedPVReqMsg3",        1026, TDCT_Label,  515, 174, 18, 470,  11, FNT_STD, "",                                    TA_LEFT,   552, 0,     0, TA_LEFT, 0, 0,  None,       None,     0,  0,  "" 
-;	 CTRL, "ReducedPVReqMsg3",        1026, TDCT_Label,  320, 170, 18, 550,  11, FNT_STD, "",                                    TA_LEFT,   552, 0,     0, TA_LEFT, 0, 0,  None,       None,     0,  0,  "" 
+	 CTRL, "ReducedPVReqMsg1",       1024, TDCT_Label,   40, 148, 18, 435,  11, FNT_STD, "",                                    TA_LEFT,   452, 0,     0, TA_LEFT, 0, 0,  None,       None,     0,  0,  "" 
+	 CTRL, "ReducedPVReqMsg2",       1025, TDCT_Label,   40, 168, 18, 435,  11, FNT_STD, "",                                    TA_LEFT,   452, 0,     0, TA_LEFT, 0, 0,  None,       None,     0,  0,  "" 
+
+
+   ; Battery exception inputs - SAC 01/10/23
+	 CTRL, "ReducedBattReq",          2021, TDCT_Check,  510, 122,  22, 203,   0, FNT_STD, "Reduced Battery Requirement",        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  PrscrpBattEngyCap > 0,        DisableAllPVBattRequirements < 1,    0,  0,  "Whether or not an exception to standard Battery requirements applies to this project (exception must be entered)"     
+	 CTRL, "ReducedBattReqVal",       2022, TDCT_Edit,   720, 120,  25,  50,  11, FNT_STD, "",                                   TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  ReducedBattReqExcpt > 999,    ReducedBattReq > 0.5,                0, 45,  "Reduced Battery requirement capacity (when following exception applied)" 
+	 CTRL, "ReducedBattReqExcpt",     2023, TDCT_Combo,  595, 150, 200, 390,  11, FNT_STD, "Exception:",                         TA_LEFT,   -65, 4,     0, TA_LEFT, 4, 4,  None,                         ReducedBattReq > 0.5,              -66,  0,  "Exception describing why standard Battery requirements don't apply to this project" 
+	 CTRL, "ReducedBattReqExcptDesc", 2027, TDCT_RTF,    545, 180,  95, 440,   0, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  ReducedBattReqExcpt = -99,    ReducedBattReq > 0.5 And ReducedBattReqExcpt > 0,  0,  0,  "Exception to standard design Battery requirements"
+
 
    ; removing Community Solar until we port to Proj object (from ResProj) - SAC 05/27/22   ; restored for ver 22.1.0 - SAC 06/01/22
    ; APB 05/12/2022 - Community solar (tic #3352)
-	 CTRL, "UseCommunitySolar",       1031, TDCT_Check,   30, 292,  22, 160,   0, FNT_STD, "Use Community Solar",                TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  NumAvailCmntySlrProjs > 0,   AllowCommunitySolar > 0,      0,  0,  "Whether or not this home/building subscribes to a Community Solar project"
-	 CTRL, "CmntySlrProjsAvailMsg",   1032, TDCT_Label,  193, 294,  16,   0,  -1, FNT_STD, "",                                   TA_LEFT,    0, 0,     0, TA_LEFT, 0, 0,  NumAvailCmntySlrProjs > 0,   NumAvailCmntySlrProjs < 1,    0,  0,  ""   ; SAC 7/3/20
-	 CTRL, "CommunitySolarProject",   1033, TDCT_Combo,  250, 290, 300, 320,  11, FNT_STD, "Project:",                           TA_LEFT,  -55, 4,     0, TA_LEFT, 4, 4,  None,   AllowCommunitySolar > 0 And NumAvailCmntySlrProjs > 0 And UseCommunitySolar > 0,  -57,  0,  "The Community Solar project this home/building subscribes to" 
-    CTRL, "CmntySlrProjInfoCap",     1034, TDCT_Button, 585, 290,  22, 355,3070, FNT_STD, "",                                   TA_CENTER,  0, 0,     0, TA_LEFT, 0, 0,  None,   CmntySlrProjInfo > 0 And CmntySlrProjCZCompat > 0,     0,  0,  "access information about the selected Community Solar project"   ; SAC 6/30/20 (tic #1018)
-	 CTRL, "InCmntySlrProjTerritory", 1035, TDCT_Check,   70, 320,  22, 600,   0, FNT_STD, "This project is located within the Community Solar provider’s territory to the best of my knowledge",  TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,  CommunitySolarProjID > 0 And CmntySlrProjCZCompat > 0,  0,  0,  "Whether or not, to the best of the user's knowledge, this home/building is located within the Community Solar provider’s territory"  ; SAC 7/3/20
+	 CTRL, "UseCommunitySolar",       1031, TDCT_Check,   20, 332,  22, 160,   0, FNT_STD, "Use Community Solar",                TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  NumAvailCmntySlrProjs > 0,   AllowCommunitySolar > 0,      0,  0,  "Whether or not this home/building subscribes to a Community Solar project"
+	 CTRL, "CmntySlrProjsAvailMsg",   1032, TDCT_Label,  183, 334,  16,   0,  -1, FNT_STD, "",                                   TA_LEFT,    0, 0,     0, TA_LEFT, 0, 0,  NumAvailCmntySlrProjs > 0,   NumAvailCmntySlrProjs < 1,    0,  0,  ""   ; SAC 7/3/20
+	 CTRL, "CommunitySolarProject",   1033, TDCT_Combo,  240, 330, 300, 320,  11, FNT_STD, "Project:",                           TA_LEFT,  -55, 4,     0, TA_LEFT, 4, 4,  None,   AllowCommunitySolar > 0 And NumAvailCmntySlrProjs > 0 And UseCommunitySolar > 0,  -57,  0,  "The Community Solar project this home/building subscribes to" 
+    CTRL, "CmntySlrProjInfoCap",     1034, TDCT_Button, 575, 330,  22, 355,3070, FNT_STD, "",                                   TA_CENTER,  0, 0,     0, TA_LEFT, 0, 0,  None,   CmntySlrProjInfo > 0 And CmntySlrProjCZCompat > 0,     0,  0,  "access information about the selected Community Solar project"   ; SAC 6/30/20 (tic #1018)
+	 CTRL, "InCmntySlrProjTerritory", 1035, TDCT_Check,   60, 360,  22, 600,   0, FNT_STD, "This project is located within the Community Solar provider’s territory to the best of my knowledge",  TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,  CommunitySolarProjID > 0 And CmntySlrProjCZCompat > 0,  0,  0,  "Whether or not, to the best of the user's knowledge, this home/building is located within the Community Solar provider’s territory"  ; SAC 7/3/20
 
-   ;CTRL, "BattGridHarmCredit",      2215, TDCT_Check,  120,  95,  22, 280,     0, FNT_STD, "Take the Grid Harmonization Battery Credit", TA_LEFT,     0, 4, 0, TA_LEFT, 0, 0,  None,  Proj:AllowBattInps > 0 And MaxCap > 0,   0,  0,  "whether or not to take the grid harmonization battery credit"   ; SAC 12/30/17
-    CTRL, "BattGridHarmCredit",      2215, TDCT_Check,   30, 350,  22, 210,     0, FNT_STD, "Take the Self Utilization Credit", TA_LEFT,  0, 4,       0, TA_LEFT, 0, 0,  None,       AllowBattGridHarmCredit > 0,     0,  0,  ""  ; "whether or not to take the Self Utilization battery credit"   ; SAC 06/04/22
+;    CTRL, "BattGridHarmCredit",      2215, TDCT_Check,   20, 390,  22, 210,     0, FNT_STD, "Take the Self Utilization Credit", TA_LEFT,  0, 4,       0, TA_LEFT, 0, 0,  None,       AllowBattGridHarmCredit > 0,     0,  0,  ""  ; "whether or not to take the Self Utilization battery credit"   ; SAC 06/04/22
 
-	 CTRL, "PrscrpPVBatteryMsg",    31008, TDCT_Label,   30, 410,  18, 780,  -1, FNT_STD, "",                                   TA_LEFT,   672, 0,     0, TA_LEFT, 0, 0,  None,       None,        0,  0,  ""           
-	 CTRL, "StdPVBatteryMsg",       31009, TDCT_Label,   30, 430,  18, 780,  -1, FNT_STD, "",                                   TA_LEFT,   672, 0,     0, TA_LEFT, 0, 0,  None,       None,        0,  0,  ""           
-	 CTRL, "UserInpPVBatteryMsg",   31010, TDCT_Label,   30, 450,  18, 780,  -1, FNT_STD, "",                                   TA_LEFT,   672, 0,     0, TA_LEFT, 0, 0,  None,       None,        0,  0,  ""           
+	 CTRL, "PrscrpPVBatteryMsg",    31008, TDCT_Label,   20, 450,  18, 965,  -1, FNT_STD, "",                                   TA_LEFT,   672, 0,     0, TA_LEFT, 0, 0,  None,       None,        0,  0,  ""           
+	 CTRL, "StdPVBatteryMsg",       31009, TDCT_Label,   20, 470,  18, 965,  -1, FNT_STD, "",                                   TA_LEFT,   672, 0,     0, TA_LEFT, 0, 0,  None,       None,        0,  0,  ""           
+	 CTRL, "UserInpPVBatteryMsg",   31010, TDCT_Label,   20, 490,  18, 965,  -1, FNT_STD, "",                                   TA_LEFT,   672, 0,     0, TA_LEFT, 0, 0,  None,       None,        0,  0,  ""           
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -614,60 +625,102 @@ MAINSCREEN,  15
      ;       BDBase             Ctrl                                             | Control Label                                                                   | Units Label         | Editable  | Display     Erase X |
      ;       Parameter           ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                         Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
      ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   CTRL, "",                    1001, TDCT_Label,    25,  20,  20, 500,   0, FNT_STD, "COMPLIANCE PATH AND CERTIFICATE OF COMPLIANCE SUMMARY:",  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "",                    1002, TDCT_Button,  250,  45,  22, 220, 3041, FNT_STD, "Access Form Fields",                                     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
+;   CTRL, "",                    1001, TDCT_Label,    25,  20,  20, 500,   0, FNT_STD, "COMPLIANCE PATH AND CERTIFICATE OF COMPLIANCE SUMMARY:",  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;   CTRL, "",                    1002, TDCT_Button,  250,  45,  22, 220, 3041, FNT_STD, "Access Form Fields",                                     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
 
-   CTRL, "",                    1010, TDCT_Line,     15,  90, 980,  90,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "",                         1001, TDCT_Label,    15,  20,  20, 500,   0, FNT_STD, "COMPLIANCE PATH AND CERTIFICATE OF COMPLIANCE SUMMARY",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                         1002, TDCT_Line,     15,  42, 980,  42,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "",                         1004, TDCT_Label,    30,  52,  20,   0,   0, FNT_STD, "For components that utilize the performance path, indicate the sheet number that includes mandatory notes on plans.", TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                         1003, TDCT_Label,    30,  78,  20,   0,   0, FNT_STD, "Building Component",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+   CTRL, "",                         1004, TDCT_Label,   240,  78,  20,   0,   0, FNT_STD, "Compliance Path",                                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+   CTRL, "",                         1005, TDCT_Label,   240,  95,  20,   0,   0, FNT_STD, "(Nonresidential/Hotel-Motel)",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+   CTRL, "",                         1006, TDCT_Label,   420,  78,  20,   0,   0, FNT_STD, "Compliance Path",                                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+   CTRL, "",                         1007, TDCT_Label,   420,  95,  20,   0,   0, FNT_STD, "(Multifamily)",                                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+   CTRL, "",                         1008, TDCT_Label,   550,  78,  20,   0,   0, FNT_STD, "Location of Mandatory Notes on Plans",                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+   CTRL, "CompPathEnv",              1010, TDCT_Edit,    240, 120,  25, 100,  25, FNT_STD, "Envelope:",                                               TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "ResCompPathEnv",           1011, TDCT_Edit,    420, 120,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "EnvDetailsLctn",           1012, TDCT_Edit,    550, 120,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "" 
+   CTRL, "CompPathMech",             1013, TDCT_Edit,    240, 150,  25, 100,  25, FNT_STD, "Mechanical:",                                             TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "ResCompPathMech",          1014, TDCT_Edit,    420, 150,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "MechDetailsLctn",          1015, TDCT_Edit,    550, 150,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+   CTRL, "CompPathLtg",              1016, TDCT_Edit,    240, 180,  25, 100,  25, FNT_STD, "Lighting (Indoor Conditioned):",                          TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "ResCompPathLtg",           1017, TDCT_Edit,    420, 180,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "LtgDetailsLctn",           1018, TDCT_Edit,    550, 180,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "" 
+   CTRL, "CompPathDHW",              1020, TDCT_Edit,    240, 210,  25, 100,  25, FNT_STD, "Domestic Hot Water:",                                     TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "ResCompPathDHW",           1021, TDCT_Edit,    420, 210,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   CTRL, "DHWDetailsLctn",           1022, TDCT_Edit,    550, 210,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+   CTRL, "CompPathKit",              1023, TDCT_Edit,    240, 240,  25, 100,  25, FNT_STD, "Covered Process Comm. Kitchen:",                          TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""
+   CTRL, "CompPathLab",              1024, TDCT_Edit,    240, 270,  25, 100,  25, FNT_STD, "Covered Process Lab. Exhaust:",                           TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""
+   CTRL, "",                         1025, TDCT_Line,     15, 300, 980, 300,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "SolThrmlComp",             1026, TDCT_Edit,    240, 310,  25, 100,  25, FNT_STD, "Solar Thermal Water Heating:",                            TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""   
+   CTRL, "PVComp",                   1027, TDCT_Edit,   480, 310,   25, 100,  25, FNT_STD, "Photovoltaics:",                                          TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""   
+   CTRL, "BattComp",                 1028, TDCT_Edit,   700, 310,   25, 100,  25, FNT_STD, "Battery:",                                                TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""   
 
-   CTRL, "",                    1011, TDCT_Label,    25, 110,  20, 900,   0, FNT_STD, "CERTIFICATE OF INSTALLATION, CERTIFICATE OF ACCEPTANCE AND CERTIFICATE OF VERIFICATION SUMMARY NRCI/NRCA/NRCV:",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "",                    1012, TDCT_Button,  250, 135,  22, 220, 3042, FNT_STD, "Access Form Fields (1 of 2)",                            TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
-   CTRL, "",                    1013, TDCT_Button,  490, 135,  22, 220, 3043, FNT_STD, "Access Form Fields (2 of 2)",                            TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
+   CTRL, "",                         1029, TDCT_Line,     15, 340, 980, 340,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "",                         1030, TDCT_Label,    30, 350,  20,   0,   0, FNT_STD, "Covered Processes: The following building components may have mandatory requirements per Part 6. Indicate which are relevant to the project.",       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "CommKitchenMandComp",      1031, TDCT_Combo,   170, 370, 300,  60,  25, FNT_STD, "Commercial Kitchen:",                                     TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+   CTRL, "LabExhaustMandComp",       1032, TDCT_Combo,   400, 370, 300,  60,  25, FNT_STD, "Laboratory Exhaust:",                                     TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+   CTRL, "ElevLtgVentMandComp",      1034, TDCT_Combo,   580, 370, 300,  60,  25, FNT_STD, "Elevators:",                                              TA_LEFT,  -80,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+   CTRL, "EscalSpdCtrlMandComp",     1033, TDCT_Combo,   760, 370, 300,  60,  25, FNT_STD, "Escalator:",                                              TA_LEFT,  -80,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""        
 
-   CTRL, "",                    1020, TDCT_Line,     15, 180, 980, 180,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "",                    1040, TDCT_Line,     15, 400, 980, 400,  -1, FNT_STD, "",                                                             TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "",                    1051, TDCT_Label,    25, 415,  20, 900,   0, FNT_STD, "CERTIFICATE OF INSTALLATION, CERTIFICATE OF ACCEPTANCE AND CERTIFICATE OF VERIFICATION SUMMARY NRCI/NRCA/NRCV:",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                    1052, TDCT_Button,   30, 436,  22, 220, 3041, FNT_STD, "Access Form Fields (1 of 2)",                                 TA_LEFT,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
+   CTRL, "",                    1053, TDCT_Button,  300, 436,  22, 220, 3042, FNT_STD, "Access Form Fields (2 of 2)",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
 
-   CTRL, "",                    1021, TDCT_Label,    25, 200,  20, 900,   0, FNT_STD, "MANDATORY INDOOR LIGHTING AND DAYLIGHTING CONTROLS:",     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "",                    1022, TDCT_Button,  250, 225,  22, 220, 3044, FNT_STD, "Access Form Fields",                                     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
+;   CTRL, "",                    1050, TDCT_Line,     15, 445, 980, 445,  -1, FNT_STD, "",                                                            TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "",                    1055, TDCT_Label,    25, 480,  20, 900,   0, FNT_STD, "MANDATORY INDOOR LIGHTING AND DAYLIGHTING CONTROLS:",          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                    1056, TDCT_Button,  440, 476,  22, 150, 3043, FNT_STD, "Access Form Fields",                                          TA_lEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access fields to view/enter additional designers"   ; SAC 08/18/22
 
-;   CTRL, "EscalSpdCtrlMandComp",     1035, TDCT_Combo,   620, 465, 300,  60,  25, FNT_STD, "Covered Process: Escalator:",                            TA_LEFT,  -250,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""        
+   CTRL, "",                    1054, TDCT_Line,     15, 508, 980, 508,  -1, FNT_STD, "",                                                             TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+   CTRL, "",                    1041, TDCT_Label,    30, 520,  20,   0,   0, FNT_STD, "Lighting (Unconditioned, Outdoor and Sign) are only eligible for prescriptive compliance. NRCC, LTI, LTO, and LTS forms must be completed separately.",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;   CTRL, "",                    1042, TDCT_Label,    30, 430,  20,   0,   0, FNT_STD, "NRCC, LTI, LTO, and LTS forms must be completed separately.", TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+
+
+
+;   CTRL, "ComputerRoomMandComp",     1036, TDCT_Combo,   930, 430, 300,  60,  25, FNT_STD, "Covered Process: Computer Room:",                        TA_LEFT,  -230, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;   CTRL, "ParkingGarageMandComp",    1037, TDCT_Combo,   930, 460, 300,  60,  25, FNT_STD, "Covered Process: Parking Garage:",                       TA_LEFT,  -230,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;   CTRL, "CompPathComputerRm",       1017, TDCT_Edit,    240, 270,  25, 100,  25, FNT_STD, "Covered Process Computer Rm:",                           TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+   
 
      ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                              
        
 
+;  ;----------------------------------------------------------------
+;  ;      BDBase      Page
+;  ;      Component    ID   Module(s)   Caption
+;  ;----------------------------------------------------------------
+;   TAB, "Proj",   107,      15,    "  HERS  "
+;                                                                                                                                                                                                                                                
+;  ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  ;       BDBase                    Ctrl                                               | Control Label                                          | Units Label         | Editable  | Display     Erase X |
+;  ;       Parameter                  ID   Ctrl Type     X    Y    Ht   Wd Val   Font   | Label                                Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+;  ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;                                                                                                                                                                                                                                                
+;                                                                                                                                                                                                                                                
+;;   CTRL, "",                         131, TDCT_Label,   20,  30,  20,   0,  0, FNT_BOLD, "HERS verification is required as indicated below:",     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,  0,  0,  ""
+;   CTRL, "",                         131, TDCT_Label,   20,  30,  20,   0,  0, FNT_BOLD, "HERS verification reporting: Under Development",     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,  0,  0,  ""
+;   CTRL, "",                         132, TDCT_Line,   345,  38, 880,  38, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,  0,  0,  ""
+; 
+;   CTRL, "ExcptCondHERSResDHWSysCompactDistSys",            1001, TDCT_Edit,    30,  70,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel compact hot water distribution system expanded credit",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""
+;   CTRL, "ExcptCondHERSDrainWtrHtRcvrySys",                 1002, TDCT_Edit,    30, 110,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel drain water heat recovery system",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
+;   CTRL, "ExcptCondHERSResDHWSysPipeIns",                   1003, TDCT_Edit,    30, 150,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel pipe insulation, all lines",          TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
+;   CTRL, "ExcptCondHERSResDHWSysParallelPiping",            1004, TDCT_Edit,    30, 190,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel parallel piping",                     TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
+;   CTRL, "ExcptCondHERSResDHWSysRecircDemCtrlPushButton",   1005, TDCT_Edit,    30, 230,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel recirculation, demand control push button",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
+;   CTRL, "ExcptCondHERSResDHWSysRecircDemCtrlOccSensor",    1006, TDCT_Edit,    30, 270,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel recirculation, demand control occupancy/motion",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
+;   CTRL, "ExcptCondHERSDuctReqTested",                      1007, TDCT_Edit,    30, 310,  25,  1,  0, FNT_STD, "Air distribution system duct leakage (exempt Healthcare)", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""      
+;   CTRL, "ExcptCondHERSVent",                               1008, TDCT_Edit,    30, 350,  25,  1,  0, FNT_STD, "Highrise residential ventilation airflow performance", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""         
+;;   CTRL, "ExcptCondHERSKitHood",                            1009, TDCT_Combo,    30, 390,  200, 50,  25, FNT_STD, "Highrise residential kitchen range hood rated by HVI", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  IsAddOrAlt = 1, None,   0,  0,  ""            
+;   CTRL, "ExcptCondHERSEnvAirLkge",                         1010, TDCT_Edit,    30, 390,  25,  1,  0, FNT_STD, "Highrise residential envelope air leakage", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""            
+;
+;   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
   ;----------------------------------------------------------------
   ;      BDBase      Page
   ;      Component    ID   Module(s)   Caption
   ;----------------------------------------------------------------
-   TAB, "Proj",   107,      15,    "  HERS  "
-                                                                                                                                                                                                                                                
-  ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  ;       BDBase                    Ctrl                                               | Control Label                                          | Units Label         | Editable  | Display     Erase X |
-  ;       Parameter                  ID   Ctrl Type     X    Y    Ht   Wd Val   Font   | Label                                Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
-  ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                
-;   CTRL, "",                         131, TDCT_Label,   20,  30,  20,   0,  0, FNT_BOLD, "HERS verification is required as indicated below:",     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,  0,  0,  ""
-   CTRL, "",                         131, TDCT_Label,   20,  30,  20,   0,  0, FNT_BOLD, "HERS verification reporting: Under Development",     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,  0,  0,  ""
-   CTRL, "",                         132, TDCT_Line,   345,  38, 880,  38, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,  0,  0,  ""
- 
-   CTRL, "ExcptCondHERSResDHWSysCompactDistSys",            1001, TDCT_Edit,    30,  70,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel compact hot water distribution system expanded credit",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""
-   CTRL, "ExcptCondHERSDrainWtrHtRcvrySys",                 1002, TDCT_Edit,    30, 110,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel drain water heat recovery system",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
-   CTRL, "ExcptCondHERSResDHWSysPipeIns",                   1003, TDCT_Edit,    30, 150,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel pipe insulation, all lines",          TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
-   CTRL, "ExcptCondHERSResDHWSysParallelPiping",            1004, TDCT_Edit,    30, 190,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel parallel piping",                     TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
-   CTRL, "ExcptCondHERSResDHWSysRecircDemCtrlPushButton",   1005, TDCT_Edit,    30, 230,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel recirculation, demand control push button",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
-   CTRL, "ExcptCondHERSResDHWSysRecircDemCtrlOccSensor",    1006, TDCT_Edit,    30, 270,  25,  1,  0, FNT_STD, "Highrise residential and Hotel/Motel recirculation, demand control occupancy/motion",    TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""   
-   CTRL, "ExcptCondHERSDuctReqTested",                      1007, TDCT_Edit,    30, 310,  25,  1,  0, FNT_STD, "Air distribution system duct leakage (exempt Healthcare)", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""      
-   CTRL, "ExcptCondHERSVent",                               1008, TDCT_Edit,    30, 350,  25,  1,  0, FNT_STD, "Highrise residential ventilation airflow performance", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""         
-;   CTRL, "ExcptCondHERSKitHood",                            1009, TDCT_Combo,    30, 390,  200, 50,  25, FNT_STD, "Highrise residential kitchen range hood rated by HVI", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  IsAddOrAlt = 1, None,   0,  0,  ""            
-   CTRL, "ExcptCondHERSEnvAirLkge",                         1010, TDCT_Edit,    30, 390,  25,  1,  0, FNT_STD, "Highrise residential envelope air leakage", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  AnalysisType = 99, None,   0,  0,  ""            
-
-   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-  ;----------------------------------------------------------------
-  ;      BDBase      Page
-  ;      Component    ID   Module(s)   Caption
-  ;----------------------------------------------------------------
-   TAB, "Proj",   108,      15,    "  Exceptional Conditions  "
+   TAB, "Proj",   107,      15,    "  Exceptional Conditions  "
                                                                                                                                                                                                                                                 
      ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      ;       BDBase                    Ctrl                                             | Control Label                                                                                                                                   | Units Label         | Editable  | Display     Erase X |
@@ -697,6 +750,8 @@ MAINSCREEN,  15
    CTRL, "ExcptCondRtdCap",             1022, TDCT_Combo,   30, 360,  60, 50,  0, FNT_STD, "Does the rated capacity of any HVAC equipment installed for your project not match the value used in the compliance analysis?", TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  None,       None,   0,  0,  ""
    CTRL, "ExcptCondNarrative",          1028, TDCT_Combo,   30, 390,  60, 50,  0, FNT_STD, "Are significant modeling approximations used in the proposed design model?  If so, a separate narrative must be provided.",     TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  None,       None,   0,  0,  ""
    CTRL, "ExcptCondWtrHtr",             1027, TDCT_Edit,    30, 420,  25, 50,  0, FNT_STD, "Is Service/Domestic water heating excluded from this building? (No indicates water heating is included in nonmechanical compliance.)",  TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,   AnalysisType = 99,       None,   0,  0,  ""
+   CTRL, "ExcptCondFxdSeat",            1029, TDCT_Edit,    30, 450,  25, 50,  0, FNT_STD, "Does any space use the expected number of occupants/fixed seating to determine minimum outdoor air flow?",                      TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,   AnalysisType = 99,       None,   0,  0,  ""
+
 ;   CTRL, "ExcptCondWtrHtrPrscrp",       1029, TDCT_Combo,   30, 420,  60, 50,  0, FNT_STD, "Include solar thermal performance for the prescriptive compliance of residential central water heating?",												TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  None,       CompOptDHW = 0 And Bldg:ResFlrArea > 0,   0,  0,  ""
 ;   CTRL, "CentralDHWSys",               1030, TDCT_Check,   90, 445,  22, 280, 0, FNT_STD, "Highrise DHW System is a Central System",                                                                                      TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  None,       CompOptDHW = 0 And Bldg:ResFlrArea > 0 And ExcptCondWtrHtrPrscrp = 1,                             0, 200,  ""
 ;   CTRL, "AnnualSolFrac",               1031, TDCT_Edit,   90, 445,  25, 50,  2, FNT_STD, "Enter the Annual Solar Fraction for the central system. Enter 0 if solar thermal is not installed.",             								TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  None,       CompOptDHW = 0 And Bldg:ResFlrArea > 0 And ExcptCondWtrHtrPrscrp = 1,       0, 600,  ""
@@ -722,6 +777,139 @@ MAINSCREEN,  15
 ;   CTRL, "ExcptCondElevEscal",         1025, TDCT_Combo,   30, 470,  60, 50,  0, FNT_STD, "Does the project include an elevator or escalator that uses a different schedule than the compliance software default?",        TA_LEFT,  60, 4,     0, TA_LEFT, 0, 0,  None,       None,   0,  0,  ""
                                                                                                                                                                                                                                                 
      ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                              
+
+
+;---------------------------------------------------------------- SAC 08/19/22 (CUAC)
+;      BDBase            Page                                               
+;      Component          ID   Module(s)   Caption                          
+;----------------------------------------------------------------
+ TAB, "Proj",            108,      15,    "  CUAC  "
+
+   ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   ;       BDBase                  Ctrl                                                 | Control Label                                              | Units Label         | Editable        | Display      Erase X | 
+   ;       Parameter                ID   Ctrl Type     X    Y    Ht   Wd   Val  Font    | Label                                   Justif.     DX  DY | Disp  Just    DX DY | Condition       | Condition    Lft Rgt | Status Bar Msg
+   ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    CTRL, "CUACMsg",                110, TDCT_Label,   20,  15,  18, 800,  0, FNT_STD, "",                                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,                      None,            0,  0,  ""
+    CTRL, "CUACReport",            3075, TDCT_Check,   20,  35,  22, 280,  0, FNT_STD, "Enable CUAC Reporting",                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                      CUACUIFlag > 0,  0,  0,  "whether Calif. Utility Allowance Calculator processing and reports are desired for this project"   ; SAC 07/26/22 (CUAC)
+
+    CTRL, "CUAC:RptOption",        3070, TDCT_Combo,  660,  35, 300,  90,  0, FNT_STD, "Report:",                                 TA_LEFT,   -55, 4,     0, TA_LEFT, 0, 0,  None,                      CUACUIFlag > 10,     -57,  0,  "CUAC report selection"
+    CTRL, "",                      3071, TDCT_Button, 770,  30,  32, 210, 3068, FNT_BOLD, "CUAC Calculate and Report",            TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  CUACUIFlag > 11,           CUACUIFlag > 10,       0,  0,  "Perform CUAC calculations and generate selected report(s)"
+
+    CTRL, "CUAC:ErrorMsg",         3078, TDCT_Label,   20,  70,  20, 630,  0, FNT_BOLD, "",                                       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,                      CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "CUAC:ErrorInfo",        3079, TDCT_Edit,    30, 100,  50, 600, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CUAC:HaveErrorInfo > 100,  CUACUIFlag > 9 And CUAC:HaveErrorInfo > 0,       0,  0,  ""
+
+
+    CTRL, "CUAC:PVAllocBtnMsg",    3085, TDCT_Button,   20, 168,  26, 425, 3083, FNT_STD, "",                                     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "View/edit CUAC site details data"   ; SAC 11/21/22
+;    CTRL, "",                       121, TDCT_Label,       20, 458,  18,   0,  0, FNT_STD, "Portion of PV/Battery System(s) serving Affordable Units",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0,        0,  0,  ""
+;    CTRL, "",                       122, TDCT_Line,       380, 466, 445, 466, -1, FNT_STD, "",                                    TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0,                           0,  0,  ""
+;	 CTRL, "CUAC:AffordablePVDCSysSize", 3085, TDCT_Edit,  115, 480,  25,  55, 11, FNT_STD, "PV DC Size:",                         TA_LEFT,   -80, 4,     1, TA_LEFT, 4, 4,  None,       CUAC:ShowPVBattInputs > 0 And PVSizeSum > 0,       -82, 30,  "Portion of building PV capacity dedicated to affordable housing units"
+;    CTRL, "CUAC:AffordablePVMsg",       3086, TDCT_Label, 210, 484,  20, 245,  0, FNT_STD, "",                                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0 And PVSizeSum > 0,         0,  0,  ""
+;; removed from CUAC battery from calcs - SAC 12/07/22
+;;	 CTRL, "CUAC:AffordableBattMaxCap",  3087, TDCT_Edit,  115, 510,  25,  55, 11, FNT_STD, "Battery Cap:",                        TA_LEFT,   -80, 4,     1, TA_LEFT, 4, 4,  None,       CUAC:ShowPVBattInputs > 0 And BattSizeSum > 0,     -82, 40,  "Portion of building PV capacity dedicated to affordable housing units"
+;;    CTRL, "CUAC:AffordableBattMsg",     3088, TDCT_Label, 210, 514,  20, 245,  0, FNT_STD, "",                                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0 And BattSizeSum > 0,       0,  0,  ""
+
+
+    CTRL, "",                       101, TDCT_Label,   20, 208,  18,   0,  0, FNT_STD, "Electric Utility",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+    CTRL, "",                       102, TDCT_Line,   112, 216, 445, 216, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+	 CTRL, "CUAC:ElecUtility",      4801, TDCT_Combo,   85, 230, 400, 360, 12, FNT_STD, "Name:",                                   TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -52,  0,  "Electric utility name"
+	 CTRL, "CUAC:ElecTerritory",    4802, TDCT_Combo,   95, 260, 400, 190, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0,    -67,  0,  "Electric utility territory"
+	 CTRL, "CUAC:ElecTariff",       4803, TDCT_Combo,  340, 260, 400, 105, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0 And CUAC:ElecTerritory > 0,  -47,  0,  "Electric utility tariff"
+
+    CTRL, "",                       106, TDCT_Label,   20, 298,  18,   0,  0, FNT_STD, "Gas Utility",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+    CTRL, "",                       107, TDCT_Line,    95, 306, 445, 306, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+	 CTRL, "CUAC:GasUtility",       4806, TDCT_Combo,   85, 320, 450, 360, 12, FNT_STD, "Name:",                                   TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -52,  0,  "Gas utility name"
+	 CTRL, "CUAC:GasTerritory",     4807, TDCT_Combo,   95, 350, 400, 190, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0,    -67,  0,  "Gas utility territory"
+	 CTRL, "CUAC:GasTariff",        4808, TDCT_Combo,  340, 350, 400, 105, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0 And CUAC:GasTerritory > 0,  -47,  0,  "Gas utility tariff"
+
+
+	 CTRL, "CUAC:WaterRateType",    4811, TDCT_Combo,   95, 390, 200, 135, 12, FNT_STD, "Water Bill:",                             TA_LEFT,   -75, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -77,  0,  "Water billing type"
+	 CTRL, "CUAC:WaterMonthlyCost", 4812, TDCT_Edit,   310, 390,  25,  65, 11, FNT_STD, "Monthly:",                                TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:WaterRateType > 0,       -68, 40,  "Water bill monthly charges"
+	 CTRL, "CUAC:WaterVolumeCost",  4813, TDCT_Edit,   310, 420,  25,  65, 11, FNT_STD, "Usage:",                                  TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:WaterRateType > 1,       -58, 50,  "Water bill usage charges"
+
+	 CTRL, "CUAC:TrashRateType",    4816, TDCT_Combo,   95, 455, 200, 135, 12, FNT_STD, "Trash Bill:",                             TA_LEFT,   -75, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -77,  0,  "Trash billing type"
+	 CTRL, "CUAC:TrashMonthlyCost", 4817, TDCT_Edit,   310, 455,  25,  65, 11, FNT_STD, "Monthly:",                                TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:TrashRateType > 0,       -68, 40,  "Trash bill monthly charges"
+
+
+    CTRL, "",                       126, TDCT_Label,   485, 168,  18,   0,   0, FNT_STD, "Site Location:  (enter on 'Project' tab)",  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+; removed CUAC-specific site address stuff - SAC 12/07/22
+;    CTRL, "",                       126, TDCT_Label,   485, 168,  18,   0,   0, FNT_STD, "Site Location",                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+;    CTRL, "",                       127, TDCT_Line,    575, 176, 760, 176,  -1, FNT_STD, "",                                      TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+;    CTRL, "CUAC:SiteAddress",      5001, TDCT_Edit,    560, 190,  25, 200, 200, FNT_STD, "Address:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "CUAC site street address, cross street or other identifier" 
+;    CTRL, "CUAC:SiteCity",         5002, TDCT_Edit,    560, 220,  25,  90, 100, FNT_STD, "City:",                                 TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "CUAC site city" 
+;    CTRL, "CUAC:SiteZIPCode",      5003, TDCT_Edit,    690, 220,  25,  70,   9, FNT_STD, "ZIP:",                                  TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "CUAC site Zip code" 
+
+
+    CTRL, "",                       131, TDCT_Label,   485, 198,  18,   0,   0, FNT_STD, "Project Identification",                TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+    CTRL, "",                       132, TDCT_Line,    615, 206, 760, 206,  -1, FNT_STD, "",                                      TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+	 CTRL, "CUAC:ProjectID",        5101, TDCT_Edit,    570, 220,  25,  70,  11, FNT_STD, "Project ID:",                           TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10,     -72,  0,  "Project ID (numeric)"
+	 CTRL, "CUAC:Locality",         5102, TDCT_Edit,    570, 250,  25, 180, 100, FNT_STD, "Locality:",                             TA_LEFT,   -70, 4,     0, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10,     -72,  0,  "Project locality"
+    CTRL, "CUAC:UnitType",         5103, TDCT_Edit,    570, 280,  25, 180, 100, FNT_STD, "Unit Type:",                            TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -72,  0,  "CUAC unit type (Affordable Housing, ...)" 
+    CTRL, "CUAC:APN",              5104, TDCT_Edit,    570, 310,  25, 180, 100, FNT_STD, "APN:",                                  TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -72,  0,  "assessors parcel number" 
+    CTRL, "CUAC:OtherProjectID",   5105, TDCT_Edit,    570, 340,  25, 250, 200, FNT_STD, "Other ID:",                             TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -72,  0,  "other project identifier(s)" 
+
+
+    CTRL, "",                       136, TDCT_Label,   485, 378,  18,   0,   0, FNT_STD, "Building Owner",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+    CTRL, "",                       137, TDCT_Line,    590, 386, 990, 386,  -1, FNT_STD, "",                                      TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+    CTRL, "CUAC:OwnerName",        5201, TDCT_Edit,    550, 400,  25, 145, 200, FNT_STD, "Name:",                                 TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -52,  0,  "building owner name" 
+    CTRL, "CUAC:OwnerAddress",     5202, TDCT_Edit,    765, 400,  25, 225, 200, FNT_STD, "Address:",                              TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -67,  0,  "building owner street address" 
+    CTRL, "CUAC:OwnerCity",        5203, TDCT_Edit,    765, 430,  25, 110, 150, FNT_STD, "City, State Zip:",                      TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,    -110,  0,  "building owner city" 
+    CTRL, "CUAC:OwnerState",       5204, TDCT_Edit,    885, 430,  25,  35,  30, FNT_STD, "",                                      TA_RIGHT,   -1, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "building owner state" 
+    CTRL, "CUAC:OwnerZIPCode",     5205, TDCT_Edit,    930, 430,  25,  60,  10, FNT_STD, "",                                      TA_RIGHT,   -1, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "building owner Zip code" 
+
+
+    CTRL, "",                       141, TDCT_Label,   485, 468,  18,   0,   0, FNT_STD, "CUAC Contact",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+    CTRL, "",                       142, TDCT_Line,    590, 476, 990, 476,  -1, FNT_STD, "",                                      TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+    CTRL, "CUAC:ContactName",      5301, TDCT_Edit,    550, 490,  25, 120, 200, FNT_STD, "Name:",                                 TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -52,  0,  "CUAC contact name" 
+    CTRL, "CUAC:ContactPhone",     5302, TDCT_Edit,    705, 490,  25, 100,  20, FNT_STD, "ph:",                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -33,  0,  "CUAC contact phone number" 
+    CTRL, "CUAC:ContactEMail",     5303, TDCT_Edit,    865, 490,  25, 125, 200, FNT_STD, "e-mail:",                               TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -55,  0,  "CUAC contact e-mail address" 
+
+
+    CTRL, "",                       201, TDCT_Label,  790, 100,  18,   0,  0, FNT_STD, "Unit Type",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       202, TDCT_Label,  900, 100,  18,   0,  0, FNT_STD, "# Affordable",                            TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       203, TDCT_Label,  965, 100,  18,   0,  0, FNT_STD, "Total",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       209, TDCT_Line,   787, 120, 985, 120, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+
+    CTRL, "",                       211, TDCT_Label,  790, 125,  18,   0,  0, FNT_STD, "Studio",                                  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       212, TDCT_Label,  790, 145,  18,   0,  0, FNT_STD, "1 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       213, TDCT_Label,  790, 165,  18,   0,  0, FNT_STD, "2 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       214, TDCT_Label,  790, 188,  18,   0,  0, FNT_STD, "3 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       215, TDCT_Label,  790, 208,  18,   0,  0, FNT_STD, "4 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       216, TDCT_Label,  790, 228,  18,   0,  0, FNT_STD, "5 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       217, TDCT_Label,  790, 248,  18,   0,  0, FNT_STD, "6 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+
+    CTRL, "",                       221, TDCT_Line,   850, 185, 985, 185, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       222, TDCT_Line,   810, 268, 985, 268, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+    CTRL, "",                       223, TDCT_Label,  820, 271,  18,   0,  0, FNT_STD, "Totals",                                  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  ""
+
+    CTRL, "CUAC:AffordableUnitsByBedrms[1]",      221, TDCT_Label,  915, 125,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[1] > 0,       0,  0,  ""
+    CTRL, "CUAC:AffordableUnitsByBedrms[2]",      222, TDCT_Label,  915, 145,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[2] > 0,       0,  0,  ""
+    CTRL, "CUAC:AffordableUnitsByBedrms[3]",      223, TDCT_Label,  915, 165,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[3] > 0,       0,  0,  ""
+    CTRL, "CUAC:AffordableUnitsByBedrms[4]",      224, TDCT_Label,  915, 188,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[4] > 0,       0,  0,  ""
+    CTRL, "CUAC:AffordableUnitsByBedrms[5]",      225, TDCT_Label,  915, 208,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[5] > 0,       0,  0,  ""
+    CTRL, "CUAC:AffordableUnitsByBedrms[6]",      226, TDCT_Label,  915, 228,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[6] > 0,       0,  0,  ""
+    CTRL, "CUAC:AffordableUnitsByBedrms[7]",      227, TDCT_Label,  915, 248,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[7] > 0,       0,  0,  ""
+;    CTRL, "CUAC:AffordableUnitsByBedrms[8]",      228, TDCT_Label,  915, 268,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[8] > 0,       0,  0,  ""
+    CTRL, "CUAC:NumAffordableDwellingUnits",      229, TDCT_Label,  915, 271,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And CUAC:NumAffordableDwellingUnits > 0,           0,  0,  ""
+
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[1]",  231, TDCT_Label,  975, 125,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[1] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[2]",  232, TDCT_Label,  975, 145,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[2] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[3]",  233, TDCT_Label,  975, 165,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[3] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[4]",  234, TDCT_Label,  975, 188,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[4] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[5]",  235, TDCT_Label,  975, 208,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[5] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[6]",  236, TDCT_Label,  975, 228,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[6] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[7]",  237, TDCT_Label,  975, 248,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[7] > 0,       0,  0,  ""
+;    CTRL, "ResProj:NumDwellingUnitsByBedrms[8]",  238, TDCT_Label,  975, 268,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnitsByBedrms[8] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnits",             239, TDCT_Label,  975, 271,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9 And ResProj:NumDwellingUnits > 0,                  0,  0,  ""
+
+
+    CTRL, "",                       199, TDCT_Line,    465, 190, 465, 530,  -1, FNT_STD, "",                                      TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+
+;   CTRL, "CUAC:SiteDetailsLbl",    4820, TDCT_Button,  740, 440,  24, 245, 3080, FNT_STD, "",                                     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  "View/edit CUAC site details data"   ; SAC 11/21/22
+;   CTRL, "CUAC:OwnerDetailsLbl",   4821, TDCT_Button,  485, 510,  24, 245, 3081, FNT_STD, "",                                     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  "View/edit CUAC owner details data" 
+;   CTRL, "CUAC:ContactDetailsLbl", 4822, TDCT_Button,  745, 510,  24, 245, 3082, FNT_STD, "",                                     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 9,       0,  0,  "View/edit CUAC contact details data" 
+
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
   ;----------------------------------------------------------------
   ;      BDBase      Page
@@ -760,9 +948,9 @@ MAINSCREEN,  15
 ;   CTRL, "",                         148, TDCT_Line,  305, 300, 820, 305,    -1, FNT_STD, "",                            TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "CALGreenNarrative",        149, TDCT_Edit,   50, 350, 180, 690, 10000, FNT_STD, "",                            TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  None, CALGreenScreenVal = 1,               0,  0,  ""   
    
-
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                                                                                                                                                                                                                                        
+
+
   ;----------------------------------------------------------------
   ;      BDBase      Page
   ;      Component    ID   Module(s)   Caption
@@ -798,7 +986,6 @@ MAINSCREEN,  15
    CTRL, "SimVarsHVACPri",          1031, TDCT_Check,  540, 120,  22, 220,  0, FNT_STD, "Primary Components",                 TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None   0,  0,  ""
    CTRL, "SimVarsThrmlEngyStor",    1032, TDCT_Check,  540, 145,  22, 220,  0, FNT_STD, "Thermal Energy Storage",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None   0,  0,  ""
    CTRL, "SimVarsWtrHtr",           1033, TDCT_Check,  540, 170,  22, 220,  0, FNT_STD, "Water Heater",                       TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None   0,  0,  ""
-
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -929,66 +1116,66 @@ MAINSCREEN,  15
      ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-  ;----------------------------------------------------------------
-  ;      BDBase      Page
-  ;      Component    ID   Module(s)   Caption
-  ;----------------------------------------------------------------
-   TAB, "Proj",      3041,      15,    " COMPLIANCE PATH AND CERTIFICATE OF COMPLIANCE SUMMARY "
-                                                                                                                                                                                                                                                
-     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
-     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
-     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;   CTRL, "",                         1001, TDCT_Label,    15,  20,  20, 500,   0, FNT_STD, "COMPLIANCE PATH AND CERTIFICATE OF COMPLIANCE SUMMARY - (page 1)",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-;   CTRL, "",                         1002, TDCT_Line,     15,  42, 980,  42,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
-   CTRL, "",                         1004, TDCT_Label,    30,  52,  20,   0,   0, FNT_STD, "For components that utilize the performance path, indicate the sheet number that includes mandatory notes on plans.", TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "",                         1005, TDCT_Label,    30,  78,  20,   0,   0, FNT_STD, "Building Component",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
-   CTRL, "",                         1006, TDCT_Label,   240,  78,  20,   0,   0, FNT_STD, "Compliance Path",                                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
-   CTRL, "",                         1040, TDCT_Label,   240,  95,  20,   0,   0, FNT_STD, "(Nonresidential/Hotel-Motel)",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
-   CTRL, "",                         1041, TDCT_Label,   420,  78,  20,   0,   0, FNT_STD, "Compliance Path",                                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
-   CTRL, "",                         1042, TDCT_Label,   420,  95,  20,   0,   0, FNT_STD, "(Multifamily)",                                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
-   CTRL, "",                         1007, TDCT_Label,   550,  78,  20,   0,   0, FNT_STD, "Location of Mandatory Notes on Plans",                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
-   CTRL, "CompPathEnv",              1008, TDCT_Edit,    240, 120,  25, 100,  25, FNT_STD, "Envelope:",                                               TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "ResCompPathEnv",           1043, TDCT_Edit,    420, 120,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "EnvDetailsLctn",           1009, TDCT_Edit,    550, 120,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "" 
-   CTRL, "CompPathMech",             1010, TDCT_Edit,    240, 150,  25, 100,  25, FNT_STD, "Mechanical:",                                             TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "ResCompPathMech",          1044, TDCT_Edit,    420, 150,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "MechDetailsLctn",          1011, TDCT_Edit,    550, 150,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
-   CTRL, "CompPathLtg",              1012, TDCT_Edit,    240, 180,  25, 100,  25, FNT_STD, "Lighting (Indoor Conditioned):",                          TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "ResCompPathLtg",           1045, TDCT_Edit,    420, 180,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "LtgDetailsLctn",           1013, TDCT_Edit,    550, 180,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "" 
-   CTRL, "CompPathDHW",              1014, TDCT_Edit,    240, 210,  25, 100,  25, FNT_STD, "Domestic Hot Water:",                                     TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "ResCompPathDHW",           1046, TDCT_Edit,    420, 210,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "DHWDetailsLctn",           1015, TDCT_Edit,    550, 210,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
-   CTRL, "CompPathKit",              1016, TDCT_Edit,    240, 240,  25, 100,  25, FNT_STD, "Covered Process Comm. Kitchen:",                          TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""
-;   CTRL, "CompPathComputerRm",       1017, TDCT_Edit,    240, 270,  25, 100,  25, FNT_STD, "Covered Process Computer Rm:",                            TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
-   CTRL, "CompPathLab",              1018, TDCT_Edit,    240, 270,  25, 100,  25, FNT_STD, "Covered Process Lab. Exhaust:",                           TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""
-   CTRL, "",                         1049, TDCT_Line,     15, 300, 980, 300,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
-   CTRL, "SolThrmlComp",             1019, TDCT_Edit,    380, 310,  25, 100,  25, FNT_STD, "Solar Thermal Water Heating:",                            TA_LEFT,  -350, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""   
-   CTRL, "PVComp",                   1047, TDCT_Combo,    380, 340,  300, 100,  25, FNT_STD, "Photovoltaics:",                                        TA_LEFT,  -350, 4,     0, TA_LEFT, 0, 0,  None,  None,       0,  0,  ""   
-   CTRL, "BattComp",                 1048, TDCT_Combo,    380, 370,  300, 100,  25, FNT_STD, "Battery:",                                              TA_LEFT,  -350, 4,     0, TA_LEFT, 0, 0,  None,  None,       0,  0,  ""   
-      
-   CTRL, "",                         1030, TDCT_Line,     15, 400, 980, 400,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
-   CTRL, "",                         1031, TDCT_Label,    30, 410,  20,   0,   0, FNT_STD, "The following building components may have mandatory requirements per Part 6.  Indicate which are relevant to the project.",       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "CommKitchenMandComp",      1032, TDCT_Combo,   280, 435, 300,  60,  25, FNT_STD, "Covered Process: Commercial Kitchen:",                   TA_LEFT,  -250, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
-   CTRL, "LabExhaustMandComp",       1033, TDCT_Combo,   620, 435, 300,  60,  25, FNT_STD, "Covered Process: Laboratory Exhaust:",                   TA_LEFT,  -250, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
-   CTRL, "ElevLtgVentMandComp",      1034, TDCT_Combo,   280, 465, 300,  60,  25, FNT_STD, "Covered Process: Elevators:",                            TA_LEFT,  -250,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
-   CTRL, "EscalSpdCtrlMandComp",     1035, TDCT_Combo,   620, 465, 300,  60,  25, FNT_STD, "Covered Process: Escalator:",                            TA_LEFT,  -250,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""        
-;   CTRL, "ComputerRoomMandComp",     1036, TDCT_Combo,   930, 430, 300,  60,  25, FNT_STD, "Covered Process: Computer Room:",                        TA_LEFT,  -230, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
-;   CTRL, "ParkingGarageMandComp",    1037, TDCT_Combo,   930, 460, 300,  60,  25, FNT_STD, "Covered Process: Parking Garage:",                       TA_LEFT,  -230,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
-   
-   CTRL, "",                         1020, TDCT_Line,     15, 495, 980, 495,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
-   CTRL, "",                         1021, TDCT_Label,    30, 505,  20,   0,   0, FNT_STD, "Lighting (Unconditioned), Lighting (Outdoor) and Lighting (Sign) are only eligible for prescriptive compliance.",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "",                         1022, TDCT_Label,    30, 525,  20,   0,   0, FNT_STD, "NRCC, LTI, LTO, and LTS forms must be completed separately.",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-                                                                                                                                                                                                                                              
-     ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                              
+;  ;----------------------------------------------------------------
+;  ;      BDBase      Page
+;  ;      Component    ID   Module(s)   Caption
+;  ;----------------------------------------------------------------
+;   TAB, "Proj",      3041,      15,    " COMPLIANCE PATH AND CERTIFICATE OF COMPLIANCE SUMMARY "
+;                                                                                                                                                                                                                                                
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+;     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;;   CTRL, "",                         1001, TDCT_Label,    15,  20,  20, 500,   0, FNT_STD, "COMPLIANCE PATH AND CERTIFICATE OF COMPLIANCE SUMMARY - (page 1)",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;;   CTRL, "",                         1002, TDCT_Line,     15,  42, 980,  42,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+;   CTRL, "",                         1004, TDCT_Label,    30,  52,  20,   0,   0, FNT_STD, "For components that utilize the performance path, indicate the sheet number that includes mandatory notes on plans.", TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;   CTRL, "",                         1005, TDCT_Label,    30,  78,  20,   0,   0, FNT_STD, "Building Component",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+;   CTRL, "",                         1006, TDCT_Label,   240,  78,  20,   0,   0, FNT_STD, "Compliance Path",                                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+;   CTRL, "",                         1040, TDCT_Label,   240,  95,  20,   0,   0, FNT_STD, "(Nonresidential/Hotel-Motel)",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+;   CTRL, "",                         1041, TDCT_Label,   420,  78,  20,   0,   0, FNT_STD, "Compliance Path",                                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+;   CTRL, "",                         1042, TDCT_Label,   420,  95,  20,   0,   0, FNT_STD, "(Multifamily)",                                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+;   CTRL, "",                         1007, TDCT_Label,   550,  78,  20,   0,   0, FNT_STD, "Location of Mandatory Notes on Plans",                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+;   CTRL, "CompPathEnv",              1008, TDCT_Edit,    240, 120,  25, 100,  25, FNT_STD, "Envelope:",                                               TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "ResCompPathEnv",           1043, TDCT_Edit,    420, 120,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "EnvDetailsLctn",           1009, TDCT_Edit,    550, 120,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "" 
+;   CTRL, "CompPathMech",             1010, TDCT_Edit,    240, 150,  25, 100,  25, FNT_STD, "Mechanical:",                                             TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "ResCompPathMech",          1044, TDCT_Edit,    420, 150,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "MechDetailsLctn",          1011, TDCT_Edit,    550, 150,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""
+;   CTRL, "CompPathLtg",              1012, TDCT_Edit,    240, 180,  25, 100,  25, FNT_STD, "Lighting (Indoor Conditioned):",                          TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "ResCompPathLtg",           1045, TDCT_Edit,    420, 180,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "LtgDetailsLctn",           1013, TDCT_Edit,    550, 180,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "" 
+;   CTRL, "CompPathDHW",              1014, TDCT_Edit,    240, 210,  25, 100,  25, FNT_STD, "Domestic Hot Water:",                                     TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "ResCompPathDHW",           1046, TDCT_Edit,    420, 210,  25, 100,  25, FNT_STD, "",                                                        TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "DHWDetailsLctn",           1015, TDCT_Edit,    550, 210,  25, 300, 100, FNT_STD, "",                                                        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;   CTRL, "CompPathKit",              1016, TDCT_Edit,    240, 240,  25, 100,  25, FNT_STD, "Covered Process Comm. Kitchen:",                          TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""
+;;   CTRL, "CompPathComputerRm",       1017, TDCT_Edit,    240, 270,  25, 100,  25, FNT_STD, "Covered Process Computer Rm:",                            TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  "" 
+;   CTRL, "CompPathLab",              1018, TDCT_Edit,    240, 270,  25, 100,  25, FNT_STD, "Covered Process Lab. Exhaust:",                           TA_LEFT,  -210, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""
+;   CTRL, "",                         1049, TDCT_Line,     15, 300, 980, 300,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+;   CTRL, "SolThrmlComp",             1019, TDCT_Edit,    380, 310,  25, 100,  25, FNT_STD, "Solar Thermal Water Heating:",                            TA_LEFT,  -350, 4,     0, TA_LEFT, 0, 0,  AnalysisType < 0,  None,       0,  0,  ""   
+;   CTRL, "PVComp",                   1047, TDCT_Combo,    380, 340,  300, 100,  25, FNT_STD, "Photovoltaics:",                                        TA_LEFT,  -350, 4,     0, TA_LEFT, 0, 0,  None,  None,       0,  0,  ""   
+;   CTRL, "BattComp",                 1048, TDCT_Combo,    380, 370,  300, 100,  25, FNT_STD, "Battery:",                                              TA_LEFT,  -350, 4,     0, TA_LEFT, 0, 0,  None,  None,       0,  0,  ""   
+;      
+;   CTRL, "",                         1030, TDCT_Line,     15, 400, 980, 400,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+;   CTRL, "",                         1031, TDCT_Label,    30, 410,  20,   0,   0, FNT_STD, "The following building components may have mandatory requirements per Part 6.  Indicate which are relevant to the project.",       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;   CTRL, "CommKitchenMandComp",      1032, TDCT_Combo,   280, 435, 300,  60,  25, FNT_STD, "Covered Process: Commercial Kitchen:",                   TA_LEFT,  -250, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;   CTRL, "LabExhaustMandComp",       1033, TDCT_Combo,   620, 435, 300,  60,  25, FNT_STD, "Covered Process: Laboratory Exhaust:",                   TA_LEFT,  -250, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;   CTRL, "ElevLtgVentMandComp",      1034, TDCT_Combo,   280, 465, 300,  60,  25, FNT_STD, "Covered Process: Elevators:",                            TA_LEFT,  -250,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;   CTRL, "EscalSpdCtrlMandComp",     1035, TDCT_Combo,   620, 465, 300,  60,  25, FNT_STD, "Covered Process: Escalator:",                            TA_LEFT,  -250,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""        
+;;   CTRL, "ComputerRoomMandComp",     1036, TDCT_Combo,   930, 430, 300,  60,  25, FNT_STD, "Covered Process: Computer Room:",                        TA_LEFT,  -230, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;;   CTRL, "ParkingGarageMandComp",    1037, TDCT_Combo,   930, 460, 300,  60,  25, FNT_STD, "Covered Process: Parking Garage:",                       TA_LEFT,  -230,  4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""  
+;   
+;   CTRL, "",                         1020, TDCT_Line,     15, 495, 980, 495,  -1, FNT_STD, "",                                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""  
+;   CTRL, "",                         1021, TDCT_Label,    30, 505,  20,   0,   0, FNT_STD, "Lighting (Unconditioned), Lighting (Outdoor) and Lighting (Sign) are only eligible for prescriptive compliance.",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;   CTRL, "",                         1022, TDCT_Label,    30, 525,  20,   0,   0, FNT_STD, "NRCC, LTI, LTO, and LTS forms must be completed separately.",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;                                                                                                                                                                                                                                              
+;     ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                              
 
 
   ;----------------------------------------------------------------
   ;      BDBase      Page
   ;      Component    ID   Module(s)   Caption
   ;----------------------------------------------------------------
-   TAB, "Proj",      3042,      15,    " CERTIFICATE OF INSTALLATION, CERTIFICATE OF ACCEPTANCE AND CERTIFICATE OF VERIFICATION SUMMARY NRCI/NRCA/NRCV - (page 1) "
+   TAB, "Proj",      3041,      15,    " CERTIFICATE OF INSTALLATION, CERTIFICATE OF ACCEPTANCE AND CERTIFICATE OF VERIFICATION SUMMARY NRCI/NRCA/NRCV"
                                                                                                                                                                                                                                                 
      ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      ;       BDBase                    Ctrl                                             | Control Label                                                                          | Units Label        | Editable  | Display     Erase X |
@@ -1062,7 +1249,7 @@ MAINSCREEN,  15
   ;      BDBase      Page
   ;      Component    ID   Module(s)   Caption
   ;----------------------------------------------------------------
-   TAB, "Proj",      3043,      15,    " CERTIFICATE OF INSTALLATION, CERTIFICATE OF ACCEPTANCE AND CERTIFICATE OF VERIFICATION SUMMARY NRCI/NRCA/NRCV - (page 2) "
+   TAB, "Proj",      3042,      15,    " CERTIFICATE OF INSTALLATION, CERTIFICATE OF ACCEPTANCE AND CERTIFICATE OF VERIFICATION SUMMARY NRCI/NRCA/NRCV - (page 2) "
                                                                                                                                                                                                                                                 
      ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      ;       BDBase                    Ctrl                                             | Control Label                                                                                                                                   | Units Label         | Editable  | Display     Erase X |
@@ -1116,7 +1303,7 @@ MAINSCREEN,  15
   ;      BDBase      Page
   ;      Component    ID   Module(s)   Caption
   ;----------------------------------------------------------------
-   TAB, "Proj",      3044,      15,    " MANDATORY INDOOR LIGHTING AND DAYLIGHTING CONTROLS "
+   TAB, "Proj",      3043,      15,    " MANDATORY INDOOR LIGHTING AND DAYLIGHTING CONTROLS "
                                                                                                                                                                                                                                                 
      ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      ;       BDBase                    Ctrl                                             | Control Label                                                                                                                                   | Units Label         | Editable  | Display     Erase X |
@@ -1246,6 +1433,176 @@ MAINSCREEN,  15
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+;  ;----------------------------------------------------------------
+;  ;      BDBase      Page
+;  ;      Component    ID   Module(s)   Caption
+;  ;----------------------------------------------------------------
+;   TAB, "CUAC",      3080,      15,    " Site Details "
+;                                                                                                                                                                                                                                                
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+;     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;   CTRL, "SiteAddress",              1001, TDCT_Edit,    140,  50,  25, 230, 200, FNT_STD, "Street Address:",                                         TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC site street address" 
+;   CTRL, "SiteCity",                 1002, TDCT_Edit,    140,  80,  25, 140, 100, FNT_STD, "City:",                                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC site city" 
+;   CTRL, "SiteZIPCode",              1003, TDCT_Edit,    140, 110,  25,  90,   9, FNT_STD, "Zip Code:",                                               TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC site Zip code" 
+;   CTRL, "UnitType",                 1004, TDCT_Edit,    140, 140,  25, 230, 100, FNT_STD, "Unit Type:",                                              TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  NumAffordableDwellingUnits < 0,  None,       0,  0,  "CUAC unit type" 
+;   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+;  ;----------------------------------------------------------------
+;  ;      BDBase      Page
+;  ;      Component    ID   Module(s)   Caption
+;  ;----------------------------------------------------------------
+;   TAB, "CUAC",      3081,      15,    " Owner Details "
+;                                                                                                                                                                                                                                                
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+;     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+;   CTRL, "OwnerName",                1001, TDCT_Edit,    140,  50,  25, 220, 200, FNT_STD, "Owner Name:",                                             TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC owner name" 
+;   CTRL, "OwnerAddress",             1002, TDCT_Edit,    140,  80,  25, 220, 200, FNT_STD, "Street Address:",                                         TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC owner street address" 
+;   CTRL, "OwnerCity",                1003, TDCT_Edit,    140, 110,  25, 140, 100, FNT_STD, "City:",                                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC owner city" 
+;   CTRL, "OwnerZIPCode",             1004, TDCT_Edit,    140, 140,  25,  90,   9, FNT_STD, "Zip Code:",                                               TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC owner Zip code" 
+;
+;   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+;  ;----------------------------------------------------------------
+;  ;      BDBase      Page
+;  ;      Component    ID   Module(s)   Caption
+;  ;----------------------------------------------------------------
+;   TAB, "CUAC",      3082,      15,    " Contact Details "
+;                                                                                                                                                                                                                                                
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+;     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+;     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+;   CTRL, "ContactName",              1001, TDCT_Edit,    140,  50,  25, 220, 200, FNT_STD, "Contact Name:",                                          TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC contact name" 
+;   CTRL, "ContactPhone",             1002, TDCT_Edit,    140,  80,  25, 140,  20, FNT_STD, "Phone:",                                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC contact phone number" 
+;   CTRL, "ContactEMail",             1003, TDCT_Edit,    140, 110,  25, 220, 200, FNT_STD, "E-mail:",                                                TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  "CUAC contact e-mail address" 
+;
+;   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+  ;----------------------------------------------------------------
+  ;      BDBase      Page
+  ;      Component    ID   Module(s)   Caption
+  ;----------------------------------------------------------------
+   TAB, "CUAC",      3083,      15,    " Dwelling Unit PV Allocation "
+                                                                                                                                                                                                                                                
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+;    CTRL, "ErrorMsg",              3078, TDCT_Label,   35,  37,  20, 630,  0, FNT_BOLD, "",                                       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,                 Proj:CUACUIFlag > 9,       0,  0,  ""
+;    CTRL, "ErrorInfo",             3079, TDCT_Edit,    45,  65,  50, 600, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  HaveErrorInfo > 100,  Proj:CUACUIFlag > 9 And HaveErrorInfo > 0,       0,  0,  ""
+    CTRL, "PVAllocUserMsg",        3079, TDCT_Edit,    45,  37,  55, 670, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  HaveErrorInfo > 100,  None,       0,  0,  ""      ; SAC 12/09/22
+
+	 CTRL, "AffordablePVDCSysSize", 4085, TDCT_Edit,  295, 105,  25,  55, 11, FNT_STD, "Total Affordable Housing Tenant PV Size:", TA_LEFT,  -260, 4,     1, TA_LEFT, 4, 4,  None,       ShowPVBattInputs > 0 And Proj:PVSizeSum > 0,       -82, 30,  "Portion of building PV capacity dedicated to affordable housing units"
+    CTRL, "AffordablePVMsg",       4086, TDCT_Label, 390, 109,  20, 245,  0, FNT_STD, "",                                         TA_LEFT,   245, 0,     0, TA_LEFT, 0, 0,  None,       ShowPVBattInputs > 0 And Proj:PVSizeSum > 0,         0,  0,  ""
+
+    CTRL, "PVBillingOption",       4089, TDCT_Combo, 145, 135, 100, 260, 25, FNT_STD, "PV Billing Option:",                       TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordablePVDCSysSize > 0,   -112,  0,  "Choose the method used to adjust electricity bills for PV generation"   ; SAC 12/10/22
+    CTRL, "PVCarryoverOption",     4090, TDCT_Combo, 540, 135, 400, 130, 25, FNT_STD, "Billing Carryover:",                       TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordablePVDCSysSize > 0 And PVBillingOption > 0 And Proj:EnableResearchMode > 0.5,   -120,  0,  "Choose if or after which month the PV carryover resets" 
+
+
+    CTRL, "",                       201, TDCT_Label,   40, 210,  18,   0,  0, FNT_STD, "Unit Type",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       202, TDCT_Label,  160, 192,  18,   0,  0, FNT_STD, "# Affordable",                            TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       203, TDCT_Label,  160, 210,  18,   0,  0, FNT_STD, "Units",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       204, TDCT_Label,  225, 192,  18,   0,  0, FNT_STD, "Total",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       205, TDCT_Label,  225, 210,  18,   0,  0, FNT_STD, "Units",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       206, TDCT_Label,  285, 192,  18,   0,  0, FNT_STD, "Avg SqFt",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       207, TDCT_Label,  285, 210,  18,   0,  0, FNT_STD, "per Unit",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       208, TDCT_Label,  358, 192,  18,   0,  0, FNT_STD, "Indiv Unit",                              TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       209, TDCT_Label,  358, 210,  18,   0,  0, FNT_STD, "% Tot Area",                              TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       291, TDCT_Label,  450, 174,  18,   0,  0, FNT_STD, "% Tenant",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       292, TDCT_Label,  450, 192,  18,   0,  0, FNT_STD, "PV Serving",                              TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       293, TDCT_Label,  450, 210,  18,   0,  0, FNT_STD, "Each Unit",                               TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       292, TDCT_Label,  535, 192,  18,   0,  0, FNT_STD, "PV Serving",                              TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       293, TDCT_Label,  535, 210,  18,   0,  0, FNT_STD, "Each Unit",                               TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       210, TDCT_Line,    37, 230, 585, 230, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+
+    CTRL, "",                       211, TDCT_Label,   40, 240,  18,   0,  0, FNT_STD, "Studio",                                  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       212, TDCT_Label,   40, 270,  18,   0,  0, FNT_STD, "1 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       213, TDCT_Label,   40, 300,  18,   0,  0, FNT_STD, "2 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       214, TDCT_Label,   40, 330,  18,   0,  0, FNT_STD, "3 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       215, TDCT_Label,   40, 360,  18,   0,  0, FNT_STD, "4 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       216, TDCT_Label,   40, 390,  18,   0,  0, FNT_STD, "5 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       217, TDCT_Label,   40, 420,  18,   0,  0, FNT_STD, "6 Bedroom",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+
+;    CTRL, "",                       221, TDCT_Line,   100, 285, 285, 285, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       222, TDCT_Line,    60, 448, 585, 448, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+    CTRL, "",                       223, TDCT_Label,   70, 451,  18,   0,  0, FNT_STD, "Totals",                                  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0,       0,  0,  ""
+
+
+    CTRL, "AffordableUnitsByBedrms[1]",           221, TDCT_Label,  170, 240,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[1] > 0,       0,  0,  ""
+    CTRL, "AffordableUnitsByBedrms[2]",           222, TDCT_Label,  170, 270,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[2] > 0,       0,  0,  ""
+    CTRL, "AffordableUnitsByBedrms[3]",           223, TDCT_Label,  170, 300,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[3] > 0,       0,  0,  ""
+    CTRL, "AffordableUnitsByBedrms[4]",           224, TDCT_Label,  170, 330,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[4] > 0,       0,  0,  ""
+    CTRL, "AffordableUnitsByBedrms[5]",           225, TDCT_Label,  170, 360,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[5] > 0,       0,  0,  ""
+    CTRL, "AffordableUnitsByBedrms[6]",           226, TDCT_Label,  170, 390,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[6] > 0,       0,  0,  ""
+    CTRL, "AffordableUnitsByBedrms[7]",           227, TDCT_Label,  170, 420,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[7] > 0,       0,  0,  ""
+;   CTRL, "AffordableUnitsByBedrms[8]",           228, TDCT_Label,  170, 368,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[8] > 0,       0,  0,  ""
+    CTRL, "NumAffordableDwellingUnits",           229, TDCT_Label,  170, 451,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And NumAffordableDwellingUnits > 0,                0,  0,  ""
+
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[1]",  231, TDCT_Label,  230, 240,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[1] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[2]",  232, TDCT_Label,  230, 270,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[2] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[3]",  233, TDCT_Label,  230, 300,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[3] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[4]",  234, TDCT_Label,  230, 330,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[4] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[5]",  235, TDCT_Label,  230, 360,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[5] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[6]",  236, TDCT_Label,  230, 390,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[6] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnitsByBedrms[7]",  237, TDCT_Label,  230, 420,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[7] > 0,       0,  0,  ""
+;   CTRL, "ResProj:NumDwellingUnitsByBedrms[8]",  238, TDCT_Label,  230, 368,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnitsByBedrms[8] > 0,       0,  0,  ""
+    CTRL, "ResProj:NumDwellingUnits",             239, TDCT_Label,  230, 451,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And ResProj:NumDwellingUnits > 0,                  0,  0,  ""
+
+    CTRL, "AvgUnitAreaByBedrms[1]",               241, TDCT_Label,  305, 240,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[1] > 0,       0,  0,  ""
+    CTRL, "AvgUnitAreaByBedrms[2]",               242, TDCT_Label,  305, 270,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[2] > 0,       0,  0,  ""
+    CTRL, "AvgUnitAreaByBedrms[3]",               243, TDCT_Label,  305, 300,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[3] > 0,       0,  0,  ""
+    CTRL, "AvgUnitAreaByBedrms[4]",               244, TDCT_Label,  305, 330,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[4] > 0,       0,  0,  ""
+    CTRL, "AvgUnitAreaByBedrms[5]",               245, TDCT_Label,  305, 360,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[5] > 0,       0,  0,  ""
+    CTRL, "AvgUnitAreaByBedrms[6]",               246, TDCT_Label,  305, 390,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[6] > 0,       0,  0,  ""
+    CTRL, "AvgUnitAreaByBedrms[7]",               247, TDCT_Label,  305, 420,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[7] > 0,       0,  0,  ""
+;   CTRL, "AvgUnitAreaByBedrms[8]",               248, TDCT_Label,  305, 368,  18,   0,  1, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[8] > 0,       0,  0,  ""
+    CTRL, "TotAffordableUnitArea",                249, TDCT_Label,  305, 451,  18,   0,  0, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And NumAffordableDwellingUnits > 0,       0,  0,  " ft2"
+
+    CTRL, "PctIndivUnitAreaByBedrms[1]",          251, TDCT_Label,  380, 240,  18,   0,  2, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[1] > 0,       0,  0,  " %"
+    CTRL, "PctIndivUnitAreaByBedrms[2]",          252, TDCT_Label,  380, 270,  18,   0,  2, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[2] > 0,       0,  0,  " %"
+    CTRL, "PctIndivUnitAreaByBedrms[3]",          253, TDCT_Label,  380, 300,  18,   0,  2, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[3] > 0,       0,  0,  " %"
+    CTRL, "PctIndivUnitAreaByBedrms[4]",          254, TDCT_Label,  380, 330,  18,   0,  2, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[4] > 0,       0,  0,  " %"
+    CTRL, "PctIndivUnitAreaByBedrms[5]",          255, TDCT_Label,  380, 360,  18,   0,  2, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[5] > 0,       0,  0,  " %"
+    CTRL, "PctIndivUnitAreaByBedrms[6]",          256, TDCT_Label,  380, 390,  18,   0,  2, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[6] > 0,       0,  0,  " %"
+    CTRL, "PctIndivUnitAreaByBedrms[7]",          257, TDCT_Label,  380, 420,  18,   0,  2, FNT_STD, "",                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[7] > 0,       0,  0,  " %"
+
+	 CTRL, "PctIndivUnitPVByBedrms[1]",           4101, TDCT_Edit,   420, 236,  25,  50, 11, FNT_STD, "",                          TA_LEFT,    -1, 4,     1, TA_LEFT, 4, 4,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[1] > 0,       0,  0,  "Percent of total Tenant PV (shown above) that serves each individual studio unit"
+	 CTRL, "PctIndivUnitPVByBedrms[2]",           4102, TDCT_Edit,   420, 266,  25,  50, 11, FNT_STD, "",                          TA_LEFT,    -1, 4,     1, TA_LEFT, 4, 4,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[2] > 0,       0,  0,  "Percent of total Tenant PV (shown above) that serves each individual 1 bedroom unit"
+	 CTRL, "PctIndivUnitPVByBedrms[3]",           4103, TDCT_Edit,   420, 296,  25,  50, 11, FNT_STD, "",                          TA_LEFT,    -1, 4,     1, TA_LEFT, 4, 4,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[3] > 0,       0,  0,  "Percent of total Tenant PV (shown above) that serves each individual 2 bedroom unit"
+	 CTRL, "PctIndivUnitPVByBedrms[4]",           4104, TDCT_Edit,   420, 326,  25,  50, 11, FNT_STD, "",                          TA_LEFT,    -1, 4,     1, TA_LEFT, 4, 4,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[4] > 0,       0,  0,  "Percent of total Tenant PV (shown above) that serves each individual 3 bedroom unit"
+	 CTRL, "PctIndivUnitPVByBedrms[5]",           4105, TDCT_Edit,   420, 356,  25,  50, 11, FNT_STD, "",                          TA_LEFT,    -1, 4,     1, TA_LEFT, 4, 4,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[5] > 0,       0,  0,  "Percent of total Tenant PV (shown above) that serves each individual 4 bedroom unit"
+	 CTRL, "PctIndivUnitPVByBedrms[6]",           4106, TDCT_Edit,   420, 386,  25,  50, 11, FNT_STD, "",                          TA_LEFT,    -1, 4,     1, TA_LEFT, 4, 4,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[6] > 0,       0,  0,  "Percent of total Tenant PV (shown above) that serves each individual 5 bedroom unit"
+	 CTRL, "PctIndivUnitPVByBedrms[7]",           4107, TDCT_Edit,   420, 416,  25,  50, 11, FNT_STD, "",                          TA_LEFT,    -1, 4,     1, TA_LEFT, 4, 4,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[7] > 0,       0,  0,  "Percent of total Tenant PV (shown above) that serves each individual 6 bedroom unit"
+    CTRL, "PctIndivUnitPVSum",                   4108, TDCT_Label,  480, 451,  18,  70,  1, FNT_BOLD, "",                         TA_RIGHT,   72, 0,     1, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And PctIndivUnitPVSum > 0,              -70,  0,  " %"
+
+    CTRL, "IndivUnitPVByBedrms[1]",               261, TDCT_Label,  560, 240,  18,  70,  2, FNT_STD, "",                          TA_RIGHT,   72, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[1] > 0 And PctIndivUnitPVByBedrms[1] > 0,  -50,  0,  " kW"
+    CTRL, "IndivUnitPVByBedrms[2]",               262, TDCT_Label,  560, 270,  18,  70,  2, FNT_STD, "",                          TA_RIGHT,   72, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[2] > 0 And PctIndivUnitPVByBedrms[2] > 0,  -50,  0,  " kW"
+    CTRL, "IndivUnitPVByBedrms[3]",               263, TDCT_Label,  560, 300,  18,  70,  2, FNT_STD, "",                          TA_RIGHT,   72, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[3] > 0 And PctIndivUnitPVByBedrms[3] > 0,  -50,  0,  " kW"
+    CTRL, "IndivUnitPVByBedrms[4]",               264, TDCT_Label,  560, 330,  18,  70,  2, FNT_STD, "",                          TA_RIGHT,   72, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[4] > 0 And PctIndivUnitPVByBedrms[4] > 0,  -50,  0,  " kW"
+    CTRL, "IndivUnitPVByBedrms[5]",               265, TDCT_Label,  560, 360,  18,  70,  2, FNT_STD, "",                          TA_RIGHT,   72, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[5] > 0 And PctIndivUnitPVByBedrms[5] > 0,  -50,  0,  " kW"
+    CTRL, "IndivUnitPVByBedrms[6]",               266, TDCT_Label,  560, 390,  18,  70,  2, FNT_STD, "",                          TA_RIGHT,   72, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[6] > 0 And PctIndivUnitPVByBedrms[6] > 0,  -50,  0,  " kW"
+    CTRL, "IndivUnitPVByBedrms[7]",               267, TDCT_Label,  560, 420,  18,  70,  2, FNT_STD, "",                          TA_RIGHT,   72, 0,     0, TA_LEFT, 0, 0,  None,       Proj:CUACUIFlag > 9 And Proj:PVSizeSum > 0 And AffordableUnitsByBedrms[7] > 0 And PctIndivUnitPVByBedrms[7] > 0,  -50,  0,  " kW"
+
+
+
+;    CTRL, "",                       121, TDCT_Label,       20, 458,  18,   0,  0, FNT_STD, "Portion of PV/Battery System(s) serving Affordable Units",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0,        0,  0,  ""
+;    CTRL, "",                       122, TDCT_Line,       380, 466, 445, 466, -1, FNT_STD, "",                                    TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0,                           0,  0,  ""
+;	 CTRL, "CUAC:AffordablePVDCSysSize", 3085, TDCT_Edit,  115, 480,  25,  55, 11, FNT_STD, "PV DC Size:",                         TA_LEFT,   -80, 4,     1, TA_LEFT, 4, 4,  None,       CUAC:ShowPVBattInputs > 0 And PVSizeSum > 0,       -82, 30,  "Portion of building PV capacity dedicated to affordable housing units"
+;    CTRL, "CUAC:AffordablePVMsg",       3086, TDCT_Label, 210, 484,  20, 245,  0, FNT_STD, "",                                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0 And PVSizeSum > 0,         0,  0,  ""
+;; removed from CUAC battery from calcs - SAC 12/07/22
+;;	 CTRL, "CUAC:AffordableBattMaxCap",  3087, TDCT_Edit,  115, 510,  25,  55, 11, FNT_STD, "Battery Cap:",                        TA_LEFT,   -80, 4,     1, TA_LEFT, 4, 4,  None,       CUAC:ShowPVBattInputs > 0 And BattSizeSum > 0,     -82, 40,  "Portion of building PV capacity dedicated to affordable housing units"
+;;    CTRL, "CUAC:AffordableBattMsg",     3088, TDCT_Label, 210, 514,  20, 245,  0, FNT_STD, "",                                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0 And BattSizeSum > 0,       0,  0,  ""
+
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 ; ResProj SCREENS PORTED FROM CBECC-Res - SAC 10/20/21 (MFam)
 ;----------------------------------------------------------------
@@ -1289,9 +1646,9 @@ MAINSCREEN,  15
     CTRL, "",                  2033, TDCT_Button, 500, 115,  22,  30, 129, FNT_STD, "...",                                       TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Proj:EnableResearchMode > 0.5,    0,  0,  "access information related to AirNet effective leakage areas"
 ;    CTRL, "",                  2033, TDCT_Button, 500, 115,  22,  30, 129, FNT_STD, "...",                                       TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,    0,  0,  "access information related to AirNet leakage areas"
 
-	 CTRL, "InsulConsQuality",  2008, TDCT_Combo,  180, 145, 300,  80, 25, FNT_STD, "Quality Insul. Installation:",               TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Quality Insulation Installation (QII)"   
+	 CTRL, "InsulConsQuality",  2008, TDCT_Combo,  180, 145, 300,  80, 25, FNT_STD, "Quality Insul. Installation:",               TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0,  None,        Bldg:TotStoryCnt <= 3,     0,  0,  "Quality Insulation Installation (QII)"   
 
-	 CTRL, "ZonalControl",      2021, TDCT_Check,   20, 175,  22, 250,  2, FNT_STD, "Zonal Control Credit (living vs. sleeping)", TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                  ZonalControl > 0.5,    0,  0,  "Checked if differentiating living vs. sleeping areas"  
+	 CTRL, "ZonalControl",      2021, TDCT_Check,   20, 175,  22, 250,  2, FNT_STD, "Zonal Control Credit (living vs. sleeping)", TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,        ZonalControl > 0.5,        0,  0,  "Checked if differentiating living vs. sleeping areas"  
 
 
 ; research mode & bypass rule limits...
@@ -2041,15 +2398,6 @@ MAINSCREEN,  15
    CTRL, "Enduse12[7]",     3507, TDCT_Label,  390, 390,  18,  85,  0, FNT_STD, "",                                   TA_RIGHT,    0,  0,     0, TA_LEFT,  0, 0,  None,       None,       0,  0,  ""
    CTRL, "Enduse15[7]",     3607, TDCT_Label,  390, 415,  18,  85,  0, FNT_STD, "",                                   TA_RIGHT,    0,  0,     0, TA_LEFT,  0, 0,  None,       None,       0,  0,  ""
 
-  ; DEMAND IMPACT     ; removed peak demand reporting in 2022 UI - SAC 11/17/21
-;   CTRL, "",                3810, TDCT_Label,   30, 415,  18, 0,  0, FNT_STD, "Generation Coincident Peak Demand (kW):",  TA_LEFT,  0, 0,    0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
-;   CTRL, "Enduse15[10]",    3811, TDCT_Label,  300, 415,  18, 0,  0, FNT_STD, "Standard Design: ",                   TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
-;   CTRL, "Enduse15[9]",     3812, TDCT_Label,  470, 415,  18, 0,  0, FNT_STD, "Proposed Design: ",                   TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
-;   CTRL, "MarginkW",        3813, TDCT_Label,  640, 415,  18, 0,  1, FNT_STD, "Reduction: ",                         TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
-
-  ; CALGreen Results
-   CTRL, "CALGreenResultMessage", 3820, TDCT_Label,   30, 485,  18, 0,  0, FNT_STD, "",                              TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
-
 	; COMPLIANCE MARGIN
    CTRL, "",                2008, TDCT_Line,   700,  15, 700,  60, -1, FNT_STD, "",                                   TA_CENTER,   0,  0,     0, TA_LEFT,  0, 0,  None,       None,       0,  0,  ""
    CTRL, "",                2009, TDCT_Line,   700,  72, 700, 225, -1, FNT_STD, "",                                   TA_CENTER,   0,  0,     0, TA_LEFT,  0, 0,  None,       None,       0,  0,  ""
@@ -2092,12 +2440,21 @@ MAINSCREEN,  15
 
 ;   CTRL, "ReqdPV_SolThrml", 3824, TDCT_Label,  770, 440,  18, 240,    1, FNT_STD, "Required Flexibility PV: ",        TA_RIGHT,    0,  0,     0, TA_LEFT, -1, 0,  None,       ReqdPV_SolThrml > 0,  0,  0,  " kWdc min"
 
-   CTRL, "CommunitySolMsg",    920, TDCT_Label,   28, 465,  16, 760,  0, FNT_STD, "* ",                               TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,  None,       CommunitySlrPVPwr > 0,   0,  0,  ""   ; SAC 06/04/22
+  ; DEMAND IMPACT     ; added back in - NK 01/04/23
+   CTRL, "",                3810, TDCT_Label,   30, 440,  18, 0,  0, FNT_STD, "Generation Coincident Peak Demand (kW):",  TA_LEFT,  0, 0,    0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
+   CTRL, "Enduse15[10]",    3811, TDCT_Label,  300, 440,  18, 0,  0, FNT_STD, "Standard Design: ",                   TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
+   CTRL, "Enduse15[9]",     3812, TDCT_Label,  470, 440,  18, 0,  0, FNT_STD, "Proposed Design: ",                   TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
+   CTRL, "MarginkW",        3813, TDCT_Label,  640, 440,  18, 0,  1, FNT_STD, "Reduction: ",                         TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
+
+   CTRL, "CommunitySolMsg",    920, TDCT_Label,   28, 460,  16, 760,  0, FNT_STD, "* ",                               TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,  None,       CommunitySlrPVPwr > 0,   0,  0,  ""   ; SAC 06/04/22
 
    ; PV Generation & Exports - SAC 2/17/20
-   CTRL, "PropPV_Total",    3820, TDCT_Label,   30, 485,  18,   0,  0, FNT_STD, "Total Proposed PV (kWh):  ",         TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      PropPV_Total > 0,       0,  0,  ""
-   CTRL, "PropPV_Export",   3821, TDCT_Label,  270, 485,  18,   0,  0, FNT_STD, "Total Export (kWh):  ",              TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      PropPV_Total > 0,       0,  0,  ""
-   CTRL, "PropPV_PctExport",3822, TDCT_Label,  470, 485,  18,   0,  1, FNT_STD, "% Export:  ",                        TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      PropPV_Total > 0,       0,  0,  ""
+   CTRL, "PropPV_Total",    3820, TDCT_Label,   30, 480,  18,   0,  0, FNT_STD, "Total Proposed PV (kWh):  ",         TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      PropPV_Total > 0,       0,  0,  ""
+   CTRL, "PropPV_Export",   3821, TDCT_Label,  270, 480,  18,   0,  0, FNT_STD, "Total Export (kWh):  ",              TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      PropPV_Total > 0,       0,  0,  ""
+   CTRL, "PropPV_PctExport",3822, TDCT_Label,  470, 480,  18,   0,  1, FNT_STD, "% Export:  ",                        TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      PropPV_Total > 0,       0,  0,  ""
+
+  ; CALGreen Results
+   CTRL, "CALGreenResultMessage", 3820, TDCT_Label,   30, 500,  18, 0,  0, FNT_STD, "",                              TA_LEFT,     0,  0,     0, TA_LEFT,  0, 0,   None,      Proj:EngyCodeYearNum >= 2019 And Proj:QuickAnalysis = 0,       0,  0,  ""
 
    ; moved to main Compliance Summary tab - SAC 06/07/22
    ; CTRL, "",                3825, TDCT_Button, 680, 490,  22, 200, 3066, FNT_STD, "View Compliance Report",           TA_CENTER,   0,  0,     0, TA_LEFT,  0, 0,  None,       None,       0,  0,  "view compliance report"
@@ -3065,8 +3422,9 @@ MAINSCREEN,  15
    CTRL, "",                           107, TDCT_Label,   20, 420,  20,   0,  0, FNT_STD, "Natural Gas Use",                  TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "",                           108, TDCT_Line,   125, 428, 925, 428, -1, FNT_STD, "",                               TA_CENTER,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                
-    CTRL, "GasEqpPwrDens",            3025, TDCT_Edit,   150, 450,  25,  70,  2, FNT_STD, "Gas Equipment:",                   TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+    CTRL, "GasEqpPwrDens",            3025, TDCT_Edit,   150, 450,  25,  70,  2, FNT_STD, "Gas Equipment**:",                 TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
     CTRL, "GasEqpSchRef",             3026, TDCT_Combo,  330, 450, 300, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 99,       None,       0,  0,  ""
+    CTRL, "",                         3027, TDCT_Label,   30, 585,  20,   0,  0, FNT_DATATYPE, "**Gas equipment power density is the annual average value and other power density inputs are the peak values",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
     CTRL, "ProcGasPwrDens",           3045, TDCT_Edit,   150, 480,  25,  70,  2, FNT_STD, "Process Gas:",                     TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
     CTRL, "ProcGasSchRef",            3046, TDCT_Combo,  330, 480, 300, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
@@ -3164,24 +3522,27 @@ MAINSCREEN,  15
                                                                                                                                                                                                                                               
 ;  CTRL, "DsgnNaturalVentACH",       4012, TDCT_Edit,   790, 120,  25,  70,  2, FNT_STD, "DsgnNaturalVentFlow:",             TA_LEFT,  -130, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
 ;  CTRL, "NaturalVentSchRef",        4013, TDCT_Combo,  790, 150, 500, 190, 25, FNT_STD, "NaturalVentSchRef:",               TA_LEFT,  -130, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-                                                                                                                                                                                                                                              
-   CTRL, "",                         9001, TDCT_Label,  660,  70,  20,   0,  0, FNT_STD, "Space Status",                     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "",                         9002, TDCT_Line,   750,  78, 890,  78, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "EnvStatus",                9003, TDCT_Combo,  760,  90, 300, 100, 25, FNT_STD, "Envelope:",                        TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "LtgStatus",                9004, TDCT_Combo,  760, 120, 300, 100, 25, FNT_STD, "Lighting:",                        TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  IntLtgSysChildren < 0.5,  IntLtgSysChildren < 0.5,      0,  0,  ""
-   CTRL, "SpcOverallLumStatus",      9005, TDCT_Edit,   760, 120,  25, 100, 25, FNT_STD, "Lighting*:",                       TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  CondgType = -1,       IntLtgSysChildren > 0.5,      0,  0,  ""
-   CTRL, "HVACStatus",               9006, TDCT_Edit,   760, 150,  25, 100, 25, FNT_STD, "HVAC:",                            TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  CondgType = -1,       None,       0,  0,  ""
-   CTRL, "OverallStatus",            9007, TDCT_Edit,   760, 180,  25, 100, 25, FNT_STD, "Overall:",                         TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  CondgType = -1,       None,       0,  0,  ""
-;  CTRL, "ModLumCnt",                9008, TDCT_Edit,   830, 180,  25,  60, 25, FNT_STD, "# Fixtures Added/Modified:"        TA_LEFT,  -180, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                              
+
+   CTRL, "PVBattSizeBldgType",            4021, TDCT_Combo, 805,  60, 300, 175, 25, FNT_STD, "PV/Batt Req Bldg Type:",       TA_LEFT,  -145, 4,     0, TA_LEFT, 0, 0,  None,       ShowPVBattSizeBldgType > 0,           -147,  0,  ""   ; SAC 01/16/23
+   CTRL, "BattReq_PartOfLargeTenantArea", 4020, TDCT_Check, 660,  90,  25, 210,  2, FNT_STD, "Part of >5,000 ft2 Tenant Area", TA_LEFT,   0, 4,     0, TA_LEFT, 0, 0,  None,       ShowBattReq_PartOfLargeTenantArea > 0,   0,  0,  ""   ; SAC 01/12/23
+
+   CTRL, "",                         9001, TDCT_Label,  660, 130,  20,   0,  0, FNT_STD, "Space Status",                     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                         9002, TDCT_Line,   750, 138, 990, 138, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "EnvStatus",                9003, TDCT_Combo,  740, 150, 300,  80, 25, FNT_STD, "Envelope:",                        TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "LtgStatus",                9004, TDCT_Combo,  740, 180, 300,  80, 25, FNT_STD, "Lighting:",                        TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  IntLtgSysChildren < 0.5,  IntLtgSysChildren < 0.5,      0,  0,  ""
+   CTRL, "SpcOverallLumStatus",      9005, TDCT_Edit,   740, 180,  25,  80, 25, FNT_STD, "Lighting*:",                       TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  CondgType = -1,           IntLtgSysChildren > 0.5,      0,  0,  ""
+   CTRL, "HVACStatus",               9006, TDCT_Edit,   905, 150,  25,  70, 25, FNT_STD, "HVAC:",                            TA_LEFT,   -55, 4,     0, TA_LEFT, 0, 0,  CondgType = -1,    None,       0,  0,  ""
+   CTRL, "OverallStatus",            9007, TDCT_Edit,   905, 180,  25,  70, 25, FNT_STD, "Overall:",                         TA_LEFT,   -55, 4,     0, TA_LEFT, 0, 0,  CondgType = -1,    None,       0,  0,  ""
+;  CTRL, "ModLumCnt",                9008, TDCT_Edit,   830, 180,  25,  60, 25, FNT_STD, "# Fixtures Added/Modified:"        TA_LEFT,  -180, 4,     0, TA_LEFT, 0, 0,  None,              None,       0,  0,  ""                                                                                                                                                                                                                                                
+
    CTRL, "SpcFuncDefaultsRef",       4017, TDCT_Combo,  140, 250, 300, 250, 25, FNT_STD, "Function Defaults:",               TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "SpcFuncDefaultsRef",       4117, TDCT_Button, 393, 250,  22,  22, 999, FNT_STD, "...",                             TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access SpaceFunctionDefault assigned to this space"
    CTRL, "",                          302, TDCT_Line,   420, 261, 990, 261, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                               
    CTRL, "SpcFunc",                  3004, TDCT_Combo,  130, 280, 360, 320, 12, FNT_STD, "Space Function:",                  TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "VentSpcFunc",              3013, TDCT_Combo,  130, 310, 300, 320, 25, FNT_STD, "Vent. Function:",                  TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "FxdSeat",                  3005, TDCT_Check,  460, 270,  25, 130,  2, FNT_STD, "Fixed Seating",                    TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  SpcFunc != 262 And SpcFunc != 263 And SpcFunc != 261, IsRes = 0,      0,  0,  ""   
-   CTRL, "IsAtriumGT55Ft",           3006, TDCT_Check,  600, 270,  25, 130,  2, FNT_STD, "Atrium > 55 ft tall",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  SpcFunc = 212,  IsRes = 0,      0,  0,  ""   
+   CTRL, "FxdSeat",                  3005, TDCT_Check,  460, 270,  25, 130,  2, FNT_STD, "Fixed Seating",                    TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  FxdSeatEligible > 0,   None,     0,  0,  ""   
+   CTRL, "IsAtriumGT55Ft",           3006, TDCT_Check,  600, 270,  25, 130,  2, FNT_STD, "Atrium > 55 ft tall",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  SpcFunc = 317,  IsRes = 0,      0,  0,  ""   
    CTRL, "IsHlthCare",               3007, TDCT_Check,  460, 310,  25, 130,  2, FNT_STD, "Healthcare Space",                 TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  HlthCareEligible > 0,   None,   0,  0,  ""   
    ; update display condition for ResLivingUnitCnt vs. HotelMotelGuestRmCnt from 228 -> 338 - SAC 03/11/22
    CTRL, "ResLivingUnitCnt",         3055, TDCT_Edit,   590, 270,  25,  50,  3, FNT_STD, "Dwelling Units/Space:",            TA_LEFT,  -130, 4,     1, TA_LEFT, 4, 4,  CondgType = -1, IsRes > 0 And SpcFunc != 338, -132, 0,  ""
@@ -3193,12 +3554,12 @@ MAINSCREEN,  15
    CTRL, "OccFrac",                  3071, TDCT_Edit,   305, 340,  25,  40,  2, FNT_STD, "x Fraction",                       TA_LEFT,   -60, 4,     0, TA_LEFT, 4, 4,  None,         IsRes = 0 And FxdSeat = 0,  0,  0,  ""
    CTRL, "OccDensSim",               3072, TDCT_Edit,   360, 340,  25,  50,  2, FNT_STD, "=",                                TA_LEFT,   -12, 4,     1, TA_LEFT, 4, 4,  CondgType = -1,         IsRes = 0,                  0,  0,  ""
    CTRL, "OccNumSim",                3073, TDCT_Edit,   635, 340,  25,  50,  1, FNT_STD, "Total Occupants:",                 TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,         HasNoInternalLds = 0 And IsRes = 0 And FxdSeat = 0,   0,  0,  ""
-   CTRL, "OccNumFxdSeat",            3074, TDCT_Edit,   635, 340,  25,  50,  1, FNT_STD, "Total Occupants:",                 TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,         HasNoInternalLds = 0 And IsRes = 0 And FxdSeat > 0,  0,  0,  ""
+   CTRL, "OccNumFxdSeat",            3074, TDCT_Edit,   635, 340,  25,  50,  1, FNT_STD, "Total Occupants:",                 TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,         FxdSeatEligible > 0 And FxdSeat > 0,  0,  0,  ""
    CTRL, "MinOccNumSim",             3075, TDCT_Edit,   635, 340,  25,  50,  1, FNT_STD, "Total Occupants:",                 TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  CondgType = -1,         HasNoInternalLds = 0 And IsRes > 0,   0,  0,  ""
    CTRL, "OccSchRef",                3076, TDCT_Combo,  750, 340, 300, 220, 25, FNT_STD, "Schedule Name*",                  TA_LEFT,    0, -18,    0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
 ;   CTRL, "OccSensHtRt",              3077, TDCT_Edit,    40, 380,  25,  70,  1, FNT_STD, "Sensible -",                       TA_LEFT,   0, -18,     0, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
 ;   CTRL, "OccLatHtRt",               3078, TDCT_Edit,   120, 380,  25,  70,  1, FNT_STD, "Latent - heat gain",               TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-   CTRL, "",                          104, TDCT_Label,   30, 345,   30,  345,  0, FNT_STD, "                                                                                  ", TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  SpcFunc != 226 And FxdSeat = 1, None,       0,  0,  ""
+   CTRL, "",                          104, TDCT_Label,   30, 345,   30,  345,  0, FNT_STD, "                                                                                  ", TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  SpcFunc != 336 And FxdSeat = 1, None,       0,  0,  ""
 
    CTRL, "",                          110, TDCT_Line,    30, 370, 950, 370, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "SHWFluidSegRef",           3052, TDCT_Combo,  130, 380, 300, 150, 25, FNT_STD, "SHW FluidSeg:",                    TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
@@ -3697,36 +4058,38 @@ TAB, "Spc",  407,      15,    "  Process Loads  "
    CTRL, "",                          104, TDCT_Label,   30, 150,  20,   0,  0, FNT_STD, "Process and Other Electric Use",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "",                          105, TDCT_Line,   220, 158, 990, 158, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ProcElecPwrDens",          3032, TDCT_Edit,   160, 180,  25,  70,  2, FNT_STD, "Process Electric:",                 TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcElecPwrDens"
-   CTRL, "ProcElecSchRef",           3033, TDCT_Combo,  740, 180, 300, 220, 25, FNT_STD, "Schedule Name*",                    TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "ProcElecSchRef"
-   CTRL, "ProcElecRadFrac",          3034, TDCT_Edit,   360, 180,  25,  70,  2, FNT_STD, "Radiant Frac.",                     TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcElecRadFrac"
-   CTRL, "ProcElecLatFrac",          3035, TDCT_Edit,   460, 180,  25,  70,  2, FNT_STD, "Latent Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcElecLatFrac"
-   CTRL, "ProcElecLostFrac",         3036, TDCT_Edit,   560, 180,  25,  70,  2, FNT_STD, "Lost Frac.",                        TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcElecLostFrac"
+   CTRL, "ProcElecPwrDens",          3032, TDCT_Edit,   160, 180,  25,  70,  2, FNT_STD, "Process Electric:",                 TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecSchRef",           3033, TDCT_Combo,  740, 180, 300, 220, 25, FNT_STD, "Schedule Name*",                    TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecRadFrac",          3034, TDCT_Edit,   360, 180,  25,  70,  2, FNT_STD, "Radiant Frac.",                     TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecLatFrac",          3035, TDCT_Edit,   460, 180,  25,  70,  2, FNT_STD, "Latent Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecLostFrac",         3036, TDCT_Edit,   560, 180,  25,  70,  2, FNT_STD, "Lost Frac.",                        TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "CommRfrgEPD",              3037, TDCT_Edit,   160, 210,  25,  70,  2, FNT_STD, "Refrigeration:",                    TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "CommRfrgEPD"
-   CTRL, "CommRfrgEqpSchRef",        3038, TDCT_Combo,  740, 210, 300, 220, 25, FNT_STD, "",                                  TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "CommRfrgEqpSchRef"
-;   CTRL, "CommRfrgEqpCOP",           xxxx, TDCT_Edit,   650, 210,  25,  70,  2, FNT_STD, "Equip COP:",                       TA_RIGHT,   -4, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "CommRfrgEqpCOP"
+   CTRL, "CommRfrgEPD",              3037, TDCT_Edit,   160, 210,  25,  70,  2, FNT_STD, "Refrigeration:",                    TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "CommRfrgEqpSchRef",        3038, TDCT_Combo,  740, 210, 300, 220, 25, FNT_STD, "",                                  TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+;   CTRL, "CommRfrgEqpCOP",           xxxx, TDCT_Edit,   650, 210,  25,  70,  2, FNT_STD, "Equip COP:",                       TA_RIGHT,   -4, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                                                                          
-   CTRL, "ElevCnt",                  3040, TDCT_Edit,   160, 240,  25,  70,  2, FNT_STD, "Elevator Count:",                 TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ElevCnt"
-   CTRL, "ElevSchRef",               3041, TDCT_Combo,  740, 240, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "ElevSchRef"
-   CTRL, "ElevLostFrac",             3042, TDCT_Edit,   560, 240,  25,  70,  2, FNT_STD, "Lost Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ElevLostFrac"
-   CTRL, "EscalCnt",                 3043, TDCT_Edit,   160, 270,  25,  70,  2, FNT_STD, "Escalator Count:",                TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "EscalCnt"
-   CTRL, "EscalSchRef",              3044, TDCT_Combo,  740, 270, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1,   4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "EscalSchRef"
-   CTRL, "EscalLostFrac",            3045, TDCT_Edit,   560, 270,  25,  70,  2, FNT_STD, "",                               TA_RIGHT,   -4,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "EscalLostFrac"
+   CTRL, "ElevCnt",                  3040, TDCT_Edit,   160, 240,  25,  70,  2, FNT_STD, "Elevator Count:",                 TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ElevSchRef",               3041, TDCT_Combo,  740, 240, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "ElevLostFrac",             3042, TDCT_Edit,   560, 240,  25,  70,  2, FNT_STD, "Lost Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "EscalCnt",                 3043, TDCT_Edit,   160, 270,  25,  70,  2, FNT_STD, "Escalator Count:",                TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "EscalSchRef",              3044, TDCT_Combo,  740, 270, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1,   4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "EscalLostFrac",            3045, TDCT_Edit,   560, 270,  25,  70,  2, FNT_STD, "",                               TA_RIGHT,   -4,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
 ;   CTRL, "",                         3046, TDCT_Label,  568, 244,  20,   0,  0, FNT_STD, "*Elevator Mechanical Systems / Space",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
 ;   CTRL, "",                          106, TDCT_Label,  568, 274,  20,   0,  0, FNT_STD, "*Escalators and Moving Sidewalks / Space",      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
    CTRL, "",                          107, TDCT_Label,   30, 310,  20,   0,  0, FNT_STD, "Natural Gas Use",                 TA_LEFT,    0,   0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "",                          108, TDCT_Line,   135, 318, 990, 318, -1, FNT_STD, "",                              TA_CENTER,    0,   0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "GasEqpPwrDens",            3025, TDCT_Edit,   160, 340,  25,  70,  2, FNT_STD, "Gas Equipment:",                  TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "GasEqpPwrDens"
-   CTRL, "GasEqpSchRef",             3026, TDCT_Combo,  740, 340, 300, 220, 25, FNT_STD, "Schedule Name*",                  TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "GasEqpSchRef"
+   CTRL, "GasEqpPwrDens",            3025, TDCT_Edit,   160, 340,  25,  70,  2, FNT_STD, "Gas Equipment**:",                TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "GasEqpSchRef",             3026, TDCT_Combo,  740, 340, 300, 220, 25, FNT_STD, "Schedule Name*",                  TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "",                         3027, TDCT_Label,   30, 525,  20,   0,  0, FNT_DATATYPE, "**Gas equipment power density is the annual average value and other power density inputs are the peak values",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ProcGasPwrDens",           3050, TDCT_Edit,   160, 370,  25,  70,  2, FNT_STD, "Process Gas:",                    TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcGasPwrDens"
-   CTRL, "ProcGasSchRef",            3051, TDCT_Combo,  740, 370, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1,   4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "ProcGasSchRef"
-   CTRL, "ProcGasRadFrac",           3052, TDCT_Edit,   360, 370,  25,  70,  2, FNT_STD, "Radiant Frac.",                   TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcGasRadFrac"
-   CTRL, "ProcGasLatFrac",           3053, TDCT_Edit,   460, 370,  25,  70,  2, FNT_STD, "Latent Frac",                     TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcGasLatFrac"
-   CTRL, "ProcGasLostFrac",          3054, TDCT_Edit,   560, 370,  25,  70,  2, FNT_STD, "Lost Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "ProcGasLostFrac"
+   CTRL, "ProcGasPwrDens",           3050, TDCT_Edit,   160, 370,  25,  70,  2, FNT_STD, "Process Gas:",                    TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasSchRef",            3051, TDCT_Combo,  740, 370, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1,   4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasRadFrac",           3052, TDCT_Edit,   360, 370,  25,  70,  2, FNT_STD, "Radiant Frac.",                   TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasLatFrac",           3053, TDCT_Edit,   460, 370,  25,  70,  2, FNT_STD, "Latent Frac",                     TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasLostFrac",          3054, TDCT_Edit,   560, 370,  25,  70,  2, FNT_STD, "Lost Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------
@@ -3909,7 +4272,9 @@ TAB, "Spc",  407,      15,    "  Process Loads  "
    CTRL, "AllowArea",                4044, TDCT_Edit,   760, 400,  25,  70,  1, FNT_STD, "Allowance Area:",                   TA_RIGHT,   -4, 4,     1, TA_LEFT, 4, 4,  None,      AllowType != 5 And AllowType != 12 And AllowType != 13 And AllowType != 10 And AllowType != 111, -120, 40,  ""
    CTRL, "VeryValDispDesc",          4045, TDCT_Edit,   200, 430,  25, 390, 99, FNT_STD, "Display Case Desc.:",               TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,      AllowType = 115, -140, 40,  ""
 ;   CTRL, "AllowMsg",                 4046, TDCT_Edit,   135, 425,  65, 400,  0, FNT_STD, "",                                  TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  ShowAllowMsg = 99,  ShowAllowMsg > 0.5,       0,  0,  ""
-                                                                                                                                                                                                                                                
+                                               
+   CTRL, "MultLvlCtrlExcept",        4047, TDCT_Check,   50, 430,  22, 400,  0, FNT_STD, "Lighting is exempted from 130.1(b) Multilevel Control requirement", TA_LEFT,  0, 4,     0, TA_LEFT, 0, 0,  None,      MultLvlCtrlReq > 0,       0,  0,  ""
+   CTRL, "DRCExcept",                4048, TDCT_Check,   50, 455,  22, 500,  0, FNT_STD, "Lighting is exempted from 110.12(c) Demand Responsive Control requirement", TA_LEFT,  0, 4,     0, TA_LEFT, 0, 0,  None,      MultLvlCtrlReq > 0,       0,  0,  ""                                                                                                                                                                                                  
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                                                                 
 ;----------------------------------------------------------------
@@ -6085,14 +6450,14 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
 ;  CTRL, "UnmetClgLdHrs",        3043, TDCT_Edit,   170, 300,  25,  60,  3, FNT_STD, "Unmet Load Hrs:",                    TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys = 0,  0,  0,  ""
 ;  CTRL, "UnmetHtgLdHrs",        3046, TDCT_Edit,   320, 300,  25,  60,  3, FNT_STD, "",                                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys = 0,  0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ResHVACAutoSizing",    3141, TDCT_Check,  700, 255,  22, 145,  0, FNT_STD, "Autosize Proposed",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:AutoHardSize > 0 And ServesResZn > 0,  0,  0,  ""     ; SAC 05/19/22
+   CTRL, "ResHVACAutoSizing",    3141, TDCT_Check,  700, 250,  22, 145,  0, FNT_STD, "Autosize Proposed",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:AutoHardSize > 0 And ServesResZn > 0,  0,  0,  ""     ; SAC 05/19/22
 ;  CTRL, "HVACAutoSizing",       3041, TDCT_Check,  500, 270,  22, 130,  0, FNT_STD, "HVAC AutoSizing",                    TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  IsExhSys = 0,  0,  0,  ""
-   CTRL, "",                     3034, TDCT_Label,  700, 285,  20,   0,  0, FNT_STD, "--- Sizing Parameters ---",          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  IsExhSys = 0,  0,  0,  "" 
-   CTRL, "AirFlowPerSqFt",       3050, TDCT_Edit,   780, 305,  25,  60,  3, FNT_STD, "Design Flow/Area:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0 And Proj:HVACAutoSizing = 0,       0,  0,  ""	
-   CTRL, "AirFlowPerTon",        3052, TDCT_Edit,   780, 330,  25,  60,  1, FNT_STD, "Design Flow/Ton:",                   TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0 And Proj:HVACAutoSizing = 0,       0,  0,  ""
-   CTRL, "ClgSizingRat",         3053, TDCT_Edit,   780, 355,  25,  60,  3, FNT_STD, "Clg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""	
-   CTRL, "HtgSizingRat",         3054, TDCT_Edit,   780, 390,  25,  60,  3, FNT_STD, "Htg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
-   CTRL, "SizingOption",         3055, TDCT_Combo,  780, 415, 300, 120,  0, FNT_STD, "Sizing Option:",                     TA_LEFT,  -120, 4,     0, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
+   CTRL, "",                     3034, TDCT_Label,  700, 280,  20,   0,  0, FNT_STD, "--- Sizing Parameters ---",          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  IsExhSys = 0,  0,  0,  "" 
+   CTRL, "AirFlowPerSqFt",       3050, TDCT_Edit,   780, 300,  25,  60,  3, FNT_STD, "Design Flow/Area:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0,       0,  0,  ""	
+   CTRL, "AirFlowPerTon",        3052, TDCT_Edit,   780, 325,  25,  60,  1, FNT_STD, "Design Flow/Ton:",                   TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0,       0,  0,  ""
+   CTRL, "ClgSizingRat",         3053, TDCT_Edit,   780, 350,  25,  60,  3, FNT_STD, "Clg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""	
+   CTRL, "HtgSizingRat",         3054, TDCT_Edit,   780, 375,  25,  60,  3, FNT_STD, "Htg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
+   CTRL, "SizingOption",         3055, TDCT_Combo,  780, 400, 300, 120,  0, FNT_STD, "Sizing Option:",                     TA_LEFT,  -120, 4,     0, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
 
                                                                                                                                                                                                                                        
 ; For Single Duct Systems

@@ -129,7 +129,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
 //   for (iHr=0; iHr<8760; iHr++)
 //      daZero[iHr] = 0.0;
 
-   // Divvy PV/Batt into affordable housing meters by annual dwelling electric use - SAC 09/10/22
+   // Divvy PV & Batt based on PVAllocMethod - SAC 11/21/22
    double dPVAnnual = BEMPX_GetHourlyResultSum(   NULL, 0, "Proposed", "Electricity", "Photovoltaics", NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
    if (dPVAnnual == -99999.0)
       dPVAnnual = 0.0;
@@ -140,45 +140,79 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUAC:AffordablePVDCSysSizeFrac" ), dAffordablePVDCSysSizeFrac, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
    BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUAC:AffordableBattMaxCapFrac"  ), dAffordableBattMaxCapFrac , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
    if ( (dPVAnnual != 0.0 || dBattAnnual != 0.0) && (dAffordablePVDCSysSizeFrac > 0 || dAffordableBattMaxCapFrac > 0) )
-   {  double dTotalAllDwellingElecUse = 0.0;
-      double daDwellingElecFrac[NumDwellingMeters];
-      for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-      {
-         if (laNumUnitsByBedrms[iMtr] < 1)
-            daDwellingElecFrac[iMtr] = 0.0;
+   {
+      double daDwellingPVBattFrac[NumDwellingMeters];
+      long lPVAllocMethod=0;     // 0: Num Residents / 1: Electricity Use / 2: User Allocation
+      if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:PVAllocMethod" ), lPVAllocMethod, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) || lPVAllocMethod == 2)
+      {  // Divvy PV/Batt into affordable housing meters by user specified allocation percentages - SAC 12/09/22
+         long lNumUnits;
+         double dPctIndivPV, dPctIndivPVSum;
+         if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUAC:PctIndivUnitPVSum" ), dPctIndivPVSum, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) ||
+               dPctIndivPVSum < 99.96 || dPctIndivPVSum > 100.04)
+         {  bAbort = true;
+            BEMPX_WriteLogFile( QString( "CUAC Error: Invalid or missing PV allocation by unit type data. Access these inputs via PV Allocation button in CUAC dialog tab." ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            return;
+         }
          else
-         {  daDwellingElecFrac[iMtr] = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMeters[0][iMtr], pszInitialCUACEnduses[0], pszInitialCUACEnduses[1], pszInitialCUACEnduses[2], pszInitialCUACEnduses[3],
-                                                                                                               pszInitialCUACEnduses[4], pszInitialCUACEnduses[5], pszInitialCUACEnduses[6], pszInitialCUACEnduses[7], iCUAC_BEMProcIdx );
-            if (daDwellingElecFrac[iMtr] == -99999.0)
-               daDwellingElecFrac[iMtr] = 0.0;
-            double dTemp = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMeters[0][iMtr], pszInitialCUACEnduses[8], pszInitialCUACEnduses[9], pszInitialCUACEnduses[10], pszInitialCUACEnduses[11],
-                                                                                                   pszInitialCUACEnduses[12], pszInitialCUACEnduses[13], NULL, NULL, iCUAC_BEMProcIdx );
-            if (dTemp != -99999.0)
-               daDwellingElecFrac[iMtr] += dTemp;
-            dTotalAllDwellingElecUse += daDwellingElecFrac[iMtr];
-      }  }
-      assert( dTotalAllDwellingElecUse > 0 );
-      if (dTotalAllDwellingElecUse > 0)
-      {
-         double *pdPVHrlyData=NULL, *pdBattHrlyData=NULL;
-         if (dPVAnnual != 0.0)
-            BEMPX_GetHourlyResultArrayPtr( &pdPVHrlyData  , NULL, 0, "Proposed", "Electricity", "Photovoltaics", iCUAC_BEMProcIdx );
-         if (dBattAnnual != 0.0)
-            BEMPX_GetHourlyResultArrayPtr( &pdBattHrlyData, NULL, 0, "Proposed", "Electricity", "Battery"      , iCUAC_BEMProcIdx );
-
+         {  for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+            {  if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:AffordableUnitsByBedrms" )+iMtr, lNumUnits  , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lNumUnits   > 0 &&
+                   BEMPX_GetFloat(   BEMPX_GetDatabaseID( "CUAC:PctIndivUnitPVByBedrms"  )+iMtr, dPctIndivPV, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && dPctIndivPV > 0)
+                  daDwellingPVBattFrac[iMtr] = (dPctIndivPV * lNumUnits) / 100.0;
+               else
+                  daDwellingPVBattFrac[iMtr] = 0.0;
+         }  }
+      }
+      else if (lPVAllocMethod == 0)
+      {  // Divvy PV/Batt into affordable housing meters by number of residents - SAC 11/21/22
          for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-            if (daDwellingElecFrac[iMtr] > 0)
-            {
-               daDwellingElecFrac[iMtr] = daDwellingElecFrac[iMtr] / dTotalAllDwellingElecUse;
-               // PV
-               if (pdPVHrlyData && dAffordablePVDCSysSizeFrac > 0 && daDwellingElecFrac[iMtr] > 0)
-                  BEMPX_SumIntoHourlyResultArray( pdPVHrlyData, "Proposed", pszCUACMeters[0][iMtr], "Photovoltaics", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
-                                                  (dAffordablePVDCSysSizeFrac * daDwellingElecFrac[iMtr]) );
-               // Battery
-               if (pdBattHrlyData && dAffordableBattMaxCapFrac > 0 && daDwellingElecFrac[iMtr] > 0)
-                  BEMPX_SumIntoHourlyResultArray( pdBattHrlyData, "Proposed", pszCUACMeters[0][iMtr], "Battery", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
-                                                  (dAffordableBattMaxCapFrac * daDwellingElecFrac[iMtr]) );
-      }     }
+            BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUAC:ResidentFracByBedrms" )+iMtr, daDwellingPVBattFrac[iMtr], 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
+      }
+      else
+      {  // Divvy PV/Batt into affordable housing meters by annual dwelling electric use - SAC 09/10/22
+         double dTotalAllDwellingElecUse = 0.0;
+         for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+         {
+            if (laNumUnitsByBedrms[iMtr] < 1)
+               daDwellingPVBattFrac[iMtr] = 0.0;
+            else
+            {  daDwellingPVBattFrac[iMtr] = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMeters[0][iMtr], pszInitialCUACEnduses[0], pszInitialCUACEnduses[1], pszInitialCUACEnduses[2], pszInitialCUACEnduses[3],
+                                                                                                                  pszInitialCUACEnduses[4], pszInitialCUACEnduses[5], pszInitialCUACEnduses[6], pszInitialCUACEnduses[7], iCUAC_BEMProcIdx );
+               if (daDwellingPVBattFrac[iMtr] == -99999.0)
+                  daDwellingPVBattFrac[iMtr] = 0.0;
+               double dTemp = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMeters[0][iMtr], pszInitialCUACEnduses[8], pszInitialCUACEnduses[9], pszInitialCUACEnduses[10], pszInitialCUACEnduses[11],
+                                                                                                      pszInitialCUACEnduses[12], pszInitialCUACEnduses[13], NULL, NULL, iCUAC_BEMProcIdx );
+               if (dTemp != -99999.0)
+                  daDwellingPVBattFrac[iMtr] += dTemp;
+               dTotalAllDwellingElecUse += daDwellingPVBattFrac[iMtr];
+         }  }
+         assert( dTotalAllDwellingElecUse > 0 );
+         if (dTotalAllDwellingElecUse > 0)
+            for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+               if (daDwellingPVBattFrac[iMtr] > 0)
+                  daDwellingPVBattFrac[iMtr] = daDwellingPVBattFrac[iMtr] / dTotalAllDwellingElecUse;
+      }
+            if (bVerbose)
+               BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - PV allocation fracs:  %1 | %2 | %3 | %4 | %5 | %6 | %7" ).arg( QString::number( daDwellingPVBattFrac[0] ), QString::number( daDwellingPVBattFrac[1] ), QString::number( daDwellingPVBattFrac[2] ), QString::number( daDwellingPVBattFrac[3] ),
+                                    QString::number( daDwellingPVBattFrac[4] ), QString::number( daDwellingPVBattFrac[5] ), QString::number( daDwellingPVBattFrac[6] ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+      double *pdPVHrlyData=NULL, *pdBattHrlyData=NULL;
+      if (dPVAnnual != 0.0)
+         BEMPX_GetHourlyResultArrayPtr( &pdPVHrlyData  , NULL, 0, "Proposed", "Electricity", "Photovoltaics", iCUAC_BEMProcIdx );
+      if (dBattAnnual != 0.0)
+         BEMPX_GetHourlyResultArrayPtr( &pdBattHrlyData, NULL, 0, "Proposed", "Electricity", "Battery"      , iCUAC_BEMProcIdx );
+
+      for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+         if (daDwellingPVBattFrac[iMtr] > 0)
+         {
+            // PV
+            if (pdPVHrlyData && dAffordablePVDCSysSizeFrac > 0 && daDwellingPVBattFrac[iMtr] > 0)
+               BEMPX_SumIntoHourlyResultArray( pdPVHrlyData, "Proposed", pszCUACMeters[0][iMtr], "Photovoltaics", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
+                                               (dAffordablePVDCSysSizeFrac * daDwellingPVBattFrac[iMtr]) );
+            // Battery
+            if (pdBattHrlyData && dAffordableBattMaxCapFrac > 0 && daDwellingPVBattFrac[iMtr] > 0)
+               BEMPX_SumIntoHourlyResultArray( pdBattHrlyData, "Proposed", pszCUACMeters[0][iMtr], "Battery", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
+                                               (dAffordableBattMaxCapFrac * daDwellingPVBattFrac[iMtr]) );
+         }
    }
    iStep = 2;     sStep = "PV-Batt";
             if (bVerbose)
@@ -294,6 +328,16 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
          BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
    }  }
 
+   long lPVBillingOption=0, lPVCarryoverOption=-1;    // SAC 12/10/22
+   BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:PVBillingOption"   ), lPVBillingOption  , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
+   BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:PVCarryoverOption" ), lPVCarryoverOption, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
+         // CUAC:PVBillingOption,  2      ; SAC 12/10/22
+         //              0,    "PV Offsets Monthly Use"
+         //              1,    "PV Offsets Monthly Use w/ Carryover"
+         // CUAC:PVCarryoverOption,  12   ; SAC 12/10/22
+         //              0,    "never ends"
+         //              1,    "ends after Jan"
+         //              2,    "ends after Feb"
 
    // Retrieve hourly series' calculate & post monthly sums and utility bills
    int iMoHrStart[12], iMoHrEnd[12];
@@ -338,6 +382,49 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                      dAnnUse /= 365.0;
                      BEMPX_SetBEMData( lDBID_CEUFuelResult+13, BEMP_Flt, (void*) &dAnnUse, BEMO_User, iResObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );  // daily
                }  }
+            }
+
+            if (iFuel == 0)  // Electric processing
+            {  double dCarryOver=0.0;
+               int iBillMo, iFirstBillMo = ((lPVCarryoverOption==0 || lPVCarryoverOption==12) ? 0 : lPVCarryoverOption);
+               if (lPVBillingOption > 0)     // special processing for Elec use - carryover negative (due to PV) monthly use - SAC 12/10/22
+               {  int iNumLoops = (lPVCarryoverOption==0 ? 2 : 1);
+                  for (int iLp=0; iLp<iNumLoops; iLp++)
+                     for (iMo=0; iMo<12; iMo++)
+                     {
+                        iBillMo = iMo+iFirstBillMo;
+                        if (iBillMo > 11)
+                           iBillMo -= 12;
+
+                        if (dTotUseByMo[iBillMo] < 0)
+                        {  // add to carryover
+                           dCarryOver -= dTotUseByMo[iBillMo];
+                           dTotUseByMo[iBillMo] = 0.0;
+                        }
+                        else if (dTotUseByMo[iBillMo] > 0 && dCarryOver > 0)
+                        {  if (dTotUseByMo[iBillMo] > dCarryOver)
+                           {  // reduce month's use partly by carryover
+                              dTotUseByMo[iBillMo] -= dCarryOver;
+                              dCarryOver = 0.0;
+                           }
+                           else
+                           {  // carryover covers all of this month's use
+                              dCarryOver -= dTotUseByMo[iBillMo];
+                              dTotUseByMo[iBillMo] = 0.0;
+                        }  }
+               }     }
+
+               long lDBID_BillingElecUse = BEMPX_GetDatabaseID( "CUACResults:BillingElecUse" );       assert( lDBID_BillingElecUse > 0 );
+               if (lDBID_BillingElecUse > 0)
+               {  double dAnnUse = 0.0;
+                  for (iMo=0; iMo<12; iMo++)          // store BillingElecUse
+                  {  dAnnUse += dTotUseByMo[iMo];
+                     BEMPX_SetBEMData( lDBID_BillingElecUse+iMo, BEMP_Flt, (void*) &dTotUseByMo[iMo], BEMO_User, iResObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  }
+                  BEMPX_SetBEMData( lDBID_BillingElecUse+12, BEMP_Flt, (void*) &dAnnUse, BEMO_User, iResObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );  // annual
+                  dAnnUse /= 365.0;
+                  BEMPX_SetBEMData( lDBID_BillingElecUse+13, BEMP_Flt, (void*) &dAnnUse, BEMO_User, iResObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );  // daily
+               }
             }
 
             // Calculate utility bills
@@ -514,6 +601,8 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    // PDF report generation
    if (!bAbort && sErrMsg.isEmpty())
    {
+      long lRptOption = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:RptOption" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );      //  1 "Draft" / 2 "Final" / 3 "Annual"
+      int iRptID=0;
       QString sSubmitPDFPathFile = BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:SubmitPDFPathFile" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
       if (sSubmitPDFPathFile.isEmpty())
          BEMPX_WriteLogFile( QString( "CUAC:SubmitPDFPathFile undefined - needed for submittal report PDF generation" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -526,14 +615,32 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
             BEMPX_WriteLogFile( QString( "Unable to write CUAC submittal report PDF file:  %1" ).arg( sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
          else
          {
-
-            int iPDFGenRetVal = BEMPX_GeneratePDF( sSubmitPDFPathFile.toLocal8Bit().constData(), sRptGraphicsPath.toLocal8Bit().constData(), 0, iCUAC_BEMProcIdx );
+            iRptID = lRptOption;
+            int iPDFGenRetVal = BEMPX_GeneratePDF( sSubmitPDFPathFile.toLocal8Bit().constData(), sRptGraphicsPath.toLocal8Bit().constData(), iRptID, iCUAC_BEMProcIdx );
             BEMPX_WriteLogFile( QString( "CUAC submittal report PDF generation returned %1:  %2" ).arg( QString::number(iPDFGenRetVal), sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+            if (iPDFGenRetVal == 0)    // details report - SAC 01/03/23
+            {  // same here for Details report
+               QString sDetailsPDFPathFile = BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:DetailsPDFPathFile" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               if (sDetailsPDFPathFile.isEmpty())
+                  BEMPX_WriteLogFile( QString( "CUAC:DetailsPDFPathFile undefined - needed for details report PDF generation" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               else
+               {  QString sMsg;
+                  sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+                               "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+                               "(once the file is closed), or \n'Abort' to abort the %s.", "PDF", sDetailsPDFPathFile.toLocal8Bit().constData(), "PDF report generation" );
+                  if (!OKToWriteOrDeleteFile( sDetailsPDFPathFile.toLocal8Bit().constData(), sMsg, bSilent ))
+                     BEMPX_WriteLogFile( QString( "Unable to write CUAC details report PDF file:  %1" ).arg( sDetailsPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  else
+                  {
+                     iRptID += 10;
+                     int iPDFGenRetVal = BEMPX_GeneratePDF( sDetailsPDFPathFile.toLocal8Bit().constData(), sRptGraphicsPath.toLocal8Bit().constData(), iRptID, iCUAC_BEMProcIdx );
+                     BEMPX_WriteLogFile( QString( "CUAC details report PDF generation returned %1:  %2" ).arg( QString::number(iPDFGenRetVal), sDetailsPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               }  }
+            }
 
             int iGotHere = 1;
       }  }
-
-      // same here for Details report
 
    }
 }

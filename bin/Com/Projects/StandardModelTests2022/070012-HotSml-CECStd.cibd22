@@ -3,8 +3,9 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "070012-HotSml-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1466465847
-   ModDate = 1666150750
-   RunDate = 1666150751
+   ModDate = 1674219122
+   RunDate = 1674219123
+   EffMetric = "SEER2/EER2/HSPF2"
    ZipCode = 95814
    HVACAutoSizing = 0
    ExcptCondNoClgSys = "No"
@@ -15,8 +16,9 @@ Proj   "070012-HotSml-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.0 (1273)"
+   SoftwareVersion = "CBECC 2022.2.1 (1286)"
    ProjFileName = "070012-HotSml-CECStd19.cibd"
+   CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
    ..
@@ -205,6 +207,7 @@ Bldg   "Hotel Small"
    ..
 
 Story   "Building Story 1"  
+   TreeState = 254
    ..
 
 Spc   "CorridorFlr1"  
@@ -12867,13 +12870,12 @@ OACtrl   "BaseSys5 OACtrl-4"
 
 ZnSys   "GuestRoom101_SZAC"  
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom101_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom101_SZAC CoilHtg"  
@@ -12885,15 +12887,13 @@ Fan   "GuestRoom101_SZAC Fan"
    ..
 
 ZnSys   "GuestRoom102_SZAC"  
-   TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom102_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom102_SZAC CoilHtg"  
@@ -12907,13 +12907,12 @@ Fan   "GuestRoom102_SZAC Fan"
 ZnSys   "GuestRoom103_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom103_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom103_SZAC CoilHtg"  
@@ -12927,13 +12926,12 @@ Fan   "GuestRoom103_SZAC Fan"
 ZnSys   "GuestRoom104_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom104_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom104_SZAC CoilHtg"  
@@ -12947,13 +12945,12 @@ Fan   "GuestRoom104_SZAC Fan"
 ZnSys   "GuestRoom105_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom105_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom105_SZAC CoilHtg"  
@@ -12967,13 +12964,12 @@ Fan   "GuestRoom105_SZAC Fan"
 ZnSys   "GuestRoom201_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom201_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom201_SZAC CoilHtg"  
@@ -12987,14 +12983,13 @@ Fan   "GuestRoom201_SZAC Fan"
 ZnSys   "GuestRoom202_205_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom202_205_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom202_205_SZAC CoilHtg"  
@@ -13008,14 +13003,13 @@ Fan   "GuestRoom202_205_SZAC Fan"
 ZnSys   "GuestRoom206_208_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 3
    ..
 
 CoilClg   "GuestRoom206_208_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom206_208_SZAC CoilHtg"  
@@ -13029,14 +13023,13 @@ Fan   "GuestRoom206_208_SZAC Fan"
 ZnSys   "GuestRoom209_212_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom209_212_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom209_212_SZAC CoilHtg"  
@@ -13050,13 +13043,12 @@ Fan   "GuestRoom209_212_SZAC Fan"
 ZnSys   "GuestRoom213_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom213_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom213_SZAC CoilHtg"  
@@ -13070,13 +13062,12 @@ Fan   "GuestRoom213_SZAC Fan"
 ZnSys   "GuestRoom214_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom214_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom214_SZAC CoilHtg"  
@@ -13090,14 +13081,13 @@ Fan   "GuestRoom214_SZAC Fan"
 ZnSys   "GuestRoom215_218_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom215_218_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom215_218_SZAC CoilHtg"  
@@ -13111,13 +13101,12 @@ Fan   "GuestRoom215_218_SZAC Fan"
 ZnSys   "GuestRoom219_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom219_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom219_SZAC CoilHtg"  
@@ -13131,14 +13120,13 @@ Fan   "GuestRoom219_SZAC Fan"
 ZnSys   "GuestRoom220_223_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom220_223_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom220_223_SZAC CoilHtg"  
@@ -13152,13 +13140,12 @@ Fan   "GuestRoom220_223_SZAC Fan"
 ZnSys   "GuestRoom224_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom224_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom224_SZAC CoilHtg"  
@@ -13172,13 +13159,12 @@ Fan   "GuestRoom224_SZAC Fan"
 ZnSys   "GuestRoom301_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom301_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom301_SZAC CoilHtg"  
@@ -13192,14 +13178,13 @@ Fan   "GuestRoom301_SZAC Fan"
 ZnSys   "GuestRoom302_305_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom302_305_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom302_305_SZAC CoilHtg"  
@@ -13213,14 +13198,13 @@ Fan   "GuestRoom302_305_SZAC Fan"
 ZnSys   "GuestRoom306_308_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 3
    ..
 
 CoilClg   "GuestRoom306_308_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom306_308_SZAC CoilHtg"  
@@ -13234,14 +13218,13 @@ Fan   "GuestRoom306_308_SZAC Fan"
 ZnSys   "GuestRoom309_312_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom309_312_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom309_312_SZAC CoilHtg"  
@@ -13255,13 +13238,12 @@ Fan   "GuestRoom309_312_SZAC Fan"
 ZnSys   "GuestRoom313_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom313_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom313_SZAC CoilHtg"  
@@ -13275,13 +13257,12 @@ Fan   "GuestRoom313_SZAC Fan"
 ZnSys   "GuestRoom314_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom314_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom314_SZAC CoilHtg"  
@@ -13295,14 +13276,13 @@ Fan   "GuestRoom314_SZAC Fan"
 ZnSys   "GuestRoom315_318_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom315_318_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom315_318_SZAC CoilHtg"  
@@ -13316,13 +13296,12 @@ Fan   "GuestRoom315_318_SZAC Fan"
 ZnSys   "GuestRoom319_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom319_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom319_SZAC CoilHtg"  
@@ -13336,14 +13315,13 @@ Fan   "GuestRoom319_SZAC Fan"
 ZnSys   "GuestRoom320_323_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom320_323_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom320_323_SZAC CoilHtg"  
@@ -13357,13 +13335,12 @@ Fan   "GuestRoom320_323_SZAC Fan"
 ZnSys   "GuestRoom324_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom324_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom324_SZAC CoilHtg"  
@@ -13377,13 +13354,12 @@ Fan   "GuestRoom324_SZAC Fan"
 ZnSys   "GuestRoom401_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom401_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom401_SZAC CoilHtg"  
@@ -13397,14 +13373,13 @@ Fan   "GuestRoom401_SZAC Fan"
 ZnSys   "GuestRoom402_405_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom402_405_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom402_405_SZAC CoilHtg"  
@@ -13418,14 +13393,13 @@ Fan   "GuestRoom402_405_SZAC Fan"
 ZnSys   "GuestRoom406_408_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 3
    ..
 
 CoilClg   "GuestRoom406_408_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom406_408_SZAC CoilHtg"  
@@ -13439,14 +13413,13 @@ Fan   "GuestRoom406_408_SZAC Fan"
 ZnSys   "GuestRoom409_412_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom409_412_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom409_412_SZAC CoilHtg"  
@@ -13460,13 +13433,12 @@ Fan   "GuestRoom409_412_SZAC Fan"
 ZnSys   "GuestRoom413_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom413_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom413_SZAC CoilHtg"  
@@ -13480,13 +13452,12 @@ Fan   "GuestRoom413_SZAC Fan"
 ZnSys   "GuestRoom414_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom414_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom414_SZAC CoilHtg"  
@@ -13500,14 +13471,13 @@ Fan   "GuestRoom414_SZAC Fan"
 ZnSys   "GuestRoom415_418_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom415_418_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom415_418_SZAC CoilHtg"  
@@ -13521,13 +13491,12 @@ Fan   "GuestRoom415_418_SZAC Fan"
 ZnSys   "GuestRoom419_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom419_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom419_SZAC CoilHtg"  
@@ -13541,14 +13510,13 @@ Fan   "GuestRoom419_SZAC Fan"
 ZnSys   "GuestRoom420_423_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    Cnt = 4
    ..
 
 CoilClg   "GuestRoom420_423_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom420_423_SZAC CoilHtg"  
@@ -13562,13 +13530,12 @@ Fan   "GuestRoom420_423_SZAC Fan"
 ZnSys   "GuestRoom424_SZAC"  
    TreeState = 253
    Type = "SZAC"
-   SubType = "Packaged1Phase"
+   SubType = "Split1Phase"
    FanCtrl = "Cycling"
    ..
 
 CoilClg   "GuestRoom424_SZAC CoilClg"  
    Type = "DirectExpansion"
-   DXEER = 11.0417
    ..
 
 CoilHtg   "GuestRoom424_SZAC CoilHtg"  
@@ -14123,59 +14090,59 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "0.0"
-   Enduse1[3] = "300.6"
-   Enduse1[4] = "26.38"
+   Enduse1[3] = "304.3"
+   Enduse1[4] = "26.68"
    Enduse1[5] = "0.0"
-   Enduse1[6] = "300.6"
-   Enduse1[7] = "26.38"
+   Enduse1[6] = "304.3"
+   Enduse1[7] = "26.68"
    Enduse1[8] = "--"
-   Enduse1[9] = "--"
-   Enduse1[10] = "--"
-   Enduse1[11] = "6.19"
-   Enduse1[12] = "6.19"
+   Enduse1[9] = "0.0"
+   Enduse1[10] = "0.0"
+   Enduse1[11] = "6.26"
+   Enduse1[12] = "6.26"
    Enduse1[13] = "--"
    Enduse1[17] = "0.00"
-   Enduse1[18] = "17.58"
-   Enduse1[19] = "17.58"
+   Enduse1[18] = "17.80"
+   Enduse1[19] = "17.80"
    Enduse1[20] = "0.00"
-   Enduse1[21] = "17.58"
-   Enduse1[22] = "17.58"
-   Enduse1[23] = "0.00"
+   Enduse1[21] = "17.79"
+   Enduse1[22] = "17.79"
+   Enduse1[23] = "-0.01"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "41.2"
+   Enduse2[2] = "39.7"
    Enduse2[3] = "--"
-   Enduse2[4] = "40.62"
-   Enduse2[5] = "41.2"
+   Enduse2[4] = "38.15"
+   Enduse2[5] = "39.7"
    Enduse2[6] = "--"
-   Enduse2[7] = "40.64"
-   Enduse2[8] = "0.02"
-   Enduse2[9] = "17.6"
-   Enduse2[10] = "17.6"
-   Enduse2[11] = "1.56"
-   Enduse2[12] = "1.56"
+   Enduse2[7] = "38.15"
+   Enduse2[8] = "--"
+   Enduse2[9] = "3.3"
+   Enduse2[10] = "3.3"
+   Enduse2[11] = "1.44"
+   Enduse2[12] = "1.44"
    Enduse2[13] = "--"
-   Enduse2[17] = "4.08"
-   Enduse2[19] = "4.08"
-   Enduse2[20] = "4.09"
-   Enduse2[22] = "4.09"
-   Enduse2[23] = "0.01"
+   Enduse2[17] = "3.78"
+   Enduse2[19] = "3.78"
+   Enduse2[20] = "3.78"
+   Enduse2[22] = "3.78"
+   Enduse2[23] = "0.00"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "36.1"
+   Enduse3[2] = "36.2"
    Enduse3[3] = "--"
-   Enduse3[4] = "25.88"
-   Enduse3[5] = "36.1"
+   Enduse3[4] = "25.57"
+   Enduse3[5] = "36.2"
    Enduse3[6] = "--"
-   Enduse3[7] = "25.88"
+   Enduse3[7] = "25.57"
    Enduse3[8] = "--"
-   Enduse3[9] = "6.3"
-   Enduse3[10] = "6.3"
-   Enduse3[11] = "2.00"
-   Enduse3[12] = "2.00"
+   Enduse3[9] = "4.5"
+   Enduse3[10] = "4.5"
+   Enduse3[11] = "1.99"
+   Enduse3[12] = "1.99"
    Enduse3[13] = "--"
-   Enduse3[17] = "5.25"
-   Enduse3[19] = "5.25"
-   Enduse3[20] = "5.25"
-   Enduse3[22] = "5.25"
+   Enduse3[17] = "5.21"
+   Enduse3[19] = "5.21"
+   Enduse3[20] = "5.21"
+   Enduse3[22] = "5.21"
    Enduse3[23] = "0.00"
    Enduse4[1] = "Heat Rejection"
    Enduse4[2] = "--"
@@ -14199,8 +14166,8 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse5[6] = "--"
    Enduse5[7] = "0.05"
    Enduse5[8] = "--"
-   Enduse5[9] = "--"
-   Enduse5[10] = "--"
+   Enduse5[9] = "0.0"
+   Enduse5[10] = "0.0"
    Enduse5[11] = "0.01"
    Enduse5[12] = "0.01"
    Enduse5[13] = "--"
@@ -14215,8 +14182,8 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse6[4] = "45.71"
    Enduse6[5] = "3.7"
    Enduse6[6] = "552.1"
-   Enduse6[7] = "48.53"
-   Enduse6[8] = "2.82"
+   Enduse6[7] = "48.52"
+   Enduse6[8] = "2.81"
    Enduse6[9] = "0.0"
    Enduse6[10] = "0.4"
    Enduse6[11] = "11.17"
@@ -14230,98 +14197,98 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse6[22] = "32.82"
    Enduse6[23] = "1.07"
    Enduse7[1] = "Indoor Lighting"
-   Enduse7[2] = "36.7"
+   Enduse7[2] = "36.6"
    Enduse7[3] = "--"
-   Enduse7[4] = "23.62"
-   Enduse7[5] = "36.7"
+   Enduse7[4] = "23.48"
+   Enduse7[5] = "36.6"
    Enduse7[6] = "--"
-   Enduse7[7] = "23.62"
+   Enduse7[7] = "23.48"
    Enduse7[8] = "--"
-   Enduse7[9] = "5.6"
-   Enduse7[10] = "5.6"
-   Enduse7[11] = "2.09"
-   Enduse7[12] = "2.09"
+   Enduse7[9] = "4.1"
+   Enduse7[10] = "4.1"
+   Enduse7[11] = "2.07"
+   Enduse7[12] = "2.07"
    Enduse7[13] = "--"
-   Enduse7[17] = "5.49"
-   Enduse7[19] = "5.49"
-   Enduse7[20] = "5.49"
-   Enduse7[22] = "5.49"
+   Enduse7[17] = "5.43"
+   Enduse7[19] = "5.43"
+   Enduse7[20] = "5.43"
+   Enduse7[22] = "5.43"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "75.1"
-   Enduse8[3] = "842.8"
-   Enduse8[4] = "144.13"
-   Enduse8[5] = "78.2"
-   Enduse8[6] = "852.7"
-   Enduse8[7] = "146.97"
-   Enduse8[8] = "2.84"
-   Enduse8[9] = "28.8"
-   Enduse8[10] = "29.2"
-   Enduse8[11] = "22.53"
-   Enduse8[12] = "22.93"
-   Enduse8[13] = "0.40"
-   Enduse8[17] = "13.60"
-   Enduse8[18] = "49.29"
-   Enduse8[19] = "62.89"
-   Enduse8[20] = "14.10"
-   Enduse8[21] = "49.87"
-   Enduse8[22] = "63.97"
-   Enduse8[23] = "1.08"
+   Enduse8[2] = "73.6"
+   Enduse8[3] = "846.5"
+   Enduse8[4] = "141.51"
+   Enduse8[5] = "81.1"
+   Enduse8[6] = "856.4"
+   Enduse8[7] = "146.33"
+   Enduse8[8] = "4.82"
+   Enduse8[9] = "11.8"
+   Enduse8[10] = "12.2"
+   Enduse8[11] = "22.45"
+   Enduse8[12] = "22.91"
+   Enduse8[13] = "0.46"
+   Enduse8[17] = "13.20"
+   Enduse8[18] = "49.51"
+   Enduse8[19] = "62.71"
+   Enduse8[20] = "13.83"
+   Enduse8[21] = "50.08"
+   Enduse8[22] = "63.91"
+   Enduse8[23] = "1.20"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "132.1"
-   Enduse9[3] = "1.4"
-   Enduse9[4] = "86.60"
+   Enduse9[3] = "6.9"
+   Enduse9[4] = "87.09"
    Enduse9[5] = "132.1"
-   Enduse9[6] = "1.4"
-   Enduse9[7] = "86.60"
+   Enduse9[6] = "6.9"
+   Enduse9[7] = "87.09"
    Enduse9[8] = "--"
-   Enduse9[9] = "20.4"
-   Enduse9[10] = "20.4"
-   Enduse9[11] = "8.02"
-   Enduse9[12] = "8.02"
+   Enduse9[9] = "16.6"
+   Enduse9[10] = "16.6"
+   Enduse9[11] = "8.04"
+   Enduse9[12] = "8.04"
    Enduse9[13] = "--"
-   Enduse9[17] = "20.94"
-   Enduse9[18] = "0.08"
-   Enduse9[19] = "21.02"
-   Enduse9[20] = "20.94"
-   Enduse9[21] = "0.08"
-   Enduse9[22] = "21.02"
+   Enduse9[17] = "20.71"
+   Enduse9[18] = "0.40"
+   Enduse9[19] = "21.11"
+   Enduse9[20] = "20.71"
+   Enduse9[21] = "0.40"
+   Enduse9[22] = "21.11"
    Enduse9[23] = "0.00"
    Enduse10[1] = "Process"
    Enduse10[2] = "34.9"
    Enduse10[3] = "--"
-   Enduse10[4] = "22.57"
+   Enduse10[4] = "22.58"
    Enduse10[5] = "34.9"
    Enduse10[6] = "--"
-   Enduse10[7] = "22.57"
+   Enduse10[7] = "22.58"
    Enduse10[8] = "--"
-   Enduse10[9] = "5.0"
-   Enduse10[10] = "5.0"
+   Enduse10[9] = "3.9"
+   Enduse10[10] = "3.9"
    Enduse10[11] = "2.07"
    Enduse10[12] = "2.07"
    Enduse10[13] = "--"
-   Enduse10[17] = "5.43"
-   Enduse10[19] = "5.43"
-   Enduse10[20] = "5.43"
-   Enduse10[22] = "5.43"
+   Enduse10[17] = "5.41"
+   Enduse10[19] = "5.41"
+   Enduse10[20] = "5.41"
+   Enduse10[22] = "5.41"
    Enduse10[23] = "0.00"
    Enduse11[1] = "Other Ltg"
    Enduse11[2] = "12.5"
    Enduse11[3] = "--"
-   Enduse11[4] = "8.88"
+   Enduse11[4] = "9.10"
    Enduse11[5] = "12.5"
    Enduse11[6] = "--"
-   Enduse11[7] = "8.88"
+   Enduse11[7] = "9.10"
    Enduse11[8] = "--"
-   Enduse11[9] = "2.6"
-   Enduse11[10] = "2.6"
+   Enduse11[9] = "2.3"
+   Enduse11[10] = "2.3"
    Enduse11[11] = "0.91"
    Enduse11[12] = "0.91"
    Enduse11[13] = "--"
-   Enduse11[17] = "2.39"
-   Enduse11[19] = "2.39"
-   Enduse11[20] = "2.39"
-   Enduse11[22] = "2.39"
+   Enduse11[17] = "2.38"
+   Enduse11[19] = "2.38"
+   Enduse11[20] = "2.38"
+   Enduse11[22] = "2.38"
    Enduse11[23] = "0.00"
    Enduse12[1] = "Process Motors"
    Enduse12[2] = "--"
@@ -14341,20 +14308,20 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse13[2] = "-39.6"
    Enduse13[3] = "--"
    Enduse13[4] = "-18.13"
-   Enduse13[5] = "-39.6"
+   Enduse13[5] = "-35.2"
    Enduse13[6] = "--"
-   Enduse13[7] = "-18.13"
-   Enduse13[8] = "--"
-   Enduse13[9] = "-0.6"
-   Enduse13[10] = "-0.6"
+   Enduse13[7] = "-16.12"
+   Enduse13[8] = "2.01"
+   Enduse13[9] = "-0.1"
+   Enduse13[10] = "-0.1"
    Enduse13[11] = "-0.49"
-   Enduse13[12] = "-0.49"
-   Enduse13[13] = "--"
+   Enduse13[12] = "-0.43"
+   Enduse13[13] = "0.06"
    Enduse13[17] = "-1.27"
    Enduse13[19] = "-1.27"
-   Enduse13[20] = "-1.27"
-   Enduse13[22] = "-1.27"
-   Enduse13[23] = "0.00"
+   Enduse13[20] = "-1.13"
+   Enduse13[22] = "-1.13"
+   Enduse13[23] = "0.14"
    Enduse14[1] = "Battery"
    Enduse14[2] = "--"
    Enduse14[3] = "--"
@@ -14370,45 +14337,45 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[13] = "--"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "254.6"
-   Enduse15[3] = "844.2"
-   Enduse15[4] = "262.18"
-   Enduse15[5] = "257.7"
-   Enduse15[6] = "854.1"
-   Enduse15[7] = "265.02"
-   Enduse15[8] = "2.84"
-   Enduse15[9] = "56.8"
-   Enduse15[10] = "57.2"
-   Enduse15[11] = "33.53"
+   Enduse15[2] = "253.1"
+   Enduse15[3] = "853.4"
+   Enduse15[4] = "260.28"
+   Enduse15[5] = "260.6"
+   Enduse15[6] = "863.3"
+   Enduse15[7] = "265.10"
+   Enduse15[8] = "4.82"
+   Enduse15[9] = "34.7"
+   Enduse15[10] = "35.1"
+   Enduse15[11] = "33.47"
    Enduse15[12] = "33.93"
-   Enduse15[13] = "0.40"
-   Enduse15[17] = "42.36"
-   Enduse15[18] = "49.37"
-   Enduse15[19] = "91.73"
-   Enduse15[20] = "42.86"
-   Enduse15[21] = "49.95"
+   Enduse15[13] = "0.46"
+   Enduse15[17] = "41.70"
+   Enduse15[18] = "49.91"
+   Enduse15[19] = "91.61"
+   Enduse15[20] = "42.33"
+   Enduse15[21] = "50.48"
    Enduse15[22] = "92.81"
-   Enduse15[23] = "1.08"
+   Enduse15[23] = "1.20"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "114.7"
-   Enduse16[3] = "842.8"
-   Enduse16[4] = "162.26"
-   Enduse16[5] = "117.8"
-   Enduse16[6] = "852.7"
-   Enduse16[7] = "165.10"
-   Enduse16[8] = "2.84"
-   Enduse16[9] = "29.5"
-   Enduse16[10] = "29.8"
-   Enduse16[11] = "23.02"
-   Enduse16[12] = "23.42"
+   Enduse16[2] = "113.2"
+   Enduse16[3] = "846.5"
+   Enduse16[4] = "159.64"
+   Enduse16[5] = "116.3"
+   Enduse16[6] = "856.4"
+   Enduse16[7] = "162.45"
+   Enduse16[8] = "2.81"
+   Enduse16[9] = "11.9"
+   Enduse16[10] = "12.3"
+   Enduse16[11] = "22.94"
+   Enduse16[12] = "23.34"
    Enduse16[13] = "0.40"
-   Enduse16[17] = "14.87"
-   Enduse16[18] = "49.29"
-   Enduse16[19] = "64.16"
-   Enduse16[20] = "15.37"
-   Enduse16[21] = "49.87"
-   Enduse16[22] = "65.24"
-   Enduse16[23] = "1.08"
+   Enduse16[17] = "14.47"
+   Enduse16[18] = "49.51"
+   Enduse16[19] = "63.98"
+   Enduse16[20] = "14.96"
+   Enduse16[21] = "50.08"
+   Enduse16[22] = "65.04"
+   Enduse16[23] = "1.06"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 0  'CorridorFlr1 Thermal Zone'
@@ -14464,7 +14431,7 @@ clg: 0  htg: 8  'GuestRoom315_318 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom319 Thermal Zone'
 clg: 0  htg: 8  'GuestRoom320_323 Thermal Zone'
 clg: 0  htg: 5  'GuestRoom324 Thermal Zone'
-clg: 0  htg: 21  'GuestRoom401 Thermal Zone'
+clg: 0  htg: 20  'GuestRoom401 Thermal Zone'
 clg: 0  htg: 20  'GuestRoom402_405 Thermal Zone'
 clg: 0  htg: 21  'GuestRoom406_408 Thermal Zone'
 clg: 0  htg: 19  'GuestRoom409_412 Thermal Zone'
@@ -14527,7 +14494,7 @@ clg: 0  htg: 8  'GuestRoom315_318 Thermal Zone'
 clg: 0  htg: 4  'GuestRoom319 Thermal Zone'
 clg: 0  htg: 8  'GuestRoom320_323 Thermal Zone'
 clg: 0  htg: 5  'GuestRoom324 Thermal Zone'
-clg: 0  htg: 21  'GuestRoom401 Thermal Zone'
+clg: 0  htg: 20  'GuestRoom401 Thermal Zone'
 clg: 0  htg: 20  'GuestRoom402_405 Thermal Zone'
 clg: 0  htg: 21  'GuestRoom406_408 Thermal Zone'
 clg: 0  htg: 19  'GuestRoom409_412 Thermal Zone'
@@ -14544,31 +14511,33 @@ clg: 0  htg: 14  'GuestRoom424 Thermal Zone'" )
    MetricPassFail[2] = "Pass"
    MetricPassFail[3] = "Pass"
    ComplyMessage = "COMPLIES"
-   StdPVBatteryMsg = "Standard Design PV Capacity: 25.3 kWdc  /  Battery System Capacity: 29.4 kWh  (power 6.93 kW)"
-   PctSavingsTDV = 1.07162
-   PctSavingsEffTDV = 1.72017
-   PctSavingsCmpTDV = 1.93237
-   PctSavTDVLbl = "1.1"
+   StdPVBatteryMsg = "Standard Design PV Capacity: 22.5 kWdc  /  Battery System Capacity: 25.5 kWh  (power 6.01 kW)"
+   PctSavingsTDV = 1.81818
+   PctSavingsEffTDV = 1.72976
+   PctSavingsCmpTDV = 3.29392
+   PctSavTDVLbl = "1.8"
    PctSavEffTDVLbl = "1.7"
-   PctSavCmpTDVLbl = "1.9"
-   PctSavingsSrc = 1.1789
-   PctSavingsEffSrc = 1.70794
-   PctSavingsCmpSrc = 1.74444
-   PctSavSrcLbl = "1.2"
+   PctSavCmpTDVLbl = "3.3"
+   PctSavingsSrc = 1.35573
+   PctSavingsEffSrc = 1.7138
+   PctSavingsCmpSrc = 2.00786
+   PctSavSrcLbl = "1.4"
    PctSavEffSrcLbl = "1.7"
-   PctSavCmpSrcLbl = "1.7"
+   PctSavCmpSrcLbl = "2.0"
    MarginkW = 0.4
    PVBattResultsValid = 1
    PropDHWNames_SSF[1] = "DHW Solar System 1"
    PropDHW_SSF[1] = 0.353
    StdDHW_SSF = 0.341
-   DHW_SSF_Summary = ( "DHW SSF:", "0.35 Prop", "0.34 Std" )
+   DHW_SSF_Summary = ( "DHW SSF:", "0.35", "0.34" )
    PropPV_Total = 39578.3
    PropPV_Export = 0
    PropPV_PctExport = 0
-   StdPV_Total = 39578.3
+   StdPV_Total = 35186.9
    StdPV_Export = 0
    StdPV_PctExport = 0
+   NRCCPRFPayldTransID = "cd7caa01-e7a6-466e-afbe-d541adfc2f3e"
+   NRCCPRFPayldProcDate = "2023-01-20T04:51:45"
    ..
 
 ResDHWSys   "GuestRm DHW Sys"  
