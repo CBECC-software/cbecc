@@ -2473,7 +2473,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		bPromptUserUMLHWarning = false;		// SAC 3/19/15 - toggle OFF PromptUserUMLHWarning if 'silent' flag set or DontAbortOnErrorsThruStep includes UMLH check step
 
 	int  iRptGenConnectTimeout		   =	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
-	int  iRptGenReadWriteTimeout		=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , 480,  saCSVOptions );		// SAC 11/02/22
+	int  iRptGenReadWriteTimeout		=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , CECRptGenDefaultReadWriteTimeoutSecs,  saCSVOptions );		// SAC 11/02/22
 
 	long plExportHourlyResults[4]		={	                                                     0                      ,		// SAC 8/21/14
 													                                                     0                      ,		// SAC 8/21/14
@@ -3709,7 +3709,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bResearchMode = false;
 	bool bProposedOnly = false;		// SAC 9/6/13
 	BOOL bCompletedAnalysisSteps = FALSE;
-	long lQuickAnalysis = 0;		// SAC 11/8/14
+	long lQuickAnalysis = 0;		   // SAC 11/8/14
+	long lCSESimSpeedOption = 0;		// 0:Compliance, 1:Quick, 2:Specify - SAC 03/02/23
 	long lNumPVArraysChk = 0;			// SAC 4/3/19
 	bool bEnablePVBattSim = false;	// SAC 4/3/19
    bool bHaveStdPVSim = false;      // SAC 12/08/21
@@ -3776,6 +3777,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			lQuickAnalysis = lQuickAnalysisOption;
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "QuickAnalysis", iCID_Proj ), BEMP_Int, (void*) &lQuickAnalysis );
 			bReDefaultModel = TRUE;
+		}
+
+      BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:SimSpeedOption" ), lCSESimSpeedOption, -1 );     // 0:Compliance, 1:Quick, 2:Specify - SAC 03/02/23
+      if (lCSESimSpeedOption == 0 && lQuickAnalysis > 0)
+		{						if (bVerbose)
+									BEMPX_WriteLogFile( "  PerfAnal_NRes - Forcing ResProj:SimSpeedOption to 'Quick' due to QuickAnalysis setting", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			lCSESimSpeedOption = 1;
+			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ResProj:SimSpeedOption" ), BEMP_Int, (void*) &lCSESimSpeedOption );
 		}
 
 		// SAC 4/11/16 - confirm existence of ReadVarsESO exe and rvi files (needed for new SimOutputVariablesToCSV feature)
@@ -4117,7 +4126,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					long lDisableMandOccSensorCtrl;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandOccSensorCtrl", iCID_Proj ), lDisableMandOccSensorCtrl ))		// SAC 11/1/19 - new cause for disabling report security
 						lDisableMandOccSensorCtrl = 0;
-			#define  NumRptSecOff  25
+			#define  NumRptSecOff  26
 					int iRptSecOffIdx[NumRptSecOff];
 					bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
 													(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
@@ -4143,7 +4152,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 													(lNumUserSpecMats > 0), 		         // # of Mats defined by user-specified properties and used to describe simulated surfaces in the building - SAC 12/16/21
                                        (lEnableResearchMode > 0),             // EnableResearchMode activated
                                        (lNumAutosizedResHtPumps > 0),         // Autosized Res HtPumps - SAC 10/15/22
-                                       (lNumResVCHP2HtPumps > 0) };           // VCHP2 Res HtPumps - SAC 10/15/22
+                                       (lNumResVCHP2HtPumps > 0),             // VCHP2 Res HtPumps - SAC 10/15/22
+                                       (lCSESimSpeedOption > 0) };            // CSE simulation modes - 0:Compliance, 1:Quick, 2:Specify - SAC 03/02/23
 					for (iRF=0; iRF < NumRptSecOff; iRF++)
 					{	if (bRptSecOff[iRF])
 							iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
@@ -4194,6 +4204,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									case 22 :	sLogMsg =        "      EnableResearchMode flag activated";		break;	// SAC 02/26/22
                            case 23 :   sLogMsg = QString::asprintf( "      %ld Residential heat pump object(s) are configured for auto-sizing which is not allowed in permit analysis", lNumAutosizedResHtPumps );		break;	// SAC 10/15/22
                            case 24 :   sLogMsg = QString::asprintf( "      %ld Residential heat pump object(s) are specified as 'VCHP - Detailed' which is not allowed in permit analysis", lNumResVCHP2HtPumps );		break;	// SAC 10/15/22
+                           case 25 :   sLogMsg = QString::asprintf( "      Residential (CSE) simulation speed setting of '%s' is not allowed in permit analysis, 'Compliance' required", (lCSESimSpeedOption==1 ? "Quick" : "Specify") );		break;	// SAC 03/02/23
 									default :	sLogMsg.clear();		break;
 								}
 								if (!sLogMsg.isEmpty())
@@ -5798,6 +5809,18 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
       							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "EUseSummary:ComplyMessage" ), BEMP_Str , (void*) "DOES NOT COMPLY (UMLH)", BEMO_User, iEUS, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo[iR].BEMProcIdx() );   // SAC 12/13/21
 						}		}
 				}
+
+				if (!bAbort && !BEMPX_AbortRuleEvaluation())	   // new property to track when analysis is invalid - SAC 05/05/23 (gh NRes PRF schema issue #51)
+            {
+               long lDBID_EUseSum_AnalysisValid = BEMPX_GetDatabaseID( "EUseSummary:AnalysisValid" );
+               long lAnalysisValid = (bSendRptSignature ? 1 : 0);
+					for (int iR=0; (lDBID_EUseSum_AnalysisValid > 0 && iR <= iSimRunIdx); iR++)
+						if (osRunInfo[iR].OSRunIdx() >= 0 && osRunInfo[iR].RunID().length() > 0)
+						{	int iNumEUseSums = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "EUseSummary" ), BEMO_User, osRunInfo[iR].BEMProcIdx() );
+							for (int iEUS=0; iEUS < iNumEUseSums; iEUS++)
+									BEMPX_SetBEMData( lDBID_EUseSum_AnalysisValid, BEMP_Int, (void*) &lAnalysisValid, BEMO_User, iEUS, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo[iR].BEMProcIdx() );
+						}
+            }
 
 				if ((!bAbort && !BEMPX_AbortRuleEvaluation()) || bForceXMLFileWriteDespiteAbort)		// SAC 9/6/13 - added to ensure XML results file still written despite errors (to help diagnose problems in model...)
 				{

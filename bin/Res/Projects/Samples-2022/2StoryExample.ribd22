@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "CZ 9 2 Story Example 2"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
    CreateDate = 1548275704
-   ModDate = 1674211298
+   ModDate = 1683873544
    RunDate = 1472838535
    ProjFileName = "2StoryExample3.ribd22"
    RunTitle = "2 Story Example"
@@ -782,7 +782,7 @@ Attic   "Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -1270,8 +1270,8 @@ EUseSummary   "EUSummary"
    StdDesignPVSize = 3.20164
    StdMixedFuelPVTDV = -38.37
    StdMixedFuelPVMlt = 3.20164
-   PrelimPropkWh = 6683.01
-   PrelimPropCompTDV = 37.9799
+   PrelimPropkWh = 6683.02
+   PrelimPropCompTDV = 37.9809
    PrelimPropPV = -5117.9
    PrelimPropPVTDV = -39.76
    UnscaledPropPVRatio = 0.81695
@@ -1310,7 +1310,7 @@ EUseSummary   "EUSummary"
    MeetsTier2 = 0
    MeetsZNETier = 0
    PropElecCarbon[1] = 0.591828
-   PropFuelCarbon[1] = 0.490189
+   PropFuelCarbon[1] = 0.490228
    PropFinalCarbon[1] = 1.08
    PropExclExpCarbon[1] = 1.11
    PropExclExpCO2Str[1] = "1.11"
@@ -2426,7 +2426,7 @@ DWHRSys   "Drain Water Heat Recovery System 1"
 DHWHeater   "Small Instantaneous"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

@@ -539,15 +539,23 @@ static FuncTable functable[] =
    {                "#CCF",        EXP_BEMPFunc, BF_Cr8CompFor,    VAR_ARGS },  /* SAC 04/27/22 - added */
    { "ExportFileConcat",           EXP_BEMPFunc, BF_ExpFileConcat, VAR_ARGS },  /* SAC 06/28/22 - added */
    {                "#XFC",        EXP_BEMPFunc, BF_ExpFileConcat, VAR_ARGS },  /* SAC 06/28/22 - added */
-   { NULL,                         0,           0,              0 }
+   { "SetNextArrayElement",        EXP_BEMPFunc, BF_SetNextArr,    1 },         /* SAC 04/24/23 - added (Com tic #3392) */
+   {                "#SNAE",       EXP_BEMPFunc, BF_SetNextArr,    1 },         /* SAC 04/24/23 - added */
+   { "MaxAcrossIf",                EXP_BEMPFunc, BF_MaxAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added (Com tic #3392) */
+   {                "#MXAI",       EXP_BEMPFunc, BF_MaxAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added */
+   { "MinAcrossIf",                EXP_BEMPFunc, BF_MinAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added (Com tic #3392) */
+   {                "#MNAI",       EXP_BEMPFunc, BF_MinAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added */
+   { NULL,                         0,            0,                0 }
 };
 
 static BOOL CurrentFunctionAllowsConditionalOperators( int iCurFunc )  // SAC 2/20/13 - 
 {	return ( iCurFunc ==  BF_SumAcrsIf    ||
+	         iCurFunc ==  BF_MaxAcrsIf    ||
+	         iCurFunc ==  BF_MinAcrsIf    ||
 	         iCurFunc ==  BF_SumChldIf    ||
             iCurFunc ==  BF_IfValidAnd   ||
             iCurFunc ==  BF_ListRevRefIf ||
-            iCurFunc ==  BF_UListRevRefIf );  // SAC 2/13/14   // SAC 1/26/15   // SAC 8/22/19
+            iCurFunc ==  BF_UListRevRefIf );  // SAC 2/13/14   // SAC 1/26/15   // SAC 8/22/19  // SAC 04/26/23
 }
 int eiParseCount_IfValidAnd = 0;		/* SAC 1/30/15 - added to ensure all arguments evaluate via *Valid() functions */
 int eiParseCount_ValidOr = 0;

@@ -142,6 +142,7 @@ void CDlgStartLoad::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDlgStartLoad, CDialog)
 	//{{AFX_MSG_MAP(CDlgStartLoad)
 	ON_BN_CLICKED(IDC_START_BATCH, OnStartBatchProcessing)
+	ON_BN_CLICKED(IDC_START_PVOPTOUT, OnStartCommunitySolarOptOut)
 	ON_BN_CLICKED(IDC_START_BLANK, OnStartBlankSlate)
 	ON_BN_CLICKED(IDC_START_EXISTING, OnStartExistingProject)
 #ifdef UI_CANRES
@@ -246,6 +247,7 @@ BOOL CDlgStartLoad::OnInitDialog()
       case -1 : uiSelRadioID = IDC_START_EXISTING;   break;
       case -3 : uiSelRadioID = IDC_START_BLANK;      break;
       case -4 : uiSelRadioID = IDC_START_BATCH;      break;
+      case -5 : uiSelRadioID = IDC_START_PVOPTOUT;   break;
       default : uiSelRadioID = IDC_START_RECENT;     break;
    }
    CButton* pBtn = (CButton*) GetDlgItem( uiSelRadioID );
@@ -266,6 +268,8 @@ void CDlgStartLoad::OnStartBlankSlate()
 {   m_iOption = -3;   }
 void CDlgStartLoad::OnStartBatchProcessing() 
 {   m_iOption = -4;   }
+void CDlgStartLoad::OnStartCommunitySolarOptOut()  // SAC 03/28/23
+{   m_iOption = -5;   }
 
 void CDlgStartLoad::OnSelChangeStartFilelist() 
 {
@@ -278,6 +282,7 @@ void CDlgStartLoad::OnSelChangeStartFilelist()
          case -2 : uiSelRadioID = IDC_START_NEW;        break;
          case -3 : uiSelRadioID = IDC_START_BLANK;      break;
          case -4 : uiSelRadioID = IDC_START_BATCH;      break;
+         case -5 : uiSelRadioID = IDC_START_PVOPTOUT;   break;
          default : uiSelRadioID = 0;                    break;
       }
       CButton* pBtn = (CButton*) GetDlgItem( uiSelRadioID );
@@ -293,7 +298,7 @@ void CDlgStartLoad::OnSelChangeStartFilelist()
 
 void CDlgStartLoad::OnCancel() 
 {
-   m_iOption = -5;
+   m_iOption = -10;     // switched from -5 to -10 - SAC 04/05/23
 	CDialog::OnCancel();
 }
 

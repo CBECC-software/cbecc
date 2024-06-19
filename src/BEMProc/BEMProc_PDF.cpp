@@ -174,6 +174,8 @@ void GenerateTable_TypeMonths( HPDF_Page& page, HPDF_Font& font, HPDF_Font& font
    return;
 }
 
+#define NumCols_DetailRpt_FuelDetails  16   // SAC 02/08/23
+
 void GenerateTable_UnitDetails_Header( HPDF_Page& page, HPDF_Font& font, HPDF_Font& fontBold, int& iCurY, const char* pszTitle,     // SAC 01/22/23
                                           int* iTblColWds, int* iTblColLeftX, int iPgLeft, int iPgRight, int iPgCenter )
 {  QString qsLabel;
@@ -220,7 +222,7 @@ void GenerateTable_UnitDetails_Header( HPDF_Page& page, HPDF_Font& font, HPDF_Fo
    HPDF_Page_EndText (page);
    HPDF_Page_SetFontAndSize (page, font, 9);
    HPDF_Page_BeginText (page);
-   for (iCol=4; iCol<=15; iCol++)
+   for (iCol=4; iCol<NumCols_DetailRpt_FuelDetails; iCol++)
       HPDF_Page_TextOut (page, iTblColLeftX[iCol] + iTableColMid - (HPDF_Page_TextWidth (page, pszMoLabel[iCol-4] )/2),  iCurY + 4, pszMoLabel[iCol-4] );
    HPDF_Page_EndText (page);
    return;
@@ -232,60 +234,57 @@ const char*  pszElecEnduseProps[] = { "CUACResults:CkgElecUse", "CUACResults:Clg
                                       "CUACResults:IAQVentElecUse", "CUACResults:LtgElecUse", "CUACResults:PlugLdsElecUse", "CUACResults:RfrgElecUse", "CUACResults:WashElecUse",  NULL  };
 int iaEnduseDetailsArrIdx[] = {  13, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0 };
 
-void GenerateTable_UnitDetails_ElecTable( HPDF_Page& page, HPDF_Font& font, HPDF_Font& fontBold, int& iCurY,      // SAC 01/23/23
-                                          int* iTblColWds, int* iTblColLeftX, int iPgLeft, int iPgRight, int iPgCenter, int iResObjIdx )
-{
+#define  Num_Gas_Enduses    4
+const char*  pszGasEnduseName[]   = { "Cooking", "DHW", "Dryer", "Heating",  NULL  };
+const char*  pszGasEnduseProps[]  = { "CUACResults:CkgGasUse", "CUACResults:DHWGasUse", "CUACResults:DryerGasUse", "CUACResults:HtgGasUse",  NULL  };
 
+void GenerateTable_UnitDetails_FuelTable( HPDF_Page& page, HPDF_Font& font, HPDF_Font& fontBold, int& iCurY,      // SAC 01/23/23
+                                          int* iTblColWds, int* iTblColLeftX, int iPgLeft, int iPgRight, int iPgCenter, int iResObjIdx, int iMtrIdx, int iBEMProcIdx,
+                                          int iNumEnduses, const char** psvaEnduseNames, const char** psvaEnduseProps, int* piaEnduseDetailsArrIdx, double dResultMult )
+{  QString qsLabel;
+   int iCol, iRow;  //, iSpecVal, iErr;
 
+   int iRectHt = 12;       // SAC 02/08/23
+   int iTextDY = 3;
+   HPDF_Page_SetLineWidth (page, 0.25);
+   for (iCol=0; iCol<NumCols_DetailRpt_FuelDetails; iCol++)
+   {  HPDF_Page_MoveTo(page, iTblColLeftX[iCol] + iTblColWds[iCol], iCurY );      HPDF_Page_LineTo(page, iTblColLeftX[iCol] + iTblColWds[iCol], iCurY - (iRectHt * iNumEnduses) );
+   }
+      HPDF_Page_MoveTo(page, iTblColLeftX[0],                                                                             iCurY - (iRectHt * iNumEnduses) );
+      HPDF_Page_LineTo(page, iTblColLeftX[NumCols_DetailRpt_FuelDetails-1] + iTblColWds[NumCols_DetailRpt_FuelDetails-1], iCurY - (iRectHt * iNumEnduses) );
+   HPDF_Page_Stroke  (page);
 
+   iCurY -= iRectHt;
+   HPDF_Page_SetFontAndSize (page, font, 9);
+   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitTypeLabels" )+iMtrIdx, qsLabel,  FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iTblColLeftX[0]+4, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+   HPDF_Page_EndText (page);
 
+   double dVal;
+   for (iRow=0; iRow < iNumEnduses; iRow++)
+   {
+      if (iRow < (iNumEnduses-1))
+      {  HPDF_Page_MoveTo(page, iTblColLeftX[1],                                                                             iCurY );
+         HPDF_Page_LineTo(page, iTblColLeftX[NumCols_DetailRpt_FuelDetails-1] + iTblColWds[NumCols_DetailRpt_FuelDetails-1], iCurY );
+         HPDF_Page_Stroke(page);
+      }
 
-
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,%s,Cooking,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",     UnitTypeLabels[#U], CUACResultsRef[#U]:CkgElecUse[14], CUACResultsRef[#U]:CkgElecUse[13],
-//                              CUACResultsRef[#U]:CkgElecUse[1], CUACResultsRef[#U]:CkgElecUse[2], CUACResultsRef[#U]:CkgElecUse[3], CUACResultsRef[#U]:CkgElecUse[4],  CUACResultsRef[#U]:CkgElecUse[5],  CUACResultsRef[#U]:CkgElecUse[6],
-//                              CUACResultsRef[#U]:CkgElecUse[7], CUACResultsRef[#U]:CkgElecUse[8], CUACResultsRef[#U]:CkgElecUse[9], CUACResultsRef[#U]:CkgElecUse[10], CUACResultsRef[#U]:CkgElecUse[11], CUACResultsRef[#U]:CkgElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Cooling,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                           CUACResultsRef[#U]:ClgElecUse[14], CUACResultsRef[#U]:ClgElecUse[13],
-//                              CUACResultsRef[#U]:ClgElecUse[1], CUACResultsRef[#U]:ClgElecUse[2], CUACResultsRef[#U]:ClgElecUse[3], CUACResultsRef[#U]:ClgElecUse[4],  CUACResultsRef[#U]:ClgElecUse[5],  CUACResultsRef[#U]:ClgElecUse[6],
-//                              CUACResultsRef[#U]:ClgElecUse[7], CUACResultsRef[#U]:ClgElecUse[8], CUACResultsRef[#U]:ClgElecUse[9], CUACResultsRef[#U]:ClgElecUse[10], CUACResultsRef[#U]:ClgElecUse[11], CUACResultsRef[#U]:ClgElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,DHW,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                               CUACResultsRef[#U]:DHWElecUse[14], CUACResultsRef[#U]:DHWElecUse[13],
-//                              CUACResultsRef[#U]:DHWElecUse[1], CUACResultsRef[#U]:DHWElecUse[2], CUACResultsRef[#U]:DHWElecUse[3], CUACResultsRef[#U]:DHWElecUse[4],  CUACResultsRef[#U]:DHWElecUse[5],  CUACResultsRef[#U]:DHWElecUse[6],
-//                              CUACResultsRef[#U]:DHWElecUse[7], CUACResultsRef[#U]:DHWElecUse[8], CUACResultsRef[#U]:DHWElecUse[9], CUACResultsRef[#U]:DHWElecUse[10], CUACResultsRef[#U]:DHWElecUse[11], CUACResultsRef[#U]:DHWElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Dishwasher,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                            CUACResultsRef[#U]:DishElecUse[14], CUACResultsRef[#U]:DishElecUse[13],
-//                              CUACResultsRef[#U]:DishElecUse[1], CUACResultsRef[#U]:DishElecUse[2], CUACResultsRef[#U]:DishElecUse[3], CUACResultsRef[#U]:DishElecUse[4],  CUACResultsRef[#U]:DishElecUse[5],  CUACResultsRef[#U]:DishElecUse[6],
-//                              CUACResultsRef[#U]:DishElecUse[7], CUACResultsRef[#U]:DishElecUse[8], CUACResultsRef[#U]:DishElecUse[9], CUACResultsRef[#U]:DishElecUse[10], CUACResultsRef[#U]:DishElecUse[11], CUACResultsRef[#U]:DishElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Dryer,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                                     CUACResultsRef[#U]:DryerElecUse[14], CUACResultsRef[#U]:DryerElecUse[13],
-//                              CUACResultsRef[#U]:DryerElecUse[1], CUACResultsRef[#U]:DryerElecUse[2], CUACResultsRef[#U]:DryerElecUse[3], CUACResultsRef[#U]:DryerElecUse[4],  CUACResultsRef[#U]:DryerElecUse[5],  CUACResultsRef[#U]:DryerElecUse[6],
-//                              CUACResultsRef[#U]:DryerElecUse[7], CUACResultsRef[#U]:DryerElecUse[8], CUACResultsRef[#U]:DryerElecUse[9], CUACResultsRef[#U]:DryerElecUse[10], CUACResultsRef[#U]:DryerElecUse[11], CUACResultsRef[#U]:DryerElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Heating,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                           CUACResultsRef[#U]:HtgElecUse[14], CUACResultsRef[#U]:HtgElecUse[13],
-//                              CUACResultsRef[#U]:HtgElecUse[1], CUACResultsRef[#U]:HtgElecUse[2], CUACResultsRef[#U]:HtgElecUse[3], CUACResultsRef[#U]:HtgElecUse[4],  CUACResultsRef[#U]:HtgElecUse[5],  CUACResultsRef[#U]:HtgElecUse[6],
-//                              CUACResultsRef[#U]:HtgElecUse[7], CUACResultsRef[#U]:HtgElecUse[8], CUACResultsRef[#U]:HtgElecUse[9], CUACResultsRef[#U]:HtgElecUse[10], CUACResultsRef[#U]:HtgElecUse[11], CUACResultsRef[#U]:HtgElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,IAQ Ventilation,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                                   CUACResultsRef[#U]:IAQVentElecUse[14], CUACResultsRef[#U]:IAQVentElecUse[13],
-//                              CUACResultsRef[#U]:IAQVentElecUse[1], CUACResultsRef[#U]:IAQVentElecUse[2], CUACResultsRef[#U]:IAQVentElecUse[3], CUACResultsRef[#U]:IAQVentElecUse[4],  CUACResultsRef[#U]:IAQVentElecUse[5],  CUACResultsRef[#U]:IAQVentElecUse[6],
-//                              CUACResultsRef[#U]:IAQVentElecUse[7], CUACResultsRef[#U]:IAQVentElecUse[8], CUACResultsRef[#U]:IAQVentElecUse[9], CUACResultsRef[#U]:IAQVentElecUse[10], CUACResultsRef[#U]:IAQVentElecUse[11], CUACResultsRef[#U]:IAQVentElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Lighting,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                          CUACResultsRef[#U]:LtgElecUse[14], CUACResultsRef[#U]:LtgElecUse[13],
-//                              CUACResultsRef[#U]:LtgElecUse[1], CUACResultsRef[#U]:LtgElecUse[2], CUACResultsRef[#U]:LtgElecUse[3], CUACResultsRef[#U]:LtgElecUse[4],  CUACResultsRef[#U]:LtgElecUse[5],  CUACResultsRef[#U]:LtgElecUse[6],
-//                              CUACResultsRef[#U]:LtgElecUse[7], CUACResultsRef[#U]:LtgElecUse[8], CUACResultsRef[#U]:LtgElecUse[9], CUACResultsRef[#U]:LtgElecUse[10], CUACResultsRef[#U]:LtgElecUse[11], CUACResultsRef[#U]:LtgElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Plug Loads,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                                        CUACResultsRef[#U]:PlugLdsElecUse[14], CUACResultsRef[#U]:PlugLdsElecUse[13],
-//                              CUACResultsRef[#U]:PlugLdsElecUse[1], CUACResultsRef[#U]:PlugLdsElecUse[2], CUACResultsRef[#U]:PlugLdsElecUse[3], CUACResultsRef[#U]:PlugLdsElecUse[4],  CUACResultsRef[#U]:PlugLdsElecUse[5],  CUACResultsRef[#U]:PlugLdsElecUse[6],
-//                              CUACResultsRef[#U]:PlugLdsElecUse[7], CUACResultsRef[#U]:PlugLdsElecUse[8], CUACResultsRef[#U]:PlugLdsElecUse[9], CUACResultsRef[#U]:PlugLdsElecUse[10], CUACResultsRef[#U]:PlugLdsElecUse[11], CUACResultsRef[#U]:PlugLdsElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Refrigerator,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                          CUACResultsRef[#U]:RfrgElecUse[14], CUACResultsRef[#U]:RfrgElecUse[13],
-//                              CUACResultsRef[#U]:RfrgElecUse[1], CUACResultsRef[#U]:RfrgElecUse[2], CUACResultsRef[#U]:RfrgElecUse[3], CUACResultsRef[#U]:RfrgElecUse[4],  CUACResultsRef[#U]:RfrgElecUse[5],  CUACResultsRef[#U]:RfrgElecUse[6],
-//                              CUACResultsRef[#U]:RfrgElecUse[7], CUACResultsRef[#U]:RfrgElecUse[8], CUACResultsRef[#U]:RfrgElecUse[9], CUACResultsRef[#U]:RfrgElecUse[10], CUACResultsRef[#U]:RfrgElecUse[11], CUACResultsRef[#U]:RfrgElecUse[12] )  }
-//   "Write CUAC I/O CSV inputs"   for:#U=(1to1)   CUAC:Action =
-//               {  WriteToExportFile( InOutCSVFileIdx, ",,,Washer,%.2f,%.0f,,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",                                CUACResultsRef[#U]:WashElecUse[14], CUACResultsRef[#U]:WashElecUse[13],
-//                              CUACResultsRef[#U]:WashElecUse[1], CUACResultsRef[#U]:WashElecUse[2], CUACResultsRef[#U]:WashElecUse[3], CUACResultsRef[#U]:WashElecUse[4],  CUACResultsRef[#U]:WashElecUse[5],  CUACResultsRef[#U]:WashElecUse[6],
-//                              CUACResultsRef[#U]:WashElecUse[7], CUACResultsRef[#U]:WashElecUse[8], CUACResultsRef[#U]:WashElecUse[9], CUACResultsRef[#U]:WashElecUse[10], CUACResultsRef[#U]:WashElecUse[11], CUACResultsRef[#U]:WashElecUse[12] )  }
-
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iTblColLeftX[1]+4, iCurY+iTextDY, psvaEnduseNames[iRow] );
+      for (iCol=0; iCol < 14; iCol++)
+      {  //BEMPX_GetString( BEMPX_GetDatabaseID( psvaEnduseProps[iRow] ) + iaEnduseDetailsArrIdx[iCol], qsLabel, TRUE, 1, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );
+         if (BEMPX_GetFloat( BEMPX_GetDatabaseID( psvaEnduseProps[iRow] ) + iaEnduseDetailsArrIdx[iCol], dVal, 0.0, -1, iResObjIdx, BEMO_User, iBEMProcIdx ))     // enable use of dResultMult - SAC 02-09-23
+         {  qsLabel = BEMPX_FloatToString( dVal * dResultMult, 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );   // int iZeroFillLeftToLength=0, BOOL bTrimTrailingDecZeroes=FALSE );
+            int iTxtX = iTblColLeftX[iCol+2] + iTblColWds[iCol+2] - ((int) HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData())) - 4;
+            if (iCol==0)
+               iTxtX -= (int) (iTblColWds[iCol+2] * 0.2);
+            HPDF_Page_TextOut (page, iTxtX, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+      }  }
+      HPDF_Page_EndText (page);
+      iCurY -= iRectHt;
+   }
+   iCurY += iRectHt;
    return;
 }
 
@@ -900,20 +899,24 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_EndText (page);
 
 
-   iCurY -= ((iProjInfoRowHt *  6)+9 + 22);        // SAC 01/08/23
+   int iTblColWds[] = { 80, 64, 64 };     // repoistioned Apts Inventory table to right side under 'Fuels' labels - SAC 02/09/23
+   int iTblColLeftX[16];
+   //iTblColLeftX[0] = iPgCenter - ((iTblColWds[0] + iTblColWds[1] + iTblColWds[2]) / 2);
+   iTblColLeftX[0] = iPgRight - (iTblColWds[0] + iTblColWds[1] + iTblColWds[2]);
+   iTblColLeftX[1] = iTblColLeftX[0] + iTblColWds[0];
+   iTblColLeftX[2] = iTblColLeftX[1] + iTblColWds[1];
+
+   //iCurY -= ((iProjInfoRowHt *  6)+9 + 22);        // SAC 01/08/23
+   iCurY -= ((iProjInfoRowHt * 3) + 24);           // shift table up to eb directly below Fuels labels - SAC 02/09/23
    qsLabel = "Apartments Inventory";
    HPDF_Page_SetFontAndSize (page, fontBold, 10); 
    HPDF_Page_BeginText (page);
-   HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData() )/2), iCurY, qsLabel.toLocal8Bit().constData());
+   //HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData() )/2), iCurY, qsLabel.toLocal8Bit().constData());
+   HPDF_Page_TextOut (page, ((iTblColLeftX[0]+iTblColLeftX[2]+iTblColWds[2])/2)-(HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData() )/2), iCurY, qsLabel.toLocal8Bit().constData());
    HPDF_Page_EndText (page);
 
-   iRectHt = 28;     // SAC 01/08/23
-   iCurY -= (iRectHt+8);
-   int iTblColWds[] = { 120, 80, 80 };
-   int iTblColLeftX[16];
-   iTblColLeftX[0] = iPgCenter - ((iTblColWds[0] + iTblColWds[1] + iTblColWds[2]) / 2);
-   iTblColLeftX[1] = iTblColLeftX[0] + iTblColWds[0];
-   iTblColLeftX[2] = iTblColLeftX[1] + iTblColWds[1];
+   iRectHt = 25;     // SAC 01/08/23
+   iCurY -= (iRectHt+6);
    HPDF_Page_SetGrayFill (page, (HPDF_REAL) 0.9);
    HPDF_Page_Rectangle (page, iTblColLeftX[0], iCurY, iTblColWds[0], iRectHt );
    HPDF_Page_Rectangle (page, iTblColLeftX[1], iCurY, iTblColWds[1], iRectHt );
@@ -923,15 +926,16 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_SetGrayFill (page, 0);
    HPDF_Page_SetFontAndSize (page, font, 8);
    HPDF_Page_BeginText (page);
-   HPDF_Page_TextOut (page, iTblColLeftX[0] + 4,  iCurY + 5, "Apartment Type"    );
-   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "# Affordable"  )/2), iCurY + 16, "# Affordable"  );
-   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "Housing Units" )/2), iCurY +  5, "Housing Units" );
-   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "# Market Rate" )/2), iCurY + 16, "# Market Rate" );
-   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "Housing Units" )/2), iCurY +  5, "Housing Units" );
+   HPDF_Page_TextOut (page, iTblColLeftX[0] + 4,  iCurY + 4, "Apartment Type"    );
+   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "# Affordable"  )/2), iCurY + 15, "# Affordable"  );
+   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "Housing Units" )/2), iCurY +  4, "Housing Units" );
+   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "# Market Rate" )/2), iCurY + 15, "# Market Rate" );
+   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "Housing Units" )/2), iCurY +  4, "Housing Units" );
    HPDF_Page_EndText (page);
 
-   HPDF_Page_SetFontAndSize (page, font, 10);      // SAC 01/08/23
-   iRectHt = 15;
+   HPDF_Page_SetFontAndSize (page, font, 9);      // SAC 01/08/23
+   iRectHt = 12;
+   int iAptInventoryRowsTop = iCurY;
    for (iMtr=0; iMtr < lNumUnitTypes; iMtr++)
       if (iaPosUnitTypeIdxs[iMtr] >= 0)
       {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
@@ -946,16 +950,95 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
 
             HPDF_Page_BeginText (page);
             BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitTypeLabels" )+iMtrIdx, qsLabel,  FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-            HPDF_Page_TextOut (page, iTblColLeftX[0]+4, iCurY+4, qsLabel.toLocal8Bit().constData() );
+            HPDF_Page_TextOut (page, iTblColLeftX[0]+4, iCurY+3, qsLabel.toLocal8Bit().constData() );
 
             qsLabel = QString::number( laNumUnitsByBedrms[iMtrIdx] );
-            HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]*2/3) -HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData()), iCurY+4, qsLabel.toLocal8Bit().constData() );
+            HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]*2/3) -HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData()), iCurY+3, qsLabel.toLocal8Bit().constData() );
             qsLabel = QString::number( laNumMktRateUnitsByBedrms[iMtrIdx] );
-            HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]*2/3) -HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData()), iCurY+4, qsLabel.toLocal8Bit().constData() );
+            HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]*2/3) -HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData()), iCurY+3, qsLabel.toLocal8Bit().constData() );
+            HPDF_Page_EndText (page);
+      }  }
+   iCurY = iAptInventoryRowsTop - (iRectHt * 7);  // allow room for max apt inventory table rows
+
+
+   // inserted PV monthly output by apt type table - SAC 02/09/23
+//   int iTblColWds[2], iTblColLeftX[13], iTableColMid, iCol, iSpecVal, iErr;
+   iCurY -= 18;
+   HPDF_Page_SetFontAndSize (page, fontBold, 10); 
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, "PV Allocation and Monthly kWh Output" )/2), iCurY, "PV Allocation and Monthly kWh Output" );
+   HPDF_Page_EndText (page);
+
+   iRectHt = 23; 
+   iCurY -= (iRectHt+6);
+   iTblColWds[0] =  80;
+   iTblColWds[1] =  60;
+   iTblColWds[2] =  40;
+   iTblColWds[3] = (iPgRight - iPgLeft - iTblColWds[0] - iTblColWds[1] - iTblColWds[2])/12;
+   iTblColLeftX[0] = iPgLeft;
+   iTblColLeftX[1] = iTblColLeftX[0] + iTblColWds[0];
+   iTblColLeftX[2] = iTblColLeftX[1] + iTblColWds[1];
+   iTblColLeftX[3] = iTblColLeftX[2] + iTblColWds[2];
+   iTableColMid =  iTblColWds[3] / 2;
+   int iTextDY = 3;
+   HPDF_Page_SetLineWidth (page, 0.25);
+   HPDF_Page_SetGrayFill (page, (HPDF_REAL) 0.9);
+   for (iCol=0; iCol<=14; iCol++)
+   {  if (iCol > 3)
+         iTblColLeftX[iCol] = iTblColLeftX[iCol-1] + iTblColWds[3];
+      HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[(iCol > 3 ? 3 : iCol)], iRectHt );
+   }
+   HPDF_Page_FillStroke (page);
+   HPDF_Page_SetGrayFill (page, 0);
+   HPDF_Page_SetFontAndSize (page, font, 9);
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iTblColLeftX[0] + 4,  iCurY + iTextDY, "Apartment Type" );
+   HPDF_Page_EndText (page);
+   HPDF_Page_SetFontAndSize (page, font, 8);
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "% Tenant PV"   ) / 2),  iCurY + iTextDY + 11, "% Tenant PV"   );
+   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "Srvg each Apt" ) / 2),  iCurY + iTextDY     , "Srvg each Apt" );
+   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "kWdc PV"       ) / 2),  iCurY + iTextDY + 11, "kWdc PV"       );
+   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "per Apt"       ) / 2),  iCurY + iTextDY     , "per Apt"       );
+   HPDF_Page_EndText (page);
+
+   HPDF_Page_SetFontAndSize (page, font, 9);
+   HPDF_Page_BeginText (page);
+   for (iCol=3; iCol<=14; iCol++)
+      HPDF_Page_TextOut (page, iTblColLeftX[iCol] + iTableColMid - (HPDF_Page_TextWidth (page, pszMoLabel[iCol-3] )/2),  iCurY + 4, pszMoLabel[iCol-3] );
+   HPDF_Page_EndText (page);
+
+   iRectHt = 12; 
+   for (int iMtr=0; iMtr < lNumUnitTypes; iMtr++)
+      if (iaPosUnitTypeIdxs[iMtr] >= 0)
+      {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+         int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
+         if (iResObjIdx >= 0)
+         {  iCurY -= iRectHt;
+            int iMtrIdx = iaPosUnitTypeIdxs[iMtr];
+            for (iCol=0; iCol<=14; iCol++)
+               HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[(iCol > 3 ? 3 : iCol)], iRectHt );
+            HPDF_Page_Stroke (page);
+
+            HPDF_Page_BeginText (page);
+            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitTypeLabels" )+iMtrIdx, qsLabel,  FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+            HPDF_Page_TextOut (page, iTblColLeftX[0]+4, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:PctIndivUnitPVByBedrms" )+iMtrIdx, qsLabel, TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );      qsLabel += " %";
+            HPDF_Page_TextOut (page, iTblColLeftX[2]-(iTblColWds[1]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:IndivUnitPVByBedrms"    )+iMtrIdx, qsLabel, TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+            HPDF_Page_TextOut (page, iTblColLeftX[3]-(iTblColWds[2]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+            double dPVGen;
+            for (iCol=0; iCol<12; iCol++)
+            {  //BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:PVSysElecUse" )+iCol, qsLabel, TRUE, 1, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );
+               if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUACResults:PVSysElecUse" )+iCol, dPVGen, 0.0, -1, iResObjIdx, BEMO_User, iBEMProcIdx )) 
+               {  qsLabel = BEMPX_FloatToString( dPVGen * (-1.0), 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );   // int iZeroFillLeftToLength=0, BOOL bTrimTrailingDecZeroes=FALSE );
+                  HPDF_Page_TextOut (page, iTblColLeftX[iCol+3] + iTblColWds[3] - HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData()) - 4, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+            }  }
             HPDF_Page_EndText (page);
       }  }
 
-   iCurY -= 4;
+
+   iCurY -= 5;
    GenerateTable_TypeMonths( page, font, fontBold, iCurY, "ACM Cooling Monthly kWh Usage", "CUACResults:ClgElecUse", lNumUnitTypes, &iaPosUnitTypeIdxs[0], lDBID_ResRef, iBEMProcIdx, iPgTop, iPgLeft, iPgRight, iPgCenter );
 
 
@@ -1102,520 +1185,240 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
 
 
 
-// RESTORE ONCE DONE - SAC 01/23/23
-// 
-// //   GenerateTable_Details_StartNewPage( pdf, page, image, font, fontBold, iCurX, iCurY, false, false, iPgTop, iPgLeft, iPgCenter, ++iPageNum, qsProjID, qsRunDateFmt, qsProjNameTitle );
-//    ///////////////////////////////////////////------------------------------------------------------------------------------------------------------------
-//    /////              PAGE 4             /////
-//    ///////////////////////////////////////////
-//    int iPgNum = 3;  // will increment before writing...
-//    QString qsPgNumLabel;
-//    page = HPDF_AddPage (pdf);     // SAC 01/12/23
-//    HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_LETTER, HPDF_PAGE_LANDSCAPE);
-// 
-// //   print_grid  (pdf, page);
-// 
-//    iCurY = iPgTop;
-//    iCurX = iPgLeft;
-//    HPDF_Page_SetFontAndSize (page, fontBold, 6);
-//    iCurY -= 25;
-//    HPDF_Page_BeginText (page);
-//    HPDF_Page_TextOut (page, iCurX, iCurY, "STATE OF CALIFORNIA");
-//    HPDF_Page_EndText (page);
-// 
-//    iCurY -= 12;
-//    HPDF_Page_SetFontAndSize (page, fontBold, 10);
-//    HPDF_Page_BeginText (page);
-//    HPDF_Page_TextOut (page, iCurX, iCurY, "CALIFORNIA ENERGY COMMISSION");
-//    HPDF_Page_EndText (page);
-// 
-//    iCurY -= 3;
-//    HPDF_Page_SetGrayFill (page, 0);  // 0.5);
-//    HPDF_Page_SetGrayStroke (page, 0);  // 0.8);
-//    HPDF_Page_SetLineWidth (page, 1.25);
-//    HPDF_Page_MoveTo  (page, iCurX, iCurY );
-//    HPDF_Page_LineTo  (page,   230, iCurY );
-//    HPDF_Page_Stroke (page);
-// 
-//    iCurY -= 11;
-//    HPDF_Page_SetFontAndSize (page, fontBold, 8);
-//    HPDF_Page_BeginText (page);
-//    HPDF_Page_TextOut (page, iCurX, iCurY, "UTILITY Allowance Calculation Tool");
-//    HPDF_Page_EndText (page);
-// 
-//    iCurY -= 13;
-//    if (!qsProjID.isEmpty())
-//    {  HPDF_Page_BeginText (page);
-//       HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
-//       HPDF_Page_EndText (page);
-//    }
-//    HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
-// 
-//    qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
-//    if (!qsRunDateFmt.isEmpty())
-//    {  iCurY = iPgTop - 56;
-//       int iMidX = 690;   // 505;    - landscaoe vs. portrait
-//       HPDF_Page_SetFontAndSize (page, fontBold, 8);
-//       tw1 = HPDF_Page_TextWidth (page, qsRunDateFmt.toLocal8Bit().constData());
-//       tw2 = HPDF_Page_TextWidth (page, qsPgNumLabel.toLocal8Bit().constData());
-//       HPDF_Page_BeginText (page);
-//       HPDF_Page_TextOut (page, iMidX-(tw1/2), iCurY,    qsRunDateFmt.toLocal8Bit().constData());
-//       HPDF_Page_TextOut (page, iMidX-(tw2/2), iCurY-12, qsPgNumLabel.toLocal8Bit().constData());
-//       HPDF_Page_EndText (page);
-//    }
-// 
-//    HPDF_Page_SetFontAndSize (page, fontBold, 10); 
-//    iCurY = iPgTop - 95;      // raised by 15 - SAC 01/13/23
-//    HPDF_Page_BeginText (page);
-//    HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, qsProjNameTitle.toLocal8Bit().constData() )/2), iCurY, qsProjNameTitle.toLocal8Bit().constData());
-//    HPDF_Page_EndText (page);
-// 
-// 
-//    int iDetTblColWds[16], iDetTblColLeftX[16];
-//    GenerateTable_UnitDetails_Header( page, font, fontBold, iCurY, "Electric kWh Usage by End Use Summary", &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter );
-// 
-//    int iNumUnitTypesThisPg = (lNumUnitTypes <= 3 ? lNumUnitTypes : 3);
-//    for (iMtr=0; iMtr < iNumUnitTypesThisPg; iMtr++)
-//       if (iaPosUnitTypeIdxs[iMtr] >= 0)
-//       {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-//          int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
-//          if (iResObjIdx >= 0)
-//          {
-//             GenerateTable_UnitDetails_ElecTable( page, font, fontBold, iCurY, &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter, iResObjIdx );
-// 
-//       }  }
-// 
-//    if (iNumUnitTypesThisPg < lNumUnitTypes)
-//    {  // need additional page to complete Electric kWh Usage by End Use Summary tables - SAC 01/23/23
-//       page = HPDF_AddPage (pdf);     // SAC 01/12/23
-//       HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_LETTER, HPDF_PAGE_LANDSCAPE);
-//       //   print_grid  (pdf, page);
-// 
-//       iCurY = iPgTop;
-//       iCurX = iPgLeft;
-//       HPDF_Page_SetFontAndSize (page, fontBold, 6);
-//       iCurY -= 25;
-//       HPDF_Page_BeginText (page);
-//       HPDF_Page_TextOut (page, iCurX, iCurY, "STATE OF CALIFORNIA");
-//       HPDF_Page_EndText (page);
-// 
-//       iCurY -= 12;
-//       HPDF_Page_SetFontAndSize (page, fontBold, 10);
-//       HPDF_Page_BeginText (page);
-//       HPDF_Page_TextOut (page, iCurX, iCurY, "CALIFORNIA ENERGY COMMISSION");
-//       HPDF_Page_EndText (page);
-// 
-//       iCurY -= 3;
-//       HPDF_Page_SetGrayFill (page, 0);  // 0.5);
-//       HPDF_Page_SetGrayStroke (page, 0);  // 0.8);
-//       HPDF_Page_SetLineWidth (page, 1.25);
-//       HPDF_Page_MoveTo  (page, iCurX, iCurY );
-//       HPDF_Page_LineTo  (page,   230, iCurY );
-//       HPDF_Page_Stroke (page);
-// 
-//       iCurY -= 11;
-//       HPDF_Page_SetFontAndSize (page, fontBold, 8);
-//       HPDF_Page_BeginText (page);
-//       HPDF_Page_TextOut (page, iCurX, iCurY, "UTILITY Allowance Calculation Tool");
-//       HPDF_Page_EndText (page);
-// 
-//       iCurY -= 13;
-//       if (!qsProjID.isEmpty())
-//       {  HPDF_Page_BeginText (page);
-//          HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
-//          HPDF_Page_EndText (page);
-//       }
-//       HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
-// 
-//       qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
-//       if (!qsRunDateFmt.isEmpty())
-//       {  iCurY = iPgTop - 56;
-//          int iMidX = 690;   // 505;    - landscaoe vs. portrait
-//          HPDF_Page_SetFontAndSize (page, fontBold, 8);
-//          tw1 = HPDF_Page_TextWidth (page, qsRunDateFmt.toLocal8Bit().constData());
-//          tw2 = HPDF_Page_TextWidth (page, qsPgNumLabel.toLocal8Bit().constData());
-//          HPDF_Page_BeginText (page);
-//          HPDF_Page_TextOut (page, iMidX-(tw1/2), iCurY,    qsRunDateFmt.toLocal8Bit().constData());
-//          HPDF_Page_TextOut (page, iMidX-(tw2/2), iCurY-12, qsPgNumLabel.toLocal8Bit().constData());
-//          HPDF_Page_EndText (page);
-//       }
-// 
-//       HPDF_Page_SetFontAndSize (page, fontBold, 10); 
-//       iCurY = iPgTop - 95;      // raised by 15 - SAC 01/13/23
-//       HPDF_Page_BeginText (page);
-//       HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, qsProjNameTitle.toLocal8Bit().constData() )/2), iCurY, qsProjNameTitle.toLocal8Bit().constData());
-//       HPDF_Page_EndText (page);
-// 
-//       GenerateTable_UnitDetails_Header( page, font, fontBold, iCurY, "Electric kWh Usage by End Use Summary", &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter );
-// 
-//       for (iMtr=0; iMtr < iNumUnitTypesThisPg; iMtr++)
-//          if (iaPosUnitTypeIdxs[iMtr] >= 0)
-//          {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-//             int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
-//             if (iResObjIdx >= 0)
-//             {
-// 
-// 
-// 
-//          }  }
-//    }
-// 
+//   GenerateTable_Details_StartNewPage( pdf, page, image, font, fontBold, iCurX, iCurY, false, false, iPgTop, iPgLeft, iPgCenter, ++iPageNum, qsProjID, qsRunDateFmt, qsProjNameTitle );
+   ///////////////////////////////////////////------------------------------------------------------------------------------------------------------------
+   /////              PAGE 4             /////
+   ///////////////////////////////////////////
+   int iPgNum = 3;  // will increment before writing...
+   QString qsPgNumLabel;
+   page = HPDF_AddPage (pdf);     // SAC 01/12/23
+   HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_LETTER, HPDF_PAGE_LANDSCAPE);
+
+//   print_grid  (pdf, page);
+
+   iCurY = iPgTop;
+   iCurX = iPgLeft;
+   HPDF_Page_SetFontAndSize (page, fontBold, 6);
+   iCurY -= 25;
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iCurX, iCurY, "STATE OF CALIFORNIA");
+   HPDF_Page_EndText (page);
+
+   iCurY -= 12;
+   HPDF_Page_SetFontAndSize (page, fontBold, 10);
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iCurX, iCurY, "CALIFORNIA ENERGY COMMISSION");
+   HPDF_Page_EndText (page);
+
+   iCurY -= 3;
+   HPDF_Page_SetGrayFill (page, 0);  // 0.5);
+   HPDF_Page_SetGrayStroke (page, 0);  // 0.8);
+   HPDF_Page_SetLineWidth (page, 1.25);
+   HPDF_Page_MoveTo  (page, iCurX, iCurY );
+   HPDF_Page_LineTo  (page,   230, iCurY );
+   HPDF_Page_Stroke (page);
+
+   iCurY -= 11;
+   HPDF_Page_SetFontAndSize (page, fontBold, 8);
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iCurX, iCurY, "UTILITY Allowance Calculation Tool");
+   HPDF_Page_EndText (page);
+
+   iCurY -= 13;
+   if (!qsProjID.isEmpty())
+   {  HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
+      HPDF_Page_EndText (page);
+   }
+   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+
+   qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
+   if (!qsRunDateFmt.isEmpty())
+   {  iCurY = iPgTop - 56;
+      int iMidX = 690;   // 505;    - landscaoe vs. portrait
+      HPDF_Page_SetFontAndSize (page, fontBold, 8);
+      tw1 = HPDF_Page_TextWidth (page, qsRunDateFmt.toLocal8Bit().constData());
+      tw2 = HPDF_Page_TextWidth (page, qsPgNumLabel.toLocal8Bit().constData());
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iMidX-(tw1/2), iCurY,    qsRunDateFmt.toLocal8Bit().constData());
+      HPDF_Page_TextOut (page, iMidX-(tw2/2), iCurY-12, qsPgNumLabel.toLocal8Bit().constData());
+      HPDF_Page_EndText (page);
+   }
+
+   HPDF_Page_SetFontAndSize (page, fontBold, 10); 
+   iCurY = iPgTop - 95;      // raised by 15 - SAC 01/13/23
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, qsProjNameTitle.toLocal8Bit().constData() )/2), iCurY, qsProjNameTitle.toLocal8Bit().constData());
+   HPDF_Page_EndText (page);
 
 
-//CUAC   User: "CUAC Inputs"  
-//   AffordableUnitsByBedrms[1] = RVal: 0
-//   AffordableUnitsByBedrms[2] = RVal: 0
-//   AffordableUnitsByBedrms[3] = RVal: 4
-//   AffordableUnitsByBedrms[4] = RVal: 0
-//   AffordableUnitsByBedrms[5] = RVal: 0
-//   AffordableUnitsByBedrms[6] = RVal: 0
-//   AffordableUnitsByBedrms[7] = RVal: 0
-//   AffordableUnitsByBedrms[8] = RVal: 0
-//   NumAffordableDwellingUnits = RVal: 4
+   int iDetTblColWds[16], iDetTblColLeftX[16];
+   GenerateTable_UnitDetails_Header( page, font, fontBold, iCurY, "Electric kWh Usage by End Use Summary", &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter );
+
+   int iNumUnitTypesThisPg = (lNumUnitTypes <= 3 ? lNumUnitTypes : 3);
+   for (iMtr=0; iMtr < iNumUnitTypesThisPg; iMtr++)
+      if (iaPosUnitTypeIdxs[iMtr] >= 0)
+      {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+         int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
+         if (iResObjIdx >= 0)
+         {  int iMtrIdx = iaPosUnitTypeIdxs[iMtr];
+            GenerateTable_UnitDetails_FuelTable( page, font, fontBold, iCurY, &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter, iResObjIdx, iMtrIdx,
+                                                 iCUAC_BEMProcIdx, Num_Elec_Enduses, pszElecEnduseName, pszElecEnduseProps, iaEnduseDetailsArrIdx, 1.0 );
+      }  }
+
+   if (iNumUnitTypesThisPg < lNumUnitTypes)
+   {  // need additional page to complete Electric kWh Usage by End Use Summary tables - SAC 01/23/23
+      /////              PAGE 5             /////
+      page = HPDF_AddPage (pdf);     // SAC 01/12/23
+      HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_LETTER, HPDF_PAGE_LANDSCAPE);
+      //   print_grid  (pdf, page);
+
+      iCurY = iPgTop;
+      iCurX = iPgLeft;
+      HPDF_Page_SetFontAndSize (page, fontBold, 6);
+      iCurY -= 25;
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iCurX, iCurY, "STATE OF CALIFORNIA");
+      HPDF_Page_EndText (page);
+
+      iCurY -= 12;
+      HPDF_Page_SetFontAndSize (page, fontBold, 10);
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iCurX, iCurY, "CALIFORNIA ENERGY COMMISSION");
+      HPDF_Page_EndText (page);
+
+      iCurY -= 3;
+      HPDF_Page_SetGrayFill (page, 0);  // 0.5);
+      HPDF_Page_SetGrayStroke (page, 0);  // 0.8);
+      HPDF_Page_SetLineWidth (page, 1.25);
+      HPDF_Page_MoveTo  (page, iCurX, iCurY );
+      HPDF_Page_LineTo  (page,   230, iCurY );
+      HPDF_Page_Stroke (page);
+
+      iCurY -= 11;
+      HPDF_Page_SetFontAndSize (page, fontBold, 8);
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iCurX, iCurY, "UTILITY Allowance Calculation Tool");
+      HPDF_Page_EndText (page);
+
+      iCurY -= 13;
+      if (!qsProjID.isEmpty())
+      {  HPDF_Page_BeginText (page);
+         HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
+         HPDF_Page_EndText (page);
+      }
+      HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+
+      qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
+      if (!qsRunDateFmt.isEmpty())
+      {  iCurY = iPgTop - 56;
+         int iMidX = 690;   // 505;    - landscaoe vs. portrait
+         HPDF_Page_SetFontAndSize (page, fontBold, 8);
+         tw1 = HPDF_Page_TextWidth (page, qsRunDateFmt.toLocal8Bit().constData());
+         tw2 = HPDF_Page_TextWidth (page, qsPgNumLabel.toLocal8Bit().constData());
+         HPDF_Page_BeginText (page);
+         HPDF_Page_TextOut (page, iMidX-(tw1/2), iCurY,    qsRunDateFmt.toLocal8Bit().constData());
+         HPDF_Page_TextOut (page, iMidX-(tw2/2), iCurY-12, qsPgNumLabel.toLocal8Bit().constData());
+         HPDF_Page_EndText (page);
+      }
+
+      HPDF_Page_SetFontAndSize (page, fontBold, 10); 
+      iCurY = iPgTop - 95;      // raised by 15 - SAC 01/13/23
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, qsProjNameTitle.toLocal8Bit().constData() )/2), iCurY, qsProjNameTitle.toLocal8Bit().constData());
+      HPDF_Page_EndText (page);
+
+      GenerateTable_UnitDetails_Header( page, font, fontBold, iCurY, "Electric kWh Usage by End Use Summary (cont'd)", &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter );
+
+      for (iMtr=iNumUnitTypesThisPg; iMtr < lNumUnitTypes; iMtr++)
+         if (iaPosUnitTypeIdxs[iMtr] >= 0)
+         {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+            int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
+            if (iResObjIdx >= 0)
+            {  int iMtrIdx = iaPosUnitTypeIdxs[iMtr];
+               GenerateTable_UnitDetails_FuelTable( page, font, fontBold, iCurY, &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter, iResObjIdx, iMtrIdx,
+                                                    iCUAC_BEMProcIdx, Num_Elec_Enduses, pszElecEnduseName, pszElecEnduseProps, iaEnduseDetailsArrIdx, 1.0 );
+         }  }
+   }
 
 
+   ///////////////////////////////////////////------------------------------------------------------------------------------------------------------------
+   /////              PAGE 5/6           /////
+   ///////////////////////////////////////////
+   page = HPDF_AddPage (pdf);     // SAC 02/08/23
+   HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_LETTER, HPDF_PAGE_LANDSCAPE);
 
-//CUACResults   User: "2bedrm results"  
-//   TotCosts[1] = UVal: 748.32
-//   TotCosts[2] = UVal: 62.36
-//   ElecCosts[1] = UVal: 190.2
-//   ElecCosts[2] = UVal: 15.85
-//   ElecCosts[3] = UVal: 56.1565
-//   ElecCosts[4] = UVal: 13.7885
-//   ElecCosts[5] = UVal: 7.53
-//   ElecCosts[6] = UVal: 7.53
-//   ElecCosts[7] = UVal: 7.53
-//   ElecCosts[8] = UVal: 7.53
-//   ElecCosts[9] = UVal: 7.53
-//   ElecCosts[10] = UVal: 7.53
-//   ElecCosts[11] = UVal: 7.53
-//   ElecCosts[12] = UVal: 7.53
-//   ElecCosts[13] = UVal: 7.53
-//   ElecCosts[14] = UVal: 52.5334
-//   GasCosts[1] = UVal: 69
-//   GasCosts[2] = UVal: 5.75
-//   GasCosts[3] = UVal: 5.75
-//   GasCosts[4] = UVal: 5.75
-//   GasCosts[5] = UVal: 5.75
-//   GasCosts[6] = UVal: 5.75
-//   GasCosts[7] = UVal: 5.75
-//   GasCosts[8] = UVal: 5.75
-//   GasCosts[9] = UVal: 5.75
-//   GasCosts[10] = UVal: 5.75
-//   GasCosts[11] = UVal: 5.75
-//   GasCosts[12] = UVal: 5.75
-//   GasCosts[13] = UVal: 5.75
-//   GasCosts[14] = UVal: 5.75
-//   WaterCosts[1] = UVal: 345.12
-//   WaterCosts[2] = UVal: 28.76
-//   WaterCosts[3] = UVal: 29.1575
-//   WaterCosts[4] = UVal: 27.11
-//   WaterCosts[5] = UVal: 29.1575
-//   WaterCosts[6] = UVal: 28.475
-//   WaterCosts[7] = UVal: 29.1575
-//   WaterCosts[8] = UVal: 28.475
-//   WaterCosts[9] = UVal: 29.1575
-//   WaterCosts[10] = UVal: 29.1575
-//   WaterCosts[11] = UVal: 28.475
-//   WaterCosts[12] = UVal: 29.1575
-//   WaterCosts[13] = UVal: 28.475
-//   WaterCosts[14] = UVal: 29.1575
-//   TrashMonthlyCost = UVal: 12
-//   Allowances[1] = UVal: 1.36278
-//   Allowances[2] = UVal: 0
-//   Allowances[3] = UVal: 0.740492
-//   Allowances[4] = UVal: 0
-//   Allowances[5] = UVal: 0.836024
-//   Allowances[6] = UVal: 9.6113
-//   Allowances[7] = UVal: 5.75
-//   Allowances[8] = UVal: 0.839719
-//   Allowances[9] = UVal: 2.45969
-//   Allowances[10] = UVal: 0
-//   Allowances[11] = UVal: 28.76
-//   Allowances[12] = UVal: 0
-//   Allowances[13] = UVal: 12
-//   CkgElecUse[1] = UVal: 24.6712
-//   CkgElecUse[2] = UVal: 21.693
-//   CkgElecUse[3] = UVal: 24.2211
-//   CkgElecUse[4] = UVal: 19.4015
-//   CkgElecUse[5] = UVal: 20.0935
-//   CkgElecUse[6] = UVal: 20.4056
-//   CkgElecUse[7] = UVal: 22.3933
-//   CkgElecUse[8] = UVal: 20.7473
-//   CkgElecUse[9] = UVal: 20.1435
-//   CkgElecUse[10] = UVal: 20.7481
-//   CkgElecUse[11] = UVal: 24.6158
-//   CkgElecUse[12] = UVal: 26.34
-//   CkgElecUse[13] = UVal: 265.474
-//   CkgElecUse[14] = UVal: 0.727326
-//   CkgGasUse[1] = UVal: 0
-//   CkgGasUse[2] = UVal: 0
-//   CkgGasUse[3] = UVal: 0
-//   CkgGasUse[4] = UVal: 0
-//   CkgGasUse[5] = UVal: 0
-//   CkgGasUse[6] = UVal: 0
-//   CkgGasUse[7] = UVal: 0
-//   CkgGasUse[8] = UVal: 0
-//   CkgGasUse[9] = UVal: 0
-//   CkgGasUse[10] = UVal: 0
-//   CkgGasUse[11] = UVal: 0
-//   CkgGasUse[12] = UVal: 0
-//   CkgGasUse[13] = UVal: 0
-//   CkgGasUse[14] = UVal: 0
-//   ClgElecUse[1] = UVal: 0
-//   ClgElecUse[2] = UVal: 0
-//   ClgElecUse[3] = UVal: 0
-//   ClgElecUse[4] = UVal: 2.11948
-//   ClgElecUse[5] = UVal: 23.2346
-//   ClgElecUse[6] = UVal: 52.2667
-//   ClgElecUse[7] = UVal: 84.0011
-//   ClgElecUse[8] = UVal: 95.8213
-//   ClgElecUse[9] = UVal: 31.1031
-//   ClgElecUse[10] = UVal: 12.5014
-//   ClgElecUse[11] = UVal: 0
-//   ClgElecUse[12] = UVal: 0
-//   ClgElecUse[13] = UVal: 301.048
-//   ClgElecUse[14] = UVal: 0.824788
-//   DHWElecUse[1] = UVal: 114.885
-//   DHWElecUse[2] = UVal: 94.175
-//   DHWElecUse[3] = UVal: 84.1252
-//   DHWElecUse[4] = UVal: 83.1511
-//   DHWElecUse[5] = UVal: 63.3173
-//   DHWElecUse[6] = UVal: 54.2993
-//   DHWElecUse[7] = UVal: 48.2529
-//   DHWElecUse[8] = UVal: 45.7722
-//   DHWElecUse[9] = UVal: 51.8244
-//   DHWElecUse[10] = UVal: 61.0234
-//   DHWElecUse[11] = UVal: 71.6346
-//   DHWElecUse[12] = UVal: 109.363
-//   DHWElecUse[13] = UVal: 881.823
-//   DHWElecUse[14] = UVal: 2.41595
-//   DHWGasUse[1] = UVal: 0
-//   DHWGasUse[2] = UVal: 0
-//   DHWGasUse[3] = UVal: 0
-//   DHWGasUse[4] = UVal: 0
-//   DHWGasUse[5] = UVal: 0
-//   DHWGasUse[6] = UVal: 0
-//   DHWGasUse[7] = UVal: 0
-//   DHWGasUse[8] = UVal: 0
-//   DHWGasUse[9] = UVal: 0
-//   DHWGasUse[10] = UVal: 0
-//   DHWGasUse[11] = UVal: 0
-//   DHWGasUse[12] = UVal: 0
-//   DHWGasUse[13] = UVal: 0
-//   DHWGasUse[14] = UVal: 0
-//   DishElecUse[1] = UVal: 7.61383
-//   DishElecUse[2] = UVal: 8.33958
-//   DishElecUse[3] = UVal: 7.97669
-//   DishElecUse[4] = UVal: 9.24581
-//   DishElecUse[5] = UVal: 6.70768
-//   DishElecUse[6] = UVal: 7.43261
-//   DishElecUse[7] = UVal: 8.33885
-//   DishElecUse[8] = UVal: 6.70725
-//   DishElecUse[9] = UVal: 9.42717
-//   DishElecUse[10] = UVal: 9.42752
-//   DishElecUse[11] = UVal: 7.6139
-//   DishElecUse[12] = UVal: 7.97683
-//   DishElecUse[13] = UVal: 96.8077
-//   DishElecUse[14] = UVal: 0.265227
-//   DryerElecUse[1] = UVal: 69.4884
-//   DryerElecUse[2] = UVal: 70.1847
-//   DryerElecUse[3] = UVal: 59.5295
-//   DryerElecUse[4] = UVal: 61.1679
-//   DryerElecUse[5] = UVal: 66.079
-//   DryerElecUse[6] = UVal: 61.7129
-//   DryerElecUse[7] = UVal: 68.8131
-//   DryerElecUse[8] = UVal: 81.9186
-//   DryerElecUse[9] = UVal: 62.8059
-//   DryerElecUse[10] = UVal: 64.9901
-//   DryerElecUse[11] = UVal: 62.8068
-//   DryerElecUse[12] = UVal: 64.0358
-//   DryerElecUse[13] = UVal: 793.533
-//   DryerElecUse[14] = UVal: 2.17406
-//   DryerGasUse[1] = UVal: 0
-//   DryerGasUse[2] = UVal: 0
-//   DryerGasUse[3] = UVal: 0
-//   DryerGasUse[4] = UVal: 0
-//   DryerGasUse[5] = UVal: 0
-//   DryerGasUse[6] = UVal: 0
-//   DryerGasUse[7] = UVal: 0
-//   DryerGasUse[8] = UVal: 0
-//   DryerGasUse[9] = UVal: 0
-//   DryerGasUse[10] = UVal: 0
-//   DryerGasUse[11] = UVal: 0
-//   DryerGasUse[12] = UVal: 0
-//   DryerGasUse[13] = UVal: 0
-//   DryerGasUse[14] = UVal: 0
-//   HtgElecUse[1] = UVal: 156.346
-//   HtgElecUse[2] = UVal: 106.643
-//   HtgElecUse[3] = UVal: 4.48889
-//   HtgElecUse[4] = UVal: 13.8163
-//   HtgElecUse[5] = UVal: 0
-//   HtgElecUse[6] = UVal: 0
-//   HtgElecUse[7] = UVal: 0
-//   HtgElecUse[8] = UVal: 0
-//   HtgElecUse[9] = UVal: 0
-//   HtgElecUse[10] = UVal: 0.829458
-//   HtgElecUse[11] = UVal: 38.3426
-//   HtgElecUse[12] = UVal: 168.104
-//   HtgElecUse[13] = UVal: 488.57
-//   HtgElecUse[14] = UVal: 1.33855
-//   HtgGasUse[1] = UVal: 0
-//   HtgGasUse[2] = UVal: 0
-//   HtgGasUse[3] = UVal: 0
-//   HtgGasUse[4] = UVal: 0
-//   HtgGasUse[5] = UVal: 0
-//   HtgGasUse[6] = UVal: 0
-//   HtgGasUse[7] = UVal: 0
-//   HtgGasUse[8] = UVal: 0
-//   HtgGasUse[9] = UVal: 0
-//   HtgGasUse[10] = UVal: 0
-//   HtgGasUse[11] = UVal: 0
-//   HtgGasUse[12] = UVal: 0
-//   HtgGasUse[13] = UVal: 0
-//   HtgGasUse[14] = UVal: 0
-//   IAQVentElecUse[1] = UVal: 24.5076
-//   IAQVentElecUse[2] = UVal: 22.1359
-//   IAQVentElecUse[3] = UVal: 24.5076
-//   IAQVentElecUse[4] = UVal: 23.717
-//   IAQVentElecUse[5] = UVal: 24.5076
-//   IAQVentElecUse[6] = UVal: 23.717
-//   IAQVentElecUse[7] = UVal: 24.5076
-//   IAQVentElecUse[8] = UVal: 24.5076
-//   IAQVentElecUse[9] = UVal: 23.717
-//   IAQVentElecUse[10] = UVal: 24.5076
-//   IAQVentElecUse[11] = UVal: 23.717
-//   IAQVentElecUse[12] = UVal: 24.5076
-//   IAQVentElecUse[13] = UVal: 288.557
-//   IAQVentElecUse[14] = UVal: 0.790567
-//   LtgElecUse[1] = UVal: 30.309
-//   LtgElecUse[2] = UVal: 25.5355
-//   LtgElecUse[3] = UVal: 25.9841
-//   LtgElecUse[4] = UVal: 22.9211
-//   LtgElecUse[5] = UVal: 21.3938
-//   LtgElecUse[6] = UVal: 19.7189
-//   LtgElecUse[7] = UVal: 20.8863
-//   LtgElecUse[8] = UVal: 22.4153
-//   LtgElecUse[9] = UVal: 24.1569
-//   LtgElecUse[10] = UVal: 27.2543
-//   LtgElecUse[11] = UVal: 28.5842
-//   LtgElecUse[12] = UVal: 30.5637
-//   LtgElecUse[13] = UVal: 299.723
-//   LtgElecUse[14] = UVal: 0.821159
-//   PlugLdsElecUse[1] = UVal: 159.244
-//   PlugLdsElecUse[2] = UVal: 132.572
-//   PlugLdsElecUse[3] = UVal: 140.904
-//   PlugLdsElecUse[4] = UVal: 133.674
-//   PlugLdsElecUse[5] = UVal: 129.534
-//   PlugLdsElecUse[6] = UVal: 120.328
-//   PlugLdsElecUse[7] = UVal: 129.633
-//   PlugLdsElecUse[8] = UVal: 134.393
-//   PlugLdsElecUse[9] = UVal: 137.098
-//   PlugLdsElecUse[10] = UVal: 150.545
-//   PlugLdsElecUse[11] = UVal: 151.69
-//   PlugLdsElecUse[12] = UVal: 160.859
-//   PlugLdsElecUse[13] = UVal: 1680.47
-//   PlugLdsElecUse[14] = UVal: 4.60403
-//   RfrgElecUse[1] = UVal: 38.5306
-//   RfrgElecUse[2] = UVal: 34.9586
-//   RfrgElecUse[3] = UVal: 40.6822
-//   RfrgElecUse[4] = UVal: 38.9557
-//   RfrgElecUse[5] = UVal: 42.1271
-//   RfrgElecUse[6] = UVal: 43.3674
-//   RfrgElecUse[7] = UVal: 45.1996
-//   RfrgElecUse[8] = UVal: 45.7174
-//   RfrgElecUse[9] = UVal: 43.1302
-//   RfrgElecUse[10] = UVal: 42.6618
-//   RfrgElecUse[11] = UVal: 38.6775
-//   RfrgElecUse[12] = UVal: 38.486
-//   RfrgElecUse[13] = UVal: 492.494
-//   RfrgElecUse[14] = UVal: 1.3493
-//   WashElecUse[1] = UVal: 8.20571
-//   WashElecUse[2] = UVal: 8.2709
-//   WashElecUse[3] = UVal: 7.04294
-//   WashElecUse[4] = UVal: 7.23677
-//   WashElecUse[5] = UVal: 7.81781
-//   WashElecUse[6] = UVal: 7.30125
-//   WashElecUse[7] = UVal: 8.14128
-//   WashElecUse[8] = UVal: 9.69179
-//   WashElecUse[9] = UVal: 7.43057
-//   WashElecUse[10] = UVal: 7.68898
-//   WashElecUse[11] = UVal: 7.43068
-//   WashElecUse[12] = UVal: 7.6242
-//   WashElecUse[13] = UVal: 93.8829
-//   WashElecUse[14] = UVal: 0.257213
-//   PVSysElecUse[1] = UVal: -286.122
-//   PVSysElecUse[2] = UVal: -479.759
-//   PVSysElecUse[3] = UVal: -619.557
-//   PVSysElecUse[4] = UVal: -756.433
-//   PVSysElecUse[5] = UVal: -892.696
-//   PVSysElecUse[6] = UVal: -834.838
-//   PVSysElecUse[7] = UVal: -910.395
-//   PVSysElecUse[8] = UVal: -871.47
-//   PVSysElecUse[9] = UVal: -771.253
-//   PVSysElecUse[10] = UVal: -624.246
-//   PVSysElecUse[11] = UVal: -456.289
-//   PVSysElecUse[12] = UVal: -316.085
-//   PVSysElecUse[13] = UVal: -7819.14
-//   PVSysElecUse[14] = UVal: -21.4223
-//   TotalElecUse[1] = UVal: 347.68
-//   TotalElecUse[2] = UVal: 44.7484
-//   TotalElecUse[3] = UVal: -200.095
-//   TotalElecUse[4] = UVal: -341.027
-//   TotalElecUse[5] = UVal: -487.884
-//   TotalElecUse[6] = UVal: -424.289
-//   TotalElecUse[7] = UVal: -450.228
-//   TotalElecUse[8] = UVal: -383.778
-//   TotalElecUse[9] = UVal: -360.417
-//   TotalElecUse[10] = UVal: -202.069
-//   TotalElecUse[11] = UVal: -1.17568
-//   TotalElecUse[12] = UVal: 321.775
-//   TotalElecUse[13] = UVal: -2136.76
-//   TotalElecUse[14] = UVal: -5.85413
-//   TotalGasUse[1] = UVal: 0
-//   TotalGasUse[2] = UVal: 0
-//   TotalGasUse[3] = UVal: 0
-//   TotalGasUse[4] = UVal: 0
-//   TotalGasUse[5] = UVal: 0
-//   TotalGasUse[6] = UVal: 0
-//   TotalGasUse[7] = UVal: 0
-//   TotalGasUse[8] = UVal: 0
-//   TotalGasUse[9] = UVal: 0
-//   TotalGasUse[10] = UVal: 0
-//   TotalGasUse[11] = UVal: 0
-//   TotalGasUse[12] = UVal: 0
-//   TotalGasUse[13] = UVal: 0
-//   TotalGasUse[14] = UVal: 0
-//   BillingElecUse[1] = UVal: 347.68
-//   BillingElecUse[2] = UVal: 44.7484
-//   BillingElecUse[3] = UVal: -200.095
-//   BillingElecUse[4] = UVal: -341.027
-//   BillingElecUse[5] = UVal: -487.884
-//   BillingElecUse[6] = UVal: -424.289
-//   BillingElecUse[7] = UVal: -450.228
-//   BillingElecUse[8] = UVal: -383.778
-//   BillingElecUse[9] = UVal: -360.417
-//   BillingElecUse[10] = UVal: -202.069
-//   BillingElecUse[11] = UVal: -1.17568
-//   BillingElecUse[12] = UVal: 321.775
-//   BillingElecUse[13] = UVal: -2136.76
-//   BillingElecUse[14] = UVal: -5.85413
-//   WaterUse[1] = UVal: 6045
-//   WaterUse[2] = UVal: 5460
-//   WaterUse[3] = UVal: 6045
-//   WaterUse[4] = UVal: 5850
-//   WaterUse[5] = UVal: 6045
-//   WaterUse[6] = UVal: 5850
-//   WaterUse[7] = UVal: 6045
-//   WaterUse[8] = UVal: 6045
-//   WaterUse[9] = UVal: 5850
-//   WaterUse[10] = UVal: 6045
-//   WaterUse[11] = UVal: 5850
-//   WaterUse[12] = UVal: 6045
-//   WaterUse[13] = UVal: 71175
-//   WaterUse[14] = UVal: 195
+//   print_grid  (pdf, page);
+
+   iCurY = iPgTop;
+   iCurX = iPgLeft;
+   HPDF_Page_SetFontAndSize (page, fontBold, 6);
+   iCurY -= 25;
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iCurX, iCurY, "STATE OF CALIFORNIA");
+   HPDF_Page_EndText (page);
+
+   iCurY -= 12;
+   HPDF_Page_SetFontAndSize (page, fontBold, 10);
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iCurX, iCurY, "CALIFORNIA ENERGY COMMISSION");
+   HPDF_Page_EndText (page);
+
+   iCurY -= 3;
+   HPDF_Page_SetGrayFill (page, 0);  // 0.5);
+   HPDF_Page_SetGrayStroke (page, 0);  // 0.8);
+   HPDF_Page_SetLineWidth (page, 1.25);
+   HPDF_Page_MoveTo  (page, iCurX, iCurY );
+   HPDF_Page_LineTo  (page,   230, iCurY );
+   HPDF_Page_Stroke (page);
+
+   iCurY -= 11;
+   HPDF_Page_SetFontAndSize (page, fontBold, 8);
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iCurX, iCurY, "UTILITY Allowance Calculation Tool");
+   HPDF_Page_EndText (page);
+
+   iCurY -= 13;
+   if (!qsProjID.isEmpty())
+   {  HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
+      HPDF_Page_EndText (page);
+   }
+   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+
+   qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
+   if (!qsRunDateFmt.isEmpty())
+   {  iCurY = iPgTop - 56;
+      int iMidX = 690;   // 505;    - landscaoe vs. portrait
+      HPDF_Page_SetFontAndSize (page, fontBold, 8);
+      tw1 = HPDF_Page_TextWidth (page, qsRunDateFmt.toLocal8Bit().constData());
+      tw2 = HPDF_Page_TextWidth (page, qsPgNumLabel.toLocal8Bit().constData());
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iMidX-(tw1/2), iCurY,    qsRunDateFmt.toLocal8Bit().constData());
+      HPDF_Page_TextOut (page, iMidX-(tw2/2), iCurY-12, qsPgNumLabel.toLocal8Bit().constData());
+      HPDF_Page_EndText (page);
+   }
+
+   HPDF_Page_SetFontAndSize (page, fontBold, 10); 
+   iCurY = iPgTop - 95;      // raised by 15 - SAC 01/13/23
+   HPDF_Page_BeginText (page);
+   HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, qsProjNameTitle.toLocal8Bit().constData() )/2), iCurY, qsProjNameTitle.toLocal8Bit().constData());
+   HPDF_Page_EndText (page);
 
 
+   //int iDetTblColWds[16], iDetTblColLeftX[16];
+   GenerateTable_UnitDetails_Header( page, font, fontBold, iCurY, "kBtu Gas Usage by End Use Summary", &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter );
+
+   iNumUnitTypesThisPg = lNumUnitTypes;  // (lNumUnitTypes <= 3 ? lNumUnitTypes : 3);
+   for (iMtr=0; iMtr < iNumUnitTypesThisPg; iMtr++)
+      if (iaPosUnitTypeIdxs[iMtr] >= 0)
+      {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+         int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
+         if (iResObjIdx >= 0)
+         {  int iMtrIdx = iaPosUnitTypeIdxs[iMtr];
+            GenerateTable_UnitDetails_FuelTable( page, font, fontBold, iCurY, &iDetTblColWds[0], &iDetTblColLeftX[0], iPgLeft, iPgRight, iPgCenter, iResObjIdx, iMtrIdx,
+                                                 iCUAC_BEMProcIdx, Num_Gas_Enduses, pszGasEnduseName, pszGasEnduseProps, iaEnduseDetailsArrIdx, 100.0 );
+      }  }
 
 
 

@@ -2964,21 +2964,35 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 
             // Write COPIES of DHWSYSs (when needed)
             if (iNumCSEDHWSysShuffles > 1 && pClass->getShortName().compare( "cseDHWSYS" )==0)
-   			{	for (ib=0; ib < (int) pClass->ObjectCount( BEMO_User ); ib++)
+   			{  BEMObject* pLastMainShuffleObj = NULL;    // SAC 04/11/23 (tic #1349)
+               for (ib=0; ib < (int) pClass->ObjectCount( BEMO_User ); ib++)
    				{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
-            	   if (pObj != NULL)
+            	   if (pObj != NULL && pObj != pLastMainShuffleObj)
             	   {	bool bOKToWriteObj = (m_plaClsObjIndices ? ObjectToBeWritten( i1Class, ib ) : true);		// SAC 12/16/18 - CSE HPWHSIZE runs
             	      if (bOKToWriteObj && pObj->getParent() == NULL)
-                     {  QString qsDayUseName, qsLoadShareSysName;
+                     {
+                        BEMObject* pMainShuffleObj = NULL;     // to facilitate sub-central systems to support shuffling w/ HeatPumpDHWCombo systems - SAC 04/11/23 (tic #1349)
+                        int iShufDHWSysIdx = ib;
+                        if (BEMPX_GetObject( BEMPX_GetDatabaseID( "cseDHWSYS:FirstSubShuffleDHWSYS" ), pMainShuffleObj, -1, ib, BEMO_User, iBEMProcIdx ) && pMainShuffleObj != NULL)
+                        {  pLastMainShuffleObj = pMainShuffleObj;
+                           iShufDHWSysIdx = BEMPX_GetObjectIndex( pMainShuffleObj->getClass(), pMainShuffleObj, iBEMProcIdx );
+                        }
+                        else
+                        {  pMainShuffleObj = pObj;
+                           pLastMainShuffleObj = NULL;
+                        }
+
+                        QString qsDayUseName, qsLoadShareSysName;
                         int iFirstShuffleNum = 0;
-                        if (lDBID_cseDHWSYS_wsDayUse_x > 0 && BEMPX_GetString( lDBID_cseDHWSYS_wsDayUse_x, qsDayUseName, FALSE, 0, -1, ib, BEMO_User, NULL, 0, iBEMProcIdx ) && !qsDayUseName.isEmpty())
+                        if (lDBID_cseDHWSYS_wsDayUse_x > 0 && BEMPX_GetString( lDBID_cseDHWSYS_wsDayUse_x, qsDayUseName, FALSE, 0, -1, iShufDHWSysIdx, BEMO_User, NULL, 0, iBEMProcIdx ) && !qsDayUseName.isEmpty())
                         {  iFirstShuffleNum = (int) atof( qsDayUseName.right(2).toLocal8Bit().constData() );
                            qsDayUseName = qsDayUseName.left( qsDayUseName.length()-2 );
                         }
                         if (lDBID_cseDHWSYS_wsLoadShareDHWSYS > 0)
-                           BEMPX_GetString( lDBID_cseDHWSYS_wsLoadShareDHWSYS, qsLoadShareSysName, FALSE, 0, -1, ib, BEMO_User, NULL, 0, iBEMProcIdx );
+                           BEMPX_GetString( lDBID_cseDHWSYS_wsLoadShareDHWSYS, qsLoadShareSysName, FALSE, 0, -1, iShufDHWSysIdx, BEMO_User, NULL, 0, iBEMProcIdx );
+
                         for (int iShuffleNum = 2; iShuffleNum <= iNumCSEDHWSysShuffles; iShuffleNum++)
-                        {  QString qsCSECopyLine = QString( "DHWSYS  \"%1-%2\"  COPY  \"%3\"  " ).arg( pObj->getName(), QString::number(iShuffleNum), pObj->getName() );
+                        {  QString qsCSECopyLine = QString( "DHWSYS  \"%1-%2\"  COPY  \"%3\"  " ).arg( pObj->getName(), QString::number(iShuffleNum), pMainShuffleObj->getName() );
                            if (iFirstShuffleNum > 0)
                            {  int iThisShuffleNum = iFirstShuffleNum + iShuffleNum - 1;
                               if (iThisShuffleNum > 5)         // prevent shuffles > 5 ??
@@ -2991,7 +3005,7 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
                               qsCSECopyLine += QString( "wsLoadShareDHWSYS = \"%1-%2\"  " ).arg( qsLoadShareSysName, QString::number(iShuffleNum) );
             					m_file.WriteWholeRecord( qsCSECopyLine.toLocal8Bit().constData() );
                         // now RE-write any properties defined as EXPRESSIONS (to avoid a CSE bug in COPY command) - SAC 05/19/21
-								   WriteProperties( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/, true /*bWriteOnlyCSEExpressionProperties*/ );
+								   WriteProperties( pMainShuffleObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/, true /*bWriteOnlyCSEExpressionProperties*/ );
                         }
          	      		m_file.NewLine();
                }  }  }

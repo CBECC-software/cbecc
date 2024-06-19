@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "Example ADU"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
    CreateDate = 1652387341
-   ModDate = 1674211439
+   ModDate = 1683873684
    RunDate = 1474306815
    ProjFileName = "ADUExample4AdditionAlone_ERexception_Walls_Attic.ribd22"
    RunTitle = "ADU Addition Alone"
@@ -511,7 +511,7 @@ Attic   "Attic "
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -740,7 +740,7 @@ EUseSummary   "EUSummary"
    SummaryCol3[3] = "(kTDV/ft²-yr)"
    SummaryCol3[5] = "13.43"
    MarginkW[1] = 0.01
-   MarginkWh = 121
+   MarginkWh = 120.9
    MarginTherms = 0
    PctSavingskW = 0.8
    PctSavingskWh = 2.6
@@ -754,8 +754,8 @@ EUseSummary   "EUSummary"
    PctSavTDVLbl = "3.6"
    PctSavCmpTDVLbl = "6.9"
    PctSavSrcLbl = "1.1"
-   PropElecDemand[1] = 0.705454
-   StdElecDemand = 0.711086
+   PropElecDemand[1] = 0.705473
+   StdElecDemand = 0.711085
    StdDesignPVSize = 0
    PropPV_Total = 0
    PropPV_Export = 0
@@ -769,13 +769,13 @@ EUseSummary   "EUSummary"
    CO2TotalUnitLabel = "kg"
    MeetsTier1 = 0
    MeetsTier2 = 0
-   PropElecCarbon[1] = 0.74798
+   PropElecCarbon[1] = 0.747985
    PropFuelCarbon[1] = 0.200815
-   PropFinalCarbon[1] = 0.948795
-   PropExclExpCarbon[1] = 0.948795
+   PropFinalCarbon[1] = 0.9488
+   PropExclExpCarbon[1] = 0.9488
    PropExportCarbon[1] = 0
    PropSelfConsCarbon[1] = 0
-   PropNoSolFlxCarbon[1] = 0.948795
+   PropNoSolFlxCarbon[1] = 0.9488
    StdFinalCarbon = 0.959247
    StdExclExpCarbon = 0.959247
    StdExportCarbon = 0
@@ -1957,6 +1957,7 @@ HVACHtPump   "Minisplit"
    HSPF2 = 7.5
    Cap47 = 36000
    Cap17 = 24000
+   IncludesCooling = 1
    SEER = 14
    SEER2 = 14.3
    EER = 11.87

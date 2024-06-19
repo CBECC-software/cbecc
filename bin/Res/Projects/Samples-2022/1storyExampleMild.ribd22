@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "1 Story Example Mild Climate PV+Battery"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.2.0 RV (1263)"
    CreateDate = 1665422094
-   ModDate = 1674211093
+   ModDate = 1683873339
    RunDate = 1472838107
    ProjFileName = "1storyExampleMild.ribd22"
    RunTitle = "1 Story Example"
@@ -992,7 +992,7 @@ Attic   "Attic "
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2720,6 +2720,7 @@ HVACHtPump   "Central Split HP"
    AutoSize = 0
    Cap47 = 48000
    Cap17 = 36000
+   IncludesCooling = 1
    SEER = 14
    SEER2 = 14.3
    EER = 11.87
@@ -2804,7 +2805,7 @@ DHWSys   "DHW System"
 DHWHeater   "Small Instantaneous"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

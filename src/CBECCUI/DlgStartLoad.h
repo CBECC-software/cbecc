@@ -76,6 +76,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CDlgStartLoad)
 	afx_msg void OnStartBatchProcessing();
+	afx_msg void OnStartCommunitySolarOptOut();  // SAC 03/28/23
 	afx_msg void OnStartBlankSlate();
 	afx_msg void OnStartExistingProject();
 	afx_msg void OnStartNewProject();

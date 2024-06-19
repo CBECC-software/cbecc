@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "EAA Example 3 w/ ADU & Addition"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.0.6 Alpha (1229)"
    CreateDate = 1556216792
-   ModDate = 1674211595
+   ModDate = 1683873840
    RunDate = 1474307407
    ProjFileName = "EAAExample3LrgAddADU.ribd22"
    RunTitle = "Gar Convert to ADU & Master Suite"
@@ -1469,7 +1469,7 @@ Attic   "Addtn Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2809,6 +2809,7 @@ HVACHtPump   "Minisplit HP"
    HSPF2 = 7.5
    Cap47 = 36000
    Cap17 = 24000
+   IncludesCooling = 1
    SEER = 14
    SEER2 = 14.3
    EER = 11.87
@@ -2919,7 +2920,7 @@ DHWSys   "Altered Storage"
 DHWHeater   "Tankless 0.82"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"
@@ -2941,7 +2942,7 @@ DHWHeater   "Tankless 0.82"
 DHWHeater   "Gas Storage"  
    HeaterElementType = "Gas"
    TankType = "Consumer Storage (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"
@@ -2960,7 +2961,7 @@ DHWHeater   "Gas Storage"
 DHWHeater   "Tankless UEF"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

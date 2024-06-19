@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "010012-SchSml-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414609068
-   ModDate = 1674218570
-   RunDate = 1674218571
+   ModDate = 1683878932
+   RunDate = 1683878933
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -14,7 +14,7 @@ Proj   "010012-SchSml-CECStd22"
    DefaultDayltgCtrls = 1
    CompOptNew = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
    ProjFileName = "010012-SchSml-CECStd22.cibd"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
@@ -5260,6 +5260,7 @@ clg: 0  htg: 0  'Common_Cafeteria_Zn'" )
    MetricPassFail[3] = "Fail"
    ComplyMessage = "DOES NOT COMPLY"
    StdPVBatteryMsg = "Standard Design PV Capacity: 43.1 kWdc  /  Battery System Capacity: 83.5 kWh  (power 19.55 kW)"
+   AnalysisValid = 0
    PctSavingsTDV = 0.212095
    PctSavingsEffTDV = 0.00506894
    PctSavingsCmpTDV = 0.297922
@@ -5280,8 +5281,6 @@ clg: 0  htg: 0  'Common_Cafeteria_Zn'" )
    StdPV_Total = 67392.7
    StdPV_Export = 10827.7
    StdPV_PctExport = 16.0666
-   NRCCPRFPayldTransID = "fdc30d6f-d8f8-4fc9-bcac-dc22e325fb22"
-   NRCCPRFPayldProcDate = "2023-01-20T04:42:57"
    ..
 
 

@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "2 Story 2 Zone PV, Battery, Self-Utilization"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.2.0 RV (1263)"
    CreateDate = 1547587885
-   ModDate = 1674211400
+   ModDate = 1683873646
    RunDate = 1472838507
    ProjFileName = "2storyZonalExample.ribd22"
    RunTitle = "2 Zone Top/Bot, 2 HVAC Systems"
@@ -813,7 +813,7 @@ Attic   "Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2435,7 +2435,7 @@ DHWSys   "DHW System 1"
 DHWHeater   "Tankless High Eff"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

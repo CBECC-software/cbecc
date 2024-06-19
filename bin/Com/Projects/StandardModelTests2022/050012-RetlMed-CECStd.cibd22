@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "050012-RetlMed-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414952024
-   ModDate = 1674218880
-   RunDate = 1674218881
+   ModDate = 1683879161
+   RunDate = 1683879162
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -13,7 +13,7 @@ Proj   "050012-RetlMed-CECStd22"
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -2382,6 +2382,7 @@ clg: 0  htg: 0  'Point_Of_Sale Thermal Zone'" )
    MetricPassFail[3] = "Pass"
    ComplyMessage = "COMPLIES"
    StdPVBatteryMsg = "Standard Design PV Capacity: 61.4 kWdc  /  Battery System Capacity: 66.4 kWh  (power 15.90 kW)"
+   AnalysisValid = 0
    PctSavingsTDV = 0.0211988
    PctSavingsEffTDV = 0.0215424
    PctSavingsCmpTDV = 0.0370165
@@ -2402,8 +2403,6 @@ clg: 0  htg: 0  'Point_Of_Sale Thermal Zone'" )
    StdPV_Total = 95985.6
    StdPV_Export = 1781.16
    StdPV_PctExport = 1.85565
-   NRCCPRFPayldTransID = "b52dba48-23ef-4efd-811c-4357fd202ceb"
-   NRCCPRFPayldProcDate = "2023-01-20T04:48:10"
    ..
 
 

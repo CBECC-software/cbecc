@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "2 Story Comb Hydronic No Cool CZ 3 Rev 3"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.2.0 RV (1263)"
    CreateDate = 1548284154
-   ModDate = 1674211351
+   ModDate = 1683873596
    RunDate = 1472838572
    ProjFileName = "2StoryExampleCombHydNoCool.ribd22"
    RunTitle = "Combined Hydronic Boiler No cooling"
@@ -1099,7 +1099,7 @@ Attic   "Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"

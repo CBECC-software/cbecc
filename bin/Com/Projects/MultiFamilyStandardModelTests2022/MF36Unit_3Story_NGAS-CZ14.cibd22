@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "MF36 Restructure Prototype"  
    BldgEngyModelVersion = 17
    CreateDate = 1647927643
-   ModDate = 1674215069
-   RunDate = 1674215070
+   ModDate = 1683876123
+   RunDate = 1683876124
    RunDateFmt = "18:39, Thu, Mar 17, 2022"
    RunDateISO = "2022-03-17T18:39:29-06:00"
    GasType = "NaturalGas"
@@ -29,7 +29,7 @@ Proj   "MF36 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
    ProjFileName = "MF36_Prop_NGAS-CZ12_Restructure - Zoned - Latest.cibd22"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
@@ -180,7 +180,7 @@ SchDay   "CARes2013 Slp Cool Hrly"
    ..
 
 Bldg   "Building"  
-   TreeState = 252
+   TreeState = 253
    TotStoryCnt = 3
    AboveGrdStoryCnt = 3
    ..
@@ -1211,6 +1211,7 @@ ResOtherZn   "F1 Business Center"
    SpcFunc = "Conference, Multipurpose and Meeting Area"
    VentSpcFunc = "General - Conference/meeting"
    ozHVACSystem = "F1 Business Cent AirSys"
+   ozDHWSys = "DHW Gas OtherZns"
    Area = 324
    CeilingHeight = 9
    FloorHeight = 10
@@ -1317,6 +1318,7 @@ ResOtherZn   "F1 Fitness Center"
    SpcFunc = "Exercise/Fitness Center and Gymnasium Areas"
    VentSpcFunc = "Sports/Entertainment - Gym, sports arena (play area)"
    ozHVACSystem = "F1 Fitness Cente AirSys"
+   ozDHWSys = "DHW Gas OtherZns"
    Area = 324
    CeilingHeight = 9
    FloorHeight = 10
@@ -1433,6 +1435,7 @@ ResOtherZn   "F1 Leasing Office"
    SpcFunc = "Office Area (<250 square feet)"
    VentSpcFunc = "Office - Office space"
    ozHVACSystem = "F1 Leasing Offic AirSys"
+   ozDHWSys = "DHW Gas OtherZns"
    Area = 216
    CeilingHeight = 9
    FloorHeight = 10
@@ -1530,6 +1533,7 @@ ResOtherZn   "F1 Lobby"
    SpcFunc = "Lobby, Main Entry"
    VentSpcFunc = "Residential - Common corridors"
    ozHVACSystem = "F1 Lobby AirSys"
+   ozDHWSys = "DHW Gas OtherZns"
    Area = 540
    CeilingHeight = 9
    FloorHeight = 10
@@ -1659,6 +1663,7 @@ ResOtherZn   "F1 Mech Rm"
    SpcFunc = "Electrical, Mechanical, Telephone Rooms"
    VentSpcFunc = "Misc - Telephone closets"
    ozHVACSystem = "- none -"
+   ozDHWSys = "DHW Gas OtherZns"
    Area = 108
    CeilingHeight = 9
    FloorHeight = 10
@@ -4940,24 +4945,24 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse5[22] = "0.86"
    Enduse5[23] = "0.00"
    Enduse6[1] = "Domestic Hot Water"
-   Enduse6[2] = "0.4"
-   Enduse6[3] = "313.9"
-   Enduse6[4] = "28.73"
+   Enduse6[2] = "0.5"
+   Enduse6[3] = "349.6"
+   Enduse6[4] = "31.95"
    Enduse6[5] = "0.4"
-   Enduse6[6] = "324.9"
-   Enduse6[7] = "29.71"
-   Enduse6[8] = "0.98"
+   Enduse6[6] = "360.5"
+   Enduse6[7] = "32.92"
+   Enduse6[8] = "0.97"
    Enduse6[9] = "0.0"
    Enduse6[10] = "0.0"
-   Enduse6[11] = "6.92"
-   Enduse6[12] = "7.16"
+   Enduse6[11] = "7.71"
+   Enduse6[12] = "7.95"
    Enduse6[13] = "0.24"
-   Enduse6[17] = "0.04"
-   Enduse6[18] = "18.36"
-   Enduse6[19] = "18.40"
-   Enduse6[20] = "0.04"
-   Enduse6[21] = "19.00"
-   Enduse6[22] = "19.04"
+   Enduse6[17] = "0.05"
+   Enduse6[18] = "20.44"
+   Enduse6[19] = "20.49"
+   Enduse6[20] = "0.05"
+   Enduse6[21] = "21.08"
+   Enduse6[22] = "21.13"
    Enduse6[23] = "0.64"
    Enduse7[1] = "Indoor Lighting"
    Enduse7[2] = "22.9"
@@ -4978,24 +4983,24 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[22] = "3.50"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "-43.3"
-   Enduse8[3] = "313.9"
-   Enduse8[4] = "29.10"
+   Enduse8[2] = "-43.2"
+   Enduse8[3] = "349.6"
+   Enduse8[4] = "32.32"
    Enduse8[5] = "-43.5"
-   Enduse8[6] = "324.9"
-   Enduse8[7] = "30.05"
-   Enduse8[8] = "0.95"
+   Enduse8[6] = "360.5"
+   Enduse8[7] = "33.26"
+   Enduse8[8] = "0.94"
    Enduse8[9] = "11.3"
    Enduse8[10] = "11.3"
-   Enduse8[11] = "10.19"
-   Enduse8[12] = "10.43"
+   Enduse8[11] = "10.98"
+   Enduse8[12] = "11.22"
    Enduse8[13] = "0.24"
-   Enduse8[17] = "6.77"
-   Enduse8[18] = "18.36"
-   Enduse8[19] = "25.13"
-   Enduse8[20] = "6.76"
-   Enduse8[21] = "19.00"
-   Enduse8[22] = "25.76"
+   Enduse8[17] = "6.78"
+   Enduse8[18] = "20.44"
+   Enduse8[19] = "27.22"
+   Enduse8[20] = "6.77"
+   Enduse8[21] = "21.08"
+   Enduse8[22] = "27.85"
    Enduse8[23] = "0.63"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "59.8"
@@ -5100,44 +5105,44 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[13] = "--"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "51.8"
-   Enduse15[3] = "448.9"
-   Enduse15[4] = "107.05"
+   Enduse15[2] = "51.9"
+   Enduse15[3] = "484.6"
+   Enduse15[4] = "110.27"
    Enduse15[5] = "51.6"
-   Enduse15[6] = "459.9"
-   Enduse15[7] = "108.00"
-   Enduse15[8] = "0.95"
+   Enduse15[6] = "495.5"
+   Enduse15[7] = "111.21"
+   Enduse15[8] = "0.94"
    Enduse15[9] = "23.6"
    Enduse15[10] = "23.6"
-   Enduse15[11] = "19.51"
-   Enduse15[12] = "19.75"
+   Enduse15[11] = "20.30"
+   Enduse15[12] = "20.54"
    Enduse15[13] = "0.24"
-   Enduse15[17] = "22.12"
-   Enduse15[18] = "26.25"
-   Enduse15[19] = "48.37"
-   Enduse15[20] = "22.11"
-   Enduse15[21] = "26.89"
-   Enduse15[22] = "49.00"
+   Enduse15[17] = "22.13"
+   Enduse15[18] = "28.33"
+   Enduse15[19] = "50.46"
+   Enduse15[20] = "22.12"
+   Enduse15[21] = "28.97"
+   Enduse15[22] = "51.09"
    Enduse15[23] = "0.63"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "85.1"
-   Enduse16[3] = "313.9"
-   Enduse16[4] = "96.68"
+   Enduse16[2] = "85.2"
+   Enduse16[3] = "349.6"
+   Enduse16[4] = "99.90"
    Enduse16[5] = "84.9"
-   Enduse16[6] = "324.9"
-   Enduse16[7] = "97.63"
-   Enduse16[8] = "0.95"
+   Enduse16[6] = "360.5"
+   Enduse16[7] = "100.84"
+   Enduse16[8] = "0.94"
    Enduse16[9] = "11.8"
    Enduse16[10] = "11.8"
-   Enduse16[11] = "12.40"
-   Enduse16[12] = "12.64"
+   Enduse16[11] = "13.19"
+   Enduse16[12] = "13.43"
    Enduse16[13] = "0.24"
-   Enduse16[17] = "13.27"
-   Enduse16[18] = "18.36"
-   Enduse16[19] = "31.63"
-   Enduse16[20] = "13.26"
-   Enduse16[21] = "19.00"
-   Enduse16[22] = "32.26"
+   Enduse16[17] = "13.28"
+   Enduse16[18] = "20.44"
+   Enduse16[19] = "33.72"
+   Enduse16[20] = "13.27"
+   Enduse16[21] = "21.08"
+   Enduse16[22] = "34.35"
    Enduse16[23] = "0.63"
    ZoneUMLHsLoaded = ( 0, 0 )
    SimSummary[1] = "CSE Successful"
@@ -5148,18 +5153,19 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    MetricPassFail[3] = "Pass"
    ComplyMessage = "COMPLIES"
    StdPVBatteryMsg = "Standard Design PV Capacity: 69.8 kWdc  /  (no battery)"
-   PctSavingsTDV = 0.87963
-   PctSavingsEffTDV = 0.973062
-   PctSavingsCmpTDV = 3.1614
-   PctSavTDVLbl = "0.9"
-   PctSavEffTDVLbl = "1.0"
-   PctSavCmpTDVLbl = "3.2"
-   PctSavingsSrc = 1.21519
-   PctSavingsEffSrc = 1.89873
-   PctSavingsCmpSrc = 2.30105
+   AnalysisValid = 0
+   PctSavingsTDV = 0.845248
+   PctSavingsEffTDV = 0.93217
+   PctSavingsCmpTDV = 2.82622
+   PctSavTDVLbl = "0.8"
+   PctSavEffTDVLbl = "0.9"
+   PctSavCmpTDVLbl = "2.8"
+   PctSavingsSrc = 1.16845
+   PctSavingsEffSrc = 1.78704
+   PctSavingsCmpSrc = 2.13904
    PctSavSrcLbl = "1.2"
-   PctSavEffSrcLbl = "1.9"
-   PctSavCmpSrcLbl = "2.3"
+   PctSavEffSrcLbl = "1.8"
+   PctSavCmpSrcLbl = "2.1"
    MarginkW = 0
    PVBattResultsValid = 1
    PropDHWNames_SSF[1] = "DHWSolarSystem 1"
@@ -5167,13 +5173,11 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    StdDHW_SSF = 0.351
    DHW_SSF_Summary = ( "DHW SSF:", "0.38", "0.35" )
    PropPV_Total = 128374
-   PropPV_Export = 55573.9
-   PropPV_PctExport = 43.2907
+   PropPV_Export = 55561.7
+   PropPV_PctExport = 43.2812
    StdPV_Total = 128381
-   StdPV_Export = 55599.8
-   StdPV_PctExport = 43.3083
-   NRCCPRFPayldTransID = "ad7ebe1f-5e67-4d54-ab27-d80ae8f06d7d"
-   NRCCPRFPayldProcDate = "2023-01-20T03:44:32"
+   StdPV_Export = 55587.4
+   StdPV_PctExport = 43.2986
    ..
 
 ResConsAssm   "Exterior Wall Cons"  
@@ -6159,10 +6163,39 @@ ResDHWSys   "DHW Electric"
    HERSCheck = "DHWElectric-hers-dhw"
    ..
 
+ResDHWSys   "DHW Gas OtherZns"  
+   SystemType = "Standard"
+   MFamDistType = "Multi-family: Recirculating with no control (continuous pumping)"
+   CentralRecircType = "Central with Recirculation"
+   CentralDHW = 1
+   CentralDHWType = "Other"
+   UseMaxDurNumHtrs = 0
+   CHPWHSysDescrip = "- select system description -"
+   CHPWHCompType = "- select CHPWH type -"
+   CHPWHNEEABrand = "n/a"
+   CHPWHNEEAModel = "n/a"
+   CHPWHTankLoc = "- select tank location -"
+   CHPWHSrcAirLoc = "- select source air location -"
+   CHPWHLoopTankConfig = "None (return to Primary)"
+   CHPWHLoopTankType = "Electric Resistance"
+   CHPWHLoopTankCompType = "- select CHPWH type -"
+   CHPWHLoopTankNEEABrand = "n/a"
+   CHPWHLoopTankNEEAModel = "n/a"
+   DHWHeater[1] = "Gas OtherZns"
+   HeaterMult[2] = 0
+   HeaterMult[3] = 0
+   BranchLossModel = "Attached to Hot Water Draws"
+   TotShowersServed = 1
+   TotBathsServed = 1
+   DHWSolarSysRef = "- none -"
+   DemRespControl = "Basic"
+   HERSCheck = "DHWGas-hers-dhw"
+   ..
+
 ResWtrHtr   "Gas"  
    HeaterElementType = "Gas"
    TankType = "Commercial Packaged Boiler"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"
@@ -6195,7 +6228,7 @@ ResWtrHtr   "Heatpump"
 ResWtrHtr   "Electric"  
    HeaterElementType = "Electric Resistance"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    EnergyFactor = 0.92
@@ -6205,6 +6238,21 @@ ResWtrHtr   "Electric"
    AmbientCond = "Unconditioned"
    RecovEff = 99
    RatedFlow = 2
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "Gas OtherZns"  
+   HeaterElementType = "Gas"
+   TankType = "Commercial Packaged Boiler"
+   HPWHCategory = "Non-UEF Rated (existing only)"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   HPWHComModel = "n/a"
+   IntInsulRVal = 0
+   ExtInsulRVal = 12
+   AmbientCond = "Unconditioned"
+   StandbyLossFrac = 0.02
    HasElecMiniTank = 0
    ElecMiniTankPower = 0
    ..

@@ -207,12 +207,15 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 // -----------------------------------------------------------------------------
 
 #ifdef CECRPTGEN
+
+#define  CECRptGenDefaultReadWriteTimeoutSecs  480       // SAC 05/03/23 (Com tic #3498)
+
 //int DLLAPI __cdecl CMX_GenerateReport_CEC(	int iReportID, const char* pszXMLPath, const char* pszXMLFileNoExt,
 //																				const char* pszReportType, const char* pszCACertPath, bool bVerbose=false, bool bSilent=false );
 int  BEMCMPMGR_API __cdecl CMX_GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 																				const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
 																				const char* pszDebugBool, bool bVerbose=false, bool bSilent=false, bool bSchemaBasedRptGen=false,    // SAC 11/20/18
-                                                            int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=480 );    // SAC 11/02/22
+                                                            int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=CECRptGenDefaultReadWriteTimeoutSecs );    // SAC 11/02/22
 int  BEMCMPMGR_API __cdecl CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 																						const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
 																						const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy 
@@ -220,7 +223,7 @@ int  BEMCMPMGR_API __cdecl CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResul
 																						const char* pszCompRptID=NULL, const char* pszRptGenServer=NULL, const char* pszRptGenApp=NULL,		// SAC 8/7/14 - added more args to facilitate URL path specification
 																						const char* pszRptGenService=NULL, const char* pszSecKeyRLName=NULL, const char* pszOutputPathFile=NULL,
 																						const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL, bool bSchemaBasedRptGen=false, 	  // SAC 11/5/15   // SAC 11/20/18
-                                                                  int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=480 );    // SAC 11/02/22
+                                                                  int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=CECRptGenDefaultReadWriteTimeoutSecs );    // SAC 11/02/22
 
 int  BEMCMPMGR_API __cdecl CMX_CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy  
 														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false, const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL );	// SAC 11/5/15

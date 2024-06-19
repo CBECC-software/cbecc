@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "090012-RetlLrg-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414704334
-   ModDate = 1674219238
-   RunDate = 1674219239
+   ModDate = 1683879443
+   RunDate = 1683879444
    ZipCode = 95814
    WeatherStation = "SACRAMENTO EXECUTIVE"
    HVACAutoSizing = 0
@@ -16,7 +16,7 @@ Proj   "090012-RetlLrg-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -9212,6 +9212,7 @@ clg: 0  htg: 0  'Side_Storage_2 Zone'" )
    MetricPassFail[3] = "Fail"
    ComplyMessage = "DOES NOT COMPLY"
    StdPVBatteryMsg = "Standard Design PV Capacity: 585.4 kWdc  /  Battery System Capacity: 639.0 kWh  (power 153.11 kW)"
+   AnalysisValid = 0
    PctSavingsTDV = -0.0849562
    PctSavingsEffTDV = 0
    PctSavingsCmpTDV = -0.16127
@@ -9232,8 +9233,6 @@ clg: 0  htg: 0  'Side_Storage_2 Zone'" )
    StdPV_Total = 915528
    StdPV_Export = 24239.2
    StdPV_PctExport = 2.64756
-   NRCCPRFPayldTransID = "80d77cc8-e83e-401d-bead-35eb75f12d1a"
-   NRCCPRFPayldProcDate = "2023-01-20T04:54:03"
    ..
 
 

@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "1 Story Multiple HVAC types"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
    CreateDate = 1555708263
-   ModDate = 1674210989
+   ModDate = 1683873234
    RunDate = 1472838107
    ProjFileName = "1storyExample3HVAC.ribd22"
    RunTitle = "Multiple HVAC types Example"
@@ -992,7 +992,7 @@ Attic   "Attic "
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2758,6 +2758,7 @@ HVACHtPump   "MiniSplit"
    HSPF2 = 7.5
    Cap47 = 36000
    Cap17 = 24000
+   IncludesCooling = 1
    SEER = 14
    SEER2 = 14.3
    EER = 11.7
@@ -2779,6 +2780,7 @@ HVACHtPump   "Air2Water"
    Cap17 = 24000
    COP47 = 3.5
    COP17 = 2.7
+   IncludesCooling = 1
    SEER = 15
    SEER2 = 14.3
    EER = 12.2

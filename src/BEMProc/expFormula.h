@@ -266,6 +266,9 @@ typedef enum optypes_   /* types other than what the parser generates */
    BF_NUnqChldVals,  /* 193 */  /* SAC 12/31/21 (MFam) - added */
    BF_Cr8CompFor,    /* 194 */  /* SAC 04/27/22 - added */
    BF_ExpFileConcat, /* 195 */  /* SAC 06/28/22 - added */
+   BF_SetNextArr,    /* 196 */  /* SAC 04/24/23 - added (Com tic #3392) */
+   BF_MaxAcrsIf,     /* 197 */  /* SAC 04/26/23 - added (Com tic #3392) */
+   BF_MinAcrsIf,     /* 198 */  /* SAC 04/26/23 - added (Com tic #3392) */
 } OpTypes;
 
 typedef enum fmerrorcode_

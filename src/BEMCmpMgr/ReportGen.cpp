@@ -558,7 +558,7 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 int CMX_GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 										const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
 										const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/, bool bSchemaBasedRptGen /*=false*/,    // SAC 11/20/18
-                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )   // SAC 11/02/22
+                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )   // SAC 11/02/22
 {
 	return GenerateReport_CEC(	pszXMLResultsPathFile, pszCACertPath, pszReportName, pszAuthToken1, pszAuthToken2,
 										pszSignature, pszPublicKey, NULL /*pszRptPrvKey*/, NULL, NULL, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false,
@@ -575,7 +575,7 @@ int  CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char
 												const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 												const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,
 												const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, bool bSchemaBasedRptGen /*=false*/,   	// SAC 11/5/15   // SAC 11/20/18
-                                    int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )   // SAC 11/02/22
+                                    int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )   // SAC 11/02/22
 {
 	return GenerateReport_CEC(	pszXMLResultsPathFile, pszCACertPath, pszReportName, pszAuthToken1, pszAuthToken2, pszSignature, 
 										pszPublicKey, NULL /*pszRptPrvKey*/, pszProxyAddress, pszProxyCredentials, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false,
@@ -619,7 +619,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 										const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 										const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,  // SAC 6/2/14  // SAC 10/9/14
 										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, long iSecurityKeyIndex /*=0*/, 	// SAC 11/5/15   // SAC 1/10/17
-										bool bFinalPDFGeneration /*=true*/, bool bSchemaBasedRptGen /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )		// SAC 11/20/18   // SAC 11/02/22
+										bool bFinalPDFGeneration /*=true*/, bool bSchemaBasedRptGen /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )		// SAC 11/20/18   // SAC 11/02/22
 { 	bool bSacOut=false;
 //bSacOut = true;
 //bVerbose = true;
@@ -998,9 +998,18 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 							pszReportName, pszAuthToken1, pszAuthToken2, (bPDFRpt ? "true" : "false"), (bXMLRpt ? "true" : "false"), /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
 
 				if (bVerbose)
-				{	sLogMsg = QString::asprintf( "GenerateReport_CEC():  web server URI:  %s", sURL.toLocal8Bit().constData() );
+				{	QString qsSize = BEMPX_FloatToString( ((double) npost) / 1000.0 );
+               sLogMsg = QString::asprintf( "GenerateReport_CEC():  XML size: %s KB, web server URI:  %s", qsSize.toLocal8Bit().constData(), sURL.toLocal8Bit().constData() );     // added npost to msg - SAC 05/03/23 (Com tic #3498)
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
+
+#define  ScaleRdWrtTimeoutFromKB  3000        // SAC 05/03/23 (Com tic #3498)
+            if (iReadWriteTimeoutSecs == CECRptGenDefaultReadWriteTimeoutSecs && npost > (ScaleRdWrtTimeoutFromKB * 1000))
+            {  iReadWriteTimeoutSecs = (int) (CECRptGenDefaultReadWriteTimeoutSecs * (((float) npost/1000)/((float) ScaleRdWrtTimeoutFromKB)));
+               QString qsSize = BEMPX_FloatToString( ((double) npost) / 1000.0 );
+               sLogMsg = QString::asprintf( "Report generation read/write timeout increasing from %g to %.1f minutes due to large report XML file size (%s KB)", (double) CECRptGenDefaultReadWriteTimeoutSecs / 60.0, (double) iReadWriteTimeoutSecs / 60.0, qsSize.toLocal8Bit().constData(), sURL.toLocal8Bit().constData() );     // added npost to msg - SAC 05/03/23 (Com tic #3498)
+					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            }
 
 							if (bVerbose)
 //								BEMPX_WriteLogFile( "    Communicating w/ report generator using Qt", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );

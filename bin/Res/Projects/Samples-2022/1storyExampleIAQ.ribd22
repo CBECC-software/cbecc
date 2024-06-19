@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "1 Story Example PV+Battery"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
    CreateDate = 1648076595
-   ModDate = 1674211044
+   ModDate = 1683873288
    RunDate = 1472838107
    ProjFileName = "1storyExample3IAQ.ribd22"
    RunTitle = "1 Story Example"
@@ -993,7 +993,7 @@ Attic   "Attic "
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2794,7 +2794,7 @@ DHWSys   "DHW System"
 DHWHeater   "Small Instantaneous"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

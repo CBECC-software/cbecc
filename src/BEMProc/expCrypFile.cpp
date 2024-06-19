@@ -46,6 +46,9 @@
 #include "stdafx.h"
 #include "expCrypFile.h"
 #include "memLkRpt.h"
+#include "BEMProc_FileIO.h"
+#include "BEMProc.h"
+#include "expTextIO.h"
 
 
 static const int MAX_CRYPTOFILE_BUFSIZE = 1024;
@@ -119,7 +122,11 @@ CryptoFile::CryptoFile(const char* pszFileName) : QFile(pszFileName)
 /////////////////////////////////////////////////////////////////////////////
 UINT CryptoFile::Read( void* lpBuf, UINT nCount )
 {
+   unsigned char* temp = (unsigned char*)lpBuf;
    UINT nRead = (UINT) QIODevice::read( (char*) lpBuf, nCount );
+
+   for ( UINT i = 0; i < nCount; i++ )
+      temp[ i ] = temp[ i ] >> 3 | temp[ i ] << 5;
 
    m_lByteCount += nCount;
 
@@ -129,7 +136,7 @@ UINT CryptoFile::Read( void* lpBuf, UINT nCount )
 void ExpCryptDecode( char* lpBuf, int length )
 {
    for (int i = 0; i < length; i++)
-      lpBuf[i] = lpBuf[i];
+      lpBuf[i] = lpBuf[i] >> 3 | lpBuf[i] << 5;
 }
 
 
@@ -164,7 +171,11 @@ void CryptoFile::Write( const void* lpBuf, UINT nCount )
                    nCount - start : MAX_CRYPTOFILE_BUFSIZE;
 
       for ( UINT i = 0; i < end; i++ )
-         buffer[ i ] = temp[ i ];
+      {
+         // Simply swap bits around in each byte.
+         unsigned char temp3 = temp[ i ] >> 5 | temp[ i ] << 3;
+         buffer[ i ] = temp3;
+      }
       // write encrypted bytes to the file
       QFile::write( (const char*) buffer, end );
       m_lByteCount += end;
@@ -175,7 +186,7 @@ void CryptoFile::Write( const void* lpBuf, UINT nCount )
 void ExpCryptEncode( char* lpBuf, int length )
 {
    for (int i = 0; i < length; i++)
-      lpBuf[i] = lpBuf[i];
+      lpBuf[i] = lpBuf[i] >> 5 | lpBuf[i] << 3;
 }
 
 
@@ -278,3 +289,174 @@ void CryptoFile::WriteDirect( const void* lpBuf, UINT nCount )
       start += MAX_CRYPTOFILE_BUFSIZE;
    }
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+bool BEMPX_FileToCrypt( const char* pszTextFile, const char* pszCryptFile )
+{  bool bRetVal = true;
+   if (!FileExists( pszTextFile ))
+   {  BEMMessageBox( QString( "Text file '%1' not found" ).arg( pszTextFile ), "", 2 /*warning*/ );
+      bRetVal = false;
+   }
+   else
+   {
+ 		//std::string sOverwriteMsg = boost::str( boost::format( "The file '%s' is opened in another application.  This file must be closed in that "
+		//											"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+		//											"(once the file is closed), or \n'Abort' to abort the file writing." ) % pszCryptFile );
+  		//if (!OKToWriteOrDeleteFile( pszCryptFile, sOverwriteMsg.c_str() ))
+      if (!FileCanBeWrittenTo( pszCryptFile, FALSE /*bFileMustExist*/ ))
+      {  BEMMessageBox( QString( "Output file '%1' cannot be written" ).arg( pszCryptFile ), "", 2 /*warning*/ );
+         bRetVal = false;
+      }
+      else
+      {  try
+         {  
+            BEMTextIO inFile( pszTextFile, BEMTextIO::load );
+            try
+            {
+
+            	CryptoFile outFile( pszCryptFile );
+            	try
+            	{
+            		if (outFile.open( QIODevice::WriteOnly | QIODevice::Truncate ))
+            		{           
+                     QString qsLive;
+                     do
+                     {
+                        qsLive = inFile.ReadLine( FALSE /*bAdvanceFirst*/ );
+                        outFile.WriteQString( qsLive );
+                     } while (!inFile.AtEOF());
+                  }
+               }
+            	catch (std::exception& e)
+            	{
+            		QString sErrMsg = QString( "Error writing crypto file: %1\n\t - cause: %2\n" ).arg( pszCryptFile, e.what() );
+            		//std::cout << sErrMsg.toLocal8Bit().constData();
+            		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+                  bRetVal = false;
+            	}
+             	catch (...)
+              	{
+            		QString sErrMsg = QString( "Error writing crypto file: %1\n" ).arg( pszCryptFile );
+            		//std::cout << sErrMsg.toLocal8Bit().constData();
+            		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+                  bRetVal = false;
+              	}
+
+            }
+      		catch (std::exception& e)
+      		{
+      			QString msg = QString( "Error reading text from file: %1\n\t - cause: %2\n" ).arg( pszTextFile, e.what() );
+      			//std::cout << msg.toLocal8Bit().constData();
+               BEMMessageBox( msg, "", 2 /*warning*/ );
+               bRetVal = false;
+      		}
+      	 	catch (...)
+      	  	{
+      			QString msg = QString( "Error reading text from file: %1\n" ).arg( pszTextFile );
+      			//std::cout << msg.toLocal8Bit().constData();
+               BEMMessageBox( msg, "", 2 /*warning*/ );
+               bRetVal = false;
+         } 	}
+      	catch (std::exception& e)
+      	{
+      		//std::cout << "Error opening file: " << pszTextFile << "  - cause: " << e.what() << '\n';
+     			QString msg = QString( "Error opening file: %1\n\t - cause: %2\n" ).arg( pszTextFile, e.what() );
+            BEMMessageBox( msg, "", 2 /*warning*/ );
+            bRetVal = false;
+      	}
+       	catch (...)
+        	{
+      	   //std::cout << "Error opening file: " << pszTextFile << '\n';
+     			QString msg = QString( "Error opening file: %1\n" ).arg( pszTextFile );
+            BEMMessageBox( msg, "", 2 /*warning*/ );
+            bRetVal = false;
+      	}
+      }
+   }
+   return bRetVal;
+}
+
+bool BEMPX_CryptToFile( const char* pszCryptFile, const char* pszTextFile )
+{  bool bRetVal = true;
+   if (!FileExists( pszCryptFile ))
+   {  BEMMessageBox( QString( "Crypt file '%1' not found" ).arg( pszCryptFile ), "", 2 /*warning*/ );
+      bRetVal = false;
+   }
+   else
+   {
+      if (!FileCanBeWrittenTo( pszTextFile, FALSE /*bFileMustExist*/ ))
+      {  BEMMessageBox( QString( "Output file '%1' cannot be written" ).arg( pszTextFile ), "", 2 /*warning*/ );
+         bRetVal = false;
+      }
+      else
+      {  try
+         {  
+            BEMTextIO outFile( pszTextFile, BEMTextIO::store );
+            try
+            {
+
+            	CryptoFile inFile( pszCryptFile );
+            	try
+            	{
+            		if (inFile.open( QIODevice::ReadOnly ))
+            		{           
+                     QString qsLive;
+                     do
+                     {
+                        inFile.ReadQString( qsLive );
+                        //outFile.WriteString( qsLive.toLocal8Bit().constData(), qsLive.size() );
+                        outFile.WriteWholeRecord( qsLive.toLocal8Bit().constData() );
+                     } while (!inFile.atEnd());
+                  }
+               }
+            	catch (std::exception& e)
+            	{
+            		QString sErrMsg = QString( "Error reading crypto file: %1\n\t - cause: %2\n" ).arg( pszCryptFile, e.what() );
+            		//std::cout << sErrMsg.toLocal8Bit().constData();
+            		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+                  bRetVal = false;
+            	}
+             	catch (...)
+              	{
+            		QString sErrMsg = QString( "Error reading crypto file: %1\n" ).arg( pszCryptFile );
+            		//std::cout << sErrMsg.toLocal8Bit().constData();
+            		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+                  bRetVal = false;
+              	}
+
+            }
+      		catch (std::exception& e)
+      		{
+      			QString msg = QString( "Error writing text from file: %1\n\t - cause: %2\n" ).arg( pszTextFile, e.what() );
+      			//std::cout << msg.toLocal8Bit().constData();
+               BEMMessageBox( msg, "", 2 /*warning*/ );
+               bRetVal = false;
+      		}
+      	 	catch (...)
+      	  	{
+      			QString msg = QString( "Error writing text from file: %1\n" ).arg( pszTextFile );
+      			//std::cout << msg.toLocal8Bit().constData();
+               BEMMessageBox( msg, "", 2 /*warning*/ );
+               bRetVal = false;
+         } 	}
+      	catch (std::exception& e)
+      	{
+      		//std::cout << "Error opening file: " << pszTextFile << "  - cause: " << e.what() << '\n';
+     			QString msg = QString( "Error opening file: %1\n\t - cause: %2\n" ).arg( pszTextFile, e.what() );
+            BEMMessageBox( msg, "", 2 /*warning*/ );
+            bRetVal = false;
+      	}
+       	catch (...)
+        	{
+      	   //std::cout << "Error opening file: " << pszTextFile << '\n';
+     			QString msg = QString( "Error opening file: %1\n" ).arg( pszTextFile );
+            BEMMessageBox( msg, "", 2 /*warning*/ );
+            bRetVal = false;
+      	}
+      }
+   }
+   return bRetVal;
+}
+

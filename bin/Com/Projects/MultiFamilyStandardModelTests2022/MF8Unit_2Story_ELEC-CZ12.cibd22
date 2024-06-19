@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "MF8 Restructure Prototype"  
    BldgEngyModelVersion = 17
    CreateDate = 1603224267
-   ModDate = 1674215935
-   RunDate = 1674215936
+   ModDate = 1683876755
+   RunDate = 1683876756
    GasType = "NaturalGas"
    CliZn = "ClimateZone12"
    ZipCode = 95814
@@ -24,7 +24,7 @@ Proj   "MF8 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
    ..
@@ -1074,6 +1074,7 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    MetricPassFail[3] = "Fail"
    ComplyMessage = "DOES NOT COMPLY"
    StdPVBatteryMsg = "Standard Design PV Capacity: 15.7 kWdc  /  (no battery)"
+   AnalysisValid = 1
    PctSavingsTDV = 0.0981932
    PctSavingsEffTDV = 0.0784683
    PctSavingsCmpTDV = 0
@@ -1987,7 +1988,7 @@ ResDWHRSys   "Drain Water Heat Recovery System 2"
 ResWtrHtr   "Gas"  
    HeaterElementType = "Gas"
    TankType = "Boiler"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"
@@ -2024,7 +2025,7 @@ ResWtrHtr   "HeatpumpZ1"
 ResWtrHtr   "Electric"  
    HeaterElementType = "Electric Resistance"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

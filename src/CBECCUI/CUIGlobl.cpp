@@ -96,6 +96,7 @@ float appYRatio;
 BOOL ebAppInitialized = FALSE;
 BOOL ebInitiateProjectCreation = TRUE;
 BOOL ebInitiateBatchProcViaStartDlg = FALSE;	// SAC 11/14/17
+BOOL ebInitiateCommSlrOptOutViaStartDlg = FALSE;  // SAC 03/28/23
 BOOL ebDisplayAllUIControls = FALSE;
 BOOL ebAnalysisRangeChecks = TRUE;
 BOOL ebShowHelpFollowingWizard = TRUE;  // SAC 2/14/01
@@ -2687,7 +2688,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_SchDay  )				{  iTabCtrlWd =  530;    iTabCtrlHt = 560;   }
 	else if (iBDBClass == eiBDBCID_ThrmlEngyStorModeSchDay )	{  iTabCtrlWd =  530;    iTabCtrlHt = 560;   }
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd =  730;    iTabCtrlHt = 535;   }
-	else if (iBDBClass == eiBDBCID_ThrmlZn )				{  iTabCtrlWd =  900;    iTabCtrlHt = 570;   }	// SAC 10/29/14
+	else if (iBDBClass == eiBDBCID_ThrmlZn )				{  iTabCtrlWd =  900;    iTabCtrlHt = 640;   }	// SAC 10/29/14   // ht: 570->640 - SAC 05/06/23
 	else if (iBDBClass == eiBDBCID_HtRcvry )				{  iTabCtrlWd =  900;    iTabCtrlHt = 580;   }  // SAC 05/17/22
 	else if (iBDBClass == eiBDBCID_Fan     )				{  iTabCtrlWd =  900;    iTabCtrlHt = 580;   }  // SAC 05/17/22
 	else if (iBDBClass == eiBDBCID_CoilHtg )				{  iTabCtrlWd =  900;    iTabCtrlHt = 590;   }  // SAC 05/17/22

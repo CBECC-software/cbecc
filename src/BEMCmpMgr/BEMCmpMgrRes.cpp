@@ -303,7 +303,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
    long lShuffleSFamDHW          =  GetCSVOptionValue( "ShuffleSFamDHW",          -1,  saCSVOptions );		// SAC 05/13/21
 
 	int  iRptGenConnectTimeout		=	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
-	int  iRptGenReadWriteTimeout	=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , 480,  saCSVOptions );		// SAC 11/02/22
+	int  iRptGenReadWriteTimeout	=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , CECRptGenDefaultReadWriteTimeoutSecs,  saCSVOptions );		// SAC 11/02/22
 
 	bool bCSEIncludeFileUsed = false;	// SAC 12/23/14
 	bool bClassifyEditableDefaultsAsUserData = (GetCSVOptionValue( "ClassifyEditableDefaultsAsUserData", 0, saCSVOptions ) > 0);	// SAC 4/1/20

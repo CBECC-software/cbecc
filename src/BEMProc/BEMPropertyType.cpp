@@ -335,13 +335,13 @@ bool BEMPropertyType::setObjClassDataFromStrings()
 	{	m_objTypeDBID[iObjCls] = 0;
 		if (!m_obj1ClassStr[iObjCls].isEmpty())
 		{	m_obj1ClassIdx[iObjCls] = BEMP_GetDBComponentID( m_obj1ClassStr[iObjCls] );
-			assert( m_obj1ClassIdx[iObjCls] > 0 || m_obj1ClassStr[iObjCls].indexOf("cf1r")==0 );   // TO DO MFam - undo: IGNORE 'cf1r*' missing object types (for now) - SAC 09/13/21
+			assert( m_obj1ClassIdx[iObjCls] > 0 );  // SAC 04/24/23 - removed temp MFam kludge: || m_obj1ClassStr[iObjCls].indexOf("cf1r")==0 );   // TO DO MFam - undo: IGNORE 'cf1r*' missing object types (for now) - SAC 09/13/21
 			if (m_obj1ClassIdx[iObjCls] > 0 && !m_objPropStr[iObjCls].isEmpty())
 			{	m_objTypeDBID[iObjCls] = BEMPX_GetDatabaseID( m_objPropStr[iObjCls], m_obj1ClassIdx[iObjCls] );
 				assert( m_objTypeDBID[iObjCls] > BEM_COMP_MULT );
 			}
-			//bRetVal = (m_obj1ClassIdx[iObjCls] > 0 && (m_objPropStr[iObjCls].isEmpty() || m_objTypeDBID[iObjCls] > BEM_COMP_MULT));
-			bRetVal = (m_obj1ClassStr[iObjCls].indexOf("cf1r")==0 || (m_obj1ClassIdx[iObjCls] > 0 && (m_objPropStr[iObjCls].isEmpty() || m_objTypeDBID[iObjCls] > BEM_COMP_MULT)));   // TO DO MFam - remove exception for 'cf1r*' object types - SAC 09/13/21
+			bRetVal = (m_obj1ClassIdx[iObjCls] > 0 && (m_objPropStr[iObjCls].isEmpty() || m_objTypeDBID[iObjCls] > BEM_COMP_MULT));
+			//bRetVal = (m_obj1ClassStr[iObjCls].indexOf("cf1r")==0 || (m_obj1ClassIdx[iObjCls] > 0 && (m_objPropStr[iObjCls].isEmpty() || m_objTypeDBID[iObjCls] > BEM_COMP_MULT)));   // TO DO MFam - remove exception for 'cf1r*' object types - SAC 09/13/21  // SAC 04/24/23 - removed temp MFam kludge
 		}
 		else
 			m_obj1ClassIdx[iObjCls] = 0;
@@ -404,7 +404,9 @@ bool BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion, QString& qsPT
    	else if (sInp.compare( "NInp", Qt::CaseInsensitive ) == 0)
    	   m_userSpecification = BEMD_NotInput;
 		else
-		{	assert( FALSE );
+		{	//assert( FALSE );
+         bRetVal = false;
+         qsPTErrMsg = QString( "Property specification type '%1' unrecognized on line %2"  ).arg( sInp, QString::number( file.GetLineCount() ) );
    	   m_userSpecification = -1;
 		}
       file.PostReadToken();

@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "Left Duplex"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
    CreateDate = 1557441305
-   ModDate = 1674210831
+   ModDate = 1683873074
    RunDate = 1472838107
    ProjFileName = "1storyExample3Duplex.ribd22"
    RunTitle = "1 Story Example"
@@ -799,7 +799,7 @@ Attic   "Attic "
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -1280,7 +1280,7 @@ EUseSummary   "EUSummary"
    PropDesignPVSize[1] = 2.51152
    PropDesignPVTot = 2.51152
    StdDesignPVSize = 2.51152
-   StdMixedFuelPVTDV = -44.35
+   StdMixedFuelPVTDV = -44.36
    StdMixedFuelPVMlt = 2.51152
    PrelimPropkWh = 4966.79
    PrelimPropCompTDV = 57.2766
@@ -2581,7 +2581,7 @@ DHWSys   "DHW System"
 DHWHeater   "Small Instantaneous"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

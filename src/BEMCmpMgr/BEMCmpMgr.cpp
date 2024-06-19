@@ -2238,7 +2238,7 @@ int CheckSiteAccessViaHttpLib(   const char* pszSite, const char* pszCACertPath,
 // report generation via httplib library - SAC 06/12/21
 int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 									const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,		// pass NULLs for no proxy
-									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )
+									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )
 {	int iRetVal = 0;
 
 //bVerbose = true;  // *** TEMPORARY *** - SAC 06/13/21
@@ -2279,7 +2279,7 @@ int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, co
 
    if (iConnectTimeoutSecs != 10)      // SAC 11/02/22
       BEMPX_WriteLogFile( QString("      Report generator connection timeout being used: %1").arg( QString::number( iConnectTimeoutSecs ) ) );
-   if (iReadWriteTimeoutSecs != 480)
+   if (iReadWriteTimeoutSecs != CECRptGenDefaultReadWriteTimeoutSecs)
       BEMPX_WriteLogFile( QString("      Report generator read/write timeout being used: %1").arg( QString::number( iReadWriteTimeoutSecs ) ) );
 
 //   cli.set_connection_timeout(0, 300000); // 300 milliseconds

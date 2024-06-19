@@ -204,6 +204,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_RPT_BLDGSUMMARYT24, OnToolsReport_BuildingSummary_T24)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_BATCH, OnUpdateToolsBatchProcessing)
 	ON_COMMAND(IDM_TOOLS_BATCH, OnToolsBatchProcessing)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_PVOPTOUT, OnUpdateToolsCommSlrOptOut)
+	ON_COMMAND(IDM_TOOLS_PVOPTOUT, OnToolsCommSlrOptOut)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_TEST, OnUpdateToolsRunTest)
 	ON_COMMAND(IDM_TOOLS_TEST, OnToolsRunTest)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_FILEHASH, OnUpdateToolsGenerateFileHashes)
@@ -905,6 +907,11 @@ void CMainFrame::OnPaint()
 				ebInitiateProjectCreation = FALSE;
 				PostMessage( WM_COMMAND, ID_FILE_NEW, 0L );
          }
+         else if (startDlg.m_iOption == -5)    // Community Solar Opt-Out - SAC 03/28/23
+         {	ebInitiateCommSlrOptOutViaStartDlg = TRUE;
+				ebInitiateProjectCreation = FALSE;
+				PostMessage( WM_COMMAND, ID_FILE_NEW, 0L );
+         }
          //	{  }
          else                                  // Exit
             PostMessage( WM_COMMAND, ID_APP_EXIT, 0L );
@@ -1490,7 +1497,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff
 		}
 
-		else if (wAction >= 3070 && wAction <= 3071)	// -3079 ??   new range to present QMessageBox w/ Caption, Message & Details (that can include hyperlinks) - SAC 6/30/20 (Res tic #1018)
+		else if (wAction >= 3070 && wAction <= 3072)	// -3079 ??   new range to present QMessageBox w/ Caption, Message & Details (that can include hyperlinks) - SAC 6/30/20 (Res tic #1018)
 		{	QString qsMBCaption, qsMBMessage, qsMBDetails;    long lIconID=0;
 			if (wAction == 3070)		// info re: Res Community Solar program(s)
 			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoCap" ), qsMBCaption );
@@ -1503,6 +1510,12 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:rnSupportInfoMsg" ), qsMBMessage );
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:rnSupportInfoDtl" ), qsMBDetails );
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:rnSupportInfoIcn" ), lIconID );
+			}
+			if (wAction == 3072)		// info re: Res Community Solar program(s) Opt-Out UI - SAC 04/07/23
+			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoCap" ), qsMBCaption );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoMsg" ), qsMBMessage );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoDtl" ), qsMBDetails );
+				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoIcn" ), lIconID );
 			}
 			if (!qsMBCaption.isEmpty() && !qsMBMessage.isEmpty())
 			{
@@ -4228,6 +4241,71 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 	}
 #else
 	AfxMessageBox( "Batch processing not available in this UI mode." );
+#endif
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+void CMainFrame::OnUpdateToolsCommSlrOptOut(CCmdUI* pCmdUI)		// SAC 03/28/23
+{
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+}
+
+void CMainFrame::OnToolsCommSlrOptOut()		// SAC 03/28/23
+{
+	CommunitySolarOptOut();
+
+	if (ebInitiateCommSlrOptOutViaStartDlg)
+	{	CDocument* pDoc = GetActiveDocument();
+		if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+			pDoc->SetModifiedFlag( FALSE );
+		PostMessage( WM_COMMAND, ID_APP_EXIT, 0L );	// initiate application shutdown
+	}
+}
+
+void CMainFrame::CommunitySolarOptOut()		// SAC 03/28/23
+{
+#ifdef UI_CARES
+
+
+
+
+   	int iCID_Proj = 0;
+   	iCID_Proj = BEMPX_GetDBComponentID( "Proj" );
+		if (iCID_Proj < 1)
+		{	// must load ruleset 
+		   LoadRuleset();
+	   	iCID_Proj = BEMPX_GetDBComponentID( "Proj" );
+	   }
+		if (iCID_Proj > 0 && BEMPX_GetNumObjects( iCID_Proj ) < 1)
+		{ // typical scenario where we need to create a Proj object
+			if (BEMPX_CreateObject( iCID_Proj ) != NULL)
+			{  //	bBRObjCreated = true;
+            // specify Compulsory property before doing defaulting
+  	         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:Address" ), BEMP_Str, (void*) "specify address" );
+			   CDocument* pDoc = GetActiveDocument();	
+			   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+			   	VERIFY( ((CComplianceUIDoc*) pDoc)->CheckAndDefaultModel() );
+         }
+		}
+
+			int iTabCtrlWd = 1000, iTabCtrlHt = 580;	
+			CWnd* pWnd = GetFocus();
+         CSACDlg dlgProj( pWnd /*this*/, iCID_Proj, 0 /* lDBID_ScreenIdx */, 120 /*iDlgID*/, 0, 0, 0,
+							"ProposedInput" /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Community Solar Opt-Out",
+							iTabCtrlHt, iTabCtrlWd, 10 /*iBaseMarg*/, 0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+							0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+							0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                     FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/, FALSE /*bBypassChecksOnCancel*/,
+                     FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 85 /*iFinishBtnWd*/, ebIncludeLongCompParamStrInToolTip );
+  		   //if (dlgProj.DoModal() == IDOK)
+  		   dlgProj.DoModal();
+
+
+
+#else
+	AfxMessageBox( "Community Solar Opt-Out feature not available in this UI mode." );
 #endif
 }
 
@@ -8201,6 +8279,20 @@ void CMainFrame::OnUpdateToolsCAHPReport(CCmdUI* pCmdUI)
 }
 void CMainFrame::OnToolsCAHPReport()		// SAC 10/8/14
 {
+
+// TESTING
+//   if (BEMPX_FileToCrypt( "C:\\Dev\\CBECC-Res-testing\\CryptRuleSrc\\1\\TestTable.csv",
+//                          "C:\\Dev\\CBECC-Res-testing\\CryptRuleSrc\\1\\TestTable.ecsv" ))    // SAC 03/27/23
+//   {
+//      if (BEMPX_CryptToFile( "C:\\Dev\\CBECC-Res-testing\\CryptRuleSrc\\1\\TestTable.ecsv",
+//                             "C:\\Dev\\CBECC-Res-testing\\CryptRuleSrc\\1\\TestTable-decrypt.csv" ))
+//         AfxMessageBox( "Success" );
+//      else
+//         AfxMessageBox( "Success creating crypt file, error decrypting" );
+//   }
+//   else
+//      AfxMessageBox( "Failure" );
+
 #ifdef UI_CARES
 	CString sNoRptIDMsg, sCAHPResultProperty;
 #ifdef UI_PROGYEAR2019
@@ -8448,6 +8540,9 @@ int CMainFrame::GenerateReport( int iReportID, bool bSilent /*=false*/ )		// SAC
       	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenApp"        ), sRptGenApp        ); 
       	   			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:NRCC_RptGenService"    ), sRptGenService    ); 
                   }
+
+						if (!bVerbose)    // SAC 05/03/23 (Com tic #3498)
+                     bVerbose = (ReadProgInt( "options", "ReportGenVerbose", 0 /*default*/ ) > 0);
 
                   int iConnectTimeoutSecs   = ReadProgInt( "options", "RptGenConnectTimeout",    10 /*default*/ );   // SAC 11/02/22
                   int iReadWriteTimeoutSecs = ReadProgInt( "options", "RptGenReadWriteTimeout", 480 /*default*/ );

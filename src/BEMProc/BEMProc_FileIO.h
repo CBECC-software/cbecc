@@ -34,6 +34,7 @@
 
 
 extern bool FileExists( const char* pszFileName );
+extern BOOL FileCanBeWrittenTo( const char* pszFileName, BOOL bFileMustExist );
 
 
 // -----------------------------------------------------------------------------

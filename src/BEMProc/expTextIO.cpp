@@ -797,7 +797,7 @@ long BEMTextIO::ReadBEMProcParam( QString& sId, BOOL bAllowLeadingDigit, QString
 				}
 				else
 				{	int iEnd = atoi( sKeyTemp.toLocal8Bit().constData() );
-					assert( iEnd > iStart );	// only allow INCREASING range (for now)
+					assert( iEnd >= iStart );	// only allow INCREASING range (for now)
 					if (iEnd > iStart)
 					{	for (int i=iStart+1; i<=iEnd; i++)
 							piaKeyInts->push_back( i );

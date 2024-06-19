@@ -69,7 +69,7 @@ static char THIS_FILE[] = __FILE__;
 #define  IDC_PRIM_15  1024
 
 // misc. dialog and control dimensions & locations
-#define  PRIMDLG_WD  550		// SAC 11/21/16 - increased from 475 to accommodate units labels
+#define  PRIMDLG_WD  670		// SAC 11/21/16 - increased from 475 to accommodate units labels  // increased again from 550->670 for longer units labels - SAC 05/03/23 (Com tic #3499)
 #define  PRIMDLG_HT   90
 
 #define  PRIMDLG_CTRL_L  255
@@ -176,7 +176,7 @@ BOOL CDlgPrimData::OnInitDialog()
       for (int i=0; i<m_iNumPrimProps; i++)
       {
          long lPropDBID = BEMPX_GetPrimaryPropertyDBID( m_i1Class, i );
-         int iError = 0;
+         iError = 0;
          BEMProperty* pProp = BEMPX_GetProperty( lPropDBID, iError, m_iObjIdx );
          if ( (iError >= 0) && (pProp != NULL) )
          {

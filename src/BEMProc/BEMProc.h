@@ -744,6 +744,9 @@ int    BEMPROC_API __cdecl BEMPX_ParseRuleListFile( const char* sRuleListFileNam
 														const char* sLogFileName=NULL, QString* psRuleCompileMsg=NULL, bool bParseRules=false,
 														QString* psRuleCompErrorMsg=NULL );
 
+bool   BEMPROC_API __cdecl BEMPX_FileToCrypt( const char* pszTextFile,  const char* pszCryptFile );    // SAC 03/27/23
+bool   BEMPROC_API __cdecl BEMPX_CryptToFile( const char* pszCryptFile, const char* pszTextFile  );
+
 // Functions to retrieve Help IDs
 UINT   BEMPROC_API __cdecl BEMPX_GetItemHelpID(  long lDBID );
 UINT   BEMPROC_API __cdecl BEMPX_GetTopicHelpID( long lDBID );

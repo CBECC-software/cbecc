@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "060012-RstntSml-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414691411
-   ModDate = 1674218903
-   RunDate = 1674218904
+   ModDate = 1683879173
+   RunDate = 1683879174
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -14,7 +14,7 @@ Proj   "060012-RstntSml-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -1147,6 +1147,7 @@ clg: 1  htg: 0  'Kitchen Thermal Zone'" )
    MetricPassFail[3] = "Pass"
    ComplyMessage = "COMPLIES"
    StdPVBatteryMsg = "No Standard Design PV/Battery included in analysis"
+   AnalysisValid = 0
    PctSavingsTDV = 0
    PctSavingsEffTDV = 0
    PctSavingsCmpTDV = 0
@@ -1167,8 +1168,6 @@ clg: 1  htg: 0  'Kitchen Thermal Zone'" )
    StdPV_Total = 0
    StdPV_Export = 0
    StdPV_PctExport = 0
-   NRCCPRFPayldTransID = "f2cec6d7-3a3c-48da-9ff2-162859fe67b3"
-   NRCCPRFPayldProcDate = "2023-01-20T04:48:33"
    ..
 
 

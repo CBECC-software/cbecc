@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "080012-Whse-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1415238845
-   ModDate = 1674219168
-   RunDate = 1674219169
+   ModDate = 1683879390
+   RunDate = 1683879391
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -14,7 +14,7 @@ Proj   "080012-Whse-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.1 (1286)"
+   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
    CompReportPDF = 1
    ..
 
@@ -5229,6 +5229,7 @@ clg: 0  htg: 0  'Zn_BulkStorage'" )
    MetricPassFail[3] = "Pass"
    ComplyMessage = "DOES NOT COMPLY"
    StdPVBatteryMsg = "Standard Design PV Capacity: 29.8 kWdc  /  Battery System Capacity: 35.4 kWh  (power 8.36 kW)"
+   AnalysisValid = 0
    PctSavingsTDV = -0.0325203
    PctSavingsEffTDV = -0.0304925
    PctSavingsCmpTDV = -0.0423101
@@ -5249,8 +5250,6 @@ clg: 0  htg: 0  'Zn_BulkStorage'" )
    StdPV_Total = 46537.4
    StdPV_Export = 7006.27
    StdPV_PctExport = 15.0551
-   NRCCPRFPayldTransID = "f10be1c1-7332-4d60-8867-4ceb4349fa9b"
-   NRCCPRFPayldProcDate = "2023-01-20T04:52:58"
    ..
 
 

@@ -549,6 +549,8 @@ void CComplianceUIApp::OnFileNew()
 
 		if (ebInitiateBatchProcViaStartDlg && m_pMainWnd && m_pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))    // Batch Processing via Start Dialog - SAC 11/14/17
 			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_BATCH, 0L );
+		else if (ebInitiateCommSlrOptOutViaStartDlg && m_pMainWnd && m_pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))    // Community Solar Opt-Out via Start Dialog - SAC 03/28/23
+			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_PVOPTOUT, 0L );
 	}
 }
 

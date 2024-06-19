@@ -241,6 +241,8 @@ protected:
 	afx_msg void OnToolsReport_BuildingSummary_T24();
 	afx_msg void OnUpdateToolsBatchProcessing(CCmdUI* pCmdUI);
 	afx_msg void OnToolsBatchProcessing();
+	afx_msg void OnUpdateToolsCommSlrOptOut(CCmdUI* pCmdUI);
+	afx_msg void OnToolsCommSlrOptOut();
 	afx_msg void OnUpdateToolsRunTest(CCmdUI* pCmdUI);
 	afx_msg void OnToolsRunTest();
 	afx_msg void OnUpdateToolsGenerateFileHashes(CCmdUI* pCmdUI);
@@ -573,6 +575,7 @@ protected:
 	void BatchProcessing( bool bOLDRules=false );		// SAC 4/2/14
 	BOOL BatchUIDefaulting();		// SAC 11/10/17
 	BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile  );		// SAC 11/10/17
+   void CommunitySolarOptOut();		// SAC 03/28/23
 	BOOL GetLogPathFile( CString& sLPF );
 	BOOL LogFileExists();
 	void PromptToDisplayPDFs( CString sCaption, CString sMsg, CString sBtn2File, CString sBtn2Label,

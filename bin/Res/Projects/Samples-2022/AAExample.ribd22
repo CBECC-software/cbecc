@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "AA Example 3"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
    CreateDate = 1556300339
-   ModDate = 1674211419
+   ModDate = 1683873665
    RunDate = 1512540972
    ProjFileName = "AAExample3.ribd22"
    RunTitle = "Addition Alone Slab ex HVAC and DHW"
@@ -454,7 +454,7 @@ Attic   "Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -705,8 +705,8 @@ EUseSummary   "EUSummary"
    PctSavTDVLbl = "2.4"
    PctSavCmpTDVLbl = "4.4"
    PctSavSrcLbl = "0.2"
-   PropElecDemand[1] = 0.418983
-   StdElecDemand = 0.423824
+   PropElecDemand[1] = 0.418989
+   StdElecDemand = 0.423827
    StdDesignPVSize = 0
    PropPV_Total = 0
    PropPV_Export = 0
@@ -720,13 +720,13 @@ EUseSummary   "EUSummary"
    CO2TotalUnitLabel = "kg"
    MeetsTier1 = 0
    MeetsTier2 = 0
-   PropElecCarbon[1] = 0.514423
-   PropFuelCarbon[1] = 0.91507
-   PropFinalCarbon[1] = 1.42949
-   PropExclExpCarbon[1] = 1.42949
+   PropElecCarbon[1] = 0.514421
+   PropFuelCarbon[1] = 0.915074
+   PropFinalCarbon[1] = 1.4295
+   PropExclExpCarbon[1] = 1.4295
    PropExportCarbon[1] = 0
    PropSelfConsCarbon[1] = 0
-   PropNoSolFlxCarbon[1] = 1.42949
+   PropNoSolFlxCarbon[1] = 1.4295
    StdFinalCarbon = 1.43141
    StdExclExpCarbon = 1.43141
    StdExportCarbon = 0
@@ -1670,7 +1670,7 @@ DHWSys   "DHW System"
 DHWHeater   "Small Instantaneous"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"
@@ -1692,7 +1692,7 @@ DHWHeater   "Small Instantaneous"
 DHWHeater   "40 Gal"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "1 Story Example Multi Orientation PV+Battery"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.1.0 RC (1243)"
    CreateDate = 1555708208
-   ModDate = 1674211155
+   ModDate = 1683873400
    RunDate = 1472838107
    ProjFileName = "1storyExample4Multi.ribd22"
    RunTitle = "1 Story Example"
@@ -992,7 +992,7 @@ Attic   "Attic "
    ..
 
 EUseSummary   "Worst Case (W)"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 1
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -1494,7 +1494,7 @@ EUseSummary   "Worst Case (W)"
    PctSavTDVLbl = "16.5"
    PctSavCmpTDVLbl = "0.5"
    PctSavSrcLbl = "14.0"
-   PropElecDemand = ( 0.641753, 0.641753 )
+   PropElecDemand = ( 0.641752, 0.641752 )
    StdElecDemand = 0.786506
    DRtgElecDemand = 1.25629
    StdMixedFuelkWh = 4385.33
@@ -1509,7 +1509,7 @@ EUseSummary   "Worst Case (W)"
    StdMixedFuelPVTDV = -36.28
    StdMixedFuelPVMlt = 2.80343
    PropInputPVMult = 1.40172
-   UnscaledPropPVRatio = 0.778193
+   UnscaledPropPVRatio = 0.778194
    PropPV_Total = 4385.33
    PropPV_Export = 1063.19
    PropPV_PctExport = 24.2441
@@ -1590,11 +1590,11 @@ EUseSummary   "Worst Case (W)"
    NumPropHVACSystems = 1
    NumPropHVACEquips = 1
    TotalHVACHtgCap[1] = 36.4254
-   TotalHVACClgCap[1] = 29.1289
+   TotalHVACClgCap[1] = 29.1288
    ..
 
 EUseSummary   "North Facing"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 1
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2195,7 +2195,7 @@ EUseSummary   "North Facing"
    ..
 
 EUseSummary   "East Facing"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 1
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2796,7 +2796,7 @@ EUseSummary   "East Facing"
    ..
 
 EUseSummary   "South Facing"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 1
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -3397,7 +3397,7 @@ EUseSummary   "South Facing"
    ..
 
 EUseSummary   "West Facing"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 1
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -3898,7 +3898,7 @@ EUseSummary   "West Facing"
    PctSavTDVLbl = "16.5"
    PctSavCmpTDVLbl = "0.5"
    PctSavSrcLbl = "14.0"
-   PropElecDemand = ( 0.641753, 0.641753 )
+   PropElecDemand = ( 0.641752, 0.641752 )
    StdElecDemand = 0.786506
    DRtgElecDemand = 1.25629
    StdMixedFuelkWh = 4385.33
@@ -3913,7 +3913,7 @@ EUseSummary   "West Facing"
    PrelimPropCompTDV = 61.823
    PrelimPropPV = -3128.55
    PrelimPropPVTDV = -29.03
-   UnscaledPropPVRatio = 0.778193
+   UnscaledPropPVRatio = 0.778194
    PropPV_Total = 4385.33
    PropPV_Export = 1063.19
    PropPV_PctExport = 24.2441
@@ -5232,7 +5232,7 @@ DHWSys   "DHW System"
 DHWHeater   "Small Instantaneous"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

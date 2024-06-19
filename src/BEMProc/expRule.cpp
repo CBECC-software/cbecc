@@ -282,6 +282,9 @@ static QString FuncName( int iFuncID )
 		case  BF_NUnqChldVals   :  return "NumUniqueChildVals";     /* SAC 12/31/21 (MFam) - added */
 		case  BF_Cr8CompFor     :  return "CreateCompFor";          
 		case  BF_ExpFileConcat  :  return "ExportFileConcat"; 
+		case  BF_SetNextArr     :  return "SetNextArrayElement"; 
+		case  BF_MaxAcrsIf      :  return "MaxAcrossIf";          
+		case  BF_MinAcrsIf      :  return "MinAcrossIf";          
 
 		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
 	}
@@ -524,7 +527,11 @@ bool ParseRuleDBID( QString& sRuleID, QString& sDBID, int& iNumIndirections, lon
 	int iNumRefComps = 0;  // SAC 8/28/12
    QString sTempDBID = sDBID;
    long lCompParam = BEMPX_GetDatabaseID( sTempDBID, 0, FALSE, &iRefCompID, &iNumRefComps );
-	assert( iNumRefComps < 2 );  // Note: when > 0, iRefCompID identifies only the first of possible several object types that this property can reference
+	//assert( iNumRefComps < 2 );  // Note: when > 0, iRefCompID identifies only the first of possible several object types that this property can reference
+   if (iNumRefComps > 1)      // SAC 04/03/23
+   {  ThrowBEMPError( errorFile, sDBID, sRuleID );
+      bRetVal = FALSE;
+   }
    if (lCompParam < BEM_COMP_MULT)
    {
       ThrowBEMPError( errorFile, sDBID, sRuleID );
@@ -555,7 +562,11 @@ bool ParseRuleDBID( QString& sRuleID, QString& sDBID, int& iNumIndirections, lon
 		for (int iObjCls=0; (pPropType && !bDBIDValid && iObjCls<BEM_MAX_PROPTYPE_OBJREFCLASSES); iObjCls++)
 		{	if (pPropType->getObj1ClassIdx( iObjCls ) > 0)
 			{	l2ndDBID = BEMPX_GetDatabaseID( temp, pPropType->getObj1ClassIdx( iObjCls ), FALSE, &i2ndRefCompID, &iNumRefComps );
-				assert( iNumRefComps < 2 );  // Note: when > 0, iRefCompID identifies only the first of possible several object types that this property can reference
+				//assert( iNumRefComps < 2 );  // Note: when > 0, iRefCompID identifies only the first of possible several object types that this property can reference
+            if (iNumRefComps > 1)      // SAC 04/03/23
+            {  ThrowBEMPError( errorFile, temp, sRuleID );
+               bRetVal = FALSE;
+            }
 				if (l2ndDBID > 0)
 					bDBIDValid = TRUE;
 			}
@@ -1863,6 +1874,8 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 		case BF_UListRevRef   :  // SAC 8/22/19 - UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_UListRevRefIf :  // SAC 8/22/19 - UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_NUnqChldVals  :  // NumUniqueChildVals( ChildObjType:PropRef:Prop, CountUndefs(dflt1) )  - SAC 12/31/21 (MFam)
+      case BF_MaxAcrsIf  :   // MaxAcrossIf( Comp:ParamDBID, <Condition> ), where <Condition> is typically something like "Comp:ParamDBID = "Option"" - SAC 04/26/23
+      case BF_MinAcrsIf  :   // MinAcrossIf( Comp:ParamDBID, <Condition> ), where <Condition> is typically something like "Comp:ParamDBID = "Option"" - SAC 04/26/23
          {
             int iCompType = 0;  // SAC 1/4/01 - added to facilitate parsing of new BF_CountNoRefs func
             if (crntFunc == BF_CountNoRefs)
@@ -2257,6 +2270,9 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 
       case BF_RetCSVVal    : // SAC 4/10/20 - added RetrieveCSVValue( PathFilename, RecordNum, SearchString, ColsFollowing )
 		case BF_EvalRLCSVCol : // SAC 5/9/20 - added EvalRulelistOnCSVColumns( "CSVPathFile", #StartRow, #StartCol, "RulelistName", "Function", "ResultBEMProp", "RecordNumBEMProp", "CSVCol1Title", "Col1ValBEMProp", <up to 5 more arg pairs> )
+         break;
+
+      case BF_SetNextArr   : // added SetNextArrayElement() - 1 argument = string or numeric result to be set to first empty array element of local property - SAC 04/24/23 (Com tic #3392)
          break;
 
       case BF_Format      :
@@ -3139,6 +3155,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 		case BF_UListRevRef   :  // SAC 8/22/19 - UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_UListRevRefIf :  // SAC 8/22/19 - UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_NUnqChldVals  :  // NumUniqueChildVals( ChildObjType:PropRef:Prop, CountUndefs(dflt1) )  - SAC 12/31/21 (MFam)
+      case BF_MaxAcrsIf  :   // MaxAcrossIf( Comp:ParamDBID, <Condition> ), where <Condition> is typically something like "Comp:ParamDBID = "Option"" - SAC 04/26/23
+      case BF_MinAcrsIf  :   // MinAcrossIf( Comp:ParamDBID, <Condition> ), where <Condition> is typically something like "Comp:ParamDBID = "Option"" - SAC 04/26/23
                             BEMProcSumChildrenAllOrRevRef( op, nArgs, stack, pEval, error );
                             break;
 
@@ -6006,6 +6024,44 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpxStackPush( stack, pNode );
                            break; }
 
+      case BF_SetNextArr   : // added SetNextArrayElement() - 1 argument = string or numeric result to be set to first empty array element of local property - SAC 04/24/23 (Com tic #3392)
+                        {  ExpNode* pNode = ExpxStackPop( stack );
+                           if (pNode && (pNode->type == EXP_String || pNode->type == EXP_Value))
+                           {  QString sSetNextArrErr;
+                              int iSetNextArrErr;
+                              bool bSetNextArrDone = false;
+                              int i1ArrIdx = BEMPX_GetArrayID( pEval->lLocDBID );
+                              if (BEMPX_GetPropertyID( pEval->lLocDBID ) < 1)
+                                 sSetNextArrErr = QString( "Invalid %1() left side - not an array property" ).arg( FuncName(op) );
+                              else
+                              {  BEMPropertyType* pPropType = BEMPX_GetPropertyTypeFromDBID( pEval->lLocDBID, iSetNextArrErr, -1 /*iBEMProcIdx*/ );
+                                 if (pPropType == NULL)
+                                    sSetNextArrErr = QString( "Invalid %1() left side - PropertyType not found" ).arg( FuncName(op) );
+                                 else if (pPropType->getNumValues() < 2 || pPropType->getNumValues() < i1ArrIdx )
+                                    sSetNextArrErr = QString( "Invalid %1() left side - no remaining array elements to traverse" ).arg( FuncName(op) );
+                                 else
+                                 {  int i1ChkArrIdx = i1ArrIdx;
+                                    long lSetNextArrClass = BEMPX_GetClassID(    pEval->lLocDBID );
+                                    long lSetNextArrProp  = BEMPX_GetPropertyID( pEval->lLocDBID );
+                                    for ( ; (!bSetNextArrDone && i1ChkArrIdx <= pPropType->getNumValues()); i1ChkArrIdx++ )
+                                       if (BEMPX_GetDataStatus( BEMPX_GetDBID( lSetNextArrClass, lSetNextArrProp, i1ChkArrIdx ), pEval->iLocObjIdx, pEval->eLocObjType, -1 /*iBEMProcIdx*/ ) < 1)
+                                       {  pEval->lLocDBID = BEMPX_GetDBID( lSetNextArrClass, lSetNextArrProp, i1ChkArrIdx );     // REVISE pEval->lLocDBID to set data to first undefined array element
+                                          bSetNextArrDone = true;
+                                       }
+                              }  }
+										if (sSetNextArrErr.isEmpty() && !bSetNextArrDone)
+                                 sSetNextArrErr = QString( "%1() error - array length exceeded" ).arg( FuncName(op) );
+                              if (!sSetNextArrErr.isEmpty())
+										{	ExpSetErr( error, EXP_RuleProc, sSetNextArrErr );
+											if (pNode == NULL)
+												pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
+											pNode->type = EXP_Invalid;
+											pNode->fValue = 0.0;
+                           }	}
+                           // Push argument node back onto the stack to serve as return value
+                           ExpxStackPush( stack, pNode );
+                           break; }
+
       case BF_YrMoDa2Date :   // long YrMoDaToSerial( int iYr, int iMo, int iDa );  
       case BF_YrMoDa2DOW  :   // int YrMoDaToDayOfWeek( int iYr, int iMo, int iDa );
 								{	ExpNode* pNode=NULL;
@@ -8525,8 +8581,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 {
    BOOL bRevRefFunc = (	op == BF_SumRevRef || op == BF_MaxRevRef || op == BF_MinRevRef || op == BF_MaxRevRefC || op == BF_MaxRevRefA || op == BF_SumRevRefEx ||  // SAC 1/3/02  // SAC 11/10/04  // SAC 8/1/06
    							op == BF_ListRevRef || op == BF_ListRevRefIf || op == BF_UListRevRef || op == BF_UListRevRefIf );		// SAC 1/26/15   // SAC 8/22/19
-   bool bGetMax     = (op == BF_MaxChild || op == BF_MaxAll || op == BF_MaxRevRef || op == BF_MaxRevRefC || op == BF_MaxAllComp || op == BF_MaxRevRefA || op == BF_MaxChildC);  // SAC 1/25/02  // SAC 11/10/04  // SAC 10/18/14
-   bool bGetMin     = (op == BF_MinChild || op == BF_MinAll || op == BF_MinRevRef || op == BF_MinChildC);  // SAC 10/18/14
+   bool bGetMax     = (op == BF_MaxChild || op == BF_MaxAll || op == BF_MaxRevRef || op == BF_MaxRevRefC || op == BF_MaxAllComp || op == BF_MaxRevRefA || op == BF_MaxChildC || op == BF_MaxAcrsIf);  // SAC 1/25/02  // SAC 11/10/04  // SAC 10/18/14  // SAC 04/26/23
+   bool bGetMin     = (op == BF_MinChild || op == BF_MinAll || op == BF_MinRevRef || op == BF_MinChildC  || op == BF_MinAcrsIf);  // SAC 10/18/14  // SAC 04/26/23
    bool bGetCount   = (op == BF_CountRefs || op == BF_CountUPRefs || op == BF_CountOccur);  // SAC 1/3-4/02  // SAC 5/4/06
    bool bStoreArgsForProcessing = (op == BF_ListRevRef || op == BF_ListRevRefIf || op == BF_UListRevRef || op == BF_UListRevRefIf);  // SAC 1/26/15   // SAC 8/22/19
 	bool bStoreUniqueList = (op == BF_UListRevRef || op == BF_UListRevRefIf);  // SAC 8/22/19
@@ -8540,14 +8596,14 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
    double fResult = 0.0;
    QString sResult;
    int iMinMaxArrIdx = -1;   // SAC 11/10/04 - for BF_MaxRevRefA
-	BOOL bArgumentConditionExpected = (op == BF_SumAcrsIf || op == BF_SumChldIf || op == BF_ListRevRefIf || op == BF_UListRevRefIf);  // SAC 3/5/13  // SAC 1/26/15  // SAC 8/22/19
-	BOOL bCondArgsNext = (op == BF_SumAcrsIf || op == BF_SumChldIf);		// SAC 1/26/15 - prevent arg parsing to expect condition args @ end of BF_ListRevRefIf - these will FOLLOW a series of 3 char strings and be in arg #s 2-4
+	BOOL bArgumentConditionExpected = (op == BF_SumAcrsIf || op == BF_MaxAcrsIf || op == BF_MinAcrsIf || op == BF_SumChldIf || op == BF_ListRevRefIf || op == BF_UListRevRefIf);  // SAC 3/5/13  // SAC 1/26/15  // SAC 8/22/19  // SAC 04/26/23
+	BOOL bCondArgsNext = (op == BF_SumAcrsIf || op == BF_MaxAcrsIf || op == BF_MinAcrsIf || op == BF_SumChldIf);		// SAC 1/26/15 - prevent arg parsing to expect condition args @ end of BF_ListRevRefIf - these will FOLLOW a series of 3 char strings and be in arg #s 2-4
 	BOOL bArgCondParsed=FALSE, bArgCondLeftParsed=FALSE, bArgCondRightParsed=FALSE;
 	QString sArgCond[2];
 	double dArgCond[2]={-99999,-99999};
 	long lArgCondDBID[2]={0,0};
 	int  iArgCond1Class[2]={0,0}, iArgCondition=0, iArg0Model[2]={-1,-1};
-	if ((op == BF_SumAcrsIf || op == BF_SumChldIf) && nArgs < 3)
+	if ((op == BF_SumAcrsIf || op == BF_MaxAcrsIf || op == BF_MinAcrsIf || op == BF_SumChldIf) && nArgs < 3)
 	{	// modify condition settings to reflect "!= 0" condition when the group of 'condition' arguments consists of only a single argument
 		bArgCondRightParsed = TRUE;
 		bArgCondParsed = TRUE;
@@ -8693,7 +8749,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 				op != BF_SumAll && op != BF_MaxAll && op != BF_MinAll)  // SAC 5/12/14 - PREVENT model-specific index retrieval for functions that do not take advantage of iModelPrimObjIdx
 			iModelPrimObjIdx = BEMPX_GetObjectIndexAcrossModels( BEMPX_GetClassID( pEval->lPrimDBID ), i0Model, pEval->ePrimObjType, pEval->iPrimObjIdx /*, int iInModel=-1*/ );
 		else if (i0Model >= 0)
-		{	assert( !bRevRefFunc && !bGetCount && op != BF_SumAcrsIf &&		// make SURE that iModelPrimObjIdx is not going to be used if we skipped setting it above
+		{	assert( !bRevRefFunc && !bGetCount && op != BF_SumAcrsIf && op != BF_MaxAcrsIf && op != BF_MinAcrsIf &&		// make SURE that iModelPrimObjIdx is not going to be used if we skipped setting it above
 						op != BF_SumChld && op != BF_MaxChild && op != BF_MinChild && op != BF_SumChldIf && op != BF_MaxChildC && op != BF_MinChildC );   // SAC 10/18/14
 		}
 
@@ -8705,7 +8761,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 		vector<int> iaChildObjIdxs;
 		// SAC 1/3/02 - Added code to handle new BF_Count*Refs functions
       if ( op == BF_SumAll || op == BF_MaxAll || op == BF_MinAll || bRevRefFunc || bGetCount ||
-		     op == BF_MaxAllComp || op == BF_SumAcrsIf )  // SAC 2/1/02 - added BF_MaxAllComp  // SAC 3/5/13 - BF_SumAcrsIf
+		     op == BF_MaxAllComp || op == BF_SumAcrsIf || op == BF_MaxAcrsIf || op == BF_MinAcrsIf )  // SAC 2/1/02 - added BF_MaxAllComp  // SAC 3/5/13 - BF_SumAcrsIf  // SAC 04/26/23 - BF_MaxAcrsIf
       {
          iNumObjs = BEMPX_GetNumObjects( BEMPX_GetClassID( plParams[ 0 ] ), pEval->ePrimObjType, i0Model );
 
@@ -8912,7 +8968,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 
             // Set iObjIdx & eObjType
             if ( op == BF_SumAll || op == BF_MaxAll || op == BF_MinAll || op == BF_MaxAllComp ||  // SAC 1/25/02
-                 op == BF_CountOccur || op == BF_SumAcrsIf )  // SAC 5/4/06   // SAC 3/5/13 - BF_SumAcrsIf
+                 op == BF_CountOccur || op == BF_SumAcrsIf || op == BF_MaxAcrsIf || op == BF_MinAcrsIf )  // SAC 5/4/06   // SAC 3/5/13 - BF_SumAcrsIf   // SAC 04/26/23 - BF_MaxAcrsIf
             {
                iObjIdx = iObj;
                eObjType = pEval->ePrimObjType;
@@ -9020,7 +9076,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 									{	pValProp = BEMPX_GetProperty( lArgCondDBID[iLR], iValErr, 0 /*iObjIdx*/, eObjType, i0Model /*0 iBEMProcIdx*/ );
 										iValObjIdx = 0 /*iObjIdx*/;		eValObjType = eObjType;
 									}
-									else if (op == BF_SumAcrsIf || op == BF_ListRevRefIf || op == BF_UListRevRefIf)
+									else if (op == BF_SumAcrsIf || op == BF_MaxAcrsIf || op == BF_MinAcrsIf || op == BF_ListRevRefIf || op == BF_UListRevRefIf)
 									{	if (iArgCond1Class[iLR] == BEMPX_GetClassID( plParams[ 0 ] ))
 										{	pValProp = BEMPX_GetProperty( lArgCondDBID[iLR], iValErr, iObjIdx, eObjType, i0Model /*0 iBEMProcIdx*/ );
 											iValObjIdx = iObjIdx;		eValObjType = eObjType;
@@ -9032,7 +9088,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 										else
 										{	//assert( FALSE );  // only local & primary conditional data retrieval for now ... ??
 											bErrorPosted = TRUE;
-											sErrMsg = QString( "Condition look-ups restricted to local/looping and primary objects (%1)" ).arg( (op == BF_SumAcrsIf ? "SumAcrossIf" : (op == BF_ListRevRefIf ? "ListRevRefIf" : (op == BF_UListRevRefIf ? "UniqueListRevRefIf" : "???"))) );
+											sErrMsg = QString( "Condition look-ups restricted to local/looping and primary objects (%1)" ).arg( FuncName( op ) );  // (op == BF_SumAcrsIf ? "SumAcrossIf" : (op == BF_ListRevRefIf ? "ListRevRefIf" : (op == BF_UListRevRefIf ? "UniqueListRevRefIf" : "???"))) );
 	                              ExpSetErr( error, EXP_RuleProc, sErrMsg );
 										}
 									}

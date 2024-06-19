@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "EAA Example 3"  
    BEMVersion = 11
-   SoftwareVersion = "CBECC-Res 2022.2.1 (1284)"
+   SoftwareVersion = "CBECC-Res 2022.2.1 SP1 (1298)"
    SoftwareVersionDetail = "CBECC-Res 2022.2.0 RV (1263)"
    CreateDate = 1556730321
-   ModDate = 1674211544
+   ModDate = 1683873789
    RunDate = 1474307407
    ProjFileName = "EAAExampleGarage.ribd22"
    RunTitle = "Ex HVAC Altered DHW"
@@ -974,7 +974,7 @@ Attic   "Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220200
+   ResultsAnalysisVer = 220201
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -2187,7 +2187,7 @@ DHWSys   "Alter DHW"
 DHWHeater   "Tankless"  
    HeaterElementType = "Gas"
    TankType = "Consumer Instantaneous (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"
@@ -2209,7 +2209,7 @@ DHWHeater   "Tankless"
 DHWHeater   "Gas Storage"  
    HeaterElementType = "Gas"
    TankType = "Consumer Storage (UEF)"
-   HPWHCategory = "Non-UEF Rated"
+   HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
    HPWHComModel = "n/a"

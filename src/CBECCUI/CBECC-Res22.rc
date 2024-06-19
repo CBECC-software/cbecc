@@ -346,6 +346,9 @@ BEGIN
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
         MENUITEM "&Generate CAHP Report", IDM_TOOLS_CAHPRPT
         MENUITEM SEPARATOR
+// temporarily remove Comm Slr opt-out for 22.2.1 SP1 release - SAC 05/07/23
+//        MENUITEM "Community Solar &Opt-Out...", IDM_TOOLS_PVOPTOUT
+//        MENUITEM SEPARATOR
         MENUITEM "&Batch Processing...",        IDM_TOOLS_BATCH
     END
     POPUP "&Help"
@@ -447,6 +450,10 @@ BEGIN
         MENUITEM "Re&view Analysis Results",    IDM_REVIEWRESULTS
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
         MENUITEM "&Generate CAHP Report", IDM_TOOLS_CAHPRPT
+// temporarily remove Comm Slr opt-out for 22.2.1 SP1 release - SAC 05/07/23
+//        MENUITEM SEPARATOR
+//        MENUITEM "Community Solar &Opt-Out...", IDM_TOOLS_PVOPTOUT
+//        MENUITEM SEPARATOR
         MENUITEM "&Generate SHA-256 File Hashes...", IDM_TOOLS_FILEHASH
 //        MENUITEM "&Generate Public Key",        IDM_TOOLS_PUBLICKEY
         MENUITEM "&Key Prep",                   IDM_TOOLS_KEYPREP
@@ -697,6 +704,28 @@ BEGIN
                     WS_BORDER | WS_VSCROLL | WS_TABSTOP,5,5,255,115
 END
 
+// temporarily remove IDC_START_PVOPTOUT for 22.2.1 SP1 release - SAC 05/07/23
+//IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 296, 114
+//STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+//CAPTION "CBECC-Res 2022 Startup Options"
+//FONT 8, "MS Sans Serif"
+//BEGIN
+//    DEFPUSHBUTTON   "OK",IDOK,126,91,35,16
+//    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,170,91,76,16
+//    PUSHBUTTON      "E&xit",IDCANCEL,254,91,35,16
+//    CONTROL         "Open &Recent Project:",IDC_START_RECENT,"Button",
+//                    BS_AUTORADIOBUTTON,12,9,125,8
+//    COMBOBOX        IDC_START_FILELIST,36,20,231,116,CBS_DROPDOWNLIST | 
+//                    WS_VSCROLL | WS_TABSTOP
+//    CONTROL         "&Select an Existing Project to Open",IDC_START_EXISTING,
+//                    "Button",BS_AUTORADIOBUTTON,12,40,125,8
+//    CONTROL         "Perform Batch &Processing",IDC_START_BATCH,"Button",
+//                    BS_AUTORADIOBUTTON,12,56,100,8
+//    CONTROL         "Community Solar &Opt-Out",IDC_START_PVOPTOUT,"Button",
+//                    BS_AUTORADIOBUTTON,12,72,100,8
+//    CONTROL         "Start with a &Blank Project",IDC_START_BLANK,"Button",
+//                    BS_AUTORADIOBUTTON,12,88,100,8
+//END
 IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 296, 98
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CBECC-Res 2022 Startup Options"
@@ -725,8 +754,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2022,2010,0,1289		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2022,2010,0,1289	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
+ FILEVERSION 2022,2018,0,1298		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2022,2018,0,1298	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -744,15 +773,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (residential 2022)\0"
-            VALUE "FileVersion", "2022.2.1 (1289)\0"
+            VALUE "FileVersion", "2022.2.1-SP1 (1298)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2023, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-Res22.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (residential 2022)\0"
-            VALUE "ProductVersion", "2022.2.1\0"
-            VALUE "SpecialBuild", "build 1289\0"
+            VALUE "ProductVersion", "2022.2.1-SP1\0"
+            VALUE "SpecialBuild", "build 1298\0"
         END
     END
     BLOCK "VarFileInfo"
