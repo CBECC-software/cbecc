@@ -130,6 +130,9 @@ CString esUserManualPDF;	// SAC 7/8/13
 	#elif  UI_PROGYEAR2022
    CString esProgramName = "CBECC";        // SAC 05/19/22
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd22", "cpbd22", "cbbd22" };
+	#elif  UI_PROGYEAR2025
+   CString esProgramName = "CBECC";        // SAC 10/23/22
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd25", "cpbd25", "cbbd25" };
 	#else
    CString esProgramName = "CBECC-Com";    // SAC 9/2/14
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd", "cpbd", "cbbd" };
@@ -144,6 +147,8 @@ CString esProgramName = "CBECC-Res";    // SAC 9/2/14
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd19", "rpbd19", "rbbd19" };
 	#elif  UI_PROGYEAR2022
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd22", "rpbd22", "rbbd22" };
+	#elif  UI_PROGYEAR2025
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd25", "rpbd25", "rbbd25" };
 	#else
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd", "rpbd", "rbbd" };
 	#endif
@@ -246,6 +251,7 @@ static int dataTypeFontHt;
                   
 CString esProgramPath = "";
 CString esDataPath = "";
+CString esBEMBasePath = "";      // SAC 10/28/22 (CUAC)
 CString esAltWeatherPath = "";	// SAC 6/3/20
 CString esProjectsPath = "";
 CString esProgramFName = "";   // SAC 8/19/11
@@ -650,6 +656,9 @@ void GetProgramPath()
  #elif  UI_PROGYEAR2022
 	esOverviewPDF   = esProgramPath + "CBECC-22_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-22_UserManual.pdf";			// SAC 6/19/19
+ #elif  UI_PROGYEAR2025
+	esOverviewPDF   = esProgramPath + "CBECC-25_QuickStartGuide.pdf";
+	esUserManualPDF = esProgramPath + "CBECC-25_UserManual.pdf";			// SAC 10/23/22
  #else
  	esOverviewPDF   = esProgramPath + "CBECC-Com_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com_UserManual.pdf";			// SAC 7/8/13
@@ -1062,7 +1071,7 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 			sProgVer.Format( "%d.%d.%d%s (%d)", major, iMiddleNum, iMinorNum, sAlphBeta, build );
 		else
 			sProgVer.Format( "%d.%d.%d%s", major, iMiddleNum, iMinorNum, sAlphBeta );
-#elif  UI_PROGYEAR2022
+#elif  UI_PROGYEAR2022 || UI_PROGYEAR2025
 		//CString sCodeYr = "2022";
 	// SAC 10/29/15 - implemented new numbering scheme - defined in CEC LF e-mail 10/2/15
 	// SAC 11/27/18 - altered to allow 2-digit iMinorNum (by increasing iMiddleNum multiplier *10)
@@ -2197,6 +2206,16 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 			if (sInitBDBFileName.isEmpty() || !FileExists( sInitBDBFileName ))
 				sInitBDBFileName = ReadProgString( "files", "BEMFile", "", TRUE );
 
+         if (FileExists( sInitBDBFileName ) &&
+             (sInitBDBFileName.lastIndexOf('/') > 0 || sInitBDBFileName.lastIndexOf('\\') > 0))    // SAC 10/28/22 (CUAC)
+         {  esBEMBasePath = sInitBDBFileName.toLatin1().constData();  
+            int iLastBEMBaseSlash = std::max( sInitBDBFileName.lastIndexOf('/'), sInitBDBFileName.lastIndexOf('\\') );
+            if (iLastBEMBaseSlash > 0)
+               esBEMBasePath = esBEMBasePath.Left( iLastBEMBaseSlash+1 );
+         }
+         else
+            esBEMBasePath.Empty();
+
 			CString sInitLogFileName = ReadProgString( "paths", "ProjectsPath", "", TRUE );
 			sInitLogFileName += "untitled.log";
 			if (!LoadDataModel(	sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName ))
@@ -2958,7 +2977,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_Win    )				{	iTabCtrlWd = 650;		iTabCtrlHt = 610;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_WindowType)			{	iTabCtrlWd = 600;		iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_Door   )	   		{  iTabCtrlWd = 550;    iTabCtrlHt = 360;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 300;   }
-	else if (iBDBClass == eiBDBCID_Cons   )	   		{  iTabCtrlWd = 670;    iTabCtrlHt = 610;   }
+	else if (iBDBClass == eiBDBCID_Cons   )	   		{  iTabCtrlWd = 670;    iTabCtrlHt = 640;   }   // Ht 610->640 - SAC 10/30/22 (DPHWall)
 	else if (iBDBClass == eiBDBCID_PVArrayGeom )			{  iTabCtrlWd = 350;    iTabCtrlHt = 250;   }	// SAC 3/2/17
 	else if (iBDBClass == eiBDBCID_Shade  )				{  iTabCtrlWd = 350;    iTabCtrlHt = 250;   }	// SAC 2/22/17
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd = 730;    iTabCtrlHt = 535;   }	// SAC 2/21/17

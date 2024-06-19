@@ -1,0 +1,45 @@
+// RC file to define Windows file property details
+//
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include "winver.h"
+
+VS_VERSION_INFO     VERSIONINFO
+  FILEVERSION       25,0,1,1278
+  PRODUCTVERSION    25,0,1,1278
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+        BLOCK "040904B0"
+		BEGIN 
+			VALUE "CompanyName",     "California Energy Commission\0"
+			VALUE "FileDescription", "Bldg Energy Model (BEM) Processor (T-24 NRMF)\0"
+			VALUE "FileVersion",     "2025.0.1 (1278)\0"
+			VALUE "InternalName",    "BEMProc25c\0"
+			VALUE "LegalCopyright",  "Copyright (C) 2012-2022, California Energy Commission. All rights reserved.\0"
+			VALUE "LegalTrademarks", "\0"
+			VALUE "OriginalFilename","BEMProc25c.dll\0"
+			VALUE "ProductName",     "BEM Processor DLL (Title-24 NRMF)\0"
+			VALUE "ProductVersion",  "2025.0.1\0"
+			VALUE "SpecialBuild",    "build 1278\0"
+		END
+	END
+	BLOCK "VarFileInfo" 
+	BEGIN 
+		VALUE "Translation", 0x409, 1200
+    END
+END
+

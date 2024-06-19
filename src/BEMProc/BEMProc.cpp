@@ -3214,7 +3214,7 @@ double  BEMPX_GetFloatAndStatus(   long lDBID, int& iStatus, int& iSpecialVal, i
 											break;
 			}	}
 			else
-			{	assert( false );		// invalid property
+			{	//assert( false );		// invalid property
 			}
 		}
 	}
@@ -3347,7 +3347,7 @@ QString BEMPX_GetStringAndStatus(  long lDBID, int& iStatus, int& iSpecialVal, i
 											else
 												sRetVal.clear();
 											break;
-					case BEMP_Int : 	if (iPrecision <= -1 && iPrecision >= -3)  // format value as DATE
+					case BEMP_Int : 	if (iPrecision <= -1 && iPrecision >= -4)  // format value as DATE   // add new -4 precision option - SAC 10/28/22 (CUAC)
 											{	if (pProp->getInt() > 0)
 												{
 													time_t time = (time_t) pProp->getInt();
@@ -3366,7 +3366,11 @@ QString BEMPX_GetStringAndStatus(  long lDBID, int& iStatus, int& iSpecialVal, i
 														sRetVal = dt.toString(Qt::ISODate);
 													}
 													else
-														sRetVal = dt.toString( (iPrecision == -1 ? "HH:mm, ddd, MMM dd, yyyy" : "MM/dd/yy") );
+                                          switch (iPrecision)
+                                          {  case -4 :  sRetVal = dt.toString( "M/d/yyyy h:mm:ss AP" );  break;     // add new -4 precision option - SAC 10/28/22 (CUAC)
+                                             case -2 :  sRetVal = dt.toString( "MM/dd/yy" );  break;
+                                             default :  sRetVal = dt.toString( "HH:mm, ddd, MMM dd, yyyy" );  break;
+                                          }
 													iStatus = pProp->getDataStatus();
 											}	}
 											else // not a date/time precision value

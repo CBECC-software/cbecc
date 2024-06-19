@@ -107,7 +107,7 @@ public:
 	BOOL UpdateSoftwareVersionString();		// SAC 9/17/12
 	BOOL SetBEMVersionID();						// SAC 9/17/12
 
-	void GenerateReport( int iReportID, bool bSilent=false );		// SAC 10/8/14  // SAC 04/13/21
+	int  GenerateReport( int iReportID, bool bSilent=false );		// SAC 10/8/14  // SAC 04/13/21  // void->int SAC 11/02/22
 	void ViewReport( int iReportID=0 );		// SAC 11/18/15
 
 	bool CheckReportGenAccess( bool bDisplayResult );		// SAC 2/19/15

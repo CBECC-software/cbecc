@@ -557,11 +557,12 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 //											 (see below)
 int CMX_GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 										const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
-										const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/, bool bSchemaBasedRptGen /*=false*/ )   // SAC 11/20/18
+										const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/, bool bSchemaBasedRptGen /*=false*/,    // SAC 11/20/18
+                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )   // SAC 11/02/22
 {
 	return GenerateReport_CEC(	pszXMLResultsPathFile, pszCACertPath, pszReportName, pszAuthToken1, pszAuthToken2,
 										pszSignature, pszPublicKey, NULL /*pszRptPrvKey*/, NULL, NULL, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false,
-										NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, true, bSchemaBasedRptGen );
+										NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, true, bSchemaBasedRptGen, iConnectTimeoutSecs, iReadWriteTimeoutSecs );
 }
 
 //		Return Values:		0 =>	SUCCESS
@@ -573,11 +574,13 @@ int  CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char
 												const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/,
 												const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 												const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,
-												const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, bool bSchemaBasedRptGen /*=false*/ )	// SAC 11/5/15   // SAC 11/20/18
+												const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, bool bSchemaBasedRptGen /*=false*/,   	// SAC 11/5/15   // SAC 11/20/18
+                                    int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )   // SAC 11/02/22
 {
 	return GenerateReport_CEC(	pszXMLResultsPathFile, pszCACertPath, pszReportName, pszAuthToken1, pszAuthToken2, pszSignature, 
 										pszPublicKey, NULL /*pszRptPrvKey*/, pszProxyAddress, pszProxyCredentials, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false,
-										pszCompRptID, pszRptGenServer, pszRptGenApp, pszRptGenService, pszSecKeyRLName, pszOutputPathFile, pszProxyType, pszNetComLibrary, 0, true, bSchemaBasedRptGen );
+										pszCompRptID, pszRptGenServer, pszRptGenApp, pszRptGenService, pszSecKeyRLName, pszOutputPathFile, pszProxyType, pszNetComLibrary, 0, true,
+                              bSchemaBasedRptGen, iConnectTimeoutSecs, iReadWriteTimeoutSecs );
 }
 
 
@@ -616,7 +619,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 										const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 										const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,  // SAC 6/2/14  // SAC 10/9/14
 										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, long iSecurityKeyIndex /*=0*/, 	// SAC 11/5/15   // SAC 1/10/17
-										bool bFinalPDFGeneration /*=true*/, bool bSchemaBasedRptGen /*=false*/ )		// SAC 11/20/18
+										bool bFinalPDFGeneration /*=true*/, bool bSchemaBasedRptGen /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )		// SAC 11/20/18   // SAC 11/02/22
 { 	bool bSacOut=false;
 //bSacOut = true;
 //bVerbose = true;
@@ -1011,8 +1014,11 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
       					BEMPX_WriteLogFile( QString::asprintf( "  Generating report (attempt #%d) '%s' %s %s", iRptIter, pszReportName, (bPDFRpt && bXMLRpt ? "pdf+xml" : (bPDFRpt ? "pdf" : "xml")), (sSignHex.length() > 5 ? "(signed)" : " ") ),
                                                 NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
    					iRetVal = GenerateReportViaHttpLib( FileOutName, sURL.toLocal8Bit().constData(), pszCACertPath, postthis, npost, pszProxyAddress, pszProxyCredentials,
-																pszProxyType, NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bVerbose );
+																pszProxyType, NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bVerbose, iConnectTimeoutSecs, iReadWriteTimeoutSecs );
                }
+               if (iRetVal == 2 && iRptIter >= 8)
+     					BEMPX_WriteLogFile( "Report generation failures on large models can sometimes be addressed by activating increased INI/analysis options:  RptGenConnectTimeout and RptGenReadWriteTimeout",
+                                          NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			}
 
 		// moved flush/close of output file down here and executed anytime the file exists, rather than only when CURL executed successfully - SAC 9/21/13

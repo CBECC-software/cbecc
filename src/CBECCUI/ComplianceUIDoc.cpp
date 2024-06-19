@@ -340,6 +340,8 @@ void LoadFileExtensionString( CString& sSaveAsExt, bool bUseProjectData, bool bX
 		sCodeYr = "19";
 #elif  UI_PROGYEAR2022
 		sCodeYr = "22";
+#elif  UI_PROGYEAR2025
+		sCodeYr = "25";
 #endif
 	}
 	sSaveAsExt.Format( "%s%s%s", sBaseExt, sCodeYr, sXML );
@@ -372,6 +374,8 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 	iProgYear = 2019;
 #elif UI_PROGYEAR2022	// SAC 6/19/19
 	iProgYear = 2022;
+#elif UI_PROGYEAR2025	// SAC 10/23/22
+	iProgYear = 2025;
 #endif
 	if (bUseProjectData)
 		CodeYearAbbrev( sCodeYr );	
@@ -381,6 +385,8 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 		sCodeYr = "19";
 	else if (iProgYear == 2022)
 		sCodeYr = "22";
+	else if (iProgYear == 2025)
+		sCodeYr = "25";
 
 #ifdef UI_CANRES
 	sFileDescrip = "SDD ";
@@ -417,6 +423,10 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 		}
 		if (iProgYear > 2022 || (iProgYear < 2022 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2022" )))	// SAC 6/19/19
 		{	sFTTemp.Format( "2022 %sProject Files (*.%s22)|*.%s22|2022 %sXML Project Files (*.%s22x)|*.%s22x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+			sInsertFileType += sFTTemp;
+		}
+		if (iProgYear > 2025 || (iProgYear < 2025 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2025" )))	// SAC 10/23/22
+		{	sFTTemp.Format( "2025 %sProject Files (*.%s25)|*.%s25|2025 %sXML Project Files (*.%s25x)|*.%s25x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
 			sInsertFileType += sFTTemp;
 		}
 	}

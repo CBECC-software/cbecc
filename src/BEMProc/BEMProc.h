@@ -751,6 +751,8 @@ UINT   BEMPROC_API __cdecl BEMPX_GetTopicHelpID( long lDBID );
 int    BEMPROC_API __cdecl BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx=-1, int iWhatToPlot=1,  // SAC 11/27/13
 															int iDayltMethod=1 );  // SAC 7/29/18
 
+int    BEMPROC_API __cdecl BEMPX_GeneratePDF( const char* pszPDFPathFile, const char* pszRptGraphicsPath, int iPDFID, int iBEMProcIdx=-1 );    // SAC 10/27/22 (CUAC)
+
 /////////////////////////////////////////////////////////////////////////////
 // AnalysisAction
 

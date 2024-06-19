@@ -215,6 +215,7 @@ extern int    GetCUIFontHeight( int fontType );
 
 extern CString esProgramPath;
 extern CString esDataPath;
+extern CString esBEMBasePath;    // SAC 10/28/22 (CUAC)
 extern CString esProjectsPath;
 extern CString esAltWeatherPath;	// SAC 6/3/20
 extern CString esProgramFName;   // SAC 8/19/11

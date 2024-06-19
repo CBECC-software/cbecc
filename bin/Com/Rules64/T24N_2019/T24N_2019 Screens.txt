@@ -124,7 +124,8 @@
 ;                              = -1  =>  integer value to be displayed as a date in long form ("%H:%M, %a, %b %d, %Y")
 ;                              = -2  =>  integer value to be displayed as a date in short form ("%m/%d/%y")
 ;                              = -3  =>  integer value to be displayed as a date in ISO format (i.e. 2018-06-12T17:22:34-07:00)
-;                              < -3  =>  0 decimal precision and no commas inserted for values > 999 (year such as 1998)
+;                              = -4  =>  integer value to be displayed as a date in form: m/d/yyyy HH:MM:SS A/P    - SAC 11/11/22
+;                              < -4  =>  0 decimal precision and no commas inserted for values > 999 (year such as 1998)
 ;           TDCT_Combo  : Val % 100  =>  Height of combobox when "closed"
 ;                         Val / 100  =>  Flag values providing the following functionality:
 ;                                               1  :  Prevent inclusion of "- none -"
@@ -325,13 +326,14 @@ MAINSCREEN,  15
    CTRL, "StdsVersion",     1056, TDCT_Combo,  200,  92, 200, 200, 25, FNT_STD, "Appliance Standards Version:", TA_LEFT,  -180, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
    CTRL, "GasType",         1069, TDCT_Combo,  540,  30, 200,  95, 25, FNT_STD, "Gas Type:",                    TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
    CTRL, "NatGasAvail",     1075, TDCT_Check,  670,  32,  22, 190,  0, FNT_STD, "Natural Gas Available Onsite", TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       GasType != 1,       0,  0,  ""
+ 
+   CTRL, "HlthCareFacility",3075, TDCT_Check,  470, 120,  22, 130,  0, FNT_STD, "Healthcare Facility",  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  "" 
 
-   CTRL, "VentStd",         3061, TDCT_Combo,  760, 170, 300, 110, 25, FNT_STD, "Ventilation Standard:",        TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
-   CTRL, "VentStdDesc",     3071, TDCT_Edit,   760, 198,  25, 110, 25, FNT_STD, "Vent. Std. Description:",      TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
-   CTRL, "VentMult",        3072, TDCT_Edit,   760, 142,  25,  45,  3, FNT_STD, "Vent. Multiplier:",            TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,            None,               0,  0,  ""
- 
-   CTRL, "HlthCareFacility",   3075, TDCT_Check,  470,  142,  22, 130,  0, FNT_STD, "Healthcare Facility",  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  "" 
- 
+   CTRL, "VentMult",        3072, TDCT_Edit,   760, 120,  25,  45,  3, FNT_STD, "Vent. Multiplier:",            TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
+   CTRL, "VentStd",         3061, TDCT_Combo,  760, 150, 300, 110, 25, FNT_STD, "Ventilation Standard:",        TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
+   CTRL, "VentStdDesc",     3071, TDCT_Edit,   760, 180,  25, 110, 25, FNT_STD, "Vent. Std. Description:",      TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
+   CTRL, "EffMetric",       3200, TDCT_Combo,  760, 210, 300, 160, 25, FNT_STD, "Efficiency Metric:",           TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
+
    CTRL, "",                1091, TDCT_Label,   20, 122,  20, 150, -1, FNT_STD, "Analysis Scope Options:",      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None, AnalysisType = 1,         0,  0,  ""
    CTRL, "CompOptNew",      1080, TDCT_Check,   40, 142,  22,  80,  0, FNT_STD, "New    OR  ",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,      -135,  0,  "Select this option if project includes New design only"
    CTRL, "CompOptExist",    1081, TDCT_Check,  140, 142,  22,  90,  0, FNT_STD, "Existing  |",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                None,      -135,  0,  "Select this option if project includes Existing desing"
@@ -364,7 +366,7 @@ MAINSCREEN,  15
    CTRL, "StAddress",       1062, TDCT_Edit,   110, 410,  25, 360, 99, FNT_STD, "Address:",                     TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
    CTRL, "City",            1063, TDCT_Edit,   110, 440,  25, 100, 99, FNT_STD, "City:",                        TA_LEFT,   -70, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
    CTRL, "State",           1064, TDCT_Edit,   260, 440,  25,  70, 99, FNT_STD, "State:",                       TA_LEFT,   -40, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
-   CTRL, "ZipCode",         1065, TDCT_Edit,   400, 440,  25,  70, -4, FNT_STD, "Zip Code:",                    TA_LEFT,   -60, 4,     1, TA_LEFT, 4, 4,  None,       None,               0,  0,  ""
+   CTRL, "ZipCode",         1065, TDCT_Edit,   400, 440,  25,  70, -9, FNT_STD, "Zip Code:",                    TA_LEFT,   -60, 4,     1, TA_LEFT, 4, 4,  None,       None,               0,  0,  ""
    CTRL, "ZipCodeMsg",      1066, TDCT_Label,  400, 474,  20, 270,  0, FNT_STD, "",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
                                                                                                                                                                                                                                          
    CTRL, "CliZn",           1067, TDCT_Combo,  600, 410, 300, 260, 25, FNT_STD, "Climate Zone:",                 TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       None,               0,  0,  ""
@@ -521,8 +523,6 @@ MAINSCREEN,  15
    CTRL, "UseExcptDsgnModel",       1030, TDCT_Check,   60, 465,  22, 280,  0, FNT_STD, "Specify Alternative Proposed Design IDF",               TA_LEFT,    0, 4,    0, TA_LEFT, 0, 0,  None,       None,   0,  0,  ""
    CTRL, "ExcptDsgnModelFile",      1031, TDCT_Edit,   460, 465,  25, 390, -1, FNT_STD, "- Path/Filename:",                                      TA_LEFT, -102, 4,    0, TA_LEFT, 0, 0,  None,       UseExcptDsgnModel > 0, -103,  0,  ""
    CTRL, "",                        1032, TDCT_Button, 855, 465,  22,  22, 3051, FNT_STD, "...",                                                 TA_CENTER,  0, 0,    0, TA_LEFT, 0, 0,  None,       UseExcptDsgnModel > 0,    0,  0,  "Browse for exceptional design IDF file"
-
-
 
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1796,26 +1796,31 @@ MAINSCREEN,  15
     CTRL, "",                            103, TDCT_Label,   20, 250,  20,   0,  0, FNT_STD, "Ventilation/Exhaust Flows",          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
     CTRL, "",                            104, TDCT_Line,   185, 258, 650, 258, -1, FNT_STD, "",                                 TA_CENTER,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
     CTRL, "",                            105, TDCT_Label,  190, 275,  20,   0,  0, FNT_STD, "Total (cfm)",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-    CTRL, "VentFlow",                   1100, TDCT_Edit,   190, 295,  25,  70,  0, FNT_STD, "Design Ventilation (cfm):",          TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "CodeVentFlow",               1101, TDCT_Edit,   190, 325,  25,  70,  0, FNT_STD, "Code Ventilation (cfm):",            TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "ExhFlow",                    1102, TDCT_Edit,   190, 355,  25,  70,  0, FNT_STD, "Design Exhaust (cfm):",              TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "VentFlow",                   1101, TDCT_Edit,   190, 295,  25,  70,  0, FNT_STD, "Design Ventilation (cfm):",          TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "CodeVentFlow",               1102, TDCT_Edit,   190, 325,  25,  70,  0, FNT_STD, "Code Ventilation (cfm):",            TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "ExhFlow",                    1103, TDCT_Edit,   190, 355,  25,  70,  0, FNT_STD, "Design Exhaust (cfm):",              TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "CodeExhFlow",                1104, TDCT_Edit,   190, 385,  25,  70,  0, FNT_STD, "Code Exhaust (cfm):",                TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
 
     CTRL, "",                            108, TDCT_Label,  420, 260,  20,   0,  0, FNT_DATATYPE, "******** Nonresidential Ventilation Balance *********",TA_CENTER,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
     CTRL, "",                            106, TDCT_Label,  300, 275,  20,   0,  0, FNT_STD, "For Balance",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-    CTRL, "VentFlowForBal",             1103, TDCT_Edit,   300, 295,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "CodeVentFlowForBal",         1104, TDCT_Edit,   300, 325,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "ExhFlowForBal",              1105, TDCT_Edit,   300, 355,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""                 
-    CTRL, "CodeVentMult",               1106, TDCT_Edit,   300, 385,  25,  50,  3, FNT_STD, "CodeVent Multiplier:",               TA_LEFT,  -260, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,      0,  0,  ""
-    CTRL, "VentExhBalRat",              1107, TDCT_Edit,   300, 415,  25,  50,  3, FNT_STD, "VentExhBalance Ratio:",              TA_LEFT,  -260, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "ExhVentMult",                1108, TDCT_Edit,   300, 445,  25,  50,  3, FNT_STD, "VentExh Multiplier:",                TA_LEFT,  -260, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "VentFlowForBal",             1111, TDCT_Edit,   300, 295,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "CodeVentFlowForBal",         1112, TDCT_Edit,   300, 325,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "ExhFlowForBal",              1113, TDCT_Edit,   300, 355,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""                 
+    CTRL, "CodeExhFlowForBal",          1114, TDCT_Edit,   300, 385,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""                 
+ 
+    CTRL, "CodeVentMult",               1115, TDCT_Edit,   300, 415,  25,  50,  3, FNT_STD, "CodeVent Multiplier:",               TA_LEFT,  -260, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,      0,  0,  ""
+    CTRL, "VentExhBalRat",              1116, TDCT_Edit,   300, 445,  25,  50,  3, FNT_STD, "VentExhBalance Ratio:",              TA_LEFT,  -260, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "ExhVentMult",                1117, TDCT_Edit,   300, 475,  25,  50,  3, FNT_STD, "VentExh Multiplier:",                TA_LEFT,  -260, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
 
     CTRL, "",                            107, TDCT_Label,  410, 275,  20,   0,  0, FNT_STD, "For 'Other' Balance",                TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-    CTRL, "OtherVentFlowForBal",        1111, TDCT_Edit,   410, 295,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "CodeOtherVentFlowForBal",    1112, TDCT_Edit,   410, 325,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "OtherExhFlowForBal",         1113, TDCT_Edit,   410, 355,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "CodeOtherVentMult",          1114, TDCT_Edit,   410, 385,  25,  50,  3, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "OtherVentExhBalRat",         1115, TDCT_Edit,   410, 415,  25,  50,  3, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
-    CTRL, "OtherExhVentMult",           1116, TDCT_Edit,   410, 445,  25,  50,  3, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "OtherVentFlowForBal",        1121, TDCT_Edit,   410, 295,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "CodeOtherVentFlowForBal",    1122, TDCT_Edit,   410, 325,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "OtherExhFlowForBal",         1123, TDCT_Edit,   410, 355,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "OtherExhFlowForBal",         1124, TDCT_Edit,   410, 385,  25,  70,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+
+    CTRL, "CodeOtherVentMult",          1125, TDCT_Edit,   410, 415,  25,  50,  3, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "OtherVentExhBalRat",         1126, TDCT_Edit,   410, 445,  25,  50,  3, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
+    CTRL, "OtherExhVentMult",           1127, TDCT_Edit,   410, 475,  25,  50,  3, FNT_STD, "",                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   None,       0,  0,  ""
 
     CTRL, "SupOAFlow",                  1201, TDCT_Edit,   600, 295,  25,  70,  0, FNT_STD, "SupOAFlow:",                         TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   Proj:DebugScreen > 0,       0,  0,  ""
     CTRL, "HtRcvryExhFlow",             1202, TDCT_Edit,   600, 325,  25,  70,  0, FNT_STD, "ExhHtRcrvyFlow:",                    TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  Mult < 0,   Proj:DebugScreen > 0,       0,  0,  ""
@@ -1857,13 +1862,13 @@ MAINSCREEN,  15
                                                                                                                                                                                                                                                 
     CTRL, "IntLPDReg",                 3015, TDCT_Edit,   150, 265,  25,  70,  2, FNT_STD, "Regulated Lighting:",             TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  IsRes = 0,       None,       0,  0,  ""
     CTRL, "IntLtgRegSchRef",           3016, TDCT_Combo,  330, 265, 300, 220, 25, FNT_STD, "",                                TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 99,       None,       0,  0,  ""
-    CTRL, "IntLtgRegHtGnSpcFrac",      3017, TDCT_Edit,   570, 265,  25,  70,  2, FNT_STD, "Fraction to Space:",              TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-    CTRL, "IntLtgRegHtGnRadFrac",      3018, TDCT_Edit,   730, 265,  25,  70,  2, FNT_STD, "Radiant Fraction:",               TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+    CTRL, "IntLtgRegHtGnSpcFrac",      3017, TDCT_Edit,   570, 265,  25,  70,  2, FNT_STD, "Fraction to Space:",              TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
+    CTRL, "IntLtgRegHtGnRadFrac",      3018, TDCT_Edit,   730, 265,  25,  70,  2, FNT_STD, "Radiant Fraction:",               TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
                                                                                                                                                                                                                                               
     CTRL, "IntLPDNonReg",              3020, TDCT_Edit,   150, 295,  25,  70,  2, FNT_STD, "NonReg. Lighting:",               TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  IsRes = 0,       None,       0,  0,  ""
     CTRL, "IntLtgNonRegSchRef",        3021, TDCT_Combo,  330, 295, 300, 220, 25, FNT_STD, "",                                TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  IsRes = 0,       None,       0,  0,  ""
-    CTRL, "IntLtgNonRegHtGnSpcFrac",   3022, TDCT_Edit,   570, 295,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-    CTRL, "IntLtgNonRegHtGnRadFrac",   3023, TDCT_Edit,   730, 295,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+    CTRL, "IntLtgNonRegHtGnSpcFrac",   3022, TDCT_Edit,   570, 295,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
+    CTRL, "IntLtgNonRegHtGnRadFrac",   3023, TDCT_Edit,   730, 295,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
                                                                                                                                                                                                                                                
     CTRL, "RecptPwrDens",             3030, TDCT_Edit,   150, 325,  25,  70,  2, FNT_STD, "Plug Loads:",                      TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
     CTRL, "RecptSchRef",              3031, TDCT_Combo,  330, 325, 300, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 99,       None,       0,  0,  ""
@@ -2032,18 +2037,18 @@ MAINSCREEN,  15
    CTRL, "IntLPDRegSim",             3111, TDCT_Edit,   160, 460,  25,  70,  2, FNT_STD, "Regulated Lighting:*",            TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,        0,  0,  ""
    CTRL, "IntLtgRegSchRef",          3113, TDCT_Combo,  750, 460, 300, 220, 25, FNT_STD, "Schedule Name*",                 TA_LEFT,  -1, -18,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,  None,    0,  0,  ""
 
-   CTRL, "IntLtgRegHtGnSpcFrac",     3120, TDCT_Edit,   360, 460,  25,  70,  2, FNT_STD, "Fraction to Space:",              TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  LPDUIDispToggle < 0.5,  LPDUIDispToggle < 0.5,      0,  0,  ""
+   CTRL, "IntLtgRegHtGnSpcFrac",     3120, TDCT_Edit,   360, 460,  25,  70,  2, FNT_STD, "Fraction to Space:",              TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,  LPDUIDispToggle < 0.5,      0,  0,  ""
    CTRL, "IntLtgRegHtGnSpcFracSim",   3121, TDCT_Edit,   360, 460,  25,  70,  2, FNT_STD, "Fraction to Space:",             TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,      0,  0,  ""
-   CTRL, "IntLtgRegHtGnRadFrac",     3122, TDCT_Edit,   500, 460,  25,  70,  2, FNT_STD, "Radiant Fraction:",               TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  LPDUIDispToggle < 0.5,  LPDUIDispToggle < 0.5,      0,  0,  ""
+   CTRL, "IntLtgRegHtGnRadFrac",     3122, TDCT_Edit,   500, 460,  25,  70,  2, FNT_STD, "Radiant Fraction:",               TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,  LPDUIDispToggle < 0.5,      0,  0,  ""
    CTRL, "IntLtgRegHtGnRadFracSim",   3123, TDCT_Edit,   500, 460,  25,  70,  2, FNT_STD, "Radiant Fraction:",              TA_LEFT,   0, -18,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,      0,  0,  ""
                                                                                                                                                                                                                                              
    CTRL, "IntLPDNonReg",             3130, TDCT_Edit,   160, 490,  25,  70,  2, FNT_STD, "NonReg. Lighting:",               TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  LPDUIDispToggle < 0.5,  LPDUIDispToggle < 0.5,      0,  0,  ""
    CTRL, "IntLPDNonRegSim",          3131, TDCT_Edit,   160, 490,  25,  70,  2, FNT_STD, "NonReg. Lighting:",               TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,      0,  0,  ""
    CTRL, "IntLtgNonRegSchRef",       3132, TDCT_Combo,  750, 490, 300, 220, 25, FNT_STD, "",                                TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  IsRes = 0,  None,    0,  0,  ""
 
-   CTRL, "IntLtgNonRegHtGnSpcFrac",  3140, TDCT_Edit,   360, 490,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  LPDUIDispToggle < 0.5,  LPDUIDispToggle < 0.5,      0,  0,  ""
+   CTRL, "IntLtgNonRegHtGnSpcFrac",  3140, TDCT_Edit,   360, 490,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,  LPDUIDispToggle < 0.5,      0,  0,  ""
    CTRL, "IntLtgNonRegHtGnSpcFracSim",3141, TDCT_Edit,   360, 490,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,      0,  0,  ""
-   CTRL, "IntLtgNonRegHtGnRadFrac",  3142, TDCT_Edit,   500, 490,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  LPDUIDispToggle < 0.5,  LPDUIDispToggle < 0.5,      0,  0,  ""
+   CTRL, "IntLtgNonRegHtGnRadFrac",  3142, TDCT_Edit,   500, 490,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,  LPDUIDispToggle < 0.5,      0,  0,  ""
    CTRL, "IntLtgNonRegHtGnRadFracSim",3143, TDCT_Edit,   500, 490,  25,  70,  2, FNT_STD, "",                                TA_LEFT,   0,  -1,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,      0,  0,  ""                 
                                                                                                                                                                                                                             
    CTRL, "RecptPwrDens",             3030, TDCT_Edit,   160, 520,  25,  70,  2, FNT_STD, "Plug Loads:",                     TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
@@ -2223,9 +2228,10 @@ TAB, "Spc",  403,      15,    "  Exhaust  "
 ; For spaces with exhaust based on # of fixtures
    CTRL, "",                          150, TDCT_Label,  520, 415,  20,   0,  0, FNT_BOLD, "Fixtures",                           TA_LEFT,    0, 0,    0, TA_LEFT, 0, 0,  CodeExhContPerFixture > 0,       None,       0,  0,  ""
    CTRL, "",                          151, TDCT_Line,   580, 423, 950, 423, -1, FNT_STD, "",                                  TA_CENTER,    0, 0,    0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "ExhContPerFixture",        3271, TDCT_Edit,   730, 435,  25,  70, 25, FNT_STD, "Continous Exhaust Per Fixture",       TA_LEFT, -200, 4,    0, TA_LEFT, 0, 0,  CodeExhContPerFixture > 0,       None,    0,  0,  ""
+   CTRL, "ExhContPerFixture",        3271, TDCT_Edit,   730, 435,  25,  40, 25, FNT_STD, "Continous Exhaust Per Fixture",       TA_LEFT, -200, 4,    0, TA_LEFT, 0, 0,  CodeExhContPerFixture > 0,       None,    0,  0,  ""
    CTRL, "ExhNumFixtures",           3272, TDCT_Edit,   730, 465,  25,  40, 25, FNT_STD, "Number of Fixtures*",                 TA_LEFT, -200, 4,    0, TA_LEFT, 0, 0,  CodeExhContPerFixture > 0,       None,    0,  0,  ""
-   CTRL, "",                         3273, TDCT_Label,  775, 468,  20,   0,  0, FNT_DATATYPE, "*Enter 0 fixtures if using intermittent exhaust", TA_LEFT,    0, 0,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
+   CTRL, "IsIntrmtExh",              3273, TDCT_Check,  775, 435,  22, 150,  0, FNT_STD, "Is Intermittent Exhaust",             TA_LEFT,    0, 4,    1, TA_LEFT, 0, 0,  None,       CodeExhContPerFixture > 0,    0,  0,  ""
+;   CTRL, "",                         3273, TDCT_Label,  775, 438,  20,   0,  0, FNT_DATATYPE, "*Enter 0 flow if using intermittent exhaust", TA_LEFT,    0, 0,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
 
 ;  CTRL, "ExhSpecMthd",              3112, TDCT_Edit,   190, 210,  25, 110, 25, FNT_STD, "Specification Method:",               TA_LEFT, -150, 4,    0, TA_LEFT, 0, 0,  CondgType = -1,       None,       0,  0,  ""
 ;  CTRL, "",                         3113, TDCT_Label,  280, 210,  20,   0,  0, FNT_DATATYPE, "Method defaults to 'Maximum' if Vent. Method",   TA_LEFT,    0, 0,     0, TA_LEFT, 0, 0,  None,            None,          0,  0,  ""
@@ -2557,8 +2563,8 @@ TAB, "Spc",  407,      15,    "  Process Loads  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the natural gas meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------
@@ -2806,9 +2812,9 @@ TAB, "Spc",  407,      15,    "  Process Loads  "
    CTRL, "FxtrType",                 4108, TDCT_Combo,  130,  90, 300, 240, 25, FNT_STD, "Fixture Type:",                    TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "LampType",                 4109, TDCT_Combo,  130, 120, 300, 240, 25, FNT_STD, "Lamp Type:",                       TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "Pwr",                      4110, TDCT_Edit,   130, 150,  25,  70,  1, FNT_STD, "Luminaire Power:",                 TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-   CTRL, "HtGnSpcFrac",              4115, TDCT_Edit,   280, 180,  25,  70,  2, FNT_STD, "Fraction of Heat to Space:",       TA_LEFT,  -200, 4,     0, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "HtGnSpcFrac",              4115, TDCT_Edit,   280, 180,  25,  70,  2, FNT_STD, "Fraction of Heat to Space:",       TA_LEFT,  -200, 4,     0, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
    CTRL, "",                         4116, TDCT_Label,  380, 180,  20,   0,  0, FNT_STD, "*Only valid for luminaires in spaces with plenum returns",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""   
-   CTRL, "HtGnRadFrac",              4117, TDCT_Edit,   280, 210,  25,  70,  2, FNT_STD, "Radiant Fraction of Space Heat:",  TA_LEFT,  -200, 4,     0, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "HtGnRadFrac",              4117, TDCT_Edit,   280, 210,  25,  70,  2, FNT_STD, "Radiant Fraction of Space Heat:",  TA_LEFT,  -200, 4,     0, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
 
    CTRL, "MinDimPwrFrac",            4118, TDCT_Edit,   280, 240,  25,  70,  2, FNT_STD, "Min. Dimming Power Fraction:",     TA_LEFT,  -200, 4,     0, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
    CTRL, "MinDimLtgFrac",            4119, TDCT_Edit,   280, 270,  25,  70,  2, FNT_STD, "Min. Dimming Light Fraction:",     TA_LEFT,  -200, 4,     0, TA_LEFT, 4, 4,  Proj:AnalysisType = 99,       None,       0,  0,  ""
@@ -3980,7 +3986,7 @@ TAB, "Spc",  407,      15,    "  Process Loads  "
    CTRL, "",                       202, TDCT_Line,   450, 168, 640, 168, -1, FNT_STD, "",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,                     CodeCat = 40,       0,   0,  ""
    CTRL, "FrmMat",                3021, TDCT_Combo,  500, 180, 400, 140, 12, FNT_STD, "Material:",                       TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  None,                     CodeCat = 40,     -92,   0,  ""
    CTRL, "FrmConfig",             3022, TDCT_Combo,  500, 210, 400, 240, 12, FNT_STD, "Configuration:",                  TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  None,                     CodeCat = 40,     -92,   0,  ""
-   CTRL, "FrmDepth",              3023, TDCT_Combo,  500, 240, 400, 140, 12, FNT_STD, "Depth:",                          TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  FrmConfig < 10,           CodeCat = 40 And FrmConfig < 10,  -92,   0,  ""
+   CTRL, "FrmDepth",              3023, TDCT_Combo,  500, 240, 400, 140, 12, FNT_STD, "Depth:",                          TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  FrmDepthEditable > 0,     CodeCat = 40 And FrmDepthEditable > 0,  -92,   0,  ""
                                                                                                                                                                                                                                                 
    CTRL, "",                       205, TDCT_Label,  395, 284,  18, 104,  0, FNT_STD, "Cavity Ins R-Val:"                TA_LEFT,     0, 0,     0, TA_LEFT,-1, 0,  None,                     CodeCat = 40,       0,   0,  ""
    CTRL, "CavityIns",             3024, TDCT_Edit,   500, 280,  25,  60,  2, FNT_STD, ""                                 TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  None,                     CodeCat = 40 And FrmMat != 2,   0,  80,  ""
@@ -3988,11 +3994,11 @@ TAB, "Spc",  407,      15,    "  Process Loads  "
 ;   CTRL, "HeaderIns",             3028, TDCT_Edit,   500, 310,  25,  60,  2, FNT_STD, "Header Ins R-Val:"                TA_LEFT,  -105, 4,     1, TA_LEFT, 4, 4,  None,                     CodeCat = 40,    -107,  80,  ""
    CTRL, "CompositeMatNotes",     3029, TDCT_Edit,   440, 340,  60, 240, 99, FNT_STD, "Notes:"                           TA_LEFT,   -45, 4,     1, TA_LEFT, 4, 4,  None,                     CodeCat = 40,     -47,   0,  "CompositeMaterialNotes"
                                                                                                                                                                                                                                                 
-   CTRL, "",                       206, TDCT_Label,  395, 410,  18, 100,  0, FNT_STD, "Framing Factors",                 TA_LEFT,     0, 0,     0, TA_LEFT,-1, 0,  None,                     CodeCat = 40 And FrmConfig < 10,     0,   0,  ""
-   CTRL, "",                       207, TDCT_Line,   495, 418, 680, 418, -1, FNT_STD, "",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,                     CodeCat = 40 And FrmConfig < 10,     0,   0,  ""
-   CTRL, "FrmFacCav",             3025, TDCT_Edit,   455, 430,  25,  45,  3, FNT_STD, "Cavity:"                          TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 3,    CodeCat = 40 And FrmConfig < 10,  -107,  80,  ""
-   CTRL, "FrmFacMembers",         3026, TDCT_Edit,   545, 430,  25,  45,  3, FNT_STD, "Frm:"                             TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 3,    CodeCat = 40 And FrmConfig < 10,  -107,  80,  ""
-;   CTRL, "FrmFacHeaders",         3027, TDCT_Edit,   635, 430,  25,  45,  3, FNT_STD, "Hdrs:"                            TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 3,    CodeCat = 40 And FrmConfig < 10,  -107,  80,  ""
+   CTRL, "",                       206, TDCT_Label,  395, 410,  18, 100,  0, FNT_STD, "Framing Factors",                 TA_LEFT,     0, 0,     0, TA_LEFT,-1, 0,  None,                     CodeCat = 40 And FrmDepthEditable > 0,     0,   0,  ""
+   CTRL, "",                       207, TDCT_Line,   495, 418, 680, 418, -1, FNT_STD, "",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,                     CodeCat = 40 And FrmDepthEditable > 0,     0,   0,  ""
+   CTRL, "FrmFacCav",             3025, TDCT_Edit,   455, 430,  25,  45,  3, FNT_STD, "Cavity:"                          TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 3,    CodeCat = 40 And FrmDepthEditable > 0,  -107,  80,  ""
+   CTRL, "FrmFacMembers",         3026, TDCT_Edit,   545, 430,  25,  45,  3, FNT_STD, "Frm:"                             TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 3,    CodeCat = 40 And FrmDepthEditable > 0,  -107,  80,  ""
+;   CTRL, "FrmFacHeaders",         3027, TDCT_Edit,   635, 430,  25,  45,  3, FNT_STD, "Hdrs:"                            TA_RIGHT,   -3, 4,     1, TA_LEFT, 4, 4,  Proj:AnalysisType = 3,    CodeCat = 40 And FrmDepthEditable > 0,  -107,  80,  ""
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                                                                                                                                                                                                                                                 
 
@@ -4585,7 +4591,7 @@ TAB, "Spc",  407,      15,    "  Process Loads  "
                                         
 ; For debugging terminal units          
    CTRL, "TrmlUnitRefStatus",           3039, TDCT_Edit,   180, 490,  25, 140,  0, FNT_STD, "TrmlUnitRefStatus:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Type = -1,  Proj:DebugScreen > 0,       0,  0,  ""
-   CTRL, "NumTrmlUnitRefs",             3040, TDCT_Edit,   150, 520,  25,  30,  0, FNT_STD, "NumTrmlUnitRefs:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Type = -1,  Proj:DebugScreen > 0,       0,  0,  ""
+   CTRL, "NumTrmlUnitRefs",             3040, TDCT_Edit,   180, 520,  25,  30,  0, FNT_STD, "NumTrmlUnitRefs:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Type = -1,  Proj:DebugScreen > 0,       0,  0,  ""
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -4700,18 +4706,18 @@ TAB, "ThrmlZn",  1802,      15,    "  Ventilation and Exhaust  "
                                                                                                                                                                                                                                                
    CTRL, "",                       112, TDCT_Label,  210,  60,  20,   0,  0, FNT_STD, "Cooling",                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 1,       0,  0,  ""
    CTRL, "ClgTstatSchRef",        3121, TDCT_Combo,  210,  80, 300, 230, 25, FNT_STD, "Thermostat Sch:",                 TA_LEFT,  -180, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       Type = 1,       0,  0,  ""
-   CTRL, "ClgDsgnSupAirTemp",     3122, TDCT_Edit,   210, 110,  25,  60,  1, FNT_STD, "Design Supply Air Temp:",         TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:HVACAutoSizing > 0,       Type = 1,       0,  0,  ""
+   CTRL, "ClgDsgnSupAirTemp",     3122, TDCT_Edit,   210, 110,  25,  60,  1, FNT_STD, "Design Supply Air Temp:",         TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:DebugScreen > 0,       Type = 1,       0,  0,  ""
    CTRL, "ClgDsgnSupAirTempDiff", 3123, TDCT_Edit,   210, 140,  25,  60,  1, FNT_STD, "Supply Air-to-Rm Difference:",    TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Type = -1,       Type = 1,       0,  0,  ""
-   CTRL, "ClgDsgnFlow",           3124, TDCT_Edit,   210, 170,  25,  80,  0, FNT_STD, "Design Supply Flow:",             TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:HVACAutoSizing > 0,       Type = 1,       0,  0,  ""
-   CTRL, "ClgDsgnSizingFac",      3125, TDCT_Edit,   210, 200,  25,  60,  2, FNT_STD, "Design Flow Sizing Factor:",      TA_LEFT,  -180, 4,     0, TA_LEFT, 4, 4,  Proj:HVACAutoSizing > 0,       Type = 1,       0,  0,  ""
+   CTRL, "ClgDsgnFlow",           3124, TDCT_Edit,   210, 170,  25,  80,  0, FNT_STD, "Design Supply Flow:",             TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:DebugScreen > 0,       Type = 1,       0,  0,  ""
+   CTRL, "ClgDsgnSizingFac",      3125, TDCT_Edit,   210, 200,  25,  60,  2, FNT_STD, "Design Flow Sizing Factor:",      TA_LEFT,  -180, 4,     0, TA_LEFT, 4, 4,  Proj:DebugScreen > 0,       Type = 1,       0,  0,  ""
                                                                                                                                                                                                                                              
    CTRL, "",                       113, TDCT_Label,  480,  60,  20,   0,  0, FNT_STD, "Heating",                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 1,       0,  0,  ""
    CTRL, "HtgTstatSchRef",        3131, TDCT_Combo,  480,  80, 300, 230, 25, FNT_STD, "",                                TA_LEFT,  -180, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       Type = 1,       0,  0,  ""
-   CTRL, "HtgDsgnSupAirTemp",     3132, TDCT_Edit,   480, 110,  25,  60,  1, FNT_STD, "",                                TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:HVACAutoSizing > 0,       Type = 1,       0,  0,  ""
+   CTRL, "HtgDsgnSupAirTemp",     3132, TDCT_Edit,   480, 110,  25,  60,  1, FNT_STD, "",                                TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:DebugScreen > 0,       Type = 1,       0,  0,  ""
    CTRL, "HtgDsgnSupAirTempDiff", 3133, TDCT_Edit,   480, 140,  25,  60,  1, FNT_STD, "",                                TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Type = -1,       Type = 1,       0,  0,  ""
-   CTRL, "HtgDsgnFlow",           3134, TDCT_Edit,   480, 170,  25,  80,  0, FNT_STD, "",                                TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:HVACAutoSizing > 0,       Type = 1,       0,  0,  ""
-   CTRL, "HtgDsgnSizingFac",      3135, TDCT_Edit,   480, 200,  25,  60,  2, FNT_STD, "",                                TA_LEFT,  -180, 4,     0, TA_LEFT, 4, 4,  Proj:HVACAutoSizing > 0,       Type = 1,       0,  0,  ""
-   CTRL, "HtgDsgnMaxFlowFrac",    3136, TDCT_Edit,   480, 230,  25,  60,  0, FNT_STD, "Max Flow Fraction in Heating:",   TA_LEFT,  -180, 4,     0, TA_LEFT, 4, 4,  Proj:HVACAutoSizing > 0,       Type = 1,       0,  0,  ""
+   CTRL, "HtgDsgnFlow",           3134, TDCT_Edit,   480, 170,  25,  80,  0, FNT_STD, "",                                TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  Proj:DebugScreen > 0,       Type = 1,       0,  0,  ""
+   CTRL, "HtgDsgnSizingFac",      3135, TDCT_Edit,   480, 200,  25,  60,  2, FNT_STD, "",                                TA_LEFT,  -180, 4,     0, TA_LEFT, 4, 4,  Proj:DebugScreen > 0,       Type = 1,       0,  0,  ""
+   CTRL, "HtgDsgnMaxFlowFrac",    3136, TDCT_Edit,   480, 230,  25,  60,  0, FNT_STD, "Max Flow Fraction in Heating:",   TA_LEFT,  -180, 4,     0, TA_LEFT, 4, 4,  Proj:DebugScreen > 0,       Type = 1,       0,  0,  ""
 
    CTRL, "SizeForDOAS",           3141, TDCT_Check,   30, 250,  22, 250,  0, FNT_STD, "Size for DOAS?",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  Type = 1 And HasUnknownHVAC != 1,       Type = 1,       0,  0,  ""
    CTRL, "SizeForDOASCtrl",       3142, TDCT_Combo,  210, 275, 300, 150, 25, FNT_STD, "DOAS Design Control:",            TA_LEFT,  -180, 4,     0, TA_LEFT, 0, 0,  SizeForDOAS > 0,       Type = 1,       0,  0,  ""
@@ -4830,8 +4836,8 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the natural gas meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------
@@ -4851,20 +4857,21 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Type",                 3004, TDCT_Combo,  100,  90, 300, 120, 12, FNT_STD, "Type:",                              TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "Status",               3005, TDCT_Combo,  290,  90, 300,  80, 12, FNT_STD, "Status:",                            TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "SubType",              3007, TDCT_Combo,  100, 120, 300, 140, 25, FNT_STD, "Sub Type:",                          TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  ""
+   CTRL, "EffMetric",            3200, TDCT_Combo,  530,  60, 300, 200, 25, FNT_STD, "Efficiency Metric:",                 TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       SEER2IsValid > 0 Or EER2IsValid > 0 Or HSPF2IsValid > 0,       0,  0,  ""
    CTRL, "Cnt",                  3006, TDCT_Edit,   340, 120,  25,  30,  0, FNT_STD, "Count:",                             TA_LEFT,   -50, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
    CTRL, "CtrlZnRef",            3008, TDCT_Combo,  100, 150, 300, 245, 12, FNT_STD, "Control Zone:",                      TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  IsSglZnSys = 1,       IsExhSys = 0,       0,  0,  ""
    CTRL, "CtrlZnRef",            4014, TDCT_Button, 348, 150,  22,  22, 999, FNT_STD, "...",                             TA_CENTER,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,  0,  0,  "Access control thermal zone assigned to system"
    CTRL, "Desc",                 3009, TDCT_Edit,   100, 180,  25, 270, 99, FNT_STD, "Description:",                       TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "AcceptanceTestReq",    3201, TDCT_Check,  650,  5,  22, 200,  0, FNT_STD, "Acceptance Test Required?",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "AvailSchRef",          3010, TDCT_Combo,  530,  60, 300, 300, 25, FNT_STD, "Availability Sch:",                  TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,    None,       0,  0,  ""
+   CTRL, "AvailSchRef",          3010, TDCT_Combo,  530, 515, 300, 300, 25, FNT_STD, "Availability Sch:",                  TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,    Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "FanCtrl",              3011, TDCT_Combo,  530,  90, 300, 100, 25, FNT_STD, "Fan Control:",                       TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  IsSglZnSys = 1,  IsExhSys = 0,  0,  0,  ""
    CTRL, "NightCycleFanCtrl",    3012, TDCT_Combo,  720,  90, 300, 170, 25, FNT_STD, "Night Cycling:",                     TA_LEFT,   -85, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,  0,  0,  ""
 ;  CTRL, "VentCtrl",             3013, TDCT_Edit,   530, 120,  25, 100, 25, FNT_STD, "Vent. Control:",                     TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Type = -1,  IsExhSys = 0,  0,  0,  ""
    CTRL, "SysVentFlow",          3014, TDCT_Edit,   530, 120,  25,  70,  0, FNT_STD, "Design OA Flow:",                    TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys = 0,  0,  0,  ""	
    CTRL, "CtrlSysType",          3015, TDCT_Combo,  530, 150, 300, 130, 25, FNT_STD, "Control Type:",                      TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       None,  0,  0,  ""
-;   CTRL, "StaticPressRstCtrl",  3016, TDCT_Check,  675, 150,  22, 200, 25, FNT_STD, "Static Press. Reset Control",        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,   IsMultiZnSys = 1,       0,  0,  ""
-   CTRL, "ReheatCtrlMthd",       3017, TDCT_Combo,  530, 180, 300, 130, 25, FNT_STD, "Reheat Control:",                    TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,   IsMultiZnSys = 1,  0,  0,  ""
+;   CTRL, "StaticPressRstCtrl",  3016, TDCT_Check,  675, 150,  22, 200, 25, FNT_STD, "Static Press. Reset Control",        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       IsMultiZnSys = 1,       0,  0,  ""
+   CTRL, "ReheatCtrlMthd",       3017, TDCT_Combo,  530, 180, 300, 130, 25, FNT_STD, "Reheat Control:",                    TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       IsMultiZnSys = 1,  0,  0,  ""
    CTRL, "IsAllOA",              3203, TDCT_Check,  685, 122,  22, 200, 25, FNT_STD, "100% OA System",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  "" 
    CTRL, "OptStart",             3204, TDCT_Check,  685, 170,  22, 200, 25, FNT_STD, "Optimum Start",                      TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0 And Proj:StdsYr > 2013,       0,  0,  "" 
    CTRL, "IsComplexSys",         3205, TDCT_Check,  685, 188,  22, 200,  0, FNT_STD, "Complex Mechanical System?",         TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
@@ -4886,12 +4893,12 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
 ;  CTRL, "UnmetHtgLdHrs",        3046, TDCT_Edit,   320, 300,  25,  60,  3, FNT_STD, "",                                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys = 0,  0,  0,  ""
                                                                                                                                                                                                                                                 
 ;  CTRL, "HVACAutoSizing",       3041, TDCT_Check,  500, 270,  22, 130,  0, FNT_STD, "HVAC AutoSizing",                    TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  IsExhSys = 0,  0,  0,  ""
-   CTRL, "",                     3034, TDCT_Label,  700, 285,  20,   0,  0, FNT_STD, "--- Sizing Parameters ---",          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  IsExhSys = 0,  0,  0,  "" 
-   CTRL, "AirFlowPerSqFt",       3050, TDCT_Edit,   780, 305,  25,  60,  3, FNT_STD, "Design Flow/Area:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0 And Proj:HVACAutoSizing = 0,       0,  0,  ""	
-   CTRL, "AirFlowPerTon",        3052, TDCT_Edit,   780, 330,  25,  60,  1, FNT_STD, "Design Flow/Ton:",                   TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0 And Proj:HVACAutoSizing = 0,       0,  0,  ""
-   CTRL, "ClgSizingRat",         3053, TDCT_Edit,   780, 355,  25,  60,  3, FNT_STD, "Clg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""	
-   CTRL, "HtgSizingRat",         3054, TDCT_Edit,   780, 390,  25,  60,  3, FNT_STD, "Htg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
-   CTRL, "SizingOption",         3055, TDCT_Combo,  780, 415, 300, 120,  0, FNT_STD, "Sizing Option:",                     TA_LEFT,  -120, 4,     0, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
+   CTRL, "",                     3034, TDCT_Label,  700, 275,  20,   0,  0, FNT_STD, "--- Sizing Parameters ---",          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  IsExhSys = 0,  0,  0,  "" 
+   CTRL, "AirFlowPerSqFt",       3050, TDCT_Edit,   780, 295,  25,  60,  3, FNT_STD, "Design Flow/Area:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0 And Proj:HVACAutoSizing = 0,       0,  0,  ""	
+   CTRL, "AirFlowPerTon",        3052, TDCT_Edit,   780, 320,  25,  60,  1, FNT_STD, "Design Flow/Ton:",                   TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:AutoHardSize > 0 And IsExhSys = 0 And Proj:HVACAutoSizing = 0,       0,  0,  ""
+   CTRL, "ClgSizingRat",         3053, TDCT_Edit,   780, 345,  25,  60,  3, FNT_STD, "Clg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""	
+   CTRL, "HtgSizingRat",         3054, TDCT_Edit,   780, 370,  25,  60,  3, FNT_STD, "Htg Sizing Ratio:",                  TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
+   CTRL, "SizingOption",         3055, TDCT_Combo,  780, 395, 300, 120,  0, FNT_STD, "Sizing Option:",                     TA_LEFT,  -120, 4,     0, TA_LEFT, 4, 4,  None,  Proj:HVACAutoSizing > 0 And IsExhSys = 0,       0,  0,  ""
 
                                                                                                                                                                                                                                        
 ; For Single Duct Systems
@@ -4899,7 +4906,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
 ;  CTRL, "",                     3091, TDCT_Line,   230, 323, 450, 323, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  ""
                                                                                                                                                                                                                                                 
    CTRL, "FanPos",               3060, TDCT_Combo,  160, 315, 300, 180, 25, FNT_STD, "Fan Position:",                      TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  ""
-   CTRL, "",                     3062, TDCT_Label,  160, 375,  20,   0,  0, FNT_STD, "Cooling",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  ""		
+   CTRL, "",                     3061, TDCT_Label,  160, 375,  20,   0,  0, FNT_STD, "Cooling",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  ""		
    CTRL, "",                     3062, TDCT_Label,  470, 375,  20,   0,  0, FNT_STD, "Heating",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  ""																												
    CTRL, "ClgCtrl",              3063, TDCT_Combo,  160, 345, 300, 220, 25, FNT_STD, "Supply Temp Control:"                TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  ""
    CTRL, "ClgFixedSupTemp",      3064, TDCT_Edit,   160, 395,  25,  60,  1, FNT_STD, "Fixed Supply Temp:",                 TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  ClgCtrl = 2 Or ClgCtrl = 8,IsExhSys = 0,       0,  0,  ""
@@ -4928,12 +4935,12 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "LabExhHasAnemometerCtrl",3126,TDCT_Check,  20, 330,  22, 200, 25, FNT_STD, "Has Anemometer Controls",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys > 0 And ExhSysType = 2,       0,  0,  ""	
    CTRL, "LabExhHasContaminantCtrl",3127,TDCT_Check, 20, 355,  22, 200, 25, FNT_STD, "Has Contaminant Controls",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys > 0 And ExhSysType = 2,       0,  0,  ""
 
-   CTRL, "",                     3131, TDCT_Label,  180, 340,  20,   0,  0, FNT_STD, "Design",                             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys > 0,       0,  0,  ""
-   CTRL, "",                     3132, TDCT_Label,  300, 340,  20,   0,  0, FNT_STD, "Minimum Req.",                       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsExhSys > 0,       0,  0,  "" 
-   CTRL, "SysVentFlow",          3133, TDCT_Edit,   180, 360,  25,  80,  0, FNT_STD, "Total Zone Vent Flow:",              TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	                                                                                                                                                                                                                                           
-   CTRL, "SysExhFlow",           3134, TDCT_Edit,   180, 390,  25,  80,  0, FNT_STD, "Total Zone Exh Flow:",               TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	
-   CTRL, "SysCodeVentFlow",      3135, TDCT_Edit,   300, 360,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	                                                                                                                                                                                                                                           
-   CTRL, "SysCodeExhFlow",       3136, TDCT_Edit,   300, 390,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	
+   CTRL, "",                     3131, TDCT_Label,  210, 380,  20,   0,  0, FNT_STD, "Design",                             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys > 0,       0,  0,  ""
+   CTRL, "",                     3132, TDCT_Label,  330, 380,  20,   0,  0, FNT_STD, "Minimum Req.",                       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsExhSys > 0,       0,  0,  "" 
+   CTRL, "SysVentFlow",          3133, TDCT_Edit,   210, 405,  25,  80,  0, FNT_STD, "Total Zone Vent Flow:",              TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	                                                                                                                                                                                                                                           
+   CTRL, "SysExhFlow",           3134, TDCT_Edit,   210, 435,  25,  80,  0, FNT_STD, "Total Zone Exh Flow:",               TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	
+   CTRL, "SysCodeVentFlow",      3135, TDCT_Edit,   330, 405,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	                                                                                                                                                                                                                                           
+   CTRL, "SysCodeExhFlow",       3136, TDCT_Edit,   330, 435,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  IsExhSys > 0,       0,  0,  ""	
                                                                                                                                                                                                                                                
 ; For Dual Duct System, not supported yet
 ;  CTRL, "",                     3190, TDCT_Label,  450, 345,  20,   0,  0, FNT_STD, "Hot Duct Control",                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
@@ -5048,7 +5055,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "MERVGTE16Flag",                      3161, TDCT_Check,    20, 215, 20,  15,  0, FNT_STD,       "",                                                                   TA_RIGHT,   40, 4,     0, TA_LEFT, 0, 0,  None,        NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
    CTRL, "",                                   3162, TDCT_Label,    40, 215, 20, 390,  0, FNT_STD,       "Filtration credit: MERV 16 or greater and electronic filters",       TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,        NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
    CTRL, "MERVGTE16DevFlow",                   3164, TDCT_Edit,    430, 215, 25,  75,  0, FNT_STD,       "",                                                                   TA_RIGHT,  -10, 4,     1, TA_LEFT, 4, 4,  MERVGTE16Flag = 1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
-   CTRL, "MERVGTE16DsgnPD",                    3165, TDCT_Edit,    660, 215, 25,  50,  2, FNT_STD,       "Design P.D.:",                                                       TA_RIGHT,  -10, 4,     1, TA_LEFT, 4, 4,  MERVGTE16Flag = 1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
+   CTRL, "MERVGTE16DsgnPD",                    3165, TDCT_Edit,    660, 215, 25,  50,  2, FNT_STD,       "Cln. Fltr. P.D.:",                                                   TA_RIGHT,  -10, 4,     1, TA_LEFT, 4, 4,  MERVGTE16Flag = 1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
    CTRL, "MERVGTE16PDAdj",                     3166, TDCT_Edit,    790, 215, 25,  50,  2, FNT_STD,       "",                                                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Type = -1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
                                                                                                                                                                                                    
    CTRL, "GasPhaseAirCleanersFlag",            3171, TDCT_Check,    20, 240, 25, 390,  0, FNT_STD,       "Carbon and other gas-phase air cleaners",                            TA_RIGHT,   40, 4,     0, TA_LEFT, 0, 0,  None,        NonExhPDAdjAllowed > 0,      0,  0,  ""
@@ -5129,15 +5136,15 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Name",                 3203, TDCT_Edit,   110,  60,  25, 270, 99, FNT_STD, "Name:",                              TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  Type = 99,  None, 0,  0,  ""
    CTRL, "Type",                 3204, TDCT_Edit,   110,  90,  25, 100, 12, FNT_STD, "Type:",                              TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  Type = 99,  None, 0,  0,  ""
 
-   CTRL, "DsgnAirFlowMinRat",    3210, TDCT_Edit,   180, 150,  25,  50,  3, FNT_STD, "DsgnAirFlowMinRat:",                 TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "DsgnPrehtTemp",        3211, TDCT_Edit,   180, 180,  25,  50,  1, FNT_STD, "DsgnPrehtTemp:",                     TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "DsgnPrehtHumidityRat", 3212, TDCT_Edit,   180, 210,  25,  50,  4, FNT_STD, "DsgnPrehtHumidityRat:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "DsgnPreclTemp",        3213, TDCT_Edit,   180, 240,  25,  50,  1, FNT_STD, "DsgnPrehtTemp:",                     TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "DsgnPreclHumidityRat", 3214, TDCT_Edit,   180, 270,  25,  50,  4, FNT_STD, "DsgnPrehtHumidityRat:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "ClgAllOutsdAir",       3215, TDCT_Combo,  180, 300, 200,  50,  0, FNT_STD, "ClgAllOutsdAir:",                    TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "HtgAllOutsdAir",       3216, TDCT_Combo,  180, 330, 200,  50,  0, FNT_STD, "HtgAllOutsdAir:",                    TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "ClgDsgnHumidityRat",   3217, TDCT_Edit,   180, 360,  25,  50,  4, FNT_STD, "ClgDsgnHumidityRat:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
-   CTRL, "HtgDsgnHumidityRat",   3218, TDCT_Edit,   180, 390,  25,  50,  4, FNT_STD, "HtgDsgnHumidityRat:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:HVACAutoSizing > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "DsgnAirFlowMinRat",    3210, TDCT_Edit,   180, 150,  25,  50,  3, FNT_STD, "DsgnAirFlowMinRat:",                 TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "DsgnPrehtTemp",        3211, TDCT_Edit,   180, 180,  25,  50,  1, FNT_STD, "DsgnPrehtTemp:",                     TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "DsgnPrehtHumidityRat", 3212, TDCT_Edit,   180, 210,  25,  50,  4, FNT_STD, "DsgnPrehtHumidityRat:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "DsgnPreclTemp",        3213, TDCT_Edit,   180, 240,  25,  50,  1, FNT_STD, "DsgnPreclTemp:",                     TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "DsgnPreclHumidityRat", 3214, TDCT_Edit,   180, 270,  25,  50,  4, FNT_STD, "DsgnPreclHumidityRat:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "ClgAllOutsdAir",       3215, TDCT_Combo,  180, 300, 200,  50,  0, FNT_STD, "ClgAllOutsdAir:",                    TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "HtgAllOutsdAir",       3216, TDCT_Combo,  180, 330, 200,  50,  0, FNT_STD, "HtgAllOutsdAir:",                    TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "ClgDsgnHumidityRat",   3217, TDCT_Edit,   180, 360,  25,  50,  4, FNT_STD, "ClgDsgnHumidityRat:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
+   CTRL, "HtgDsgnHumidityRat",   3218, TDCT_Edit,   180, 390,  25,  50,  4, FNT_STD, "HtgDsgnHumidityRat:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Proj:DebugScreen > 0 And IsExhSys = 0,  0,  0,  ""
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -5154,8 +5161,8 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       IsExhSys = 0,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       IsExhSys = 0,       0,  0,  "The name of the natural gas meter connected to the space"
    CTRL, "",                         4003, TDCT_Label,   20, 120,  22,   0,  0, FNT_STD, "Exhaust system meter is assigned in thermal zone", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0,  None,       IsExhSys > 0,       0,  0,  ""
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -5176,6 +5183,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Type",                 3004, TDCT_Combo,  100,  90, 300, 120, 12, FNT_STD, "Type:",                              TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "Status",               3005, TDCT_Combo,  290,  90, 300,  80, 12, FNT_STD, "Status:",                            TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "SubType",              3007, TDCT_Combo,  100, 120, 300, 140, 25, FNT_STD, "Sub Type:",                          TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       Type < 21 And Type != 11,       0,  0,  ""
+   CTRL, "EffMetric",            3200, TDCT_Combo,  530,  60, 300, 200, 25, FNT_STD, "Efficiency Metric:",                 TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       SEER2IsValid > 0 Or EER2IsValid > 0 Or HSPF2IsValid > 0,       0,  0,  ""
    CTRL, "VRFSysRef",            9007, TDCT_Combo,  100, 120, 300, 140, 25, FNT_STD, "VRF System:",                        TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       Type = 11,        0,  0,  ""
    CTRL, "Cnt",                  3006, TDCT_Edit,   340, 120,  25,  30,  0, FNT_STD, "Count:",                             TA_LEFT,   -50, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
    CTRL, "CtrlZnRef",            3008, TDCT_Combo,  100, 150, 300, 245, 12, FNT_STD, "Control Zone:",                      TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  Type = -1,  Type < 31,       0,  0,  ""
@@ -5183,7 +5191,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Desc",                 3009, TDCT_Edit,   100, 180,  25, 270, 99, FNT_STD, "Description:",                       TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "AcceptanceTestReq",    3201, TDCT_Check,  650,  5,  22, 200,  0, FNT_STD, "Acceptance Test Required?",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "AvailSchRef",          3010, TDCT_Combo,  530,  60, 300, 300, 25, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,    None,       0,  0,  ""
+   CTRL, "AvailSchRef",          3010, TDCT_Combo,  530, 515, 300, 300, 25, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,    Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "FanCtrl",              3011, TDCT_Combo,  530,  90, 300, 100, 25, FNT_STD, "Fan Control:",                       TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  IsSglZnSys = 1,  Type < 20,  0,  0,  ""
 ;  CTRL, "NightCycleFanCtrl",    3012, TDCT_Combo,  720,  90, 300, 170, 25, FNT_STD, "Night Cycling:",                     TA_LEFT,   -85, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,  0,  0,  ""
    CTRL, "SysVentFlow",          3014, TDCT_Edit,   530, 120,  25,  70,  0, FNT_STD, "Design OA Flow:",                    TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type < 20,  0,  0,  ""	
@@ -5197,14 +5205,15 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "",                     3031, TDCT_Label,  170, 220,  20,   0,  0, FNT_STD, "Cooling",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 31,       0,  0,  ""
    CTRL, "",                     3032, TDCT_Label,  320, 220,  20,   0,  0, FNT_STD, "Heating",                            TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 31,       0,  0,  ""
    CTRL, "",                     3033, TDCT_Label,  460, 220,  20,   0,  0, FNT_STD, "Supply Flow",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 20 And Type != 11,       0,  0,  ""
-   CTRL, "",                     3035, TDCT_Label,  460, 250,  20,   0,  0, FNT_STD, "Floating",                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 11,        0,  0,  ""                                                                                                                                                                                                                                          
+   CTRL, "",                     3035, TDCT_Label,  460, 280,  20,   0,  0, FNT_STD, "Floating",                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 11,        0,  0,  ""                                                                                                                                                                                                                                          
    CTRL, "ClgDsgnSupAirTemp",    3040, TDCT_Edit,   170, 240,  25,  60,  1, FNT_STD, "Design Supply Air Temp:",            TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  ClgCap > 0, Type < 31 And Type != 20,       0,  0,  ""	
    CTRL, "HtgDsgnSupAirTemp",    3044, TDCT_Edit,   320, 240,  25,  60,  1, FNT_STD, "",                                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  HtgCap > 0, Type < 31 And Type != 20,       0,  0,  ""
    CTRL, "ClgCap",               3042, TDCT_Edit,   170, 270,  25,  80,  0, FNT_STD, "Net Capacity*:",                     TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type < 31,       0,  0,  ""	
    CTRL, "ClgSupFanCap",         9024, TDCT_Edit,   170, 300,  25,  80,  0, FNT_STD, "Supply Fan Capacity:",               TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 11,       0,  0,  ""	
    CTRL, "HtgCap",               3045, TDCT_Edit,   320, 270,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type < 31,       0,  0,  ""	
    CTRL, "HtgSupFanCap",         9025, TDCT_Edit,   320, 300,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,   -55, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 11,       0,  0,  ""	
-   CTRL, "SupFanCap",            3047, TDCT_Edit,   460, 270,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type < 31 And Type != 20,       0,  0,  ""	
+   CTRL, "SupFanCap",            3047, TDCT_Edit,   460, 270,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type < 31 And Type != 20 And Type != 11,       0,  0,  ""	
+   CTRL, "SupFanCap",            3048, TDCT_Edit,   460, 300,  25,  80,  0, FNT_STD, "",                                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 11,       0,  0,  ""	
    CTRL, "",                     3050, TDCT_Label,   30, 330,  20,   0,  0, FNT_DATATYPE, "*Reflects capacity of a single system if Count is >1. Heating capacity includes terminal units.",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  Type < 31,       0,  0,  ""
    CTRL, "RadSysChangeOverPeriod",9050, TDCT_Edit,  170, 300,  25,  80,  1, FNT_STD, "Change Over Time:",                  TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  Type = 20,  RadSysIsClgHtg > 0,       0,  0,  ""	
 
@@ -5238,12 +5247,12 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "LabExhHasAnemometerCtrl",3126,TDCT_Check,  20, 330,  22, 200, 25, FNT_STD, "Has Anemometer Controls",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       Type = 31 And ExhSysType = 2,       0,  0,  ""	
    CTRL, "LabExhHasContaminantCtrl",3127,TDCT_Check, 20, 355,  22, 200, 25, FNT_STD, "Has Contaminant Controls",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       Type = 31 And ExhSysType = 2,       0,  0,  ""
 
-   CTRL, "",                     3131, TDCT_Label,  160, 370,  20,   0,  0, FNT_STD, "Design",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type > 30,       0,  0,  ""
-   CTRL, "",                     3132, TDCT_Label,  260, 370,  20,   0,  0, FNT_STD, "Minimum Req.",                       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type > 30,       0,  0,  "" 
-   CTRL, "SysVentFlow",          3133, TDCT_Edit,   160, 390,  25,  60,  0, FNT_STD, "Total Zone Vent. Flow:",             TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 32,       0,  0,  ""	                                                                                                                                                                                                                                      
-   CTRL, "SysExhFlow",           3134, TDCT_Edit,   160, 420,  25,  60,  0, FNT_STD, "Total Zone Exh. Flow:",              TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 31,       0,  0,  ""	                                                                                                                                                                                                                                           
-   CTRL, "SysCodeVentFlow",      3135, TDCT_Edit,   260, 390,  25,  60,  0, FNT_STD, "",                                   TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 32,       0,  0,  ""	                                                                                                                                                                                                                                      
-   CTRL, "SysCodeExhFlow",       3136, TDCT_Edit,   260, 420,  25,  60,  0, FNT_STD, "",                                   TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 31,       0,  0,  ""	
+   CTRL, "",                     3131, TDCT_Label,  210, 380,  20,   0,  0, FNT_STD, "Design",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type > 30,       0,  0,  ""
+   CTRL, "",                     3132, TDCT_Label,  330, 380,  20,   0,  0, FNT_STD, "Minimum Req.",                       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type > 30,       0,  0,  "" 
+   CTRL, "SysVentFlow",          3133, TDCT_Edit,   210, 405,  25,  60,  0, FNT_STD, "Total Zone Vent. Flow:",             TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 32,       0,  0,  ""	                                                                                                                                                                                                                                      
+   CTRL, "SysExhFlow",           3134, TDCT_Edit,   210, 435,  25,  60,  0, FNT_STD, "Total Zone Exh. Flow:",              TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 31,       0,  0,  ""	                                                                                                                                                                                                                                           
+   CTRL, "SysCodeVentFlow",      3135, TDCT_Edit,   330, 405,  25,  60,  0, FNT_STD, "",                                   TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 32,       0,  0,  ""	                                                                                                                                                                                                                                      
+   CTRL, "SysCodeExhFlow",       3136, TDCT_Edit,   330, 435,  25,  60,  0, FNT_STD, "",                                   TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 31,       0,  0,  ""	
 
 ; For VentilationOnly Systems
    CTRL, "ExhSysType",           3109, TDCT_Combo,  100, 120, 300, 160, 25, FNT_STD, "Vent. Type:",                        TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       Type = 32,       0,  0,  ""
@@ -5270,16 +5279,16 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
 ;  CTRL, "",                      112, TDCT_Label,  820, 320,  20,   0,  0, FNT_STD, "Total",                              TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 32 And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "HtgSensEff100",        4014, TDCT_Edit,   500, 340,  25,  50,  2, FNT_STD, "Heating:",                           TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       Type = 32 And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "HtgLatEff100",         4015, TDCT_Edit,   560, 340,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       Type = 32 And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
-   CTRL, "HtgTotEff100",         4016, TDCT_Edit,   620, 340,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
+   CTRL, "HtgTotEff100",         4016, TDCT_Edit,   620, 340,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
 ;  CTRL, "HtgSensEff75",         4017, TDCT_Edit,   700, 340,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
 ;  CTRL, "HtgLatEff75",          4018, TDCT_Edit,   760, 340,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
-;  CTRL, "HtgTotEff75",          4019, TDCT_Edit,   820, 340,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
+;  CTRL, "HtgTotEff75",          4019, TDCT_Edit,   820, 340,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "ClgSensEff100",        4020, TDCT_Edit,   500, 370,  25,  50,  2, FNT_STD, "Cooling:",                           TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "ClgLatEff100",         4021, TDCT_Edit,   560, 370,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
-   CTRL, "ClgTotEff100",         4022, TDCT_Edit,   620, 370,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
+   CTRL, "ClgTotEff100",         4022, TDCT_Edit,   620, 370,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
 ;  CTRL, "ClgSensEff75",         4023, TDCT_Edit,   700, 370,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
 ;  CTRL, "ClgLatEff75",          4024, TDCT_Edit,   760, 370,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
-;  CTRL, "ClgTotEff75",          4025, TDCT_Edit,   820, 370,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""                                                                                                                                                                                                                                          
+;  CTRL, "ClgTotEff75",          4025, TDCT_Edit,   820, 370,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""                                                                                                                                                                                                                                          
 
    CTRL, "TempCtrl",             4031, TDCT_Combo,  540, 400, 200, 130, 12, FNT_STD, "Temp. Control:",                     TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  Type = 2 Or HasHXBypass = 1,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "FixedSupTemp",         4032, TDCT_Edit,   820, 400,  25,  50,  0, FNT_STD, "Fixed Supply Temp.:",                TA_LEFT,  -130, 4,     1, TA_LEFT, 4, 4,  TempCtrl = 2,       Type = 32  And ExhSysType = 14 And HtRcvryCertification = 1,       0,  0,  ""
@@ -5397,7 +5406,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "MERVGTE16Flag",                      3161, TDCT_Check,    20, 215, 20,  15,  0, FNT_STD,       "",                                                                   TA_RIGHT,   40, 4,     0, TA_LEFT, 0, 0,  None,        NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
    CTRL, "",                                   3162, TDCT_Label,    40, 215, 20, 390,  0, FNT_STD,       "Filtration credit: MERV 16 or greater and electronic filters",       TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,        NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
    CTRL, "MERVGTE16DevFlow",                   3164, TDCT_Edit,    430, 215, 25,  75,  0, FNT_STD,       "",                                                                   TA_RIGHT,  -10, 4,     1, TA_LEFT, 4, 4,  MERVGTE16Flag = 1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
-   CTRL, "MERVGTE16DsgnPD",                    3165, TDCT_Edit,    660, 215, 25,  50,  2, FNT_STD,       "Design P.D.:",                                                       TA_RIGHT,  -10, 4,     1, TA_LEFT, 4, 4,  MERVGTE16Flag = 1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
+   CTRL, "MERVGTE16DsgnPD",                    3165, TDCT_Edit,    660, 215, 25,  50,  2, FNT_STD,       "Cln. Fltr. P.D.:",                                                   TA_RIGHT,  -10, 4,     1, TA_LEFT, 4, 4,  MERVGTE16Flag = 1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
    CTRL, "MERVGTE16PDAdj",                     3166, TDCT_Edit,    790, 215, 25,  50,  2, FNT_STD,       "",                                                                   TA_LEFT,     0, 4,     1, TA_LEFT, 4, 4,  Type = -1,   NonExhPDAdjAllowed > 0 Or MERVGTE16AdjAllowed > 0,      0,  0,  ""
                                                                                                                                                                                                    
    CTRL, "GasPhaseAirCleanersFlag",            3171, TDCT_Check,    20, 240, 25, 390,  0, FNT_STD,       "Carbon and other gas-phase air cleaners",                            TA_RIGHT,   40, 4,     0, TA_LEFT, 0, 0,  None,        NonExhPDAdjAllowed > 0,      0,  0,  ""
@@ -5473,8 +5482,8 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       IsExhSys = 0,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       IsExhSys = 0,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       IsExhSys = 0,       0,  0,  "The name of the natural gas meter connected to the space"
    CTRL, "",                         4003, TDCT_Label,   20, 120,  22,   0,  0, FNT_STD, "Exhaust system meter is assigned in thermal zone", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0,  None,       IsExhSys > 0,       0,  0,  ""
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                       
                                                                                                                                                                                                         
@@ -5499,7 +5508,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Desc",                 3008, TDCT_Edit,   115, 150,  25, 270, 99, FNT_STD, "Description:",                       TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
 
                                                                                                                                                                                                                                         
-   CTRL, "AvailSchRef",          3009, TDCT_Combo,  540,  60, 300, 270,  25, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,    None,       0,  0,  ""
+   CTRL, "AvailSchRef",          3009, TDCT_Combo,  540,  60, 300, 270,  25, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,    Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "CtrlZnRef",            3010, TDCT_Combo,  540,  90, 300, 270,  12, FNT_STD, "Control Zone:",                      TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       CtrlPriority = 1,    -110,  0,  ""
    CTRL, "CtrlZnRef",            4014, TDCT_Button, 813,  90,  22,  22, 999, FNT_STD, "...",                               TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,       CtrlPriority = 1,       0,  0,  "Access control thermal zone assigned to system"
                                                                                                                                                                                                                         
@@ -5623,7 +5632,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------        
 
 
@@ -5696,7 +5705,7 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------        
 
 
@@ -5745,12 +5754,16 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
 
    CTRL, "",                         106, TDCT_Label,  590, 140,  20,   0,  0, FNT_STD, "Input",                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 2,   0,  0,  ""
    CTRL, "",                         107, TDCT_Label,  670, 140,  20,   0,  0, FNT_STD, "Code Min.",                       TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 2,   0,  0,  ""                                                                                                                                                                                                                                               
-   CTRL, "DXEER",                   3031, TDCT_Edit,   590, 160,  25,  60,  2, FNT_STD, "EER*:",                           TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 2,   0,  0,  ""
+   CTRL, "DXEER",                   3031, TDCT_Edit,   590, 160,  25,  60,  2, FNT_STD, "EER*:",                           TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 2 And ShowEER > 0,   0,  0,  ""
+   CTRL, "DXEER2",                  3204, TDCT_Edit,   590, 160,  25,  60,  2, FNT_STD, "EER2*:",                          TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 2 And CodeMinSEER2 > 0,   0,  0,  ""
    CTRL, "DXIEER",                  3032, TDCT_Edit,   590, 190,  25,  60,  2, FNT_STD, "IEER*:",                          TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  CodeMinIEER > 0,       Type = 2 And CodeMinIEER > 0,   0,  0,  ""
    CTRL, "DXSEER",                  3033, TDCT_Edit,   590, 220,  25,  60,  2, FNT_STD, "SEER*:",                          TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  CodeMinSEER > 0,       Type = 2 And CodeMinSEER > 0,       0,  0,  ""
+   CTRL, "DXSEER2",                 3205, TDCT_Edit,   590, 220,  25,  60,  2, FNT_STD, "SEER2*:",                         TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  CodeMinSEER2 > 0,      Type = 2 And CodeMinSEER2 > 0,       0,  0,  ""
    CTRL, "CodeMinEER",              3034, TDCT_Edit,   670, 160,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 2 And CodeMinEER > 0,       0,  0,  ""
+   CTRL, "CodeMinEER2",             3206, TDCT_Edit,   670, 160,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 2 And CodeMinEER2 > 0,       0,  0,  ""
    CTRL, "CodeMinIEER",             3035, TDCT_Edit,   670, 190,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 2 And CodeMinIEER > 0,   0,  0,  ""
    CTRL, "CodeMinSEER",             3036, TDCT_Edit,   670, 220,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 2 And CodeMinSEER > 0,       0,  0,  ""
+   CTRL, "CodeMinSEER2",            3207, TDCT_Edit,   670, 220,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 2 And CodeMinSEER2 > 0,       0,  0,  ""
    CTRL, "BypassMinEffCheck",       3202, TDCT_Check,  750, 138,  22, 130,  0, FNT_STD, "Bypass Minimum",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       Type = 2 And IsLessThanMinEff > 0,   0,  0,  ""
    CTRL, "",                         107, TDCT_Label,  750, 158,  20,   0,  0, FNT_STD, "Efficiency Check",                TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 2 And IsLessThanMinEff > 0,   0,  0,  ""
 
@@ -5761,8 +5774,8 @@ TAB, "ThrmlZn",  1804,      15,    "  Daylighting  "
 ;  CTRL, "MinHotGasRat",            3037, TDCT_Edit,   700, 260,  25,  90,  3, FNT_STD, "Min. Hot Gas Bypass Ratio:",      TA_LEFT,  -200, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
 ;  CTRL, "DXFDDFac",                3038, TDCT_Edit,   700, 290,  25,  90,  3, FNT_STD, "Fault Det. & Diag. Factor:",      TA_LEFT,  -200, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
 ;  CTRL, "DXRfrgtChrgFac",          3040, TDCT_Edit,   700, 320,  25,  90,  3, FNT_STD, "Refrigerant Charge Factor:",      TA_LEFT,  -200, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
-;  CTRL, "DXCrankcaseCtrlTemp",     3041, TDCT_Edit,   700, 350,  25,  90,  1, FNT_STD, "Crankcase Htr Ctrl Temp:",        TA_LEFT,  -200, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
-;  CTRL, "DXCrankcaseHtCap",        3048, TDCT_Edit,   700, 380,  25,  90,  1, FNT_STD, "Crankcase Htr Capacity:",         TA_LEFT,  -200, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
+  CTRL, "DXCrankcaseCtrlTemp",      3041, TDCT_Edit,   700, 350,  25,  90,  1, FNT_STD, "Crankcase Htr Ctrl Temp:",        TA_LEFT,  -200, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
+  CTRL, "DXCrankcaseHtrCap",        3048, TDCT_Edit,   700, 380,  25,  90,  1, FNT_STD, "Crankcase Htr Capacity:",         TA_LEFT,  -200, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
 
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -5828,7 +5841,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------     
 
 ;----------------------------------------------------------------
@@ -5868,8 +5881,8 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "CapTotGrossRtd",            3013, TDCT_Edit,   170, 295,  25,  80,  0, FNT_STD, "Rated Gross Capacity:",           TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,       Type != 3,       0,  0,  ""
    CTRL, "CapTotNetRtd",              3012, TDCT_Edit,   170, 325,  25,  80,  0, FNT_STD, "Rated Net Capacity:",             TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,       Type = 3 Or Type = 6,       0,  0,  ""
    CTRL, "CapTotInpRtd",              3017, TDCT_Edit,   170, 325,  25,  80,  0, FNT_STD, "Input Capacity (Ref):",           TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 2,       0,  0,  ""
-   CTRL, "FluidFlowRtDsgn",           3016, TDCT_Edit,   170, 355,  25,  80,  1, FNT_STD, "Design Flow Rate:",               TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,  Type = 4 Or PumpPwrRtd > 0,   0,  0,  ""
-   CTRL, "CoilHdDsgn",                3018, TDCT_Edit,   170, 385,  25,  80,  1, FNT_STD, "Pressure Drop:",                  TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,  Type = 4 Or PumpPwrRtd > 0,   0,  0,  ""
+   CTRL, "FluidFlowRtDsgn",           3016, TDCT_Edit,   170, 355,  25,  80,  1, FNT_STD, "Design Flow Rate:",               TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,       Type = 4 Or PumpPwrRtd > 0,   0,  0,  ""
+   CTRL, "CoilHdDsgn",                3018, TDCT_Edit,   170, 385,  25,  80,  1, FNT_STD, "Pressure Drop:",                  TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,       Type = 4 Or PumpPwrRtd > 0,   0,  0,  ""
 ;  CTRL, "CapTotRtdStageFrac[1]",     3014, TDCT_Edit,   170, 375,  25,  80,  2, FNT_STD, "Stg1 Capacity Frac:",             TA_LEFT,  -140, 4,     0, TA_LEFT, 4, 4,  None,       Type = 3 And NumHtgStages > 1 And CndsrType = 1,       0,  0,  ""
 ;  CTRL, "CapTotRtdStageFrac[2]",     3015, TDCT_Edit,   170, 405,  25,  80,  2, FNT_STD, "Stg2 Capacity Frac:",             TA_LEFT,  -140, 4,     0, TA_LEFT, 4, 4,  None,       Type = 3 And NumHtgStages > 1 And CndsrType = 1,       0,  0,  ""
                                                                                                                                                                                                                                                
@@ -5885,10 +5898,12 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "CndsrType",                 3030, TDCT_Combo,  610,  90, 300, 150, 25, FNT_STD, "Condenser Type:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       Type = 3,   0,  0,  ""
 ;  CTRL, "CndsrFlowType",             3031, TDCT_Combo,  610, 110, 300, 200, 25, FNT_STD, "CndsrFlowType:",                  TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       Type = 3,   0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "HtPumpCOP",                 3032, TDCT_Edit,   580, 160,  25,  60,  2, FNT_STD, "COP*:",                            TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 3,   0,  0,  ""
-   CTRL, "HtPumpHSPF",                3033, TDCT_Edit,   580, 190,  25,  60,  2, FNT_STD, "HSPF*:",                           TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 3 And CodeMinHSPF > 0,   0,  0,  ""
+   CTRL, "HtPumpCOP",                 3032, TDCT_Edit,   580, 160,  25,  60,  2, FNT_STD, "COP*:",                           TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 3,   0,  0,  ""
+   CTRL, "HtPumpHSPF",                3033, TDCT_Edit,   580, 190,  25,  60,  2, FNT_STD, "HSPF*:",                          TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 3 And CodeMinHSPF > 0,   0,  0,  ""
+   CTRL, "HtPumpHSPF2",               3204, TDCT_Edit,   580, 190,  25,  60,  2, FNT_STD, "HSPF2*:",                         TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = 3 And CodeMinHSPF2 > 0,   0,  0,  ""
    CTRL, "CodeMinCOP",                3034, TDCT_Edit,   670, 160,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 3 And CodeMinCOP > 0,   0,  0,  ""
    CTRL, "CodeMinHSPF",               3035, TDCT_Edit,   670, 190,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 3 And CodeMinHSPF > 0,   0,  0,  ""
+   CTRL, "CodeMinHSPF2",              3205, TDCT_Edit,   670, 190,  25,  60,  2, FNT_STD, "",                                TA_LEFT,     0, 4,     0, TA_LEFT, 4, 4,  Type = -1,  Type = 3 And CodeMinHSPF2 > 0,   0,  0,  ""
 ;  CTRL, "HtPumpEIR",                 3036, TDCT_Edit,   590, 220,  25,  60,  3, FNT_STD, "EIR:",                            TA_LEFT,   -90, 4,     0, TA_LEFT, 4, 4,  None,       Type = -1,  0,  0,  ""
    CTRL, "BypassMinEffCheck",         3202, TDCT_Check,  750, 138,  22, 130,  0, FNT_STD, "Bypass Minimum",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       Type = 3 And IsLessThanMinEff > 0,   0,  0,  ""
    CTRL, "",                           107, TDCT_Label,  750, 158,  20,   0,  0, FNT_STD, "Efficiency Check",                TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 3 And IsLessThanMinEff > 0,   0,  0,  ""
@@ -5897,10 +5912,10 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
 ;   CTRL, "",                           109, TDCT_Label,  500, 225,  20,  0,   0, FNT_DATATYPE, "to decimal precision specified in governing testing standard.",                TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type = 3,       0,  0,  ""
                                                                                                                                                                                                                          
    CTRL, "HtPumpCprsrLockoutTemp",    3040, TDCT_Edit,   650, 250,  25,  60,  1, FNT_STD, "Compressor Lockout OAT:",         TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  None,       Type = 3,   0,  0,  ""
-   CTRL, "HtPumpSuppCoilHtgRef",      3041, TDCT_Combo,  650, 280, 200, 220, 12, FNT_STD, "Supp Htr Coil Name:",             TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0,  None,       Type = 3,   0,  0,  ""
-   CTRL, "HtPumpSuppTemp",            3042, TDCT_Edit,   650, 310,  25,  60,  1, FNT_STD, "Supp Htr Limit OAT:",             TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  None,       Type = 3,   0,  0,  ""
+   CTRL, "HtPumpSuppCoilHtgRef",      3041, TDCT_Combo,  650, 280, 200, 220, 12, FNT_STD, "Supp. Htr Coil Name:",            TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0,  None,       Type = 3,   0,  0,  ""
+   CTRL, "HtPumpSuppTemp",            3042, TDCT_Edit,   650, 310,  25,  60,  1, FNT_STD, "Supp. Htr Limit OAT:",            TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  None,       Type = 3,   0,  0,  ""
    CTRL, "HtPumpDefHtSrc",            3050, TDCT_Combo,  650, 340, 300, 150, 25, FNT_STD, "Defrost Htr Source:",             TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0,  None,       Type = 3 And CndsrType = 1,   0,  0,  ""
-   CTRL, "HtPumpDefHtrCap",           3051, TDCT_Edit,   650, 370,  25,  60,  1, FNT_STD, "Defrost Htr Capacity:"            TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  None,       Type = 3 And CndsrType = 1 And HtPumpDefHtSrc = 1,   0,  0,  ""
+   CTRL, "HtPumpDefHtrCap",           3051, TDCT_Edit,   650, 370,  25,  60,  1, FNT_STD, "Defrost Htr Capacity:"            TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  HtPumpDefHtSrc = 1,       Type = 3 And CndsrType = 1 And HtPumpDefHtSrc = 1,   0,  0,  ""
    CTRL, "HtPumpDefCtrl",             3052, TDCT_Combo,  650, 400, 300, 150, 25, FNT_STD, "Defrost Control:",                TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0,  None,       Type = 3 And CndsrType = 1,   0,  0,  ""
    CTRL, "HtPumpDefCtrlTemp",         3053, TDCT_Edit,   650, 430,  25,  60,  1, FNT_STD, "Defrost Htr Limit OAT:",          TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 3 And CndsrType = 1,   0,  0,  ""
    CTRL, "HtPumpCrankcaseHtrCap",     3060, TDCT_Edit,   650, 460,  25,  60,  0, FNT_STD, "Crankcase Htr Capacity:",         TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4,  None,       Type = 3 And CndsrType = 1,   0,  0,  ""
@@ -5940,8 +5955,8 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the natural gas meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                    
 
 ;----------------------------------------------------------------
@@ -5988,7 +6003,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "MtrType",              3033, TDCT_Combo,  650, 300, 200, 100, 12, FNT_STD, "Type:",                                TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  ParentComp < 3,      None,       0,  0,  ""
    CTRL, "MtrPoleCnt",           3034, TDCT_Edit,   650, 330,  25,  60,  0, FNT_STD, "Pole Count:",                          TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  ParentComp < 3,      None,       0,  0,  ""
    CTRL, "MtrEff",               3035, TDCT_Edit,   650, 360,  25,  60,  3, FNT_STD, "Motor Efficiency:",                    TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  ParentComp < 3,      None,       0,  0,  ""
-   CTRL, "TotEff",               3036, TDCT_Edit,   650, 390,  25,  60,  3, FNT_STD, "Total Efficiency:",                    TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  ParentComp < 3,      None,       0,  0,  ""
+   CTRL, "TotEff",               3036, TDCT_Edit,   650, 390,  25,  60,  3, FNT_STD, "Total Efficiency:",                    TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,      None,       0,  0,  ""
 
    ;------------------------------------------------------------------------------------------------------------------      ----------------------------------------------------------
            
@@ -6005,7 +6020,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       IsExhFan = 0,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       IsExhFan = 0,       0,  0,  "The name of the electricity meter connected to the space"
    CTRL, "",                         4003, TDCT_Label,   20,  90,  22,   0,  0, FNT_STD, "Exhaust fan meter is assigned in thermal zone", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0,  None,  IsExhFan > 0,       0,  0,  ""
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                          
 
@@ -6030,7 +6045,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "ZnServedRef",            3008, TDCT_Combo,  140, 150, 200, 265, 12, FNT_STD, "Zone Served:",                    TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "ZnServedRef",            4014, TDCT_Button, 408, 150,  22,  22, 999, FNT_STD, "...",                          TA_CENTER,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Access thermal zone served by TerminalUnit"
    CTRL, "PriAirSegRef",           3009, TDCT_Combo,  170, 180, 200, 260, 12, FNT_STD, "Primary AirSeg Ref:",             TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "AvailSchRef",            3030, TDCT_Combo,  610,  60, 300, 250, 25, FNT_STD, "Availability Sch.:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "AvailSchRef",            3030, TDCT_Combo,  610,  60, 300, 250, 25, FNT_STD, "Availability Sch.:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "MinAirFracSchRef",       3031, TDCT_Combo,  610,  90, 300, 250, 25, FNT_STD, "Min. Air Frac. Sch.:",            TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       Type = 2,   0,  0,  ""
                                                                                                                                                                                                                                                 
    CTRL, "",                        101, TDCT_Label,   20, 215,  20,  0,  0, FNT_STD, "Air Flow (For single terminal if # Terminals or Component Qty > 1)",               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
@@ -6049,17 +6064,17 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "ReheatCtrlMthd",         3021, TDCT_Combo,  170, 330, 300, 150, 25, FNT_STD, "Reheat Ctrl Method:",             TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  HasHotWaterCoil > 0,       Type = 2,       0,  0,  ""
 ;  CTRL, "ReheatDelTemp",          3022, TDCT_Edit,   170, 360,  25,  70,  1, FNT_STD, "ReheatDelTemp:",                  TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 2,   None,       0,  0,  ""
 
-   CTRL, "OASupFlowWithMult",      3023, TDCT_Edit,   500, 240,  25,  70,  0, FNT_STD, "OAFlowWithMult:",                 TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  Type = -1,       Proj:DebugScreen > 0,       0,  0,  ""
+   CTRL, "OASupFlowWithMult",      3023, TDCT_Edit,   700, 240,  25,  70,  0, FNT_STD, "OAFlowWithMult:",                 TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  Type = -1,       Proj:DebugScreen > 0,       0,  0,  ""
 
-   CTRL, "",                        101, TDCT_Label,   20, 365,  20,  0,  0, FNT_STD, "Fan Powered Boxes/Active Beams",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "",                        102, TDCT_Line,   250, 373, 850, 373, -1, FNT_STD, "",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "InductionRat",           3101, TDCT_Edit,   170, 390,  25,  60,  3, FNT_STD, "Induction Ratio:",                TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3,   None,       0,  0,  ""
-   CTRL, "InducedAirZnRef",        3102, TDCT_Combo,  170, 420, 200, 240, 12, FNT_STD, "Induced Air Zone:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Type = 3 Or Type = 4,       None,       0,  0,  ""
-   CTRL, "ParallelBoxFanCtrlMthd", 3103, TDCT_Edit,   170, 450,  25, 200,  3, FNT_STD, "Parallel Box Ctrl",               TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3,   None,       0,  0,  ""
-   CTRL, "FanPwrPerFlow",          3104, TDCT_Edit,   610, 390,  25,  60,  3, FNT_STD, "Terminal Fan Power:",             TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3 Or Type = 4,       None,       0,  0,  ""
-   CTRL, "ParallelBoxFanFlowFrac", 3105, TDCT_Edit,   610, 420,  25,  60,  2, FNT_STD, "Parallel Box Flow Frac:",         TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3,   None,       0,  0,  ""
-;  CTRL, "ParallelBoxTstatSetpt",  3106, TDCT_Edit,   610, 400,  25,  90,  3, FNT_STD, "ParallelBoxTstatSetpt:",          TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-;  CTRL, "ParallelBoxTstatSchRef", 3107, TDCT_Combo,  610, 430, 200, 240, 12, FNT_STD, "ParallelBoxTstatSchRef:",         TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                        101, TDCT_Label,   20, 365,  20,  0,  0, FNT_STD, "Fan Powered Boxes/Active Beams",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type >=3,       0,  0,  ""
+   CTRL, "",                        102, TDCT_Line,   250, 373, 850, 373, -1, FNT_STD, "",                                TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type >= 3,       0,  0,  ""
+   CTRL, "InductionRat",           3101, TDCT_Edit,   170, 390,  25,  60,  3, FNT_STD, "Induction Ratio:",                TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3,   Type = 3,       0,  0,  ""
+   CTRL, "InducedAirZnRef",        3102, TDCT_Combo,  170, 420, 200, 240, 12, FNT_STD, "Induced Air Zone:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Type = 3 Or Type = 4,       Type = 3 Or Type = 4,       0,  0,  ""
+   CTRL, "ParallelBoxFanCtrlMthd", 3103, TDCT_Edit,   170, 450,  25, 200,  3, FNT_STD, "Parallel Box Ctrl",               TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 3,       0,  0,  ""
+   CTRL, "FanPwrPerFlow",          3104, TDCT_Edit,   610, 390,  25,  60,  3, FNT_STD, "Terminal Fan Power:",             TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3 Or Type = 4,       Type = 3 Or Type = 4,       0,  0,  ""
+   CTRL, "ParallelBoxFanFlowFrac", 3105, TDCT_Edit,   610, 420,  25,  60,  2, FNT_STD, "Parallel Box Flow Frac:",         TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3,   Type = 3,       0,  0,  ""
+;  CTRL, "ParallelBoxTstatSetpt",  3106, TDCT_Edit,   610, 400,  25,  90,  3, FNT_STD, "ParallelBoxTstatSetpt:",          TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = 3,   Type = 3,       0,  0,  ""
+;  CTRL, "ParallelBoxTstatSchRef", 3107, TDCT_Combo,  610, 430, 200, 240, 12, FNT_STD, "ParallelBoxTstatSchRef:",         TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Type = 3,   Type = 3,       0,  0,  ""
    CTRL, "TransferEff",            3108, TDCT_Edit,   610, 450,  25,  60,  2, FNT_STD, "Transfer Eff:",                   TA_LEFT,  -140, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type = 6,   0,  0,  ""
 
 ;  CTRL, "HotDuctFlowSegRef",      3022, TDCT_Combo,  170, 210, 200, 240, 12, FNT_STD, "HotDuctFlowSegRef:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""                                                                                                                                                                                                                                               
@@ -6078,8 +6093,8 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the natural gas meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------     
 
 ;----------------------------------------------------------------
@@ -6108,9 +6123,9 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "",                           102, TDCT_Line,   340, 193, 850, 193, -1, FNT_STD, "",                                 TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "DsgnOAFlow",                3011, TDCT_Edit,   130, 210,  25,  60,  0, FNT_STD, "Design OA Flow:",                   TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  EconoCtrlMthd = -1,       None,       0,  0,  ""
    CTRL, "MaxOARat",                  3012, TDCT_Edit,   130, 240,  25,  60,  2, FNT_STD, "Max OA Ratio:",                     TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  EconoCtrlMthd > 1,       None,       0,  0,  ""
-   CTRL, "OASchMthd",                 3013, TDCT_Combo,  350, 210, 200, 200, 12, FNT_STD, "Schedule Method:",                  TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "OASchRef",                  3014, TDCT_Combo,  350, 240, 200, 200, 12, FNT_STD, "Min Fraction Sch:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  OASchMthd = 3,       None,       0,  0,  ""
-   CTRL, "StartUpDelay",              3015, TDCT_Edit,   740, 210,  25,  40,  0, FNT_STD, "Delay OA During Start Up By:"       TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  OASchMthd = 2,       None,       0,  0,  ""
+   CTRL, "OASchMthd",                 3013, TDCT_Combo,  350, 210, 200, 200, 12, FNT_STD, "Schedule Method:",                  TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       Proj:DebugScreen > 0,       0,  0,  ""
+   CTRL, "OASchRef",                  3014, TDCT_Combo,  350, 240, 200, 200, 12, FNT_STD, "Min Fraction Sch:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  OASchMthd = 3,       Proj:DebugScreen > 0,       0,  0,  ""
+   CTRL, "StartUpDelay",              3015, TDCT_Edit,   740, 210,  25,  40,  0, FNT_STD, "Delay OA During Start Up By:"       TA_LEFT,  -180, 4,     1, TA_LEFT, 4, 4,  OASchMthd = 2,       Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "MaxOAFracSchRef",           3016, TDCT_Combo,  350, 270, 200, 200, 12, FNT_STD, "Max OA Frac Sch.:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       Proj:DebugScreen > 0,       0,  0,  "" 
    CTRL, "MinOAFracSchRef",           3017, TDCT_Combo,  680, 270, 200, 200, 12, FNT_STD, "Min OA Frac Sch.:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       Proj:DebugScreen > 0,       0,  0,  "" 
                                                                                                                                                                                                                                                 
@@ -6120,8 +6135,8 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "EconoIntegration",          3022, TDCT_Combo,  150, 360, 200, 150, 12, FNT_STD, "Integration:",                      TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  EconoCtrlMthd > 1,      None,       0,  0,  ""
    CTRL, "EconoHiTempLockout",        3023, TDCT_Edit,   180, 390,  25,  60,  1, FNT_STD, "High DB Temp Lockout:",             TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  EconoCtrlMthd > 1,      None,       0,  0,  ""
    CTRL, "EconoLowTempLockout",       3024, TDCT_Edit,   180, 420,  25,  60,  1, FNT_STD, "Low DB Temp Lockout:",              TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  EconoCtrlMthd > 1,      None,       0,  0,  ""
-   CTRL, "EconoHiEnthLockout",        3025, TDCT_Edit,   180, 450,  25,  60,  1, FNT_STD, "High Enthalpy Lockout:",            TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  EconoCtrlMthd > 3,      None,       0,  0,  ""
-   CTRL, "EconoAvailSchRef",          3026, TDCT_Combo,  620, 330, 200, 260, 12, FNT_STD, "Availability Sch.:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       Proj:DebugScreen > 0,       0,  0,  ""                                                                                                                                                                                                                                                     
+   CTRL, "EconoHiEnthLockout",        3025, TDCT_Edit,   180, 450,  25,  60,  1, FNT_STD, "High Enthalpy Lockout:",            TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  EconoCtrlMthd > 1,      None,       0,  0,  ""
+   CTRL, "EconoAvailSchRef",          3026, TDCT_Combo,  620, 330, 200, 260, 12, FNT_STD, "Availability Sch.:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       Proj:DebugScreen > 0,       0,  0,  ""                                                                                                                                                                                                                                                     
    CTRL, "CtrlType",                  3027, TDCT_Combo,  620, 360, 200, 200, 12, FNT_STD, "Control Type:",                     TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       Proj:DebugScreen > 0,       0,  0,  ""    
    CTRL, "MinLimitType",              3028, TDCT_Combo,  620, 390, 200, 120, 12, FNT_STD, "Minimum Limit Type:",               TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       Proj:DebugScreen > 0,       0,  0,  ""
                                                                                                                                                        
@@ -6150,7 +6165,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
 ;  CTRL, "SupOutAirSegRef",           3009, TDCT_Combo,  140, 180, 200, 240, 12, FNT_STD, "Supply Out AirSeg:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""           
 ;  CTRL, "ExhInAirSegRef",            3010, TDCT_Combo,  530, 150, 200, 240, 12, FNT_STD, "Return In AirSeg:",                  TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""                                 
 ;  CTRL, "ExhOutAirSegRef",           3011, TDCT_Combo,  530, 180, 200, 240, 12, FNT_STD, "Return Out AirSeg:",                 TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""           
-   CTRL, "AvailSchRef",               3013, TDCT_Combo,  620,  60, 200, 240, 12, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "AvailSchRef",               3013, TDCT_Combo,  620,  60, 200, 240, 12, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "HasHXBypass",               3041, TDCT_Combo,  380, 150, 200,  50, 12, FNT_STD, "Has Bypass:",                        TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       Type = 1,       0,  0,  ""
 
    CTRL, "",                           103, TDCT_Label,   20, 200,  20,   0,  0, FNT_STD, "Heat Recovery Performance",          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
@@ -6171,16 +6186,16 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "",                           112, TDCT_Label,  680, 240,  20,   0,  0, FNT_STD, "Total",                              TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "HtgSensEff100",             3014, TDCT_Edit,   340, 260,  25,  50,  2, FNT_STD, "Heating:",                           TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "HtgLatEff100",              3015, TDCT_Edit,   400, 260,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       HtRcvryCertification = 1,       0,  0,  ""
-   CTRL, "HtgTotEff100",              3016, TDCT_Edit,   460, 260,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       HtRcvryCertification = 1,       0,  0,  ""
+   CTRL, "HtgTotEff100",              3016, TDCT_Edit,   460, 260,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "HtgSensEff75",              3017, TDCT_Edit,   560, 260,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "HtgLatEff75",               3018, TDCT_Edit,   620, 260,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       HtRcvryCertification = 1,       0,  0,  ""
-   CTRL, "HtgTotEff75",               3019, TDCT_Edit,   680, 260,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       HtRcvryCertification = 1,       0,  0,  ""
+   CTRL, "HtgTotEff75",               3019, TDCT_Edit,   680, 260,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "ClgSensEff100",             3020, TDCT_Edit,   340, 290,  25,  50,  2, FNT_STD, "Cooling:",                           TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "ClgLatEff100",              3021, TDCT_Edit,   400, 290,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       HtRcvryCertification = 1,       0,  0,  ""
-   CTRL, "ClgTotEff100",              3022, TDCT_Edit,   460, 290,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       HtRcvryCertification = 1,       0,  0,  ""
+   CTRL, "ClgTotEff100",              3022, TDCT_Edit,   460, 290,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "ClgSensEff75",              3023, TDCT_Edit,   560, 290,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType <= 2,       HtRcvryCertification = 1,       0,  0,  ""
    CTRL, "ClgLatEff75",               3024, TDCT_Edit,   620, 290,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1 Or RcvryType = 3,       HtRcvryCertification = 1,       0,  0,  ""
-   CTRL, "ClgTotEff75",               3025, TDCT_Edit,   680, 290,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       HtRcvryCertification = 1,       0,  0,  ""
+   CTRL, "ClgTotEff75",               3025, TDCT_Edit,   680, 290,  25,  50,  2, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  RcvryType = 1,       HtRcvryCertification = 1,       0,  0,  ""
                                                                                                                                                                                                                                                 
    CTRL, "",                           120, TDCT_Label,   20, 335,  20,  0,   0, FNT_STD, "Controls and Power",                 TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "",                           121, TDCT_Line,   140, 343, 890, 343, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
@@ -6190,7 +6205,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "EconoLockout",              3038, TDCT_Combo,  180, 450, 200,  50, 12, FNT_STD, "Economizer Lockout:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "AuxPwr",                    3039, TDCT_Edit,   180, 480,  25,  50,  0, FNT_STD, "Auxiliary Power:",                   TA_LEFT,  -150, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
    CTRL, "DefrostCtrl",               3034, TDCT_Combo,  600, 360, 200, 200, 12, FNT_STD, "Defrost Control:",                   TA_LEFT,  -130, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "DefrostCtrlTemp",           3035, TDCT_Edit,   600, 390,  25,  50,  1, FNT_STD, "Defrost Temp:",                      TA_LEFT,  -130, 4,     1, TA_LEFT, 4, 4,  DefrostCtrl = 2 Or DefrostCtrl = 3,       None,       0,  0,  ""
+   CTRL, "DefrostCtrlTemp",           3035, TDCT_Edit,   600, 390,  25,  50,  1, FNT_STD, "Defrost Temp:",                      TA_LEFT,  -130, 4,     1, TA_LEFT, 4, 4,  DefrostCtrl = 2 Or DefrostCtrl = 3,       Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "DefrostTimeFrac",           3036, TDCT_Edit,   600, 420,  25,  50,  3, FNT_STD, "Def. Time Frac:",                    TA_LEFT,  -130, 4,     0, TA_LEFT, 0, 0,  DefrostCtrl = 2 Or DefrostCtrl = 3,       Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "DefrostTimeFracRt",         3037, TDCT_Edit,   600, 450,  25,  50,  3, FNT_STD, "Def. Time Frac Inc.:",               TA_LEFT,  -130, 4,     0, TA_LEFT, 0, 0,  DefrostCtrl = 2 Or DefrostCtrl = 3,       Proj:DebugScreen > 0,       0,  0,  ""
   
@@ -6210,7 +6225,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------     
 
 ;----------------------------------------------------------------
@@ -6342,7 +6357,7 @@ TAB, "CoilClg",  2102,      15,    "  Performance Curves  "
    CTRL, "Status",               3005, TDCT_Combo,  110, 120, 200,  90, 12, FNT_STD, "Status:",                            TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "Desc",                 3009, TDCT_Edit,   110, 150,  25, 270, 99, FNT_STD, "Description:",                       TA_LEFT,   -90, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "AvailSchRef",          3010, TDCT_Combo,  600,  60, 300, 250, 25, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "AvailSchRef",          3010, TDCT_Combo,  600,  60, 300, 250, 25, FNT_STD, "Availability Sch.:",                 TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       Proj:DebugScreen > 0,       0,  0,  ""
    CTRL, "CtrlType",             3011, TDCT_Combo,  600,  90, 300, 130, 25, FNT_STD, "Control System Type:",               TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "Cnt",                  3012, TDCT_Edit,   350,  90,  25,  30,  0, FNT_STD, "Multiplier:",                        TA_LEFT,   -60, 4,     1, TA_LEFT, 4, 4,  None,       Type = 4,       0,  0,  ""
    CTRL, "SizingOption",         3013, TDCT_Combo,  600, 120, 300, 120,  1, FNT_STD, "Sizing Option:",                     TA_LEFT,  -150, 4,     0, TA_LEFT, 4, 4,  None,       Proj:HVACAutoSizing = 1,       0,  0,  ""
@@ -6608,8 +6623,8 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the natural gas meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------     
 
 ;----------------------------------------------------------------
@@ -6807,7 +6822,7 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------     
 
 ;----------------------------------------------------------------
@@ -6833,9 +6848,9 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "UnldRatMin",                3510, TDCT_Edit,   130, 240,  25,  60,  3, FNT_STD, "UnldRatMin:",                       TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
    CTRL, "DraftFanHp",                3532, TDCT_Edit,   130, 270,  25,  60,  3, FNT_STD, "Draft Fan HP:",                     TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "AFUE",                      3511, TDCT_Edit,   130, 330,  25,  60,  3, FNT_STD, "AFUE:",                             TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  FuelSrc != 3,  None,       0,  0,  ""
+   CTRL, "AFUE",                      3511, TDCT_Edit,   130, 330,  25,  60,  3, FNT_STD, "AFUE:",                             TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  FuelSrc != 3 And CapRtd < 300000,  None,       0,  0,  ""
    CTRL, "ThrmlEff",                  3513, TDCT_Edit,   130, 360,  25,  60,  3, FNT_STD, "Thermal Eff:",                      TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  FuelSrc != 3,  None,       0,  0,  ""
-   CTRL, "CombEff",                   3514, TDCT_Edit,   130, 390,  25,  60,  3, FNT_STD, "Combustion Eff:",                   TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  FuelSrc != 3,  None,       0,  0,  ""
+   CTRL, "CombEff",                   3514, TDCT_Edit,   130, 390,  25,  60,  3, FNT_STD, "Combustion Eff:",                   TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  FuelSrc != 3 And CapRtd > 2500000,  None,       0,  0,  ""
    CTRL, "FuelFullLd",                3531, TDCT_Edit,   130, 450,  25, 100,  0, FNT_STD, "Fuel at Full Ld:",                  TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  FuelSrc != 3,  None,       0,  0,  ""
                                                                                                                                                                                                                                                 
    CTRL, "Status",                    3525, TDCT_Combo,  520,  90, 350, 200, 12, FNT_STD, "Status:",                           TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  Proj:CompType >= 11, Proj:CompType >= 0, 0,  0,  ""
@@ -6864,8 +6879,8 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the natural gas meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                               
 
 ;----------------------------------------------------------------
@@ -6923,7 +6938,7 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------     
 
 ;----------------------------------------------------------------
@@ -7049,7 +7064,7 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                               
 
 ;----------------------------------------------------------------
@@ -7163,42 +7178,50 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    ;       BDBase                    Ctrl                                               | Control Label                                          | Units Label         | Editable  | Display     Erase X |
    ;       Parameter                  ID   Ctrl Type     X    Y    Ht   Wd Val   Font   | Label                                Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
    ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   CTRL, "Active",                 45001, TDCT_Combo,  300,  10, 300, 220, 25, FNT_STD, "Currently Active Water Heater:",     TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
+   CTRL, "Active",                 45001, TDCT_Combo,  300,  10, 300, 220, 25, FNT_STD, "Currently Active Water Heater:",     TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0, None,       FluidSysHtg = 0,       0,  0,  ""
+   CTRL, "Active",                 45090, TDCT_Combo,  300,  10, 300, 220, 25, FNT_STD, "Currently Active Air-to-Water Heat-Pump:",     TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0, None,       FluidSysHtg = 1,       0,  0,  ""
    CTRL, "",                       45002, TDCT_Line,    10,  45, 890,  45, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "Name",                   45003, TDCT_Edit,   180,  60,  25, 200, 99, FNT_STD, "Water Heater Name:",                 TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
+   CTRL, "Name",                   45003, TDCT_Edit,   180,  60,  25, 200, 99, FNT_STD, "Water Heater Name:",                 TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0, None,       FluidSysHtg = 0,       0,  0,  ""
+   CTRL, "Name",                   45091, TDCT_Edit,   200,  60,  25, 200, 99, FNT_STD, "Air-to-Water Heat-Pump Name:",       TA_LEFT,  -180, 4,     0, TA_LEFT, 0, 0, None,       FluidSysHtg = 1,       0,  0,  ""
    CTRL, "Status",                 45004, TDCT_Combo,  580,  60, 350, 200, 12, FNT_STD, "Status:",                            TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
 
-   CTRL, "Cnt",                    45005, TDCT_Edit,   180, 110,  25,  50,  0, FNT_STD, "Multiplier (# on System):",          TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, None,       None,       0,  0,  ""
-   CTRL, "CmbdMult",               45006, TDCT_Edit,   330, 110,  25,  50,  0, FNT_STD, "Comp Qty:",                          TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4, Name = -9999999, None,  0,  0,  ""
+   CTRL, "Cnt",                    45005, TDCT_Edit,   180, 110,  25,  50,  0, FNT_STD, "Multiplier (# on System):",          TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FluidSysHtg = 0,       FluidSysHtg = 0,       0,  0,  ""
+   CTRL, "CmbdMult",               45006, TDCT_Edit,   330, 110,  25,  50,  0, FNT_STD, "Comp Qty:",                          TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4, Name = -9999999, FluidSysHtg = 0,  0,  0,  ""
    CTRL, "FuelSrc",                45007, TDCT_Combo,  180, 140, 350, 200, 12, FNT_STD, "Fuel Source:",                       TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
    CTRL, "ElecIgnit",              45008, TDCT_Check,  410, 141,  22, 150,  0, FNT_STD, "Electrical Ignition",                TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0, None, FuelSrc = 2 Or FuelSrc = 3 Or FuelSrc = 4,       0,  0,  ""                                                                                                                                                                                                                                                
    CTRL, "DraftFanPwr",            45009, TDCT_Edit,   680, 140,  25,  60, 0,  FNT_STD, "Draft Fan Power:",                   TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4, FuelSrc = 2 And ElecIgnit = 1,       FuelSrc = 2 And ElecIgnit = 1,       -122,  60,  ""
    CTRL, "Type",                   45010, TDCT_Combo,  180, 170, 350, 200, 12, FNT_STD, "Type:",                              TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
-   CTRL, "ProdType",               45011, TDCT_Edit,   410, 170,  25, 120, 12, FNT_STD, "",                                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0, Name = -9999999, None,  0,  0,  "" 
-   CTRL, "SubType",                45012, TDCT_Edit,   540, 170,  25, 120, 12, FNT_STD, "",                                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0, Name = -9999999, None,  0,  0,  ""
-   CTRL, "IsMultipass",            45013, TDCT_Check,  670, 170,  25, 120,  0, FNT_STD, "Multipass?",                         TA_LEFT,     0, 4,     1, TA_LEFT, 0, 0, Type > 1 And IsCommHtPumpWtrHtr = 1,   Type > 1 And IsCommHtPumpWtrHtr = 1,   0,  0,  ""
-  
-   CTRL, "StorCap",                45016, TDCT_Edit,   180, 230,  25,  80,  1, FNT_STD, "Storage Capacity:",                  TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, None,       None,       0,  0,  ""
-   CTRL, "CapRtd",                 45017, TDCT_Edit,   180, 260,  25,  80,  0, FNT_STD, "Input Rate:",                        TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FuelSrc = 2,   FuelSrc = 2,   0,  0,  ""
-   CTRL, "InpPwr",                 45018, TDCT_Edit,   180, 260,  25,  80,  1, FNT_STD, "Input Rate:",                        TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FuelSrc = 1,   FuelSrc = 1,   0,  0,  ""
+   CTRL, "HtPumpSubType",          45080, TDCT_Combo,  180, 200, 350, 200, 12, FNT_STD, "Ht. Pump Sub Type:",                 TA_LEFT,  -160, 4,     0, TA_LEFT, 0, 0, Type > 1 And COPReq = 1,       Type > 1 And COPReq = 1,       0,  0,  ""
 
-   CTRL, "IsUEFRtd",               45020, TDCT_Check,   20, 290,  25, 200,  0, FNT_STD, "Is Water Heater UEF Rated?",         TA_LEFT,     0, 4,     1, TA_LEFT, 0, 0, None,            None,   0,  0,  ""
+   CTRL, "ProdType",               45011, TDCT_Edit,   410, 170,  25, 120, 12, FNT_STD, "",                                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0, Name = -9999999, FluidSysHtg = 0,  0,  0,  "" 
+   CTRL, "SubType",                45012, TDCT_Edit,   540, 170,  25, 120, 12, FNT_STD, "",                                   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0, Name = -9999999, FluidSysHtg = 0,  0,  0,  ""
+;   CTRL, "IsMultipass",            45013, TDCT_Check,  670, 170,  25, 120,  0, FNT_STD, "Multipass?",                         TA_LEFT,     0, 4,     1, TA_LEFT, 0, 0, Type > 1 And IsCommHtPumpWtrHtr = 1 And FluidSysSHW = 0,   Type > 1 And IsCommHtPumpWtrHtr = 1 And FluidSysSHW = 0,   0,  0,  ""
+  
+   CTRL, "StorCap",                45014, TDCT_Edit,   180, 230,  25,  80,  1, FNT_STD, "Storage Capacity:",                  TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, None,       None,       0,  0,  ""
+   CTRL, "CapRtd",                 45015, TDCT_Edit,   180, 260,  25,  80,  0, FNT_STD, "Rated Heating Capacity:",            TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FuelSrc = 1 And FluidSysHtg = 1,   FuelSrc = 1 And FluidSysHtg = 1,   0,  0,  ""
+   CTRL, "CapRtd",                 45016, TDCT_Edit,   180, 260,  25,  80,  0, FNT_STD, "Input Rate:",                        TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FuelSrc = 2,   FuelSrc = 2,   0,  0,  ""
+;   CTRL, "CapRtd",                 45019, TDCT_Edit,   180, 200,  25,  80,  0, FNT_STD, "Input Rate:",                        TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FuelSrc = 1,   FuelSrc = 1,   0,  0,  ""
+   CTRL, "InpPwr",                 45017, TDCT_Edit,   180, 260,  25,  80,  1, FNT_STD, "Rated Input Rate:",                  TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FuelSrc = 1 And FluidSysHtg = 0,   FuelSrc = 1 And FluidSysHtg = 0,   0,  0,  ""
+   CTRL, "InpPwr",                 45018, TDCT_Edit,   180, 290,  25,  80,  1, FNT_STD, "Rated Heating Input Power:",         TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, FuelSrc = 1 And FluidSysHtg = 1,   FuelSrc = 1 And FluidSysHtg = 1,   0,  0,  ""
+
+   CTRL, "IsUEFRtd",               45020, TDCT_Check,   20, 290,  25, 200,  0, FNT_STD, "Is Water Heater UEF Rated?",         TA_LEFT,     0, 4,     1, TA_LEFT, 0, 0, None,            FluidSysHtg = 0 And COPReq = 0,   0,  0,  ""
    CTRL, "ThrmlEff",               45021, TDCT_Edit,   180, 320,  25,  80,  2, FNT_STD, "Thermal Efficiency:",                TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, ThrmlEffReq = 1, ThrmlEffReq = 1 And UEFRtdVal < 10,       -162,  0,  ""
    CTRL, "ThrmlEff",               45022, TDCT_Edit,   180, 380,  25,  80,  2, FNT_STD, "Thermal Efficiency:",                TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, ThrmlEffReq = 1, ThrmlEffReq = 1 And UEFRtdVal >= 10,       -162,  0,  ""
-   CTRL, "",                       45023, TDCT_Label,  332, 295,  20,   0,  0, FNT_STD, "Code Min.",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0, None,            Proj:DebugScreen > 0 And UEFRtdVal < 10 And COPReq = 0,       0,  0,  ""
-   CTRL, "CodeMinThrmlEff",        45024, TDCT_Edit,   330, 320,  25,  60,  3, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, Name = -9999999, Proj:DebugScreen > 0 And ThrmlEffReq = 1 And UEFRtdVal < 10,       0,  0,  ""
-   CTRL, "EF",                     45025, TDCT_Edit,   180, 320,  25,  80,  2, FNT_STD, "Energy Factor:",                     TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, EFReq = 1,       EFReq = 1,       -162,  0,  ""
-   CTRL, "COP",                    45026, TDCT_Edit,   180, 320,  25,  80,  2, FNT_STD, "COP:",                               TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, COPReq = 1,      COPReq = 1,       -162,  0,  ""
-   CTRL, "CodeMinEF",              45027, TDCT_Edit,   330, 320,  25,  60,  3, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, Name = -9999999,  Proj:DebugScreen > 0 And EFReq = 1 And UEFRtdVal = 0,       -162,  0,  ""
-   CTRL, "UEF",                    45028, TDCT_Edit,   180, 320,  25,  80,  2, FNT_STD, "Uniform Energy Factor:",             TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, UEFRtdVal >= 10,  UEFRtdVal >= 10,       -162,  0,  ""
+   CTRL, "",                       45023, TDCT_Label,  332, 295,  20,   0,  0, FNT_STD, "Code Min.",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0, None,            Proj:DebugScreen > 0 And UEFRtdVal < 10 And COPReq = 0 And FluidSysHtg = 0,       0,  0,  ""
+   CTRL, "CodeMinThrmlEff",        45024, TDCT_Edit,   330, 320,  25,  60,  3, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, Name = -9999999, Proj:DebugScreen > 0 And ThrmlEffReq = 1 And UEFRtdVal < 10 And FluidSysHtg = 0,       0,  0,  ""
+   CTRL, "EF",                     45025, TDCT_Edit,   180, 320,  25,  80,  2, FNT_STD, "Energy Factor:",                     TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, EFReq = 1,       EFReq = 1 And FluidSysHtg = 0,       -162,  0,  ""
+   CTRL, "COP",                    45026, TDCT_Edit,   180, 320,  25,  80,  2, FNT_STD, "Rated Heating COP:",                 TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, COPReq = 1,      COPReq = 1,       -162,  0,  ""
+   CTRL, "CodeMinEF",              45027, TDCT_Edit,   330, 320,  25,  60,  3, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, Name = -9999999,  Proj:DebugScreen > 0 And EFReq = 1 And UEFRtdVal = 0  And FluidSysHtg = 0,       -162,  0,  ""
+   CTRL, "UEF",                    45028, TDCT_Edit,   180, 320,  25,  80,  2, FNT_STD, "Uniform Energy Factor:",             TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, UEFRtdVal >= 10,  UEFRtdVal >= 10 And FluidSysHtg = 0,       -162,  0,  ""
 ;   CTRL, "CodeMinUEF",             45029, TDCT_Edit,   330, 320,  25,  60,  4, FNT_STD, "",                                   TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, Name = -9999999, UEFRtdVal >= 10,       -162,  0,  ""
-   CTRL, "FirstHrRating",          45030, TDCT_Edit,   180, 350,  25,  80,  0, FNT_STD, "First Hour Rating:",                 TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, UEFRtdVal >= 10 And SubType != 1, UEFRtdVal >= 10 And SubType != 1,       -162,  100,  ""
-   CTRL, "FlowRt",                 45031, TDCT_Edit,   180, 350,  25,  80,  2, FNT_STD, "Flow Rate:",                         TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, UEFRtdVal >= 10 And SubType = 1, UEFRtdVal >= 10 And SubType = 1,       -162,  100,  ""
-   CTRL, "RE",                     45032, TDCT_Edit,   180, 380,  25,  80,  2, FNT_STD, "Recovery Efficiency:    ",           TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, REReq = 1,       REReq = 1,       -162,  20,  ""
+   CTRL, "FirstHrRating",          45030, TDCT_Edit,   180, 350,  25,  80,  0, FNT_STD, "First Hour Rating:",                 TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, UEFRtdVal >= 10 And SubType != 1, UEFRtdVal >= 10 And SubType != 1 And FluidSysHtg = 0,       -162,  100,  ""
+   CTRL, "FlowRt",                 45031, TDCT_Edit,   180, 350,  25,  80,  2, FNT_STD, "Flow Rate:",                         TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, UEFRtdVal >= 10 And SubType = 1, UEFRtdVal >= 10 And SubType = 1 And FluidSysHtg = 0,       -162,  100,  ""
+   CTRL, "RE",                     45032, TDCT_Edit,   180, 380,  25,  80,  2, FNT_STD, "Recovery Efficiency:    ",           TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, REReq = 1,       REReq = 1 And FluidSysHtg = 0,       -162,  20,  ""
    CTRL, "StdbyLossFrac",          45033, TDCT_Edit,   180, 410,  25,  80,  4, FNT_STD, "Standby Loss Fraction:",             TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, StdbyLossFracReq = 1, StdbyLossFracReq = 1,       -162,  50,  ""
-   CTRL, "RtdEvapInletAirDBTempF", 45034, TDCT_Edit,   180, 440,  25,  80,  0, FNT_STD, "Rated Inlet Air Drybulb:",           TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, COPReq = 1,      COPReq = 1,       -162,  50,  ""
-   CTRL, "RtdCondInletWtrTempF",   45035, TDCT_Edit,   180, 470,  25,  80,  0, FNT_STD, "Rated Inlet Water Temp:",            TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, COPReq = 1,      COPReq = 1,       -162,  50,  ""
+   CTRL, "RtdEvapInletAirDBTempF", 45034, TDCT_Edit,   180, 350,  25,  80,  0, FNT_STD, "Rated Inlet Air Drybulb:",           TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, COPReq = 1 And HtPumpSubType > 1,      COPReq = 1 And HtPumpSubType = 2,       -162,  50,  ""
+   CTRL, "RtdEvapInletAirWBTempF", 45035, TDCT_Edit,   180, 350,  25,  80,  0, FNT_STD, "Rated Inlet Air Wetbulb:",           TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, COPReq = 1 And HtPumpSubType > 1,      COPReq = 1 And HtPumpSubType = 3,       -162,  50,  ""
+   CTRL, "RtdCondInletWtrTempF",   45036, TDCT_Edit,   180, 380,  25,  80,  0, FNT_STD, "Rated Inlet Water Temp:",            TA_LEFT,  -160, 4,     1, TA_LEFT, 4, 4, COPReq = 1 And HtPumpSubType > 1,      COPReq = 1 And HtPumpSubType > 1,       -162,  50,  ""
 
 
    CTRL, "FluidSegOutRef",         45040, TDCT_Combo,  580, 260, 350, 200, 12, FNT_STD, "Fluid Segment Outlet:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0, None,            None,      -160, 100,  ""
@@ -7207,8 +7230,9 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
 
    CTRL, "StorLoc",                45043, TDCT_Check,  430, 320,  25, 320,  2, FNT_STD, "Storage tank is located outside",   TA_LEFT,     0, 4,     1, TA_LEFT, 0, 0, Type > 1,         Type > 1,   0,  0,  ""
    CTRL, "StorZnRef",              45044, TDCT_Combo,  580, 350, 300, 200,  0, FNT_STD, "Storage Tank Zone:",                TA_LEFT,  -150, 4,     1, TA_LEFT, 0, 0, StorLoc = 0,      Type > 1 And StorLoc = 0,   -160,  100,  ""
-   CTRL, "CprsrLoc",               45045, TDCT_Check,  430, 380,  25, 320,  2, FNT_STD, "Compressor is located outside",     TA_LEFT,     0, 4,     1, TA_LEFT, 0, 0, Type = 3,         Type = 3,   0,  0,  ""
+   CTRL, "CprsrLoc",               45045, TDCT_Check,  430, 380,  25, 320,  2, FNT_STD, "Compressor is located outside",     TA_LEFT,     0, 4,     1, TA_LEFT, 0, 0, Type = 3 And FluidSysHtg = 0,         Type = 3,   0,  0,  ""
    CTRL, "CprsrZnRef",             45046, TDCT_Combo,  580, 410, 300, 200,  0, FNT_STD, "Compressor Zone:",                  TA_LEFT,  -150, 4,     1, TA_LEFT, 0, 0, CprsrLoc = 0,     Type = 3 And CprsrLoc = 0,  -160,  100,  ""
+   CTRL, "MinInletAirTempCprsrOper", 45047, TDCT_Edit, 680, 410,  25,  40,  0, FNT_STD, "Min. OA Temp for Compressor Operation:", TA_LEFT, -250, 4,  1, TA_LEFT, 4, 4, CprsrLoc > 0,     Type = 3 And CprsrLoc > 0,  -250,  100,  ""
 
    CTRL, "UEFMdlDrawPattern",      45050, TDCT_Edit,   365, 480,  25,  80,  3, FNT_STD, "Draw Pattern:",                     TA_LEFT,   -90, 4,     1, TA_LEFT, 4, 4, UEFRtdVal = -1,   Proj:DebugScreen > 0 And UEFRtdVal >= 10,      -122,  0,  ""
    CTRL, "UEFMdlCoefa",            45051, TDCT_Edit,    70, 450,  25,  70,  6, FNT_STD, "Coefa:",                            TA_LEFT,   -45, 4,     1, TA_LEFT, 4, 4, UEFRtdVal = -1,   Proj:DebugScreen > 0 And UEFRtdVal = 10,        -55,  0,  ""
@@ -7232,6 +7256,16 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "UEFMdlCalcRE",           45071, TDCT_Edit,   550, 450,  25,  70,  6, FNT_STD, "RE_Calc:",                          TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4, UEFRtdVal = -1,       Proj:DebugScreen > 0 And UEFRtdVal >= 10,       -75,  0,  ""
    CTRL, "UEFMdlCalcThrmlEff",     45072, TDCT_Edit,   720, 480,  25,  70,  6, FNT_STD, "TE_Calc:",                          TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4, UEFRtdVal = -1,       Proj:DebugScreen > 0 And UEFRtdVal >= 10,       -75,  0,  ""
    CTRL, "UEFMdlCalcStdbyLoss",    45073, TDCT_Edit,   720, 450,  25,  70,  3, FNT_STD, "SL_Calc:",                          TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4, UEFRtdVal = -1,       Proj:DebugScreen > 0 And UEFRtdVal >= 10,       -75,  0,  ""
+
+   CTRL, "CapRtdSim",            	 45081, TDCT_Edit,   100, 480,  25,  80,  0, FNT_STD, "CapRtdSim",                          TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4, COPReq = 2,   Proj:DebugScreen > 0 And COPReq = 1,        -55,  0,  ""
+   CTRL, "CapRtdSupp",             45083, TDCT_Edit,   280, 480,  25,  80,  0, FNT_STD, "Supp",                               TA_LEFT,   -40, 4,     1, TA_LEFT, 4, 4, COPReq = 2,   Proj:DebugScreen > 0 And COPReq = 1,        -55,  0,  ""
+   CTRL, "COPSim",                 45082, TDCT_Edit,   480, 480,  25,  40,  2, FNT_STD, "COPSim",                             TA_LEFT,   -60, 4,     1, TA_LEFT, 4, 4, COPReq = 2,   Proj:DebugScreen > 0 And COPReq = 1,        -55,  0,  ""
+
+;   CTRL, "TankLoss",            	  45085, TDCT_Edit,   100, 480,  25,  80,  0, FNT_STD, "TankLoss",                           TA_LEFT,   -70, 4,     1, TA_LEFT, 4, 4, FluidSysHtg = 0,   Proj:DebugScreen > 0 And EFReq = 1,        -55,  0,  ""
+;   CTRL, "HtPumpEF",               45086, TDCT_Edit,   350, 480,  25,  50,  2, FNT_STD, "HtPumpEF",                           TA_LEFT,   -80, 4,     1, TA_LEFT, 4, 4, FluidSysHtg = 0,   Proj:DebugScreen > 0 And EFReq = 1,        -55,  0,  ""
+;   CTRL, "COP",                    45087, TDCT_Edit,   480, 480,  25,  40,  2, FNT_STD, "COP",                                 TA_LEFT,   -40, 4,     1, TA_LEFT, 4, 4, FluidSysHtg = 0,   Proj:DebugScreen > 0 And EFReq = 1,        -55,  0,  ""
+
+
 
 ;  CTRL, "",                        450XX, TDCT_Label,  180, 210,  20,   0,  0, FNT_STD, "Input",                              TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
 ;   CTRL, "HIR_fPLRCrvRef",         450XX, TDCT_Combo,  580, 320, 350, 200, 12, FNT_STD, "Part Load Curve Ref:"                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,      Type = 1,       -160,  100,  ""
@@ -7259,8 +7293,8 @@ TAB, "FluidSys",  3202,      15,    "  Plant Staging  "
    CTRL, "Active",                   3001, TDCT_Combo,  250,  10, 580, 250, 25, FNT_STD, "Currently Active Space:",          TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected space"
    CTRL, "",                         3002, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
-   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the electricity meter connected to the space"
-   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the natural gas meter connected to the space"
+   CTRL, "ElecMeterRef",             4001, TDCT_Combo,  160,  60, 150, 250, 99, FNT_STD, "Electricity Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the electricity meter connected to the space"
+   CTRL, "GasMeterRef",              4002, TDCT_Combo,  160,  90, 150, 250, 99, FNT_STD, "Natural Gas Meter:",               TA_LEFT,  -140, 4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  "The name of the natural gas meter connected to the space"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------     
 
 ; Ported over T-24 DHWSolarSys dialog from -Res - SAC 1/30/20 - StdSolarSys (tic #3157)

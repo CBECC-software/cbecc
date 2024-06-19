@@ -115,13 +115,13 @@ extern int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* ps
 										const char* pszCompRptID=NULL, const char* pszRptGenServer=NULL, const char* pszRptGenApp=NULL,
 										const char* pszRptGenService=NULL, const char* pszSecKeyRLName=NULL, const char* pszOutputPathFile=NULL,
 										const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL, long iSecurityKeyIndex=0,		// SAC 1/10/17
-										bool bFinalPDFGeneration=true, bool bSchemaBasedRptGen=false );		// SAC 7/18/17   // SAC 11/20/18
+										bool bFinalPDFGeneration=true, bool bSchemaBasedRptGen=false, int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=480 );		// SAC 7/18/17   // SAC 11/20/18
 extern int GenerateReportViaQt(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 											const char* pszProxyAddress=NULL, const char* pszProxyCredentials=NULL, const char* pszProxyType=NULL,		// pass NULLs for no proxy
 											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );
 extern int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 											const char* pszProxyAddress=NULL, const char* pszProxyCredentials=NULL, const char* pszProxyType=NULL,		// pass NULLs for no proxy
-											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );      // SAC 06/13/21
+											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false, int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=480 );      // SAC 06/13/21   // SAC 11/02/22
 
 extern int CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy
 										char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false,

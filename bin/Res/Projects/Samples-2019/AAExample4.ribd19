@@ -1,11 +1,11 @@
 RulesetFilename   "CA Res 2019.bin"  
 
 Proj   "AA Example 3"  
-   BEMVersion = 10
-   SoftwareVersion = "CBECC-Res 2019.2.0 (1207)"
+   BEMVersion = 11
+   SoftwareVersion = "CBECC-Res 2019.2.1 (1279)"
    SoftwareVersionDetail = "CBECC-Res 2019.2.0 Beta (1203)"
    CreateDate = 1629761749
-   ModDate = 1633285476
+   ModDate = 1668110639
    RunDate = 1512540972
    ProjFileName = "AAExample4.ribd19"
    RunTitle = "Addition Alone Slab ex HVAC and DHW"
@@ -45,6 +45,7 @@ Proj   "AA Example 3"
    AllowExcessPVEDR = 0
    ReducedPVReq = 0
    ReducedPVReqExcept = "- select applicable required PV exception -"
+   SimStandaloneBatt = 0
    BattMaxCap = 0
    BatteryControl = "Basic"
    BattGridHarmCredit = 0
@@ -488,34 +489,34 @@ EUseSummary   "EUSummary"
    Title3[30] = "Margin (kg)"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "4"
-   Enduse1[3] = "5.1"
-   Enduse1[4] = "2.49"
+   Enduse1[3] = "5.0"
+   Enduse1[4] = "2.44"
    Enduse1[5] = "1"
-   Enduse1[6] = "0.8"
-   Enduse1[7] = "0.40"
-   Enduse1[8] = "-2.09"
+   Enduse1[6] = "1.2"
+   Enduse1[7] = "0.58"
+   Enduse1[8] = "-1.86"
    Enduse1[10] = "0.00"
    Enduse1[11] = "0.00"
    Enduse1[23] = "1"
    Enduse1[24] = "27"
-   Enduse1[25] = "28"
+   Enduse1[25] = "27"
    Enduse1[27] = "0"
-   Enduse1[28] = "4"
-   Enduse1[29] = "5"
-   Enduse1[30] = "-23"
+   Enduse1[28] = "6"
+   Enduse1[29] = "6"
+   Enduse1[30] = "-21"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "231"
-   Enduse2[4] = "44.03"
-   Enduse2[5] = "282"
-   Enduse2[7] = "48.77"
-   Enduse2[8] = "4.74"
-   Enduse2[10] = "0.50"
-   Enduse2[11] = "0.52"
-   Enduse2[23] = "63"
-   Enduse2[25] = "63"
-   Enduse2[27] = "76"
-   Enduse2[29] = "76"
-   Enduse2[30] = "13"
+   Enduse2[2] = "249"
+   Enduse2[4] = "34.89"
+   Enduse2[5] = "377"
+   Enduse2[7] = "48.99"
+   Enduse2[8] = "14.10"
+   Enduse2[10] = "0.36"
+   Enduse2[11] = "0.45"
+   Enduse2[23] = "61"
+   Enduse2[25] = "61"
+   Enduse2[27] = "91"
+   Enduse2[29] = "91"
+   Enduse2[30] = "30"
    Enduse3[1] = "IAQ Ventilation"
    Enduse3[4] = "0.00"
    Enduse3[7] = "0.00"
@@ -560,13 +561,13 @@ EUseSummary   "EUSummary"
    Enduse6[29] = "25"
    Enduse6[30] = "0"
    Enduse7[1] = "Appl. & Cooking"
-   Enduse7[2] = "682"
+   Enduse7[2] = "681"
    Enduse7[3] = "35.8"
-   Enduse7[4] = "51.78"
+   Enduse7[4] = "51.70"
    Enduse7[5] = "689"
    Enduse7[6] = "35.8"
-   Enduse7[7] = "52.14"
-   Enduse7[8] = "0.36"
+   Enduse7[7] = "52.05"
+   Enduse7[8] = "0.35"
    Enduse7[10] = "0.12"
    Enduse7[11] = "0.12"
    Enduse7[23] = "125"
@@ -603,39 +604,39 @@ EUseSummary   "EUSummary"
    Enduse9[29] = "25"
    Enduse9[30] = "0"
    Enduse10[1] = "TOTAL"
-   Enduse10[2] = "2,481"
-   Enduse10[3] = "193.7"
-   Enduse10[4] = "245.97"
-   Enduse10[5] = "2,536"
-   Enduse10[6] = "189.4"
-   Enduse10[7] = "248.98"
-   Enduse10[8] = "3.01"
-   Enduse10[10] = "0.87"
-   Enduse10[11] = "0.89"
-   Enduse10[23] = "500"
+   Enduse10[2] = "2,498"
+   Enduse10[3] = "193.6"
+   Enduse10[4] = "236.70"
+   Enduse10[5] = "2,630"
+   Enduse10[6] = "189.8"
+   Enduse10[7] = "249.29"
+   Enduse10[8] = "12.59"
+   Enduse10[10] = "0.73"
+   Enduse10[11] = "0.82"
+   Enduse10[23] = "498"
    Enduse10[24] = "1,028"
-   Enduse10[25] = "1,528"
-   Enduse10[27] = "513"
-   Enduse10[28] = "1,005"
-   Enduse10[29] = "1,519"
-   Enduse10[30] = "-9"
+   Enduse10[25] = "1,525"
+   Enduse10[27] = "528"
+   Enduse10[28] = "1,007"
+   Enduse10[29] = "1,535"
+   Enduse10[30] = "10"
    Enduse11[1] = "Compliance Total"
-   Enduse11[2] = "236"
-   Enduse11[3] = "157.9"
-   Enduse11[4] = "107.68"
-   Enduse11[5] = "283"
-   Enduse11[6] = "153.6"
-   Enduse11[7] = "110.33"
-   Enduse11[8] = "2.65"
-   Enduse11[10] = "0.50"
-   Enduse11[11] = "0.52"
-   Enduse11[23] = "64"
+   Enduse11[2] = "253"
+   Enduse11[3] = "157.8"
+   Enduse11[4] = "98.49"
+   Enduse11[5] = "378"
+   Enduse11[6] = "154.0"
+   Enduse11[7] = "110.73"
+   Enduse11[8] = "12.24"
+   Enduse11[10] = "0.36"
+   Enduse11[11] = "0.45"
+   Enduse11[23] = "62"
    Enduse11[24] = "838"
-   Enduse11[25] = "902"
-   Enduse11[27] = "76"
-   Enduse11[28] = "815"
-   Enduse11[29] = "892"
-   Enduse11[30] = "-10"
+   Enduse11[25] = "899"
+   Enduse11[27] = "91"
+   Enduse11[28] = "817"
+   Enduse11[29] = "908"
+   Enduse11[30] = "9"
    Enduse13[1] = "Photovoltaics"
    Enduse13[4] = "0.00"
    Enduse13[7] = " "
@@ -665,27 +666,27 @@ EUseSummary   "EUSummary"
    SummaryCol2[1] = "Compliance"
    SummaryCol2[2] = "Total"
    SummaryCol2[3] = "(kTDV/ft²-yr)"
-   SummaryCol2[4] = "110.33"
-   SummaryCol2[5] = "107.68"
+   SummaryCol2[4] = "110.73"
+   SummaryCol2[5] = "98.49"
    SummaryCol3[1] = "Compliance"
    SummaryCol3[2] = "Margin"
    SummaryCol3[3] = "(kTDV/ft²-yr)"
-   SummaryCol3[5] = "2.65"
-   MarginkW[1] = 0.02
-   MarginkWh = 55
-   MarginTherms = -4.28
-   PctSavingskW = 2
-   PctSavingskWh = 2.2
-   PctSavingsTherms = -2.3
-   PctSavingsTDV = 1.2
-   PctSavingsCmpTDV = 2.4
-   PctSavkWLbl = "2.0"
-   PctSavkWhLbl = "2.2"
-   PctSavThermsLbl = "-2.3"
-   PctSavTDVLbl = "1.2"
-   PctSavCmpTDVLbl = "2.4"
-   PropElecDemand[1] = 0.87495
-   StdElecDemand = 0.892403
+   SummaryCol3[5] = "12.24"
+   MarginkW[1] = 0.09
+   MarginkWh = 132.3
+   MarginTherms = -3.84
+   PctSavingskW = 10.8
+   PctSavingskWh = 5
+   PctSavingsTherms = -2
+   PctSavingsTDV = 5.1
+   PctSavingsCmpTDV = 11.1
+   PctSavkWLbl = "10.8"
+   PctSavkWhLbl = "5.0"
+   PctSavThermsLbl = "-2.0"
+   PctSavTDVLbl = "5.1"
+   PctSavCmpTDVLbl = "11.1"
+   PropElecDemand[1] = 0.730936
+   StdElecDemand = 0.819878
    StdDesignPVSize = 0
    PropPV_Total = 0
    PropPV_Export = 0
@@ -699,18 +700,18 @@ EUseSummary   "EUSummary"
    CO2TotalUnitLabel = "kg"
    MeetsTier1 = 0
    MeetsTier2 = 0
-   PropElecCarbon[1] = 0.499713
-   PropFuelCarbon[1] = 1.02802
-   PropFinalCarbon[1] = 1.52773
-   PropExclExpCarbon[1] = 1.52773
+   PropElecCarbon[1] = 0.498083
+   PropFuelCarbon[1] = 1.02753
+   PropFinalCarbon[1] = 1.52562
+   PropExclExpCarbon[1] = 1.52562
    PropExportCarbon[1] = 0
    PropSelfConsCarbon[1] = 0
-   PropNoSolFlxCarbon[1] = 1.52773
-   StdFinalCarbon = 1.51846
-   StdExclExpCarbon = 1.51846
+   PropNoSolFlxCarbon[1] = 1.52562
+   StdFinalCarbon = 1.536
+   StdExclExpCarbon = 1.536
    StdExportCarbon = 0
    StdSelfConsCarbon = 0
-   StdNoSolFlxCarbon = 1.51846
+   StdNoSolFlxCarbon = 1.536
    HideCompSummary = 1
    HideEDRs = 1
    HideC02Emissions = 0
@@ -799,6 +800,8 @@ Cons   "Asphalt Shingle Roof"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "- no insulation -"
    FrameLayer = "2x4 Top Chord of Roof Truss @ 24 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -830,6 +833,8 @@ Cons   "Ceiling R11"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "R 11"
    FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -859,6 +864,8 @@ Cons   "Wall R0"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "- no insulation (vertical) -"
    FrameLayer = "2x4 @ 16 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -889,6 +896,8 @@ Cons   "Raised Crawl R0"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "- no insulation -"
    FrameLayer = "2x6 @ 16 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -919,6 +928,8 @@ Cons   "Interior R0"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "- no insulation (vertical) -"
    FrameLayer = "2x4 @ 16 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -949,6 +960,8 @@ Cons   "R-38 Ceiling"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "R 38"
    FrameLayer = "2x4 @ 24 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -978,6 +991,8 @@ Cons   "R-13 Stucco"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "R 13"
    FrameLayer = "2x4 @ 16 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -1008,6 +1023,8 @@ Cons   "Asphalt High performance"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "R 13"
    FrameLayer = "2x4 @ 16 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -1038,6 +1055,8 @@ Cons   "2x6 R-19 w/R5"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
    FrameLayer = "2x6 @ 16 in. O.C."
    SheathInsulLayer = "R5 Sheathing"
@@ -1067,6 +1086,8 @@ Cons   "R-19 Stucco Wall"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
    CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
    FrameLayer = "2x6 @ 16 in. O.C."
    SheathInsulLayer = "- no sheathing/insul. -"
@@ -1498,7 +1519,9 @@ HVACHeat   "Heating System 3"
 
 HVACCool   "Ex Cooling"  
    Type = "SplitAirCond - Split air conditioning system"
+   EffMetric = "SEER/EER"
    SEER = 12
+   SEER2 = 14.3
    EER = 10.42
    CFMperTon = 350
    ACCharge = "Not Verified"
@@ -1510,7 +1533,9 @@ HVACCool   "Ex Cooling"
 
 HVACCool   "Cool Split"  
    Type = "SplitAirCond - Split air conditioning system"
+   EffMetric = "SEER/EER"
    SEER = 13
+   SEER2 = 14.3
    EER = 11.3
    CFMperTon = 350
    ACCharge = "Not Verified"
@@ -1538,6 +1563,7 @@ HVACDist   "Attic Default"
    DuctDesign = 0
    LowLkgAH = 0
    IsLessThanFortyFt = 1
+   IsLessThan25Ft = 0
    ..
 
 HVACDist   "New Ducts"  
@@ -1558,6 +1584,7 @@ HVACDist   "New Ducts"
    DuctDesign = 0
    LowLkgAH = 0
    IsLessThanFortyFt = 0
+   IsLessThan25Ft = 0
    ..
 
 HVACFan   "Ex Fan"  
@@ -1588,6 +1615,7 @@ IAQFan   "IAQ Fan 1"
 
 DHWSys   "DHW System"  
    SystemType = "Standard"
+   NewSmConsInstElecExcept = 0
    CentralRecircType = "Non-Central"
    CHPWHSysDescrip = "- select system description -"
    CHPWHIntegPkgType = "Residential (NEEA rated) Product"

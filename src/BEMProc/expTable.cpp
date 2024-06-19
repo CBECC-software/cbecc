@@ -213,7 +213,7 @@ BEMTableCell* BEMTable::LookupCell( int iRetColID, vector<string>& saIndepNames,
 					{	bFoundIndep = true;
 						iaIndepsChecked[iIndep] = true;
 						//BEMTableCell* pRowIndepCell = (BEMTableCell*) m_rowIndepCells[i0Col-1];			assert( pRowIndepCell );
-					// SAC 3/10/13 - replaced above line w/ following 3 lines to fix bug where RowIndepCell not properly accessed
+					   // SAC 3/10/13 - replaced above line w/ following 3 lines to fix bug where RowIndepCell not properly accessed
 						BEMTableCell* pRowIndepCellGrp = (BEMTableCell*) m_rowIndepCells[iRow];				assert( pRowIndepCellGrp );
 						if (pRowIndepCellGrp)
 						{	BEMTableCell* pRowIndepCell = &pRowIndepCellGrp[i0Col-1];								assert( pRowIndepCell );
@@ -244,7 +244,19 @@ BEMTableCell* BEMTable::LookupCell( int iRetColID, vector<string>& saIndepNames,
 							}
 						}
 					}
-				assert( bFoundIndep );  // if not, then input argument did not
+#ifdef _DEBUG
+				//assert( bFoundIndep );  // if not, then input argument did not
+            if (!bFoundIndep && iRow == (int) m_rowTitles.size()-1)    // switched from assert to error logging - SAC 10/20/22
+            {  QString qsDbgMsg = QString( "expTable BEMTable::LookupCell() error on %1:  i0Row %2, indep(s): " ).arg( m_name, QString::number(iRow) );
+   				for (iIndep=0; iIndep < (int) saIndepNames.size(); iIndep++)
+               {  //qsDbgMsg += QString( " %1," ).arg( (string) saIndepNames.at(iIndep) );
+                  if (iIndep > 0)
+                     qsDbgMsg += ", ";
+                  qsDbgMsg += saIndepNames[iIndep].c_str();
+               }
+               BEMPX_WriteLogFile( qsDbgMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            }
+#endif
 			}
 			if (bColMatch)
 				i0SelCol = i0Col;

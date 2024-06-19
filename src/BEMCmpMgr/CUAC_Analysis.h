@@ -38,8 +38,9 @@
 struct CUACUtilityRate  // SAC 10/19/22
 {
    bool    bOK;
-   double  dElecMonthlyCharge;
-   double  dElecMinMonthlyCharge;
+   QString sUnits;
+   double  dMonthlyCharge;
+   double  dMinMonthlyCharge;
    long    lNumSeasons;
    QString saSeasonLabels[12];
    long    laSeasonMonthMap[12];
@@ -47,7 +48,7 @@ struct CUACUtilityRate  // SAC 10/19/22
    double  daaBinSeasonalCost[5][12];
 };
 
-extern void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, int iRulesetCodeYear,
+extern void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo,
                               char* pszErrorMsg, int iErrorMsgLen, bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx );
 

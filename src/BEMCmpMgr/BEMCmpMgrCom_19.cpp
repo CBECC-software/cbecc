@@ -2160,6 +2160,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	if (bPromptUserUMLHWarning && (bSilent || iDontAbortOnErrorsThruStep > 6))
 		bPromptUserUMLHWarning = false;		// SAC 3/19/15 - toggle OFF PromptUserUMLHWarning if 'silent' flag set or DontAbortOnErrorsThruStep includes UMLH check step
 
+	int  iRptGenConnectTimeout		   =	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
+	int  iRptGenReadWriteTimeout		=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , 480,  saCSVOptions );		// SAC 11/02/22
+
 	long plExportHourlyResults[4]		={	                                                     0                      ,		// SAC 8/21/14
 													                                                     0                      ,		// SAC 8/21/14
 													 GetCSVOptionValue( "ExportHourlyResults_ap"     ,   0,  saCSVOptions )     ,		// SAC 8/21/14
@@ -5775,7 +5778,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
 																	sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																	(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex, false );		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
+																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex, false, false,		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
+                                                   iRptGenConnectTimeout, iRptGenReadWriteTimeout );    // SAC 11/02/22
+
 							dTimeToReport += DeltaTime( tmMark );		// log time spent generating report
 							iNumTimeToReport++; 
 							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
@@ -5933,7 +5938,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																	(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
 																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex,		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
-                                                   false /*bFinalPDFGeneration*/, true /*bSchemaBasedRptGen*/ );     // SAC 04/11/21
+                                                   false /*bFinalPDFGeneration*/, true /*bSchemaBasedRptGen*/, iRptGenConnectTimeout, iRptGenReadWriteTimeout );     // SAC 04/11/21   // SAC 11/02/22
 							dTimeToReport += DeltaTime( tmMark );		// log time spent generating report
 							iNumTimeToReport++; 
 							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket

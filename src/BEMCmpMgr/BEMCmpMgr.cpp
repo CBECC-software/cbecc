@@ -2236,7 +2236,7 @@ int CheckSiteAccessViaHttpLib(   const char* pszSite, const char* pszCACertPath,
 // report generation via httplib library - SAC 06/12/21
 int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 									const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,		// pass NULLs for no proxy
-									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/ )
+									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=480*/ )
 {	int iRetVal = 0;
 
 //bVerbose = true;  // *** TEMPORARY *** - SAC 06/13/21
@@ -2275,10 +2275,15 @@ int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, co
 //   std::string body;
 //   auto res = cli.Post( sPostPath.c_str(), pszRptData, iRptDataLen, "application/text" );
 
+   if (iConnectTimeoutSecs != 10)      // SAC 11/02/22
+      BEMPX_WriteLogFile( QString("      Report generator connection timeout being used: %1").arg( QString::number( iConnectTimeoutSecs ) ) );
+   if (iReadWriteTimeoutSecs != 480)
+      BEMPX_WriteLogFile( QString("      Report generator read/write timeout being used: %1").arg( QString::number( iReadWriteTimeoutSecs ) ) );
+
 //   cli.set_connection_timeout(0, 300000); // 300 milliseconds
-   cli.set_connection_timeout(10, 0);  // SAC 09/28/21 - now 10 secs, was: // 8 seconds
-   cli.set_read_timeout(300, 0);       // 5 minutes
-   cli.set_write_timeout(300, 0);      // 5 minutes
+   cli.set_connection_timeout(iConnectTimeoutSecs, 0);  // SAC 09/28/21 - now 10 secs, was: // 8 seconds   // updated to use iConnectTimeoutSecs - SAC 11/02/22
+   cli.set_read_timeout( iReadWriteTimeoutSecs, 0);      // updated to use iReadWriteTimeoutSecs - SAC 11/02/22
+   cli.set_write_timeout(iReadWriteTimeoutSecs, 0);  
 
    cli.set_keep_alive(true);
    auto res = cli.Post( sPostPath.c_str(), pszRptData, iRptDataLen, "text/plain" );

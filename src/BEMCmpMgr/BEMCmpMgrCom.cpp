@@ -2472,6 +2472,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	if (bPromptUserUMLHWarning && (bSilent || iDontAbortOnErrorsThruStep > 6))
 		bPromptUserUMLHWarning = false;		// SAC 3/19/15 - toggle OFF PromptUserUMLHWarning if 'silent' flag set or DontAbortOnErrorsThruStep includes UMLH check step
 
+	int  iRptGenConnectTimeout		   =	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
+	int  iRptGenReadWriteTimeout		=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , 480,  saCSVOptions );		// SAC 11/02/22
+
 	long plExportHourlyResults[4]		={	                                                     0                      ,		// SAC 8/21/14
 													                                                     0                      ,		// SAC 8/21/14
 													 GetCSVOptionValue( "ExportHourlyResults_ap"     ,   0,  saCSVOptions )     ,		// SAC 8/21/14
@@ -2502,6 +2505,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	    iDLLCodeYear = 2019;
 #elif  CODEYEAR2022
 	    iDLLCodeYear = 2022;		// SAC 4/24/20
+#elif  CODEYEAR2025
+	    iDLLCodeYear = 2025;		// SAC 10/23/22
 #endif
 
 	int iNumFileOpenDefaultingRounds = GetCSVOptionValue( "NumFileOpenDefaultingRounds", 3, saCSVOptions );		// SAC 4/11/18
@@ -2631,6 +2636,23 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	RelativeToCompletePath_IfNeeded( sModelPathFile   );
 	RelativeToCompletePath_IfNeeded( sLogPathFile     );
 	RelativeToCompletePath_IfNeeded( sEPlusPath       );  // SAC 12/30/13
+
+   QString qsBEMBaseDir;      // SAC 10/28/22 (CUAC)
+   QString qsBEMBaseExtension = sBEMBasePathFile.right(4);
+   if (!qsBEMBaseExtension.isEmpty() && qsBEMBaseExtension.compare(".bin", Qt::CaseInsensitive))
+   {  // have sBEMBasePathFile but NOT a .bin filename - use only for qsBEMBaseDir
+      qsBEMBaseDir = sBEMBasePathFile;
+      if (qsBEMBaseDir.right(1).compare('/') && qsBEMBaseDir.right(1).compare('\\'))
+         qsBEMBaseDir += '\\';  // add trailing backslash
+      sBEMBasePathFile.clear();
+      pszBEMBasePathFile = NULL;
+   }
+   else if (FileExists( sBEMBasePathFile ))
+   {  // use path of sBEMBasePathFile to set qsBEMBaseDir
+      int iLastSlash = std::max( sBEMBasePathFile.lastIndexOf('\\'), sBEMBasePathFile.lastIndexOf('/') );
+      qsBEMBaseDir = sBEMBasePathFile.left( iLastSlash+1 );
+   }
+   // else - qsBEMBaseDir left blank which may cause CUAC PDF report gen issue in finding CEC logo JPG
 
 	QString sModelPathOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.left(                            sModelPathFile.lastIndexOf('\\') + 1 ) : "");
 	QString sModelFileOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.right( sModelPathFile.length() - sModelPathFile.lastIndexOf('\\') - 1 ) : "");		assert( !sModelFileOnly.isEmpty() );
@@ -3857,7 +3879,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
 										(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()) ) != 0)		// SAC 3/8/13 - added weather file prep routine
 			{	BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				sErrMsg = QString::asprintf( "Error encountered initializing weather file locations and/or names for path:  %s", sSimWeatherPath.toLocal8Bit().constData() );
+            QString sWthrStaErrMsg;    // enable ruleset-defined WeatherStation error messaging - SAC
+   			if (BEMPX_GetString( BEMPX_GetDatabaseID( "WeatherStationErrorMsg", iCID_Proj ), sWthrStaErrMsg ) && !sWthrStaErrMsg.isEmpty())
+               sErrMsg = sWthrStaErrMsg;
+            else
+   				sErrMsg = QString::asprintf( "Error encountered initializing weather file locations and/or names for path:  %s", sSimWeatherPath.toLocal8Bit().constData() );
 //											14 : Error encountered initializing weather file locations and/or names
 				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 14 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 		}	}
@@ -4516,6 +4542,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunDateFmt", iCID_Proj ), BEMP_QStr, (void*) &sRunDateFmt );  // was: Proj:RunDateFormatted - SAC 10/28/21
 			BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -3 /*iPrecision*/ );	// SAC 5/16/18 - added new '-3' format to handle output as ISO (xsd:datetime) string  // SAC 9/10/18 - ported from Res
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunDateISO", iCID_Proj ), BEMP_QStr, (void*) &sRunDateFmt );
+         if (iCUACReportID > 0)
+         {  BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -4 /*iPrecision*/ );      // new format: "M/d/yyyy h:m:s ap" - SAC 10/28/22 (CUAC)
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:RunDateFmt" ), BEMP_QStr, (void*) &sRunDateFmt ); 
+         }
 		}
 
 					//		AnalysisThruStep options:
@@ -5858,7 +5888,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
       // perform CUAC analysis/calcs - SAC 09/09/22
       if (iRetVal == 0 && iCUACReportID > 0)
       {
-         CUAC_AnalysisProcessing( sProcessingPath, sModelPathOnly, sModelFileOnly, iRulesetCodeYear, bStoreBEMDetails, bSilent, bVerbose,
+         CUAC_AnalysisProcessing( sProcessingPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMDetails, bSilent, bVerbose,
                                   bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx );
                         //   CSERunLoop( iSimRunIdx, posSimInfo, pqsCSESimStatusMsg, bStoreHourlyResults, sProcessingPath, sModelPathOnly, sModelFileOnly, bSecureT24NRptGenActivated,
                         //                  bPerformFullCSESim, bBypassRecircDHW, lNumPVArraysChk, bEnablePVBattSim, pszUIVersionString,
@@ -6057,7 +6087,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
 																	sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																	(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex, false );		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
+																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex, false, false, 		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
+                                                   iRptGenConnectTimeout, iRptGenReadWriteTimeout );    // SAC 11/02/22
+
 							dTimeToReport += DeltaTime( tmMark );		// log time spent generating report
 							iNumTimeToReport++; 
 							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
@@ -6214,7 +6246,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																	(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
 																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex,		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
-                                                   false /*bFinalPDFGeneration*/, true /*bSchemaBasedRptGen*/ );     // SAC 04/11/21
+                                                   false /*bFinalPDFGeneration*/, true /*bSchemaBasedRptGen*/, iRptGenConnectTimeout, iRptGenReadWriteTimeout );     // SAC 04/11/21   // SAC 11/02/22
 							dTimeToReport += DeltaTime( tmMark );		// log time spent generating report
 							iNumTimeToReport++; 
 							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
@@ -6874,6 +6906,137 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 
 /////////////////////////////////////////////////////////////////////////////
 
+//static const char* /* 560*/ pszNonResResultsHdr1 = ",,,,Analysis:,,,,Proposed ...
+//static const char* /* 968*/ pszNonResResultsHdr2 = ",,,,,,Pass /,Compliance,...
+//static const char* /*2706*/ pszNonResResultsHdr3 = "Start Date & Time,Filename ...
+
+// SAC 10/10/16 - updated T24N CSV summary results header strings to include prop & std model electric demand
+// SAC 2/7/17 - added Proc Mtrs enduse (tic #2033)
+// SAC 2/18/17 - added total & cond floor area + TDV results for unregulated enduses and TDV totals by fuel (for 2019.0.1 release)
+// SAC 7/20/18 - added PV & Battery enduses (for A2030 & 2019.0.3 releases)
+// SAC 6/28/19 - added 2022 Source & SrcPrime energy use columns out to the right
+// SAC 9/24/19 - removed 2022 SrcPrime energy use columns
+// SAC 11/4/19 - added Results Set (5th column) and C02 emissions by model (Prop/Std) and Fuel (Elec/Fuel)
+// SAC 3/20/20 - fixed col CK T24N header: Lighting -> Indoor Lighting (tic #3188)
+// SAC 9/16/20 - added Flexibility Proposed TDV (col BK) (tic #3218)
+// SAC 9/17/20 - added Flexibility Req'd PV and Prop & Std DHW SSF (cols CC-CE) (tic #3215)
+// added Report Gen NRCC PRF transaction ID & processing date/time - SAC 12/05/21
+static char szT24NCSV1[]	 =	",,,,,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,"
+										",,,,Proposed Model,,,Proposed Model,,,,,,Flexibility,Calculated SSFs,,Standard Model:,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Sta"
+										"ndard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,Standard Model,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,"
+										",Calling,Compliance,,,,Secondary,,,Report Generation,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Standard"
+										" Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,\n";   // 665 chars
+static char szT24NCSV2[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
+										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling"
+										" Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Ene"
+										"rgy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,TDV by Fuel (k"
+										"TDV/ft2),,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak De"
+										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC/LMCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
+										",,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,"
+										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1117 chars
+static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Results Set,Area (SqFt),Area (SqFt),Analysis Type,Elapsed Time,Fail,Margin,Time,Rul"
+										"e Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle"
+										",Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp To"
+										"tal,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp"
+										" Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,F"
+										"lexibility,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,"
+										"Zone Max,Zone Name,Num Zones Exceed Max,(kW),(frac),(frac),Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pu"
+										"mps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fan"
+										"s,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor "
+										"Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indo"
+										"or Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natur"
+										"al Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps "
+										"& Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht"
+										" Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Version,Version,Version,"
+										"Version,Version,Version,Weather File Path,Project Path,Transaction ID,Date/Time,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic"
+										" Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps &"
+										" Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pump"
+										"s & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,"
+										"Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fa"
+										"ns,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Coo"
+										"ling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL\n";   // 3102 chars
+
+static char szT24NCSV2_TDVdollars[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
+										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation ($/ft2),,,,,,,,,,,,,,,,TDV by Fuel ($/ft2),,,Cooling"
+										" Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Ene"
+										"rgy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation ($/ft2),,,,,,,,,,,,,,,TDV by Fuel (k"
+										"TDV/ft2),,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak De"
+										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC/LMCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
+										",,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,"
+										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1117 chars
+
+static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model"
+										",,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";
+static char szS901GCSV2[]	=	",,,,,,Pass /,Compliance,Elapsed,,,Energy Costs ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,"
+										",,,,,Other Fuel Energy Consumption (MBtu),,,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Energy Costs ($),,,,Electric E"
+										"nergy Consumption (kWh),,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Other Fuel Energy Consumption (MMBtu),,,,,,,,,,,,Cooling Un"
+										"met Load Hours,,,Heating Unmet Load Hours,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
+static char szS901GCSV3[]	=	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation Status,Elec"
+										"tricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Proce"
+										"ss,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Pr"
+										"ocess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Ot"
+										"her Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Ele"
+										"ctricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Proc"
+										"ess,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,P"
+										"rocess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,O"
+										"ther Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Version,Version,Version,Version,Version,Ve"
+										"rsion,Weather File Path,Project Path\n";
+
+int CMX_PopulateResultsHeader_CECNonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )	// SAC 5/16/14
+{	return CMX_PopulateResultsHeader_NonRes( pszHdr1, iHdr1Len, pszHdr2, iHdr2Len, pszHdr3, iHdr3Len, CT_T24N );
+}
+
+int CMX_PopulateResultsHeader_NonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len, int iCodeType )	// SAC 12/3/14
+{	int iRetVal = 0;
+	const char* pszaHdrs[3];
+	if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
+	{	pszaHdrs[0] = szS901GCSV1;		pszaHdrs[1] = szS901GCSV2;		pszaHdrs[2] = szS901GCSV3;
+	}
+	else
+	{	pszaHdrs[0] = szT24NCSV1;		pszaHdrs[1] = szT24NCSV2;		pszaHdrs[2] = szT24NCSV3;
+	}
+
+#pragma warning(disable:4996)
+	if (pszHdr1 && iHdr1Len > 0)
+	{	strncpy( pszHdr1, pszaHdrs[0], iHdr1Len-1 );
+		if (strlen( pszHdr1 ) < strlen( pszaHdrs[0] ))
+			iRetVal = 1;
+	}
+	if (pszHdr2 && iHdr2Len > 0)
+	{	strncpy( pszHdr2, pszaHdrs[1], iHdr2Len-1 );
+		if (iRetVal == 0 && strlen( pszHdr2 ) < strlen( pszaHdrs[1] ))
+			iRetVal = 2;
+	}
+	if (pszHdr3 && iHdr3Len > 0)
+	{	strncpy( pszHdr3, pszaHdrs[2], iHdr3Len-1 );
+		if (iRetVal == 0 && strlen( pszHdr3 ) < strlen( pszaHdrs[2] ))
+			iRetVal = 3;
+	}
+#pragma warning(default:4996)
+	return iRetVal;
+}
+
+const char* GetResultsCSVHeader_NonRes( int i1HdrIdx, int iCodeType )	// SAC 12/3/14
+{	const char* pszRetVal = NULL;
+	switch (iCodeType)
+	{	case CT_S901G :
+		case CT_ECBC  :	switch (i1HdrIdx)
+								{	case  2 :	pszRetVal = szS901GCSV2;		break;
+									case  3 :	pszRetVal = szS901GCSV3;		break;
+									default :	pszRetVal = szS901GCSV1;		break;
+								}	break;
+		default :			switch (i1HdrIdx)
+								{	case  2 :	pszRetVal = szT24NCSV2;			break;
+									case  3 :	pszRetVal = szT24NCSV3;			break;
+									default :	pszRetVal = szT24NCSV1;			break;
+								}	break;
+	}
+	return pszRetVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+
 #define  CM_MAX_BATCH_VER 4		// SAC 6/21/18 - 2->3 (CSE path)  | SAC 1/24/20 - 3->4 (AnalysisAction table)
 
 int path_len( std::string& str )
@@ -7373,6 +7536,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 			if (sErrMsg.size() < 1)
 			{
 				int iAnalRetVal = -1;
+            bool bRulesetNameIncl25 = (saRulesetFN[iRun].find("25") != std::string::npos ? true : false);     // SAC 10/25/22
 				assert( !bOLDRules );
 				char pszResultsRecord[3200] = "\0";       // increased length from 2056->3200 - SAC 05/25/22
 					iAnalRetVal = CMX_PerformAnalysis_CECNonRes( saBEMBaseFN[iRun].c_str() /*pszBEMBasePathFile*/, saRulesetFN[iRun].c_str() /*pszRulesetPathFile*/,
@@ -7453,7 +7617,10 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							if (bWriteHdrs)
 							{	// WRITE HEADER RECORDS
                         csvFile.write( GetResultsCSVHeader_NonRes( 1, iCodeType ) );
-                        csvFile.write( GetResultsCSVHeader_NonRes( 2, iCodeType ) );
+                        if (bRulesetNameIncl25 && iCodeType == CT_T24N)
+                           csvFile.write( szT24NCSV2_TDVdollars );      // kludge to select column labels replacing kTDV w/ $ for 2025 T24N - SAC 10/25/22
+                        else
+                           csvFile.write( GetResultsCSVHeader_NonRes( 2, iCodeType ) );
                         csvFile.write( GetResultsCSVHeader_NonRes( 3, iCodeType ) );
 							}
 
@@ -8726,127 +8893,6 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 }
 
 /////////////////////////////////////////////////////////////////////////////
-
-//static const char* /* 560*/ pszNonResResultsHdr1 = ",,,,Analysis:,,,,Proposed ...
-//static const char* /* 968*/ pszNonResResultsHdr2 = ",,,,,,Pass /,Compliance,...
-//static const char* /*2706*/ pszNonResResultsHdr3 = "Start Date & Time,Filename ...
-
-// SAC 10/10/16 - updated T24N CSV summary results header strings to include prop & std model electric demand
-// SAC 2/7/17 - added Proc Mtrs enduse (tic #2033)
-// SAC 2/18/17 - added total & cond floor area + TDV results for unregulated enduses and TDV totals by fuel (for 2019.0.1 release)
-// SAC 7/20/18 - added PV & Battery enduses (for A2030 & 2019.0.3 releases)
-// SAC 6/28/19 - added 2022 Source & SrcPrime energy use columns out to the right
-// SAC 9/24/19 - removed 2022 SrcPrime energy use columns
-// SAC 11/4/19 - added Results Set (5th column) and C02 emissions by model (Prop/Std) and Fuel (Elec/Fuel)
-// SAC 3/20/20 - fixed col CK T24N header: Lighting -> Indoor Lighting (tic #3188)
-// SAC 9/16/20 - added Flexibility Proposed TDV (col BK) (tic #3218)
-// SAC 9/17/20 - added Flexibility Req'd PV and Prop & Std DHW SSF (cols CC-CE) (tic #3215)
-// added Report Gen NRCC PRF transaction ID & processing date/time - SAC 12/05/21
-static char szT24NCSV1[]	 =	",,,,,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,"
-										",,,,Proposed Model,,,Proposed Model,,,,,,Flexibility,Calculated SSFs,,Standard Model:,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Sta"
-										"ndard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,Standard Model,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,"
-										",Calling,Compliance,,,,Secondary,,,Report Generation,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Standard"
-										" Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,\n";   // 665 chars
-static char szT24NCSV2[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
-										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling"
-										" Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Ene"
-										"rgy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,TDV by Fuel (k"
-										"TDV/ft2),,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak De"
-										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC/LMCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
-										",,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,"
-										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1117 chars
-static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Results Set,Area (SqFt),Area (SqFt),Analysis Type,Elapsed Time,Fail,Margin,Time,Rul"
-										"e Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle"
-										",Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp To"
-										"tal,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp"
-										" Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,F"
-										"lexibility,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,"
-										"Zone Max,Zone Name,Num Zones Exceed Max,(kW),(frac),(frac),Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pu"
-										"mps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fan"
-										"s,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor "
-										"Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indo"
-										"or Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natur"
-										"al Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps "
-										"& Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht"
-										" Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Version,Version,Version,"
-										"Version,Version,Version,Weather File Path,Project Path,Transaction ID,Date/Time,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic"
-										" Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps &"
-										" Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pump"
-										"s & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,"
-										"Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fa"
-										"ns,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Coo"
-										"ling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL\n";   // 3102 chars
-
-static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model"
-										",,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";
-static char szS901GCSV2[]	=	",,,,,,Pass /,Compliance,Elapsed,,,Energy Costs ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,"
-										",,,,,Other Fuel Energy Consumption (MBtu),,,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Energy Costs ($),,,,Electric E"
-										"nergy Consumption (kWh),,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Other Fuel Energy Consumption (MMBtu),,,,,,,,,,,,Cooling Un"
-										"met Load Hours,,,Heating Unmet Load Hours,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
-static char szS901GCSV3[]	=	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation Status,Elec"
-										"tricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Proce"
-										"ss,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Pr"
-										"ocess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Ot"
-										"her Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Ele"
-										"ctricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Proc"
-										"ess,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,P"
-										"rocess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,O"
-										"ther Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Version,Version,Version,Version,Version,Ve"
-										"rsion,Weather File Path,Project Path\n";
-
-int CMX_PopulateResultsHeader_CECNonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )	// SAC 5/16/14
-{	return CMX_PopulateResultsHeader_NonRes( pszHdr1, iHdr1Len, pszHdr2, iHdr2Len, pszHdr3, iHdr3Len, CT_T24N );
-}
-
-int CMX_PopulateResultsHeader_NonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len, int iCodeType )	// SAC 12/3/14
-{	int iRetVal = 0;
-	const char* pszaHdrs[3];
-	if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
-	{	pszaHdrs[0] = szS901GCSV1;		pszaHdrs[1] = szS901GCSV2;		pszaHdrs[2] = szS901GCSV3;
-	}
-	else
-	{	pszaHdrs[0] = szT24NCSV1;		pszaHdrs[1] = szT24NCSV2;		pszaHdrs[2] = szT24NCSV3;
-	}
-
-#pragma warning(disable:4996)
-	if (pszHdr1 && iHdr1Len > 0)
-	{	strncpy( pszHdr1, pszaHdrs[0], iHdr1Len-1 );
-		if (strlen( pszHdr1 ) < strlen( pszaHdrs[0] ))
-			iRetVal = 1;
-	}
-	if (pszHdr2 && iHdr2Len > 0)
-	{	strncpy( pszHdr2, pszaHdrs[1], iHdr2Len-1 );
-		if (iRetVal == 0 && strlen( pszHdr2 ) < strlen( pszaHdrs[1] ))
-			iRetVal = 2;
-	}
-	if (pszHdr3 && iHdr3Len > 0)
-	{	strncpy( pszHdr3, pszaHdrs[2], iHdr3Len-1 );
-		if (iRetVal == 0 && strlen( pszHdr3 ) < strlen( pszaHdrs[2] ))
-			iRetVal = 3;
-	}
-#pragma warning(default:4996)
-	return iRetVal;
-}
-
-const char* GetResultsCSVHeader_NonRes( int i1HdrIdx, int iCodeType )	// SAC 12/3/14
-{	const char* pszRetVal = NULL;
-	switch (iCodeType)
-	{	case CT_S901G :
-		case CT_ECBC  :	switch (i1HdrIdx)
-								{	case  2 :	pszRetVal = szS901GCSV2;		break;
-									case  3 :	pszRetVal = szS901GCSV3;		break;
-									default :	pszRetVal = szS901GCSV1;		break;
-								}	break;
-		default :			switch (i1HdrIdx)
-								{	case  2 :	pszRetVal = szT24NCSV2;			break;
-									case  3 :	pszRetVal = szT24NCSV3;			break;
-									default :	pszRetVal = szT24NCSV1;			break;
-								}	break;
-	}
-	return pszRetVal;
-}
-
-
 
 int CMX_ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptPathFile,  
                         LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, bool bVerboseOutput,

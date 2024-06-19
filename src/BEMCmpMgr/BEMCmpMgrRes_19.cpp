@@ -301,6 +301,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bReportGenVerbose	  		= (GetCSVOptionValue( "ReportGenVerbose"      ,   0,  saCSVOptions ) > 0);		// SAC 3/20/20
 	bool bCSE_DHWonly	  				= (GetCSVOptionValue( "CSE_DHWonly"           ,   0,  saCSVOptions ) > 0);		// SAC 7/7/20
    long lShuffleSFamDHW          =  GetCSVOptionValue( "ShuffleSFamDHW",          -1,  saCSVOptions );		// SAC 05/13/21
+	int  iRptGenConnectTimeout		=	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
+	int  iRptGenReadWriteTimeout	=   GetCSVOptionValue( "RptGenReadWriteTimeout"     , 480,  saCSVOptions );		// SAC 11/02/22
 	bool bCSEIncludeFileUsed = false;	// SAC 12/23/14
 	bool bClassifyEditableDefaultsAsUserData = (GetCSVOptionValue( "ClassifyEditableDefaultsAsUserData", 0, saCSVOptions ) > 0);	// SAC 4/1/20
 	QString sAltWeatherPath;		// SAC 6/4/20
@@ -3314,7 +3316,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 																sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
 																sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																sProxyServerType.toLocal8Bit().constData(), (sNetComLibrary.isEmpty() ? NULL : sNetComLibrary.toLocal8Bit().constData()),
-																iSecurityKeyIndex, false, (iRptGenPass==0) );		// SAC 11/5/15   // SAC 1/10/17   // SAC 11/20/18
+																iSecurityKeyIndex, false, (iRptGenPass==0), iRptGenConnectTimeout, iRptGenReadWriteTimeout );		// SAC 11/5/15   // SAC 1/10/17   // SAC 11/20/18   // SAC 11/02/22
 
 									if (bVerbose || bReportGenVerbose || iRptGenRetVal != 0)
 									{	sLogMsg = QString( "      generation of %1 %2 compliance report(s) %3 (returned %4)" ).arg( (bComplianceReportPDF && bComplianceReportXML ? "both pdf & full" : (bComplianceReportPDF ? "pdf" : "full")), sRptGenPassID, (iRptGenRetVal==0 ? "succeeded" : "failed"), QString::number(iRptGenRetVal) );
