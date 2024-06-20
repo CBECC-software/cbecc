@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "090012-RetlLrg-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414704334
-   ModDate = 1688370731
-   RunDate = 1688370732
+   ModDate = 1705888901
+   RunDate = 1705888902
    ZipCode = 95814
    WeatherStation = "SACRAMENTO EXECUTIVE"
    HVACAutoSizing = 0
@@ -16,7 +16,7 @@ Proj   "090012-RetlLrg-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.0 (1302)"
+   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -8905,22 +8905,22 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Title3[22] = "Emis. (tonne)"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
-   Enduse1[2] = "148.5"
+   Enduse1[2] = "147.6"
    Enduse1[3] = "--"
-   Enduse1[4] = "18.52"
-   Enduse1[5] = "148.5"
+   Enduse1[4] = "18.37"
+   Enduse1[5] = "147.6"
    Enduse1[6] = "--"
-   Enduse1[7] = "18.52"
+   Enduse1[7] = "18.37"
    Enduse1[8] = "--"
-   Enduse1[9] = "57.8"
-   Enduse1[10] = "57.8"
-   Enduse1[11] = "2.42"
-   Enduse1[12] = "2.42"
+   Enduse1[9] = "56.4"
+   Enduse1[10] = "56.4"
+   Enduse1[11] = "2.40"
+   Enduse1[12] = "2.40"
    Enduse1[13] = "--"
-   Enduse1[17] = "35.80"
-   Enduse1[19] = "35.80"
-   Enduse1[20] = "35.80"
-   Enduse1[22] = "35.80"
+   Enduse1[17] = "35.52"
+   Enduse1[19] = "35.52"
+   Enduse1[20] = "35.52"
+   Enduse1[22] = "35.52"
    Enduse1[23] = "0.00"
    Enduse2[1] = "Space Cooling"
    Enduse2[2] = "273.7"
@@ -9023,22 +9023,22 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[22] = "71.10"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "326.9"
+   Enduse8[2] = "326.0"
    Enduse8[3] = "0.0"
-   Enduse8[4] = "81.46"
-   Enduse8[5] = "326.9"
+   Enduse8[4] = "81.31"
+   Enduse8[5] = "326.0"
    Enduse8[6] = "0.0"
-   Enduse8[7] = "81.46"
+   Enduse8[7] = "81.31"
    Enduse8[8] = "--"
-   Enduse8[9] = "139.0"
-   Enduse8[10] = "139.0"
-   Enduse8[11] = "8.67"
-   Enduse8[12] = "8.67"
+   Enduse8[9] = "137.6"
+   Enduse8[10] = "137.6"
+   Enduse8[11] = "8.65"
+   Enduse8[12] = "8.65"
    Enduse8[13] = "--"
-   Enduse8[17] = "128.15"
-   Enduse8[19] = "128.15"
-   Enduse8[20] = "128.15"
-   Enduse8[22] = "128.15"
+   Enduse8[17] = "127.87"
+   Enduse8[19] = "127.87"
+   Enduse8[20] = "127.87"
+   Enduse8[22] = "127.87"
    Enduse8[23] = "0.00"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "683.0"
@@ -9141,46 +9141,46 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[22] = "-8.36"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "1,011.0"
+   Enduse15[2] = "1,010.1"
    Enduse15[3] = "0.0"
-   Enduse15[4] = "153.87"
-   Enduse15[5] = "1,011.0"
+   Enduse15[4] = "153.72"
+   Enduse15[5] = "1,010.1"
    Enduse15[6] = "0.0"
-   Enduse15[7] = "153.87"
+   Enduse15[7] = "153.72"
    Enduse15[8] = "--"
-   Enduse15[9] = "171.5"
-   Enduse15[10] = "171.5"
-   Enduse15[11] = "14.08"
-   Enduse15[12] = "14.08"
+   Enduse15[9] = "170.1"
+   Enduse15[10] = "170.1"
+   Enduse15[11] = "14.06"
+   Enduse15[12] = "14.06"
    Enduse15[13] = "--"
-   Enduse15[17] = "208.11"
-   Enduse15[19] = "208.11"
-   Enduse15[20] = "208.11"
-   Enduse15[22] = "208.11"
+   Enduse15[17] = "207.83"
+   Enduse15[19] = "207.83"
+   Enduse15[20] = "207.83"
+   Enduse15[22] = "207.83"
    Enduse15[23] = "0.00"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "1,238.0"
+   Enduse16[2] = "1,237.1"
    Enduse16[3] = "0.0"
-   Enduse16[4] = "158.00"
-   Enduse16[5] = "1,238.0"
+   Enduse16[4] = "157.85"
+   Enduse16[5] = "1,237.1"
    Enduse16[6] = "0.0"
-   Enduse16[7] = "158.00"
+   Enduse16[7] = "157.85"
    Enduse16[8] = "--"
-   Enduse16[9] = "144.5"
-   Enduse16[10] = "144.5"
-   Enduse16[11] = "11.89"
-   Enduse16[12] = "11.89"
+   Enduse16[9] = "143.1"
+   Enduse16[10] = "143.1"
+   Enduse16[11] = "11.87"
+   Enduse16[12] = "11.87"
    Enduse16[13] = "--"
-   Enduse16[17] = "175.66"
-   Enduse16[19] = "175.66"
-   Enduse16[20] = "175.66"
-   Enduse16[22] = "175.66"
+   Enduse16[17] = "175.38"
+   Enduse16[19] = "175.38"
+   Enduse16[20] = "175.38"
+   Enduse16[22] = "175.38"
    Enduse16[23] = "0.00"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 0  'Back_Office Zone'
 clg: 0  htg: 0  'Back_Shelving/Refrig Zone'
-clg: 0  htg: 0  'Back_Storage Zone'
+clg: 0  htg: 5  'Back_Storage Zone'
 clg: 0  htg: 0  'Main_Entry Zone'
 clg: 0  htg: 0  'Registers/Aisle Zone'
 clg: 0  htg: 0  'Restroom_1 Zone'
@@ -9189,11 +9189,11 @@ clg: 0  htg: 0  'Side_Entry_1 Zone'
 clg: 0  htg: 0  'Side_Entry_2 Zone'
 clg: 0  htg: 0  'Side_Shelving_East Zone'
 clg: 0  htg: 0  'Side_Shelving_West Zone'
-clg: 0  htg: 0  'Side_Storage_1 Zone'
-clg: 0  htg: 0  'Side_Storage_2 Zone'", 
+clg: 0  htg: 12  'Side_Storage_1 Zone'
+clg: 0  htg: 1  'Side_Storage_2 Zone'", 
                  "clg: 0  htg: 0  'Back_Office Zone'
 clg: 0  htg: 0  'Back_Shelving/Refrig Zone'
-clg: 0  htg: 0  'Back_Storage Zone'
+clg: 0  htg: 5  'Back_Storage Zone'
 clg: 0  htg: 0  'Main_Entry Zone'
 clg: 0  htg: 0  'Registers/Aisle Zone'
 clg: 0  htg: 0  'Restroom_1 Zone'
@@ -9202,10 +9202,10 @@ clg: 0  htg: 0  'Side_Entry_1 Zone'
 clg: 0  htg: 0  'Side_Entry_2 Zone'
 clg: 0  htg: 0  'Side_Shelving_East Zone'
 clg: 0  htg: 0  'Side_Shelving_West Zone'
-clg: 0  htg: 0  'Side_Storage_1 Zone'
-clg: 0  htg: 0  'Side_Storage_2 Zone'" )
+clg: 0  htg: 12  'Side_Storage_1 Zone'
+clg: 0  htg: 1  'Side_Storage_2 Zone'" )
    SimSummary[1] = "CSE Successful, E+ Successful (203 warnings)"
-   SimSummary[3] = "CSE Successful, E+ Successful (203 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (200 warnings)"
    PassFail = "PASS"
    MetricPassFail[1] = "Pass"
    MetricPassFail[2] = "Pass"
@@ -9230,13 +9230,13 @@ clg: 0  htg: 0  'Side_Storage_2 Zone'" )
    MarginkW = 0
    PVBattResultsValid = 1
    PropPV_Total = 915528
-   PropPV_Export = 23987.9
-   PropPV_PctExport = 2.62012
+   PropPV_Export = 23986.5
+   PropPV_PctExport = 2.61996
    StdPV_Total = 915528
-   StdPV_Export = 23987.9
-   StdPV_PctExport = 2.62012
-   NRCCPRFPayldTransID = "0046408f-1ac5-4999-894d-ec1eb77571ab"
-   NRCCPRFPayldProcDate = "2023-07-03T00:51:50"
+   StdPV_Export = 23986.5
+   StdPV_PctExport = 2.61996
+   NRCCPRFPayldTransID = "d1015bb9-d66f-4e17-8628-33da1aaeae65"
+   NRCCPRFPayldProcDate = "2024-01-21T18:01:24"
    ..
 
 

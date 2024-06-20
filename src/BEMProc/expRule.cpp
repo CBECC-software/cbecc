@@ -618,7 +618,10 @@ void ReportTargetedDebugInfo( ExpEvalStruct* pEval, int iDataType, long lDBID, i
 		if (iDataType == BEMP_Sym || iDataType == BEMP_Int)
 		{	lData = BEMPX_GetIntegerAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, iBEMProcModel );
 			if (iDataStatus > 0 && iDataType == BEMP_Sym)
-				sData = BEMPX_GetSymbolString( lData, lDBID, iObjIdx, eObjType );
+			{	sData = BEMPX_GetSymbolString( lData, lDBID, iObjIdx, eObjType );
+            if (sData.isEmpty())    // if undefined, try loading enum regardless of CurrentSymDepSet - SAC 01/08/24
+                  sData = BEMPX_GetSymbolString( lData, lDBID, iObjIdx, eObjType, FALSE /*bOnlyFromCurrentSymDepSet*/ );
+         }
 		}
 		else if (iDataType == BEMP_Flt)
 			dData = BEMPX_GetFloatAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, iBEMProcModel );
@@ -9637,9 +9640,12 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 										{	case BEMP_Int	:	bIsNumeric[iLR] = TRUE;		dValCond[iLR] = (double) pValProp->getInt();			break;
 											case BEMP_Flt	:	bIsNumeric[iLR] = TRUE;		dValCond[iLR] = (double) pValProp->getDouble();		break;
 											case BEMP_Sym	:	bIsNumeric[iLR] = TRUE;		dValCond[iLR] = (double) pValProp->getInt();
-																	bIsString[iLR] = TRUE;		sValCond[iLR] = BEMPX_GetSymbolString( pValProp->getInt(), lArgCondDBID[iLR], iValObjIdx, eValObjType, i0Model /*0 iBEMProcIdx*/ );  break;
+																	bIsString[iLR] = TRUE;		sValCond[iLR] = BEMPX_GetSymbolString( pValProp->getInt(), lArgCondDBID[iLR], iValObjIdx, eValObjType, i0Model /*0 iBEMProcIdx*/ );
+                                                            if (sValCond[iLR].isEmpty())    // try loading enum regardless of CurrentSymDepSet - SAC 01/08/24
+                                                               sValCond[iLR] = BEMPX_GetSymbolString( pValProp->getInt(), lArgCondDBID[iLR], iValObjIdx, eValObjType, i0Model /*0 iBEMProcIdx*/, FALSE /*bOnlyFromCurrentSymDepSet*/ );
+                                                            break;
                                        //const char* __cdecl BEMPX_GetSymbolString( long iSymVal, long lDBID, int iOccur=-1,
-                                       //                                         BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+                                       //                                         BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1, BOOL bOnlyFromCurrentSymDepSet=TRUE );
 											case BEMP_Str	:	bIsString[iLR] = TRUE;		sValCond[iLR] = pValProp->getString();					break;
 											case BEMP_Obj	:	if (pValProp->getObj())
 																	{	dValCond[iLR] = (double) BEMPX_GetObjectIndex( pValProp->getObj()->getClass(), pValProp->getObj(), i0Model /*0 iBEMProcIdx*/ );
@@ -11098,6 +11104,8 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 			if (iDataStatus > 0)
 			{	if (iDataType == BEMP_Sym  &&  bGetSymStr)
 				{	sCurrStr = BEMPX_GetSymbolString( (int) pNode->fValue, lDBID, iOccur, eObjType, iBEMProcModel );
+               if (sCurrStr.isEmpty())    // try loading enum regardless of CurrentSymDepSet - SAC 01/08/24
+                  sCurrStr = BEMPX_GetSymbolString( (int) pNode->fValue, lDBID, iOccur, eObjType, iBEMProcModel, FALSE /*bOnlyFromCurrentSymDepSet*/ );
 					pNode->type = EXP_String;
 				}
 				else

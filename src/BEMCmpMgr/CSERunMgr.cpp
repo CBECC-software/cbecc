@@ -1696,6 +1696,7 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 
    		//	laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
 	   	// SAC 4/7/20 - revision to write only DHWSYS objects that reference a DHWSOLARSYS (or are a slave of central system w/ solarsys reference)
+         // add logic to PREVENT writing child DHWSYS objects that serve ResOtherZn objects (part of changes to allow combination of res & nonres serving std design DHW systems) - SAC 01/12/24
 			for (int iS2Idx=0; (sErrorMsg.isEmpty() && iS2Idx < iNumCSEDHWSystems); iS2Idx++)
 			{	BEMObject* pCentralSys2 = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsCentralDHWSYS" ), iSV, iErr, iS2Idx );
 				BEMObject* pSolarSys2   = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsSolarSys"      ), iSV, iErr, iS2Idx );
@@ -1705,8 +1706,10 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 				{	int iCentralSys2Idx  = BEMPX_GetObjectIndex( pCentralSys2->getClass(), pCentralSys2 );			assert( iCentralSys2Idx >= 0 );
 					pSolarSys2           = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsSolarSys"      ), iSV, iErr, iCentralSys2Idx );
 					if (pSolarSys2)
-						laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iS2Idx+1 );					// slave of central sys w/ cseSOLARSYS assignment
-			}	}
+               {  BEMObject* pSourceOtherZone = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:SourceOtherZone" ), iSV, iErr, iS2Idx );    // ptr to ResOtherZn that this cseDHWSYS serves
+                  if (pSourceOtherZone == NULL)
+						   laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iS2Idx+1 );				// slave of central sys w/ cseSOLARSYS assignment (not serving ResOtherZn)
+			}	}  }
 
 			QString sSzCSEFile, sSzCSEFileOnlyNoExt = QString( "%1-slrsz" ).arg( sProjFileAlone );
 			if (sErrorMsg.isEmpty())

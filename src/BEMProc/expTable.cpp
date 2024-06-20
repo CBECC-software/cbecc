@@ -371,7 +371,8 @@ std::string	BEMTable::GetErrorMessage(   string& sErrorLabel )
 
 std::string	BEMTable::GetErrorMessage( int i0MsgIndex )
 {	assert( i0MsgIndex >= 0 && i0MsgIndex < (int) m_errorLabels.size() );
-	if (i0MsgIndex >= 0 && i0MsgIndex < (int) m_errorLabels.size())
+	if (i0MsgIndex >= 0 && i0MsgIndex < (int) m_errorLabels.size() &&
+       i0MsgIndex < (int) m_errorMessages.size())     // add check to ensure m_errorMessages size sufficient (CAN be 1 less than m_errorLabels.size()) - SAC 01/08/24
 		return m_errorMessages[i0MsgIndex];
 	return "";
 }

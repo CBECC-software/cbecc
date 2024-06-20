@@ -423,6 +423,14 @@ void ProcessNonResAnalysisAbort( int iCodeType, int iProgressStep, QString& sErr
 
 /////////////////////////////////////////////////////////////////////////////
 
+inline static void InitHourlyArray( double* pDbl, double dVal )      // SAC 01/19/24
+{	for (int hr=0; hr<8760; hr++)
+		pDbl[hr] = dVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+
 int CMX_WindowDoorOverlaps_CECNonRes( bool /*bVerbose*/, bool /*bStoreBEMDetails*/, bool /*bSilent*/, QString& sErrMsg )
 {	int iRetVal = 0;
 	QString sLogMsg, sBEMErr;
@@ -3801,7 +3809,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			bProposedOnly = (sAT.indexOf("proposedonly") >= 0);      // SAC 9/6/13
 			if ((bProposedOnly || bResearchMode || iCUACReportID > 0) && iAnalysisThruStep > 7)
 			{	iAnalysisThruStep = 7;
-											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - AnalysisThruStep being set to #%d due to Proj:AnalysisType = %s (or other special processing modes)", iAnalysisThruStep, sATcopy.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            if (iCUACReportID > 0)     // SAC 01/15/24
+					BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - AnalysisThruStep being set to #%d for CUAC analysis", iAnalysisThruStep ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            else
+					BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - AnalysisThruStep being set to #%d due to Proj:AnalysisType = %s (or other special processing modes)", iAnalysisThruStep, sATcopy.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			}
 
 		// further defaulting/setup of CompReport* booleans
@@ -8937,8 +8948,9 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				if (iCodeType == CT_T24N)		// SAC 10/7/14
 				{  if (lEngyCodeYearNum >= 2022 && (!bEchoNResData || !bEchoResData))
                {  // move PV & Battery out to right - no other changes
-                  fprintf( fp_CSV,  ",,,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,%s Multipliers,,,Building Wide,\n", sTDV.toLocal8Bit().constData() );	
-      	         fprintf( fp_CSV,  ",,,Local Time,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,%s,%s\n",
+                  // inserted columns for source energy, CO2 emissions and elec demand multipliers for 2022.3.0-SP2 - SAC 01/18/24 (tic #3421)
+                  fprintf( fp_CSV,  ",,,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,%s Multipliers,,,Source Energy Multipliers,,,CO2 Emissions Multipliers,,,Elec Demand,Building Wide,\n", sTDV.toLocal8Bit().constData() );
+      	         fprintf( fp_CSV,  ",,,Local Time,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,Electric,NatGas,OtherFuel,Electric,NatGas,OtherFuel,,%s,%s\n",
    												esEUMap_CECNonRes[iEUO[0][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 3]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][10]].sEnduseAbbrev,
@@ -8952,13 +8964,15 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                                        esEUMap_CECNonRes[iEUO[0][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][12]].sEnduseAbbrev );   // moved PV & Battery to very end, after TDV
    	            fprintf( fp_CSV,  "Mo,Da,Hr,(%s),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
    														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
-   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(%s/kWh),(%s/MBtu),(%s/MBtu),(kWh),(kWh)\n", sTimeType.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData() );
+   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
+                                             "(%s/kWh),(%s/MBtu),(%s/MBtu),(kBtu/kWh),(kBtu/therm),(kBtu/therm),(tonnes CO2-e/kWh),(tonnes CO2-e/therm),(tonnes CO2-e/therm),(frac),(kWh),(kWh)\n", sTimeType.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData() );
                }
                else if (lEngyCodeYearNum >= 2022)
                {  // move PV & Battery out to right, add separate col of TDV mults (for PV & Batt), and then write a complete set of more column headers for Res data
-                  fprintf( fp_CSV,  ",,,,Nonres Site Electric Use,,,,,,,,,,,,,Nonres Site Natural Gas Use,,,,,,,,,,,,,Nonres Site Propane Use,,,,,,,,,,,,,Nonres %s Multipliers,,,Building Wide,,%s Mult.s,Residential Site Electric Use,,,,,,,,,,,,,Residential Site Natural Gas Use,,,,,,,,,,,,,Residential Site Propane Use,,,,,,,,,,,,,Res %s Multipliers,\n",
-                                       sTDV.toLocal8Bit().constData(), sTDV.toLocal8Bit().constData(), sTDV.toLocal8Bit().constData() );
-      	         fprintf( fp_CSV,  ",,,Local Time,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,%s,%s,PV/Battery,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,\n",
+                  // inserted columns for source energy, CO2 emissions and elec demand multipliers for 2022.3.0-SP2 - SAC 01/18/24 (tic #3421)
+                  fprintf( fp_CSV,  ",,,,Nonres Site Electric Use,,,,,,,,,,,,,Nonres Site Natural Gas Use,,,,,,,,,,,,,Nonres Site Propane Use,,,,,,,,,,,,,Nonres %s Multipliers,,,Nonres Source Energy Multipliers,,,Nonres CO2 Emissions Multipliers,,,Nonres Elec Demand,Building Wide,,PV/Batt Mults (Res/NRes area weighted avg),,,,Residential Site Electric Use,,,,,,,,,,,,,Residential Site Natural Gas Use,,,,,,,,,,,,,Residential Site Propane Use,,,,,,,,,,,,,Res %s Multipliers,,,Res Source Energy Multipliers,,,Res CO2 Emissions Multipliers,,,Res Elec Demand,\n",
+                                       sTDV.toLocal8Bit().constData(), sTDV.toLocal8Bit().constData() );
+      	         fprintf( fp_CSV,  ",,,Local Time,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,Electric,NatGas,OtherFuel,Electric,NatGas,OtherFuel,,%s,%s,%s,Source Energy,CO2 Emis,Elec Demand,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel,Electric,NatGas,OtherFuel,Electric,NatGas,OtherFuel,\n",
    												esEUMap_CECNonRes[iEUO[0][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 3]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][10]].sEnduseAbbrev,	esEUMap_CECNonRes[iEUO[0][13]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][14]].sEnduseAbbrev,  
@@ -8968,7 +8982,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    												esEUMap_CECNonRes[iEUO[1][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 3]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[1][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][12]].sEnduseAbbrev,
-                                       esEUMap_CECNonRes[iEUO[0][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][12]].sEnduseAbbrev,     // moved PV & Battery to follow nonres TDV
+                                       esEUMap_CECNonRes[iEUO[0][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][12]].sEnduseAbbrev, sTDV.toLocal8Bit().constData(),     // moved PV & Battery to follow nonres TDV
    												esEUMap_CECNonRes[iEUO[0][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 3]].sEnduseAbbrev,   // added entirely new set of columns for RES results
    												esEUMap_CECNonRes[iEUO[0][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 7]].sEnduseAbbrev, 
    												esEUMap_CECNonRes[iEUO[0][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][13]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][14]].sEnduseAbbrev,  
@@ -8980,10 +8994,12 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][12]].sEnduseAbbrev );
    	            fprintf( fp_CSV,  "Mo,Da,Hr,(%s),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
    														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
-   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(%s/kWh),(%s/MBtu),(%s/MBtu),(kWh),(kWh),(%s/MBtu),"
+   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
+                                             "(%s/kWh),(%s/MBtu),(%s/MBtu),(kBtu/kWh),(kBtu/therm),(kBtu/therm),(tonnes CO2-e/kWh),(tonnes CO2-e/therm),(tonnes CO2-e/therm),(frac),(kWh),(kWh),(%s/kWh),(kBtu/kWh),(tonnes CO2-e/kWh),(frac),"
                                              "(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
    														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
-   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(%s/kWh),(%s/MBtu),(%s/MBtu),\n", sTimeType.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(),
+   														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"
+                                             "(%s/kWh),(%s/MBtu),(%s/MBtu),(kBtu/kWh),(kBtu/therm),(kBtu/therm),(tonnes CO2-e/kWh),(tonnes CO2-e/therm),(tonnes CO2-e/therm),(frac),\n", sTimeType.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(),
                                        sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData(), sKTDV.toLocal8Bit().constData() );
                }
                else
@@ -9115,7 +9131,10 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 					int iPropTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + 2 + 2) : ((2 * 16) + lCliZnNum + 1) );
 
 					//	int iFuelTDVCol = (lNatGasAvailable > 0 ? 2 : 3);
-					double daTDVMults[3][8760], daResTDVMults[3][8760];
+					//double daTDVMults[3][8760], daResTDVMults[3][8760];
+               double *daTDVMults[3], *daResTDVMults[3];   // switched from stack to heap memory for 8760 multiplier arrays - SAC 01/19/24
+                  daTDVMults[0]    = (double*) malloc( sizeof(double) * 8760 );   daTDVMults[1]    = (double*) malloc( sizeof(double) * 8760 );   daTDVMults[2]    = (double*) malloc( sizeof(double) * 8760 );
+                  daResTDVMults[0] = (double*) malloc( sizeof(double) * 8760 );   daResTDVMults[1] = (double*) malloc( sizeof(double) * 8760 );   daResTDVMults[2] = (double*) malloc( sizeof(double) * 8760 );
 					double* daTDVData[3]    = { &daTDVMults[0][0], &daTDVMults[1][0], &daTDVMults[2][0] };
 					double* daResTDVData[3] = { &daResTDVMults[0][0], &daResTDVMults[1][0], &daResTDVMults[2][0] };
 		            //	int iTableCol = ((lCliZnNum-1) * 3) + iFl + 2;
@@ -9149,6 +9168,144 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                }
                double dFracRArea  = (fResFlrArea < 0.1 ? 0.0 : fResFlrArea / (fNonresFlrArea + fResFlrArea));
                double dFracNRArea = 1.0 - dFracRArea;
+
+					QString sSrcEngyMultTableName, sResSrcEngyMultTableName;		// SAC 01/18/24
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SrcEngyMultTableName"    )+lPrimResultSetIdx-1, sSrcEngyMultTableName   , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResSrcEngyMultTableName" )+lPrimResultSetIdx-1, sResSrcEngyMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+
+					//double daSrcEngyMults[3][8760], daResSrcEngyMults[3][8760];       // SAC 01/18/24
+               double *daSrcEngyMults[3], *daResSrcEngyMults[3];   // switched from stack to heap memory for 8760 multiplier arrays - SAC 01/19/24
+                  daSrcEngyMults[0]    = (double*) malloc( sizeof(double) * 8760 );   daSrcEngyMults[1]    = (double*) malloc( sizeof(double) * 8760 );   daSrcEngyMults[2]    = (double*) malloc( sizeof(double) * 8760 );
+                  daResSrcEngyMults[0] = (double*) malloc( sizeof(double) * 8760 );   daResSrcEngyMults[1] = (double*) malloc( sizeof(double) * 8760 );   daResSrcEngyMults[2] = (double*) malloc( sizeof(double) * 8760 );
+					double* daSrcEngyData[3]    = { &daSrcEngyMults[0][0], &daSrcEngyMults[1][0], &daSrcEngyMults[2][0] };
+					double* daResSrcEngyData[3] = { &daResSrcEngyMults[0][0], &daResSrcEngyMults[1][0], &daResSrcEngyMults[2][0] };
+               if (lEngyCodeYearNum >= 2022)
+               {  if (bEchoNResData && !sSrcEngyMultTableName.isEmpty())
+                  {	if (BEMPX_GetTableColumn( &daSrcEngyMults[0][0], 8760, sSrcEngyMultTableName.toLocal8Bit().constData(), iElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daSrcEngyData[0] = &daZero[0];
+      					if (BEMPX_GetTableColumn( &daSrcEngyMults[1][0], 8760, sSrcEngyMultTableName.toLocal8Bit().constData(), iNGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daSrcEngyData[1] = &daZero[0];
+      					if (BEMPX_GetTableColumn( &daSrcEngyMults[2][0], 8760, sSrcEngyMultTableName.toLocal8Bit().constData(), iPropTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daSrcEngyData[2] = &daZero[0];
+      					assert( (daSrcEngyData[0] != &daZero[0] && daSrcEngyData[1] != &daZero[1] && daSrcEngyData[2] != &daZero[2]) );
+                  }
+                  else if (!bEchoNResData && bEchoResData && !sResSrcEngyMultTableName.isEmpty())
+                  {	if (BEMPX_GetTableColumn( &daSrcEngyMults[0][0], 8760, sResSrcEngyMultTableName.toLocal8Bit().constData(), iElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daSrcEngyData[0] = &daZero[0];
+      					if (BEMPX_GetTableColumn( &daSrcEngyMults[1][0], 8760, sResSrcEngyMultTableName.toLocal8Bit().constData(), iNGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daSrcEngyData[1] = &daZero[0];
+      					if (BEMPX_GetTableColumn( &daSrcEngyMults[2][0], 8760, sResSrcEngyMultTableName.toLocal8Bit().constData(), iPropTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daSrcEngyData[2] = &daZero[0];
+      					assert( (daSrcEngyData[0] != &daZero[0] && daSrcEngyData[1] != &daZero[1] && daSrcEngyData[2] != &daZero[2]) );
+                  }
+                  if (bEchoNResData && bEchoResData)
+                  {	if (BEMPX_GetTableColumn( &daResSrcEngyMults[0][0], 8760, sResSrcEngyMultTableName.toLocal8Bit().constData(), iElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daResSrcEngyData[0] = &daZero[0];
+      					if (BEMPX_GetTableColumn( &daResSrcEngyMults[1][0], 8760, sResSrcEngyMultTableName.toLocal8Bit().constData(), iNGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daResSrcEngyData[1] = &daZero[0];
+      					if (BEMPX_GetTableColumn( &daResSrcEngyMults[2][0], 8760, sResSrcEngyMultTableName.toLocal8Bit().constData(), iPropTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daResSrcEngyData[2] = &daZero[0];
+      					assert( (daResSrcEngyData[0] != &daZero[0] && daResSrcEngyData[1] != &daZero[1] && daResSrcEngyData[2] != &daZero[2]) );
+               }  }
+
+					QString sCO2EmissionsElecTableName, sCO2EmissionsNatGasTableName, sCO2EmissionsOtherTableName;		// SAC 01/18/24
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CO2EmissionsElecTable"   )+lPrimResultSetIdx-1, sCO2EmissionsElecTableName  , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CO2EmissionsNatGasTable" )+lPrimResultSetIdx-1, sCO2EmissionsNatGasTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CO2EmissionsOtherTable"  )+lPrimResultSetIdx-1, sCO2EmissionsOtherTableName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+               double dCO2EmissionsNatGasMult=0.0, dCO2EmissionsOtherMult=0.0;
+               BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:CO2EmissionsNatGasMult"  )+lPrimResultSetIdx-1, dCO2EmissionsNatGasMult, 0.0, -1, 0, BEMO_User, iBEMProcIdx );
+               BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:CO2EmissionsOtherMult"   )+lPrimResultSetIdx-1, dCO2EmissionsOtherMult , 0.0, -1, 0, BEMO_User, iBEMProcIdx );
+					int iCO2ElecTableCol   = (sCO2EmissionsElecTableName.isEmpty()   ? 0 : lCliZnNum + 1);
+					int iCO2NatGasTableCol = (sCO2EmissionsNatGasTableName.isEmpty() ? 0 : lCliZnNum + 1 + (!sCO2EmissionsNatGasTableName.compare(sCO2EmissionsElecTableName) ? 16 : 0));
+					int iCO2OtherTableCol  = (sCO2EmissionsOtherTableName.isEmpty()  ? 0 : lCliZnNum + 1 + (!sCO2EmissionsOtherTableName.compare( sCO2EmissionsElecTableName) ? 32 : 0));
+
+					QString sResCO2EmissionsElecTableName, sResCO2EmissionsNatGasTableName, sResCO2EmissionsOtherTableName;		// SAC 01/18/24
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResCO2EmissionsElecTable"   )+lPrimResultSetIdx-1, sResCO2EmissionsElecTableName  , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResCO2EmissionsNatGasTable" )+lPrimResultSetIdx-1, sResCO2EmissionsNatGasTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResCO2EmissionsOtherTable"  )+lPrimResultSetIdx-1, sResCO2EmissionsOtherTableName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+               double dResCO2EmissionsNatGasMult=0.0, dResCO2EmissionsOtherMult=0.0;
+               BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:ResCO2EmissionsNatGasMult"  )+lPrimResultSetIdx-1, dResCO2EmissionsNatGasMult, 0.0, -1, 0, BEMO_User, iBEMProcIdx );
+               BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:ResCO2EmissionsOtherMult"   )+lPrimResultSetIdx-1, dResCO2EmissionsOtherMult , 0.0, -1, 0, BEMO_User, iBEMProcIdx );
+					int iResCO2ElecTableCol   = (sResCO2EmissionsElecTableName.isEmpty()   ? 0 : lCliZnNum + 1);
+					int iResCO2NatGasTableCol = (sResCO2EmissionsNatGasTableName.isEmpty() ? 0 : lCliZnNum + 1 + (!sResCO2EmissionsNatGasTableName.compare(sResCO2EmissionsElecTableName) ? 16 : 0));
+					int iResCO2OtherTableCol  = (sResCO2EmissionsOtherTableName.isEmpty()  ? 0 : lCliZnNum + 1 + (!sResCO2EmissionsOtherTableName.compare( sResCO2EmissionsElecTableName) ? 32 : 0));
+
+					//double daCO2EmisMults[3][8760], daResCO2EmisMults[3][8760];       // SAC 01/19/24
+               double *daCO2EmisMults[3], *daResCO2EmisMults[3];   // switched from stack to heap memory for 8760 multiplier arrays - SAC 01/19/24
+                  daCO2EmisMults[0]    = (double*) malloc( sizeof(double) * 8760 );   daCO2EmisMults[1]    = (double*) malloc( sizeof(double) * 8760 );   daCO2EmisMults[2]    = (double*) malloc( sizeof(double) * 8760 );
+                  daResCO2EmisMults[0] = (double*) malloc( sizeof(double) * 8760 );   daResCO2EmisMults[1] = (double*) malloc( sizeof(double) * 8760 );   daResCO2EmisMults[2] = (double*) malloc( sizeof(double) * 8760 );
+					double* daCO2EmisData[3]    = { &daCO2EmisMults[0][0], &daCO2EmisMults[1][0], &daCO2EmisMults[2][0] };
+					double* daResCO2EmisData[3] = { &daResCO2EmisMults[0][0], &daResCO2EmisMults[1][0], &daResCO2EmisMults[2][0] };
+               if (lEngyCodeYearNum >= 2022)
+               {  if (bEchoNResData)
+                  {	if (!sCO2EmissionsElecTableName.isEmpty() && BEMPX_GetTableColumn( &daCO2EmisMults[0][0], 8760, sCO2EmissionsElecTableName.toLocal8Bit().constData(), iCO2ElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daCO2EmisData[0] = &daZero[0];
+      					if (sCO2EmissionsNatGasTableName.isEmpty() && dCO2EmissionsNatGasMult > 0.0)
+                        InitHourlyArray( daCO2EmisMults[1], dCO2EmissionsNatGasMult );
+                     else if (!sCO2EmissionsElecTableName.isEmpty() && BEMPX_GetTableColumn( &daCO2EmisMults[1][0], 8760, sCO2EmissionsNatGasTableName.toLocal8Bit().constData(), iCO2NatGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daCO2EmisData[1] = &daZero[0];
+      					if (sCO2EmissionsOtherTableName.isEmpty() && dCO2EmissionsOtherMult > 0.0)
+                        InitHourlyArray( daCO2EmisMults[2], dCO2EmissionsOtherMult );
+                     else if (!sCO2EmissionsOtherTableName.isEmpty() && BEMPX_GetTableColumn( &daCO2EmisMults[2][0], 8760, sCO2EmissionsOtherTableName.toLocal8Bit().constData(), iCO2OtherTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daCO2EmisData[2] = &daZero[0];
+      					assert( (daCO2EmisData[0] != &daZero[0] && daCO2EmisData[1] != &daZero[1] && daCO2EmisData[2] != &daZero[2]) );
+                  }
+                  else if (!bEchoNResData && bEchoResData)
+                  {	if (!sResCO2EmissionsElecTableName.isEmpty() && BEMPX_GetTableColumn( &daCO2EmisMults[0][0], 8760, sResCO2EmissionsElecTableName.toLocal8Bit().constData(), iResCO2ElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daCO2EmisData[0] = &daZero[0];
+      					if (sResCO2EmissionsNatGasTableName.isEmpty() && dResCO2EmissionsNatGasMult > 0.0)
+                        InitHourlyArray( daCO2EmisMults[1], dResCO2EmissionsNatGasMult );
+                     else if (!sResCO2EmissionsNatGasTableName.isEmpty() && BEMPX_GetTableColumn( &daCO2EmisMults[1][0], 8760, sResCO2EmissionsNatGasTableName.toLocal8Bit().constData(), iResCO2NatGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daCO2EmisData[1] = &daZero[0];
+      					if (sResCO2EmissionsOtherTableName.isEmpty() && dResCO2EmissionsOtherMult > 0.0)
+                        InitHourlyArray( daCO2EmisMults[2], dResCO2EmissionsOtherMult );
+                     else if (!sResCO2EmissionsOtherTableName.isEmpty() && BEMPX_GetTableColumn( &daCO2EmisMults[2][0], 8760, sResCO2EmissionsOtherTableName.toLocal8Bit().constData(), iResCO2OtherTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daCO2EmisData[2] = &daZero[0];
+      					assert( (daCO2EmisData[0] != &daZero[0] && daCO2EmisData[1] != &daZero[1] && daCO2EmisData[2] != &daZero[2]) );
+                  }
+                  if (bEchoNResData && bEchoResData)
+                  {	if (!sResCO2EmissionsElecTableName.isEmpty() && BEMPX_GetTableColumn( &daResCO2EmisMults[0][0], 8760, sResCO2EmissionsElecTableName.toLocal8Bit().constData(), iResCO2ElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daResCO2EmisData[0] = &daZero[0];
+      					if (sResCO2EmissionsNatGasTableName.isEmpty() && dResCO2EmissionsNatGasMult > 0.0)
+                        InitHourlyArray( daResCO2EmisMults[1], dResCO2EmissionsNatGasMult );
+                     else if (!sResCO2EmissionsNatGasTableName.isEmpty() && BEMPX_GetTableColumn( &daResCO2EmisMults[1][0], 8760, sResCO2EmissionsNatGasTableName.toLocal8Bit().constData(), iResCO2NatGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daResCO2EmisData[1] = &daZero[0];
+      					if (sResCO2EmissionsOtherTableName.isEmpty() && dResCO2EmissionsOtherMult > 0.0)
+                        InitHourlyArray( daResCO2EmisMults[2], dResCO2EmissionsOtherMult );
+                     else if (!sResCO2EmissionsOtherTableName.isEmpty() && BEMPX_GetTableColumn( &daResCO2EmisMults[2][0], 8760, sResCO2EmissionsOtherTableName.toLocal8Bit().constData(), iResCO2OtherTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daResCO2EmisData[2] = &daZero[0];
+      					assert( (daResCO2EmisData[0] != &daZero[0] && daResCO2EmisData[1] != &daZero[1] && daResCO2EmisData[2] != &daZero[2]) );
+               }  }
+
+					QString sElecDemMultTableName, sResElecDemMultTableName;		// SAC 01/19/24
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ElecDemMultTableName"    )+lPrimResultSetIdx-1, sElecDemMultTableName   , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResElecDemMultTableName" )+lPrimResultSetIdx-1, sResElecDemMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+               if (!sElecDemMultTableName.isEmpty()    && sElecDemMultTableName.indexOf(':') > 0)
+                  sElecDemMultTableName    = sElecDemMultTableName.left(    sElecDemMultTableName.indexOf(':') );
+               if (!sResElecDemMultTableName.isEmpty() && sResElecDemMultTableName.indexOf(':') > 0)
+                  sResElecDemMultTableName = sResElecDemMultTableName.left( sResElecDemMultTableName.indexOf(':') );
+               int iElecDemMultTableCol=2, iResElecDemMultTableCol=2;
+					//double daElecDemMults[8760], daResElecDemMults[8760];
+               double *daElecDemMults, *daResElecDemMults;   // switched from stack to heap memory for 8760 multiplier arrays - SAC 01/19/24
+                  daElecDemMults = (double*) malloc( sizeof(double) * 8760 );   daResElecDemMults = (double*) malloc( sizeof(double) * 8760 );
+					double* daElecDemData    = &daElecDemMults[0];
+					double* daResElecDemData = &daResElecDemMults[0];
+               if (lEngyCodeYearNum >= 2022)
+               {  if (bEchoNResData && !sElecDemMultTableName.isEmpty())
+                  {	if (BEMPX_GetTableColumn( &daElecDemMults[0], 8760, sElecDemMultTableName.toLocal8Bit().constData(), iElecDemMultTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daElecDemData = &daZero[0];
+      					assert( daElecDemData != &daZero[0] );
+                  }
+                  else if (!bEchoNResData && bEchoResData && !sResElecDemMultTableName.isEmpty())
+                  {	if (BEMPX_GetTableColumn( &daElecDemMults[0], 8760, sResElecDemMultTableName.toLocal8Bit().constData(), iResElecDemMultTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daElecDemData = &daZero[0];
+      					assert( daElecDemData != &daZero[0] );
+                  }
+                  if (bEchoNResData && bEchoResData && !sResElecDemMultTableName.isEmpty())
+                  {	if (BEMPX_GetTableColumn( &daResElecDemMults[0], 8760, sResElecDemMultTableName.toLocal8Bit().constData(), iResElecDemMultTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+      						daResElecDemData = &daZero[0];
+      					assert( daResElecDemData != &daZero[0] );
+               }  }
 
 				   // EXPORT hourly results records
 					iYrHr = -1;
@@ -9192,7 +9349,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                            iYrHr++;
    				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"      // revised DST format to exclude trailing ':00' - SAC 11/12/22
    																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
+   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
    						daMtrEUData[0][ 0][iYrHr], daMtrEUData[0][ 1][iYrHr], daMtrEUData[0][ 2][iYrHr], daMtrEUData[0][ 3][iYrHr], daMtrEUData[0][ 4][iYrHr],
                      daMtrEUData[0][ 5][iYrHr], daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr],
                      daMtrEUData[0][10][iYrHr], daMtrEUData[0][13][iYrHr], daMtrEUData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery
@@ -9202,6 +9359,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                      daMtrEUData[2][ 2][iYrHr]*dFUMlt, daMtrEUData[2][ 3][iYrHr]*dFUMlt, daMtrEUData[2][ 4][iYrHr]*dFUMlt, daMtrEUData[2][ 5][iYrHr]*dFUMlt, daMtrEUData[2][ 6][iYrHr]*dFUMlt,
                      daMtrEUData[2][ 7][iYrHr]*dFUMlt, daMtrEUData[2][ 8][iYrHr]*dFUMlt, daMtrEUData[2][ 9][iYrHr]*dFUMlt, daMtrEUData[2][10][iYrHr]*dFUMlt, daMtrEUData[2][11][iYrHr]*dFUMlt,
                      daMtrEUData[2][12][iYrHr]*dFUMlt,		daTDVData[0][iYrHr], daTDVData[1][iYrHr]*dFTMlt, daTDVData[2][iYrHr]*dFTMlt,
+                     daSrcEngyData[0][iYrHr], daSrcEngyData[1][iYrHr], daSrcEngyData[2][iYrHr],  daCO2EmisData[0][iYrHr], daCO2EmisData[1][iYrHr], daCO2EmisData[2][iYrHr],  daElecDemData[iYrHr],     // SAC 01/19/24
                      daMtrEUData[0][11][iYrHr], daMtrEUData[0][12][iYrHr] );
    							}
                else if (!bEchoNResData && bEchoResData)  // still just one set of results data - RES - and shift PV/Battery to end of record
@@ -9224,7 +9382,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                            iYrHr++;
    				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
    																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
+   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
    						daMtrEUResData[0][ 0][iYrHr], daMtrEUResData[0][ 1][iYrHr], daMtrEUResData[0][ 2][iYrHr], daMtrEUResData[0][ 3][iYrHr], daMtrEUResData[0][ 4][iYrHr],
                      daMtrEUResData[0][ 5][iYrHr], daMtrEUResData[0][ 6][iYrHr], daMtrEUResData[0][ 7][iYrHr], daMtrEUResData[0][ 8][iYrHr], daMtrEUResData[0][ 9][iYrHr],
                      daMtrEUResData[0][10][iYrHr], daMtrEUResData[0][13][iYrHr], daMtrEUResData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery
@@ -9234,6 +9392,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                      daMtrEUResData[2][ 2][iYrHr]*dFUMlt, daMtrEUResData[2][ 3][iYrHr]*dFUMlt, daMtrEUResData[2][ 4][iYrHr]*dFUMlt, daMtrEUResData[2][ 5][iYrHr]*dFUMlt, daMtrEUResData[2][ 6][iYrHr]*dFUMlt,
                      daMtrEUResData[2][ 7][iYrHr]*dFUMlt, daMtrEUResData[2][ 8][iYrHr]*dFUMlt, daMtrEUResData[2][ 9][iYrHr]*dFUMlt, daMtrEUResData[2][10][iYrHr]*dFUMlt, daMtrEUResData[2][11][iYrHr]*dFUMlt,
                      daMtrEUResData[2][12][iYrHr]*dFUMlt,		daTDVData[0][iYrHr], daTDVData[1][iYrHr]*dFTMlt, daTDVData[2][iYrHr]*dFTMlt,
+                     daSrcEngyData[0][iYrHr], daSrcEngyData[1][iYrHr], daSrcEngyData[2][iYrHr],  daCO2EmisData[0][iYrHr], daCO2EmisData[1][iYrHr], daCO2EmisData[2][iYrHr],  daElecDemData[iYrHr],     // SAC 01/19/24
                      daMtrEUResData[0][11][iYrHr], daMtrEUResData[0][12][iYrHr] );
    							}
                else  // write separate Nonres & Res results data
@@ -9255,9 +9414,9 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                            }
                            iYrHr++;
    				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-                                                      "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-   																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
+   																	                "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"   // added 10 for NRes Src,CO2,ElDem + PV/B Src,CO2,ElDem - SAC 01/19/24
+                                                                      "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+   																	                "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,    // added 7 for Res Src,CO2,ElDem - SAC 01/19/24
    						daMtrEUData[0][ 0][iYrHr], daMtrEUData[0][ 1][iYrHr], daMtrEUData[0][ 2][iYrHr], daMtrEUData[0][ 3][iYrHr], daMtrEUData[0][ 4][iYrHr],    // NONRES data
                      daMtrEUData[0][ 5][iYrHr], daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr],
                      daMtrEUData[0][10][iYrHr], daMtrEUData[0][13][iYrHr], daMtrEUData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery
@@ -9267,7 +9426,9 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                      daMtrEUData[2][ 2][iYrHr]*dFUMlt, daMtrEUData[2][ 3][iYrHr]*dFUMlt, daMtrEUData[2][ 4][iYrHr]*dFUMlt, daMtrEUData[2][ 5][iYrHr]*dFUMlt, daMtrEUData[2][ 6][iYrHr]*dFUMlt,
                      daMtrEUData[2][ 7][iYrHr]*dFUMlt, daMtrEUData[2][ 8][iYrHr]*dFUMlt, daMtrEUData[2][ 9][iYrHr]*dFUMlt, daMtrEUData[2][10][iYrHr]*dFUMlt, daMtrEUData[2][11][iYrHr]*dFUMlt,
                      daMtrEUData[2][12][iYrHr]*dFUMlt,		daTDVData[0][iYrHr], daTDVData[1][iYrHr]*dFTMlt, daTDVData[2][iYrHr]*dFTMlt,
+                     daSrcEngyData[0][iYrHr], daSrcEngyData[1][iYrHr], daSrcEngyData[2][iYrHr],  daCO2EmisData[0][iYrHr], daCO2EmisData[1][iYrHr], daCO2EmisData[2][iYrHr],  daElecDemData[iYrHr],     // SAC 01/19/24
                      daMtrEUData[0][11][iYrHr], daMtrEUData[0][12][iYrHr],    ((daTDVData[0][iYrHr]*dFracNRArea)+(daResTDVData[0][iYrHr]*dFracRArea)),         // PV, Battery & PV/Batt TDV
+                     ((daSrcEngyData[0][iYrHr]*dFracNRArea)+(daResSrcEngyData[0][iYrHr]*dFracRArea)),  ((daCO2EmisData[0][iYrHr]*dFracNRArea)+(daResCO2EmisData[0][iYrHr]*dFracRArea)),  ((daElecDemData[iYrHr]*dFracNRArea)+(daResElecDemData[iYrHr]*dFracRArea)),  // PV/B Src,CO2,ElDem - SAC 01/19/24
                      daMtrEUResData[0][ 0][iYrHr], daMtrEUResData[0][ 1][iYrHr], daMtrEUResData[0][ 2][iYrHr], daMtrEUResData[0][ 3][iYrHr], daMtrEUResData[0][ 4][iYrHr],       // RES data
                      daMtrEUResData[0][ 5][iYrHr], daMtrEUResData[0][ 6][iYrHr], daMtrEUResData[0][ 7][iYrHr], daMtrEUResData[0][ 8][iYrHr], daMtrEUResData[0][ 9][iYrHr],
                      daMtrEUResData[0][10][iYrHr], daMtrEUResData[0][13][iYrHr], daMtrEUResData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery
@@ -9276,8 +9437,17 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
                      daMtrEUResData[1][10][iYrHr]*dFUMlt, daMtrEUResData[1][11][iYrHr]*dFUMlt, daMtrEUResData[1][12][iYrHr]*dFUMlt, daMtrEUResData[2][ 0][iYrHr]*dFUMlt, daMtrEUResData[2][ 1][iYrHr]*dFUMlt,
                      daMtrEUResData[2][ 2][iYrHr]*dFUMlt, daMtrEUResData[2][ 3][iYrHr]*dFUMlt, daMtrEUResData[2][ 4][iYrHr]*dFUMlt, daMtrEUResData[2][ 5][iYrHr]*dFUMlt, daMtrEUResData[2][ 6][iYrHr]*dFUMlt,
                      daMtrEUResData[2][ 7][iYrHr]*dFUMlt, daMtrEUResData[2][ 8][iYrHr]*dFUMlt, daMtrEUResData[2][ 9][iYrHr]*dFUMlt, daMtrEUResData[2][10][iYrHr]*dFUMlt, daMtrEUResData[2][11][iYrHr]*dFUMlt,
-                     daMtrEUResData[2][12][iYrHr]*dFUMlt,		daResTDVData[0][iYrHr], daResTDVData[1][iYrHr]*dFTMlt, daResTDVData[2][iYrHr]*dFTMlt  );
+                     daMtrEUResData[2][12][iYrHr]*dFUMlt,		daResTDVData[0][iYrHr], daResTDVData[1][iYrHr]*dFTMlt, daResTDVData[2][iYrHr]*dFTMlt,
+                     daResSrcEngyData[0][iYrHr], daResSrcEngyData[1][iYrHr], daResSrcEngyData[2][iYrHr],  daResCO2EmisData[0][iYrHr], daResCO2EmisData[1][iYrHr], daResCO2EmisData[2][iYrHr],  daResElecDemData[iYrHr]  );     // SAC 01/19/24
    							}
+
+               free( daTDVMults[0] );           free( daTDVMults[1] );           free( daTDVMults[2] );        // switched from stack to heap memory for 8760 multiplier arrays - SAC 01/19/24
+               free( daResTDVMults[0] );        free( daResTDVMults[1] );        free( daResTDVMults[2] );
+               free( daSrcEngyMults[0] );       free( daSrcEngyMults[1] );       free( daSrcEngyMults[2] );
+               free( daResSrcEngyMults[0] );    free( daResSrcEngyMults[1] );    free( daResSrcEngyMults[2] );
+               free( daCO2EmisMults[0] );       free( daCO2EmisMults[1] );       free( daCO2EmisMults[2] );
+               free( daResCO2EmisMults[0] );    free( daResCO2EmisMults[1] );    free( daResCO2EmisMults[2] );
+               free( daElecDemMults );          free( daResElecDemMults );
 				}
 				else if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14
 				{	//	int iFuelTDVCol = (lNatGasAvailable > 0 ? 2 : 3);

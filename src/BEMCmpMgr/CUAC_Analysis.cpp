@@ -191,7 +191,18 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
 //   for (iHr=0; iHr<8760; iHr++)
 //      daZero[iHr] = 0.0;
 
-   if (!bOldCUAC)
+
+   if (bOldCUAC)
+   {  // add setting of CUAC:RunDateFmt when processing OldCUAC projects - SAC 01/10/24
+		QString sRunDateFmt;
+		QDateTime current = QDateTime::currentDateTime();
+		long lTime = (long) current.toTime_t();	// seconds since 1970-Jan-01 / valid as long int until 2038-Jan-19 / switching to uint extends valid date range to 2106-Feb-07
+		long lDBID_RunDate = BEMPX_GetDatabaseID( "Proj:RunDate" );
+		BEMPX_SetBEMData( lDBID_RunDate, BEMP_Int, (void*) &lTime );
+      BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -4 /*iPrecision*/ );      // format: "M/d/yyyy h:m:s ap"
+      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:RunDateFmt" ), BEMP_QStr, (void*) &sRunDateFmt ); 
+   }
+   else  // if (!bOldCUAC)
    {
       // Divvy PV & Batt based on PVAllocMethod - SAC 11/21/22
       double dPVAnnual = BEMPX_GetHourlyResultSum(   NULL, 0, "Proposed", "Electricity", "Photovoltaics", NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
@@ -2160,6 +2171,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
       if (TRUE)
       {
          BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ProjectID", iCID_OldCUAC ), BEMP_Int, (void*) &projectID );
+         double dProjID = (double) projectID;
+         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ProjectID", iCID_CUAC    ), BEMP_Flt, (void*) &dProjID );     // added storage of numeric CUAC:ProjectID - SAC 01/10/24
 
          std::string project_cond("ProjectID=" + std::to_string(projectID));
          int iLocRes = db.get_key_value("tProjects", "ProjectID", "Address", projectID, sVal);     // "Project Name", ... , sProjectName -->> "ProjectID", ... , projectID - SAC 09/18/23
@@ -2179,11 +2192,13 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
          {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OldElecUtilityID", iCID_CUAC ), BEMP_Int, (void*) &lVal );
             CMX_EvaluateRuleset( "CUAC_MapOldCUACElecUtility" , FALSE /*bVerbose*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerbose*/, NULL, NULL, NULL, NULL /*pCompRuleDebugInfo*/ );
             iLocRes = db.get_key_value("tProjects", "ProjectID", "ElectricTerritory", projectID, sVal);
-               // BEMPX_WriteLogFile( QString( "ElecTerritory:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               if (bVerboseLogging)
+                  BEMPX_WriteLogFile( QString( "ElecTerritory:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
             if (iLocRes == 0 && sVal.length() > 0)
             {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ElecTerritory", iCID_CUAC ), BEMP_Str, (void*) sVal.c_str() );
                iLocRes = db.get_key_value("tProjects", "ProjectID", "TariffType", projectID, sVal);
-                  // BEMPX_WriteLogFile( QString( "ElecTariff:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  if (bVerboseLogging)
+                     BEMPX_WriteLogFile( QString( "ElecTariff:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                if (iLocRes == 0 && sVal.length() > 0)
                {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ElecTariff", iCID_CUAC ), BEMP_Str, (void*) sVal.c_str() );
                   CMX_EvaluateRuleset( "CUAC_PerformGen2UtilityRateMapping_Electric" , FALSE /*bVerbose*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerbose*/, NULL, NULL, NULL, NULL /*pCompRuleDebugInfo*/ );
@@ -2195,11 +2210,13 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
             CMX_EvaluateRuleset( "CUAC_MapOldCUACGasUtility" , FALSE /*bVerbose*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerbose*/, NULL, NULL, NULL, NULL /*pCompRuleDebugInfo*/ );
             if (lGasUtilID > 0 && lGasUtilID != 6)  // if valid gas utility (not 6 => 'no gas service')
             {  iLocRes = db.get_key_value("tProjects", "ProjectID", "GasTerritory", projectID, sVal);
-                  // BEMPX_WriteLogFile( QString( "GasTerritory:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  if (bVerboseLogging)
+                     BEMPX_WriteLogFile( QString( "GasTerritory:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                if (iLocRes == 0 && sVal.length() > 0)
                {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "GasTerritory", iCID_CUAC ), BEMP_Str, (void*) sVal.c_str() );
                   iLocRes = db.get_key_value("tProjects", "ProjectID", "TariffType", projectID, sVal);
-                     // BEMPX_WriteLogFile( QString( "GasTariff:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                     if (bVerboseLogging)
+                        BEMPX_WriteLogFile( QString( "GasTariff:  %1" ).arg( sVal.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                   if (iLocRes == 0 && sVal.length() > 0)
                   {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "GasTariff" , iCID_CUAC ), BEMP_Str, (void*) sVal.c_str() );
                      CMX_EvaluateRuleset( "CUAC_PerformGen2UtilityRateMapping_Gas" , FALSE /*bVerbose*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerbose*/, NULL, NULL, NULL, NULL /*pCompRuleDebugInfo*/ );
@@ -2461,7 +2478,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
                                        for (int iApt=0; (iThisAptObjIdx < 0 && iApt < iAptTypeFoundIdx); iApt++)
                                        {  sTemp = col_vals[iRow].as_string();
                                           iThisAptObjIdx = (sTemp.compare(sAptTypes[iApt])==0 ? iAptObjIdx[iApt] : -1);
-                                       }           // BEMPX_WriteLogFile( QString( "  elec summary row:  %1 => iThisAptObjIdx %2" ).arg( col_vals[0].c_str(), QString::number(iThisAptObjIdx) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                       }           if (bVerboseLogging)
+                                                      BEMPX_WriteLogFile( QString( "  elec summary row:  %1 => iThisAptObjIdx %2" ).arg( sTemp.c_str(), QString::number(iThisAptObjIdx) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                                     }  break;
                         case  1 :   {  if (bVerboseLogging)
                                           sTemp += " / PVSystemName "      + col_vals[iRow].as_string();
@@ -2606,7 +2624,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
                                           for (int iApt=0; (iThisAptObjIdx < 0 && iApt < iAptTypeFoundIdx); iApt++)
                                           {  sTemp = col_vals[iRow].as_string();
                                              iThisAptObjIdx = (sTemp.compare(sAptTypes[iApt])==0 ? iAptObjIdx[iApt] : -1);
-                                          }           // BEMPX_WriteLogFile( QString( "  elec summary row:  %1 => iThisAptObjIdx %2" ).arg( col_vals[0].c_str(), QString::number(iThisAptObjIdx) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                          }           if (bVerboseLogging)
+                                                         BEMPX_WriteLogFile( QString( "  elec summary row:  %1 => iThisAptObjIdx %2" ).arg( sTemp.c_str(), QString::number(iThisAptObjIdx) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                                        }  break;
                            case  1 :   {  if (iThisAptObjIdx >= 0)
                                           {  assert( col_vals[iRow].index() == CUACToolMiner::string_type );
@@ -2615,7 +2634,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
                                                 sPropName = "PlugLoads";
                                              sPropName += "Elec[1]";
                                              lEnduseDBID = BEMPX_GetDatabaseID( sPropName.c_str(), iCID_OldCUACApt );
-                                                      // BEMPX_WriteLogFile( QString( "     property: %1 => DBID %2" ).arg( sPropName.c_str(), QString::number(lEnduseDBID) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                                      if (bVerboseLogging)
+                                                         BEMPX_WriteLogFile( QString( "     property: %1 => DBID %2" ).arg( sPropName.c_str(), QString::number(lEnduseDBID) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                                        }  }  break;
                            case  2 :
                            case  3 :   break;   // skip daily avg & annual total (or PVSystemName & PercentForCommonLoad for PV table)
@@ -2629,7 +2649,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
                                                 default  :  assert( false );  break;
                                              }
                                              int iSetRetVal = BEMPX_SetBEMData( lEnduseDBID+iMo-1, BEMP_Flt, (void*) &dVal, BEMO_User, iThisAptObjIdx );
-                                                      // BEMPX_WriteLogFile( QString( "        set %1 to DBID %2 objectIdx %3 - returned %4" ).arg( QString::number(dVal), QString::number(lEnduseDBID+iMo-1), QString::number(iThisAptObjIdx), QString::number(iSetRetVal) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                                      //if (bVerboseLogging)
+                                                      //   BEMPX_WriteLogFile( QString( "        set %1 to DBID %2 objectIdx %3 - returned %4" ).arg( QString::number(dVal), QString::number(lEnduseDBID+iMo-1), QString::number(iThisAptObjIdx), QString::number(iSetRetVal) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                                        }  }  break;
                         }
                         done = false;
@@ -2714,7 +2735,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
                                           {  sTemp = col_vals[iRow].as_string();
                                              iThisAptObjIdx = (sTemp.compare(sAptTypes[iApt])==0 ? iAptObjIdx[iApt] : -1);
                                              //iThisAptObjIdx = (col_vals[iRow].compare(sAptTypes[iApt])==0 ? iAptObjIdx[iApt] : -1);
-                                          }           // BEMPX_WriteLogFile( QString( "  elec summary row:  %1 => iThisAptObjIdx %2" ).arg( col_vals[0].c_str(), QString::number(iThisAptObjIdx) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                          }           if (bVerboseLogging)
+                                                         BEMPX_WriteLogFile( QString( "  elec summary row:  %1 => iThisAptObjIdx %2" ).arg( sTemp.c_str(), QString::number(iThisAptObjIdx) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                                        }  break;
                            case  1 :   {  if (iThisAptObjIdx >= 0)
                                           {  assert( col_vals[iRow].index() == CUACToolMiner::string_type );
@@ -2723,7 +2745,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
                                                 sPropName = "PlugLoads";
                                              sPropName += "Gas[1]";
                                              lEnduseDBID = BEMPX_GetDatabaseID( sPropName.c_str(), iCID_OldCUACApt );
-                                                      // BEMPX_WriteLogFile( QString( "     property: %1 => DBID %2" ).arg( sPropName.c_str(), QString::number(lEnduseDBID) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                                      if (bVerboseLogging)
+                                                         BEMPX_WriteLogFile( QString( "     property: %1 => DBID %2" ).arg( sPropName.c_str(), QString::number(lEnduseDBID) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                                        }  }  break;
                            case  2 :
                            case  3 :   break;   // skip daily avg & annual total
@@ -2737,7 +2760,8 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
                                                 default  :  assert( false );  break;
                                              }
                                              int iSetRetVal = BEMPX_SetBEMData( lEnduseDBID+iMo-1, BEMP_Flt, (void*) &dVal, BEMO_User, iThisAptObjIdx );
-                                                      // BEMPX_WriteLogFile( QString( "        set %1 to DBID %2 objectIdx %3 - returned %4" ).arg( QString::number(dVal), QString::number(lEnduseDBID+iMo-1), QString::number(iThisAptObjIdx), QString::number(iSetRetVal) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                                      //if (bVerboseLogging)
+                                                      //   BEMPX_WriteLogFile( QString( "        set %1 to DBID %2 objectIdx %3 - returned %4" ).arg( QString::number(dVal), QString::number(lEnduseDBID+iMo-1), QString::number(iThisAptObjIdx), QString::number(iSetRetVal) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                                        }  }  break;
                         }
                         done = false;

@@ -983,7 +983,17 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 							int iNatGasCO2ColOffset = (sCO2EmissionsElecTableName.compare( sCO2EmissionsNatGasTableName )==0 ? 16 : 0);		// SAC 12/10/19
 							int iOtherCO2ColOffset  = (sCO2EmissionsElecTableName.compare( sCO2EmissionsOtherTableName  )==0 ? 32 : 0);
 							if (iFl==0 && sCO2EmissionsElecTableName.length() > 1 && fCO2EmissionsElecConvFac > 0.0)
-								dCO2Sum = fCO2EmissionsElecConvFac /*MWh-tonne/kWh-ton*/ * /*kWh * ton/MWh*/ BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sCO2EmissionsElecTableName.toLocal8Bit().constData(), lCliZnNum+1, (bVerbose != FALSE) );
+							//	dCO2Sum = fCO2EmissionsElecConvFac /*MWh-tonne/kWh-ton*/ * /*kWh * ton/MWh*/ BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sCO2EmissionsElecTableName.toLocal8Bit().constData(), lCliZnNum+1, (bVerbose != FALSE) );
+                     // replaced above w/ following to apply Res/Nonres area frac to PV/Batt elec use CO2 emissions (since use recorded only as nonres) - SAC 01/20/24
+                     {  if (iEUIdx == IDX_T24_NRES_EU_PV || iEUIdx == IDX_T24_NRES_EU_BT)
+                        {  dCO2Sum =    fNonResAreaRatio * fCO2EmissionsElecConvFac /*MWh-tonne/kWh-ton*/ * /*kWh * ton/MWh*/ BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sCO2EmissionsElecTableName.toLocal8Bit().constData(), lCliZnNum+1, (bVerbose != FALSE) );
+                           if (sResCO2EmissionsElecTableName.length() > 1 && fCO2EmissionsElecConvFac > 0.0)
+                              dResCO2Sum = fResAreaRatio * fCO2EmissionsElecConvFac /*MWh-tonne/kWh-ton*/ * /*kWh * ton/MWh*/ BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sResCO2EmissionsElecTableName.toLocal8Bit().constData(), lCliZnNum+1, (bVerbose != FALSE) );
+                           // dResCO2Sum should get summed into dCO2Sum down below
+                        }
+                        else
+   								dCO2Sum = fCO2EmissionsElecConvFac /*MWh-tonne/kWh-ton*/ * /*kWh * ton/MWh*/ BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sCO2EmissionsElecTableName.toLocal8Bit().constData(), lCliZnNum+1, (bVerbose != FALSE) );
+                     }
 							else if (iFl==1 && sCO2EmissionsNatGasTableName.length() > 1 && fCO2EmissionsNatGasConvFac > 0.0)
 								dCO2Sum = fCO2EmissionsNatGasConvFac * BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sCO2EmissionsNatGasTableName.toLocal8Bit().constData(), lCliZnNum+1+iNatGasCO2ColOffset, (bVerbose != FALSE) );
 							else if (iFl==2 && sCO2EmissionsOtherTableName.length() > 1 && fCO2EmissionsOtherConvFac > 0.0)
@@ -995,7 +1005,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                      // RES CO2 results - SAC 10/31/21 (MFam)
                      // fCO2EmissionsElecConvFac, fCO2EmissionsNatGasConvFac & fCO2EmissionsOtherConvFac assumed SAME between Com & Res
                      if (esEUMap_CECNonRes[iEUIdx].daResEnduseTotal[iFl] != 0)
-							{  if (iFl==0 && sResCO2EmissionsElecTableName.length() > 1 && fCO2EmissionsElecConvFac > 0.0)
+							{  if (iFl==0 && sResCO2EmissionsElecTableName.length() > 1 && fCO2EmissionsElecConvFac > 0.0 && iEUIdx != IDX_T24_NRES_EU_PV && iEUIdx != IDX_T24_NRES_EU_BT)    // Res PV/Batt handled above - SAC 01/20/24
    								dResCO2Sum = fCO2EmissionsElecConvFac /*MWh-tonne/kWh-ton*/ * /*kWh * ton/MWh*/ BEMPX_ApplyHourlyMultipliersFromTable( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes), sResCO2EmissionsElecTableName.toLocal8Bit().constData(), lCliZnNum+1, (bVerbose != FALSE) );
    							else if (iFl==1 && sResCO2EmissionsNatGasTableName.length() > 1 && fCO2EmissionsNatGasConvFac > 0.0)
    								dResCO2Sum = fCO2EmissionsNatGasConvFac * BEMPX_ApplyHourlyMultipliersFromTable( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes), sResCO2EmissionsNatGasTableName.toLocal8Bit().constData(), lCliZnNum+1+iNatGasCO2ColOffset, (bVerbose != FALSE) );

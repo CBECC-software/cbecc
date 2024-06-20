@@ -2671,7 +2671,7 @@ int eiBDBCID_ResClVentFan = 0;
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
-	     if (iBDBClass == eiBDBCID_Proj    )				{  iTabCtrlWd = 1010;    iTabCtrlHt = 580;   }	// SAC 11/8/14  // wd 900->1010 - SAC 04/21/22
+	     if (iBDBClass == eiBDBCID_Proj    )				{  iTabCtrlWd = 1010;    iTabCtrlHt = 590;   }	// SAC 11/8/14  // wd 900->1010 - SAC 04/21/22  // ht 580->590 - SAC 01/25/24
 	else if (iBDBClass == eiBDBCID_ResProj)         	{  iTabCtrlWd =  960;    iTabCtrlHt = 460;   }	// SAC 10/20/21 (MFam)
 	else if (iBDBClass == eiBDBCID_CUAC)            	{  iTabCtrlWd =  960;    iTabCtrlHt = 460;   }	// SAC 07/26/22 (CUAC)
 	else if (iBDBClass == eiBDBCID_EUseSummary)			{  if (elRulesetCodeYear >= 2025)

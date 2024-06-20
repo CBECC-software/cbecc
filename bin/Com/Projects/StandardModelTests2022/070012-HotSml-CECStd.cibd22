@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "070012-HotSml-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1466465847
-   ModDate = 1688370616
-   RunDate = 1688370617
+   ModDate = 1705888777
+   RunDate = 1705888778
    EffMetric = "SEER2/EER2/HSPF2"
    ZipCode = 95814
    HVACAutoSizing = 0
@@ -16,7 +16,7 @@ Proj   "070012-HotSml-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.0 (1302)"
+   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
    ProjFileName = "070012-HotSml-CECStd19.cibd"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
@@ -14090,52 +14090,52 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "0.0"
-   Enduse1[3] = "333.2"
-   Enduse1[4] = "29.19"
+   Enduse1[3] = "333.1"
+   Enduse1[4] = "29.17"
    Enduse1[5] = "0.0"
-   Enduse1[6] = "333.2"
+   Enduse1[6] = "333.3"
    Enduse1[7] = "29.19"
-   Enduse1[8] = "--"
+   Enduse1[8] = "0.02"
    Enduse1[9] = "0.0"
    Enduse1[10] = "0.0"
    Enduse1[11] = "6.86"
    Enduse1[12] = "6.86"
    Enduse1[13] = "--"
    Enduse1[17] = "0.00"
-   Enduse1[18] = "19.49"
-   Enduse1[19] = "19.49"
+   Enduse1[18] = "19.48"
+   Enduse1[19] = "19.48"
    Enduse1[20] = "0.00"
    Enduse1[21] = "19.49"
    Enduse1[22] = "19.49"
-   Enduse1[23] = "0.00"
+   Enduse1[23] = "0.01"
    Enduse2[1] = "Space Cooling"
    Enduse2[2] = "40.3"
    Enduse2[3] = "--"
-   Enduse2[4] = "38.50"
+   Enduse2[4] = "38.49"
    Enduse2[5] = "40.3"
    Enduse2[6] = "--"
-   Enduse2[7] = "38.50"
+   Enduse2[7] = "38.49"
    Enduse2[8] = "--"
    Enduse2[9] = "3.5"
    Enduse2[10] = "3.5"
    Enduse2[11] = "1.50"
    Enduse2[12] = "1.50"
    Enduse2[13] = "--"
-   Enduse2[17] = "3.93"
-   Enduse2[19] = "3.93"
-   Enduse2[20] = "3.93"
-   Enduse2[22] = "3.93"
+   Enduse2[17] = "3.92"
+   Enduse2[19] = "3.92"
+   Enduse2[20] = "3.92"
+   Enduse2[22] = "3.92"
    Enduse2[23] = "0.00"
    Enduse3[1] = "Indoor Fans"
    Enduse3[2] = "36.1"
    Enduse3[3] = "--"
-   Enduse3[4] = "25.51"
+   Enduse3[4] = "25.50"
    Enduse3[5] = "36.1"
    Enduse3[6] = "--"
-   Enduse3[7] = "25.51"
+   Enduse3[7] = "25.50"
    Enduse3[8] = "--"
-   Enduse3[9] = "4.5"
-   Enduse3[10] = "4.5"
+   Enduse3[9] = "4.4"
+   Enduse3[10] = "4.4"
    Enduse3[11] = "1.98"
    Enduse3[12] = "1.98"
    Enduse3[13] = "--"
@@ -14159,17 +14159,17 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse4[13] = "--"
    Enduse4[23] = "0.00"
    Enduse5[1] = "Pumps & Misc."
-   Enduse5[2] = "0.1"
+   Enduse5[2] = "0.0"
    Enduse5[3] = "--"
-   Enduse5[4] = "0.04"
-   Enduse5[5] = "0.1"
+   Enduse5[4] = "0.02"
+   Enduse5[5] = "0.0"
    Enduse5[6] = "--"
-   Enduse5[7] = "0.04"
+   Enduse5[7] = "0.02"
    Enduse5[8] = "--"
    Enduse5[9] = "0.0"
    Enduse5[10] = "0.0"
-   Enduse5[11] = "0.01"
-   Enduse5[12] = "0.01"
+   Enduse5[11] = "0.00"
+   Enduse5[12] = "0.00"
    Enduse5[13] = "--"
    Enduse5[17] = "0.01"
    Enduse5[19] = "0.01"
@@ -14215,25 +14215,25 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[22] = "5.43"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "78.5"
-   Enduse8[3] = "875.4"
-   Enduse8[4] = "146.31"
-   Enduse8[5] = "81.6"
-   Enduse8[6] = "885.3"
-   Enduse8[7] = "149.12"
-   Enduse8[8] = "2.81"
+   Enduse8[2] = "78.4"
+   Enduse8[3] = "875.3"
+   Enduse8[4] = "146.25"
+   Enduse8[5] = "81.5"
+   Enduse8[6] = "885.4"
+   Enduse8[7] = "149.08"
+   Enduse8[8] = "2.83"
    Enduse8[9] = "12.0"
    Enduse8[10] = "12.4"
-   Enduse8[11] = "23.16"
-   Enduse8[12] = "23.56"
+   Enduse8[11] = "23.15"
+   Enduse8[12] = "23.55"
    Enduse8[13] = "0.40"
-   Enduse8[17] = "13.48"
-   Enduse8[18] = "51.20"
-   Enduse8[19] = "64.68"
-   Enduse8[20] = "13.97"
+   Enduse8[17] = "13.47"
+   Enduse8[18] = "51.19"
+   Enduse8[19] = "64.66"
+   Enduse8[20] = "13.96"
    Enduse8[21] = "51.78"
-   Enduse8[22] = "65.75"
-   Enduse8[23] = "1.07"
+   Enduse8[22] = "65.74"
+   Enduse8[23] = "1.08"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "132.1"
    Enduse9[3] = "6.9"
@@ -14337,45 +14337,45 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[13] = "--"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "258.0"
-   Enduse15[3] = "882.3"
-   Enduse15[4] = "265.08"
-   Enduse15[5] = "261.1"
-   Enduse15[6] = "892.2"
-   Enduse15[7] = "267.89"
-   Enduse15[8] = "2.81"
+   Enduse15[2] = "257.9"
+   Enduse15[3] = "882.2"
+   Enduse15[4] = "265.02"
+   Enduse15[5] = "261.0"
+   Enduse15[6] = "892.3"
+   Enduse15[7] = "267.85"
+   Enduse15[8] = "2.83"
    Enduse15[9] = "34.9"
-   Enduse15[10] = "35.3"
-   Enduse15[11] = "34.18"
-   Enduse15[12] = "34.58"
+   Enduse15[10] = "35.2"
+   Enduse15[11] = "34.17"
+   Enduse15[12] = "34.57"
    Enduse15[13] = "0.40"
-   Enduse15[17] = "41.98"
-   Enduse15[18] = "51.60"
-   Enduse15[19] = "93.58"
-   Enduse15[20] = "42.47"
+   Enduse15[17] = "41.97"
+   Enduse15[18] = "51.59"
+   Enduse15[19] = "93.56"
+   Enduse15[20] = "42.46"
    Enduse15[21] = "52.18"
-   Enduse15[22] = "94.65"
-   Enduse15[23] = "1.07"
+   Enduse15[22] = "94.64"
+   Enduse15[23] = "1.08"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "113.7"
-   Enduse16[3] = "875.4"
-   Enduse16[4] = "162.43"
-   Enduse16[5] = "116.8"
-   Enduse16[6] = "885.3"
-   Enduse16[7] = "165.24"
-   Enduse16[8] = "2.81"
+   Enduse16[2] = "113.6"
+   Enduse16[3] = "875.3"
+   Enduse16[4] = "162.37"
+   Enduse16[5] = "116.7"
+   Enduse16[6] = "885.4"
+   Enduse16[7] = "165.20"
+   Enduse16[8] = "2.83"
    Enduse16[9] = "12.1"
    Enduse16[10] = "12.5"
-   Enduse16[11] = "23.59"
-   Enduse16[12] = "23.99"
+   Enduse16[11] = "23.58"
+   Enduse16[12] = "23.98"
    Enduse16[13] = "0.40"
-   Enduse16[17] = "14.61"
-   Enduse16[18] = "51.20"
-   Enduse16[19] = "65.81"
-   Enduse16[20] = "15.10"
+   Enduse16[17] = "14.60"
+   Enduse16[18] = "51.19"
+   Enduse16[19] = "65.79"
+   Enduse16[20] = "15.09"
    Enduse16[21] = "51.78"
-   Enduse16[22] = "66.88"
-   Enduse16[23] = "1.07"
+   Enduse16[22] = "66.87"
+   Enduse16[23] = "1.08"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 0  'CorridorFlr1 Thermal Zone'
@@ -14437,7 +14437,7 @@ clg: 0  htg: 21  'GuestRoom406_408 Thermal Zone'
 clg: 0  htg: 19  'GuestRoom409_412 Thermal Zone'
 clg: 0  htg: 13  'GuestRoom413 Thermal Zone'
 clg: 0  htg: 14  'GuestRoom414 Thermal Zone'
-clg: 0  htg: 20  'GuestRoom415_418 Thermal Zone'
+clg: 0  htg: 21  'GuestRoom415_418 Thermal Zone'
 clg: 0  htg: 14  'GuestRoom419 Thermal Zone'
 clg: 0  htg: 20  'GuestRoom420_423 Thermal Zone'
 clg: 0  htg: 14  'GuestRoom424 Thermal Zone'", 
@@ -14500,7 +14500,7 @@ clg: 0  htg: 21  'GuestRoom406_408 Thermal Zone'
 clg: 0  htg: 19  'GuestRoom409_412 Thermal Zone'
 clg: 0  htg: 13  'GuestRoom413 Thermal Zone'
 clg: 0  htg: 14  'GuestRoom414 Thermal Zone'
-clg: 0  htg: 20  'GuestRoom415_418 Thermal Zone'
+clg: 0  htg: 21  'GuestRoom415_418 Thermal Zone'
 clg: 0  htg: 14  'GuestRoom419 Thermal Zone'
 clg: 0  htg: 20  'GuestRoom420_423 Thermal Zone'
 clg: 0  htg: 14  'GuestRoom424 Thermal Zone'" )
@@ -14515,19 +14515,19 @@ clg: 0  htg: 14  'GuestRoom424 Thermal Zone'" )
    AnalysisValid = 0
    HideCompSmrySrc = 0
    HideCompSmryTot = 0
-   PctSavingsTDV = 1.04894
-   PctSavingsEffTDV = 1.70056
-   PctSavingsCmpTDV = 1.88439
-   PctSavTDVLbl = "1.0"
+   PctSavingsTDV = 1.05656
+   PctSavingsEffTDV = 1.71308
+   PctSavingsCmpTDV = 1.89831
+   PctSavTDVLbl = "1.1"
    PctSavEffTDVLbl = "1.7"
    PctSavCmpTDVLbl = "1.9"
-   PctSavingsSrc = 1.15674
-   PctSavingsEffSrc = 1.66736
-   PctSavingsCmpSrc = 1.69779
+   PctSavingsSrc = 1.15707
+   PctSavingsEffSrc = 1.66806
+   PctSavingsCmpSrc = 1.69851
    PctSavSrcLbl = "1.2"
    PctSavEffSrcLbl = "1.7"
    PctSavCmpSrcLbl = "1.7"
-   MarginkW = 0.4
+   MarginkW = 0.3
    PVBattResultsValid = 1
    PropDHWNames_SSF[1] = "DHW Solar System 1"
    PropDHW_SSF[1] = 0.353
@@ -14539,8 +14539,8 @@ clg: 0  htg: 14  'GuestRoom424 Thermal Zone'" )
    StdPV_Total = 35186.9
    StdPV_Export = 0
    StdPV_PctExport = 0
-   NRCCPRFPayldTransID = "d29c09ca-2c40-4776-a93e-bea41bfc6af7"
-   NRCCPRFPayldProcDate = "2023-07-03T00:49:31"
+   NRCCPRFPayldTransID = "730fa201-fa35-46d9-a4fd-578126e9e7e8"
+   NRCCPRFPayldProcDate = "2024-01-21T17:59:00"
    ..
 
 ResDHWSys   "GuestRm DHW Sys"  

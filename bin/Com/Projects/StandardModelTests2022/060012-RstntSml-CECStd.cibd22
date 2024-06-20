@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "060012-RstntSml-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414691411
-   ModDate = 1688370385
-   RunDate = 1688370386
+   ModDate = 1705888547
+   RunDate = 1705888548
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -14,7 +14,7 @@ Proj   "060012-RstntSml-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.0 (1302)"
+   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -1170,8 +1170,8 @@ clg: 0  htg: 0  'Kitchen Thermal Zone'" )
    StdPV_Total = 0
    StdPV_Export = 0
    StdPV_PctExport = 0
-   NRCCPRFPayldTransID = "f69323b1-262e-4dd1-bb5e-39866cfe6bc1"
-   NRCCPRFPayldProcDate = "2023-07-03T00:46:09"
+   NRCCPRFPayldTransID = "c1be6c1a-b805-4b1b-93c0-dd28156afd1a"
+   NRCCPRFPayldProcDate = "2024-01-21T17:55:38"
    ..
 
 
