@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "030012-OffMed-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414971507
-   ModDate = 1683879001
-   RunDate = 1683879002
+   ModDate = 1688370158
+   RunDate = 1688370159
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -13,7 +13,7 @@ Proj   "030012-OffMed-CECStd22"
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
+   SoftwareVersion = "CBECC 2022.3.0 (1302)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -3226,7 +3226,7 @@ FluidSys   "HotWater Loop"
 Blr   "Boiler 1"  
    Type = "HotWater"
    FuelSrc = "Gas"
-   DraftType = "Condensing"
+   DraftType = "MechanicalNoncondensing"
    FluidSegInRef = "HW Primary Return"
    FluidSegOutRef = "HW Primary Supply"
    EntTempDsgn = 120
@@ -3257,7 +3257,7 @@ FluidSeg   "HW Primary Return"
 Blr   "Boiler 2"  
    Type = "HotWater"
    FuelSrc = "Gas"
-   DraftType = "Condensing"
+   DraftType = "MechanicalNoncondensing"
    FluidSegInRef = "HW Primary Return"
    FluidSegOutRef = "HW Primary Supply"
    EntTempDsgn = 120
@@ -3362,59 +3362,59 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "0.0"
-   Enduse1[3] = "309.9"
-   Enduse1[4] = "16.11"
+   Enduse1[3] = "345.6"
+   Enduse1[4] = "17.93"
    Enduse1[5] = "0.0"
-   Enduse1[6] = "309.9"
-   Enduse1[7] = "16.11"
+   Enduse1[6] = "345.5"
+   Enduse1[7] = "17.93"
    Enduse1[8] = "--"
    Enduse1[9] = "0.0"
    Enduse1[10] = "0.0"
-   Enduse1[11] = "5.38"
-   Enduse1[12] = "5.38"
+   Enduse1[11] = "6.00"
+   Enduse1[12] = "6.00"
    Enduse1[13] = "--"
    Enduse1[17] = "0.01"
-   Enduse1[18] = "17.37"
-   Enduse1[19] = "17.38"
+   Enduse1[18] = "19.37"
+   Enduse1[19] = "19.38"
    Enduse1[20] = "0.01"
-   Enduse1[21] = "17.37"
-   Enduse1[22] = "17.38"
-   Enduse1[23] = "0.00"
+   Enduse1[21] = "19.36"
+   Enduse1[22] = "19.37"
+   Enduse1[23] = "-0.01"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "80.1"
+   Enduse2[2] = "79.8"
    Enduse2[3] = "--"
-   Enduse2[4] = "54.64"
-   Enduse2[5] = "80.1"
+   Enduse2[4] = "54.58"
+   Enduse2[5] = "79.8"
    Enduse2[6] = "--"
-   Enduse2[7] = "54.64"
+   Enduse2[7] = "54.58"
    Enduse2[8] = "--"
    Enduse2[9] = "6.2"
    Enduse2[10] = "6.2"
-   Enduse2[11] = "2.41"
-   Enduse2[12] = "2.41"
+   Enduse2[11] = "2.40"
+   Enduse2[12] = "2.40"
    Enduse2[13] = "--"
-   Enduse2[17] = "7.96"
-   Enduse2[19] = "7.96"
-   Enduse2[20] = "7.96"
-   Enduse2[22] = "7.96"
+   Enduse2[17] = "7.94"
+   Enduse2[19] = "7.94"
+   Enduse2[20] = "7.94"
+   Enduse2[22] = "7.94"
    Enduse2[23] = "0.00"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "27.5"
+   Enduse3[2] = "26.9"
    Enduse3[3] = "--"
-   Enduse3[4] = "13.71"
-   Enduse3[5] = "27.5"
+   Enduse3[4] = "13.51"
+   Enduse3[5] = "26.9"
    Enduse3[6] = "--"
-   Enduse3[7] = "13.71"
+   Enduse3[7] = "13.51"
    Enduse3[8] = "--"
    Enduse3[9] = "2.1"
    Enduse3[10] = "2.1"
-   Enduse3[11] = "0.98"
-   Enduse3[12] = "0.98"
+   Enduse3[11] = "0.97"
+   Enduse3[12] = "0.97"
    Enduse3[13] = "--"
-   Enduse3[17] = "3.23"
-   Enduse3[19] = "3.23"
-   Enduse3[20] = "3.23"
-   Enduse3[22] = "3.23"
+   Enduse3[17] = "3.20"
+   Enduse3[19] = "3.20"
+   Enduse3[20] = "3.20"
+   Enduse3[22] = "3.20"
    Enduse3[23] = "0.00"
    Enduse4[1] = "Heat Rejection"
    Enduse4[2] = "--"
@@ -3433,10 +3433,10 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse5[1] = "Pumps & Misc."
    Enduse5[2] = "0.1"
    Enduse5[3] = "--"
-   Enduse5[4] = "0.09"
+   Enduse5[4] = "0.08"
    Enduse5[5] = "0.1"
    Enduse5[6] = "--"
-   Enduse5[7] = "0.09"
+   Enduse5[7] = "0.08"
    Enduse5[8] = "--"
    Enduse5[9] = "0.1"
    Enduse5[10] = "0.1"
@@ -3485,25 +3485,25 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[22] = "7.63"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "-80.6"
-   Enduse8[3] = "309.9"
-   Enduse8[4] = "13.42"
-   Enduse8[5] = "-80.6"
-   Enduse8[6] = "309.9"
-   Enduse8[7] = "13.43"
+   Enduse8[2] = "-81.5"
+   Enduse8[3] = "345.6"
+   Enduse8[4] = "14.98"
+   Enduse8[5] = "-81.5"
+   Enduse8[6] = "345.5"
+   Enduse8[7] = "14.99"
    Enduse8[8] = "0.01"
    Enduse8[9] = "5.4"
    Enduse8[10] = "5.4"
-   Enduse8[11] = "6.57"
-   Enduse8[12] = "6.57"
+   Enduse8[11] = "7.17"
+   Enduse8[12] = "7.17"
    Enduse8[13] = "--"
-   Enduse8[17] = "3.96"
-   Enduse8[18] = "17.37"
-   Enduse8[19] = "21.33"
-   Enduse8[20] = "3.97"
-   Enduse8[21] = "17.37"
-   Enduse8[22] = "21.34"
-   Enduse8[23] = "0.01"
+   Enduse8[17] = "3.90"
+   Enduse8[18] = "19.37"
+   Enduse8[19] = "23.27"
+   Enduse8[20] = "3.91"
+   Enduse8[21] = "19.36"
+   Enduse8[22] = "23.27"
+   Enduse8[23] = "0.00"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "229.7"
    Enduse9[3] = "--"
@@ -3589,68 +3589,68 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[1] = "Battery"
    Enduse14[2] = "2.6"
    Enduse14[3] = "--"
-   Enduse14[4] = "-9.29"
+   Enduse14[4] = "-9.28"
    Enduse14[5] = "2.6"
    Enduse14[6] = "--"
-   Enduse14[7] = "-9.29"
+   Enduse14[7] = "-9.28"
    Enduse14[8] = "--"
-   Enduse14[9] = "-7.2"
-   Enduse14[10] = "-7.2"
+   Enduse14[9] = "-7.1"
+   Enduse14[10] = "-7.1"
    Enduse14[11] = "-1.65"
    Enduse14[12] = "-1.65"
    Enduse14[13] = "--"
-   Enduse14[17] = "-5.44"
-   Enduse14[19] = "-5.44"
-   Enduse14[20] = "-5.44"
-   Enduse14[22] = "-5.44"
+   Enduse14[17] = "-5.45"
+   Enduse14[19] = "-5.45"
+   Enduse14[20] = "-5.45"
+   Enduse14[22] = "-5.45"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "185.4"
-   Enduse15[3] = "309.9"
-   Enduse15[4] = "133.44"
-   Enduse15[5] = "185.4"
-   Enduse15[6] = "309.9"
-   Enduse15[7] = "133.45"
+   Enduse15[2] = "184.5"
+   Enduse15[3] = "345.6"
+   Enduse15[4] = "135.00"
+   Enduse15[5] = "184.5"
+   Enduse15[6] = "345.5"
+   Enduse15[7] = "135.01"
    Enduse15[8] = "0.01"
    Enduse15[9] = "18.8"
    Enduse15[10] = "18.8"
-   Enduse15[11] = "15.65"
-   Enduse15[12] = "15.65"
+   Enduse15[11] = "16.25"
+   Enduse15[12] = "16.25"
    Enduse15[13] = "--"
-   Enduse15[17] = "33.96"
-   Enduse15[18] = "17.37"
-   Enduse15[19] = "51.33"
-   Enduse15[20] = "33.97"
-   Enduse15[21] = "17.37"
-   Enduse15[22] = "51.34"
-   Enduse15[23] = "0.01"
+   Enduse15[17] = "33.90"
+   Enduse15[18] = "19.37"
+   Enduse15[19] = "53.27"
+   Enduse15[20] = "33.91"
+   Enduse15[21] = "19.36"
+   Enduse15[22] = "53.27"
+   Enduse15[23] = "0.00"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "179.3"
-   Enduse16[3] = "309.9"
-   Enduse16[4] = "118.23"
-   Enduse16[5] = "179.3"
-   Enduse16[6] = "309.9"
-   Enduse16[7] = "118.24"
+   Enduse16[2] = "178.4"
+   Enduse16[3] = "345.6"
+   Enduse16[4] = "119.78"
+   Enduse16[5] = "178.4"
+   Enduse16[6] = "345.5"
+   Enduse16[7] = "119.79"
    Enduse16[8] = "0.01"
    Enduse16[9] = "13.2"
    Enduse16[10] = "13.2"
-   Enduse16[11] = "11.62"
-   Enduse16[12] = "11.62"
+   Enduse16[11] = "12.22"
+   Enduse16[12] = "12.22"
    Enduse16[13] = "--"
-   Enduse16[17] = "20.62"
-   Enduse16[18] = "17.37"
-   Enduse16[19] = "37.99"
-   Enduse16[20] = "20.63"
-   Enduse16[21] = "17.37"
-   Enduse16[22] = "38.00"
-   Enduse16[23] = "0.01"
+   Enduse16[17] = "20.57"
+   Enduse16[18] = "19.37"
+   Enduse16[19] = "39.94"
+   Enduse16[20] = "20.58"
+   Enduse16[21] = "19.36"
+   Enduse16[22] = "39.94"
+   Enduse16[23] = "0.00"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 8  'Core_bottom Thermal Zone'
 clg: 0  htg: 4  'Perimeter_bot_ZN_1 Thermal Zone'
 clg: 0  htg: 5  'Perimeter_bot_ZN_2 Thermal Zone'
 clg: 0  htg: 6  'Perimeter_bot_ZN_3 Thermal Zone'
-clg: 0  htg: 5  'Perimeter_bot_ZN_4 Thermal Zone'
+clg: 0  htg: 6  'Perimeter_bot_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'FirstFloor_Plenum Thermal Zone'
 clg: 0  htg: 5  'Core_mid Thermal Zone'
 clg: 0  htg: 3  'Perimeter_mid_ZN_1 Thermal Zone'
@@ -3659,9 +3659,9 @@ clg: 0  htg: 4  'Perimeter_mid_ZN_3 Thermal Zone'
 clg: 0  htg: 4  'Perimeter_mid_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'MidFloor_Plenum Thermal Zone'
 clg: 0  htg: 0  'Core_top Thermal Zone'
-clg: 0  htg: 0  'Perimeter_top_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_1 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_top_ZN_2 Thermal Zone'
-clg: 0  htg: 0  'Perimeter_top_ZN_3 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_3 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_top_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'", 
                  "clg: 0  htg: 8  'Core_bottom Thermal Zone'
@@ -3671,13 +3671,13 @@ clg: 0  htg: 6  'Perimeter_bot_ZN_3 Thermal Zone'
 clg: 0  htg: 5  'Perimeter_bot_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'FirstFloor_Plenum Thermal Zone'
 clg: 0  htg: 5  'Core_mid Thermal Zone'
-clg: 0  htg: 3  'Perimeter_mid_ZN_1 Thermal Zone'
+clg: 0  htg: 4  'Perimeter_mid_ZN_1 Thermal Zone'
 clg: 0  htg: 4  'Perimeter_mid_ZN_2 Thermal Zone'
 clg: 0  htg: 4  'Perimeter_mid_ZN_3 Thermal Zone'
-clg: 0  htg: 4  'Perimeter_mid_ZN_4 Thermal Zone'
+clg: 0  htg: 5  'Perimeter_mid_ZN_4 Thermal Zone'
 clg: 0  htg: 0  'MidFloor_Plenum Thermal Zone'
 clg: 0  htg: 0  'Core_top Thermal Zone'
-clg: 0  htg: 0  'Perimeter_top_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_1 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_top_ZN_2 Thermal Zone'
 clg: 0  htg: 0  'Perimeter_top_ZN_3 Thermal Zone'
 clg: 0  htg: 1  'Perimeter_top_ZN_4 Thermal Zone'
@@ -3691,9 +3691,11 @@ clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'" )
    ComplyMessage = "COMPLIES"
    StdPVBatteryMsg = "Standard Design PV Capacity: 167.9 kWdc  /  Battery System Capacity: 296.8 kWh  (power 70.50 kW)"
    AnalysisValid = 0
-   PctSavingsTDV = 0.00749344
-   PctSavingsEffTDV = 0.00845737
-   PctSavingsCmpTDV = 0.0744602
+   HideCompSmrySrc = 0
+   HideCompSmryTot = 0
+   PctSavingsTDV = 0.00740686
+   PctSavingsEffTDV = 0.00834794
+   PctSavingsCmpTDV = 0.0667111
    PctSavTDVLbl = "0.0"
    PctSavEffTDVLbl = "0.0"
    PctSavCmpTDVLbl = "0.1"
@@ -3706,11 +3708,13 @@ clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'" )
    MarginkW = 0
    PVBattResultsValid = 1
    PropPV_Total = 262496
-   PropPV_Export = 45803.5
-   PropPV_PctExport = 17.4492
+   PropPV_Export = 45699.8
+   PropPV_PctExport = 17.4097
    StdPV_Total = 262496
-   StdPV_Export = 45796.9
-   StdPV_PctExport = 17.4467
+   StdPV_Export = 45693.1
+   StdPV_PctExport = 17.4071
+   NRCCPRFPayldTransID = "4c7c73f7-cccd-452a-9109-e25f3e1c1e44"
+   NRCCPRFPayldProcDate = "2023-07-03T00:42:17"
    ..
 
 

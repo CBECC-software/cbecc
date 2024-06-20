@@ -9,8 +9,8 @@
 #include "winver.h"
 
 VS_VERSION_INFO     VERSIONINFO
-  FILEVERSION       25,0,4,1298
-  PRODUCTVERSION    25,0,4,1298
+  FILEVERSION       25,0,4,1302
+  PRODUCTVERSION    25,0,4,1302
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -27,14 +27,14 @@ BEGIN
 		BEGIN 
 			VALUE "CompanyName",     "California Energy Commission\0"
 			VALUE "FileDescription", "BEM Compliance Manager (Title-24 NRMF)\0"
-			VALUE "FileVersion",     "2025.0.4 (1298)\0"
+			VALUE "FileVersion",     "2025.0.4 (1302)\0"
 			VALUE "InternalName",    "BEMCmpMgr25c\0"
 			VALUE "LegalCopyright",  "Copyright (C) 2012-2023, California Energy Commission. All rights reserved.\0"
 			VALUE "LegalTrademarks", "\0"
 			VALUE "OriginalFilename","BEMCmpMgr25c.dll\0"
 			VALUE "ProductName",     "BEM Compliance Manager DLL (T-24 NRMF)\0"
 			VALUE "ProductVersion",  "2025.0.4\0"
-			VALUE "SpecialBuild",    "build 1298\0"
+			VALUE "SpecialBuild",    "build 1302\0"
 		END
 	END
 	BLOCK "VarFileInfo" 

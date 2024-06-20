@@ -3385,6 +3385,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sOptionsCSVString += sOptTemp;
 		}
 
+		int iLogAnalysisMsgs = ReadProgInt( sOptsSec, "LogAnalysisMsgs", -1 );     // SAC 06/26/23
+		if (iLogAnalysisMsgs > -1)
+		{	sOptTemp.Format( "LogAnalysisMsgs,%d,", iLogAnalysisMsgs );
+			sOptionsCSVString += sOptTemp;
+		}
+
 #ifdef UI_CANRES
 		AnalysisOption saCECNonResAnalOpts[] =	{	{  "LogRuleEvaluation"           ,  "Verbose"                     ,    0   },
 																{  "MaxNumErrorsReportedPerType" ,  "MaxNumErrorsReportedPerType" ,    5   },

@@ -425,10 +425,10 @@
 					;	; 2,              3,    "Variable Outdoor Air Ventilation Central Heat/Cool System"
 					;	2,              1,    "Other Heating and Cooling System"
 	 CTRL, "HVACSysType",           4043, TDCT_Combo,  160, 305, 200, 230, 12, FNT_STD, "HVAC System Type:",                       TA_LEFT,   -125, 4,     0, TA_LEFT, 0, 0,  None,             None,               0,  0,  "Type of HVAC system serving this DwellUnitType"
-	 CTRL, "HVACDistRef",           4049, TDCT_Combo,  445, 305, 300, 135, 12, FNT_STD, "Distrib:",                                TA_RIGHT,    -2, 4,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0,  -65,  0,  "Distribution system (ducts) serving this DwellUnitType"
-         CTRL, "HVACDistRef",           4149, TDCT_Button, 582, 305,  22,  22,999, FNT_STD, "...",                                     TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0,    0,  0,  "Access distribution system by DwellUnitType"
-	 CTRL, "HVACFanRef",            4048, TDCT_Combo,  650, 305, 300, 135, 12, FNT_STD, "Fan:",                                    TA_RIGHT,    -2, 4,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0,  -65,  0,  "HVAC fan serving this DwellUnitType"
-         CTRL, "HVACFanRef",            4148, TDCT_Button, 787, 305,  22,  22,999, FNT_STD, "...",                                     TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0,    0,  0,  "Access HVAC fan by DwellUnitType"
+	 CTRL, "HVACDistRef",           4049, TDCT_Combo,  445, 305, 300, 135, 12, FNT_STD, "Distrib:",                                TA_RIGHT,    -2, 4,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0 And HtPumpEqpType != 22,  -65,  0,  "Distribution system (ducts) serving this DwellUnitType"
+         CTRL, "HVACDistRef",           4149, TDCT_Button, 582, 305,  22,  22,999, FNT_STD, "...",                                     TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0 And HtPumpEqpType != 22,    0,  0,  "Access distribution system by DwellUnitType"
+	 CTRL, "HVACFanRef",            4048, TDCT_Combo,  650, 305, 300, 135, 12, FNT_STD, "Fan:",                                    TA_RIGHT,    -2, 4,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0 And HtPumpEqpType != 22,  -65,  0,  "HVAC fan serving this DwellUnitType"
+         CTRL, "HVACFanRef",            4148, TDCT_Button, 787, 305,  22,  22,999, FNT_STD, "...",                                     TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,             HVACSysType > 0 And HtPumpEqpType != 22,    0,  0,  "Access HVAC fan by DwellUnitType"
 
 	 CTRL, "HeatEquipNumLbl",      30110, TDCT_Label,   35, 344,  19,  95,  0, FNT_STD, "",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,                    HVACSysType > 0.5 And HVACSysType < 4,                            0,   0,  ""
 	 CTRL, "NumHeatEquipTypes",    30111, TDCT_Edit,   130, 340,  25,  30,  0, FNT_STD, "Unique Heating Unit Types",          TA_LEFT,    35, 4,     0, TA_LEFT, 4, 4,  None,                    HVACSysType > 0.5 And HVACSysType != 2 And HVACSysType < 4,       0, 170,  ""
@@ -1600,7 +1600,7 @@
     CTRL, "AffordableHousing",  3077, TDCT_Check,  505,  60,  22, 220,  0, FNT_STD, "Affordable Housing Units (CUAC)",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       Proj:AffordableHousing > 0 And Proj:CUACReport > 0,   0,  0,  "whether this zone's dwelling units qualify as affordable housing"   ; SAC 08/04/22 (CUAC)
 	 CTRL, "CUACErrorMsg",       3078, TDCT_Label,  725,  85,  20, 450,  0, FNT_BOLD, "",                                          TA_RIGHT,    0, 0,     0, TA_LEFT, 0, 0,  None,       None,                        0,  0,  ""
 
-	 CTRL, "Mult",               3079, TDCT_Edit,   125, 130,  25,  75, 11, FNT_STD, "Zone Group Mult:",                           TA_LEFT,  -105, 4,     1, TA_LEFT, 4, 4,  Mult = -9,  Proj:EnableResearchMode > 0,       0,  0,  "Zone group (floor) multiplier"      ; SAC 04/21/23 (tic #3392)
+	 CTRL, "Mult",               3079, TDCT_Edit,   125, 130,  25,  75, 11, FNT_STD, "Zone Group Mult:",                           TA_LEFT,  -105, 4,     1, TA_LEFT, 4, 4,  Mult = -9,  Proj:EnableResearchMode > 0 Or Proj:AnalysisVersion >= 220300,   0,  0,  "Zone group (floor) multiplier"      ; SAC 04/21/23 (tic #3392)  ; restore - SAC 05/22/23 (tic #3392)
 	 CTRL, "FloorArea",          3005, TDCT_Edit,   125, 160,  25,  75, 11, FNT_STD, "Floor Area:",                                TA_LEFT,  -105, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Floor area of zone measured to outside stud face of exterior walls and centerline if walls between zones"    
 ;	 CTRL, "Volume",             3006, TDCT_Edit,   125, 190,  25,  75,  0, FNT_STD, "Volume:",                                    TA_LEFT,  -105, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Volume of air in this zone"                                                                                  
 ;	mjb - mods for E+A+A	11/27/13 - moved Stories into screen slot for commented out Volume
@@ -1620,7 +1620,7 @@
 ;	mjb	10/6/14 - mods for Additions needing existing HVAC
 	 CTRL, "HVACSysStatus",      3015, TDCT_Combo,  435, 120, 300,  80, 12, FNT_STD, "HVAC Sys Status:",                       	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,  Type < 10 And ResProj:RunScope = 2,   0,  0,  ""
 	 CTRL, "HVACSysStatus",      3015, TDCT_Combo,  435, 120, 300,  80, 12, FNT_STD, "HVAC Sys Status:",                       	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,  Type < 10 And ResProj:IsAddAlone > 0,   0,  0,  ""
-	 CTRL, "HVACSysVerified",    3016, TDCT_Check,  530, 122,  22, 150,  0, FNT_STD, "Verify Existing System",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And Type < 10 And ResProj:RunScope = 2 And HVACSysStatus = 2,   0,  0,  "Whether or not altered HVACSys has a verifiable existing HVACSys"  
+;	 CTRL, "HVACSysVerified",    3016, TDCT_Check,  530, 122,  22, 150,  0, FNT_STD, "Verify Existing System",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And Type < 10 And ResProj:RunScope = 2 And HVACSysStatus = 2,   0,  0,  "Whether or not altered HVACSys has a verifiable existing HVACSys"  
 	 CTRL, "UILabel_HVACSys[1]", 3026, TDCT_Label,  325, 154,  20, 127, 12, FNT_STD, "",                                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,                               Type < 10,                         0,  0,  ""
 	 CTRL, "HVACSystem",         3011, TDCT_Combo,  455, 150, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And Type < 10 And HVACSysStatus = 3,   0,  0,  "HVAC system serving this zone"
 	 CTRL, "AltHVACSystem",      3027, TDCT_Combo,  455, 150, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And Type < 10 And HVACSysStatus = 2,   0,  0,  "Altered HVAC system serving this zone"
@@ -1631,7 +1631,7 @@
 	 CTRL, "MFamHVACUILabel",    3051, TDCT_Label,  470, 154,  19, 265, 12, FNT_STD, "",                                           TA_LEFT,     0, 0,     0, TA_LEFT,-1, 0,  None,  Proj:CSE_AllowCentralDHW > 0.5 And Type < 10,                         0,  0,  ""     ; SAC 01/03/21 (MFam)
 
 	 CTRL, "DHWSys1Status",      3018, TDCT_Combo,  435, 230, 300,  80, 12, FNT_STD, "DHW Sys 1 Status:",                       	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 Or ResProj:IsAddAlone > 0,                          0,  0,  ""
-	 CTRL, "DHWSys1Verified",    3019, TDCT_Check,  530, 232,  22, 180,  0, FNT_STD, "Verify Existing DHW Sys 1",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And ResProj:RunScope = 2 And DHWSys1Status = 2,    0,  0,  "Whether or not altered DHW system 1 has a verifiable existing DHW system"  
+;	 CTRL, "DHWSys1Verified",    3019, TDCT_Check,  530, 232,  22, 180,  0, FNT_STD, "Verify Existing DHW Sys 1",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And ResProj:RunScope = 2 And DHWSys1Status = 2,    0,  0,  "Whether or not altered DHW system 1 has a verifiable existing DHW system"  
 	 CTRL, "UILabel_DHWSys1[1]", 3031, TDCT_Label,  325, 264,  20, 127, 12, FNT_STD, "",                                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  None,                                                                    0,  0,  ""
 	 CTRL, "DHWSys1",            3013, TDCT_Combo,  455, 260, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And DHWSys1Status = 3,                          0,  0,  "First DHW system serving this zone"
 	 CTRL, "AltDHWSys1",         3032, TDCT_Combo,  455, 260, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:CSE_AllowCentralDHW < 0.5 And DHWSys1Status = 2,                          0,  0,  "First altered DHW system serving this zone"
@@ -1675,8 +1675,10 @@
 	 CTRL, "Active",             3000, TDCT_Combo,  240,  10, 350, 220, 25, FNT_STD, "Currently Active OtherZone:",                TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected zone"
 	 CTRL, "",                   3001, TDCT_Line,    10,  45, 805,  45, -1, FNT_STD, "",                                           TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                              
-	 CTRL, "Name",               3002, TDCT_Edit,    70,  60,  25, 200, 99, FNT_STD, "Name:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Name of this zone"
-	 CTRL, "Type",               3003, TDCT_Combo,   70,  90, 200, 200, 12, FNT_STD, "Type:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Type of zone"
+	 CTRL, "Name",               3002, TDCT_Edit,    70,  60,  25, 220, 99, FNT_STD, "Name:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Name of this zone"
+	 CTRL, "Status",             3104, TDCT_Combo,  390,  60, 300,  75, 12, FNT_STD, "Zone Status:",                    	          TA_LEFT,   -85, 4,     0, TA_LEFT, 0, 0,  None,       ResProj:RunScope != 1,       0,  0,  ""
+	 CTRL, "Type",               3003, TDCT_Combo,   70,  90, 100, 125, 12, FNT_STD, "Type:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Type of zone"
+      CTRL, "CondType",         3012, TDCT_Combo,  200,  90,  75,  90, 12, FNT_STD, "",                                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  Type < 10,       0,  0,  "Conditioned space is either directly conditioned or indirectly conditioned. (See §100.1[b] for full definition.)"
 	 CTRL, "SpcFunc",            3004, TDCT_Combo,  130, 120, 500, 340, 12, FNT_STD, "Space Function:",                            TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The area category occupancy type from Nonresidential Appendix 5.4A"
 
 	 CTRL, "Mult",               3079, TDCT_Edit,   130, 160,  25,  75, 11, FNT_STD, "Zone Group Mult:",                           TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  Mult = -9,  Proj:EnableResearchMode > 0,       0,  0,  "Zone group (floor) multiplier"      ; SAC 04/30/23 (tic #3392)
@@ -1691,12 +1693,25 @@
     CTRL, "PVBattSizeBldgType",            4021, TDCT_Combo, 445, 160, 300, 200, 25, FNT_STD, "PV/Batt Req Bldg Type:",           TA_LEFT,  -145, 4,     0, TA_LEFT, 0, 0,  None,       ShowPVBattSizeBldgType > 0,             -147,  0,  ""   ; SAC 01/16/23
     CTRL, "BattReq_PartOfLargeTenantArea", 4020, TDCT_Check, 300, 190,  25, 210,  2, FNT_STD, "Part of >5,000 ft2 Tenant Area",   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       ShowBattReq_PartOfLargeTenantArea > 0,     0,  0,  ""   ; SAC 01/12/23
 
-    CTRL, "",                   2033, TDCT_Button, 530, 220,  22, 260,3067,FNT_STD, "Create and Assign Com AirSys",               TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And ServedByAirSys = 0,    0,  0,  "Create AirSys equipment network and assign to this ResOtherZn"  ; SAC 05/17/22
-	 CTRL, "ozHVACSystem",       3011, TDCT_Combo,  475, 250, 200, 210, 25, FNT_STD, "HVAC System:",                               TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10,      -102,  0,  "HVAC system serving this zone"
-    CTRL, "ozHVACSystem",       3111, TDCT_Button, 690, 250,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10,         0,  0,  "Access HVAC system by the zone"
+    ; revisions integrating HVACSysStatus & DHWSysStatus for EAA analysis - SAC 06/25/23 (tic #3479)
+	 CTRL, "HVACSysStatus",      3015, TDCT_Combo,  435, 220, 300,  80, 12, FNT_STD, "HVAC Sys Status:",                       	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1,  -122,  0,  "Status (new/altered/existing) of assigned HVAC system"
+    CTRL, "",                   2911, TDCT_Label,  375, 254,  16,  98,  0, FNT_STD, "HVAC System:",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1,    0,  0,  ""
+    CTRL, "",                   2033, TDCT_Button, 530, 220,  22, 260,3067,FNT_STD, "Create and Assign Com AirSys",               TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And HVACSysStatus = 3 And ServedByAirSys = 0,    0,  0,  "Create AirSys equipment network and assign to this ResOtherZn"  ; SAC 05/17/22
+    CTRL, "ozHVACSystem",       3011, TDCT_Combo,  475, 250, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And HVACSysStatus = 3,    0,  0,  "New HVAC system serving this zone"
+    CTRL, "ozHVACSystem",       3111, TDCT_Button, 690, 250,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And HVACSysStatus = 3,    0,  0,  "Access data describing HVAC system serving this zone"
+    CTRL, "AltHVACSystem",      3211, TDCT_Combo,  475, 250, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 2,    0,  0,  "Altered HVAC system serving this zone"
+    CTRL, "AltHVACSystem",      3311, TDCT_Button, 690, 250,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 2,    0,  0,  "Access data describing HVAC system serving this zone"
+    CTRL, "exHVACSystem",       3411, TDCT_Combo,  475, 250, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 1,    0,  0,  "Existing HVAC system serving this zone"
+    CTRL, "exHVACSystem",       3511, TDCT_Button, 690, 250,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 1,    0,  0,  "Access data describing HVAC system serving this zone"
 
-    CTRL, "ozDHWSys",           3013, TDCT_Combo,  475, 310, 200, 210, 25, FNT_STD, "DHW System:",                                TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0,  -102,  0,  "DHW system serving this zone"        ; added disp cond of HasDHWUse - SAC 02/20/23 (tic #3418)
-    CTRL, "ozDHWSys",           3113, TDCT_Button, 690, 310,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0,     0,  0,  "Access DHW system by the zone"
+	 CTRL, "DHWSysStatus",       3115, TDCT_Combo,  435, 280, 300,  80, 12, FNT_STD, "DHW Sys Status:",                        	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1,  -122,  0,  "Status (new/altered/existing) of assigned DHW system"
+    CTRL, "",                   2913, TDCT_Label,  375, 314,  16,  98,  0, FNT_STD, "DHW System:",                                TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0,     0,  0,  ""
+    CTRL, "ozDHWSys",           3013, TDCT_Combo,  475, 310, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And DHWSysStatus = 3,     0,  0,  "New DHW system serving this zone"        ; added disp cond of HasDHWUse - SAC 02/20/23 (tic #3418)
+    CTRL, "ozDHWSys",           3113, TDCT_Button, 690, 310,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And DHWSysStatus = 3,     0,  0,  "Access DHW system by the zone"
+    CTRL, "AltDHWSys",          3213, TDCT_Combo,  475, 310, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 2,    0,  0,  "Altered DHW system serving this zone"     ; SAC 06/25/23 (tic #3479)
+    CTRL, "AltDHWSys",          3313, TDCT_Button, 690, 310,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 2,    0,  0,  "Access data describing DHW system serving this zone"
+    CTRL, "exDHWSys",           3413, TDCT_Combo,  475, 310, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 1,    0,  0,  "Existing DHW system serving this zone"
+    CTRL, "exDHWSys",           3513, TDCT_Button, 690, 310,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 1,    0,  0,  "Access data describing DHW system serving this zone"
 
     CTRL, "DryerFuel",          3014, TDCT_Combo,  475, 340, 300, 100, 25, FNT_STD, "Dryer Fuel:",                                TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       LaundryArea > 0.5,   -105,  0,  "Fuel used for clothes dryer"  
 
@@ -1745,11 +1760,12 @@
          CTRL, "MinExhCFM",          3110, TDCT_Edit,   550, 185,  25,  70, 11, FNT_STD, "Minimum Exhaust:",                           TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  Type = -1,  None,                     0,  0,  "Minimum continuous exhaust flow rate" 
 
     CTRL, "AirSysVentCFM",      4300, TDCT_Edit,   250, 240,  25,  50, 25, FNT_STD, "Ventilation Provided by the Air System:",    TA_RIGHT,    -4, 4,     1, TA_LEFT, 4, 4,  None,        Type = 1 And ServedByAirSys > 0,                          -250, 50,  ""
-    CTRL, "MinIAQCFMLbl",       4073, TDCT_Label,   35, 274,  18, 600,  0, FNT_STD, "",                                           TA_LEFT,      0, 0,     0, TA_LEFT, 0, 0,  None,             None,              0,  0,  ""
+    CTRL, "MinIAQCFMLbl",       4073, TDCT_Label,   35, 274,  18, 700,  0, FNT_STD, "",                                           TA_LEFT,      0, 0,     0, TA_LEFT, 0, 0,  None,             None,              0,  0,  ""
 
 ;    CTRL, "UnbalancedIAQLbl",   4061, TDCT_Label,   35, 299,  18, 421,  0, FNT_STD, "",                                           TA_LEFT,      0, 0,     0, TA_LEFT, 0, 0,  None,             None,              0,  0,  ""
 
     CTRL, "IAQOption",          4074, TDCT_Combo,  100, 240, 300, 250, 25, FNT_STD, "Model as:",                                  TA_LEFT,    -65, 4,     0, TA_LEFT, 0, 0,  None,        IAQDisabled < 1 And AllowIAQInps > 0,         -67,  0,  ""
+    CTRL, "MakeupExhSrc",       4076, TDCT_Combo,  550, 240,  75, 200, 25, FNT_STD, "Exhaust Source:",                            TA_LEFT,   -120, 4,     0, TA_LEFT, 0, 0,  None,        IAQDisabled < 1 And MakeupExhCFM > 0,         -80,  0,  "Make up air source for the imbalanced exhaust flow"
 
     CTRL, "IAQFanRef[1]",       4081, TDCT_Combo,  100, 300, 300, 170, 25, FNT_STD, "1:",                                         TA_LEFT,    -17, 4,     0, TA_LEFT, 0, 0,  None,        IAQDisabled < 1 And AllowIAQInps > 0 And IAQOption = 2,    -18,  0,  "IAQ fan present in this zone" 
     CTRL, "IAQFanRef[1]",       4181, TDCT_Button, 272, 300,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,        IAQDisabled < 1 And AllowIAQInps > 0 And IAQOption = 2,     0,   0,  "Access IAQ fan by zone"
@@ -1887,7 +1903,7 @@
 	 CTRL, "Type",            3106, TDCT_Combo,  145,  60, 300, 150, 12, FNT_STD, "Attic Conditioning:",            TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                    FloorArea > 0.1,    0,  0,  "Type of attic"   
 
 	 CTRL, "Status",          3130, TDCT_Combo,  145,  90, 300, 150, 12, FNT_STD, "Attic Roof Status:",                  TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                    ResProj:RunScope != 1,               0,  0,  ""
-	 CTRL, "IsVerified",      3131, TDCT_Check,  145, 120,  22, 140,  0, FNT_STD, "Verify Existing Roof",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                    Status = 2 OR Status = 4,     0,  0,  "Whether or not altered attic has a verifiable existing attic"  
+;	 CTRL, "IsVerified",      3131, TDCT_Check,  145, 120,  22, 140,  0, FNT_STD, "Verify Existing Roof",           TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                    Status = 2 OR Status = 4,     0,  0,  "Whether or not altered attic has a verifiable existing attic"  
 
 	 CTRL, "FloorArea",       3104, TDCT_Edit,   470,  20,  25,  65, 11, FNT_STD, "Area:",                          TA_RIGHT,   -5, 4,     1, TA_LEFT, 4, 4,  None,                    None,               0,  0,  "Floor area of attic"
 	 CTRL, "RoofRise",        3107, TDCT_Edit,   470,  60,  25,  65, 11, FNT_STD, "Roof Rise:",                     TA_RIGHT,   -5, 4,     1, TA_LEFT, 4, 4,  None,                    FloorArea > 0.1,  -60,  0,  "Roof rise (inches rise / 12 inches run)"        
@@ -1964,7 +1980,7 @@
 
 	 CTRL, "Status",            7030, TDCT_Combo,  115, 130, 300, 220, 12, FNT_STD, "Surface Status:",                    TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,                           ResProj:RunScope != 1,       0,  0,  ""
 ; mjb	new Verification flag plus rest of screen shifted down to accomodate	9/17/13
-	 CTRL, "IsVerified",        7031, TDCT_Check,  115, 160,  22, 150,  0, FNT_STD, "Verify Existing Wall",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
+;	 CTRL, "IsVerified",        7031, TDCT_Check,  115, 160,  22, 150,  0, FNT_STD, "Verify Existing Wall",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
 	 CTRL, "Construction",      7007, TDCT_Combo,  115, 190, 300, 220, 12, FNT_STD, "Construction:",                      TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
 
 ;	 CTRL, "IsWoodFrmdWallExt", 7035, TDCT_Check,  115, 220,  22, 220,  0, FNT_STD, "Is Wood-Framed Wall Extension",      TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ShowIsWoodFrmdWallExt > 0,   0,  0,  "Whether or not this is an extension of an existing wood-framed wall (Section 150.2(a)1A)"   ; SAC 4/30/18 - tic #798
@@ -2018,12 +2034,13 @@
 	 CTRL, "IsPartySurface",    7507, TDCT_Check,   20, 123,  22, 140,  0, FNT_STD, "Is a Party Surface",                 TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                       None,       0,  0,  "Whether or not the zone on the other side of this wall is part of a different dwelling unit"
 	 CTRL, "OtherSideModeled",  7508, TDCT_Check,  185, 123,  22, 215,  0, FNT_STD, "Zone on Other Side Is Modeled",      TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  Proj:CSE_AllowCentralDHW > 0.5,   IsPartySurface > 0.5,       0,  0,  "Whether or not the zone on the other side of this party surface is included in the model"
 	 CTRL, "Outside",           7506, TDCT_Combo,  185, 150, 300, 220, 12, FNT_STD, "Zone on Other Side:",                TA_LEFT,  -145, 4,     0, TA_LEFT, 0, 0,  None,                       IsPartySurface < 0.5 Or OtherSideModeled > 0.5,  -150,  0,  "The zone on the other side of this interior wall."
+         CTRL, "IsDemising",        7509, TDCT_Check,   20, 180,  22, 150,  0, FNT_STD, "Is a Demising Surface",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                       None,       0,  0,  "Whether or not this wall separates Conditioned zone from Uncond or garage"
 ;	 CTRL, "OutsideDiffUnit",   7507, TDCT_Check,   40, 153,  22, 240,  0, FNT_STD, "Different Dwelling Unit on Other Side", TA_LEFT,  0, 4,     0, TA_LEFT, 0, 0,  None,   InterCondZnArea > 0.5 And ResProj:IsMultiFamily > 0.5,   0,  0,  "Whether or not the zone on the other side of this wall is part of a different dwelling unit"
 ; mjb 11/26/13 - re-enable E+A+A
 ; SAC 1/8/15 - revised display logic to show for any demising wall (in EAA project)
-	 CTRL, "Status",            7030, TDCT_Combo,  115, 180, 300, 220, 12, FNT_STD, "Surface Status:",                    TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And IsDemising > 0.1,       0,  0,  ""
+	 CTRL, "Status",            7030, TDCT_Combo,  115, 210, 300, 220, 12, FNT_STD, "Surface Status:",                    TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And IsDemising > 0.1,       0,  0,  ""
 ; mjb	new Verification flag plus rest of screen shifted down to accomodate	9/17/13
-	 CTRL, "IsVerified",          7031, TDCT_Check,  115, 210,  22, 150,  0, FNT_STD, "Verify Existing Wall",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And IsDemising > 0.1 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
+;	 CTRL, "IsVerified",          7031, TDCT_Check,  355, 210,  22, 150,  0, FNT_STD, "Verify Existing Wall",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And IsDemising > 0.1 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
                                                                                                                                                                                                    
 	 CTRL, "Construction",      7510, TDCT_Combo,  115, 240, 300, 220, 12, FNT_STD, "Construction:",                      TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
 	 CTRL, "Area",              7511, TDCT_Edit,   115, 270,  25,  75, 11, FNT_STD, "Wall Area:",                         TA_LEFT,   -95, 4,     1, TA_LEFT, 4, 4,  None,                           None,       0,  0,  ""
@@ -2052,7 +2069,7 @@
 	 CTRL, "PClass",            7805, TDCT_Label,   20,  94, 100,   0, 12, FNT_STD, "Belongs to ",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ":"
 
 	 CTRL, "Status",            7830, TDCT_Combo,  115, 130, 300, 220, 12, FNT_STD, "Surface Status:",                    TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,                           ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        7831, TDCT_Check,  115, 160,  22, 150,  0, FNT_STD, "Verify Existing Wall",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
+;	 CTRL, "IsVerified",        7831, TDCT_Check,  115, 160,  22, 150,  0, FNT_STD, "Verify Existing Wall",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
 	 CTRL, "Construction",      7807, TDCT_Combo,  115, 190, 300, 220, 12, FNT_STD, "Construction:",                      TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
 	 CTRL, "Construction",      7811, TDCT_Button, 342, 190,  22,  22, 999, FNT_STD, "...",                               TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  "access construction assigned to this wall"
 	 CTRL, "Area",              7808, TDCT_Edit,   140, 220,  25,  75, 11, FNT_STD, "Wall Area:",                         TA_LEFT,  -120, 4,     1, TA_LEFT, 4, 4,  None,                           None,       0,  0,  ""
@@ -2113,7 +2130,7 @@
 
 ; mjb	EAA - new Status and Verification entries, plus rest of screen shifted down to accomodate	11/6/13
 	 CTRL, "Status",            8213, TDCT_Combo,  145, 210, 300, 180, 12, FNT_STD, "Roof Status:",                    TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                           ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        8214, TDCT_Check,  145, 240,  22, 180,  0, FNT_STD, "Verify Existing Ceiling",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,      Status = 2 OR Status = 4,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
+;	 CTRL, "IsVerified",        8214, TDCT_Check,  145, 240,  22, 180,  0, FNT_STD, "Verify Existing Ceiling",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,      Status = 2 OR Status = 4,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
 
 	 CTRL, "",                  8215, TDCT_Label,   20, 300,  18,   0,  0, FNT_STD, "Roof Deck/Surface",              TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,          None,    0,  0,  ""
 	 CTRL, "",                  8216, TDCT_Line,   135, 308, 530, 308, -1, FNT_STD, "",                               TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,          None,    0,  0,  ""
@@ -2152,7 +2169,7 @@
 
 ; mjb	EAA - new Status and Verification entries, plus rest of screen shifted down to accomodate	11/6/13
 	 CTRL, "Status",            8206, TDCT_Combo,  145, 130, 300, 180, 12, FNT_STD, "Surface Status:",                    TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                           ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        8208, TDCT_Check,  145, 160,  22, 180,  0, FNT_STD, "Verify Existing Ceiling",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
+;	 CTRL, "IsVerified",        8208, TDCT_Check,  145, 160,  22, 180,  0, FNT_STD, "Verify Existing Ceiling",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
 
 	 CTRL, "AtticZone",         8215, TDCT_Combo,  145, 190, 300, 180, 12, FNT_STD, "Attic Zone:",                        TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
 	 CTRL, "Construction",      8209, TDCT_Combo,  145, 220, 300, 180, 12, FNT_STD, "Construction:",                      TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
@@ -2189,7 +2206,7 @@
 	 CTRL, "PClass",            8405, TDCT_Label,   20,  94, 100,   0, 12, FNT_STD, "Belongs to ",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  ":"
 
 	 CTRL, "Status",            8430, TDCT_Combo,  145, 120, 300, 220, 12, FNT_STD, "Slab Floor Status:",                 TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          ResProj:RunScope != 1,                     0,  0,  ""
-	 CTRL, "IsVerified",        8431, TDCT_Check,  145, 150,  22, 140,  0, FNT_STD, "Verify Existing Slab",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,     0,  0,  "Whether or not altered slab has a verifiable existing slab"  
+;	 CTRL, "IsVerified",        8431, TDCT_Check,  145, 150,  22, 140,  0, FNT_STD, "Verify Existing Slab",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,     0,  0,  "Whether or not altered slab has a verifiable existing slab"  
 
 ;	 CTRL, "Surface",           8407, TDCT_Combo,  145, 260, 300, 295, 12, FNT_STD, "Surface:",                           TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  "Description of the floor surface (carpeted vs. exposed)"
 	 CTRL, "Area",              8408, TDCT_Edit,   145, 180,  25,  75, 11, FNT_STD, "Floor Area:",                        TA_LEFT,  -125, 4,     1, TA_LEFT, 4, 4,  None,          None,                     0,  0,  "Gross floor area"
@@ -2232,7 +2249,7 @@
 	 CTRL, "PClass",            8605, TDCT_Label,   20,  94, 100,   0, 12, FNT_STD, "Belongs to ",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  ":"
 ; mjb	EAA - new Status and Verification entries, plus rest of screen shifted down to accomodate	11/6/13
 	 CTRL, "Status",            8606, TDCT_Combo,  145, 130, 300, 180, 12, FNT_STD, "Surface Status:",                    TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        8607, TDCT_Check,  145, 160,  22, 180,  0, FNT_STD, "Verify Existing Floor",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
+;	 CTRL, "IsVerified",        8607, TDCT_Check,  145, 160,  22, 180,  0, FNT_STD, "Verify Existing Floor",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
 
 	 CTRL, "Type",              8407, TDCT_Combo,  145, 190, 300, 180, 12, FNT_STD, "Floor Type:",                        TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  "Type of exterior floor"
 	 CTRL, "Construction",      8408, TDCT_Combo,  145, 220, 300, 180, 12, FNT_STD, "Construction:",                      TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  "Floor construction"
@@ -2264,7 +2281,7 @@
 	 CTRL, "PClass",            8705, TDCT_Label,   20,  94, 100,   0, 12, FNT_STD, "Belongs to ",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  ":"
 ; mjb	EAA - new Status and Verification entries, plus rest of screen shifted down to accomodate	11/6/13
 	 CTRL, "Status",            8706, TDCT_Combo,  145, 130, 300, 180, 12, FNT_STD, "Surface Status:",                    TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,         ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        8707, TDCT_Check,  145, 160,  22, 180,  0, FNT_STD, "Verify Existing Floor",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
+;	 CTRL, "IsVerified",        8707, TDCT_Check,  145, 160,  22, 180,  0, FNT_STD, "Verify Existing Floor",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered wall has a verifiable existing wall"  
 
 ;	 CTRL, "Type",              8708, TDCT_Combo,  145, XXX, 300, 180, 12, FNT_STD, "Floor Type:",                        TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  "Type of floor (over crawlspace)"
 	 CTRL, "Construction",      8709, TDCT_Combo,  145, 190, 300, 180, 12, FNT_STD, "Construction:",                      TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  "Floor construction"
@@ -2295,7 +2312,7 @@
 	 CTRL, "PClass",            8505, TDCT_Label,   20,  94, 100,   0, 12, FNT_STD, "Belongs to ",                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,          None,                     0,  0,  ":"
 
 	 CTRL, "Status",            8530, TDCT_Combo,  145, 120, 300, 220, 12, FNT_STD, "Slab Floor Status:",                    TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,          ResProj:RunScope != 1,                     0,  0,  ""
-	 CTRL, "IsVerified",        8531, TDCT_Check,  145, 150,  22, 140,  0, FNT_STD, "Verify Existing Slab",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,     0,  0,  "Whether or not altered slab has a verifiable existing slab"  
+;	 CTRL, "IsVerified",        8531, TDCT_Check,  145, 150,  22, 140,  0, FNT_STD, "Verify Existing Slab",                  TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,     0,  0,  "Whether or not altered slab has a verifiable existing slab"  
 
 	 CTRL, "Area",              8508, TDCT_Edit,   145, 180,  25,  75, 11, FNT_STD, "Floor Area:",                           TA_LEFT,  -125, 4,     1, TA_LEFT, 4, 4,  None,          None,                     0,  0,  "Gross floor area"
 	 CTRL, "DepthBelowGrade",   8509, TDCT_Edit,   145, 210,  25,  75, 11, FNT_STD, "Depth Below Grade:",                    TA_LEFT,  -125, 4,     1, TA_LEFT, 4, 4,  None,          None,                     0,  0,  ""
@@ -2323,7 +2340,7 @@
 
 
 	 CTRL, "Status",            8830, TDCT_Combo,  115, 130, 300, 120, 12, FNT_STD, "Surface Status:",                    TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,          ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        8831, TDCT_Check,  250, 133,  22, 150,  0, FNT_STD, "Verify Existing Floor",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered floor has a verifiable existing floor"  
+;	 CTRL, "IsVerified",        8831, TDCT_Check,  250, 133,  22, 150,  0, FNT_STD, "Verify Existing Floor",              TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered floor has a verifiable existing floor"  
 
 ; EM 4/9/15 - revisions to party surface / other side modeled properties
 	 CTRL, "IsPartySurface",    7507, TDCT_Check,   20, 163,  22, 140,  0, FNT_STD, "Is a Party Surface",                 TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                       None,       0,  0,  "Whether or not the zone on the other side of this ceiling is part of a different dwelling unit"
@@ -2363,7 +2380,7 @@
 
 
 	 CTRL, "Status",            8930, TDCT_Combo,  115, 130, 300, 120, 12, FNT_STD, "Surface Status:",                    TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,          ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        8931, TDCT_Check,  250, 133,  22, 150,  0, FNT_STD, "Verify Existing Ceiling",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered ceiling has a verifiable existing ceiling"  
+;	 CTRL, "IsVerified",        8931, TDCT_Check,  250, 133,  22, 150,  0, FNT_STD, "Verify Existing Ceiling",            TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered ceiling has a verifiable existing ceiling"  
 
 ; EM 4/9/15 - revisions to party surface / other side modeled properties
 	 CTRL, "IsPartySurface",    7507, TDCT_Check,   20, 163,  22, 140,  0, FNT_STD, "Is a Party Surface",                 TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                       None,       0,  0,  "Whether or not the zone on the other side of this ceiling is part of a different dwelling unit"
@@ -2430,7 +2447,7 @@
 	 CTRL, "PClass",            10005, TDCT_Label,   20,  94, 100,   0, 12, FNT_STD, "Belongs to ",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ":"
 ;	mjb	mods for E+A+A	9/17/13
 	 CTRL, "Status",            10025, TDCT_Combo,  170, 120, 300, 100, 12, FNT_STD, "Surface Status:",                    TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None, ResProj:RunScope = 2,     0,  0,  ""
-	 CTRL, "IsVerified",        10026, TDCT_Check,  300, 120,  22, 200,  0, FNT_STD, "Verify Existing Window",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None, ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered window has a verifiable existing window"  
+;	 CTRL, "IsVerified",        10026, TDCT_Check,  300, 120,  22, 200,  0, FNT_STD, "Verify Existing Window",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None, ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered window has a verifiable existing window"  
 	 CTRL, "WinType",           10008, TDCT_Combo,  170, 150, 200, 250, 12, FNT_STD, "Window Type:",                       TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Assignment of WindowType object that facilitates Window property defaulting."
 	 CTRL, "SpecMethod",        10006, TDCT_Combo,  170, 180, 200, 250, 12, FNT_STD, "Specification Method:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Whether to input window area vs. dimensions (later required for fin/overhang modeling)."
 	 CTRL, "ModelFinsOverhang", 10007, TDCT_Check,   20, 210,  22, 240,  2,  FNT_STD, "Model Window Fins and/or Overhangs", TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  SpecMethod = 1,  None,  0,  0,  "Whether or not window fins and/or overhangs are to be modeled"  
@@ -2586,7 +2603,7 @@
 
 ; SAC 11/30/13 - added Status & IsVerified
 	 CTRL, "Status",            10030, TDCT_Combo,  120, 130, 300,  95, 12, FNT_STD, "Skylight Status:",                   TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",        10031, TDCT_Check,  230, 130,  22, 160,  0, FNT_STD, "Verify Existing Skylight",          TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered skylight has a verifiable existing skylight"  
+;	 CTRL, "IsVerified",        10031, TDCT_Check,  230, 130,  22, 160,  0, FNT_STD, "Verify Existing Skylight",          TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered skylight has a verifiable existing skylight"  
 
 	 CTRL, "Multiplier",        10013, TDCT_Edit,   120, 160,  25,  75, 11, FNT_STD, "Multiplier:",                        TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
 
@@ -2627,7 +2644,7 @@
 
 ; SAC 11/30/13 - added Status & IsVerified
 	 CTRL, "Status",         10030, TDCT_Combo,  100, 130, 300,  95, 12, FNT_STD, "Door Status:",                       TA_LEFT,   -80, 4,     0, TA_LEFT, 0, 0,  None,       ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "IsVerified",     10031, TDCT_Check,  210, 130,  22, 140,  0, FNT_STD, "Verify Existing Door",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered door has a verifiable existing door"  
+;	 CTRL, "IsVerified",     10031, TDCT_Check,  210, 130,  22, 140,  0, FNT_STD, "Verify Existing Door",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered door has a verifiable existing door"  
 
 	 CTRL, "Area",           10012, TDCT_Edit,   100, 160,  25,  75, 11, FNT_STD, "Door Area:",                         TA_LEFT,   -80, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
 	 CTRL, "Ufactor",        10020, TDCT_Edit,   100, 190,  25,  75, 11, FNT_STD, "U-factor:",                          TA_LEFT,   -80, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
@@ -2658,7 +2675,7 @@
 	 CTRL, "Status",               30107, TDCT_Combo,  400,  60, 200,  80, 12, FNT_STD, "Status:",                            TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  FloorAreaSrvdInclV < 1,  ResProj:RunScope = 2 Or ResProj:IsAddAlone = 1,   0,  0,  "The status of this HVAC system (editable only when Area Served = 0)"
 
 ; should this be editable??
-	 CTRL, "IsVerified",           30108, TDCT_Check,  490,  62,  22, 200,  0, FNT_STD, "Verify Existing HVAC System",        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered HVAC system has a verifiable existing system"  
+;	 CTRL, "IsVerified",           30108, TDCT_Check,  490,  62,  22, 200,  0, FNT_STD, "Verify Existing HVAC System",        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered HVAC system has a verifiable existing system"  
 	 CTRL, "Type",                 30105, TDCT_Combo,  120,  90, 350, 360, 12, FNT_STD, "System Type:",                       TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       None,            0,   0,  "The type of HVAC system"
 
 ; SAC 12/12/13 - switched displayed area served to be the one including existing system in altered & verified scenario
@@ -3375,8 +3392,6 @@
 	 CTRL, "ClgSizingFactor"   30403, TDCT_Edit,   430, 410,  25,  50, 11, FNT_STD, "Sizing Factor:",                            TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  Type = -1,  Type < 3, -110, 100,  "Cooling capacity sizing factor"
 	 CTRL, "ClgCapTotNetRtd"   30404, TDCT_Edit,   430, 410,  25, 100, 11, FNT_STD, "Rated Capacity:",                           TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,       Type = 4 And AutoSize < 1, -110, 100,  "The net total (both sensible and latent) cooling capacity at AHRI conditions."
 	 CTRL, "WSHPEER"           30405, TDCT_Edit,   430, 430,  25,  50, 11, FNT_STD, "EER:",                                      TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,       Type = 2, -110, 100,  ""
-
-	 CTRL, "",                  9999, TDCT_Label,   20, 500,  18,  0, 0, FNT_BOLD, "This ResCentralHtgClgSys Type Is Not Currently Supported",  TA_LEFT, 122, 0,     0, TA_LEFT, 0, 0,  None,    Type = 1,    0,  0,  ""      
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3397,7 +3412,7 @@
 	 CTRL, "Name",           30403, TDCT_Edit,    70,  60,  25, 170, 99, FNT_STD, "Name:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,                None,       0,  0,  "Name of this air distribution system"
 ; SAC 12/4/13 - HVAC E+A+A
 	 CTRL, "Status",         30417, TDCT_Combo,  310,  60, 200, 130, 12, FNT_STD, "Status:",                                    TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,  ShowStatus > 0,        0,  0,  "The status of this distribution system"
-	 CTRL, "IsVerified",     30418, TDCT_Check,  315,  90,  22, 240,  0, FNT_STD, "Verify Existing Distribution System",        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ShowStatus > 0 And Status = 2,   0,  0,  "Whether or not altered distribution system has a verifiable existing system"  
+;	 CTRL, "IsVerified",     30418, TDCT_Check,  315,  90,  22, 240,  0, FNT_STD, "Verify Existing Distribution System",        TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  ShowStatus > 0 And Status = 2,   0,  0,  "Whether or not altered distribution system has a verifiable existing system"  
 	 CTRL, "Type",           30404, TDCT_Combo,   70, 120, 350, 480, 12, FNT_STD, "Type:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,                None,       0,  0,  "Type of air distribution system"
 ;	mjb - switch screen order of bypass duct and low leakage AH, as compared to distribution system defaults flag  10/02/13                                                                                                                                                                                         
 ;	 CTRL, "DefaultSystem",  30405, TDCT_Check,   20, 150,  22, 220,  2, FNT_STD, "Use all distribution system defaults",       TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                DuctsPresent > 0,    0,  0,  "Whether or not distribution system defaults are to be used (controls access to input fields on this screen)"  

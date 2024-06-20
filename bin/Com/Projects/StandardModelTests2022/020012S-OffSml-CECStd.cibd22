@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "020012S-OffSml-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414975490
-   ModDate = 1683878969
-   RunDate = 1683878970
+   ModDate = 1688370110
+   RunDate = 1688370111
    GeometryInpType = "Simplified"
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
@@ -15,7 +15,7 @@ Proj   "020012S-OffSml-CECStd22"
    IsStdModel = 0
    DefaultDayltgCtrls = 0
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.2.1 SP1 (1298)"
+   SoftwareVersion = "CBECC 2022.3.0 (1302)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 0
@@ -387,7 +387,6 @@ Spc   "Core_ZN"
    ThrmlZnRef = "Core_ZN Thermal Zone"
    Area = 1610.9
    SpcFunc = "Office Area (>250 square feet)"
-   CommRfrgEPD = 0
    SHWFluidSegRef = "SHWSupplyElec"
    ..
 
@@ -531,14 +530,14 @@ AirSeg   "CoreZnSysSupply AirSeg"
 
 CoilClg   "CoreZnCoolingCoil"  
    Type = "DirectExpansion"
-   CapTotNetRtd = 31749.3
+   CapTotNetRtd = 31119.8
    DXSEER = 14
    DXEER = 11.407
    ..
 
 CoilHtg   "CoreZnHeatingCoil"  
    Type = "HeatPump"
-   CapTotNetRtd = 34499.5
+   CapTotNetRtd = 33815.4
    HtPumpHSPF = 8
    HtPumpCOP = 3.19
    HtPumpSuppCoilHtgRef = "CoreZnSupplyHeatingCoil"
@@ -548,11 +547,11 @@ CoilHtg   "CoreZnHeatingCoil"
 
 CoilHtg   "CoreZnSupplyHeatingCoil"  
    Type = "Resistance"
-   CapTotGrossRtd = 29294.2
+   CapTotGrossRtd = 28958.3
    ..
 
 Fan   "CoreZnSupplyFan"  
-   FlowCap = 1119.89
+   FlowCap = 1097.68
    PwrIdx = 0.744
    MtrHP = 1
    MtrPoleCnt = 4
@@ -567,7 +566,7 @@ TrmlUnit   "CoreZn TU"
    Type = "Uncontrolled"
    ZnServedRef = "Core_ZN Thermal Zone"
    PriAirSegRef = "CoreZnSysSupply AirSeg"
-   PriAirFlowMax = 1119.89
+   PriAirFlowMax = 1097.68
    ..
 
 OACtrl   "CoreZnOAControl"  
@@ -591,14 +590,14 @@ AirSeg   "Perim1ZnSysSupply AirSeg"
 
 CoilClg   "Perim1ZnCoolingCoil"  
    Type = "DirectExpansion"
-   CapTotNetRtd = 33553.8
+   CapTotNetRtd = 33542.1
    DXSEER = 14
    DXEER = 11.407
    ..
 
 CoilHtg   "Perim1ZnHeatingCoil"  
    Type = "HeatPump"
-   CapTotNetRtd = 36460.3
+   CapTotNetRtd = 36447.5
    HtPumpHSPF = 8
    HtPumpCOP = 3.19
    HtPumpSuppCoilHtgRef = "Perim1ZnSupplyHeatingCoil"
@@ -608,11 +607,11 @@ CoilHtg   "Perim1ZnHeatingCoil"
 
 CoilHtg   "Perim1ZnSupplyHeatingCoil"  
    Type = "Resistance"
-   CapTotGrossRtd = 26090.4
+   CapTotGrossRtd = 26083.5
    ..
 
 Fan   "Perim1ZnSupplyFan"  
-   FlowCap = 1101.36
+   FlowCap = 1100.9
    PwrIdx = 0.744
    MtrHP = 1
    MtrPoleCnt = 4
@@ -623,7 +622,7 @@ TrmlUnit   "Perim1 TU"
    Type = "Uncontrolled"
    ZnServedRef = "Perimeter_ZN_1 Thermal Zone"
    PriAirSegRef = "Perim1ZnSysSupply AirSeg"
-   PriAirFlowMax = 1101.36
+   PriAirFlowMax = 1100.9
    ..
 
 AirSeg   "Perim1ZnSysReturn AirSeg"  
@@ -655,14 +654,14 @@ AirSeg   "Perim2ZnSysSupply AirSeg"
 
 CoilClg   "Perim2ZnCoolingCoil"  
    Type = "DirectExpansion"
-   CapTotNetRtd = 18941.8
+   CapTotNetRtd = 18962.9
    DXSEER = 14
    DXEER = 11.407
    ..
 
 CoilHtg   "Perim2ZnHeatingCoil"  
    Type = "HeatPump"
-   CapTotNetRtd = 20582.5
+   CapTotNetRtd = 20605.5
    HtPumpHSPF = 8
    HtPumpCOP = 3.19
    HtPumpSuppCoilHtgRef = "Perim2ZnSupplyHeatingCoil"
@@ -672,11 +671,11 @@ CoilHtg   "Perim2ZnHeatingCoil"
 
 CoilHtg   "Perim2ZnSupplyHeatingCoil"  
    Type = "Resistance"
-   CapTotGrossRtd = 15192.5
+   CapTotGrossRtd = 15205.1
    ..
 
 Fan   "Perim2ZnSupplyFan"  
-   FlowCap = 634.588
+   FlowCap = 635.418
    PwrIdx = 0.744
    MtrHP = 0.75
    MtrEff = 0.855
@@ -690,7 +689,7 @@ TrmlUnit   "Perim2 TU"
    Type = "Uncontrolled"
    ZnServedRef = "Perimeter_ZN_2 Thermal Zone"
    PriAirSegRef = "Perim2ZnSysSupply AirSeg"
-   PriAirFlowMax = 634.588
+   PriAirFlowMax = 635.418
    ..
 
 OACtrl   "Perim2OAControl"  
@@ -716,14 +715,14 @@ AirSeg   "Perim3ZnSysSupply AirSeg"
 
 CoilClg   "Perim3ZnCoolingCoil"  
    Type = "DirectExpansion"
-   CapTotNetRtd = 25961.9
+   CapTotNetRtd = 30839.3
    DXSEER = 14
    DXEER = 11.407
    ..
 
 CoilHtg   "Perim3ZnHeatingCoil"  
    Type = "HeatPump"
-   CapTotNetRtd = 28210.8
+   CapTotNetRtd = 33510.6
    HtPumpHSPF = 8
    HtPumpCOP = 3.19
    HtPumpSuppCoilHtgRef = "Perim3ZnSupplyHeatingCoil"
@@ -733,11 +732,11 @@ CoilHtg   "Perim3ZnHeatingCoil"
 
 CoilHtg   "Perim3ZnSupplyHeatingCoil"  
    Type = "Resistance"
-   CapTotGrossRtd = 23264.3
+   CapTotGrossRtd = 23053.6
    ..
 
 Fan   "Perim3ZnSupplyFan"  
-   FlowCap = 915.753
+   FlowCap = 901.915
    PwrIdx = 0.744
    MtrHP = 1
    MtrPoleCnt = 4
@@ -752,7 +751,7 @@ TrmlUnit   "Perim3 TU"
    Type = "Uncontrolled"
    ZnServedRef = "Perimeter_ZN_3 Thermal Zone"
    PriAirSegRef = "Perim3ZnSysSupply AirSeg"
-   PriAirFlowMax = 915.753
+   PriAirFlowMax = 901.915
    ..
 
 OACtrl   "Perim3 OAControl"  
@@ -777,14 +776,14 @@ AirSeg   "Perim4ZnSysSupplyAirSeg"
 
 CoilClg   "Perim4ZnCoolingCoil"  
    Type = "DirectExpansion"
-   CapTotNetRtd = 22385.8
+   CapTotNetRtd = 22403.2
    DXSEER = 14
    DXEER = 11.407
    ..
 
 CoilHtg   "Perim4ZnHeatingCoil"  
    Type = "HeatPump"
-   CapTotNetRtd = 24324.8
+   CapTotNetRtd = 24343.8
    HtPumpHSPF = 8
    HtPumpCOP = 3.19
    HtPumpSuppCoilHtgRef = "Perim4ZnSupplyHeatingCoil"
@@ -792,11 +791,11 @@ CoilHtg   "Perim4ZnHeatingCoil"
 
 CoilHtg   "Perim4ZnSupplyHeatingCoil"  
    Type = "Resistance"
-   CapTotGrossRtd = 16535.7
+   CapTotGrossRtd = 16545.9
    ..
 
 Fan   "Perim4ZnSupplyFan"  
-   FlowCap = 722.809
+   FlowCap = 723.479
    PwrIdx = 0.744
    MtrHP = 0.75
    MtrPoleCnt = 4
@@ -811,7 +810,7 @@ TrmlUnit   "Perim4 TU"
    Type = "Uncontrolled"
    ZnServedRef = "Perimeter_ZN_4 Thermal Zone"
    PriAirSegRef = "Perim4ZnSysSupplyAirSeg"
-   PriAirFlowMax = 722.809
+   PriAirFlowMax = 723.479
    ..
 
 OACtrl   "Perim4 OAControl"  
@@ -844,12 +843,12 @@ FluidSeg   "SHWMakeupElec"
 WtrHtr   "WaterHeaterElec"  
    FluidSegOutRef = "SHWSupplyElec"
    FluidSegMakeupRef = "SHWMakeupElec"
-   StorCap = 29.991
-   UEF = 0.9217
+   StorCap = 30
+   UEF = 0.92155
    RE = 0.99
    FirstHrRating = 60
    FuelSrc = "Electricity"
-   InpPwr = 8.74173
+   InpPwr = 8.74175
    ..
 
 CrvQuad   "WtHtrStorFIRRatio_fQRatio"  
@@ -946,58 +945,58 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Title3[22] = "Emis. (tonne)"
    Title3[23] = "Margin (tonne)"
    Enduse1[1] = "Space Heating"
-   Enduse1[2] = "1.9"
+   Enduse1[2] = "2.1"
    Enduse1[3] = "--"
-   Enduse1[4] = "11.64"
-   Enduse1[5] = "1.9"
+   Enduse1[4] = "12.69"
+   Enduse1[5] = "2.1"
    Enduse1[6] = "--"
-   Enduse1[7] = "11.64"
+   Enduse1[7] = "12.69"
    Enduse1[8] = "--"
    Enduse1[9] = "1.3"
    Enduse1[10] = "1.3"
-   Enduse1[11] = "1.67"
-   Enduse1[12] = "1.67"
+   Enduse1[11] = "1.83"
+   Enduse1[12] = "1.83"
    Enduse1[13] = "--"
-   Enduse1[17] = "0.57"
-   Enduse1[19] = "0.57"
-   Enduse1[20] = "0.57"
-   Enduse1[22] = "0.57"
+   Enduse1[17] = "0.62"
+   Enduse1[19] = "0.62"
+   Enduse1[20] = "0.62"
+   Enduse1[22] = "0.62"
    Enduse1[23] = "0.00"
    Enduse2[1] = "Space Cooling"
    Enduse2[2] = "8.4"
    Enduse2[3] = "--"
-   Enduse2[4] = "57.22"
+   Enduse2[4] = "57.43"
    Enduse2[5] = "8.4"
    Enduse2[6] = "--"
-   Enduse2[7] = "57.22"
+   Enduse2[7] = "57.43"
    Enduse2[8] = "--"
    Enduse2[9] = "0.6"
    Enduse2[10] = "0.6"
-   Enduse2[11] = "2.39"
-   Enduse2[12] = "2.39"
+   Enduse2[11] = "2.41"
+   Enduse2[12] = "2.41"
    Enduse2[13] = "--"
-   Enduse2[17] = "0.81"
-   Enduse2[19] = "0.81"
-   Enduse2[20] = "0.81"
-   Enduse2[22] = "0.81"
+   Enduse2[17] = "0.82"
+   Enduse2[19] = "0.82"
+   Enduse2[20] = "0.82"
+   Enduse2[22] = "0.82"
    Enduse2[23] = "0.00"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "18.6"
+   Enduse3[2] = "18.5"
    Enduse3[3] = "--"
-   Enduse3[4] = "96.17"
-   Enduse3[5] = "18.6"
+   Enduse3[4] = "95.44"
+   Enduse3[5] = "18.5"
    Enduse3[6] = "--"
-   Enduse3[7] = "96.17"
+   Enduse3[7] = "95.44"
    Enduse3[8] = "--"
    Enduse3[9] = "2.3"
    Enduse3[10] = "2.3"
-   Enduse3[11] = "9.03"
-   Enduse3[12] = "9.03"
+   Enduse3[11] = "8.96"
+   Enduse3[12] = "8.96"
    Enduse3[13] = "--"
-   Enduse3[17] = "3.06"
-   Enduse3[19] = "3.06"
-   Enduse3[20] = "3.06"
-   Enduse3[22] = "3.06"
+   Enduse3[17] = "3.04"
+   Enduse3[19] = "3.04"
+   Enduse3[20] = "3.04"
+   Enduse3[22] = "3.04"
    Enduse3[23] = "0.00"
    Enduse4[1] = "Heat Rejection"
    Enduse4[2] = "--"
@@ -1030,11 +1029,11 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse6[1] = "Domestic Hot Water"
    Enduse6[2] = "1.7"
    Enduse6[3] = "--"
-   Enduse6[4] = "7.71"
+   Enduse6[4] = "7.68"
    Enduse6[5] = "1.7"
    Enduse6[6] = "--"
-   Enduse6[7] = "7.73"
-   Enduse6[8] = "0.02"
+   Enduse6[7] = "7.68"
+   Enduse6[8] = "--"
    Enduse6[9] = "0.1"
    Enduse6[10] = "0.1"
    Enduse6[11] = "0.65"
@@ -1064,22 +1063,22 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[22] = "0.89"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "11.3"
+   Enduse8[2] = "11.4"
    Enduse8[3] = "0.0"
-   Enduse8[4] = "104.06"
-   Enduse8[5] = "11.3"
+   Enduse8[4] = "104.56"
+   Enduse8[5] = "11.4"
    Enduse8[6] = "0.0"
-   Enduse8[7] = "104.08"
-   Enduse8[8] = "0.02"
+   Enduse8[7] = "104.56"
+   Enduse8[8] = "--"
    Enduse8[9] = "4.3"
    Enduse8[10] = "4.3"
-   Enduse8[11] = "11.62"
-   Enduse8[12] = "11.61"
-   Enduse8[13] = "-0.01"
-   Enduse8[17] = "3.94"
-   Enduse8[19] = "3.94"
-   Enduse8[20] = "3.94"
-   Enduse8[22] = "3.94"
+   Enduse8[11] = "11.72"
+   Enduse8[12] = "11.73"
+   Enduse8[13] = "0.01"
+   Enduse8[17] = "3.98"
+   Enduse8[19] = "3.98"
+   Enduse8[20] = "3.98"
+   Enduse8[22] = "3.98"
    Enduse8[23] = "0.00"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "23.6"
@@ -1169,93 +1168,97 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[8] = "--"
    Enduse14[9] = "-0.4"
    Enduse14[10] = "-0.4"
-   Enduse14[11] = "-1.34"
-   Enduse14[12] = "-1.35"
-   Enduse14[13] = "-0.01"
+   Enduse14[11] = "-1.35"
+   Enduse14[12] = "-1.34"
+   Enduse14[13] = "0.01"
    Enduse14[17] = "-0.46"
    Enduse14[19] = "-0.46"
    Enduse14[20] = "-0.46"
    Enduse14[22] = "-0.46"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
-   Enduse15[2] = "34.9"
+   Enduse15[2] = "35.0"
    Enduse15[3] = "0.0"
-   Enduse15[4] = "206.07"
-   Enduse15[5] = "34.9"
+   Enduse15[4] = "206.57"
+   Enduse15[5] = "35.0"
    Enduse15[6] = "0.0"
-   Enduse15[7] = "206.09"
-   Enduse15[8] = "0.02"
+   Enduse15[7] = "206.57"
+   Enduse15[8] = "--"
    Enduse15[9] = "5.4"
-   Enduse15[10] = "5.3"
-   Enduse15[11] = "19.17"
-   Enduse15[12] = "19.16"
-   Enduse15[13] = "-0.01"
-   Enduse15[17] = "6.50"
-   Enduse15[19] = "6.50"
-   Enduse15[20] = "6.50"
-   Enduse15[22] = "6.50"
+   Enduse15[10] = "5.4"
+   Enduse15[11] = "19.27"
+   Enduse15[12] = "19.28"
+   Enduse15[13] = "0.01"
+   Enduse15[17] = "6.54"
+   Enduse15[19] = "6.54"
+   Enduse15[20] = "6.54"
+   Enduse15[22] = "6.54"
    Enduse15[23] = "0.00"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "38.0"
+   Enduse16[2] = "38.1"
    Enduse16[3] = "0.0"
-   Enduse16[4] = "206.11"
-   Enduse16[5] = "38.0"
+   Enduse16[4] = "206.61"
+   Enduse16[5] = "38.1"
    Enduse16[6] = "0.0"
-   Enduse16[7] = "206.13"
-   Enduse16[8] = "0.02"
-   Enduse16[9] = "4.7"
-   Enduse16[10] = "4.7"
-   Enduse16[11] = "16.36"
-   Enduse16[12] = "16.36"
+   Enduse16[7] = "206.61"
+   Enduse16[8] = "--"
+   Enduse16[9] = "4.8"
+   Enduse16[10] = "4.8"
+   Enduse16[11] = "16.47"
+   Enduse16[12] = "16.47"
    Enduse16[13] = "--"
-   Enduse16[17] = "5.55"
-   Enduse16[19] = "5.55"
-   Enduse16[20] = "5.55"
-   Enduse16[22] = "5.55"
+   Enduse16[17] = "5.59"
+   Enduse16[19] = "5.59"
+   Enduse16[20] = "5.59"
+   Enduse16[22] = "5.59"
    Enduse16[23] = "0.00"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 0  'Attic Thermal Zone'
 clg: 0  htg: 0  'Core_ZN Thermal Zone'
-clg: 1  htg: 0  'Perimeter_ZN_1 Thermal Zone'
-clg: 1  htg: 0  'Perimeter_ZN_2 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_1 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_2 Thermal Zone'
 clg: 0  htg: 0  'Perimeter_ZN_3 Thermal Zone'
-clg: 2  htg: 0  'Perimeter_ZN_4 Thermal Zone'", 
+clg: 3  htg: 0  'Perimeter_ZN_4 Thermal Zone'", 
                  "clg: 0  htg: 0  'Attic Thermal Zone'
 clg: 0  htg: 0  'Core_ZN Thermal Zone'
-clg: 1  htg: 0  'Perimeter_ZN_1 Thermal Zone'
-clg: 1  htg: 0  'Perimeter_ZN_2 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_1 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_2 Thermal Zone'
 clg: 0  htg: 0  'Perimeter_ZN_3 Thermal Zone'
-clg: 2  htg: 0  'Perimeter_ZN_4 Thermal Zone'" )
+clg: 3  htg: 0  'Perimeter_ZN_4 Thermal Zone'" )
    SimSummary[1] = "CSE Successful, E+ Successful (126 warnings)"
    SimSummary[3] = "CSE Successful, E+ Successful (126 warnings)"
-   PassFail = "FAIL"
+   PassFail = "PASS"
    MetricPassFail[1] = "Pass"
    MetricPassFail[2] = "Pass"
-   MetricPassFail[3] = "Fail"
-   ComplyMessage = "DOES NOT COMPLY"
+   MetricPassFail[3] = "Pass"
+   ComplyMessage = "COMPLIES"
    StdPVBatteryMsg = "Standard Design PV Capacity: 17.2 kWdc  /  Battery System Capacity: 30.5 kWh  (power 7.23 kW)"
-   AnalysisValid = 1
-   PctSavingsTDV = 0.0097045
-   PctSavingsEffTDV = 0.00970261
-   PctSavingsCmpTDV = 0.019216
-   PctSavTDVLbl = "0.0"
-   PctSavEffTDVLbl = "0.0"
-   PctSavCmpTDVLbl = "0.0"
-   PctSavingsSrc = -0.0521921
+   AnalysisValid = 0
+   HideCompSmrySrc = 0
+   HideCompSmryTot = 0
+   PctSavingsTDV = 0
+   PctSavingsEffTDV = 0
+   PctSavingsCmpTDV = 0
+   PctSavTDVLbl = "-"
+   PctSavEffTDVLbl = "-"
+   PctSavCmpTDVLbl = "-"
+   PctSavingsSrc = 0.0518672
    PctSavingsEffSrc = 0
-   PctSavingsCmpSrc = -0.0861326
-   PctSavSrcLbl = "-0.1"
+   PctSavingsCmpSrc = 0.0852515
+   PctSavSrcLbl = "0.1"
    PctSavEffSrcLbl = "-"
-   PctSavCmpSrcLbl = "-0.1"
-   MarginkW = -0.1
+   PctSavCmpSrcLbl = "0.1"
+   MarginkW = 0
    PVBattResultsValid = 1
    PropPV_Total = 26931.5
-   PropPV_Export = 3980.84
-   PropPV_PctExport = 14.7814
+   PropPV_Export = 3966.27
+   PropPV_PctExport = 14.7273
    StdPV_Total = 26931.4
-   StdPV_Export = 3981.69
-   StdPV_PctExport = 14.7846
+   StdPV_Export = 3967.55
+   StdPV_PctExport = 14.7321
+   NRCCPRFPayldTransID = "c2e3b8d3-5109-4318-985d-2509ae1575fe"
+   NRCCPRFPayldProcDate = "2023-07-03T00:41:31"
    ..
 
 

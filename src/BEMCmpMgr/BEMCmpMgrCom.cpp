@@ -2537,6 +2537,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
    //if (iCUACReportID > 0)  // test
    //   BEMMessageBox( QString::asprintf( "CUACReportID %ld", iCUACReportID ) );
 
+   bool bSaveLogAnalysisMsgs = ebLogAnalysisMsgs;
+   ebLogAnalysisMsgs = (GetCSVOptionValue( "LogAnalysisMsgs", 0, saCSVOptions ) > 0);     // mechanism to toggle ON analysis messages w/out full verbose output - SAC 06/26/23
+
 	int iCID_Proj = BEMPX_GetDBComponentID( "Proj" );
 	QString sDebugRuleEvalCSV;		// SAC 1/9/14 - ported from Res analysis - ability to specify targeted rule eval debug info
 	GetCSVOptionString( "DebugRuleEvalCSV", sDebugRuleEvalCSV, saCSVOptions );
@@ -4602,7 +4605,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}	}
 		int iPropModelRunIdx = (iCodeType == CT_T24N ? 2 : 5);		// SAC 4/6/20
 
-      bool bLogCSERunLoopDetails = bVerbose;
+      bool bLogCSERunLoopDetails = (bVerbose || ebLogAnalysisMsgs);
                // DEBUGGING
                //bLogCSERunLoopDetails = true;
 
@@ -4647,6 +4650,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u   ;																																									bFinalRun = TRUE;		}
 									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[1]);		iProgressModel = BCM_NRAP_Model_zp ;								iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	}	break;
 			}	}
+								if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Run loop %d for model %s / bSimulateModel %s / bSimRunsNow %s", iRun, sRunID.toLocal8Bit().constData(), (bSimulateModel ? "true" : "false"), (bSimRunsNow ? "true" : "false") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
             #ifdef CM_QTGUI
 							sqProgressRunName = ""; // sRunID;
@@ -4711,7 +4716,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 				else if (iNumBypassItems > iRun && pbBypassOpenStudio && pbBypassOpenStudio[iRun])  // ReadProgInt( "options", "BypassOpenStudio_**", 0 ) > 0)
-					bCallOpenStudio = FALSE;
+				{	bCallOpenStudio = FALSE;
+                                 if (bLogCSERunLoopDetails)    // SAC 06/26/23
+                                    BEMPX_WriteLogFile( QString::asprintf( "    skipping OpenStudio for model '%s' due to BypassOpenStudio flags", sRunID.toLocal8Bit().constData() ) );
+            }
 
 				if (!bCopySizingResultsOK)
 				{	sErrMsg = QString::asprintf( "Error copying equipment sizes/flows from %d to '%s' model", iBEMProcIdxToCopy, sRunID.toLocal8Bit().constData() );
@@ -5018,6 +5026,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							osSimInfo[iSimRunIdx].iProgressModel = iProgressModel;
 							iProgressModelSum += iProgressModel;
 
+                     // RESET bSimRunsNow flag in cases where second of parallel runs toggled OFF - SAC 06/26/23
+                     if (!bSimRunsNow && bParallelSimulations)
+                     {  if (iCodeType == CT_T24N)
+                           bSimRunsNow = ( (iRun == 1 && bModelToBeSimulated[0] && !bResearchMode) ||    // zp & zb
+                                           (iRun == 3 && bModelToBeSimulated[2]) );                      // ap & ab
+                        else
+                           bSimRunsNow = ( (iRun == 1 && bModelToBeSimulated[0] && !bResearchMode) ||    // zp & zb*
+                                           (iRun == 9 && bModelToBeSimulated[5]) );                      // ap & ab*
+                     }
+
 // didn't work because actual sim & results retrieval done on DIFFERENT array of osRunInfo[] - SAC 10/29/21 (MFam)
 //BEMPX_WriteLogFile( QString( "  PerfAnal_NRes - iSimRunIdx %1, bPerformComSim %2, bPerformFullCSESim %3, bStoreHourlyResults %4" ).arg( QString::number(iSimRunIdx), (bPerformComSim ? "true" : "false"), (bPerformFullCSESim ? "true" : "false"), (bStoreHourlyResults ? "true" : "false") ), NULL, FALSE, TRUE, FALSE );
 //                     if (!bPerformComSim && bPerformFullCSESim && bStoreHourlyResults)
@@ -5065,7 +5083,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                             (bStoreHourlyResults || lDBID_ResProj_HVACSizingNeeded > 0))
                         {  bool bPerformSimLoop1 = bStoreHourlyResults;
                            for (iSR=0; (iSR <= iSimRunIdx && !bPerformSimLoop1); iSR++)	// loop over runs in search for any requiring HVAC sizing runs
-                              if (posSimInfo[iSR]->bSimulateModel)
+                           {  if (posSimInfo[iSR]->bSimulateModel)
                               {  long lCSEHVACSizingReqd = 0;
                                  if (BEMPX_GetInteger( lDBID_ResProj_HVACSizingNeeded, lCSEHVACSizingReqd, 0, -1, 0, BEMO_User, posSimInfo[iSR]->iBEMProcIdx ) &&
                                      lCSEHVACSizingReqd > 0)
@@ -5074,7 +5092,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                           if (bLogCSERunLoopDetails)    // SAC 05/24/22
                                              BEMPX_WriteLogFile( QString::asprintf( "    CSE run loop 1 - CSE sizing reqd for '%s' model", posSimInfo[iSR]->pszRunID ) );
                                  }
+                                 else if (bLogCSERunLoopDetails)    // SAC 06/26/23
+                                             BEMPX_WriteLogFile( QString::asprintf( "    CSE run loop 1 - CSE sizing ResProj:HVACSizingNeeded flag False for '%s' model", posSimInfo[iSR]->pszRunID ) );
                               }
+                              else if (bLogCSERunLoopDetails)    // SAC 06/26/23
+                                             BEMPX_WriteLogFile( QString::asprintf( "    CSE run loop 1 - CSE sizing bSimulateModel flag False for '%s' model", posSimInfo[iSR]->pszRunID ) );
+                           }
                            if (bStoreHourlyResults || bPerformSimLoop1)
                            {  for (iSR=0; iSR <= iSimRunIdx; iSR++)	// loop over runs to ensure no PV/Batt simulations performed this round
                                  if (posSimInfo[iSR]->bSimulateModel)
@@ -5096,13 +5119,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                              iCodeType, iRulesetCodeYear, lAnalysisType, iDontAbortOnErrorsThruStep, iAnalStep, bProposedOnly, bStoreBEMDetails,
                                              bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, sCSEIncludeFileDBID, sCSEVersion, pszErrorMsg, iErrorMsgLen,
                                              bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile, iCUACReportID );
-                        }  }
+                           }
+                           else if (bLogCSERunLoopDetails)    // SAC 06/26/23
+                                             BEMPX_WriteLogFile( QString::asprintf( "    CSE run loop 1 - CSE sizing not performed for '%s' model (bStoreHourlyResults %s, bPerformSimLoop1 %s)", posSimInfo[iSR]->pszRunID, (bStoreHourlyResults ? "true" : "false"), (bPerformSimLoop1 ? "true" : "false") ) );
+                        }
 
                            //BEMMessageBox( QString::asprintf( "Pause following first CSE run loop:  bPerformFullCSESim %s / bStoreHourlyResults %s / lDBID_Proj_ExcludePVBattFromSim %ld / lDBID_Proj_SimPVBattOnly %ld",
                            //                                      (bPerformFullCSESim ? "true" : "false"), (bStoreHourlyResults ? "true" : "false"), lDBID_Proj_ExcludePVBattFromSim, lDBID_Proj_SimPVBattOnly ) );
 
 								if (bSimulateCSEOnly)		// SAC 3/10/20 - added logic to SKIP E+ and move directly onto CSE simulation...
-									iSimRetVal = 0;
+									iSimRetVal = iRetVal;   // switch from 0 to iRetVal so that failed CSE sim above prevents subsequent rule eval & analysis - SAC 06/26/23
 								else
                         {
                            // make sure to DELETE existing CSE LoadPassing CSV schedule files before E+ simulation(s) - SAC 03/30/22
@@ -5142,12 +5168,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																					(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																					iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
 																					false /*bIncludeOutputDiagnostics*/, iProgressType, bUseEPlusRunMgr, (!bPerformComSim) );		// SAC 5/27/15   // SAC 2/15/19    // SAC 10/29/21 (MFam)
+
+										if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
+											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Back from PerfSim_E+ (%s model, %d return value)", sRunID.toLocal8Bit().constData(), iSimRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                         }
 
 							   // moved some post-E+ processing into if (bSimRunsNow) statement
 								tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
-										if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
-											BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Back from PerfSim_E+ (%s model, %d return value)", sRunID.toLocal8Bit().constData(), iSimRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 								if (/*bSimRunsNow &&*/ iSimRetVal == 0 && bIsDsgnSim)		// SAC 4/1/14
 									for (iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
@@ -6549,6 +6576,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
    if (lLogAnalysisProgressOption >= 0)      // SAC 01/14/22 (MFam)
       ebLogAnalysisProgress = bOrig_LogAnalysisProgress;
+
+   if (ebLogAnalysisMsgs != bSaveLogAnalysisMsgs)     // SAC 06/26/23
+      ebLogAnalysisMsgs = bSaveLogAnalysisMsgs;
 
 	// SAC 5/28/15 - callback mechanism - reset static function pointer
 	if (pAnalProgCallbackFunc)

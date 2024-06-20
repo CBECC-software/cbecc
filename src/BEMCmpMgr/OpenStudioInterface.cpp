@@ -756,6 +756,9 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResSrcEngyMultTableName"   )+iResSet, sResSrcEnergyTableName   , FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
 		// 	BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SrcEngyPrimeMultTableName" ), sSrcEnergyPrmTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
 
+         long lInclSrcEngyInCompTest = 0;
+			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:InclSrcEngyInCompTest" )+iResSet, lInclSrcEngyInCompTest, 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );   // SAC 06/01/23 (tic #3521)
+
 		// copy Flexibility (PV-solar thermal) credit-related results from Proj to EUseSummary objects - SAC 9/14/20
 			long lDBID_Proj_StdDHWNoSlrSysEnergy = BEMPX_GetDatabaseID( "Proj:StdDHWNoSlrSysEnergy" );		// BEMP_Flt, 30,  1,  0,  NInp,  "",      "StandardDHWNoSolarSystemEnergy", ""    ; "Standard design energy use of DHW w/out SolarSys [1-ElecKWH, 2-NGasKBtu, 3-OthrKBtu]"    ; SAC 9/14/20
 			long lDBID_Proj_StdDHWNoSlrSysTDV    = BEMPX_GetDatabaseID( "Proj:StdDHWNoSlrSysTDV"    );		// BEMP_Flt, 30,  1,  0,  NInp,  "kTDV",  "StandardDHWNoSolarSystemTDV", ""       ; "Standard design kTDV of DHW w/out SolarSys [1-Elec, 2-NGas, 3-Othr]"
@@ -1813,12 +1816,12 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompMarginSrc", iCID_EnergyUse )+iResSet, BEMP_Flt, &fCompMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveSrc", iCID_EnergyUse )+iResSet, BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
                   if (lEngyCodeYearNum >= 2022)
-                  {  if (fCompMargin <= -0.001)       // SAC 12/09/21
+                  {  if (fCompMargin <= -0.001 && lInclSrcEngyInCompTest > 0)       // SAC 12/09/21   // SAC 06/01/23 (tic #3521)
                         bT24NComplyPasses = false;
                      assert( iT24NMetricIdx < MAX_T24N_METRIC );
                      if (iT24NMetricIdx < MAX_T24N_METRIC)
                      {  saT24NCompMetrics[       iT24NMetricIdx  ] = "Source";
-                        saT24NCompMetricPassFail[iT24NMetricIdx  ] = (fCompMargin <= -0.001 ? "Fail" : "Pass");      // SAC 12/13/21
+                        saT24NCompMetricPassFail[iT24NMetricIdx  ] = (lInclSrcEngyInCompTest < 1 ? "n/a" : (fCompMargin <= -0.001 ? "Fail" : "Pass"));      // SAC 12/13/21   // SAC 06/01/23 (tic #3521)
                         daT24NCompMargin[        iT24NMetricIdx  ] = fCompMargin;
                         daT24NCompPctMargin[     iT24NMetricIdx++] = fPctImprove;
                }	}  }

@@ -443,12 +443,12 @@ int BEMClass::ObjectCount( BEM_ObjType eObjType )
 
 BEMObject* BEMClass::GetObject( BEM_ObjType eObjType, int iObjIdx )
 {	BEMObject* pRetVal = NULL;
-   switch ( eObjType )
-   {
-      case BEMO_User    :  pRetVal = m_bdObjects.at(iObjIdx);   break;
-      case BEMO_RuleLib :  pRetVal = m_rlObjects.at(iObjIdx);   break;
-      case BEMO_UserLib :  pRetVal = m_ulObjects.at(iObjIdx);   break;
-   }  
+   if (iObjIdx >= 0)
+      switch ( eObjType )     // prevent invalid object retrieval - SAC 06/28/23
+      {  case BEMO_User    :  pRetVal = m_bdObjects.at(iObjIdx);   break;
+         case BEMO_RuleLib :  pRetVal = m_rlObjects.at(iObjIdx);   break;
+         case BEMO_UserLib :  pRetVal = m_ulObjects.at(iObjIdx);   break;
+      }  
    return pRetVal;
 }
 

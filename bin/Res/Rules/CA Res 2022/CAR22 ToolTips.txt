@@ -44,6 +44,20 @@ Proj:PVWModuleType, "PV module type:
 (Premium) is high efficiency (~18-20%) mono-crystalline silicon modules that have anti-reflective coatings and lower temperature coefficients, and
 (Thin Film) assumes a low efficiency (~11%) with a significantly lower temperature coefficient."
 
+; SAC 07/07/23 (tic #1352)
+Proj:SolAccessRfArea, "SARA includes the area of the building’s roof space capable of structurally supporting a PV system, and the
+area of all roof space on covered parking areas, carports, and all other newly constructed structures on the
+site that are compatible with supporting a PV system per Title 24, Part 2, Section 1511.2.
+SARA does NOT include:
+i. Any roof area that has less than 70 percent annual solar access. Annual solar access is determined by
+dividing the total annual solar insolation, accounting for shading obstructions, by the total annual solar
+insolation if the same areas were unshaded by obstructions.
+ii. Occupied roof areas as specified by CBC Section 503.1.4.
+iii. Roof area that is otherwise not available due to compliance with other building code requirements.
+Exception 1: For steep slope roofs, SARA shall not consider roof areas with a northerly azimuth that
+lies between 300 degrees and 90 degrees from true north.
+Refer to standards section 150.1(c)14 for more details"
+
 Zone:FloorArea,        "Floor area of zone measured to outside stud face of exterior walls and centerline if walls between zones"    
 
 ExtWall:Orientation,       "Wall orientation"    
