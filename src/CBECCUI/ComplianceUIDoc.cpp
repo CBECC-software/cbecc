@@ -463,6 +463,7 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
    if ( sInputFile.IsEmpty() )
       return FALSE;
 
+		      //AfxMessageBox( "in CComplianceUIDoc::OpenTheFile()" );  // debugging - SAC 07/15/23 (CalPRM)
    CString sExt;
 //   sInputFile.MakeUpper();
    sInputFile.GetExt( sExt );
@@ -630,6 +631,8 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 							bKeepLogFileOpen = (!sDebugRuleEvalCSV.IsEmpty() && FileExists( sDebugRuleEvalCSV ));
 						}	break;
 	}
+		      //AfxMessageBox( "in CComplianceUIDoc::OpenTheFile(), about to CMX_LoadModel()" );  // debugging - SAC 07/15/23 (CalPRM)
+
 	QStringList saWarningsForUser;	// SAC 7/8/14 - added to track issues (not designated as read failures, but worthy of logging)
 	int iLoadModelRetVal = CMX_LoadModel( NULL /*pszBEMBinPathFile*/, NULL /*pszRulesetPathFile*/, sInputFile, MAX_BEMBASE_DATA_SET_ERRORS, iaFailedBEMBaseDBIDs,
 														true /*bSupressAllMsgBoxes*/, iaFailedBEMBaseObjIdxs, &saFailedBEMBaseData, (bLogProjectOpen), NULL /*pszLogPathFile*/,
@@ -802,21 +805,31 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 	// SAC 10/10/16 - added same notice to user about performing Save As... following ruleset switch as that presented following a manual ruleset switch
 	if (bRulesetBeingSwitched)
 		AfxMessageBox( eszPostRulesetSwitch );  //, "Ruleset Switch Completed" );
+   else if (pMainWnd)
+   {  // check for this being a CUAC_OldAccessDB project, and if so, open up the main CUAC dialog - SAC 09/19/23
+#ifdef UI_CANRES
+      long lCUAC_OldAccessDB=0;
+		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" ), lCUAC_OldAccessDB );
+      if (lCUAC_OldAccessDB > 0)
+         pMainWnd->PostMessage( WM_COMMAND, IDM_DISPLAYCUACDLG, 0L );
+#endif
+   }
 
 	return bRetVal;
 }
 
 
 // SAC 9/5/14 - MOVED code from OpenTheFile() to here to ensure consistent checking and defaulting for models that are opened via command line specification
-BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLog*/ )
+BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLog*/, BOOL bPerformScreenReset /*=TRUE*/ )
 {	BOOL bRetVal = TRUE;
 	bool bLogProjectOpen = (ReadProgInt( "options", "LogProjectOpen", 0) > 0);
 	CString sLogMsg;
 	ptime t1, t2;
 	time_duration td;
+		//AfxMessageBox( "in CComplianceUIDoc::CheckAndDefaultModel()" );  // debugging - SAC 07/15/23 (CalPRM)
 
       CWnd* pMainWnd = AfxGetMainWnd();
-		if (pMainWnd)
+		if (pMainWnd && bPerformScreenReset)
 			pMainWnd->SendMessage( WM_LOADSCREENFILES );
 
 	// SAC 2/27/14 - added RE-load of BEM CIDs & DBIDs to account for special conditions, such as UI_CANRES 2D/simplified geometry
@@ -919,6 +932,17 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 		long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "ResProj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
 		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
+
+      // override default selections to include/exclude PV/Battery (in EAA runs) - SAC 10/25/23
+		long lAllowPropPVBatt = ReadProgInt( "options", "AllowProposedPVBattery", -1 ),	lDBID_Proj_AllowPropPVBatt = BEMPX_GetDatabaseID( "AllowPropPVBatt", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowPropPVBatt > 0 );
+		long lAllowStdPV      = ReadProgInt( "options", "AllowStandardPV"       , -1 ),	lDBID_Proj_AllowStdPV      = BEMPX_GetDatabaseID( "AllowStdPV"     , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowStdPV      > 0 );
+		long lAllowStdBatt    = ReadProgInt( "options", "AllowStandardBattery"  , -1 ),	lDBID_Proj_AllowStdBatt    = BEMPX_GetDatabaseID( "AllowStdBatt"   , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowStdBatt    > 0 );
+		if (lAllowPropPVBatt != -1 &&		lDBID_Proj_AllowPropPVBatt > 0)
+	      				BEMPX_SetBEMData( lDBID_Proj_AllowPropPVBatt , BEMP_Int, (void*) &lAllowPropPVBatt  , BEMO_User, -1, BEMS_ProgDefault );
+		if (lAllowStdPV      != -1 &&		lDBID_Proj_AllowStdPV      > 0)
+	      				BEMPX_SetBEMData( lDBID_Proj_AllowStdPV      , BEMP_Int, (void*) &lAllowStdPV       , BEMO_User, -1, BEMS_ProgDefault );
+		if (lAllowStdBatt    != -1 &&		lDBID_Proj_AllowStdBatt    > 0)
+	      				BEMPX_SetBEMData( lDBID_Proj_AllowStdBatt    , BEMP_Int, (void*) &lAllowStdBatt     , BEMO_User, -1, BEMS_ProgDefault );
 #endif
 
 		long lNumFileOpenDefaultingRounds = ReadProgInt( "options", "NumFileOpenDefaultingRounds", 3 );		// SAC 4/11/18
@@ -961,19 +985,20 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 
 			((CMainFrame*)pMainWnd)->SetStatusBarStrings( "", 2 );		// SAC 10/29/15 - display ruleset ID in third status bar pane
 
-         CMainView* pMainView = (CMainView*) ((CMainFrame*)pMainWnd)->m_wndSplitter.GetPane(0,0);
-         if (pMainView != NULL)            // update main view's tree control(s)
-         {
+         if (bPerformScreenReset)
+         {  CMainView* pMainView = (CMainView*) ((CMainFrame*)pMainWnd)->m_wndSplitter.GetPane(0,0);
+            if (pMainView != NULL)            // update main view's tree control(s)
+            {
 #ifdef UI_CARES
-				pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
-				pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_RHERSEnabled );		// SAC 9/28/20 - ensure access/non-access to RESNETBldg object
+		   		pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+			   	pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_RHERSEnabled );		// SAC 9/28/20 - ensure access/non-access to RESNETBldg object
 #endif
-            pMainView->SendMessage( WM_DISPLAYDATA );
+               pMainView->SendMessage( WM_DISPLAYDATA );
 
-            CView* pLibView = (CView*) ((CMainFrame*)pMainWnd)->m_wndSplitter.GetPane(1,0);
-            if (pLibView != NULL)            // update main view's tree control(s)
-               pLibView->SendMessage( WM_POPLIBTREE, eiCurrentTab );
-         }
+               CView* pLibView = (CView*) ((CMainFrame*)pMainWnd)->m_wndSplitter.GetPane(1,0);
+               if (pLibView != NULL)            // update main view's tree control(s)
+                  pLibView->SendMessage( WM_POPLIBTREE, eiCurrentTab );
+         }  }
       }
       else
          // even if frame is not available, still evaluate proposed rulelist

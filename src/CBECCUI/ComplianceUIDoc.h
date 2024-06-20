@@ -82,7 +82,7 @@ public:
    BOOL OpenTheFile( CPathName sInputFile, BOOL bWriteToLog=TRUE, BOOL bRestore=FALSE,
 							const char* pszNewRulesetFile=NULL, long lRulesetSymVal=-1,
 							BOOL bNormalRulesetUpdates=TRUE );	// SAC 11/17/15
-	BOOL CheckAndDefaultModel( BOOL bCheckModel=TRUE, BOOL bWriteToLog=TRUE );		// SAC 9/5/14
+	BOOL CheckAndDefaultModel( BOOL bCheckModel=TRUE, BOOL bWriteToLog=TRUE, BOOL bPerformScreenReset=TRUE );		// SAC 9/5/14   // SAC 10/13/23
 
 protected:
    virtual BOOL OnSaveDocument(const char* pszPathName);

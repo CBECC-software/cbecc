@@ -1,0 +1,2156 @@
+RulesetFilename   "T24N-PRM_2022.bin"  
+
+Proj   "OffSml-PRMProto-CECStd22"  
+   BldgEngyModelVersion = 17
+   CreateDate = 1414951358
+   ModDate = 1703115210
+   RunDate = 1703115211
+   CliZn = "ClimateZone1"
+   ZipCode = 95519
+   WeatherStation = "CALIFORNIA REDWOOD COAST"
+   ExcptCondNoClgSys = "No"
+   ExcptCondRtdCap = "No"
+   ExcptCondNarrative = "No"
+   AutoHardSize = 1
+   AutoEffInput = 1
+   DefaultDayltgCtrls = 1
+   AirBarrier = "Air barrier - not verified"
+   SoftwareVersion = "CBECC 2022.3.0.PRM-b2 (1330)"
+   CompReportPDF = 0
+   ResultsCurrentMessage = "(not current)"
+   ..
+
+ConsAssm   "Base_CZ12-SlabOnOrBelowGradeF073"  
+   CompatibleSurfType = "UndergroundFloor"
+   SlabType = "UnheatedSlabOnGrade"
+   MatRef[1] = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+Mat   "Concrete - 140 lb/ft3 - 6 in."  
+   CodeCat = "Concrete"
+   CodeItem = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+ConsAssm   "Base_CZ12-NonresMetalFrameWallU055"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R14.60"
+   MatRef[3] = "Compliance Insulation R1.41"
+   MatRef[4] = "Compliance Insulation R0.02"
+   MatRef[5] = "Compliance Insulation R0.02"
+   MatRef[6] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[7] = "Gypsum Board - 1/2 in."
+   ..
+
+Mat   "Stucco - 7/8 in."  
+   CodeCat = "Plastering Materials"
+   CodeItem = "Stucco - 7/8 in."
+   ..
+
+Mat   "Air - Metal Wall Framing - 16 or 24 in. OC"  
+   CodeCat = "Air"
+   CodeItem = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   ..
+
+Mat   "Gypsum Board - 1/2 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 1/2 in."
+   ..
+
+ConsAssm   "NACM_Interior Wall"  
+   CompatibleSurfType = "InteriorWall"
+   MatRef[1] = "Gypsum Board - 5/8 in."
+   MatRef[2] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[3] = "Gypsum Board - 5/8 in."
+   ..
+
+Mat   "Gypsum Board - 5/8 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 5/8 in."
+   ..
+
+ConsAssm   "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.25
+   CRRCAgedRefl = 0.25
+   CRRCInitialEmit = 0.8
+   CRRCAgedEmit = 0.8
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R28.63"
+   ..
+
+Mat   "Metal Standing Seam - 1/16 in."  
+   CodeCat = "Roofing"
+   CodeItem = "Metal Standing Seam - 1/16 in."
+   ..
+
+Mat   "Compliance Insulation R28.63"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R28.63"
+   ..
+
+ConsAssm   "Base_CZ12-NonresOtherFloorU071"  
+   CompatibleSurfType = "ExteriorFloor"
+   MatRef[1] = "Compliance Insulation R9.83"
+   MatRef[2] = "Plywood - 5/8 in."
+   MatRef[3] = "Carpet - 3/4 in."
+   ..
+
+Mat   "Compliance Insulation R9.83"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R9.83"
+   ..
+
+Mat   "Plywood - 5/8 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Plywood - 5/8 in."
+   ..
+
+Mat   "Carpet - 3/4 in."  
+   CodeCat = "Finish Materials"
+   CodeItem = "Carpet - 3/4 in."
+   ..
+
+ConsAssm   "NACM_Drop Ceiling"  
+   CompatibleSurfType = "InteriorFloor"
+   MatRef[1] = "Acoustic Tile - 3/4 in."
+   ..
+
+Mat   "Acoustic Tile - 3/4 in."  
+   CodeCat = "Finish Materials"
+   CodeItem = "Acoustic Tile - 3/4 in."
+   ..
+
+FenCons   "Base_AllCZ_FixedWindowU34"  
+   FenType = "VerticalFenestration"
+   FenProdType = "FixedWindow"
+   AssmContext = "Manufactured"
+   CertificationMthd = "NFRCRated"
+   SHGC = 0.22
+   UFactor = 0.34
+   VT = 0.42
+   ..
+
+FenCons   "Glazed Door"  
+   FenType = "VerticalFenestration"
+   FenProdType = "GlazedDoor"
+   AssmContext = "Manufactured"
+   CertificationMthd = "NFRCRated"
+   SHGC = 0.23
+   UFactor = 0.45
+   VT = 0.17
+   ..
+
+Bldg   "Small Office"  
+   FuncClassMthd = "AreaCategoryMethod"
+   TotStoryCnt = 1
+   AboveGrdStoryCnt = 1
+   ..
+
+Story   "Building Story 1"  
+   ..
+
+Spc   "Perimeter_ZN_1"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_1 Thermal Zone"
+   Vol = 12219.7
+   SpcFunc = "Office Area (>250 square feet)"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+PolyLp   "PolyLoop 25"  
+   ..
+
+CartesianPt   "CartesianPoint 100"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 101"  
+   Coord = ( 90.8465, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 102"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 103"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+IntWall   "Perimeter_ZN_1_wall_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 26"  
+   ..
+
+CartesianPt   "CartesianPoint 104"  
+   Coord = ( 90.8465, 6.69906e-15, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 105"  
+   Coord = ( 90.8465, 6.69906e-15, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 106"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 107"  
+   Coord = ( 74.4423, 16.4042, 10.0066 )
+   ..
+
+IntWall   "Perimeter_ZN_1_wall_north"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 27"  
+   ..
+
+CartesianPt   "CartesianPoint 108"  
+   Coord = ( 74.4423, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 109"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 110"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 111"  
+   Coord = ( 16.4042, 16.4042, 10.0066 )
+   ..
+
+UndgrFlr   "Perimeter_ZN_1_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 28"  
+   ..
+
+CartesianPt   "CartesianPoint 112"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 113"  
+   Coord = ( 90.8465, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 114"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 115"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+ExtWall   "Perimeter_ZN_1_wall_south"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   ..
+
+PolyLp   "PolyLoop 29"  
+   ..
+
+CartesianPt   "CartesianPoint 116"  
+   Coord = ( 0, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 117"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 118"  
+   Coord = ( 90.8465, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 119"  
+   Coord = ( 90.8465, 0, 10.0066 )
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 30"  
+   ..
+
+CartesianPt   "CartesianPoint 120"  
+   Coord = ( 4.56037, 0, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 121"  
+   Coord = ( 4.56037, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 122"  
+   Coord = ( 10.5643, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 123"  
+   Coord = ( 10.5643, 0, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_door"  
+   FenConsRef = "Glazed Door"
+   ..
+
+PolyLp   "PolyLoop 31"  
+   ..
+
+CartesianPt   "CartesianPoint 124"  
+   Coord = ( 42.4213, 0, 7.00131 )
+   ..
+
+CartesianPt   "CartesianPoint 125"  
+   Coord = ( 42.4213, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 126"  
+   Coord = ( 48.4252, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 127"  
+   Coord = ( 48.4252, 0, 7.00131 )
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_5"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 32"  
+   ..
+
+CartesianPt   "CartesianPoint 128"  
+   Coord = ( 65.1247, 0, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 129"  
+   Coord = ( 65.1247, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 130"  
+   Coord = ( 71.1286, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 131"  
+   Coord = ( 71.1286, 0, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 33"  
+   ..
+
+CartesianPt   "CartesianPoint 132"  
+   Coord = ( 50, 0, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 133"  
+   Coord = ( 50, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 134"  
+   Coord = ( 56.0039, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 135"  
+   Coord = ( 56.0039, 0, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_6"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 34"  
+   ..
+
+CartesianPt   "CartesianPoint 136"  
+   Coord = ( 80.2822, 0, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 137"  
+   Coord = ( 80.2822, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 138"  
+   Coord = ( 86.2861, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 139"  
+   Coord = ( 86.2861, 0, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 35"  
+   ..
+
+CartesianPt   "CartesianPoint 140"  
+   Coord = ( 19.7178, 0, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 141"  
+   Coord = ( 19.7178, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 142"  
+   Coord = ( 25.7218, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 143"  
+   Coord = ( 25.7218, 0, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 36"  
+   ..
+
+CartesianPt   "CartesianPoint 144"  
+   Coord = ( 34.8425, 0, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 145"  
+   Coord = ( 34.8425, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 146"  
+   Coord = ( 40.8465, 0, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 147"  
+   Coord = ( 40.8465, 0, 7.95276 )
+   ..
+
+Spc   "Perimeter_ZN_2"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_2 Thermal Zone"
+   Vol = 7248.87
+   SpcFunc = "Office Area (>250 square feet)"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+PolyLp   "PolyLoop 51"  
+   ..
+
+CartesianPt   "CartesianPoint 204"  
+   Coord = ( 90.8465, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 205"  
+   Coord = ( 90.8465, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 206"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 207"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+ExtWall   "Perimeter_ZN_2_wall_east"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   ..
+
+PolyLp   "PolyLoop 52"  
+   ..
+
+CartesianPt   "CartesianPoint 208"  
+   Coord = ( 90.8465, 6.69906e-15, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 209"  
+   Coord = ( 90.8465, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 210"  
+   Coord = ( 90.8465, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 211"  
+   Coord = ( 90.8465, 60.5643, 10.0066 )
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 53"  
+   ..
+
+CartesianPt   "CartesianPoint 212"  
+   Coord = ( 90.8465, 34.8425, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 213"  
+   Coord = ( 90.8465, 34.8425, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 214"  
+   Coord = ( 90.8465, 40.8465, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 215"  
+   Coord = ( 90.8465, 40.8465, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 54"  
+   ..
+
+CartesianPt   "CartesianPoint 216"  
+   Coord = ( 90.8465, 50, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 217"  
+   Coord = ( 90.8465, 50, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 218"  
+   Coord = ( 90.8465, 56.0039, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 219"  
+   Coord = ( 90.8465, 56.0039, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 55"  
+   ..
+
+CartesianPt   "CartesianPoint 220"  
+   Coord = ( 90.8465, 19.7178, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 221"  
+   Coord = ( 90.8465, 19.7178, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 222"  
+   Coord = ( 90.8465, 25.7218, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 223"  
+   Coord = ( 90.8465, 25.7218, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 56"  
+   ..
+
+CartesianPt   "CartesianPoint 224"  
+   Coord = ( 90.8465, 4.56037, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 225"  
+   Coord = ( 90.8465, 4.56037, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 226"  
+   Coord = ( 90.8465, 10.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 227"  
+   Coord = ( 90.8465, 10.5643, 7.95276 )
+   ..
+
+UndgrFlr   "Perimeter_ZN_2_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 57"  
+   ..
+
+CartesianPt   "CartesianPoint 228"  
+   Coord = ( 90.8465, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 229"  
+   Coord = ( 90.8465, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 230"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 231"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+Spc   "Perimeter_ZN_3"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_3 Thermal Zone"
+   Vol = 12219.7
+   SpcFunc = "Office Area (>250 square feet)"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+PolyLp   "PolyLoop 37"  
+   ..
+
+CartesianPt   "CartesianPoint 148"  
+   Coord = ( 90.8465, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 149"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 150"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 151"  
+   Coord = ( 0, 60.5643, 0 )
+   ..
+
+UndgrFlr   "Perimeter_ZN_3_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 38"  
+   ..
+
+CartesianPt   "CartesianPoint 152"  
+   Coord = ( 90.8465, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 153"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 154"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 155"  
+   Coord = ( 0, 60.5643, 0 )
+   ..
+
+ExtWall   "Perimeter_ZN_3_wall_north"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   ..
+
+PolyLp   "PolyLoop 39"  
+   ..
+
+CartesianPt   "CartesianPoint 156"  
+   Coord = ( 90.8465, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 157"  
+   Coord = ( 90.8465, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 158"  
+   Coord = ( 0, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 159"  
+   Coord = ( 0, 60.5643, 10.0066 )
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_5"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 40"  
+   ..
+
+CartesianPt   "CartesianPoint 160"  
+   Coord = ( 25.7218, 60.5643, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 161"  
+   Coord = ( 25.7218, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 162"  
+   Coord = ( 19.7178, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 163"  
+   Coord = ( 19.7178, 60.5643, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 41"  
+   ..
+
+CartesianPt   "CartesianPoint 164"  
+   Coord = ( 71.1286, 60.5643, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 165"  
+   Coord = ( 71.1286, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 166"  
+   Coord = ( 65.1247, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 167"  
+   Coord = ( 65.1247, 60.5643, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 42"  
+   ..
+
+CartesianPt   "CartesianPoint 168"  
+   Coord = ( 86.2861, 60.5643, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 169"  
+   Coord = ( 86.2861, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 170"  
+   Coord = ( 80.2822, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 171"  
+   Coord = ( 80.2822, 60.5643, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_6"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 43"  
+   ..
+
+CartesianPt   "CartesianPoint 172"  
+   Coord = ( 10.5643, 60.5643, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 173"  
+   Coord = ( 10.5643, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 174"  
+   Coord = ( 4.56037, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 175"  
+   Coord = ( 4.56037, 60.5643, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 44"  
+   ..
+
+CartesianPt   "CartesianPoint 176"  
+   Coord = ( 56.0039, 60.5643, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 177"  
+   Coord = ( 56.0039, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 178"  
+   Coord = ( 50, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 179"  
+   Coord = ( 50, 60.5643, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 45"  
+   ..
+
+CartesianPt   "CartesianPoint 180"  
+   Coord = ( 40.8465, 60.5643, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 181"  
+   Coord = ( 40.8465, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 182"  
+   Coord = ( 34.8425, 60.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 183"  
+   Coord = ( 34.8425, 60.5643, 7.95276 )
+   ..
+
+IntWall   "Perimeter_ZN_3_wall_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 46"  
+   ..
+
+CartesianPt   "CartesianPoint 184"  
+   Coord = ( 74.4423, 44.1601, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 185"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 186"  
+   Coord = ( 90.8465, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 187"  
+   Coord = ( 90.8465, 60.5643, 10.0066 )
+   ..
+
+IntWall   "Perimeter_ZN_3_wall_south"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 47"  
+   ..
+
+CartesianPt   "CartesianPoint 188"  
+   Coord = ( 16.4042, 44.1601, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 189"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 190"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 191"  
+   Coord = ( 74.4423, 44.1601, 10.0066 )
+   ..
+
+Spc   "Perimeter_ZN_4"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_4 Thermal Zone"
+   Vol = 7248.87
+   SpcFunc = "Office Area (>250 square feet)"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+PolyLp   "PolyLoop 1"  
+   ..
+
+CartesianPt   "CartesianPoint 1"  
+   Coord = ( 0, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 2"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 3"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 4"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+IntWall   "Perimeter_ZN_4_wall_south"  
+   AdjacentSpcRef = "Perimeter_ZN_1"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 2"  
+   ..
+
+CartesianPt   "CartesianPoint 5"  
+   Coord = ( 0, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 6"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 7"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 8"  
+   Coord = ( 16.4042, 16.4042, 10.0066 )
+   ..
+
+ExtWall   "Perimeter_ZN_4_wall_west"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   ..
+
+PolyLp   "PolyLoop 3"  
+   ..
+
+CartesianPt   "CartesianPoint 9"  
+   Coord = ( 0, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 10"  
+   Coord = ( 0, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 11"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 12"  
+   Coord = ( 0, 0, 10.0066 )
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 4"  
+   ..
+
+CartesianPt   "CartesianPoint 13"  
+   Coord = ( 0, 56.0039, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 14"  
+   Coord = ( 0, 56.0039, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 15"  
+   Coord = ( 0, 50, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 16"  
+   Coord = ( 0, 50, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 5"  
+   ..
+
+CartesianPt   "CartesianPoint 17"  
+   Coord = ( 0, 40.8465, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 18"  
+   Coord = ( 0, 40.8465, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 19"  
+   Coord = ( 0, 34.8425, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 20"  
+   Coord = ( 0, 34.8425, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 6"  
+   ..
+
+CartesianPt   "CartesianPoint 21"  
+   Coord = ( 0, 10.5643, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 22"  
+   Coord = ( 0, 10.5643, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 23"  
+   Coord = ( 0, 4.56037, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 24"  
+   Coord = ( 0, 4.56037, 7.95276 )
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 7"  
+   ..
+
+CartesianPt   "CartesianPoint 25"  
+   Coord = ( 0, 25.7218, 7.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 26"  
+   Coord = ( 0, 25.7218, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 27"  
+   Coord = ( 0, 19.7178, 2.95276 )
+   ..
+
+CartesianPt   "CartesianPoint 28"  
+   Coord = ( 0, 19.7178, 7.95276 )
+   ..
+
+UndgrFlr   "Perimeter_ZN_4_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 8"  
+   ..
+
+CartesianPt   "CartesianPoint 29"  
+   Coord = ( 0, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 30"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 31"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 32"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+IntWall   "Perimeter_ZN_4_wall_east"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 9"  
+   ..
+
+CartesianPt   "CartesianPoint 33"  
+   Coord = ( 16.4042, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 34"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 35"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 36"  
+   Coord = ( 16.4042, 44.1601, 10.0066 )
+   ..
+
+IntWall   "Perimeter_ZN_4_wall_north"  
+   AdjacentSpcRef = "Perimeter_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 10"  
+   ..
+
+CartesianPt   "CartesianPoint 37"  
+   Coord = ( 16.4042, 44.1601, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 38"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 39"  
+   Coord = ( 0, 60.5643, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 40"  
+   Coord = ( 0, 60.5643, 10.0066 )
+   ..
+
+Spc   "Core_ZN"  
+   TreeState = 254
+   ThrmlZnRef = "Core_ZN Thermal Zone"
+   Vol = 16119.6
+   SpcFunc = "Office Area (>250 square feet)"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+PolyLp   "PolyLoop 48"  
+   ..
+
+CartesianPt   "CartesianPoint 192"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 193"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 194"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 195"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+UndgrFlr   "Core_ZN_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 49"  
+   ..
+
+CartesianPt   "CartesianPoint 196"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 197"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 198"  
+   Coord = ( 16.4042, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 199"  
+   Coord = ( 16.4042, 44.1601, 0 )
+   ..
+
+IntWall   "Core_ZN_wall_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 50"  
+   ..
+
+CartesianPt   "CartesianPoint 200"  
+   Coord = ( 74.4423, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 201"  
+   Coord = ( 74.4423, 16.4042, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 202"  
+   Coord = ( 74.4423, 44.1601, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 203"  
+   Coord = ( 74.4423, 44.1601, 10.0066 )
+   ..
+
+Spc   "Attic"  
+   TreeState = 254
+   CondgType = "IndirectlyConditioned"
+   ThrmlZnRef = "Attic Thermal Zone"
+   Vol = 28195.7
+   SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+   SecSide100PctControlled = 0
+   ..
+
+PolyLp   "PolyLoop 11"  
+   ..
+
+CartesianPt   "CartesianPoint 41"  
+   Coord = ( 92.815, 62.5328, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 42"  
+   Coord = ( 92.815, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 43"  
+   Coord = ( -1.9685, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 44"  
+   Coord = ( -1.9685, 62.5328, 10.0066 )
+   ..
+
+Roof   "Attic_roof_north"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 12"  
+   ..
+
+CartesianPt   "CartesianPoint 50"  
+   Coord = ( 60.5643, 30.2822, 20.7677 )
+   ..
+
+CartesianPt   "CartesianPoint 51"  
+   Coord = ( 92.815, 62.5328, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 52"  
+   Coord = ( -1.9685, 62.5328, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 53"  
+   Coord = ( 30.2822, 30.2822, 20.7677 )
+   ..
+
+IntFlr   "Attic_floor_core"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   ..
+
+PolyLp   "PolyLoop 13"  
+   ..
+
+CartesianPt   "CartesianPoint 54"  
+   Coord = ( 74.4423, 44.1601, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 55"  
+   Coord = ( 74.4423, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 56"  
+   Coord = ( 16.4042, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 57"  
+   Coord = ( 16.4042, 44.1601, 10.0066 )
+   ..
+
+Roof   "Attic_roof_west"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 14"  
+   ..
+
+CartesianPt   "CartesianPoint 58"  
+   Coord = ( 30.2822, 30.2822, 20.7677 )
+   ..
+
+CartesianPt   "CartesianPoint 59"  
+   Coord = ( -1.9685, 62.5328, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 60"  
+   Coord = ( -1.9685, -1.9685, 10.0066 )
+   ..
+
+ExtFlr   "Attic_soffit_north"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   ..
+
+PolyLp   "PolyLoop 15"  
+   ..
+
+CartesianPt   "CartesianPoint 61"  
+   Coord = ( 92.815, 62.5328, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 62"  
+   Coord = ( 90.8465, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 63"  
+   Coord = ( 0, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 64"  
+   Coord = ( -1.9685, 62.5328, 10.0066 )
+   ..
+
+IntFlr   "Attic_floor_perimeter_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   ..
+
+PolyLp   "PolyLoop 16"  
+   ..
+
+CartesianPt   "CartesianPoint 65"  
+   Coord = ( 90.8465, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 66"  
+   Coord = ( 90.8465, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 67"  
+   Coord = ( 74.4423, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 68"  
+   Coord = ( 74.4423, 44.1601, 10.0066 )
+   ..
+
+IntFlr   "Attic_floor_perimeter_west"  
+   AdjacentSpcRef = "Perimeter_ZN_4"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   ..
+
+PolyLp   "PolyLoop 17"  
+   ..
+
+CartesianPt   "CartesianPoint 69"  
+   Coord = ( 0, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 70"  
+   Coord = ( 16.4042, 44.1601, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 71"  
+   Coord = ( 16.4042, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 72"  
+   Coord = ( 0, 0, 10.0066 )
+   ..
+
+Roof   "Attic_roof_east"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 18"  
+   ..
+
+CartesianPt   "CartesianPoint 73"  
+   Coord = ( 60.5643, 30.2822, 20.7677 )
+   ..
+
+CartesianPt   "CartesianPoint 74"  
+   Coord = ( 92.815, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 75"  
+   Coord = ( 92.815, 62.5328, 10.0066 )
+   ..
+
+IntFlr   "Attic_floor_perimeter_south"  
+   AdjacentSpcRef = "Perimeter_ZN_1"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   ..
+
+PolyLp   "PolyLoop 19"  
+   ..
+
+CartesianPt   "CartesianPoint 76"  
+   Coord = ( 74.4423, 16.4042, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 77"  
+   Coord = ( 90.8465, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 78"  
+   Coord = ( 0, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 79"  
+   Coord = ( 16.4042, 16.4042, 10.0066 )
+   ..
+
+IntFlr   "Attic_floor_perimeter_north"  
+   AdjacentSpcRef = "Perimeter_ZN_3"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   ..
+
+PolyLp   "PolyLoop 20"  
+   ..
+
+CartesianPt   "CartesianPoint 80"  
+   Coord = ( 90.8465, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 81"  
+   Coord = ( 74.4423, 44.1601, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 82"  
+   Coord = ( 16.4042, 44.1601, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 83"  
+   Coord = ( 0, 60.5643, 10.0066 )
+   ..
+
+ExtFlr   "Attic_soffit_east"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   ..
+
+PolyLp   "PolyLoop 21"  
+   ..
+
+CartesianPt   "CartesianPoint 84"  
+   Coord = ( 92.815, 62.5328, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 85"  
+   Coord = ( 92.815, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 86"  
+   Coord = ( 90.8465, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 87"  
+   Coord = ( 90.8465, 60.5643, 10.0066 )
+   ..
+
+ExtFlr   "Attic_soffit_west"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   ..
+
+PolyLp   "PolyLoop 22"  
+   ..
+
+CartesianPt   "CartesianPoint 88"  
+   Coord = ( -1.9685, 62.5328, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 89"  
+   Coord = ( 0, 60.5643, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 90"  
+   Coord = ( 0, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 91"  
+   Coord = ( -1.9685, -1.9685, 10.0066 )
+   ..
+
+ExtFlr   "Attic_soffit_south"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   ..
+
+PolyLp   "PolyLoop 23"  
+   ..
+
+CartesianPt   "CartesianPoint 92"  
+   Coord = ( 90.8465, 0, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 93"  
+   Coord = ( 92.815, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 94"  
+   Coord = ( -1.9685, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 95"  
+   Coord = ( 0, 0, 10.0066 )
+   ..
+
+Roof   "Attic_roof_south"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 24"  
+   ..
+
+CartesianPt   "CartesianPoint 96"  
+   Coord = ( 30.2822, 30.2822, 20.7677 )
+   ..
+
+CartesianPt   "CartesianPoint 97"  
+   Coord = ( -1.9685, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 98"  
+   Coord = ( 92.815, -1.9685, 10.0066 )
+   ..
+
+CartesianPt   "CartesianPoint 99"  
+   Coord = ( 60.5643, 30.2822, 20.7677 )
+   ..
+
+ThrmlZn   "Attic Thermal Zone"  
+   Type = "Unconditioned"
+   ..
+
+ThrmlZn   "Core_ZN Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "CoreZnPSZ AirSys"
+   ..
+
+ThrmlZn   "Perimeter_ZN_1 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Perim1ZnPSZ AirSys"
+   OperableWinHaveInterlock = 1
+   ..
+
+ThrmlZn   "Perimeter_ZN_2 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Perim2ZnPSZ AirSys"
+   ..
+
+ThrmlZn   "Perimeter_ZN_3 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Perim3ZnPSZ AirSys"
+   ..
+
+ThrmlZn   "Perimeter_ZN_4 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Perim4ZnPSZ AirSys"
+   ..
+
+AirSys   "CoreZnPSZ AirSys"  
+   Type = "SZHP"
+   CtrlZnRef = "Core_ZN Thermal Zone"
+   ..
+
+AirSeg   "CoreZnSysSupply AirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "CoreZnCoolingCoil"  
+   Type = "DirectExpansion"
+   ..
+
+CoilHtg   "CoreZnHeatingCoil"  
+   Type = "HeatPump"
+   HtPumpSuppCoilHtgRef = "CoreZnSupplyHeatingCoil"
+   ..
+
+CoilHtg   "CoreZnSupplyHeatingCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "CoreZnSupplyFan"  
+   ..
+
+AirSeg   "CoreZnSysReturnAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "CoreZn TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Core_ZN Thermal Zone"
+   PriAirSegRef = "CoreZnSysSupply AirSeg"
+   ..
+
+OACtrl   "CoreZnOAControl"  
+   AirSegSupRef = "CoreZnSysSupply AirSeg"
+   AirSegRetRef = "CoreZnSysReturnAirSeg"
+   ..
+
+AirSys   "Perim1ZnPSZ AirSys"  
+   TreeState = 253
+   Type = "SZHP"
+   CtrlZnRef = "Perimeter_ZN_1 Thermal Zone"
+   ..
+
+AirSeg   "Perim1ZnSysSupply AirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "Perim1ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "Perim1ZnHeatingCoil"  
+   Type = "HeatPump"
+   HtPumpSuppCoilHtgRef = "Perim1ZnSupplyHeatingCoil"
+   ..
+
+CoilHtg   "Perim1ZnSupplyHeatingCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "Perim1ZnSupplyFan"  
+   ..
+
+TrmlUnit   "Perim1 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_1 Thermal Zone"
+   PriAirSegRef = "Perim1ZnSysSupply AirSeg"
+   ..
+
+AirSeg   "Perim1ZnSysReturn AirSeg"  
+   Type = "Return"
+   ..
+
+OACtrl   "Perime1OAControl"  
+   AirSegSupRef = "Perim1ZnSysSupply AirSeg"
+   AirSegRetRef = "Perim1ZnSysReturn AirSeg"
+   ..
+
+AirSys   "Perim2ZnPSZ AirSys"  
+   TreeState = 253
+   Type = "SZHP"
+   CtrlZnRef = "Perimeter_ZN_2 Thermal Zone"
+   ..
+
+AirSeg   "Perim2ZnSysSupply AirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "Perim2ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   ..
+
+CoilHtg   "Perim2ZnHeatingCoil"  
+   Type = "HeatPump"
+   HtPumpSuppCoilHtgRef = "Perim2ZnSupplyHeatingCoil"
+   ..
+
+CoilHtg   "Perim2ZnSupplyHeatingCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "Perim2ZnSupplyFan"  
+   ..
+
+AirSeg   "Perim2ZnSysReturnAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "Perim2 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_2 Thermal Zone"
+   PriAirSegRef = "Perim2ZnSysSupply AirSeg"
+   ..
+
+OACtrl   "Perim2OAControl"  
+   AirSegSupRef = "Perim2ZnSysSupply AirSeg"
+   AirSegRetRef = "Perim2ZnSysReturnAirSeg"
+   ..
+
+AirSys   "Perim3ZnPSZ AirSys"  
+   TreeState = 253
+   Type = "SZHP"
+   CtrlZnRef = "Perimeter_ZN_3 Thermal Zone"
+   ..
+
+AirSeg   "Perim3ZnSysSupply AirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "Perim3ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   ..
+
+CoilHtg   "Perim3ZnHeatingCoil"  
+   Type = "HeatPump"
+   HtPumpSuppCoilHtgRef = "Perim3ZnSupplyHeatingCoil"
+   ..
+
+CoilHtg   "Perim3ZnSupplyHeatingCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "Perim3ZnSupplyFan"  
+   ..
+
+AirSeg   "Perim3ZnSysReturn AirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "Perim3 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_3 Thermal Zone"
+   PriAirSegRef = "Perim3ZnSysSupply AirSeg"
+   ..
+
+OACtrl   "Perim3 OAControl"  
+   AirSegSupRef = "Perim3ZnSysSupply AirSeg"
+   AirSegRetRef = "Perim3ZnSysReturn AirSeg"
+   ..
+
+AirSys   "Perim4ZnPSZ AirSys"  
+   TreeState = 253
+   Type = "SZHP"
+   CtrlZnRef = "Perimeter_ZN_4 Thermal Zone"
+   ..
+
+AirSeg   "Perim4ZnSysSupplyAirSeg"  
+   Type = "Supply"
+   ..
+
+CoilClg   "Perim4ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   ..
+
+CoilHtg   "Perim4ZnHeatingCoil"  
+   Type = "HeatPump"
+   HtPumpSuppCoilHtgRef = "Perim4ZnSupplyHeatingCoil"
+   ..
+
+CoilHtg   "Perim4ZnSupplyHeatingCoil"  
+   Type = "Resistance"
+   ..
+
+Fan   "Perim4ZnSupplyFan"  
+   ..
+
+AirSeg   "Perim4ZnSysReturnAirSeg"  
+   Type = "Return"
+   ..
+
+TrmlUnit   "Perim4 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_4 Thermal Zone"
+   PriAirSegRef = "Perim4ZnSysSupplyAirSeg"
+   ..
+
+OACtrl   "Perim4 OAControl"  
+   AirSegSupRef = "Perim4ZnSysSupplyAirSeg"
+   AirSegRetRef = "Perim4ZnSysReturnAirSeg"
+   ..
+
+FluidSys   "SHWFluidSysElec"  
+   Type = "ServiceHotWater"
+   ..
+
+FluidSeg   "SHWSupplyElec"  
+   Type = "PrimarySupply"
+   ..
+
+FluidSeg   "SHWMakeupElec"  
+   Type = "MakeupFluid"
+   Src = "MunicipalWater"
+   ..
+
+WtrHtr   "WaterHeaterElec"  
+   FluidSegOutRef = "SHWSupplyElec"
+   FluidSegMakeupRef = "SHWMakeupElec"
+   StorCap = 29.991
+   UEF = 0.9217
+   RE = 0.99
+   FirstHrRating = 60
+   FuelSrc = "Electricity"
+   InpPwr = 8.74173
+   ..
+
+Mat   "Compliance Insulation R14.60"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R14.60"
+   ..
+
+Mat   "Compliance Insulation R1.41"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R1.41"
+   ..
+
+Mat   "Compliance Insulation R0.02"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R0.02"
+   ..
+
+PVArray   "T24 PVArray"  
+   DCSysSize = 17.2214
+   ..
+
+Batt   "T24 Batt"  
+   MaxCap = 30.4547
+   Ctrl = "Time of Use"
+   MaxChrgPwr = 7.233
+   MaxDschrgPwr = 7.233
+   ..
+
+EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"  
+   Title1[2] = "Proposed"
+   Title1[3] = "Proposed"
+   Title1[4] = "Proposed"
+   Title1[5] = "Baseline"
+   Title1[6] = "Baseline"
+   Title1[7] = "Target"
+   Title1[8] = "Compliance"
+   Title1[11] = "Proposed"
+   Title1[12] = "Target"
+   Title1[13] = "Compliance"
+   Title1[17] = "Proposed"
+   Title1[18] = "Proposed"
+   Title1[19] = "Proposed"
+   Title1[20] = "Baseline"
+   Title1[21] = "Baseline"
+   Title1[22] = "Baseline"
+   Title1[23] = "CO2 Emissions"
+   Title2[2] = "Site Elec."
+   Title2[3] = "Site Gas"
+   Title2[4] = "TDV"
+   Title2[5] = "Site Elec."
+   Title2[6] = "Site Gas"
+   Title2[7] = "TDV¹"
+   Title2[8] = "Margin TDV"
+   Title2[11] = "Source Energy"
+   Title2[12] = "Source Energy¹"
+   Title2[13] = "Src Margin"
+   Title2[17] = "Electric CO2"
+   Title2[18] = "Fuel CO2"
+   Title2[19] = "Total CO2"
+   Title2[20] = "Electric CO2"
+   Title2[21] = "Fuel CO2"
+   Title2[22] = "Total CO2"
+   Title2[23] = "Margin"
+   Title3[1] = "End Use"
+   Title3[2] = "(MWh/yr)"
+   Title3[3] = "(MBtu/yr)"
+   Title3[4] = "(kBtu/ft²-yr)"
+   Title3[5] = "(MWh/yr)"
+   Title3[6] = "(MBtu/yr)"
+   Title3[7] = "(kBtu/ft²-yr)"
+   Title3[8] = "(kBtu/ft²-yr)"
+   Title3[11] = "(kBtu/ft²-yr)"
+   Title3[12] = "(kBtu/ft²-yr)"
+   Title3[13] = "(kBtu/ft²-yr)"
+   Title3[17] = "Emis. (tonne)"
+   Title3[18] = "Emis. (tonne)"
+   Title3[19] = "Emis. (tonne)"
+   Title3[20] = "Emis. (tonne)"
+   Title3[21] = "Emis. (tonne)"
+   Title3[22] = "Emis. (tonne)"
+   Title3[23] = "(tonne)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "3.1"
+   Enduse1[3] = "--"
+   Enduse1[4] = "22.05"
+   Enduse1[5] = "--"
+   Enduse1[6] = "44.9"
+   Enduse1[7] = "11.18"
+   Enduse1[8] = "-10.87"
+   Enduse1[9] = "1.3"
+   Enduse1[10] = "--"
+   Enduse1[11] = "2.43"
+   Enduse1[12] = "5.01"
+   Enduse1[13] = "2.58"
+   Enduse1[17] = "0.82"
+   Enduse1[19] = "0.82"
+   Enduse1[21] = "2.52"
+   Enduse1[22] = "2.52"
+   Enduse1[23] = "1.70"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "2.0"
+   Enduse2[3] = "--"
+   Enduse2[4] = "7.41"
+   Enduse2[5] = "0.7"
+   Enduse2[6] = "--"
+   Enduse2[7] = "1.89"
+   Enduse2[8] = "-5.52"
+   Enduse2[9] = "0.1"
+   Enduse2[10] = "0.1"
+   Enduse2[11] = "0.36"
+   Enduse2[12] = "0.24"
+   Enduse2[13] = "-0.12"
+   Enduse2[17] = "0.12"
+   Enduse2[19] = "0.12"
+   Enduse2[20] = "0.12"
+   Enduse2[22] = "0.12"
+   Enduse2[23] = "0.00"
+   Enduse3[1] = "Indoor Fans"
+   Enduse3[2] = "22.7"
+   Enduse3[3] = "--"
+   Enduse3[4] = "117.74"
+   Enduse3[5] = "30.3"
+   Enduse3[6] = "--"
+   Enduse3[7] = "78.69"
+   Enduse3[8] = "-39.05"
+   Enduse3[9] = "2.8"
+   Enduse3[10] = "3.7"
+   Enduse3[11] = "10.98"
+   Enduse3[12] = "9.78"
+   Enduse3[13] = "-1.20"
+   Enduse3[17] = "3.72"
+   Enduse3[19] = "3.72"
+   Enduse3[20] = "5.02"
+   Enduse3[22] = "5.02"
+   Enduse3[23] = "1.30"
+   Enduse4[1] = "Heat Rejection"
+   Enduse4[2] = "--"
+   Enduse4[3] = "--"
+   Enduse4[4] = "--"
+   Enduse4[5] = "--"
+   Enduse4[6] = "--"
+   Enduse4[7] = "--"
+   Enduse4[8] = "--"
+   Enduse4[9] = "--"
+   Enduse4[10] = "--"
+   Enduse4[11] = "--"
+   Enduse4[12] = "--"
+   Enduse4[13] = "--"
+   Enduse4[23] = "0.00"
+   Enduse5[1] = "Pumps & Misc."
+   Enduse5[2] = "--"
+   Enduse5[3] = "--"
+   Enduse5[4] = "--"
+   Enduse5[5] = "--"
+   Enduse5[6] = "--"
+   Enduse5[7] = "--"
+   Enduse5[8] = "--"
+   Enduse5[9] = "--"
+   Enduse5[10] = "--"
+   Enduse5[11] = "--"
+   Enduse5[12] = "--"
+   Enduse5[13] = "--"
+   Enduse5[23] = "0.00"
+   Enduse6[1] = "Domestic Hot Water"
+   Enduse6[2] = "1.8"
+   Enduse6[3] = "--"
+   Enduse6[4] = "8.30"
+   Enduse6[5] = "1.8"
+   Enduse6[6] = "--"
+   Enduse6[7] = "4.13"
+   Enduse6[8] = "-4.17"
+   Enduse6[9] = "0.1"
+   Enduse6[10] = "0.1"
+   Enduse6[11] = "0.69"
+   Enduse6[12] = "0.46"
+   Enduse6[13] = "-0.23"
+   Enduse6[17] = "0.24"
+   Enduse6[19] = "0.24"
+   Enduse6[20] = "0.23"
+   Enduse6[22] = "0.23"
+   Enduse6[23] = "-0.01"
+   Enduse7[1] = "Indoor Lighting"
+   Enduse7[2] = "5.5"
+   Enduse7[3] = "--"
+   Enduse7[4] = "26.72"
+   Enduse7[5] = "17.5"
+   Enduse7[6] = "--"
+   Enduse7[7] = "39.60"
+   Enduse7[8] = "12.88"
+   Enduse7[9] = "0.4"
+   Enduse7[10] = "1.0"
+   Enduse7[11] = "2.27"
+   Enduse7[12] = "4.07"
+   Enduse7[13] = "1.80"
+   Enduse7[17] = "0.77"
+   Enduse7[19] = "0.77"
+   Enduse7[20] = "2.09"
+   Enduse7[22] = "2.09"
+   Enduse7[23] = "1.32"
+   Enduse8[1] = "Total Compliance"
+   Enduse8[2] = "13.4"
+   Enduse8[3] = "0.0"
+   Enduse8[4] = "109.43"
+   Enduse8[5] = "32.4"
+   Enduse8[6] = "44.9"
+   Enduse8[7] = "75.26"
+   Enduse8[8] = "-34.18"
+   Enduse8[9] = "4.7"
+   Enduse8[10] = "4.9"
+   Enduse8[11] = "13.96"
+   Enduse8[12] = "17.27"
+   Enduse8[13] = "3.31"
+   Enduse8[17] = "4.73"
+   Enduse8[19] = "4.73"
+   Enduse8[20] = "6.68"
+   Enduse8[21] = "2.52"
+   Enduse8[22] = "9.20"
+   Enduse8[23] = "4.47"
+   Enduse9[1] = "Receptacle"
+   Enduse9[2] = "23.6"
+   Enduse9[3] = "--"
+   Enduse9[4] = "101.97"
+   Enduse9[5] = "23.6"
+   Enduse9[6] = "--"
+   Enduse9[7] = "101.97"
+   Enduse9[8] = "--"
+   Enduse9[9] = "1.1"
+   Enduse9[10] = "1.1"
+   Enduse9[11] = "7.55"
+   Enduse9[12] = "7.55"
+   Enduse9[13] = "--"
+   Enduse9[17] = "2.56"
+   Enduse9[19] = "2.56"
+   Enduse9[20] = "2.56"
+   Enduse9[22] = "2.56"
+   Enduse9[23] = "0.00"
+   Enduse10[1] = "Process"
+   Enduse10[2] = "--"
+   Enduse10[3] = "--"
+   Enduse10[4] = "--"
+   Enduse10[5] = "--"
+   Enduse10[6] = "--"
+   Enduse10[7] = "--"
+   Enduse10[8] = "--"
+   Enduse10[9] = "--"
+   Enduse10[10] = "--"
+   Enduse10[11] = "--"
+   Enduse10[12] = "--"
+   Enduse10[13] = "--"
+   Enduse10[23] = "0.00"
+   Enduse11[1] = "Other Lighting"
+   Enduse11[2] = "--"
+   Enduse11[3] = "--"
+   Enduse11[4] = "--"
+   Enduse11[5] = "--"
+   Enduse11[6] = "--"
+   Enduse11[7] = "--"
+   Enduse11[8] = "--"
+   Enduse11[9] = "--"
+   Enduse11[10] = "--"
+   Enduse11[11] = "--"
+   Enduse11[12] = "--"
+   Enduse11[13] = "--"
+   Enduse11[23] = "0.00"
+   Enduse12[1] = "Process Motors"
+   Enduse12[2] = "--"
+   Enduse12[3] = "--"
+   Enduse12[4] = "--"
+   Enduse12[5] = "--"
+   Enduse12[6] = "--"
+   Enduse12[7] = "--"
+   Enduse12[8] = "--"
+   Enduse12[9] = "--"
+   Enduse12[10] = "--"
+   Enduse12[11] = "--"
+   Enduse12[12] = "--"
+   Enduse12[13] = "--"
+   Enduse12[23] = "0.00"
+   Enduse13[1] = "Photovoltaics"
+   Enduse13[2] = "-21.7"
+   Enduse13[3] = "--"
+   Enduse13[4] = "-72.79"
+   Enduse13[5] = "-17.9"
+   Enduse13[6] = "--"
+   Enduse13[7] = "-60.23"
+   Enduse13[8] = "12.56"
+   Enduse13[9] = "-0.0"
+   Enduse13[10] = "-0.0"
+   Enduse13[11] = "-2.77"
+   Enduse13[12] = "-2.29"
+   Enduse13[13] = "0.48"
+   Enduse13[17] = "-0.94"
+   Enduse13[19] = "-0.94"
+   Enduse13[20] = "-0.78"
+   Enduse13[22] = "-0.78"
+   Enduse13[23] = "0.16"
+   Enduse14[1] = "Battery"
+   Enduse14[2] = "--"
+   Enduse14[3] = "--"
+   Enduse14[4] = "--"
+   Enduse14[5] = "--"
+   Enduse14[6] = "--"
+   Enduse14[7] = "--"
+   Enduse14[8] = "--"
+   Enduse14[9] = "--"
+   Enduse14[10] = "--"
+   Enduse14[11] = "--"
+   Enduse14[12] = "--"
+   Enduse14[13] = "--"
+   Enduse14[23] = "0.00"
+   Enduse15[1] = "Project Total"
+   Enduse15[2] = "37.0"
+   Enduse15[3] = "0.0"
+   Enduse15[4] = "211.40"
+   Enduse15[5] = "56.0"
+   Enduse15[6] = "44.9"
+   Enduse15[7] = "177.23"
+   Enduse15[8] = "-34.19"
+   Enduse15[9] = "5.8"
+   Enduse15[10] = "6.0"
+   Enduse15[11] = "21.51"
+   Enduse15[12] = "24.82"
+   Enduse15[13] = "3.31"
+   Enduse15[17] = "7.29"
+   Enduse15[19] = "7.29"
+   Enduse15[20] = "9.24"
+   Enduse15[21] = "2.52"
+   Enduse15[22] = "11.76"
+   Enduse15[23] = "4.47"
+   Enduse16[1] = "Efficiency Compliance"
+   Enduse16[2] = "35.1"
+   Enduse16[3] = "0.0"
+   Enduse16[4] = "182.22"
+   Enduse16[5] = "50.3"
+   Enduse16[6] = "44.9"
+   Enduse16[7] = "135.49"
+   Enduse16[8] = "-46.74"
+   Enduse16[9] = "4.7"
+   Enduse16[10] = "5.0"
+   Enduse16[11] = "16.73"
+   Enduse16[12] = "19.56"
+   Enduse16[13] = "2.83"
+   Enduse16[17] = "5.67"
+   Enduse16[19] = "5.67"
+   Enduse16[20] = "7.46"
+   Enduse16[21] = "2.52"
+   Enduse16[22] = "9.98"
+   Enduse16[23] = "4.31"
+   ZoneUMLHsLoaded = ( 0, 1 )
+   ZoneUMLHs = ( 
+                 "clg: 0  htg: 0  'Attic Thermal Zone'
+clg: 0  htg: 0  'Core_ZN Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_1 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_2 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_3 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_4 Thermal Zone'", 
+                 "clg: 0  htg: 0  'Attic Thermal Zone'
+clg: 0  htg: 0  'Core_ZN Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_1 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_2 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_3 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_4 Thermal Zone'" )
+   SimSummary[1] = "CSE Successful, E+ Successful (121 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (102 warnings)"
+   PassFail = "FAIL"
+   MetricPassFail[1] = "Fail"
+   MetricPassFail[2] = "Fail"
+   MetricPassFail[3] = "Pass"
+   ComplyMessage = "DOES NOT COMPLY"
+   StdPVBatteryMsg = "Baseline Design PV Capacity: 14.3 kWdc  /  (no battery)"
+   AnalysisValid = 0
+   HideCompSmrySrc = 0
+   HideCompSmryTot = 0
+   PctSavingsTDV = 32.3996
+   PctSavingsEffTDV = 32.7552
+   PctSavingsCmpTDV = 48.0759
+   PctSavTDVLbl = "-19.29"
+   PctSavEffTDVLbl = "-34.50"
+   PctSavCmpTDVLbl = "-45.42"
+   PctSavingsSrc = 38.3491
+   PctSavingsEffSrc = 43.537
+   PctSavingsCmpSrc = 48.9393
+   PctSavSrcLbl = "13.34"
+   PctSavEffSrcLbl = "14.47"
+   PctSavCmpSrcLbl = "19.17"
+   MarginkW = 0.2
+   PVBattResultsValid = 1
+   PropPV_Size = 17.22
+   PropPV_Total = 21661.3
+   PropPV_Export = 4122
+   PropPV_PctExport = 19.0293
+   PropBatt_Size = 30.5
+   PropBatt_Pwr = 7.235
+   StdPV_Size = 14.25
+   StdPV_Total = 17924.3
+   StdPV_Export = 2686.61
+   StdPV_PctExport = 14.9887
+   StdBatt_Size = 0
+   StdBatt_Pwr = 0
+   ..
+
+
+END_OF_FILE

@@ -896,6 +896,8 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                   iBEMResHrlyResPtrRV = BEMPX_GetHourlyResultArrayPtr( &pdBEMResHrlyRes, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sResEnduseName, osRunInfo.BEMProcIdx() );
 					bool bBEMHrlyResPtrOK    = (pdBEMHrlyRes    && iBEMHrlyResPtrRV   ==0);			//assert( bBEMHrlyResPtrOK );  // needs to be valid following split of results processing routine? - SAC 7/23/18
 					bool bBEMResHrlyResPtrOK = (pdBEMResHrlyRes && iBEMResHrlyResPtrRV==0);		// SAC 10/30/21 (MFam)
+                                          //if (bHrlyDebugLogging && iEUIdx == 8 && iFl==0 && bBEMHrlyResPtrOK)      // DEBUGGING - Receptacle - SAC 12/08/23 (PRM)
+                                          //   BEMPX_WriteLogFile( QString( "         ProcessNonresSimulationResults() Receptacle - sum of elec hrly res from BEMPX_GetHourlyResultArrayPtr() %1 | LongRunID %2 | BEMProcIdx %3" ).arg( QString::number( SumHrlyRes( pdBEMHrlyRes ) ), osRunInfo.LongRunID(), QString::number( osRunInfo.BEMProcIdx() ) ) );
 							// assert( (bBEMHrlyResPtrOK || iEUIdx == IDX_T24_NRES_EU_CompTot || iEUIdx == IDX_T24_NRES_EU_Total ) );
                	// debugging
                	//	// failure EXPECTED for enduses:  "COMPLIANCE TOTAL" & "TOTAL"
@@ -935,9 +937,11 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                         dTDVSum += dResTDVSum;
                      }
                      else 
-							{  dTDVSum       = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK    ? pdBEMHrlyRes    : dHrlyRes), sTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+							{  dTDVSum       = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK    ? pdBEMHrlyRes    : dHrlyRes), sTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );   // (bHrlyDebugLogging && iEUIdx == 8)
                         if (!sResTDVMultTableName.isEmpty())
 							      dResTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes), sResTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+                                          //if (bHrlyDebugLogging && iEUIdx == 8)      // DEBUGGING - Receptacle - SAC 12/08/23 (PRM)
+                                          //   BEMPX_WriteLogFile( QString( "         ProcessNonresSimulationResults() Receptacle - bBEMHrlyResPtrOK %1 | sTDVMultTableName %2 | iTableCol %3 | dTDVSum %4" ).arg( (bBEMHrlyResPtrOK ? "yes" : "no"), sTDVMultTableName, QString::number( iTableCol ), QString::number( dTDVSum ) ) );
                         dTDVSum += dResTDVSum;
                      }
                            //BEMPX_WriteLogFile( QString( "         iTableCol %1 - dTDVSum %2" ).arg( QString::number( iTableCol ), QString::number( dTDVSum ) ) );
@@ -2551,7 +2555,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 							}
 							dPV_Total  *= -1.0;
 							dPV_Export *= -1.0;
-							dPV_PctExport = dPV_Export * 100.0 / dPV_Total;			assert( dPV_PctExport >= 0 && dPV_PctExport < 100 );
+							dPV_PctExport = dPV_Export * 100.0 / dPV_Total;			assert( dPV_PctExport >= 0 && dPV_PctExport <= 100 );
 				 		}
 						long lDBID_PV_Total  = BEMPX_GetDatabaseID( QString( "%1PV_Total"     ).arg( sEUPropNameBase ), iCID_EUseSummary );
 						long lDBID_PV_PctExp = BEMPX_GetDatabaseID( QString( "%1PV_PctExport" ).arg( sEUPropNameBase ), iCID_EUseSummary );
@@ -3115,6 +3119,13 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 			QString sResCopyErrMsg;
 			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, osRunInfo2.RunID().toLocal8Bit().constData(), osRunInfo.BEMProcIdx(), osRunInfo2.BEMProcIdx(), psaCopyAcrossModelClassPrefixes );
 			assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+								//if (bVerbose)   // SAC 11/04/23
+								if (true)
+								{  if (iResCopyRetVal > 0)
+                           	BEMPX_WriteLogFile( QString( "  PerfSim_E+ - error copying results objects from %1 to %2:  %3" ).arg( osRunInfo.RunID(), osRunInfo2.RunID(), sResCopyErrMsg ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                           else
+                           	BEMPX_WriteLogFile( QString( "  PerfSim_E+ - results objects copied from %1 to %2" ).arg( osRunInfo.RunID(), osRunInfo2.RunID() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                        }
 			if (iResCopyRetVal > 0)
 			{	if (sErrMsg.isEmpty())
 					sErrMsg = sResCopyErrMsg;
@@ -3707,6 +3718,12 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 //BEMPX_WriteLogFile( QString( "   in ProcessSimulationResults_Multiple(), CM_CopyAnalysisResultsObjects_CECNonRes() BEMProcIdx %1 to %2" ).arg( QString::number(osRunInfo[iRun-1].BEMProcIdx()), QString::number(osRunInfo[iRun].BEMProcIdx()) ), NULL, FALSE, TRUE, FALSE );
 			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, osRunInfo[iRun].RunID().toLocal8Bit().constData(), osRunInfo[iRun-1].BEMProcIdx(), osRunInfo[iRun].BEMProcIdx(), psaCopyAcrossModelClassPrefixes );
 			assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+								if (bVerbose)   // SAC 11/04/23
+								{  if (iResCopyRetVal > 0)
+                           	BEMPX_WriteLogFile( QString( "  ProcessSimulationResults_Multiple - error copying results objects from %1 (%2) to %3 (%4):  %5" ).arg( osRunInfo[iRun-1].RunID(), QString::number(osRunInfo[iRun-1].BEMProcIdx()), osRunInfo[iRun].RunID(), QString::number(osRunInfo[iRun].BEMProcIdx()), sResCopyErrMsg ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                           else
+                           	BEMPX_WriteLogFile( QString( "  ProcessSimulationResults_Multiple - results objects copied from %1 (%2) to %3 (%4)" ).arg( osRunInfo[iRun-1].RunID(), QString::number(osRunInfo[iRun-1].BEMProcIdx()), osRunInfo[iRun].RunID(), QString::number(osRunInfo[iRun].BEMProcIdx()) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                        }
 			if (iResCopyRetVal > 0)
 			{	if (sErrMsg.isEmpty())
 				{	sErrMsg = sResCopyErrMsg;

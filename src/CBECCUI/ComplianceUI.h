@@ -78,12 +78,14 @@ public:
 	virtual BOOL PerformAnalysis() const { return m_bPerformAnalysis; }
 	virtual BOOL PerformAPIAnalysis() const { return m_bPerformAPIAnalysis; }
 	virtual BOOL PerformSave() const { return m_bPerformSave; }
+	virtual BOOL PerformBatch() const { return m_bPerformBatch; }
 	//}}AFX_VIRTUAL
 protected:
 	BOOL m_bPerformSimulations;	// -nosim command line option sets FALSE (default TRUE)
 	BOOL m_bPerformAnalysis;	// -pa command line option sets TRUE (default FALSE)
 	BOOL m_bPerformAPIAnalysis;	// -api command line option sets TRUE (default FALSE) - SAC 3/19/20
 	BOOL m_bPerformSave;		// -save command line option sets TRUE (default FALSE)
+	BOOL m_bPerformBatch;		// -batch command line option sets TRUE (default FALSE) - SAC 07/15/23 (CalPRM)
 
 // Implementation
 

@@ -48,9 +48,16 @@ struct CUACUtilityRate  // SAC 10/19/22
    double  daaBinSeasonalCost[5][12];
 };
 
-extern void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
-                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo,
-                              char* pszErrorMsg, int iErrorMsgLen, bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx );
+//extern void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
+//                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo,
+//                              char* pszErrorMsg, int iErrorMsgLen, bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx );
 
+extern void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtilRateRefPropType, QString sProcessingPath, /*QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,*/
+                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, long iSecurityKeyIndex, const char* pszPrivateKey,
+                              const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
+                              /*char* pszErrorMsg, int iErrorMsgLen,*/ bool& bAbort, int& iRetVal, QString& sErrMsg, /*(long iCUACReportID,*/ int iCUAC_BEMProcIdx,     // SAC 08/30/23
+                              int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=CECRptGenDefaultReadWriteTimeoutSecs );   // SAC 08/31/23
+
+extern int CUAC_WriteCSVSummary( QFile& csvFile, const char* pszProjectPathFileName, const char* pszSimWeatherPath );    // SAC 12/11/23
 
 #endif // __CUAC_Analysis_H__

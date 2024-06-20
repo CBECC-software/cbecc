@@ -102,7 +102,7 @@ END_MESSAGE_MAP()
 //HRESULT WINAPI setDPIAwareRetVal;
 
 CComplianceUIApp::CComplianceUIApp() :
-	m_bPerformSimulations( TRUE), m_bPerformAnalysis( FALSE), m_bPerformAPIAnalysis( FALSE), m_bPerformSave( FALSE)
+	m_bPerformSimulations( TRUE), m_bPerformAnalysis( FALSE), m_bPerformAPIAnalysis( FALSE), m_bPerformSave( FALSE), m_bPerformBatch( FALSE)
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
@@ -427,6 +427,10 @@ BOOL CComplianceUIApp::InitInstance()
 	{	m_pMainWnd->SendMessage(WM_APICOMPANALYSIS);
 		return FALSE;
 	}
+	else if (PerformBatch())
+	{	m_pMainWnd->SendMessage(WM_CMDLINE_BATCH);
+		return FALSE;
+	}
 
 	if (PerformSave())
 	{	((CMainFrame*)m_pMainWnd)->OnFileSave();
@@ -522,6 +526,10 @@ static BOOL LocalParseParam( const char* pszParam, BOOL bFlag, BOOL /*bLast*/ )
 		{	m_bPerformSave = TRUE;
 			bRet = TRUE;
 		}
+		else if (bFlag && !_tcsnicmp( pszParam, _T("batch"), 5))
+		{	m_bPerformBatch = TRUE;
+			bRet = TRUE;
+		}
 	}
 	return bRet;
 }
@@ -551,6 +559,8 @@ void CComplianceUIApp::OnFileNew()
 			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_BATCH, 0L );
 		else if (ebInitiateCommSlrOptOutViaStartDlg && m_pMainWnd && m_pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))    // Community Solar Opt-Out via Start Dialog - SAC 03/28/23
 			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_PVOPTOUT, 0L );
+		else if (ebInitiateOldCUACImportViaStartDlg && m_pMainWnd && m_pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))    // import of old Access DB-based CUAC project via Start Dialog - SAC 09/18/23
+			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_OLDCUACIMPORT, 0L );
 	}
 }
 
@@ -703,11 +713,11 @@ void CAboutDlg::OnPaint()
 			//"\\pard\\f0 <open source license text>\\f1\\par"
 			//"\\b0\\f2\\par"
 			//"}";
-#ifdef UI_CANRES
+#ifdef UI_CANRES     // updates for CPR utility tariff data - SAC 09/21/23
 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC LICENSE AGREEMENT     (modified BSD)\\par "
 			"\\par "
-			"Copyright (c) 2012-2022, California Energy Commission\\par "
+			"Copyright (c) 2012-2023, California Energy Commission\\par "
 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
 			"All rights reserved.\\par "
 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
@@ -721,12 +731,22 @@ void CAboutDlg::OnPaint()
 			" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY"
 			" WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING"
 			" TO THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES, STRICT LIABILITY OR OTHERWISE.\\par "
+			"\\par "
+			"Utility tariff data was provided by Clean Power Research and subject to the following conditions -\\par "
+			"PERMITTED USES:\\par "
+			"* To compute utility bills within the CBECC-CUAC calculator\\par "
+			"* To display utility tariff data within the CBECC-CUAC user interface\\par "
+			"* To cache utility tariff data during term of service period\\par "
+			"NON-PERMITTED USES:\\par "
+			"* Utility tariff data shall not be used for any other business purpose other than the use of the CBECC-CUAC calculator and internal research purposes\\par "
+			"* Utility tariff data may not be published in any form for mass distribution\\par "
+			"* Utility tariff data may not be sold/resold\\par "
 			"}";
 #elif UI_CARES
 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC-Res LICENSE AGREEMENT     (modified BSD)\\par "
 			"\\par "
-			"Copyright (c) 2012-2022, California Energy Commission\\par "
+			"Copyright (c) 2012-2023, California Energy Commission\\par "
 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
 			"All rights reserved.\\par "
 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "

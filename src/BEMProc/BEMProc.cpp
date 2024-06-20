@@ -2258,6 +2258,7 @@ int BEMPX_CheckObjectNames(	char* pcNotAllowedInObjNames, QString& sNameViolatio
 //   >= 0  =>  Number of objects
 //     -1  =>  invalid class index argument
 //     -2  =>  invalid eObjType argument
+//     -3  =>  invalid iBEMProcIdx argument     - added new check & return val - SAC 11/04/23
 //   
 // Notes --------------------------------------------------------------------
 //   if eObjType == BEMO_NumTypes then this function returns the sum across ALL object types
@@ -2268,7 +2269,9 @@ int BEMPX_GetNumObjects( int i1BEMClass, BEM_ObjType eObjType, int iBEMProcIdx /
    int iRetVal = 0;
    BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );
 
-   if (i1BEMClass < 1 || i1BEMClass > pBEMProc->getNumClasses())
+   if (pBEMProc == NULL)
+      iRetVal = -3;
+   else if (i1BEMClass < 1 || i1BEMClass > pBEMProc->getNumClasses())
       iRetVal = -1;
    else if (eObjType >= BEMO_User && eObjType < BEMO_NumTypes)
       iRetVal = pBEMProc->getClass( i1BEMClass-1 )->ObjectCount( eObjType );
@@ -2566,6 +2569,37 @@ BEMObject* BEMPX_GetObjectByNameQ(	int i1BEMClass, int& iError, QString& qsObjNa
    }
 
    return pRetVal;  
+}
+
+
+int BEMPX_GetNumObjectsWithNameStarting( int i1BEMClass, QString& qsObjName,
+													  BEM_ObjType eObjType /*=BEMO_User*/, int iBEMProcIdx /*=-1*/ )    // SAC 12/18/23
+{  int iRetVal = 0;
+   BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );
+   if (pBEMProc == NULL)
+   	iRetVal = -3;
+   else if (i1BEMClass > 0)
+   {  // get the total number of objects of this class and type
+	   int iCount = BEMPX_GetNumObjects( i1BEMClass, eObjType, iBEMProcIdx );
+	   if (iCount < 0)
+	      iRetVal = iCount;
+	   else if (iCount == 0)
+	      iRetVal = -2;
+	}
+   if (iRetVal == 0)
+   {	int iFirstClass = (i1BEMClass > 0 ? i1BEMClass : 1);
+   	int iLastClass  = (i1BEMClass > 0 ? i1BEMClass : pBEMProc->getNumClasses());
+   	for (int iCls=iFirstClass; (iRetVal >= 0 && iCls <= iLastClass); iCls++)
+      {	// i1BEMClass must be valid and there are at least one object of the desired type
+			int iNumObjs = pBEMProc->getClass( iCls-1 )->ObjectCount( eObjType );
+			for (int ib=0; (iRetVal >= 0 && ib < iNumObjs); ib++)
+			{	BEMObject* pObj = pBEMProc->getClass( iCls-1 )->GetObject( eObjType, ib );			assert( pObj );
+      	   // check for object valid and name match
+      	   if ( pObj != NULL && qsObjName.compare( pObj->getName().left( qsObjName.length() ), Qt::CaseInsensitive ) == 0)
+               iRetVal++;
+      }	}
+   }
+   return iRetVal;
 }
 
 

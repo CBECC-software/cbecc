@@ -379,6 +379,13 @@ BEMObject*       __cdecl BEMPX_ReadProjectComponent(  const char* fileName, int 
 bool BEMPROC_API __cdecl BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iBEMProcIdx=-1, bool bWriteAllProperties=false,
 																			bool bWritePrimaryDefaultData=false );
 
+int  BEMPROC_API __cdecl BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
+                                                          int iBEMProcIdx=-1, QString* psMsg=NULL, const char* fileNamePropertyType=NULL,       // SAC 08/15/23
+                                                          const char* propertyToIncludeInObjName=NULL );    // SAC 12/18/23
+int  BEMPROC_API __cdecl BEMPX_GetJSONFileErrorCode( const char* fileName, QString* psMsg=NULL, const char* pszReqdElement=NULL, long lMinFileSize=0 );     // SAC 09/04/23
+
+int  BEMPROC_API __cdecl BEMPX_WriteComponentsToCSVFile( const char* fileName, const char* objType, int iBEMProcIdx=-1 );   // SAC 08/16/23
+
 ////////////////////////////////////////////////////////////////////////////////
 // Access to CBEMClasses
 int BEMPROC_API __cdecl BEMPX_GetNumClasses();
@@ -425,6 +432,9 @@ int  BEMPROC_API __cdecl BEMPX_GetObjectIndex(  BEMClass* pClass, BEMObject* pOb
 int  BEMPROC_API __cdecl BEMPX_GetChildObjectIndex( int i1BEMClass, int i1ChildClass, int& iError,
                                                               BEM_ObjType& eChildObjType, int i1ChildIdx=1, int iObjIdx=-1,
                                                               BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+
+int  BEMPROC_API __cdecl BEMPX_GetNumObjectsWithNameStarting( int i1BEMClass, QString& qsObjName,
+																BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );    // SAC 12/18/23
 
 BEM_ObjType BEMPROC_API __cdecl BEMPX_GetCurrentObjectType( int i1BEMClass, int iObjIdx=-1, int iBEMProcIdx=-1 );
 

@@ -1,0 +1,2111 @@
+RulesetFilename   "T24N-PRM_2022.bin"  
+
+Proj   "Project"  
+   BldgEngyModelVersion = 17
+   CreateDate = 1664220084
+   ModDate = 1703114325
+   RunDate = 1703114326
+   CliZn = "ClimateZone12"
+   ZipCode = 95814
+   QuickAnalysis = 0
+   ExcptCondNoClgSys = "No"
+   ExcptCondRtdCap = "No"
+   ExcptCondNarrative = "No"
+   AutoHardSize = 1
+   AutoEffInput = 1
+   CompOptEnve = 1
+   CompOptLtg = 1
+   CompOptMech = 1
+   CompOptDHW = 1
+   AirBarrier = "Air barrier - not verified"
+   SoftwareVersion = "CBECC 2022.3.0.PRM-b2 (1330)"
+   ResultsCurrentMessage = "(not current)"
+   ..
+
+ConsAssm   "SlabOnOrBelowGradeF073"  
+   CompatibleSurfType = "UndergroundFloor"
+   SlabType = "UnheatedSlabOnGrade"
+   MatRef[1] = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+ConsAssm   "NonResMetalFrameWall"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R13.99"
+   MatRef[3] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[4] = "Gypsum Board - 1/2 in."
+   ..
+
+ConsAssm   "Metal Frame Interior Wall"  
+   CompatibleSurfType = "InteriorWall"
+   MatRef[1] = "Gypsum Board - 5/8 in."
+   MatRef[2] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[3] = "Gypsum Board - 5/8 in."
+   ..
+
+ConsAssm   "NonResWoodFramingAndOtherRoof"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.63
+   CRRCAgedRefl = 0.63
+   CRRCInitialEmit = 0.85
+   CRRCAgedEmit = 0.85
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R24.86"
+   ..
+
+Mat   "Stucco - 7/8 in."  
+   CodeCat = "Plastering Materials"
+   CodeItem = "Stucco - 7/8 in."
+   ..
+
+Mat   "Air - Metal Wall Framing - 16 or 24 in. OC"  
+   CodeCat = "Air"
+   CodeItem = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   ..
+
+Mat   "Gypsum Board - 1/2 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 1/2 in."
+   ..
+
+Mat   "Metal Standing Seam - 1/16 in."  
+   CodeCat = "Roofing"
+   CodeItem = "Metal Standing Seam - 1/16 in."
+   ..
+
+Mat   "Compliance Insulation R0.10"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R0.10"
+   ..
+
+Mat   "Compliance Insulation R0.20"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R0.20"
+   ..
+
+Mat   "Compliance Insulation R2.00"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R2.00"
+   ..
+
+Mat   "Compliance Insulation R7.39"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R7.39"
+   ..
+
+Mat   "Compliance Insulation R10.06"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R10.06"
+   ..
+
+Mat   "Compliance Insulation R13.99"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R13.99"
+   ..
+
+Mat   "Compliance Insulation R19.63"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R19.63"
+   ..
+
+Mat   "Compliance Insulation R28.63"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R28.63"
+   ..
+
+Mat   "Compliance Insulation R34.93"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R34.93"
+   ..
+
+Mat   "Compliance Insulation R11.70"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R11.70"
+   ..
+
+Mat   "Compliance Insulation R5.00"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R5.00"
+   ..
+
+ConsAssm   "WoodFramingAndOtherRoofU034"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.63
+   CRRCAgedRefl = 0.63
+   CRRCInitialEmit = 0.75
+   CRRCAgedEmit = 0.75
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R28.63"
+   ..
+
+ConsAssm   "WoodFramingAndOtherRoofU049"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.63
+   CRRCAgedRefl = 0.63
+   CRRCInitialEmit = 0.85
+   CRRCAgedEmit = 0.85
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R19.63"
+   ..
+
+ConsAssm   "WoodFramingAndOtherRoofU028"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.63
+   CRRCAgedRefl = 0.63
+   CRRCInitialEmit = 0.85
+   CRRCAgedEmit = 0.85
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R34.93"
+   ..
+
+ConsAssm   "WoodFramingAndOtherRoofU039"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.63
+   CRRCAgedRefl = 0.63
+   CRRCInitialEmit = 0.85
+   CRRCAgedEmit = 0.85
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R25.16"
+   ..
+
+ConsAssm   "MetalFramedWallU069"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R10.06"
+   MatRef[3] = "Compliance Insulation R2.00"
+   MatRef[4] = "Compliance Insulation R0.20"
+   MatRef[5] = "Compliance Insulation R0.10"
+   MatRef[6] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[7] = "Gypsum Board - 1/2 in."
+   ..
+
+ConsAssm   "MetalFramedWallU055"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R14.60"
+   MatRef[3] = "Compliance Insulation R1.41"
+   MatRef[4] = "Compliance Insulation R0.02"
+   MatRef[5] = "Compliance Insulation R0.02"
+   MatRef[6] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[7] = "Gypsum Board - 1/2 in."
+   MatRef[8] = "- none -"
+   ..
+
+ConsAssm   "MetalFramedWallU105"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R7.39"
+   MatRef[3] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[4] = "Gypsum Board - 1/2 in."
+   ..
+
+ConsAssm   "MetalFramedWallU048"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R11.70"
+   MatRef[3] = "Compliance Insulation R5.00"
+   MatRef[4] = "Compliance Insulation R2.00"
+   MatRef[5] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[6] = "Gypsum Board - 1/2 in."
+   ..
+
+Mat   "Concrete - 140 lb/ft3 - 6 in."  
+   CodeCat = "Concrete"
+   CodeItem = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+Mat   "Compliance Insulation R24.86"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R24.86"
+   ..
+
+Mat   "Gypsum Board - 5/8 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 5/8 in."
+   ..
+
+FenCons   "Base_AllCZ_FixedWindowU34"  
+   FenType = "VerticalFenestration"
+   FenProdType = "FixedWindow"
+   AssmContext = "Manufactured"
+   CertificationMthd = "NFRCRated"
+   SHGC = 0.22
+   UFactor = 0.34
+   VT = 0.42
+   ..
+
+FenCons   "Base_AllCZ_Skylt-Gl-CurbMntU58"  
+   FenType = "Skylight"
+   FenProdType = "FixedWindow"
+   AssmContext = "Manufactured"
+   CertificationMthd = "NFRCRated"
+   SkyltGlz = "Glass"
+   SkyltCurb = "CurbMounted"
+   SHGC = 0.25
+   UFactor = 0.58
+   VT = 0.49
+   ..
+
+DrCons   "Base_AllCZ_NSwng-ExtDoorU145"  
+   CertificationMthd = "NFRCRated"
+   UFactor = 1.45
+   Open = "NonSwinging"
+   DrAutoCloser = 1
+   ..
+
+DrCons   "ExtOpaqueDoorU070"  
+   CertificationMthd = "NFRCRated"
+   UFactor = 0.7
+   Open = "Swinging"
+   ..
+
+Bldg   "Strip Mall"  
+   BldgAz = 0
+   ..
+
+Story   "Building Story 1"  
+   PRMBldgTypeForBaseWWR = "Retail (strip mall)"
+   ..
+
+Spc   "LGstore1"  
+   ThrmlZnRef = "LGstore1 Thermal Zone"
+   Vol = 63730.5
+   SpcFunc = "Retail Sales Area (Retail Merchandise Sales)"
+   Skylit100PctControlled = 0
+   PriSide100PctControlled = 0
+   SecSide100PctControlled = 0
+   SHWFluidSegRef = "SHW Supply FluidSegment"
+   ..
+
+PolyLp   "PolyLoop 1"  
+   ..
+
+CartesianPt   "CartesianPoint 1"  
+   Coord = ( 50, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 2"  
+   Coord = ( 50, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 3"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 4"  
+   Coord = ( 0, 75, 0 )
+   ..
+
+UndgrFlr   "LGstore1_Floor"  
+   ConsAssmRef = "SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 2"  
+   ..
+
+CartesianPt   "CartesianPoint 5"  
+   Coord = ( 50, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 6"  
+   Coord = ( 50, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 7"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 8"  
+   Coord = ( 0, 75, 0 )
+   ..
+
+Roof   "LGstore1_Roof"  
+   ConsAssmRef = "WoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 3"  
+   ..
+
+CartesianPt   "CartesianPoint 9"  
+   Coord = ( 50, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 10"  
+   Coord = ( 50, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 11"  
+   Coord = ( 0, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 12"  
+   Coord = ( 0, 0, 16.9948 )
+   ..
+
+ExtWall   "LGstore1_Wall_1"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 6"  
+   ..
+
+CartesianPt   "CartesianPoint 21"  
+   Coord = ( 0, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 22"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 23"  
+   Coord = ( 50, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 24"  
+   Coord = ( 50, 0, 16.9948 )
+   ..
+
+Win   "LGstore1_Wall_1_Door_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 7"  
+   ..
+
+CartesianPt   "CartesianPoint 25"  
+   Coord = ( 9.51444, 0, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 26"  
+   Coord = ( 9.51444, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 27"  
+   Coord = ( 15.5184, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 28"  
+   Coord = ( 15.5184, 0, 6.98819 )
+   ..
+
+Win   "LGstore1_Wall_1_Door_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 8"  
+   ..
+
+CartesianPt   "CartesianPoint 29"  
+   Coord = ( 34.5144, 0, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 30"  
+   Coord = ( 34.5144, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 31"  
+   Coord = ( 40.5184, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 32"  
+   Coord = ( 40.5184, 0, 6.98819 )
+   ..
+
+Win   "LGstore1_Wall_1_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 9"  
+   ..
+
+CartesianPt   "CartesianPoint 33"  
+   Coord = ( 2.00131, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 34"  
+   Coord = ( 2.00131, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 35"  
+   Coord = ( 8.9895, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 36"  
+   Coord = ( 8.9895, 0, 7.97244 )
+   ..
+
+Win   "LGstore1_Wall_1_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 10"  
+   ..
+
+CartesianPt   "CartesianPoint 37"  
+   Coord = ( 16.0105, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 38"  
+   Coord = ( 16.0105, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 39"  
+   Coord = ( 22.9987, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 40"  
+   Coord = ( 22.9987, 0, 7.97244 )
+   ..
+
+Win   "LGstore1_Wall_1_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 11"  
+   ..
+
+CartesianPt   "CartesianPoint 41"  
+   Coord = ( 27.0013, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 42"  
+   Coord = ( 27.0013, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 43"  
+   Coord = ( 33.9895, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 44"  
+   Coord = ( 33.9895, 0, 7.97244 )
+   ..
+
+Win   "LGstore1_Wall_1_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 12"  
+   ..
+
+CartesianPt   "CartesianPoint 45"  
+   Coord = ( 41.0105, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 46"  
+   Coord = ( 41.0105, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 47"  
+   Coord = ( 47.9987, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 48"  
+   Coord = ( 47.9987, 0, 7.97244 )
+   ..
+
+ExtWall   "LGstore1_Wall_2"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 13"  
+   ..
+
+CartesianPt   "CartesianPoint 49"  
+   Coord = ( 0, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 50"  
+   Coord = ( 0, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 51"  
+   Coord = ( 0, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 52"  
+   Coord = ( 0, 0, 16.9948 )
+   ..
+
+ExtWall   "LGstore1_Wall_3"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 14"  
+   ..
+
+CartesianPt   "CartesianPoint 53"  
+   Coord = ( 50, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 54"  
+   Coord = ( 50, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 55"  
+   Coord = ( 0, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 56"  
+   Coord = ( 0, 75, 16.9948 )
+   ..
+
+Dr   "LGstore1_Wall_3_Door_1"  
+   DrConsRef = "Base_AllCZ_NSwng-ExtDoorU145"
+   ..
+
+PolyLp   "PolyLoop 15"  
+   ..
+
+CartesianPt   "CartesianPoint 57"  
+   Coord = ( 15.5184, 75, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 58"  
+   Coord = ( 15.5184, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 59"  
+   Coord = ( 9.51444, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 60"  
+   Coord = ( 9.51444, 75, 6.98819 )
+   ..
+
+Dr   "LGstore1_Wall_3_Door_2"  
+   DrConsRef = "Base_AllCZ_NSwng-ExtDoorU145"
+   ..
+
+PolyLp   "PolyLoop 16"  
+   ..
+
+CartesianPt   "CartesianPoint 61"  
+   Coord = ( 40.5184, 75, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 62"  
+   Coord = ( 40.5184, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 63"  
+   Coord = ( 34.5144, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 64"  
+   Coord = ( 34.5144, 75, 6.98819 )
+   ..
+
+IntWall   "LGstore1_Wall_4"  
+   AdjacentSpcRef = "SMstore1"
+   ConsAssmRef = "Metal Frame Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 17"  
+   ..
+
+CartesianPt   "CartesianPoint 65"  
+   Coord = ( 50, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 66"  
+   Coord = ( 50, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 67"  
+   Coord = ( 50, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 68"  
+   Coord = ( 50, 75, 16.9948 )
+   ..
+
+Spc   "SMstore1"  
+   ThrmlZnRef = "SMstore1 Thermal Zone"
+   Vol = 31865.2
+   SpcFunc = "Retail Sales Area (Retail Merchandise Sales)"
+   Skylit100PctControlled = 0
+   PriSide100PctControlled = 0
+   SecSide100PctControlled = 0
+   SHWFluidSegRef = "SHW Supply FluidSegment"
+   ..
+
+PolyLp   "PolyLoop 35"  
+   ..
+
+CartesianPt   "CartesianPoint 137"  
+   Coord = ( 75, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 138"  
+   Coord = ( 75, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 139"  
+   Coord = ( 50, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 140"  
+   Coord = ( 50, 75, 0 )
+   ..
+
+UndgrFlr   "SMstore1_Floor"  
+   ConsAssmRef = "SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 36"  
+   ..
+
+CartesianPt   "CartesianPoint 141"  
+   Coord = ( 75, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 142"  
+   Coord = ( 75, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 143"  
+   Coord = ( 50, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 144"  
+   Coord = ( 50, 75, 0 )
+   ..
+
+Roof   "SMstore1_Roof"  
+   ConsAssmRef = "WoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 37"  
+   ..
+
+CartesianPt   "CartesianPoint 145"  
+   Coord = ( 75, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 146"  
+   Coord = ( 75, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 147"  
+   Coord = ( 50, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 148"  
+   Coord = ( 50, 0, 16.9948 )
+   ..
+
+ExtWall   "SMstore1_Wall_1"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 39"  
+   ..
+
+CartesianPt   "CartesianPoint 153"  
+   Coord = ( 50, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 154"  
+   Coord = ( 50, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 155"  
+   Coord = ( 75, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 156"  
+   Coord = ( 75, 0, 16.9948 )
+   ..
+
+Win   "SMstore1_Wall_1_Door"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 40"  
+   ..
+
+CartesianPt   "CartesianPoint 157"  
+   Coord = ( 59.5144, 0, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 158"  
+   Coord = ( 59.5144, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 159"  
+   Coord = ( 65.5184, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 160"  
+   Coord = ( 65.5184, 0, 6.98819 )
+   ..
+
+Win   "SMstore1_Wall_1_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 41"  
+   ..
+
+CartesianPt   "CartesianPoint 161"  
+   Coord = ( 52.0013, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 162"  
+   Coord = ( 52.0013, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 163"  
+   Coord = ( 58.9895, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 164"  
+   Coord = ( 58.9895, 0, 7.97244 )
+   ..
+
+Win   "SMstore1_Wall_1_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 42"  
+   ..
+
+CartesianPt   "CartesianPoint 165"  
+   Coord = ( 66.0105, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 166"  
+   Coord = ( 66.0105, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 167"  
+   Coord = ( 72.9987, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 168"  
+   Coord = ( 72.9987, 0, 7.97244 )
+   ..
+
+ExtWall   "SMstore1_Wall_3"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 43"  
+   ..
+
+CartesianPt   "CartesianPoint 169"  
+   Coord = ( 75, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 170"  
+   Coord = ( 75, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 171"  
+   Coord = ( 50, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 172"  
+   Coord = ( 50, 75, 16.9948 )
+   ..
+
+Dr   "SMstore1_Wall_3_Door"  
+   DrConsRef = "Base_AllCZ_NSwng-ExtDoorU145"
+   ..
+
+PolyLp   "PolyLoop 44"  
+   ..
+
+CartesianPt   "CartesianPoint 173"  
+   Coord = ( 65.5184, 75, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 174"  
+   Coord = ( 65.5184, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 175"  
+   Coord = ( 59.5144, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 176"  
+   Coord = ( 59.5144, 75, 6.98819 )
+   ..
+
+IntWall   "SMstore1_Wall_4"  
+   AdjacentSpcRef = "SMstore2"
+   ConsAssmRef = "Metal Frame Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 45"  
+   ..
+
+CartesianPt   "CartesianPoint 177"  
+   Coord = ( 75, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 178"  
+   Coord = ( 75, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 179"  
+   Coord = ( 75, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 180"  
+   Coord = ( 75, 75, 16.9948 )
+   ..
+
+Spc   "SMstore2"  
+   ThrmlZnRef = "SMstore2 Thermal Zone"
+   Vol = 31865.2
+   SpcFunc = "Retail Sales Area (Retail Merchandise Sales)"
+   Skylit100PctControlled = 0
+   PriSide100PctControlled = 0
+   SecSide100PctControlled = 0
+   SHWFluidSegRef = "SHW Supply FluidSegment"
+   ..
+
+PolyLp   "PolyLoop 46"  
+   ..
+
+CartesianPt   "CartesianPoint 181"  
+   Coord = ( 100, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 182"  
+   Coord = ( 100, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 183"  
+   Coord = ( 75, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 184"  
+   Coord = ( 75, 75, 0 )
+   ..
+
+UndgrFlr   "SMstore2_Floor"  
+   ConsAssmRef = "SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 47"  
+   ..
+
+CartesianPt   "CartesianPoint 185"  
+   Coord = ( 100, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 186"  
+   Coord = ( 100, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 187"  
+   Coord = ( 75, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 188"  
+   Coord = ( 75, 75, 0 )
+   ..
+
+Roof   "SMstore2_Roof"  
+   ConsAssmRef = "WoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 48"  
+   ..
+
+CartesianPt   "CartesianPoint 189"  
+   Coord = ( 100, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 190"  
+   Coord = ( 100, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 191"  
+   Coord = ( 75, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 192"  
+   Coord = ( 75, 0, 16.9948 )
+   ..
+
+ExtWall   "SMstore2_Wall_1"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 50"  
+   ..
+
+CartesianPt   "CartesianPoint 197"  
+   Coord = ( 75, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 198"  
+   Coord = ( 75, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 199"  
+   Coord = ( 100, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 200"  
+   Coord = ( 100, 0, 16.9948 )
+   ..
+
+Win   "SMstore2_Wall_1_Door"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 51"  
+   ..
+
+CartesianPt   "CartesianPoint 201"  
+   Coord = ( 84.5144, 0, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 202"  
+   Coord = ( 84.5144, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 203"  
+   Coord = ( 90.4856, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 204"  
+   Coord = ( 90.4856, 0, 6.98819 )
+   ..
+
+Win   "SMstore2_Wall_1_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 52"  
+   ..
+
+CartesianPt   "CartesianPoint 205"  
+   Coord = ( 77.0013, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 206"  
+   Coord = ( 77.0013, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 207"  
+   Coord = ( 83.9895, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 208"  
+   Coord = ( 83.9895, 0, 7.97244 )
+   ..
+
+Win   "SMstore2_Wall_1_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 53"  
+   ..
+
+CartesianPt   "CartesianPoint 209"  
+   Coord = ( 91.0105, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 210"  
+   Coord = ( 91.0105, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 211"  
+   Coord = ( 97.9987, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 212"  
+   Coord = ( 97.9987, 0, 7.97244 )
+   ..
+
+ExtWall   "SMstore2_Wall_3"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 54"  
+   ..
+
+CartesianPt   "CartesianPoint 213"  
+   Coord = ( 100, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 214"  
+   Coord = ( 100, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 215"  
+   Coord = ( 75, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 216"  
+   Coord = ( 75, 75, 16.9948 )
+   ..
+
+Dr   "SMstore2_Wall_3_Door"  
+   DrConsRef = "Base_AllCZ_NSwng-ExtDoorU145"
+   ..
+
+PolyLp   "PolyLoop 55"  
+   ..
+
+CartesianPt   "CartesianPoint 217"  
+   Coord = ( 90.4856, 75, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 218"  
+   Coord = ( 90.4856, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 219"  
+   Coord = ( 84.5144, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 220"  
+   Coord = ( 84.5144, 75, 6.98819 )
+   ..
+
+IntWall   "SMstore2_Wall_4"  
+   AdjacentSpcRef = "SMstore3"
+   ConsAssmRef = "Metal Frame Interior Wall"
+   ..
+
+PolyLp   "PolyLoop 56"  
+   ..
+
+CartesianPt   "CartesianPoint 221"  
+   Coord = ( 100, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 222"  
+   Coord = ( 100, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 223"  
+   Coord = ( 100, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 224"  
+   Coord = ( 100, 75, 16.9948 )
+   ..
+
+Spc   "SMstore3"  
+   ThrmlZnRef = "SMstore3 Thermal Zone"
+   Vol = 31865.2
+   SpcFunc = "Retail Sales Area (Retail Merchandise Sales)"
+   Skylit100PctControlled = 0
+   PriSide100PctControlled = 0
+   SecSide100PctControlled = 0
+   SHWFluidSegRef = "SHW Supply FluidSegment"
+   ..
+
+PolyLp   "PolyLoop 57"  
+   ..
+
+CartesianPt   "CartesianPoint 225"  
+   Coord = ( 125, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 226"  
+   Coord = ( 125, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 227"  
+   Coord = ( 100, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 228"  
+   Coord = ( 100, 75, 0 )
+   ..
+
+UndgrFlr   "SMstore3_Floor"  
+   ConsAssmRef = "SlabOnOrBelowGradeF073"
+   ..
+
+PolyLp   "PolyLoop 58"  
+   ..
+
+CartesianPt   "CartesianPoint 229"  
+   Coord = ( 125, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 230"  
+   Coord = ( 125, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 231"  
+   Coord = ( 100, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 232"  
+   Coord = ( 100, 75, 0 )
+   ..
+
+Roof   "SMstore3_Roof"  
+   ConsAssmRef = "WoodFramingAndOtherRoofU034"
+   ..
+
+PolyLp   "PolyLoop 59"  
+   ..
+
+CartesianPt   "CartesianPoint 233"  
+   Coord = ( 125, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 234"  
+   Coord = ( 125, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 235"  
+   Coord = ( 100, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 236"  
+   Coord = ( 100, 0, 16.9948 )
+   ..
+
+ExtWall   "SMstore3_Wall_1"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 61"  
+   ..
+
+CartesianPt   "CartesianPoint 241"  
+   Coord = ( 100, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 242"  
+   Coord = ( 100, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 243"  
+   Coord = ( 125, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 244"  
+   Coord = ( 125, 0, 16.9948 )
+   ..
+
+Win   "SMstore3_Wall_1_Door"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 62"  
+   ..
+
+CartesianPt   "CartesianPoint 245"  
+   Coord = ( 109.514, 0, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 246"  
+   Coord = ( 109.514, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 247"  
+   Coord = ( 115.486, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 248"  
+   Coord = ( 115.486, 0, 6.98819 )
+   ..
+
+Win   "SMstore3_Wall_1_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 63"  
+   ..
+
+CartesianPt   "CartesianPoint 249"  
+   Coord = ( 102.001, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 250"  
+   Coord = ( 102.001, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 251"  
+   Coord = ( 108.99, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 252"  
+   Coord = ( 108.99, 0, 7.97244 )
+   ..
+
+Win   "SMstore3_Wall_1_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   ..
+
+PolyLp   "PolyLoop 64"  
+   ..
+
+CartesianPt   "CartesianPoint 253"  
+   Coord = ( 116.01, 0, 7.97244 )
+   ..
+
+CartesianPt   "CartesianPoint 254"  
+   Coord = ( 116.01, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 255"  
+   Coord = ( 122.999, 0, 2.98556 )
+   ..
+
+CartesianPt   "CartesianPoint 256"  
+   Coord = ( 122.999, 0, 7.97244 )
+   ..
+
+ExtWall   "SMstore3_Wall_3"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 65"  
+   ..
+
+CartesianPt   "CartesianPoint 257"  
+   Coord = ( 125, 75, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 258"  
+   Coord = ( 125, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 259"  
+   Coord = ( 100, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 260"  
+   Coord = ( 100, 75, 16.9948 )
+   ..
+
+Dr   "SMstore3_Wall_3_Door"  
+   DrConsRef = "Base_AllCZ_NSwng-ExtDoorU145"
+   ..
+
+PolyLp   "PolyLoop 66"  
+   ..
+
+CartesianPt   "CartesianPoint 261"  
+   Coord = ( 115.486, 75, 6.98819 )
+   ..
+
+CartesianPt   "CartesianPoint 262"  
+   Coord = ( 115.486, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 263"  
+   Coord = ( 109.514, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 264"  
+   Coord = ( 109.514, 75, 6.98819 )
+   ..
+
+ExtWall   "SMstore3_Wall_4"  
+   ConsAssmRef = "MetalFramedWallU055"
+   ..
+
+PolyLp   "PolyLoop 67"  
+   ..
+
+CartesianPt   "CartesianPoint 265"  
+   Coord = ( 125, 0, 16.9948 )
+   ..
+
+CartesianPt   "CartesianPoint 266"  
+   Coord = ( 125, 0, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 267"  
+   Coord = ( 125, 75, 0 )
+   ..
+
+CartesianPt   "CartesianPoint 268"  
+   Coord = ( 125, 75, 16.9948 )
+   ..
+
+ThrmlZn   "LGstore1 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BaseAirSys7b"
+   PriAirCondgSysPriority[1] = 1
+   VentSysRef = "BaseAirSys7b"
+   VentSysPriority = 1
+   DayltgIllumRefPt1Coord = ( 37.5164, 6.98819, 2.5 )
+   DayltgIllumRefPt2Coord = ( 37.5164, 13.9764, 2.5 )
+   DayltgIllumSetpt1 = 825
+   DayltgIllumSetpt2 = 1100
+   DayltgCtrlLtgFrac1 = 0.106111
+   DayltgCtrlLtgFrac2 = 0.106667
+   DayltgCtrlType = "Continuous"
+   DayltgMinDimLtgFrac = 0.2
+   DayltgMinDimPwrFrac = 0.2
+   ..
+
+ThrmlZn   "SMstore1 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BaseAirSys3b_2"
+   PriAirCondgSysPriority[1] = 1
+   VentSysRef = "BaseAirSys3b_2"
+   VentSysPriority = 1
+   DayltgIllumRefPt1Coord = ( 62.5164, 6.98819, 2.5 )
+   DayltgIllumRefPt2Coord = ( 62.5164, 13.9764, 2.5 )
+   DayltgIllumSetpt1 = 825
+   DayltgIllumSetpt2 = 1100
+   DayltgCtrlLtgFrac1 = 0.106111
+   DayltgCtrlLtgFrac2 = 0.106667
+   DayltgCtrlType = "Continuous"
+   DayltgMinDimLtgFrac = 0.2
+   DayltgMinDimPwrFrac = 0.2
+   ..
+
+ThrmlZn   "SMstore2 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BaseAirSys3b_3"
+   PriAirCondgSysPriority[1] = 1
+   VentSysRef = "BaseAirSys3b_3"
+   VentSysPriority = 1
+   DayltgIllumRefPt1Coord = ( 87.5, 6.98819, 2.5 )
+   DayltgIllumRefPt2Coord = ( 87.5, 13.9764, 2.5 )
+   DayltgIllumSetpt1 = 825
+   DayltgIllumSetpt2 = 1100
+   DayltgCtrlLtgFrac1 = 0.106111
+   DayltgCtrlLtgFrac2 = 0.106667
+   DayltgCtrlType = "Continuous"
+   DayltgMinDimLtgFrac = 0.2
+   DayltgMinDimPwrFrac = 0.2
+   ..
+
+ThrmlZn   "SMstore3 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BaseAirSys3b_4"
+   PriAirCondgSysPriority[1] = 1
+   VentSysRef = "BaseAirSys3b_4"
+   VentSysPriority = 1
+   VentCtrlMthd = "Fixed"
+   DayltgIllumRefPt1Coord = ( 112.5, 6.98819, 2.5 )
+   DayltgIllumRefPt2Coord = ( 112.5, 13.9764, 2.5 )
+   DayltgIllumSetpt1 = 825
+   DayltgIllumSetpt2 = 1100
+   DayltgCtrlLtgFrac1 = 0.106111
+   DayltgCtrlLtgFrac2 = 0.106667
+   DayltgCtrlType = "Continuous"
+   DayltgMinDimLtgFrac = 0.2
+   DayltgMinDimPwrFrac = 0.2
+   ..
+
+AirSys   "BaseAirSys7b"  
+   Type = "SZVAVHP"
+   CtrlZnRef = "LGstore1 Thermal Zone"
+   AvailSchRef = "RetailHVACAvail"
+   FanCtrl = "Continuous"
+   NightCycleFanCtrl = "CycleOnCallPrimaryZone"
+   FanPos = "DrawThrough"
+   ClgCtrl = "NoSATControl"
+   ..
+
+AirSeg   "BaseSys7b SupAirSeg"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "BaseSys7b CoilClg"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   NumClgStages = 2
+   CapTotGrossRtd = 100354
+   CapTotNetRtd = 94552.4
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "BaseSys7b CoilHtg"  
+   Type = "HeatPump"
+   CapTotNetRtd = 102743
+   HtPumpSuppCoilHtgRef = "BaseSys7b CoilSuppHtg"
+   ..
+
+Fan   "BaseSys7b Fan"  
+   CtrlMthd = "VariableSpeedDrive"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 3335.14
+   TotStaticPress = 3.68359
+   MtrHP = 3
+   MtrEff = 0.895
+   MtrPos = "InAirStream"
+   ..
+
+CoilHtg   "BaseSys7b CoilSuppHtg"  
+   Type = "Resistance"
+   CapTotGrossRtd = 99265.9
+   ..
+
+AirSeg   "BaseSys7b RetAirSeg"  
+   Type = "Relief"
+   Path = "Direct"
+   ..
+
+TrmlUnit   "BaseSys7bUnctrl TrmlUnit"  
+   Type = "Uncontrolled"
+   ZnServedRef = "LGstore1 Thermal Zone"
+   PriAirSegRef = "BaseSys7b SupAirSeg"
+   PriAirFlowMax = 3335.14
+   ..
+
+OACtrl   "BaseSys7b OACtrl"  
+   EconoCtrlMthd = "FixedDryBulb"
+   EconoIntegration = "Integrated"
+   EconoHiTempLockout = 75
+   MaxOARat = 1
+   OASchMthd = "FollowHVACAvailability"
+   StartUpDelay = 1
+   AirSegSupRef = "BaseSys7b SupAirSeg"
+   AirSegRetRef = "BaseSys7b RetAirSeg"
+   ..
+
+AirSys   "BaseAirSys3b_2"  
+   Type = "SZHP"
+   CtrlZnRef = "SMstore1 Thermal Zone"
+   AvailSchRef = "RetailHVACAvail"
+   FanCtrl = "Continuous"
+   NightCycleFanCtrl = "CycleOnCallPrimaryZone"
+   FanPos = "DrawThrough"
+   ClgCtrl = "NoSATControl"
+   ..
+
+AirSeg   "BaseAirSys3b SupAirSeg_2"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "BaseAirSys3b CoilClg_2"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   NumClgStages = 1
+   CapTotGrossRtd = 55160.6
+   CapTotNetRtd = 52090.4
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "BaseAirSys3b CoilHtg_2"  
+   Type = "HeatPump"
+   CapTotNetRtd = 56428.2
+   HtPumpSuppCoilHtgRef = "BaseAirSys3b CoilSuppHtg_2"
+   ..
+
+Fan   "BaseAirSys3b Fan_2"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 1837.38
+   TotStaticPress = 3.56012
+   MtrHP = 2
+   MtrEff = 0.865
+   MtrPos = "InAirStream"
+   ..
+
+CoilHtg   "BaseAirSys3b CoilSuppHtg_2"  
+   Type = "Resistance"
+   CapTotGrossRtd = 52307.3
+   ..
+
+AirSeg   "BaseAirSys3b RetAirSeg_2"  
+   Type = "Return"
+   Path = "Direct"
+   ..
+
+TrmlUnit   "BaseAirSys3bUnctrl TrmlUnit-2"  
+   Type = "Uncontrolled"
+   ZnServedRef = "SMstore1 Thermal Zone"
+   PriAirSegRef = "BaseAirSys3b SupAirSeg_2"
+   PriAirFlowMax = 1837.38
+   ..
+
+OACtrl   "BaseAirSys3b OACtrl-2"  
+   EconoCtrlMthd = "FixedDryBulb"
+   EconoIntegration = "Integrated"
+   EconoHiTempLockout = 75
+   OASchMthd = "FollowHVACAvailability"
+   StartUpDelay = 1
+   AirSegSupRef = "BaseAirSys3b SupAirSeg_2"
+   AirSegRetRef = "BaseAirSys3b RetAirSeg_2"
+   ..
+
+AirSys   "BaseAirSys3b_3"  
+   Type = "SZHP"
+   CtrlZnRef = "SMstore2 Thermal Zone"
+   AvailSchRef = "RetailHVACAvail"
+   FanCtrl = "Continuous"
+   NightCycleFanCtrl = "CycleOnCallPrimaryZone"
+   FanPos = "DrawThrough"
+   ClgCtrl = "NoSATControl"
+   ..
+
+AirSeg   "BaseAirSys3b SupAirSeg_3"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "BaseAirSys3b CoilClg_3"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   NumClgStages = 1
+   CapTotGrossRtd = 54782.7
+   CapTotNetRtd = 51930
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "BaseAirSys3b CoilHtg_3"  
+   Type = "HeatPump"
+   CapTotNetRtd = 56428.2
+   HtPumpSuppCoilHtgRef = "BaseAirSys3b CoilSuppHtg_3"
+   ..
+
+Fan   "BaseAirSys3b Fan_3"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 1831.72
+   TotStaticPress = 3.56012
+   MtrHP = 2
+   MtrEff = 0.865
+   MtrPos = "InAirStream"
+   ..
+
+CoilHtg   "BaseAirSys3b CoilSuppHtg_3"  
+   Type = "Resistance"
+   CapTotGrossRtd = 52221.9
+   ..
+
+AirSeg   "BaseAirSys3b RetAirSeg_3"  
+   Type = "Return"
+   Path = "Direct"
+   ..
+
+TrmlUnit   "BaseAirSys3bUnctrl TrmlUnit-3"  
+   Type = "Uncontrolled"
+   ZnServedRef = "SMstore2 Thermal Zone"
+   PriAirSegRef = "BaseAirSys3b SupAirSeg_3"
+   PriAirFlowMax = 1831.72
+   ..
+
+OACtrl   "BaseAirSys3b OACtrl-3"  
+   EconoCtrlMthd = "FixedDryBulb"
+   EconoIntegration = "Integrated"
+   EconoHiTempLockout = 75
+   OASchMthd = "FollowHVACAvailability"
+   StartUpDelay = 1
+   AirSegSupRef = "BaseAirSys3b SupAirSeg_3"
+   AirSegRetRef = "BaseAirSys3b RetAirSeg_3"
+   ..
+
+AirSys   "BaseAirSys3b_4"  
+   Type = "SZHP"
+   CtrlZnRef = "SMstore3 Thermal Zone"
+   AvailSchRef = "RetailHVACAvail"
+   FanCtrl = "Continuous"
+   NightCycleFanCtrl = "CycleOnCallPrimaryZone"
+   FanPos = "DrawThrough"
+   ClgCtrl = "NoSATControl"
+   ..
+
+AirSeg   "BaseAirSys3b SupAirSeg_4"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "BaseAirSys3b CoilClg_4"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   NumClgStages = 1
+   CapTotGrossRtd = 54782.9
+   CapTotNetRtd = 49657.6
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "BaseAirSys3b CoilHtg_4"  
+   Type = "HeatPump"
+   CapTotNetRtd = 53959
+   HtPumpSuppCoilHtgRef = "BaseAirSys3b CoilSuppHtg_4"
+   ..
+
+Fan   "BaseAirSys3b Fan_4"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 1751.57
+   TotStaticPress = 3.56012
+   MtrHP = 2
+   MtrEff = 0.865
+   MtrPos = "InAirStream"
+   ..
+
+CoilHtg   "BaseAirSys3b CoilSuppHtg_4"  
+   Type = "Resistance"
+   CapTotGrossRtd = 50851.7
+   ..
+
+AirSeg   "BaseAirSys3b RetAirSeg_4"  
+   Type = "Return"
+   Path = "Direct"
+   ..
+
+TrmlUnit   "BaseAirSys3bUnctrl TrmlUnit-4"  
+   Type = "Uncontrolled"
+   ZnServedRef = "SMstore3 Thermal Zone"
+   PriAirSegRef = "BaseAirSys3b SupAirSeg_4"
+   PriAirFlowMax = 1751.57
+   ..
+
+OACtrl   "BaseAirSys3b OACtrl-4"  
+   EconoCtrlMthd = "FixedDryBulb"
+   EconoIntegration = "Integrated"
+   EconoHiTempLockout = 75
+   OASchMthd = "FollowHVACAvailability"
+   StartUpDelay = 1
+   AirSegSupRef = "BaseAirSys3b SupAirSeg_4"
+   AirSegRetRef = "BaseAirSys3b RetAirSeg_4"
+   ..
+
+FluidSys   "NonResBaseSHWSystem"  
+   TreeState = 253
+   Type = "ServiceHotWater"
+   DsgnSupWtrTemp = 135
+   DsgnSupWtrDelT = 80
+   TempCtrl = "Fixed"
+   FixedSupTemp = 135
+   ..
+
+FluidSeg   "SHW Supply FluidSegment"  
+   Type = "PrimarySupply"
+   ..
+
+FluidSeg   "SHW Makeup FluidSegment"  
+   Type = "MakeupFluid"
+   ..
+
+WtrHtr   "NonResBaseWaterHeater"  
+   Cnt = 1
+   FluidSegOutRef = "SHW Supply FluidSegment"
+   FluidSegMakeupRef = "SHW Makeup FluidSegment"
+   EF = 0.654
+   ThrmlEff = 0.8
+   FuelSrc = "Electricity"
+   CapRtd = 13872.6
+   ..
+
+Mat   "Compliance Insulation R25.16"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R25.16"
+   ..
+
+ConsAssm   "MetalFramedWallU082"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R10.06"
+   MatRef[3] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[4] = "Gypsum Board - 1/2 in."
+   ..
+
+Mat   "Compliance Insulation R0.02"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R0.02"
+   ..
+
+Mat   "Compliance Insulation R14.60"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R14.60"
+   ..
+
+Mat   "Compliance Insulation R1.41"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R1.41"
+   ..
+
+PVArray   "Base PVArray"  
+   DCSysSize = 27.28
+   ..
+
+Batt   "Base Battery"  
+   MaxCap = 29.58
+   ..
+
+EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"  
+   Title1[2] = "Proposed"
+   Title1[3] = "Proposed"
+   Title1[4] = "Proposed"
+   Title1[5] = "Baseline"
+   Title1[6] = "Baseline"
+   Title1[7] = "Target"
+   Title1[8] = "Compliance"
+   Title1[11] = "Proposed"
+   Title1[12] = "Target"
+   Title1[13] = "Compliance"
+   Title1[17] = "Proposed"
+   Title1[18] = "Proposed"
+   Title1[19] = "Proposed"
+   Title1[20] = "Baseline"
+   Title1[21] = "Baseline"
+   Title1[22] = "Baseline"
+   Title1[23] = "CO2 Emissions"
+   Title2[2] = "Site Elec."
+   Title2[3] = "Site Gas"
+   Title2[4] = "TDV"
+   Title2[5] = "Site Elec."
+   Title2[6] = "Site Gas"
+   Title2[7] = "TDV¹"
+   Title2[8] = "Margin TDV"
+   Title2[11] = "Source Energy"
+   Title2[12] = "Source Energy¹"
+   Title2[13] = "Src Margin"
+   Title2[17] = "Electric CO2"
+   Title2[18] = "Fuel CO2"
+   Title2[19] = "Total CO2"
+   Title2[20] = "Electric CO2"
+   Title2[21] = "Fuel CO2"
+   Title2[22] = "Total CO2"
+   Title2[23] = "Margin"
+   Title3[1] = "End Use"
+   Title3[2] = "(MWh/yr)"
+   Title3[3] = "(MBtu/yr)"
+   Title3[4] = "(kBtu/ft²-yr)"
+   Title3[5] = "(MWh/yr)"
+   Title3[6] = "(MBtu/yr)"
+   Title3[7] = "(kBtu/ft²-yr)"
+   Title3[8] = "(kBtu/ft²-yr)"
+   Title3[11] = "(kBtu/ft²-yr)"
+   Title3[12] = "(kBtu/ft²-yr)"
+   Title3[13] = "(kBtu/ft²-yr)"
+   Title3[17] = "Emis. (tonne)"
+   Title3[18] = "Emis. (tonne)"
+   Title3[19] = "Emis. (tonne)"
+   Title3[20] = "Emis. (tonne)"
+   Title3[21] = "Emis. (tonne)"
+   Title3[22] = "Emis. (tonne)"
+   Title3[23] = "(tonne)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "6.5"
+   Enduse1[3] = "--"
+   Enduse1[4] = "21.49"
+   Enduse1[5] = "--"
+   Enduse1[6] = "61.5"
+   Enduse1[7] = "7.24"
+   Enduse1[8] = "-14.25"
+   Enduse1[9] = "3.1"
+   Enduse1[10] = "--"
+   Enduse1[11] = "2.81"
+   Enduse1[12] = "2.38"
+   Enduse1[13] = "-0.43"
+   Enduse1[17] = "1.62"
+   Enduse1[19] = "1.62"
+   Enduse1[21] = "3.45"
+   Enduse1[22] = "3.45"
+   Enduse1[23] = "1.83"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "13.2"
+   Enduse2[3] = "--"
+   Enduse2[4] = "60.35"
+   Enduse2[5] = "28.0"
+   Enduse2[6] = "--"
+   Enduse2[7] = "46.43"
+   Enduse2[8] = "-13.92"
+   Enduse2[9] = "1.3"
+   Enduse2[10] = "2.7"
+   Enduse2[11] = "2.31"
+   Enduse2[12] = "1.93"
+   Enduse2[13] = "-0.38"
+   Enduse2[17] = "1.34"
+   Enduse2[19] = "1.34"
+   Enduse2[20] = "2.86"
+   Enduse2[22] = "2.86"
+   Enduse2[23] = "1.52"
+   Enduse3[1] = "Indoor Fans"
+   Enduse3[2] = "23.8"
+   Enduse3[3] = "--"
+   Enduse3[4] = "71.20"
+   Enduse3[5] = "61.3"
+   Enduse3[6] = "--"
+   Enduse3[7] = "69.05"
+   Enduse3[8] = "-2.15"
+   Enduse3[9] = "2.3"
+   Enduse3[10] = "5.6"
+   Enduse3[11] = "5.64"
+   Enduse3[12] = "5.73"
+   Enduse3[13] = "0.09"
+   Enduse3[17] = "3.25"
+   Enduse3[19] = "3.25"
+   Enduse3[20] = "8.49"
+   Enduse3[22] = "8.49"
+   Enduse3[23] = "5.24"
+   Enduse4[1] = "Heat Rejection"
+   Enduse4[2] = "--"
+   Enduse4[3] = "--"
+   Enduse4[4] = "--"
+   Enduse4[5] = "--"
+   Enduse4[6] = "--"
+   Enduse4[7] = "--"
+   Enduse4[8] = "--"
+   Enduse4[9] = "--"
+   Enduse4[10] = "--"
+   Enduse4[11] = "--"
+   Enduse4[12] = "--"
+   Enduse4[13] = "--"
+   Enduse4[23] = "0.00"
+   Enduse5[1] = "Pumps & Misc."
+   Enduse5[2] = "--"
+   Enduse5[3] = "--"
+   Enduse5[4] = "--"
+   Enduse5[5] = "--"
+   Enduse5[6] = "--"
+   Enduse5[7] = "--"
+   Enduse5[8] = "--"
+   Enduse5[9] = "--"
+   Enduse5[10] = "--"
+   Enduse5[11] = "--"
+   Enduse5[12] = "--"
+   Enduse5[13] = "--"
+   Enduse5[23] = "0.00"
+   Enduse6[1] = "Domestic Hot Water"
+   Enduse6[2] = "6.4"
+   Enduse6[3] = "--"
+   Enduse6[4] = "18.17"
+   Enduse6[5] = "6.3"
+   Enduse6[6] = "--"
+   Enduse6[7] = "6.97"
+   Enduse6[8] = "-11.20"
+   Enduse6[9] = "0.4"
+   Enduse6[10] = "0.4"
+   Enduse6[11] = "1.53"
+   Enduse6[12] = "0.59"
+   Enduse6[13] = "-0.94"
+   Enduse6[17] = "0.88"
+   Enduse6[19] = "0.88"
+   Enduse6[20] = "0.87"
+   Enduse6[22] = "0.87"
+   Enduse6[23] = "-0.01"
+   Enduse7[1] = "Indoor Lighting"
+   Enduse7[2] = "30.8"
+   Enduse7[3] = "--"
+   Enduse7[4] = "83.58"
+   Enduse7[5] = "55.1"
+   Enduse7[6] = "--"
+   Enduse7[7] = "58.33"
+   Enduse7[8] = "-25.25"
+   Enduse7[9] = "1.5"
+   Enduse7[10] = "2.7"
+   Enduse7[11] = "6.28"
+   Enduse7[12] = "4.39"
+   Enduse7[13] = "-1.89"
+   Enduse7[17] = "3.63"
+   Enduse7[19] = "3.63"
+   Enduse7[20] = "6.49"
+   Enduse7[22] = "6.49"
+   Enduse7[23] = "2.86"
+   Enduse8[1] = "Total Compliance"
+   Enduse8[2] = "38.1"
+   Enduse8[3] = "0.0"
+   Enduse8[4] = "166.16"
+   Enduse8[5] = "108.0"
+   Enduse8[6] = "61.5"
+   Enduse8[7] = "98.96"
+   Enduse8[8] = "-67.19"
+   Enduse8[9] = "8.5"
+   Enduse8[10] = "11.4"
+   Enduse8[11] = "15.43"
+   Enduse8[12] = "11.86"
+   Enduse8[13] = "-3.58"
+   Enduse8[17] = "8.91"
+   Enduse8[19] = "8.91"
+   Enduse8[20] = "16.89"
+   Enduse8[21] = "3.45"
+   Enduse8[22] = "20.34"
+   Enduse8[23] = "11.43"
+   Enduse9[1] = "Receptacle"
+   Enduse9[2] = "34.1"
+   Enduse9[3] = "--"
+   Enduse9[4] = "92.37"
+   Enduse9[5] = "34.1"
+   Enduse9[6] = "--"
+   Enduse9[7] = "92.37"
+   Enduse9[8] = "--"
+   Enduse9[9] = "1.6"
+   Enduse9[10] = "1.6"
+   Enduse9[11] = "6.90"
+   Enduse9[12] = "6.90"
+   Enduse9[13] = "--"
+   Enduse9[17] = "3.98"
+   Enduse9[19] = "3.98"
+   Enduse9[20] = "3.98"
+   Enduse9[22] = "3.98"
+   Enduse9[23] = "0.00"
+   Enduse10[1] = "Process"
+   Enduse10[2] = "--"
+   Enduse10[3] = "--"
+   Enduse10[4] = "--"
+   Enduse10[5] = "--"
+   Enduse10[6] = "--"
+   Enduse10[7] = "--"
+   Enduse10[8] = "--"
+   Enduse10[9] = "--"
+   Enduse10[10] = "--"
+   Enduse10[11] = "--"
+   Enduse10[12] = "--"
+   Enduse10[13] = "--"
+   Enduse10[23] = "0.00"
+   Enduse11[1] = "Other Lighting"
+   Enduse11[2] = "--"
+   Enduse11[3] = "--"
+   Enduse11[4] = "--"
+   Enduse11[5] = "--"
+   Enduse11[6] = "--"
+   Enduse11[7] = "--"
+   Enduse11[8] = "--"
+   Enduse11[9] = "--"
+   Enduse11[10] = "--"
+   Enduse11[11] = "--"
+   Enduse11[12] = "--"
+   Enduse11[13] = "--"
+   Enduse11[23] = "0.00"
+   Enduse12[1] = "Process Motors"
+   Enduse12[2] = "--"
+   Enduse12[3] = "--"
+   Enduse12[4] = "--"
+   Enduse12[5] = "--"
+   Enduse12[6] = "--"
+   Enduse12[7] = "--"
+   Enduse12[8] = "--"
+   Enduse12[9] = "--"
+   Enduse12[10] = "--"
+   Enduse12[11] = "--"
+   Enduse12[12] = "--"
+   Enduse12[13] = "--"
+   Enduse12[23] = "0.00"
+   Enduse13[1] = "Photovoltaics"
+   Enduse13[2] = "-42.7"
+   Enduse13[3] = "--"
+   Enduse13[4] = "-88.80"
+   Enduse13[5] = "-42.7"
+   Enduse13[6] = "--"
+   Enduse13[7] = "-88.81"
+   Enduse13[8] = "-0.01"
+   Enduse13[9] = "-0.1"
+   Enduse13[10] = "-0.1"
+   Enduse13[11] = "-3.16"
+   Enduse13[12] = "-3.16"
+   Enduse13[13] = "--"
+   Enduse13[17] = "-1.82"
+   Enduse13[19] = "-1.82"
+   Enduse13[20] = "-1.82"
+   Enduse13[22] = "-1.82"
+   Enduse13[23] = "0.00"
+   Enduse14[1] = "Battery"
+   Enduse14[2] = "0.1"
+   Enduse14[3] = "--"
+   Enduse14[4] = "0.17"
+   Enduse14[5] = "0.0"
+   Enduse14[6] = "--"
+   Enduse14[7] = "-0.25"
+   Enduse14[8] = "-0.42"
+   Enduse14[9] = "0.0"
+   Enduse14[10] = "0.0"
+   Enduse14[11] = "0.02"
+   Enduse14[12] = "-0.00"
+   Enduse14[13] = "-0.02"
+   Enduse14[17] = "0.01"
+   Enduse14[19] = "0.01"
+   Enduse14[20] = "-0.00"
+   Enduse14[23] = "-0.01"
+   Enduse15[1] = "Project Total"
+   Enduse15[2] = "72.2"
+   Enduse15[3] = "0.0"
+   Enduse15[4] = "258.53"
+   Enduse15[5] = "142.1"
+   Enduse15[6] = "61.5"
+   Enduse15[7] = "191.33"
+   Enduse15[8] = "-67.19"
+   Enduse15[9] = "10.2"
+   Enduse15[10] = "13.0"
+   Enduse15[11] = "22.33"
+   Enduse15[12] = "18.76"
+   Enduse15[13] = "-3.58"
+   Enduse15[17] = "12.89"
+   Enduse15[19] = "12.89"
+   Enduse15[20] = "20.87"
+   Enduse15[21] = "3.45"
+   Enduse15[22] = "24.32"
+   Enduse15[23] = "11.43"
+   Enduse16[1] = "Efficiency Compliance"
+   Enduse16[2] = "80.7"
+   Enduse16[3] = "0.0"
+   Enduse16[4] = "254.79"
+   Enduse16[5] = "150.7"
+   Enduse16[6] = "61.5"
+   Enduse16[7] = "188.02"
+   Enduse16[8] = "-66.76"
+   Enduse16[9] = "8.6"
+   Enduse16[10] = "11.5"
+   Enduse16[11] = "18.57"
+   Enduse16[12] = "15.02"
+   Enduse16[13] = "-3.56"
+   Enduse16[17] = "10.72"
+   Enduse16[19] = "10.72"
+   Enduse16[20] = "18.71"
+   Enduse16[21] = "3.45"
+   Enduse16[22] = "22.16"
+   Enduse16[23] = "11.44"
+   ZoneUMLHsLoaded = ( 0, 1 )
+   ZoneUMLHs = ( 
+                 "clg: 0  htg: 0  'LGstore1 Thermal Zone'
+clg: 0  htg: 0  'SMstore1 Thermal Zone'
+clg: 0  htg: 0  'SMstore2 Thermal Zone'
+clg: 0  htg: 0  'SMstore3 Thermal Zone'", 
+                 "clg: 0  htg: 0  'LGstore1 Thermal Zone'
+clg: 0  htg: 0  'SMstore1 Thermal Zone'
+clg: 0  htg: 0  'SMstore2 Thermal Zone'
+clg: 0  htg: 0  'SMstore3 Thermal Zone'" )
+   SimSummary[1] = "CSE Successful, E+ Successful (105 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (99 warnings)"
+   PassFail = "FAIL"
+   MetricPassFail[1] = "Fail"
+   MetricPassFail[2] = "Fail"
+   MetricPassFail[3] = "Fail"
+   ComplyMessage = "DOES NOT COMPLY"
+   StdPVBatteryMsg = "Baseline Design PV Capacity: 27.3 kWdc  /  Battery System Capacity: 29.6 kWh  (power 7.09 kW)"
+   AnalysisValid = 0
+   HideCompSmrySrc = 0
+   HideCompSmryTot = 0
+   PctSavingsTDV = 46.7377
+   PctSavingsEffTDV = 47.1478
+   PctSavingsCmpTDV = 57.7223
+   PctSavTDVLbl = "-35.12"
+   PctSavEffTDVLbl = "-35.51"
+   PctSavCmpTDVLbl = "-67.90"
+   PctSavingsSrc = 47.1479
+   PctSavingsEffSrc = 51.7788
+   PctSavingsCmpSrc = 56.3508
+   PctSavSrcLbl = "-19.08"
+   PctSavEffSrcLbl = "-23.70"
+   PctSavCmpSrcLbl = "-30.19"
+   MarginkW = 2.8
+   PVBattResultsValid = 1
+   PropPV_Size = 27.28
+   PropPV_Total = 42661.2
+   PropPV_Export = 38.9861
+   PropPV_PctExport = 0.0913854
+   PropBatt_Size = 29.6
+   PropBatt_Pwr = 10.565
+   StdPV_Size = 27.28
+   StdPV_Total = 42663.2
+   StdPV_Export = 0
+   StdPV_PctExport = 0
+   StdBatt_Size = 29.6
+   StdBatt_Pwr = 7.095
+   ..
+
+
+END_OF_FILE

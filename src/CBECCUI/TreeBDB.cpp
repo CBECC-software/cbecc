@@ -3247,7 +3247,8 @@ void CTreeBDB::OnQuickEdit()
 
 				int iMaxTabs = 0;
 				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
-				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", iBDBClass ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+            long lDBID_NumDlgTabs = BEMPX_GetDatabaseID( "NumUIDialogTabs", iBDBClass );     // prevent invalid int retrieval - SAC 12/05/23
+				if (lDBID_NumDlgTabs > 0 && BEMPX_SetDataInteger( lDBID_NumDlgTabs, lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
 					iMaxTabs = lNumUIDialogTabs;
 				else
 					iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( iBDBClass, 0 /*iUIMode*/ );

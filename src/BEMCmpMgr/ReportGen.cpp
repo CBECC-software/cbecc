@@ -47,8 +47,12 @@
 #include <windows.h>
 
 #include "..\BEMProc\BEMProc.h"
+#include "..\BEMProc\BEMClass.h"
 #include "BEMCmpMgr.h"
 #include "BEMCM_I.h"
+#include "CUAC_Analysis.h"    
+#include "CUACRateDownloadKeys.h"    
+#include "BEMCmpMgrCom.h"    
 
 // OpenSSL includes:
 #include <openssl/bio.h>
@@ -290,6 +294,113 @@ bool CMX_RetrievePublicKey( QString sSecKeyRulelistName, bool bConvertBinHex, QS
 	return bRetVal;
 }
 
+bool RetrieveRateDownloadPublicPrivateKeys( QString sSecKeyRulelistName, QString& sRptPubKey, QString& sRptPrvKey, QString* psRptPubHexKey, QString* psRptPrvHexKey, QString& sErrMsg,
+											QString* psPrvKeyTempPathFile )     // SAC 09/04/23
+{	bool bPPKRetVal = false;
+	int iError;
+
+		FILE* pPrvKeyFile = NULL;
+		try
+		{
+				TCHAR szTempFileName[MAX_PATH];  
+				if (psPrvKeyTempPathFile)
+				{	psPrvKeyTempPathFile->clear();
+					TCHAR lpTempPathBuffer[MAX_PATH];
+					//  Gets the temp path env string (no guarantee it's a valid path).
+					DWORD dwRetVal = GetTempPath( MAX_PATH, lpTempPathBuffer ); // buffer for path 
+					if (dwRetVal > MAX_PATH || (dwRetVal == 0))
+					{	assert( FALSE );
+					}
+					else
+					{	//  Generates a temporary file name. 
+						UINT uRetVal = GetTempFileName( lpTempPathBuffer, TEXT("pk") /*file name prefix*/, 0 /*create unique name*/, szTempFileName );
+						if (uRetVal == 0)
+						{	assert( FALSE );
+						}
+						else
+						{	int iErrorCode = fopen_s( &pPrvKeyFile, szTempFileName, "wb" );
+							if (iErrorCode != 0 || pPrvKeyFile == NULL)
+							{	assert( FALSE );
+								pPrvKeyFile = NULL;
+							}
+				}	}	}
+
+				int prvKeyLen = sRptPrvKey.length();				assert( prvKeyLen == 64 );
+				char* prvKey = (char*) malloc( prvKeyLen+1 );
+				memcpy( prvKey, sRptPrvKey.toLocal8Bit().constData(), prvKeyLen );		prvKey[prvKeyLen]=0;
+				CM_CharSwap( prvKey, prvKeyLen );
+				sRptPrvKey = prvKey + QString("\n");
+				free( prvKey );
+
+						if (CMX_EvaluateRuleset( sSecKeyRulelistName.toLocal8Bit().constData(), FALSE /*never log evaluation of these rules ?? / bVerbose / bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*never verbose evaluation of these rules ?? / bVerboseOutput*/ ))
+						{	long lDBID_RptPrvKey = BEMPX_GetDatabaseID( "Proj:RptPrvKey" );		assert( lDBID_RptPrvKey > 0 );
+							long lDBID_RptPubKey = BEMPX_GetDatabaseID( "Proj:RptPubKey" );		assert( lDBID_RptPubKey > 0 );
+							if (lDBID_RptPrvKey > 0 && lDBID_RptPubKey > 0)
+							{	QString sKeyTemp;
+								int i, iPrvKeyStrIdx = 0;
+								while (BEMPX_GetString(  lDBID_RptPrvKey + iPrvKeyStrIdx++, sKeyTemp ) && !sKeyTemp.isEmpty())
+								{	sRptPrvKey += (sKeyTemp + QString("\n"));
+								}
+								int iPubKeyStrIdx = 0;
+								while (BEMPX_GetString(  lDBID_RptPubKey + iPubKeyStrIdx++, sKeyTemp ) && !sKeyTemp.isEmpty())
+									sRptPubKey += (sKeyTemp + QString("\n"));		// sKeyTemp;
+								if (!sRptPrvKey.isEmpty() && !sRptPubKey.isEmpty())
+								{
+									sRptPrvKey  = "-----BEGIN RSA PRIVATE KEY-----\n";    // + sRptPrvKey;
+                           sRptPrvKey += pszRDKPrv1;  sRptPrvKey += pszRDKPrv2;  sRptPrvKey += pszRDKPrv3;  sRptPrvKey += pszRDKPrv4;
+                           sRptPrvKey += pszRDKPrv5;  sRptPrvKey += pszRDKPrv6;  sRptPrvKey += pszRDKPrv7;
+									sRptPrvKey += "-----END RSA PRIVATE KEY-----";
+									if (pPrvKeyFile)
+										fprintf( pPrvKeyFile, sRptPrvKey.toLocal8Bit().constData() );
+									sRptPubKey  = "-----BEGIN PUBLIC KEY-----\n";    // + sRptPubKey;
+                           sRptPubKey += pszRDKPub1;     sRptPubKey += pszRDKPub2;
+									sRptPubKey += "-----END PUBLIC KEY-----";
+								}
+								for (i=0; i<iPrvKeyStrIdx; i++)
+									BEMPX_DefaultProperty( lDBID_RptPrvKey + i, iError );	// blast keys immediately after retrieving them from BEMBase
+								for (i=0; i<iPubKeyStrIdx; i++)
+									BEMPX_DefaultProperty( lDBID_RptPubKey + i, iError );
+
+								bPPKRetVal = true;
+								if (psRptPrvHexKey)
+								{	*psRptPrvHexKey = sRptPrvKey;
+									if (!ConvertBinHex( *psRptPrvHexKey ))
+									{	bPPKRetVal = false;
+										sErrMsg = "Error - private key too long for BinHex conversion.";
+									}
+								}
+								if (psRptPubHexKey)
+								{	*psRptPubHexKey = sRptPubKey;
+									if (!ConvertBinHex( *psRptPubHexKey ))
+									{	bPPKRetVal = false;
+										sErrMsg = "Error - public key too long for BinHex conversion.";
+									}
+								}
+							}
+							else
+								sErrMsg = "Error retrieving public/private key database IDs.";
+						}
+						else
+							//BEMPX_WriteLogFile( "GenerateReport_CEC():  Error evaluating 'SetReportKeys' rulelist.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+							sErrMsg = "Error evaluating 'SetReportKeys' rulelist.";
+
+				if (pPrvKeyFile)
+				{
+					fflush( pPrvKeyFile );
+					fclose( pPrvKeyFile );
+					*psPrvKeyTempPathFile = szTempFileName;
+				}
+		}
+		catch( ... )
+		{
+			assert( FALSE );
+		}
+
+	if (psPrvKeyTempPathFile && psPrvKeyTempPathFile->isEmpty())
+		BEMPX_WriteLogFile( "Error:  Unable to write security key file to disk prior to report generation.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	return bPPKRetVal;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -303,7 +414,8 @@ int spc_sign(unsigned char *msg, unsigned int mlen, unsigned char *out,
 
 
 //Signs and verifies using existing PEM files
-bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, bool bDbgVerbose )
+// added pqsHashHex argument to enable return of hash hex for utility rate download mechanism - SAC 09/02/23 (CUAC)
+bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, bool bDbgVerbose, QString* pqsHashHex )
 {
 	                    //     BEMMessageBox( "Signing Report XML", "" );
 	//char * szXmlMsg = NULL;				//original xml data
@@ -468,14 +580,17 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 		//			/* end verify*/
 
 //#if 0	// enable to debug SHA1
-					if (bDbgVerbose)
+					if (bDbgVerbose || pqsHashHex)
 					{	char szHashHex[SHA_DIGEST_LENGTH*2+1];
 						for(int i = 0; i < SHA_DIGEST_LENGTH; i++)
 							sprintf_s( &szHashHex[i*2], 3, "%02x", hash[i] );
-						QString sMsg;
-						sMsg = QString::asprintf("SignXML():  SHA1 %s", szHashHex);
-						BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					}
+                  if (pqsHashHex)
+                     *pqsHashHex = QString( szHashHex );
+                  if (bDbgVerbose)
+						{  QString sMsg;
+						   sMsg = QString::asprintf("SignXML():  SHA1 %s", szHashHex);
+						   BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}  }
 //#endif
 
 					*signature_hex = (char *)malloc(slen * 2 + 1);
@@ -918,7 +1033,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 
 	// SAC 10/14/13 - latest XMl signing/security stuff from RS ->
 				char *signature_hex = 0; // rsa signature
-				if (bSignData && SignXML( postthis, &signature_hex, sPrvKeyPathFile.toLocal8Bit().constData() /*sRptPrvKey*/, bSacOut /*bVerbose*/ ))
+				if (bSignData && SignXML( postthis, &signature_hex, sPrvKeyPathFile.toLocal8Bit().constData() /*sRptPrvKey*/, bSacOut /*bVerbose*/, NULL /*pqsHashHex*/ ))
 				{
 					sSignHex = signature_hex;
 #pragma warning(disable:4996)
@@ -1383,6 +1498,276 @@ int CMX_CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const c
 //CURL
 //CURL	return iRetVal;
 //CURL}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+int CMX_RateDownload( const char* pszRateType, int iErrorRetVal, const char* pszUtilRateRefPropType, const char* pszProcessingPath, /*QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,*/
+                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, long iSecurityKeyIndex, const char* pszPrivateKey,
+                              const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
+                              char* pszErrorMsg, int iErrorMsgLen, /*(long iCUACReportID,*/ int iCUAC_BEMProcIdx,     // SAC 08/30/23
+                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )      // SAC 08/31/23
+{  int iRetVal = 0;
+   bool bAbort = false;
+   QString sErrMsg;
+   CUAC_RateDownload( pszRateType, iErrorRetVal, pszUtilRateRefPropType, pszProcessingPath, /*QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,*/
+                              bStoreBEMDetails, bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, iSecurityKeyIndex, pszPrivateKey,
+                              pszProxyAddress, pszProxyCredentials, pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
+                              /*char* pszErrorMsg, int iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*(long iCUACReportID,*/ iCUAC_BEMProcIdx,     // SAC 08/30/23
+                              iConnectTimeoutSecs /*=10*/, iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ );
+   if (iRetVal != 0 && pszErrorMsg && iErrorMsgLen > 0)
+   {  if (sErrMsg.isEmpty())
+         _snprintf( pszErrorMsg, iErrorMsgLen, "CMX_RateDownload() failure, returning %d.", iRetVal );
+      else
+         _snprintf( pszErrorMsg, iErrorMsgLen, "CMX_RateDownload() failure, returning %d:  %s", iRetVal, sErrMsg.toLocal8Bit().constData() );
+   }
+   return iRetVal;
+}
+
+void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtilRateRefPropType, QString sProcessingPath, /*QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,*/
+                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, long iSecurityKeyIndex, const char* pszPrivateKey,
+                              const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
+                              /*char* pszErrorMsg, int iErrorMsgLen,*/ bool& bAbort, int& iRetVal, QString& sErrMsg, /*(long iCUACReportID,*/ int iCUAC_BEMProcIdx,     // SAC 08/30/23
+                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )      // SAC 08/31/23
+{
+// temporary
+//bVerbose = true;
+
+   // copy rate ID info to file
+	char postthis[2048]; 
+	char keyToHash[256]; 
+	QString sLogMsg;
+	char FileOutName[MAX_PATH+1];
+
+	QString sRptGenUIApp, sRptGenUIVer, /*sRptGenCompReport, sRptGenCompRptID, sRptGenServer, sRptGenApp, sRptGenService,*/ sSecKeyRLName, sSoftwareVendor, sUtilRateDownloadURL;
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RptGenUIApp"    ), sRptGenUIApp     , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iCUAC_BEMProcIdx );   // "CBECC-Com"
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RptGenUIVer"    ), sRptGenUIVer     , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iCUAC_BEMProcIdx );   // "30"
+   //BEMPX_GetString( BEMPX_GetDatabaseID(  sRptNameProp     , iCID_Proj ), sRptGenCompReport );
+   //BEMPX_GetString( BEMPX_GetDatabaseID( "RptGenCompRptID" , iCID_Proj ), sRptGenCompRptID  );
+   //BEMPX_GetString( BEMPX_GetDatabaseID( "RptGenServer"    , iCID_Proj ), sRptGenServer     );
+   //BEMPX_GetString( BEMPX_GetDatabaseID( "RptGenApp"       , iCID_Proj ), sRptGenApp        );
+   //BEMPX_GetString( BEMPX_GetDatabaseID( "RptGenService"   , iCID_Proj ), sRptGenService    );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SecKeyRLName"        ), sSecKeyRLName       , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iCUAC_BEMProcIdx );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SoftwareVendor"      ), sSoftwareVendor     , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iCUAC_BEMProcIdx );     // SAC 09/02/23
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:UtilRateDownloadURL" ), sUtilRateDownloadURL, TRUE, 0, -1, 0, BEMO_User, NULL, 0, iCUAC_BEMProcIdx );     // SAC 09/05/23
+
+   QString sSector = "MFam";     // TO DO - enable 'SFam' for calls from CBECC-Res &/or other res programs once they are CUAC-enabled - SAC 09/02/23
+
+	QDateTime current = QDateTime::currentDateTime();
+	long lTime = (long) current.toTime_t();	// seconds since 1970-Jan-01 / valid as long int until 2038-Jan-19 / switching to uint extends valid date range to 2106-Feb-07
+	long lDBID_RunDate = BEMPX_GetDatabaseID( "Proj:RunDate" );
+	BEMPX_SetBEMData( lDBID_RunDate, BEMP_Int, (void*) &lTime );
+	QString sRunDateFmt;
+	BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -3 /*iPrecision*/ );	// '-3' format => output as ISO (xsd:datetime) string - SAC 09/02/23
+
+   int iCID_CPR_UtilityRate = BEMPX_GetDBComponentID( "CPR_UtilityRate" );       assert( iCID_CPR_UtilityRate > 0 );
+
+   long lDBID_ObjAssignRef = BEMPX_GetDatabaseID( pszUtilRateRefPropType );      assert( lDBID_ObjAssignRef > 0 );
+   QString sEncodedRateName, sRateName, sOutPathFile = sProcessingPath;
+   sOutPathFile.replace( '\\', '/' );  // replace backslashes w/ slashes to provide more universal compatibility
+   if (sRateType.compare("Electric", Qt::CaseInsensitive) == 0)
+   {  sOutPathFile += "er.json";
+      sRateName = "er";
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTariffERN" ), sEncodedRateName, TRUE, 0, -1, 0, BEMO_User, NULL, 0, iCUAC_BEMProcIdx );     // SAC 09/05/23
+   }
+   else // if (sRateType.compare("Gas", Qt::CaseInsensitive) == 0)
+   {  sOutPathFile += "gr.json";
+      sRateName = "gr";
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2GasTariffERN"  ), sEncodedRateName, TRUE, 0, -1, 0, BEMO_User, NULL, 0, iCUAC_BEMProcIdx );     // SAC 09/05/23
+   }
+
+
+// TEMPORARY
+//sEncodedRateName = "CA_PGE_R_ETOU_C3_B_FERA";
+
+
+   _snprintf_s( FileOutName, MAX_PATH+1, MAX_PATH, "%s", sOutPathFile.toLocal8Bit().constData() );
+      //	BEMMessageBox( QString( "about to write rpt file:  %1" ).arg( FileOutName ) );
+	sLogMsg = QString::asprintf( "The file '%s' is opened in another application.  This file must be closed in that "
+	             "application before an updated file can be written.\n\nSelect 'Retry' to proceed "
+					 "(once the file is closed), or \n'Abort' to abort the utility rate download.", FileOutName );
+	if (!OKToWriteOrDeleteFile( FileOutName, sLogMsg, bSilent ))
+	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  User chose not to overwrite rate JSON file:  %s", sRateType.toLocal8Bit().constData(), FileOutName );
+		iRetVal = iErrorRetVal;
+	}
+   else if (iCID_CPR_UtilityRate < 1)
+	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  Unable to initiate JSON file utility rate class ID 'CPR_UtilityRate'", sRateType.toLocal8Bit().constData() );
+		iRetVal = iErrorRetVal;
+	}
+   else if (sSoftwareVendor.isEmpty())
+	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  Missing SoftwareVendor", sRateType.toLocal8Bit().constData() );
+		iRetVal = iErrorRetVal;
+	}
+   else if (sRunDateFmt.isEmpty())
+	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  Unable to produce date/time stamp", sRateType.toLocal8Bit().constData() );
+		iRetVal = iErrorRetVal;
+	}
+   else if (sEncodedRateName.isEmpty())
+	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  Missing EncodedRateName", sRateType.toLocal8Bit().constData() );
+		iRetVal = iErrorRetVal;
+	}
+   else if (sUtilRateDownloadURL.isEmpty())
+	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  Missing web API path (Proj:UtilRateDownloadURL)", sRateType.toLocal8Bit().constData() );
+		iRetVal = iErrorRetVal;
+	}
+
+   if (iRetVal == 0)
+   {
+	   try
+	   {
+      	// code to collect private/public keys to perform digital signing...
+	   	bool bSignData = false;
+	   	QString sRptPrvKey, sRptPubKey, sRptPubHexKey, sPrvKeyPathFile;
+	   	if (!sSecKeyRLName.isEmpty())
+	   	{
+	   		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SecurityKeyIdx" ), BEMP_Int, (void*) &iSecurityKeyIndex, BEMO_User, 0, BEMS_ProgDefault );   // SAC 1/11/17  // set as ProgDflt so won't save w/ proj data - SAC 09/20/23
+	   		QString sKeyErrMsg;
+	   		sRptPrvKey = pszPrivateKey;
+	   		if (!RetrieveRateDownloadPublicPrivateKeys( sSecKeyRLName, sRptPubKey, sRptPrvKey, &sRptPubHexKey, NULL, sKeyErrMsg, &sPrvKeyPathFile ))
+	   		{	if (!sKeyErrMsg.isEmpty())
+	   				sErrMsg = QString::asprintf( "CUAC_RateDownload():  %s", sKeyErrMsg.toLocal8Bit().constData() );
+	   			else
+	   				sErrMsg = "CUAC_RateDownload():  Error retrieving public/private keys from BEMBase.";
+	   			BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	   		}
+                  //#ifdef _DEBUG
+                  //			sLogMsg = QString::asprintf( "CUAC_RateDownload():  Public Key:\n%s", sRptPubKey );
+                  //			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  //			sLogMsg.clear();
+                  //#endif
+	   	}
+
+	   	if (!sRptPrvKey.isEmpty() && !sRptPubKey.isEmpty())
+	   	{	bSignData = true;  // sign data w/ supplied public/private keys
+	   		if (bVerbose)
+	   			BEMPX_WriteLogFile( "CUAC_RateDownload():  Public/private keys necessary to download utility rate successfully loaded.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	   	}
+	   	else //if (bVerbose)
+	   	{	if (sErrMsg.isEmpty())
+            {  sErrMsg = "CUAC_RateDownload():  Unable to retrieve public/private keys necessary to download utility rate.";
+               BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            }
+      		iRetVal = iErrorRetVal;
+         }        //BEMPX_WriteLogFile( QString::asprintf( "CUAC_RateDownload() public key:   %s", sRptPubKey.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  //BEMPX_WriteLogFile( QString::asprintf( "CUAC_RateDownload() private key:  %s", sRptPrvKey.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  //BEMPX_WriteLogFile( QString::asprintf( "CUAC_RateDownload() index of pub key beginning: %d", sRptPubKey.indexOf("MFwwDQYJKoZIh") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+         if (iRetVal == 0)
+         {
+            //if (sRptPubKey.indexOf("MFwwDQYJKoZIh") >= 20 && sRptPubKey.indexOf("MFwwDQYJKoZIh") <= 35)   // hardwire sSoftwareVendor to "CBECC-test" when using open source security keys - SAC 09/02/23
+            //   sSoftwareVendor = "CBECC-test";
+
+            // setup string to be hashed & signed
+            sprintf_s( keyToHash, 256, "%s / %s / %s", sSoftwareVendor.toLocal8Bit().constData(), sSector.toLocal8Bit().constData(), sRunDateFmt.toLocal8Bit().constData() );
+
+				QString sSignHex, sHashHex;
+				char *signature_hex = 0; // rsa signature
+				if (SignXML( keyToHash, &signature_hex, sPrvKeyPathFile.toLocal8Bit().constData() /*sRptPrvKey*/, false /*bVerbose/bSacOut*/, &sHashHex ))
+				{
+					sSignHex = signature_hex;
+#pragma warning(disable:4996)
+				   // now simple Bin->Hex of public key...
+					int iRptPubKeyLen = sRptPubKey.length();
+					char* pszRptPubKeyOrig = (char *)malloc( iRptPubKeyLen + 1 );
+					if (pszRptPubKeyOrig)
+					{	sprintf( pszRptPubKeyOrig, "%s", sRptPubKey.toLocal8Bit().constData() );
+						char* pszRptPubKeyHex = (char *)malloc( iRptPubKeyLen * 2 + 1 );
+						if(pszRptPubKeyHex)
+						{	for(int iH = 0; iH < iRptPubKeyLen; iH++)
+								sprintf( pszRptPubKeyHex + iH * 2, "%02x", pszRptPubKeyOrig[iH] );
+							sRptPubHexKey = pszRptPubKeyHex;
+							delete [] pszRptPubKeyHex;
+						}
+						delete [] pszRptPubKeyOrig;
+					}
+#pragma warning(default:4996)
+				}
+				if (signature_hex)
+					delete [] signature_hex;
+
+				if (!sPrvKeyPathFile.isEmpty())  // delete private key file
+				{	if( remove( sPrvKeyPathFile.toLocal8Bit().constData() ) != 0 )
+   					{	assert( FALSE );	// error deleting file
+					}
+				}
+
+            // setup request body
+            sprintf_s( postthis, 2048, "{\"ProviderName\": \"%s\", \"Sector\": \"%s\", \"EncodedRateName\": \"%s\", \"Data\": \"%s\", \"Signature\": \"%s\"}", sSoftwareVendor.toLocal8Bit().constData(),
+                                                sSector.toLocal8Bit().constData(), sEncodedRateName.toLocal8Bit().constData(), sHashHex.toLocal8Bit().constData(), sSignHex.toLocal8Bit().constData() );
+
+            // post rate ID file to server - get rate file back
+   		   //sURL = QString::asprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
+   		   //					pszReportName, pszAuthToken1, pszAuthToken2, (bPDFRpt ? "true" : "false"), (bXMLRpt ? "true" : "false"), /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
+   		   //QString sURL = QString::asprintf( "https://%s/%s/%s/%s", "cf6r.com", "UtilityRates", "api", "ratedetails");
+   		   QString sURL = sUtilRateDownloadURL;
+
+	   	      		if (bVerbose)
+	   	   			{  BEMPX_WriteLogFile( "    Communicating w/ utility rate server using HttpLib", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                        BEMPX_WriteLogFile( QString::asprintf( "          key:   %s", keyToHash                      ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                        BEMPX_WriteLogFile( QString::asprintf( "          body:  %s", postthis                       ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                        BEMPX_WriteLogFile( QString::asprintf( "          URL:   %s", sURL.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                     }
+
+            int iRptIter=0;      // added mechanism to iterate up to 8 times if download fails due to connection/download issue - SAC 09/28/21
+            iRetVal = 2;   // => error downloading data (probably negotiating proxy server)
+            while (++iRptIter <= 8 && iRetVal == 2)
+            {  if (iRptIter > 1)
+            		BEMPX_WriteLogFile( QString::asprintf( "  Retrieving %s utility rate (attempt #%d)", sRateType.toLocal8Bit().constData(), iRptIter ),
+                                             NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+      	   	iRetVal = GenerateReportViaHttpLib( FileOutName, sURL.toLocal8Bit().constData(), /*pszCACertPath*/ NULL, postthis, (int) strlen(postthis), pszProxyAddress, pszProxyCredentials,
+   		   											pszProxyType, NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bVerbose, iConnectTimeoutSecs, iReadWriteTimeoutSecs, "Utility rate download", "application/json" );
+            }
+               //      if (iRetVal == 2 && iRptIter >= 8)
+               //     		BEMPX_WriteLogFile( "Report generation failures on large models can sometimes be addressed by activating increased INI/analysis options:  RptGenConnectTimeout and RptGenReadWriteTimeout",
+               //                                 NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+            if (iRetVal == 0)    // success, return value could however be reporting an error...
+            {
+               QString qsErrMsg;
+               int iJSONErrorCode = BEMPX_GetJSONFileErrorCode( FileOutName, &qsErrMsg, "EncodedRateName", 512 );    // file has to be >= 512 bytes and include 'EncodedRateName'
+               if (iJSONErrorCode > 0 || !qsErrMsg.isEmpty())
+            	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  server returned code %d, %s", sRateType.toLocal8Bit().constData(), iJSONErrorCode, qsErrMsg.toLocal8Bit().constData() );
+		            iRetVal = iErrorRetVal;
+	   	      		if (bVerbose)
+	   	   			   BEMPX_WriteLogFile( QString::asprintf( "    Utility rate server error code %d:  %s", iJSONErrorCode, qsErrMsg.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	            }
+               else
+               {  // read/parse rate file data & set reference to new CPR_UtilityRate object
+                  QString sRateObjName = QString( "%1 %2" ).arg( sRateName, QString::number( BEMPX_GetNumObjects( iCID_CPR_UtilityRate, BEMO_User, iCUAC_BEMProcIdx ) + 1 ) );
+                  //iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\Dev\\CUAC-testing\\CUAC\\45-CPRrates\\rate.json", "CPR_UtilityRate", (const char*) sRateName, -1, &qsErrMsg );
+                  int iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( FileOutName, "CPR_UtilityRate", sRateObjName.toLocal8Bit().constData(), iCUAC_BEMProcIdx, &qsErrMsg, "PathFileLoadedFrom" );
+                  if (iReadJSONRetVal >= 0)
+                  {  int iError;
+                     BEMObject* pUtilRateObj = BEMPX_GetObjectByClass( iCID_CPR_UtilityRate, iError, iReadJSONRetVal );
+                     if (pUtilRateObj)
+                     {  BEMPX_SetBEMData( lDBID_ObjAssignRef, BEMP_Obj, (void*) pUtilRateObj, BEMO_User, 0, BEMS_ProgDefault );     // set as ProgDflt so won't save w/ proj data - SAC 09/20/23
+                        // default CPR utility rate objects
+                        CMX_EvaluateRuleset( "CUAC_DefaultGen2Rates", bVerbose, /*bTagDataAsUserDefined*/ TRUE, bVerbose, NULL, NULL, NULL, /*epInpRuleDebugInfo*/ NULL ); 
+                           if (bVerbose)
+                              BEMPX_WriteLogFile( QString("Success downloading & parsing utility rate %1 to '%2'").arg( sEncodedRateName, pUtilRateObj->getName() ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+                              //BEMPX_WriteLogFile( QString("Success downloading & parsing JSON utility rate '%1' / file: %2").arg( pUtilRateObj->getName(), FileOutName ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+                  }  }
+                  else
+                  {  if (sErrMsg.isEmpty())
+                        sErrMsg = QString("Error parsing JSON utility rate:  code %1: %2").arg( QString::number( iReadJSONRetVal ), qsErrMsg );
+                     //BEMPX_WriteLogFile( .toLatin1().constData(), NULL, false /*bBlankFile*/ );
+            	   	iRetVal = iErrorRetVal;
+               }  }
+         }  }
+	   }
+	   catch( ... ) {
+	   	assert( FALSE );
+         if (sErrMsg.isEmpty())
+            sErrMsg = "CUAC_RateDownload():  Unknown error downloading utility rate.";
+	   	BEMPX_WriteLogFile( "CUAC_RateDownload():  Unknown error downloading utility rate.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         iRetVal = iErrorRetVal;
+	   	//	if (!bSilent)
+	   	//		BEMMessageBox( "Unknown error downloading utility rate." );
+	   }
+   }
+   return;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

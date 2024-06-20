@@ -1223,7 +1223,7 @@ double BEMPX_RuleTableLookupFloat( const char* pszTableAndColumnName, vector<str
 // sTableName & iTableColumn arguments:
 //		either valid table name alone w/ column index,
 //		OR sTableName = "TableName:ColumnName" and iTableColumn = -1
-double BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyVals, LPCSTR sTableName, int iTableColumn, bool /*bVerbose*/ )
+double BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyVals, LPCSTR sTableName, int iTableColumn, bool bVerbose )
 {
 	double dRetVal = 0.0;
 	QString qsColName, qsTableNameOnly = sTableName;	// SAC 10/8/16 - modified code to enable sTableName to include both table and column names
@@ -1236,15 +1236,20 @@ double BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyVals, LPCSTR sTableNa
 	if (pTable == NULL)
 		dRetVal = -1;  // ExpSetErr( error, EXP_RuleProc, "Table referenced by ApplyHourlyResultMultipliers() function argument not found." );
 	else
-	{	if (!qsColName.isEmpty() && iTableColumn < 0)
+	{  if (!qsColName.isEmpty() && iTableColumn < 0)
 			iTableColumn = pTable->GetColumnIndex( qsColName.toLocal8Bit().constData() );
 		if (iTableColumn < 0 || iTableColumn > pTable->getNCols())
 			dRetVal = -2;  // ExpSetErr( error, EXP_RuleProc, "Table column specified in ApplyHourlyResultMultipliers() function argument too high." );
 		else
-		{	double dTblVal;
+		{                                   if (bVerbose)      // DEBUGGING - SAC 12/08/23 (PRM)
+                                             BEMPX_WriteLogFile( QString( "            BEMPX_ApplyHourlyMultipliersFromTable() - sTableName %1 | iTableColumn %2 " ).arg( sTableName, QString::number( iTableColumn ) ) );  // , QString::number( dHrlyVals ) ) );
+         double dTblVal;
 			for (int iHr=0; (dRetVal != -9999 && iHr < 8760); iHr++)
 			{	if (pTable->GrabRecord( iHr+1, iTableColumn, &dTblVal, true /*bIgnoreIndepCols*/ ))  //, BOOL bVerboseOutput=FALSE );  // SAC 5/15/12
-					dRetVal += (dHrlyVals[iHr] * dTblVal);  // APPLY hourly multiplier factors
+		      {  dRetVal += (dHrlyVals[iHr] * dTblVal);  // APPLY hourly multiplier factors
+                                          if (bVerbose)      // DEBUGGING - SAC 12/08/23 (PRM)
+                                             BEMPX_WriteLogFile( QString( "                  hr %1 | dHrlyVals[iHr] %2 | dTblVal %3 | dRetVal %4" ).arg( QString::number( iHr ), QString::number( dHrlyVals[iHr] ), QString::number( dTblVal ), QString::number( dRetVal ) ) );
+            }
 				else
 				{	dRetVal = -9999;	// SAC 6/25/18 - revised balance check to prevent minor negative use from erroring out (Com tic #2145)
 					//ExpSetErr( error, EXP_RuleProc, "Error retrieving hourly table multiplier in ApplyHourlyResultMultipliers() function." );
@@ -1254,6 +1259,8 @@ double BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyVals, LPCSTR sTableNa
 	}	}
 	if (dRetVal == -9999)
 		dRetVal = -3;	// SAC 6/25/18 - retain original '-3' retval indicating table value retrieval failure
+		                                    if (bVerbose)      // DEBUGGING - SAC 12/08/23 (PRM)
+                                             BEMPX_WriteLogFile( QString( "                  final dRetVal %1" ).arg( QString::number( dRetVal ) ) );
 	return dRetVal;
 }
 

@@ -243,7 +243,13 @@ protected:
 	afx_msg void OnToolsBatchProcessing();
 	afx_msg void OnUpdateToolsCommSlrOptOut(CCmdUI* pCmdUI);
 	afx_msg void OnToolsCommSlrOptOut();
-	afx_msg void OnUpdateToolsRunTest(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateToolsOldCUACImport(CCmdUI* pCmdUI);
+	afx_msg void OnToolsOldCUACImport();
+	afx_msg void OnUpdateDisplayCUACDialog(CCmdUI* pCmdUI);
+	afx_msg void OnDisplayCUACDialog();
+	afx_msg void OnUpdateToolsProcessJSONUtilityRateFiles(CCmdUI* pCmdUI);
+	afx_msg void OnToolsProcessJSONUtilityRateFiles();
+   afx_msg void OnUpdateToolsRunTest(CCmdUI* pCmdUI);
 	afx_msg void OnToolsRunTest();
 	afx_msg void OnUpdateToolsGenerateFileHashes(CCmdUI* pCmdUI);
 	afx_msg void OnToolsGenerateFileHashes();
@@ -553,6 +559,7 @@ protected:
    afx_msg LRESULT OnPopulateLibraryTree(WPARAM uiTreeMode, LPARAM);
    afx_msg LRESULT OnPerformAnalysis(WPARAM, LPARAM);
    afx_msg LRESULT OnPerformAPIAnalysisMsg(WPARAM, LPARAM);
+   afx_msg LRESULT OnCommandLineBatchAnalysis(WPARAM, LPARAM);
    afx_msg LRESULT OnQuickMenu( WPARAM, LPARAM lParam );
    afx_msg LRESULT OnCheckCompat( WPARAM wParam, LPARAM lParam );
    afx_msg LRESULT OnSetStatusMessage( WPARAM wParam, LPARAM lParam );
@@ -576,6 +583,8 @@ protected:
 	BOOL BatchUIDefaulting();		// SAC 11/10/17
 	BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile  );		// SAC 11/10/17
    void CommunitySolarOptOut();		// SAC 03/28/23
+   void OldCUACImport();            // SAC 09/18/23
+   void CUACPostAnalysisPrompt( CString sOriginalFileName );   // SAC 09/19/23
 	BOOL GetLogPathFile( CString& sLPF );
 	BOOL LogFileExists();
 	void PromptToDisplayPDFs( CString sCaption, CString sMsg, CString sBtn2File, CString sBtn2Label,

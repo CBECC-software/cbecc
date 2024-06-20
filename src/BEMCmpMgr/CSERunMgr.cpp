@@ -60,6 +60,8 @@ const char* pszRunAbbrev_pE = "p-E";
 const char* pszRunAbbrev_pS = "p-S";
 const char* pszRunAbbrev_pW = "p-W";
 const char* pszRunAbbrev_s    = "s";    
+const char* pszRunAbbrev_s2   = "s2";     // SAC 07/17/23 (2025)
+const char* pszRunAbbrev_s3   = "s3";    
 const char* pszRunAbbrev_pfx  = "pfx";  
 const char* pszRunAbbrev_pfxN = "pfx-N";
 const char* pszRunAbbrev_pfxE = "pfx-E";
@@ -257,7 +259,7 @@ int CSERunMgr::SetupRun(
 	m_vCSERun.push_back( pCSERun);
 	QString sMsg, sLogMsg;
 	BOOL bLastRun = (iRunIdx == (m_iNumRuns-1));
-	BOOL bIsStdDesign = (iRunType == CRM_StdDesign);	// SAC 3/27/15 - was:  (iRunIdx > 0 && bLastRun);  // SAC 7/3/13 - consolidated some logic to identify 
+	BOOL bIsStdDesign = (CRM_IsStdDesign( iRunType ));	// SAC 3/27/15 - was:  (iRunIdx > 0 && bLastRun);  // SAC 7/3/13 - consolidated some logic to identify 
 	pCSERun->SetRunType( iRunType);							// SAC 3/27/15
 	pCSERun->SetLastRun( bLastRun);
 	pCSERun->SetIsStdDesign( bIsStdDesign);
@@ -680,7 +682,7 @@ int CSERunMgr::SetupRun_Simple(
 	m_vCSERun.push_back( pCSERun);
 	QString sMsg, sLogMsg;
 	BOOL bLastRun = (iRunIdx == (m_iNumRuns-1));
-	BOOL bIsStdDesign = (iRunType == CRM_StdDesign);	// SAC 3/27/15 - was:  (iRunIdx > 0 && bLastRun);  // SAC 7/3/13 - consolidated some logic to identify 
+	BOOL bIsStdDesign = (CRM_IsStdDesign( iRunType ));	// SAC 3/27/15 - was:  (iRunIdx > 0 && bLastRun);  // SAC 7/3/13 - consolidated some logic to identify 
 	pCSERun->SetRunType( iRunType);							// SAC 3/27/15
 	pCSERun->SetLastRun( bLastRun);
 	pCSERun->SetIsStdDesign( bIsStdDesign);
@@ -1235,17 +1237,19 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 			std::vector<long> laClsObjIndicesToWrite;		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
 			laClsObjIndicesToWrite.push_back( BEMF_ClassIDMult );  // Proj object
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseTOP" ) * BEMF_ClassIDMult) );  // cseTOP object
-			int iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
-			BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );		assert(pObj);
-			if (pObj)
-				laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
-			if (bHaveFuelHtr)
-			{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
-				if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
-					pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
-				if (pObj)
-					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
-			}
+
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseMETER" ) * BEMF_ClassIDMult) );  // revised to write ALL cseMETERs - SAC 11/02/23
+			// int iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
+			// BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );		assert(pObj);
+			// if (pObj)
+			// 	laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
+			// if (bHaveFuelHtr)
+			// {	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+			// 	if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+			// 		pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
+			// 	if (pObj)
+			// 		laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
+			// }
 
 		// SAC 2/10/20 - added to enable solar systems to feed central DHWSystems
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
@@ -1263,7 +1267,7 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 			// output HPWHSIZE-related EXPORT & REPORT objects
 			int iCID_CSEExport = BEMPX_GetDBComponentID( "cseEXPORT" );
 			int iCID_CSEReport = BEMPX_GetDBComponentID( "cseREPORT" );
-			pObj = BEMPX_GetObjectByName( iCID_CSEExport, iErr, "HPWH Sizing Export" );		assert(pObj);  	// cseEXPORT object
+			BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEExport, iErr, "HPWH Sizing Export" );		assert(pObj);  	// cseEXPORT object
 			if (pObj)
 				laClsObjIndicesToWrite.push_back( (iCID_CSEExport * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );
 			pObj = BEMPX_GetObjectByName( iCID_CSEReport, iErr, "HPWH Sizing Report" );		assert(pObj);  	// cseREPORT object
@@ -1671,17 +1675,19 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 			std::vector<long> laClsObjIndicesToWrite;		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
 			laClsObjIndicesToWrite.push_back( BEMF_ClassIDMult );  // Proj object
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseTOP" ) * BEMF_ClassIDMult) );  // cseTOP object
-			int iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
-			BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );		assert(pObj);
-			if (pObj)
-				laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
-			if (TRUE)  //bHaveFuelHtr)
-			{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
-				if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
-					pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
-				if (pObj)
-					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
-			}
+
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseMETER" ) * BEMF_ClassIDMult) );  // revised to write ALL cseMETERs - SAC 11/02/23
+			// int iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
+			// BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );		assert(pObj);
+			// if (pObj)
+			// 	laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
+			// if (TRUE)  //bHaveFuelHtr)
+			// {	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+			// 	if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+			// 		pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
+			// 	if (pObj)
+			// 		laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
+			// }
 
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
 			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
@@ -2146,16 +2152,18 @@ bool CSERunMgr::T24Res_DHWNoSolarSysRun( QString sProjFileAlone, QString sRunID,
 				laClsObjIndicesToWrite.clear();		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
 				laClsObjIndicesToWrite.push_back( BEMF_ClassIDMult );  // Proj object
 				laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseTOP" ) * BEMF_ClassIDMult) );  // cseTOP object
-				pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );			assert(pObj);
-				if (pObj)
-					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
-				if (TRUE)  //bHaveFuelHtr)
-				{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
-				if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
-						pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
-					if (pObj)
-						laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
-				}
+
+   			laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) );  // revised to write ALL cseMETERs - SAC 11/02/23
+				// pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );			assert(pObj);
+				// if (pObj)
+				// 	laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
+				// if (TRUE)  //bHaveFuelHtr)
+				// {	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+				// if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+				// 		pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
+				// 	if (pObj)
+				// 		laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
+				// }
 
 				laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
 				//laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
@@ -2431,21 +2439,23 @@ int CSERunMgr::SetupRunFinish(
 				}	}
 
 			// store flags for each object to be written to when only simulating DHW-related objects - SAC 7/7/20
-				std::vector<long> laClsObjIndicesToWrite;   int iErr;		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
+				std::vector<long> laClsObjIndicesToWrite;   //int iErr;		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
 				if (pCSERun->GetCSE_DHWonly())
 				{	laClsObjIndicesToWrite.push_back( BEMF_ClassIDMult );  // Proj object
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseTOP" ) * BEMF_ClassIDMult) );  // cseTOP object
-					int iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
-					BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );		assert(pObj);
-					if (pObj)
-						laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
-					if (TRUE)  //bHaveFuelHtr)
-					{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
-						if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
-							pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
-						if (pObj)
-							laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
-					}
+
+      			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseMETER" ) * BEMF_ClassIDMult) );  // revised to write ALL cseMETERs - SAC 11/02/23
+					// int iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
+					// BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );		assert(pObj);
+					// if (pObj)
+					// 	laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
+					// if (TRUE)  //bHaveFuelHtr)
+					// {	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+					// 	if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+					// 		pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
+					// 	if (pObj)
+					// 		laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
+					// }
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseIMPORTFILE"				) * BEMF_ClassIDMult) );
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER"				)	* BEMF_ClassIDMult) );
 					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS"			)	* BEMF_ClassIDMult) );
@@ -2677,7 +2687,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 	QString sMsg;
 	m_iNumRuns = 1;		// SAC 5/24/16 - not running parallel DHW simulations for non-res (for now)
 	BOOL bLastRun = (iRunIdx == (m_iNumRuns-1));						assert( bLastRun );	// remove if/when we do parallel runs in -Com...
-	BOOL bIsStdDesign = (iRunType == CRM_StdDesign);
+	BOOL bIsStdDesign = (CRM_IsStdDesign( iRunType ));
 	pCSERun->SetRunType( iRunType);
 	pCSERun->SetLastRun( bLastRun);
 	pCSERun->SetIsStdDesign( bIsStdDesign);
@@ -2713,7 +2723,8 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 	long lRunNumber = (iRunType == CRM_User ? 0 : iRunIdx+1 );
 	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ResProj:RunNumber" ), BEMP_Int, (void*) &lRunNumber );
-   const char* pszCSERunAbbrev = (iRunType == CRM_User ? pszRunAbbrev_u : (iRunType == CRM_Prop ? pszRunAbbrev_p : (iRunType == CRM_StdDesign ? pszRunAbbrev_s : pszRunAbbrev)));   // SAC 10/28/21 (MFam)
+   const char* pszCSERunAbbrev = (iRunType == CRM_User ? pszRunAbbrev_u : (iRunType == CRM_Prop ? pszRunAbbrev_p : (iRunType == CRM_StdDesign ? pszRunAbbrev_s :     // SAC 10/28/21 (MFam)
+                                 (iRunType == CRM_StdDesign2 ? pszRunAbbrev_s2 : (iRunType == CRM_StdDesign3 ? pszRunAbbrev_s3 : pszRunAbbrev)))));      // SAC 07/17/23 (2025)
 	if (pszCSERunAbbrev && strlen( pszCSERunAbbrev ) > 0)
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ResProj:RunAbbrev" ), BEMP_Str, (void*) pszCSERunAbbrev );
 

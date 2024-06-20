@@ -543,16 +543,16 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    int iRow;
    for (iRow=1; iRow <= 10; iRow++)
    {  switch (iRow)
-      {  case  1 :  BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:StAddress"     ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerName"      ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  2 :  BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:City"          ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerAddress"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  3 :  BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ZipCode"       ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerCity"      ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  4 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitType"      ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerState"     ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  5 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecUtility"   ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerZIPCode"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  6 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecTerritory" ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactName"    ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  7 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecTariff"    ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactPhone"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  8 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasUtility"    ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactEMail"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  9 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasTerritory"  ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:APN"            ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case 10 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasTariff"     ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OtherProjectID" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+      {  case  1 :  BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:StAddress"       ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerName"      ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  2 :  BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:City"            ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerAddress"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  3 :  BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ZipCode"         ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerCity"      ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  4 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitType"        ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerState"     ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  5 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecUtility"     ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OwnerZIPCode"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  6 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTerritory" ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactName"    ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  7 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTariff"    ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactPhone"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  8 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasUtility"      ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactEMail"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  9 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2GasTerritory"  ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:APN"            ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case 10 :  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2GasTariff"     ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:OtherProjectID" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
       } 
       HPDF_Page_BeginText (page);
       HPDF_Page_TextOut (page, iProjInfoLeftX , iCurY - (iProjInfoRowHt * iRow),  qsLabel.toLocal8Bit().constData());
@@ -569,7 +569,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    // export of Allowance results - SAC 01/05/23
 #define  NumDwellingMeters   7
    int iCUAC_BEMProcIdx = -1;  // ???
-   int iMtr, iSpecVal, iErr, iCol;
+   int iMtr, iSpecVal, iErr, iCol;     double dTemp;
    long laNumUnitsByBedrms[NumDwellingMeters], laNumMktRateUnitsByBedrms[NumDwellingMeters], lTemp, lNumUnitTypes=0;
    int iaPosUnitTypeIdxs[NumDwellingMeters] = {-1,-1,-1,-1,-1,-1,-1};
    for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
@@ -686,7 +686,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
                   if (dVal > 0)
                      qsLabel = BEMPX_FloatToString( (dVal * 12.0), 2 );
                   else
-                     qsLabel.clear();
+                     qsLabel = "0.00";   // switched from .clear() to "0.00" to prevent leaving column blank - SAC 09/14/23
                }
                else
                   BEMPX_GetString( BEMPX_GetDatabaseID( pszaColVars[iCol] ), qsLabel, TRUE, 2, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );
@@ -789,22 +789,24 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt * 2) -3, "Gas"      );
    HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt * 4) -6, "Trash"    );
    HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt * 5) -9, "Water"    );
+   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt * 7)-13, "Community Solar" );      // SAC 10/03/23
    HPDF_Page_EndText (page);
 
-   iProjInfoLeftX = 130;   iProjInfoRightX = 630;     int iProjInfoLeftX2 = 370;
+   iProjInfoLeftX = 130;   iProjInfoRightX = 630;     int iProjInfoLeftX2 = 370, iProjInfoLeftX3 = 290;     // mods to lessen territory & widen tariff length - SAC 09/06/23
    HPDF_Page_SetFontAndSize (page, font, 8); 
    HPDF_Page_BeginText (page);
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Utility"            ), iCurY                          , "Utility"             );
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Territory"          ), iCurY - (iProjInfoRowHt *  1)  , "Territory"           );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tariff"             ), iCurY - (iProjInfoRowHt *  1)  , "Tariff"              );
+   HPDF_Page_TextOut (page, iProjInfoLeftX3 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tariff"             ), iCurY - (iProjInfoRowHt *  1)  , "Tariff"              );
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Utility"            ), iCurY - (iProjInfoRowHt *  2)-3, "Utility"             );
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Territory"          ), iCurY - (iProjInfoRowHt *  3)-3, "Territory"           );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tariff"             ), iCurY - (iProjInfoRowHt *  3)-3, "Tariff"              );
+   HPDF_Page_TextOut (page, iProjInfoLeftX3 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tariff"             ), iCurY - (iProjInfoRowHt *  3)-3, "Tariff"              );
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Rate Type"          ), iCurY - (iProjInfoRowHt *  4)-6, "Rate Type"           );
    HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Monthly Charge"     ), iCurY - (iProjInfoRowHt *  4)-6, "Monthly Charge"      );
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Rate Type"          ), iCurY - (iProjInfoRowHt *  5)-9, "Rate Type"           );
    HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Monthly Charge"     ), iCurY - (iProjInfoRowHt *  5)-9, "Monthly Charge"      );
    HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Water $/Gallon"     ), iCurY - (iProjInfoRowHt *  6)-9, "Water $/Gallon"      );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2+70 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Total Allocation"   ), iCurY - (iProjInfoRowHt * 7)-13, "Total Allocation"    );    // SAC 10/03/23
    HPDF_Page_TextOut (page, iProjInfoRightX - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Space Heating"      ), iCurY                          , "Space Heating"       );
    HPDF_Page_TextOut (page, iProjInfoRightX - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Water Heating"      ), iCurY - (iProjInfoRowHt *  1)  , "Water Heating"       );
    HPDF_Page_TextOut (page, iProjInfoRightX - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Cooking"            ), iCurY - (iProjInfoRowHt *  2)  , "Cooking"             );
@@ -812,17 +814,19 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_EndText (page);
 
    HPDF_Page_SetLineWidth (page, 0.25);
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY -3 );                          HPDF_Page_LineTo  (page, 480, iCurY -3 );
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY -  iProjInfoRowHt    -3 );     HPDF_Page_LineTo  (page, 320, iCurY - iProjInfoRowHt -3 );
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3, iCurY -  iProjInfoRowHt    -3 );     HPDF_Page_LineTo  (page, 480, iCurY - iProjInfoRowHt -3 );
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY - (iProjInfoRowHt*2) -3-3 );   HPDF_Page_LineTo  (page, 480, iCurY - (iProjInfoRowHt*2) -3-3 );
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY - (iProjInfoRowHt*3) -3-3 );   HPDF_Page_LineTo  (page, 320, iCurY - (iProjInfoRowHt*3) -3-3 );
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3, iCurY - (iProjInfoRowHt*3) -3-3 );   HPDF_Page_LineTo  (page, 480, iCurY - (iProjInfoRowHt*3) -3-3 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY -3 );                          HPDF_Page_LineTo  (page, 480,                iCurY -3 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY -  iProjInfoRowHt    -3 );     HPDF_Page_LineTo  (page, iProjInfoLeftX3-50, iCurY - iProjInfoRowHt -3 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX3-3, iCurY -  iProjInfoRowHt    -3 );     HPDF_Page_LineTo  (page, 480,                iCurY - iProjInfoRowHt -3 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY - (iProjInfoRowHt*2) -3-3 );   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*2) -3-3 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY - (iProjInfoRowHt*3) -3-3 );   HPDF_Page_LineTo  (page, iProjInfoLeftX3-50, iCurY - (iProjInfoRowHt*3) -3-3 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX3-3, iCurY - (iProjInfoRowHt*3) -3-3 );   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*3) -3-3 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY - (iProjInfoRowHt*4) -3-6 );   HPDF_Page_LineTo  (page, 280, iCurY - (iProjInfoRowHt*4) -3-6 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3, iCurY - (iProjInfoRowHt*4) -3-6 );   HPDF_Page_LineTo  (page, 480, iCurY - (iProjInfoRowHt*4) -3-6 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY - (iProjInfoRowHt*5) -3-9 );   HPDF_Page_LineTo  (page, 280, iCurY - (iProjInfoRowHt*5) -3-9 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3, iCurY - (iProjInfoRowHt*5) -3-9 );   HPDF_Page_LineTo  (page, 480, iCurY - (iProjInfoRowHt*5) -3-9 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3, iCurY - (iProjInfoRowHt*6) -3-9 );   HPDF_Page_LineTo  (page, 480, iCurY - (iProjInfoRowHt*6) -3-9 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3, iCurY - (iProjInfoRowHt*7) -3-13);   HPDF_Page_LineTo  (page, 280+70, iCurY - (iProjInfoRowHt*7) -3-13);     // SAC 10/03/23
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3+70, iCurY - (iProjInfoRowHt*7) -3-13);   HPDF_Page_LineTo  (page, 480, iCurY - (iProjInfoRowHt*7) -3-13);
    HPDF_Page_MoveTo  (page, iProjInfoRightX-3, iCurY -3 );                          HPDF_Page_LineTo  (page, 720, iCurY -3 );                     
    HPDF_Page_MoveTo  (page, iProjInfoRightX-3, iCurY -  iProjInfoRowHt    -3 );     HPDF_Page_LineTo  (page, 720, iCurY -  iProjInfoRowHt    -3 );
    HPDF_Page_MoveTo  (page, iProjInfoRightX-3, iCurY - (iProjInfoRowHt*2) -3 );     HPDF_Page_LineTo  (page, 720, iCurY - (iProjInfoRowHt*2) -3 );
@@ -831,27 +835,35 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
 
    HPDF_Page_SetFontAndSize (page, font, 9);    // SAC 01/07/23
    HPDF_Page_BeginText (page);
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecUtility"   ), qsLabel , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecTerritory" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecTariff"    ), qsLabel3, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecUtility"     ), qsLabel , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTerritory" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTariff"    ), qsLabel3, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY                        , qsLabel.toLocal8Bit().constData()  );
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  1), qsLabel2.toLocal8Bit().constData() );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  1), qsLabel3.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX3 , iCurY - (iProjInfoRowHt *  1), qsLabel3.toLocal8Bit().constData() );
 
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasUtility"    ), qsLabel , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasTerritory"  ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasTariff"     ), qsLabel3, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasUtility"      ), qsLabel , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2GasTerritory"  ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2GasTariff"     ), qsLabel3, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  2)-3, qsLabel.toLocal8Bit().constData()  );
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  3)-3, qsLabel2.toLocal8Bit().constData() );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  3)-3, qsLabel3.toLocal8Bit().constData() );
-
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:TrashRateType"    ), qsLabel , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-   BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:TrashMonthlyCost" ), qsTemp  ,  TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );      qsLabel2 = QString( "$ %1" ).arg( qsTemp );
+   HPDF_Page_TextOut (page, iProjInfoLeftX3 , iCurY - (iProjInfoRowHt *  3)-3, qsLabel3.toLocal8Bit().constData() );
+   long lRateType;
+   BEMPX_GetString(      BEMPX_GetDatabaseID( "CUAC:TrashRateType"    ), qsLabel  , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:TrashRateType"    ), lRateType,        0, -1, 0, BEMO_User, iBEMProcIdx ) && lRateType > 0)  // prevent reporting invalid trash costs - SAC 09/14/23
+      BEMPX_GetString(   BEMPX_GetDatabaseID( "CUAC:TrashMonthlyCost" ), qsTemp   ,  TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   else
+      qsTemp = "0.00";
+   qsLabel2 = QString( "$ %1" ).arg( qsTemp );
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  4)-6,  qsLabel.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  4)-6, qsLabel2.toLocal8Bit().constData() );
 
-   BEMPX_GetString(    BEMPX_GetDatabaseID( "CUAC:WaterRateType"    ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-   BEMPX_GetString(    BEMPX_GetDatabaseID( "CUAC:WaterMonthlyCost" ), qsTemp ,  TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    qsLabel2 = QString( "$ %1" ).arg( qsTemp );
+   BEMPX_GetString(      BEMPX_GetDatabaseID( "CUAC:WaterRateType"    ), qsLabel  , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:WaterRateType"    ), lRateType,        0, -1, 0, BEMO_User, iBEMProcIdx ) && lRateType > 0)  // prevent reporting invalid water costs - SAC 09/14/23
+      BEMPX_GetString(   BEMPX_GetDatabaseID( "CUAC:WaterMonthlyCost" ), qsTemp   ,  TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   else
+      qsTemp = "0.00";
+   qsLabel2 = QString( "$ %1" ).arg( qsTemp );
    if (qsLabel.indexOf("Usage")==0)
    {  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:WaterVolumeCost"  ), qsTemp , TRUE, 11, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    qsLabel3 = QString( "$ %1" ).arg( qsTemp );
    }
@@ -860,8 +872,21 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  5)-9,  qsLabel.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  5)-9, qsLabel2.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  6)-9, qsLabel3.toLocal8Bit().constData() );
-   HPDF_Page_EndText (page);
 
+   bool bHaveComunitySolar = false;    // SAC 10/03/23
+   if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:UseCommunitySolar"     ), lTemp, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lTemp > 0 &&
+       BEMPX_GetFloat(   BEMPX_GetDatabaseID( "CUAC:TotCommunitySolarSize" ), dTemp, 0, -1, 0, BEMO_User, iBEMProcIdx ) && dTemp > 0.1)
+   {  bHaveComunitySolar = true;
+      BEMPX_GetString(   BEMPX_GetDatabaseID( "CUAC:CommunitySolarProject" ), qsLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+      BEMPX_GetString(   BEMPX_GetDatabaseID( "CUAC:TotCommunitySolarSize" ), qsTemp , TRUE, 11, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );    qsLabel2 = QString( "%1 kW" ).arg( qsTemp );
+   }
+   else
+   {  qsLabel.clear();
+      qsLabel2.clear();
+   }
+   HPDF_Page_TextOut (page, iProjInfoLeftX     , iCurY - (iProjInfoRowHt *  7)-13,  qsLabel.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 +70, iCurY - (iProjInfoRowHt *  7)-13, qsLabel2.toLocal8Bit().constData() );
+   HPDF_Page_EndText (page);
 
    BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:GasType" ), qsTemp, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
    QString qsFuelType;
@@ -899,7 +924,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_EndText (page);
 
 
-   int iTblColWds[] = { 80, 64, 64 };     // repoistioned Apts Inventory table to right side under 'Fuels' labels - SAC 02/09/23
+   int iTblColWds[4] = { 80, 64, 64, 0 };     // repoistioned Apts Inventory table to right side under 'Fuels' labels - SAC 02/09/23
    int iTblColLeftX[16];
    //iTblColLeftX[0] = iPgCenter - ((iTblColWds[0] + iTblColWds[1] + iTblColWds[2]) / 2);
    iTblColLeftX[0] = iPgRight - (iTblColWds[0] + iTblColWds[1] + iTblColWds[2]);
@@ -961,82 +986,149 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    iCurY = iAptInventoryRowsTop - (iRectHt * 7);  // allow room for max apt inventory table rows
 
 
-   // inserted PV monthly output by apt type table - SAC 02/09/23
-//   int iTblColWds[2], iTblColLeftX[13], iTableColMid, iCol, iSpecVal, iErr;
+
    iCurY -= 18;
    HPDF_Page_SetFontAndSize (page, fontBold, 10); 
    HPDF_Page_BeginText (page);
-   HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, "PV Allocation and Monthly kWh Output" )/2), iCurY, "PV Allocation and Monthly kWh Output" );
-   HPDF_Page_EndText (page);
+   if (bHaveComunitySolar)
+   {  // added Community Solar table - SAC 10/03/23
+      HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, "Community Solar Allocation and Bill Credits" )/2), iCurY, "Community Solar Allocation and Bill Credits" );
+      HPDF_Page_EndText (page);
 
-   iRectHt = 23; 
-   iCurY -= (iRectHt+6);
-   iTblColWds[0] =  80;
-   iTblColWds[1] =  60;
-   iTblColWds[2] =  40;
-   iTblColWds[3] = (iPgRight - iPgLeft - iTblColWds[0] - iTblColWds[1] - iTblColWds[2])/12;
-   iTblColLeftX[0] = iPgLeft;
-   iTblColLeftX[1] = iTblColLeftX[0] + iTblColWds[0];
-   iTblColLeftX[2] = iTblColLeftX[1] + iTblColWds[1];
-   iTblColLeftX[3] = iTblColLeftX[2] + iTblColWds[2];
-   iTableColMid =  iTblColWds[3] / 2;
-   int iTextDY = 3;
-   HPDF_Page_SetLineWidth (page, 0.25);
-   HPDF_Page_SetGrayFill (page, (HPDF_REAL) 0.9);
-   for (iCol=0; iCol<=14; iCol++)
-   {  if (iCol > 3)
-         iTblColLeftX[iCol] = iTblColLeftX[iCol-1] + iTblColWds[3];
-      HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[(iCol > 3 ? 3 : iCol)], iRectHt );
-   }
-   HPDF_Page_FillStroke (page);
-   HPDF_Page_SetGrayFill (page, 0);
-   HPDF_Page_SetFontAndSize (page, font, 9);
-   HPDF_Page_BeginText (page);
-   HPDF_Page_TextOut (page, iTblColLeftX[0] + 4,  iCurY + iTextDY, "Apartment Type" );
-   HPDF_Page_EndText (page);
-   HPDF_Page_SetFontAndSize (page, font, 8);
-   HPDF_Page_BeginText (page);
-   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "% Tenant PV"   ) / 2),  iCurY + iTextDY + 11, "% Tenant PV"   );
-   HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "Srvg each Apt" ) / 2),  iCurY + iTextDY     , "Srvg each Apt" );
-   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "kWdc PV"       ) / 2),  iCurY + iTextDY + 11, "kWdc PV"       );
-   HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "per Apt"       ) / 2),  iCurY + iTextDY     , "per Apt"       );
-   HPDF_Page_EndText (page);
+      iRectHt = 23; 
+      iCurY -= (iRectHt+6);
+      iTblColWds[0] = 100;
+      iTblColWds[1] =  60;
+      iTblColWds[2] =  60;
+      iTblColLeftX[0] = iPgLeft + ((iPgRight - iPgLeft)/2) - ((iTblColWds[0]+iTblColWds[1]+iTblColWds[2])/2);
+      iTblColLeftX[1] = iTblColLeftX[0] + iTblColWds[0];
+      iTblColLeftX[2] = iTblColLeftX[1] + iTblColWds[1];
 
-   HPDF_Page_SetFontAndSize (page, font, 9);
-   HPDF_Page_BeginText (page);
-   for (iCol=3; iCol<=14; iCol++)
-      HPDF_Page_TextOut (page, iTblColLeftX[iCol] + iTableColMid - (HPDF_Page_TextWidth (page, pszMoLabel[iCol-3] )/2),  iCurY + 4, pszMoLabel[iCol-3] );
-   HPDF_Page_EndText (page);
+      int iTextDY = 3;
+      HPDF_Page_SetLineWidth (page, 0.25);
+      HPDF_Page_SetGrayFill (page, (HPDF_REAL) 0.9);
+      for (iCol=0; iCol<=3; iCol++)
+         HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[iCol], iRectHt );
+      HPDF_Page_FillStroke (page);
+      HPDF_Page_SetGrayFill (page, 0);
+      HPDF_Page_SetFontAndSize (page, font, 9);
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iTblColLeftX[0] + 4,  iCurY + iTextDY, "Apartment Type" );
+      HPDF_Page_EndText (page);
+      HPDF_Page_SetFontAndSize (page, font, 8);
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "kWdc PV"       ) / 2),  iCurY + iTextDY + 11, "kWdc PV"     );
+      HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "per Apt"       ) / 2),  iCurY + iTextDY     , "per Apt"     );
+      HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "Monthly"       ) / 2),  iCurY + iTextDY + 11, "Monthly"     );
+      HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "Credit"        ) / 2),  iCurY + iTextDY     , "Credit"      );
+      HPDF_Page_EndText (page);
 
-   iRectHt = 12; 
-   for (int iMtr=0; iMtr < lNumUnitTypes; iMtr++)
-      if (iaPosUnitTypeIdxs[iMtr] >= 0)
-      {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-         int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
-         if (iResObjIdx >= 0)
+      HPDF_Page_SetFontAndSize (page, font, 9);
+//      HPDF_Page_BeginText (page);
+//      for (iCol=3; iCol<=3; iCol++)
+//         HPDF_Page_TextOut (page, iTblColLeftX[iCol] + iTableColMid - (HPDF_Page_TextWidth (page, pszMoLabel[iCol-3] )/2),  iCurY + 4, pszMoLabel[iCol-3] );
+//      HPDF_Page_EndText (page);
+
+      double dCSPV, dCSCred;
+      iRectHt = 12; 
+      for (int iMtr=0; iMtr < lNumUnitTypes; iMtr++)
+         if (iaPosUnitTypeIdxs[iMtr] >= 0)
          {  iCurY -= iRectHt;
             int iMtrIdx = iaPosUnitTypeIdxs[iMtr];
-            for (iCol=0; iCol<=14; iCol++)
-               HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[(iCol > 3 ? 3 : iCol)], iRectHt );
+            for (iCol=0; iCol<=3; iCol++)
+               HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[iCol], iRectHt );
             HPDF_Page_Stroke (page);
 
             HPDF_Page_BeginText (page);
             BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitTypeLabels" )+iMtrIdx, qsLabel,  FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
             HPDF_Page_TextOut (page, iTblColLeftX[0]+4, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
-            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:PctIndivUnitPVByBedrms" )+iMtrIdx, qsLabel, TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );      qsLabel += " %";
-            HPDF_Page_TextOut (page, iTblColLeftX[2]-(iTblColWds[1]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
-            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:IndivUnitPVByBedrms"    )+iMtrIdx, qsLabel, TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
-            HPDF_Page_TextOut (page, iTblColLeftX[3]-(iTblColWds[2]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
-            double dPVGen;
-            for (iCol=0; iCol<12; iCol++)
-            {  //BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:PVSysElecUse" )+iCol, qsLabel, TRUE, 1, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );
-               if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUACResults:PVSysElecUse" )+iCol, dPVGen, 0.0, -1, iResObjIdx, BEMO_User, iBEMProcIdx )) 
-               {  qsLabel = BEMPX_FloatToString( dPVGen * (-1.0), 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );   // int iZeroFillLeftToLength=0, BOOL bTrimTrailingDecZeroes=FALSE );
-                  HPDF_Page_TextOut (page, iTblColLeftX[iCol+3] + iTblColWds[3] - HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData()) - 4, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
-            }  }
-            HPDF_Page_EndText (page);
-      }  }
 
+            if (BEMPX_GetFloat(   BEMPX_GetDatabaseID( "CUAC:CommunitySolarSizeByBedrms"      )+iMtrIdx, dCSPV  , 0, -1, 0, BEMO_User, iBEMProcIdx ) && dCSPV   > 0.01 &&
+                BEMPX_GetFloat(   BEMPX_GetDatabaseID( "CUAC:CommunitySolarAnnCreditByBedrms" )+iMtrIdx, dCSCred, 0, -1, 0, BEMO_User, iBEMProcIdx ) && dCSCred > 0.01)
+            {
+               BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:CommunitySolarSizeByBedrms"      )+iMtrIdx, qsLabel, TRUE, 11, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );      qsLabel += " kW";
+               HPDF_Page_TextOut (page, iTblColLeftX[2]-(iTblColWds[1]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+               //BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:CommunitySolarAnnCreditByBedrms" )+iMtrIdx, qsLabel, TRUE,  2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );      qsLabel += " kW";
+               qsLabel = QString( "$ %1" ).arg( dCSCred/12, 0, 'f', 2 );
+               HPDF_Page_TextOut (page, iTblColLeftX[2]+(4*iTblColWds[2]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+            }
+            HPDF_Page_EndText (page);
+         }
+   }
+   else
+   {  // inserted PV monthly output by apt type table - SAC 02/09/23
+      //int iTblColWds[2], iTblColLeftX[13], iTableColMid, iCol, iSpecVal, iErr;
+      HPDF_Page_TextOut (page, iPgCenter-(HPDF_Page_TextWidth (page, "PV Allocation and Monthly kWh Output" )/2), iCurY, "PV Allocation and Monthly kWh Output" );
+      HPDF_Page_EndText (page);
+
+      iRectHt = 23; 
+      iCurY -= (iRectHt+6);
+      iTblColWds[0] =  80;
+      iTblColWds[1] =  60;
+      iTblColWds[2] =  40;
+      iTblColWds[3] = (iPgRight - iPgLeft - iTblColWds[0] - iTblColWds[1] - iTblColWds[2])/12;
+      iTblColLeftX[0] = iPgLeft;
+      iTblColLeftX[1] = iTblColLeftX[0] + iTblColWds[0];
+      iTblColLeftX[2] = iTblColLeftX[1] + iTblColWds[1];
+      iTblColLeftX[3] = iTblColLeftX[2] + iTblColWds[2];
+      iTableColMid =  iTblColWds[3] / 2;
+      int iTextDY = 3;
+      HPDF_Page_SetLineWidth (page, 0.25);
+      HPDF_Page_SetGrayFill (page, (HPDF_REAL) 0.9);
+      for (iCol=0; iCol<=14; iCol++)
+      {  if (iCol > 3)
+            iTblColLeftX[iCol] = iTblColLeftX[iCol-1] + iTblColWds[3];
+         HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[(iCol > 3 ? 3 : iCol)], iRectHt );
+      }
+      HPDF_Page_FillStroke (page);
+      HPDF_Page_SetGrayFill (page, 0);
+      HPDF_Page_SetFontAndSize (page, font, 9);
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iTblColLeftX[0] + 4,  iCurY + iTextDY, "Apartment Type" );
+      HPDF_Page_EndText (page);
+      HPDF_Page_SetFontAndSize (page, font, 8);
+      HPDF_Page_BeginText (page);
+      HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "% Tenant PV"   ) / 2),  iCurY + iTextDY + 11, "% Tenant PV"   );
+      HPDF_Page_TextOut (page, iTblColLeftX[1] + (iTblColWds[1]/2) - (HPDF_Page_TextWidth (page, "Srvg each Apt" ) / 2),  iCurY + iTextDY     , "Srvg each Apt" );
+      HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "kWdc PV"       ) / 2),  iCurY + iTextDY + 11, "kWdc PV"       );
+      HPDF_Page_TextOut (page, iTblColLeftX[2] + (iTblColWds[2]/2) - (HPDF_Page_TextWidth (page, "per Apt"       ) / 2),  iCurY + iTextDY     , "per Apt"       );
+      HPDF_Page_EndText (page);
+
+      HPDF_Page_SetFontAndSize (page, font, 9);
+      HPDF_Page_BeginText (page);
+      for (iCol=3; iCol<=14; iCol++)
+         HPDF_Page_TextOut (page, iTblColLeftX[iCol] + iTableColMid - (HPDF_Page_TextWidth (page, pszMoLabel[iCol-3] )/2),  iCurY + 4, pszMoLabel[iCol-3] );
+      HPDF_Page_EndText (page);
+
+      iRectHt = 12; 
+      for (int iMtr=0; iMtr < lNumUnitTypes; iMtr++)
+         if (iaPosUnitTypeIdxs[iMtr] >= 0)
+         {  BEMObject* pUnitResultsObj = BEMPX_GetObjectPtr( lDBID_ResRef+iaPosUnitTypeIdxs[iMtr], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+            int iResObjIdx = (pUnitResultsObj == NULL ? -1 : BEMPX_GetObjectIndex( pUnitResultsObj->getClass(), pUnitResultsObj, iCUAC_BEMProcIdx ));       assert( iResObjIdx >= 0 );
+            if (iResObjIdx >= 0)
+            {  iCurY -= iRectHt;
+               int iMtrIdx = iaPosUnitTypeIdxs[iMtr];
+               for (iCol=0; iCol<=14; iCol++)
+                  HPDF_Page_Rectangle (page, iTblColLeftX[iCol], iCurY, iTblColWds[(iCol > 3 ? 3 : iCol)], iRectHt );
+               HPDF_Page_Stroke (page);
+
+               HPDF_Page_BeginText (page);
+               BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitTypeLabels" )+iMtrIdx, qsLabel,  FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+               HPDF_Page_TextOut (page, iTblColLeftX[0]+4, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+               BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:PctIndivUnitPVByBedrms" )+iMtrIdx, qsLabel, TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );      qsLabel += " %";
+               HPDF_Page_TextOut (page, iTblColLeftX[2]-(iTblColWds[1]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+               BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:IndivUnitPVByBedrms"    )+iMtrIdx, qsLabel, TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+               HPDF_Page_TextOut (page, iTblColLeftX[3]-(iTblColWds[2]/5)-HPDF_Page_TextWidth(page, qsLabel.toLocal8Bit().constData() ), iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+               double dPVGen;
+               for (iCol=0; iCol<12; iCol++)
+               {  //BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:PVSysElecUse" )+iCol, qsLabel, TRUE, 1, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );
+                  if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUACResults:PVSysElecUse" )+iCol, dPVGen, 0.0, -1, iResObjIdx, BEMO_User, iBEMProcIdx )) 
+                  {  qsLabel = BEMPX_FloatToString( dPVGen * (-1.0), 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );   // int iZeroFillLeftToLength=0, BOOL bTrimTrailingDecZeroes=FALSE );
+                     HPDF_Page_TextOut (page, iTblColLeftX[iCol+3] + iTblColWds[3] - HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData()) - 4, iCurY+iTextDY, qsLabel.toLocal8Bit().constData() );
+               }  }
+               HPDF_Page_EndText (page);
+         }  }
+   }
 
    iCurY -= 5;
    GenerateTable_TypeMonths( page, font, fontBold, iCurY, "ACM Cooling Monthly kWh Usage", "CUACResults:ClgElecUse", lNumUnitTypes, &iaPosUnitTypeIdxs[0], lDBID_ResRef, iBEMProcIdx, iPgTop, iPgLeft, iPgRight, iPgCenter );
@@ -1449,6 +1541,15 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
    iPDFID;
    iBEMProcIdx;
 
+   QString qsFuelType, qsTemp;
+   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:GasType" ), qsTemp, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );     // ported (revised) from Details report - SAC 09/21/23
+   if (qsTemp.compare("NaturalGas")==0)
+      qsFuelType = "Natural Gas";
+   else if (qsTemp.compare("None")==0 || qsTemp.isEmpty())
+      qsFuelType = "Unknown Gas";
+   else 
+      qsFuelType = qsTemp;
+
    //  1 "Draft" / 2 "Final" / 3 "Annual"
    QString sRptName = ((iPDFID == 1 || iPDFID == 4) ? "Draft" : ((iPDFID == 2 || iPDFID == 5) ? "Final" : "Annual" ));
    sRptName += " Submittal";
@@ -1822,15 +1923,15 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_SetFontAndSize (page, font, 9); 
    HPDF_Page_BeginText (page);
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 0], "Electric"     );
-   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 1], "Natural Gas"  );
+   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 1], qsFuelType.toLocal8Bit().constData() );     // "Natural Gas" -> specified fuel type - SAC 09/21/23
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 2], "Electric"     );
-   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 3], "Natural Gas"  );
+   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 3], qsFuelType.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 4], "Electric"     );
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 5], "Electric"     );
-   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 6], "Natural Gas"  );
+   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 6], qsFuelType.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 7], "Electric"     );
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 8], "Electric"     );
-   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 9], "Natural Gas"  );
+   HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[ 9], qsFuelType.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[10], "Water"        );
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[11], "Sewer"        );
    HPDF_Page_TextOut (page, iCurX + iLblXMarg, iaAllowY[12], "Trash"        );
@@ -1962,14 +2063,14 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
       {  case  0 :  qsLabel = "Software Version:";       qsLabel2 = qsSoftwareVersion;   break;
          case  1 :  qsLabel = "Calculation Engine:";     qsLabel2 = qsCompManagerVersion;   break;
          case  2 :  qsLabel = "Printed Timestamp:";      qsLabel2 = qsRunDateFmt;   break;
-         case  3 :  qsLabel = "Project Name:";           BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:Name"          ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  3 :  qsLabel = "Project Name:";           BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:Name"            ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
          case  4 :  qsLabel = "Site Street Address:";    qsLabel2 = qsAddCityStZip;  break;
-         case  5 :  qsLabel = "Site Contact:";           BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactName"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  6 :  qsLabel = "Electric Utility:";       BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecUtility"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  7 :  qsLabel = "Elec. Territory:";        BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecTerritory" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  8 :  qsLabel = "Gas Utility:";            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasUtility"    ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-         case  9 :  qsLabel = "Gas Territory:";          BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasTerritory"  ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-   //      case  8 :  qsLabel = "Tariff Type:";            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecTariff"  ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  5 :  qsLabel = "Site Contact:";           BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ContactName"     ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  6 :  qsLabel = "Electric Utility:";       BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecUtility"     ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  7 :  qsLabel = "Elec. Territory:";        BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTerritory" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  8 :  qsLabel = "Gas Utility:";            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasUtility"      ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+         case  9 :  qsLabel = "Gas Territory:";          BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2GasTerritory"  ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+   //      case  8 :  qsLabel = "Tariff Type:";            BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTariff"    ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
       } 
       HPDF_Page_SetFontAndSize (page, fontBold, 9);
       HPDF_Page_BeginText (page);
@@ -1983,24 +2084,25 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
       HPDF_Page_EndText (page);
 
       if (iRow == 5 || iRow == 7 || iRow == 9)
-      {  switch (iRow)
-         {  case  5 :  qsLabel = "Project Type:";    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitType"   ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-            case  7 :  qsLabel = "Elec. Tariff:";    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ElecTariff" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
-            case  9 :  qsLabel = "Gas Tariff:";      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:GasTariff"  ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+      {  int iRtLineLeft, iLineMargin;     // provide less room for territory, more room for tariff - SAC 09/06/23  // SAC 09/06/23
+         switch (iRow)
+         {  case  5 :  qsLabel = "Project Type:";    iRtLineLeft = 471;  iLineMargin = 85;  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:UnitType"     ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+            case  7 :  qsLabel = "Elec. Tariff:";    iRtLineLeft = 356;  iLineMargin = 70;  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2ElecTariff" ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
+            case  9 :  qsLabel = "Gas Tariff:";      iRtLineLeft = 356;  iLineMargin = 70;  BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:G2GasTariff"  ), qsLabel2, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );   break;
          }
          HPDF_Page_SetFontAndSize (page, fontBold, 9);
          HPDF_Page_BeginText (page);
          tw1 = HPDF_Page_TextWidth (page, qsLabel.toLocal8Bit().constData());
-         HPDF_Page_TextOut (page, 465-tw1, iCurY - (iTxtLnDY * iRow), qsLabel.toLocal8Bit().constData());
+         HPDF_Page_TextOut (page, (iRtLineLeft-6)-tw1, iCurY - (iTxtLnDY * iRow), qsLabel.toLocal8Bit().constData());
          HPDF_Page_EndText (page);
 
          HPDF_Page_SetFontAndSize (page, font, 9);
          HPDF_Page_BeginText (page);
-         HPDF_Page_TextOut (page, 475, iCurY - (iTxtLnDY * iRow), qsLabel2.toLocal8Bit().constData());
+         HPDF_Page_TextOut (page, (iRtLineLeft+4), iCurY - (iTxtLnDY * iRow), qsLabel2.toLocal8Bit().constData());
          HPDF_Page_EndText (page);
 
-         HPDF_Page_MoveTo  (page, 161, iCurY - (iTxtLnDY * iRow)-4 );     HPDF_Page_LineTo  (page, 385,      iCurY - (iTxtLnDY * iRow)-4 );
-         HPDF_Page_MoveTo  (page, 471, iCurY - (iTxtLnDY * iRow)-4 );     HPDF_Page_LineTo  (page, iPgRight, iCurY - (iTxtLnDY * iRow)-4 );
+         HPDF_Page_MoveTo  (page, 161,         iCurY - (iTxtLnDY * iRow)-4 );     HPDF_Page_LineTo  (page, (iRtLineLeft-iLineMargin), iCurY - (iTxtLnDY * iRow)-4 );
+         HPDF_Page_MoveTo  (page, iRtLineLeft, iCurY - (iTxtLnDY * iRow)-4 );     HPDF_Page_LineTo  (page, iPgRight,                  iCurY - (iTxtLnDY * iRow)-4 );
          HPDF_Page_Stroke (page);
       }
       else

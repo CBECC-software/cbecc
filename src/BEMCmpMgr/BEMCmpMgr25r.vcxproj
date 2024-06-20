@@ -116,6 +116,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WIN32;_WIN64;_DEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;YYDEBUG;CODEYEAR2025;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -166,6 +167,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WIN32;_WIN64;NDEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;CODEYEAR2025;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

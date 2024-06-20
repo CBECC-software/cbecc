@@ -6,6 +6,8 @@
 #if !defined(AFX_STDAFX_H__245352C7_5683_11D1_9002_0080C732DDC2__INCLUDED_)
 #define AFX_STDAFX_H__245352C7_5683_11D1_9002_0080C732DDC2__INCLUDED_
 
+#define _HAS_AUTO_PTR_ETC 1      // ISO C++ 17 std compatibility - SAC 09/14/23
+
 #include <string>
 #include <vector>
 #include <ctype.h>
@@ -160,6 +162,9 @@ inline float Divide(float n,float d)
 #define WM_INITFTPDOWNLOAD   WM_APP+30
 #define WM_ENDFTPDOWNLOAD    WM_APP+31
 #define WM_DISPLAYFTPSTATUS  WM_APP+32
+
+// Message to initiate batch compliance analysis (handled by CMainFrame) - SAC 07/15/23 (CalPRM)
+#define WM_CMDLINE_BATCH     WM_APP+33
 
 // Message sent from UI Control to Parent Dialog to retrieve DBID based on control ID
 // THIS VALUE MUST MATCH IDENTICAL MESSAGES IN application's STDAFX.H & PD2'S MESSAGES.H

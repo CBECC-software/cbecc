@@ -50,6 +50,8 @@ extern const char* pszRunAbbrev_pE;
 extern const char* pszRunAbbrev_pS;
 extern const char* pszRunAbbrev_pW;
 extern const char* pszRunAbbrev_s;
+extern const char* pszRunAbbrev_s2;
+extern const char* pszRunAbbrev_s3;
 extern const char* pszRunAbbrev_pfx;
 extern const char* pszRunAbbrev_pfxN;
 extern const char* pszRunAbbrev_pfxE;
@@ -76,6 +78,8 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_SOrientProp,
    CRM_WOrientProp,
    CRM_StdDesign,
+   CRM_StdDesign2,   // SAC 07/18/23 (2025)
+   CRM_StdDesign3,
    CRM_PropFlex,	// SAC 8/3/17 - added proposed Flexibility (for now just pre-cooling) runs
    CRM_NPropFlex,
    CRM_EPropFlex,
@@ -87,6 +91,8 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_HERSIdxRtd,
    CRM_HERSIdxRef
 };
+
+#define  CRM_IsStdDesign(  iRunType )	(bool) ( iRunType >= CRM_StdDesign && iRunType <= CRM_StdDesign3 )   // SAC 07/18/23 (2025)
 
 extern bool RunIsHERS( int iRunID );
 

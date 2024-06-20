@@ -545,6 +545,8 @@ static FuncTable functable[] =
    {                "#MXAI",       EXP_BEMPFunc, BF_MaxAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added */
    { "MinAcrossIf",                EXP_BEMPFunc, BF_MinAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added (Com tic #3392) */
    {                "#MNAI",       EXP_BEMPFunc, BF_MinAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added */
+   { "CopyComp",                   EXP_BEMPFunc, BF_CopyComp,      VAR_ARGS },  /* SAC 11/29/23 */
+   {                "#CPC",        EXP_BEMPFunc, BF_CopyComp,      VAR_ARGS },  /* SAC 11/29/23 */
    { NULL,                         0,            0,                0 }
 };
 

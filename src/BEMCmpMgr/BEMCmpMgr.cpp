@@ -1318,6 +1318,10 @@ int LocalEvaluateRuleset( QString& sErrMsg, int iErrRetVal, const char* pszRulel
 								  QStringList* psaWarningMsgs /*=NULL*/ )		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
 {
 	int iRetVal = 0;
+
+      if (ebLogAnalysisMsgs)
+         BEMPX_WriteLogFile( QString( "     evaluating rulelist '%1'" ).arg( pszRulelistName ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
 			            //BOOL __declspec(dllexport) __cdecl CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog=FALSE, BOOL bTagDataAsUserDefined=FALSE,
 	                  //																		  BOOL bVerboseOutput=FALSE,    // SAC 8/23/11
 							//																		  long* plNumRuleEvals=NULL, double* pdNumSeconds=NULL,   // SAC 10/12/11 - added to facilitate rule evaluation duration stats
@@ -2238,9 +2242,11 @@ int CheckSiteAccessViaHttpLib(   const char* pszSite, const char* pszCACertPath,
 // report generation via httplib library - SAC 06/12/21
 int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 									const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,		// pass NULLs for no proxy
-									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )
+									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/,
+                           const char* pszOperationDescrip /*=NULL*/, const char* pszPostDescrip /*=NULL*/ )
 {	int iRetVal = 0;
-
+   std::string sOperationDescrip = (pszOperationDescrip ? pszOperationDescrip : "Report generator");
+   std::string sPostDescrip = (pszPostDescrip ? pszPostDescrip : "text/plain");
 //bVerbose = true;  // *** TEMPORARY *** - SAC 06/13/21
 
    std::string sHost = pszURL;
@@ -2278,9 +2284,9 @@ int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, co
 //   auto res = cli.Post( sPostPath.c_str(), pszRptData, iRptDataLen, "application/text" );
 
    if (iConnectTimeoutSecs != 10)      // SAC 11/02/22
-      BEMPX_WriteLogFile( QString("      Report generator connection timeout being used: %1").arg( QString::number( iConnectTimeoutSecs ) ) );
+      BEMPX_WriteLogFile( QString("      %1 connection timeout being used: %2").arg( sOperationDescrip.c_str(), QString::number( iConnectTimeoutSecs ) ) );
    if (iReadWriteTimeoutSecs != CECRptGenDefaultReadWriteTimeoutSecs)
-      BEMPX_WriteLogFile( QString("      Report generator read/write timeout being used: %1").arg( QString::number( iReadWriteTimeoutSecs ) ) );
+      BEMPX_WriteLogFile( QString("      %1 read/write timeout being used: %2").arg( sOperationDescrip.c_str(), QString::number( iReadWriteTimeoutSecs ) ) );
 
 //   cli.set_connection_timeout(0, 300000); // 300 milliseconds
    cli.set_connection_timeout(iConnectTimeoutSecs, 0);  // SAC 09/28/21 - now 10 secs, was: // 8 seconds   // updated to use iConnectTimeoutSecs - SAC 11/02/22
@@ -2288,7 +2294,7 @@ int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, co
    cli.set_write_timeout(iReadWriteTimeoutSecs, 0);  
 
    cli.set_keep_alive(true);
-   auto res = cli.Post( sPostPath.c_str(), pszRptData, iRptDataLen, "text/plain" );
+   auto res = cli.Post( sPostPath.c_str(), pszRptData, iRptDataLen, sPostDescrip.c_str() );
    cli.set_keep_alive(false);
 //  Result Post(const char *path, const char *body, size_t content_length,
 //              const char *content_type);
@@ -2322,18 +2328,18 @@ int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, co
          default : sErr = "<unknown>";  break;
       }
       if (pszErrorMsg && iErrorMsgLen > 0)
-      {  sErr = "Report generation communication error encountered: " + sErr;
+      {  sErr = sOperationDescrip + std::string(" communication error encountered: ") + sErr;
          strcat_s( pszErrorMsg, iErrorMsgLen, sErr.c_str() );
       }
       else
-         BEMPX_WriteLogFile( QString("      Error encountered generating report: %1 (returned from cpp-httplib)").arg( sErr.c_str() ) );
+         BEMPX_WriteLogFile( QString("      %1 Error encountered: %2 (returned from cpp-httplib)").arg( sOperationDescrip.c_str(), sErr.c_str() ) );
    }
 	else
 	{	// download SUCCESS
       if (bVerbose)
-         BEMPX_WriteLogFile( QString("      cpp-httplib status: %1: %2 bytes returned from report generator").arg( httplib::detail::status_message(res->status), QString::number(res->body.length()) ) );
+         BEMPX_WriteLogFile( QString("      %1 cpp-httplib status: %2: %3 bytes returned").arg( sOperationDescrip.c_str(), httplib::detail::status_message(res->status), QString::number(res->body.length()) ) );
 
- 		std::string sOverwriteMsg = boost::str( boost::format( "The report file '%s' is opened in another application.  This file must be closed in that "
+ 		std::string sOverwriteMsg = boost::str( boost::format( "The file '%s' is opened in another application.  This file must be closed in that "
 													"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 													"(once the file is closed), or \n'Abort' to abort the file writing." ) % pszOutPathFile );
   		if (!OKToWriteOrDeleteFile( pszOutPathFile, sOverwriteMsg.c_str() ))

@@ -285,6 +285,7 @@ static QString FuncName( int iFuncID )
 		case  BF_SetNextArr     :  return "SetNextArrayElement"; 
 		case  BF_MaxAcrsIf      :  return "MaxAcrossIf";          
 		case  BF_MinAcrsIf      :  return "MinAcrossIf";          
+		case  BF_CopyComp       :  return "CopyComp";          
 
 		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
 	}
@@ -1859,7 +1860,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_CompArray  :   // SAC 3/7/11 - ComponentArray( <OperationID#>, <Value#>, LocalDBID, Comp:ParamDBID ) - returns array of component references to LocalDBID based on Comp:ParamDBID meeting OperationID & Value condition
       case BF_SumAcrsIf  :   // SAC 2/15/13 - SumAcrossIf( Comp:ParamDBID, <Condition> ), where <Condition> is typically something like "Comp:ParamDBID = "Option""
       case BF_SumChldIf  :   // SAC 2/15/13 - SumChildrenIf( ChildComp:ParamDBID, <Condition> ), where <Condition> is typically something like "ChildComp:ParamDBID = "Option""
-      case BF_ScalePolyLp :  // SAC 5/28/13 - 1st arg is a scale method (0/1/...), 2nd is a scaling factor which may be simply an Object:Property path
+      case BF_ScalePolyLp :  // SAC 5/28/13 - 1st arg is a scale method (0/1/...), 2nd is a scaling factor which may be simply an Object:Property path, 3rd (optional) a scaling calc limit (possibly Object:Property path)
       case BF_ConsUFctr :    // SAC 6/12/13 - ConsAssmUFactor() has 1 argument, calculation method, which may be entered as an Object:Property path
       case BF_ConsUFctrR :	  // SAC 2/21/14 - ConsUFactorRes() has 1 argument, code vintage (for future use), which may be entered as an Object:Property path
       case BF_DayltArea :    // SAC 10/1/13 - DaylightableArea() has 1 argument, daylight calc methodology/vintage, which may be entered as an Object:Property path
@@ -2216,6 +2217,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_ImportComp  : // SAC 1/6/04 - ImportComponentFromFile( <CompType>, <path/filename> )
       case BF_AsgnCr8Comp : // SAC 3/11/14 - AssignOrCreateComp() - first argument comp type, 2nd is comp name, following args are pairs of created comp property name (in quotes) and values/strings/enumerations for each property */
       case BF_Cr8CompFor  : // "CreateCompFor",   5-6 arguments - ( MinVal, MaxVal, LoopObjectType:LoopVal, ParentObject, CreateObjectType:LoopValProp, <optional: CreateObjectType:FirstLoopObjectFound> ) - SAC 04/27/22
+      case BF_CopyComp    : // "CopyComp",        3-5 arguments - ( CompType, DestObjName, SourceObjName, <optional: (0/1)CopyPrimaryDefaultDataAsUserDefined, (0/1)CopyChildren> ) - SAC 11/29/23
          dbId = (int)BEMPX_GetDBComponentID( name );
          found = dbId > 0 && dbId <= BEM_MAX_COMP_ID;
          if ( found )
@@ -2825,6 +2827,52 @@ static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode**
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
+static double sdPi        = acos(-1.0);      // copied from expDaylitArea.cpp for use in poly scaling - SAC 11/13/23
+static double sdHalfPi    = asin(1.0);
+static inline double XYLen( double dX1, double dY1, double dX2, double dY2 )
+{  if (WithinMargin( dX1, dX2, 0.01 ) && WithinMargin( dY1, dY2, 0.01 ))
+      return 0.0;
+   return sqrt( ((dX2-dX1)*(dX2-dX1)) + ((dY2-dY1)*(dY2-dY1)) );
+}
+static inline double LineAngle( double dX1, double dX2, double dY1, double dY2, double dMargin )
+{	if (WithinMargin( dY1, dY2, dMargin ))
+	{	if (dX2 > dX1)
+			return 0.0;
+		else
+			return sdPi;
+	}
+	else if (WithinMargin( dX1, dX2, dMargin ))
+	{	if (dY2 > dY1)
+			return sdHalfPi;
+		else
+			return (sdHalfPi * 3.0);
+	}
+	double dAng = atan2( (dY2-dY1), (dX2-dX1) );
+	return (dAng < -0.000005 ? dAng + (sdPi * 2.0) : dAng);
+}
+
+static int AddPolyPointsToVectors( int iPolyLpObjIdx, BEM_ObjType ePolyLpObjType, int iCID_PolyLp, int iCID_CartesianPt, long lDBID_Coord,       // SAC 11/11/23
+                                   vector<double>& faX, vector<double>& faY, vector<double>& faZ )
+{	int iNumPolyLpCoords = (int) BEMPX_GetNumChildren( iCID_PolyLp, iPolyLpObjIdx, ePolyLpObjType, iCID_CartesianPt );
+	double fCoord[3];
+   int iError, iRetVal=0;
+	for (int iPt=0; (iRetVal >= 0 && iPt < iNumPolyLpCoords); iPt++)
+	{	BEM_ObjType eCartPtObjType = BEMO_User;
+		int iCartPtObjIdx = BEMPX_GetChildObjectIndex( iCID_PolyLp, iCID_CartesianPt, iError, eCartPtObjType, 
+																		iPt+1 /*i1ChildIdx*/, iPolyLpObjIdx, ePolyLpObjType );
+		if (iCartPtObjIdx >= 0 && BEMPX_GetFloatArray( lDBID_Coord, fCoord, 3, 0, -1, iCartPtObjIdx, (int) eCartPtObjType ) == 3)
+		{	//iaCartPtObjIdxs.push_back( iCartPtObjIdx );
+			faX.push_back( fCoord[0] );
+			faY.push_back( fCoord[1] );
+			faZ.push_back( fCoord[2] );
+         iRetVal++;
+		}
+		else
+			iRetVal = -1;
+	}
+   return iRetVal;
+}
+
 static int AreSame(double a, double b)  /*SAC 4/21/17 - added DBL_EPSILON check to handle float representation issues */
 {	return (fabs(a-b) < (10.0*DBL_EPSILON) ? 1 : 0);
 }
@@ -3391,26 +3439,64 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										ExpxStackPush( stack, pNode );
 									}	break;
 
-      case BF_ScalePolyLp : // SAC 5/28/13 - 1st arg is a scale method (0/1/...), 2nd is a scaling factor which may be simply an Object:Property path
+      case BF_ScalePolyLp : // SAC 5/28/13 - 1st arg is a scale method (0/1/...), 2nd is a scaling factor which may be simply an Object:Property path, 3rd (optional) a scaling calc limit (possibly Object:Property path) - SAC 10/31/23
       case BF_PolyLpArea  : // SAC 5/28/13 - no arguments needing parsing - should never get here.
-                           {  double fPolyArea = -1;
+                           {  // scale methods:    0 - vertical windows, lower sill height, ScaleLimit = sill height min Z
+                              //                   1 - hoizonatl/skylt - expands corners from center
+                              //                   2 - vertical windows, lower sill height directly TO ScaleLimit (sill height min Z, regardless of scale factor)    - SAC 11/10/23
+                              //                   3 - vertical windows, raise head height, ScaleLimit = head max Z
+                              //                   4 - vertical windows, raise head height directly TO ScaleLimit (sill height max Z, regardless of scale factor)
+                              //                   5 - vertical windows - extend width in both directions based on scale factor                                      - SAC 11/11/23
+                              //                   6 - vertical windows - extend width to limits of parent and sibling edges (regardless of scale factor)
+                              double fPolyArea = -1;
 										ExpNode* pNode = NULL;
 										QString sErrMsg;
 										if (!ruleSet.initGeomIDs( pEval, error ))  // SAC 10/1/13
 										{	// do nothing here - error already posted
 										}
-										else if (op == BF_ScalePolyLp && nArgs != 2)
-										{  sErrMsg = QString( "Invalid number of ScalePolyLoop() arguments (%1 found, expecting 2)" ).arg( QString::number( nArgs ) );
+										else if (op == BF_ScalePolyLp && (nArgs < 2 || nArgs > 3))
+										{  sErrMsg = QString( "Invalid number of ScalePolyLoop() arguments (%1 found, expecting 2-3)" ).arg( QString::number( nArgs ) );
 											ExpSetErr( error, EXP_RuleProc, sErrMsg );
 										}
 										else
-										{	int iError, iSpecialVal;
+										{	int iError, iSpecialVal, iDataType, iStatus;
+											double fScaleLimit = -99999;
+											if (op == BF_ScalePolyLp && nArgs > 2)
+											{	pNode = ExpxStackPop( stack );
+	                           		if (pNode->type != EXP_Value)
+													ExpSetErr( error, EXP_RuleProc, "Invalid third ScalePolyLoop() argument, expecting numeric database ID" );
+												else
+											   	fScaleLimit = pNode->fValue;
+                            			// {  long lScaleDBID = 0;
+                            			//    long long lMDBID = (long long) pNode->fValue;
+												// 	int iBEMProcIdx = -1;
+												// 	int iScaleObjIdx = -1;
+												// 	BEM_ObjType eScaleObjType = BEMO_User;
+												// 	if (!ParseModelDBID( lMDBID, iBEMProcIdx, lScaleDBID, iScaleObjIdx, eScaleObjType, pEval ))
+												// 	{  sErrMsg = QString( "Unable to decipher PolyLoop scaling limit DBID (%1) (argument #3)" ).arg( QString::number( lScaleDBID ) );
+												// 	   ExpSetErr( error, EXP_RuleProc, sErrMsg );
+												// 	}
+												// 	else
+												// 	{  iStatus = iError = 0;
+												// 		double dData = BEMPX_GetFloatAndStatus( lScaleDBID, iStatus, iSpecialVal, iError, iScaleObjIdx, eScaleObjType, iBEMProcIdx );
+												// 	   if (iStatus < 1)
+												// 		{  sErrMsg = QString( "Unable to retrieve PolyLoop scaling limit, argument #3, DBID %1" ).arg( QString::number( lScaleDBID ) );
+												// 		   ExpSetErr( error, EXP_RuleProc, sErrMsg );
+												// 		}
+												// 		else
+												// 	   	fScaleLimit = dData;
+												// 	}
+												// }
+                            			if (pNode)
+													ExpxNodeDelete( pNode );
+											}
+
 											double fScaleFactor = -1;
 											QString sScalePolyName;
 											if (op == BF_ScalePolyLp)
 											{	pNode = ExpxStackPop( stack );
 	                           		if (pNode->type != EXP_Value)
-													ExpSetErr( error, EXP_RuleProc, "Invalid first ScalePolyLoop() argument, expecting numeric database ID" );
+													ExpSetErr( error, EXP_RuleProc, "Invalid second ScalePolyLoop() argument, expecting numeric database ID" );
 												else
                             			{  long lScaleDBID = 0;
                             			   long long lMDBID = (long long) pNode->fValue;
@@ -3418,21 +3504,20 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													int iScaleObjIdx = -1;
 													BEM_ObjType eScaleObjType = BEMO_User;
 													if (!ParseModelDBID( lMDBID, iBEMProcIdx, lScaleDBID, iScaleObjIdx, eScaleObjType, pEval ))
-													{  sErrMsg = QString( "Unable to decipher PolyLoop scaling factor DBID (%1) (argument #1)" ).arg( QString::number( lScaleDBID ) );
+													{  sErrMsg = QString( "Unable to decipher PolyLoop scaling factor DBID (%1) (argument #2)" ).arg( QString::number( lScaleDBID ) );
 													   ExpSetErr( error, EXP_RuleProc, sErrMsg );
 													}
 													else
-													{  int iDataType, iSpecialVal, iError = 0, iStatus = 0;
-										//			   void* pData = (void*) BEMPX_GetData( lScaleDBID, iDataType, iSpecialVal, iError, iScaleObjIdx, eScaleObjType, FALSE, iBEMProcIdx );
+													{  iStatus = iError = 0;
 														double dData = BEMPX_GetFloatAndStatus( lScaleDBID, iStatus, iSpecialVal, iError, iScaleObjIdx, eScaleObjType, iBEMProcIdx );
 													   if (iStatus < 1)
-														{  sErrMsg = QString( "Unable to retrieve PolyLoop scaling factor, argument #1, DBID %1" ).arg( QString::number( lScaleDBID ) );
+														{  sErrMsg = QString( "Unable to retrieve PolyLoop scaling factor, argument #2, DBID %1" ).arg( QString::number( lScaleDBID ) );
 														   ExpSetErr( error, EXP_RuleProc, sErrMsg );
 														}
 														else
 													   {	fScaleFactor = dData;
 															if (fScaleFactor <= 0)  // SAC 10/26/18 - removed to allow scaling factors > 1: || fScaleFactor > 1)
-															{  sErrMsg = QString( "Invalid PolyLoop scaling factor (%1), argument #1 must be > 0" ).arg( QString::number( fScaleFactor ) );
+															{  sErrMsg = QString( "Invalid PolyLoop scaling factor (%1), argument #2 must be > 0" ).arg( QString::number( fScaleFactor ) );
 															   ExpSetErr( error, EXP_RuleProc, sErrMsg );
 													   		fScaleFactor = -1;
 															}
@@ -3447,11 +3532,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											if (op == BF_ScalePolyLp)
 											{	pNode = ExpxStackPop( stack );
 	                           		if (pNode->type != EXP_Value)
-													ExpSetErr( error, EXP_RuleProc, "Invalid second ScalePolyLoop() argument, expecting scaling method (0-VerticalGlazing or 1-Skylight)" );
+													ExpSetErr( error, EXP_RuleProc, "Invalid first ScalePolyLoop() argument, expecting scaling method (0-VerticalGlazing or 1-Skylight)" );
 												else
                             			{  iScaleMethod = (int) pNode->fValue;
-													if (iScaleMethod < 0 || iScaleMethod > 1)
-													{  sErrMsg = QString( "Invalid PolyLoop scaling method (%1, expecting 0(VerticalGlazing) or 1(Skylight))" ).arg( QString::number( iScaleMethod ) );
+													if (iScaleMethod < 0 || iScaleMethod > 6)
+													{  sErrMsg = QString( "Invalid PolyLoop scaling method, first argument (%1, expecting 0 or 2-6(VerticalGlazing) or 1(Skylight))" ).arg( QString::number( iScaleMethod ) );
 													   ExpSetErr( error, EXP_RuleProc, sErrMsg );
 														iScaleMethod = -1;
 													}
@@ -3497,16 +3582,71 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													ExpSetErr( error, EXP_RuleProc, "Unable to identify PolyLoop to scale via ScalePolyLoop()" );
 											}
 
+											int iCID_CartesianPt = ruleSet.getGeomIDs()->m_iOID_CartesianPt;			// SAC 10/1/13 - was: BEMPX_GetDBComponentID( "CartesianPt" );
+											long lDBID_Coord     = ruleSet.getGeomIDs()->m_lDBID_CartesianPt_Coord;	// SAC 10/1/13 - was: BEMPX_GetDatabaseID( "Coord", iCID_CartesianPt );
+                                 int iParClassID=0, iParObjIdx=-1;
+											vector<int> iaSibClassIDs, iaSibObjIdxs;
+											vector<double> faParX, faParY, faParZ;
+											vector<double> faSibX, faSibY, faSibZ;
+                                 bool bRelatedLopyLpError = false;
+                                 if (op == BF_ScalePolyLp && iScaleMethod >= 5 && iScaleMethod <= 6)
+                                 {  // load geometry for poly parent and all of that component's children
+                                    BEMObject* pLocObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lLocDBID ), iError, pEval->iLocObjIdx, pEval->eLocObjType );
+                                    BEMObject* pParObj = ((pLocObj==NULL || !pLocObj->haveParent()) ? NULL : pLocObj->getParent());
+												if (pParObj && pParObj->haveParent() && (BEMPX_GetClassID( pEval->lPrimDBID ) == iCID_PolyLp || BEMPX_GetClassID( pEval->lLocDBID ) == iCID_PolyLp))
+                                       // base following on GRAND parent
+                                       pParObj = pParObj->getParent();
+                                    if (pParObj)
+                                    {
+													int iNumPolyLpChildren = (int) BEMPX_GetNumChildren( pParObj->getClass()->get1BEMClassIdx(), BEMPX_GetObjectIndex( pParObj->getClass(), pParObj ), pParObj->getObjectType(), iCID_PolyLp );
+													if (iNumPolyLpChildren == 1)
+													{	BEM_ObjType eChldPolyLpObjType = BEMO_User;
+														int iChldPolyLpObjIdx = BEMPX_GetChildObjectIndex( pParObj->getClass()->get1BEMClassIdx(), iCID_PolyLp, iError, eChldPolyLpObjType, 1 /*i1ChildIdx*/,
+																													      BEMPX_GetObjectIndex( pParObj->getClass(), pParObj ), pParObj->getObjectType() );
+														if (iChldPolyLpObjIdx < 0 || AddPolyPointsToVectors( iChldPolyLpObjIdx, BEMO_User, iCID_PolyLp, iCID_CartesianPt, lDBID_Coord, faParX, faParY, faParZ ) < 3)
+                                          {  bRelatedLopyLpError = true;
+                                             ExpSetErr( error, EXP_RuleProc, "ScalePolyLoop() Error: loading PolyLoop of parent object" );
+                                          }
+                                          else
+                                          {
+                                                         // BEMPX_WriteLogFile( QString( "      ScalePolyLoop() - loaded parent geom:  %1 %2" ).arg( pParObj->getClass()->getShortName(), pParObj->getName() ) );
+                                             int iSiblingClassIDs[] = {  ruleSet.getGeomIDs()->m_iOID_Win,  BEMPX_GetClassIndexByLongName( "Door" ),  -1  };
+                                             int iSibCIDIdx = -1;
+                                             while (iSiblingClassIDs[++iSibCIDIdx] > 0)
+                                             {
+                                                int iNumSibObjs = (int) BEMPX_GetNumChildren( pParObj->getClass()->get1BEMClassIdx(), BEMPX_GetObjectIndex( pParObj->getClass(), pParObj ), pParObj->getObjectType(), iSiblingClassIDs[iSibCIDIdx] );
+                                                for (int iSibChildIdx=1; (!bRelatedLopyLpError && iSibChildIdx <= iNumSibObjs); iSibChildIdx++)
+                                                {
+         														int iSibObjIdx = BEMPX_GetChildObjectIndex( pParObj->getClass()->get1BEMClassIdx(), iSiblingClassIDs[iSibCIDIdx], iError, eChldPolyLpObjType, iSibChildIdx,
+			         																									  BEMPX_GetObjectIndex( pParObj->getClass(), pParObj ), pParObj->getObjectType() );
+            													iNumPolyLpChildren = (int) BEMPX_GetNumChildren( iSiblingClassIDs[iSibCIDIdx], iSibObjIdx, BEMO_User, iCID_PolyLp );
+				            									if (iNumPolyLpChildren == 1)
+								            					{	iChldPolyLpObjIdx = BEMPX_GetChildObjectIndex( iSiblingClassIDs[iSibCIDIdx], iCID_PolyLp, iError, eChldPolyLpObjType, 1 /*i1ChildIdx*/, iSibObjIdx, BEMO_User );
+                                                      if (iChldPolyLpObjIdx == iPolyLpObjIdx)
+                                                      {  // nothing here - THIS is the PolyLp being scaled
+                                                      }
+            														else if (iChldPolyLpObjIdx < 0 || AddPolyPointsToVectors( iChldPolyLpObjIdx, BEMO_User, iCID_PolyLp, iCID_CartesianPt, lDBID_Coord, faSibX, faSibY, faSibZ ) < 3)
+                                                      {  bRelatedLopyLpError = true;
+                                                         ExpSetErr( error, EXP_RuleProc, "ScalePolyLoop() Error: loading PolyLoop of sibling object" );
+                                                      }
+                                                      else
+                                                      {
+                                                         // BEMPX_WriteLogFile( QString( "      ScalePolyLoop() - loaded sibling geom:  %1 %2" ).arg( BEMPX_GetClass( iSiblingClassIDs[iSibCIDIdx], iError )->getShortName(), BEMPX_GetObjectByClass( iSiblingClassIDs[iSibCIDIdx], iError, iSibObjIdx )->getName() ) );
+                                                      }
+                                                   }
+                                          }  }  }
+                                       }
+                                 }  }
+
 											vector<double> faX, faY, faZ;
 											vector<int> iaCartPtObjIdxs;
 											double fCentroid[3] = {0,0,0};
 											double fOrigPolyArea = 0, fPolyAreaRatio = 1;
-											int iCID_CartesianPt = ruleSet.getGeomIDs()->m_iOID_CartesianPt;			// SAC 10/1/13 - was: BEMPX_GetDBComponentID( "CartesianPt" );
-											long lDBID_Coord     = ruleSet.getGeomIDs()->m_lDBID_CartesianPt_Coord;	// SAC 10/1/13 - was: BEMPX_GetDatabaseID( "Coord", iCID_CartesianPt );
 											int iPt, iNumPolyCoords = 0, iErrantPolyCoordRetrieval = 0;
+                                 bool bWinAlongX=true, bWinAlongY=true;  // flags indicating window parallel to X or Y axes - SAC 11/12/23
 											if (op == BF_PolyLpArea || (fScaleFactor >= 0 && iScaleMethod >= 0 && iPolyLpObjIdx >= 0))
 											{
-										// load initial polygon
+										   // load initial polygon
 												int iNumPolyLpCoords = (int) BEMPX_GetNumChildren( iCID_PolyLp, iPolyLpObjIdx, ePolyLpObjType, iCID_CartesianPt );
 												double fCoord[3];
 												for (iPt=0; (iErrantPolyCoordRetrieval == 0 && iPt < iNumPolyLpCoords); iPt++)
@@ -3521,10 +3661,15 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 														fCentroid[0] += fCoord[0];
 														fCentroid[1] += fCoord[1];
 														fCentroid[2] += fCoord[2];
-													}
+                                          if (faX.size() > 1)
+                                          {  if (!WithinMargin( faY[0], fCoord[1], 0.01 ))
+                                                bWinAlongX = false;
+                                             if (!WithinMargin( faX[0], fCoord[0], 0.01 ))
+                                                bWinAlongY = false;
+                                       }  }
 													else
 														iErrantPolyCoordRetrieval = iPt + 1;
-												}
+												}           assert( !bWinAlongX || !bWinAlongY );
 												if (iErrantPolyCoordRetrieval > 0)
 												{  sErrMsg = QString( "Error retrieving PolyLoop coordinate #%1 (ScalePolyLoop(), PolyLoop index %2)" ).arg( QString::number( iErrantPolyCoordRetrieval ), QString::number( iPolyLpObjIdx ) );
 												   ExpSetErr( error, EXP_RuleProc, sErrMsg );
@@ -3552,27 +3697,249 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
 											if (op == BF_ScalePolyLp && fScaleFactor >= 0 && iScaleMethod >= 0 && iNumPolyCoords > 2)
 											{
-										// Window PolyLoop Scaling
-												if (iScaleMethod == 0)
-												{	double fMaxZ = -9999;
-													for (iPt=0; iPt < iNumPolyCoords; iPt++)
-													{	if (faZ[iPt] > fMaxZ)
+										   // Window PolyLoop Scaling
+                                    double fMinX = 99999, fMinY = 99999, fMinZ = 99999, fMaxX = -9999, fMaxY = -9999, fMaxZ = -9999,
+                                           fX1 = 99999, fY1 = 99999, fX2 = 99999, fY2 = 99999, fAngleMaxLen = 0.0;
+												if (iScaleMethod == 0 || (iScaleMethod >= 2 && iScaleMethod <= 6))
+												{	for (iPt=0; iPt < iNumPolyCoords; iPt++)
+													{	if (faX[iPt] > fMaxX)
+															fMaxX = faX[iPt];
+                                          if (faX[iPt] < fMinX)
+															fMinX = faX[iPt];
+														if (faY[iPt] > fMaxY)
+															fMaxY = faY[iPt];
+                                          if (faY[iPt] < fMinY)
+															fMinY = faY[iPt];
+														if (faZ[iPt] > fMaxZ)
 															fMaxZ = faZ[iPt];
-													}
+                                          if (faZ[iPt] < fMinZ)
+															fMinZ = faZ[iPt];
+                                          for (int iPt2=iPt+1; iPt2 < iNumPolyCoords; iPt2++)
+                                             if (fAngleMaxLen < XYLen( faX[iPt], faY[iPt], faX[iPt2], faY[iPt2] ))   // store segment w/ largest XY length (win width)
+                                             {  if ((faX[iPt] == 0.0 && faY[iPt] == 0.0) ||
+                                                    XYLen( faX[iPt], faY[iPt], 0.0, 0.0 ) < XYLen( 0.0, 0.0, faX[iPt2], faY[iPt2] ))  // first seg point closest to origin
+                                                {  fX1 = faX[iPt];   fY1 = faY[iPt];   fX2 = faX[iPt2];  fY2 = faY[iPt2];  }
+                                                else
+                                                {  fX1 = faX[iPt2];  fY1 = faY[iPt2];  fX2 = faX[iPt];   fY2 = faY[iPt];   }
+                                                fAngleMaxLen  = XYLen( faX[iPt], faY[iPt], faX[iPt2], faY[iPt2] );
+                                             }
+                                    }  }
+												if (iScaleMethod == 0 || (iScaleMethod >= 2 && iScaleMethod <= 4))
+                                    {  double dMidZ = (fMinZ + fMaxZ)/2.0;
 													// scale each Z coordinate in polygon
-													for (iPt=0; iPt < iNumPolyCoords; iPt++)
-													{	if (faZ[iPt] != fMaxZ)
-															faZ[iPt] = fMaxZ - (fScaleFactor * (fMaxZ - faZ[iPt]));
-													}
+                                       switch (iScaleMethod)
+                                       {  case   0 :  // vertical windows, lower sill height, ScaleLimit = sill height min Z
+                                                      for (iPt=0; iPt < iNumPolyCoords; iPt++)
+													               {	if (faZ[iPt] != fMaxZ)
+													               	{	faZ[iPt] = fMaxZ - (fScaleFactor * (fMaxZ - faZ[iPt]));
+                                                            if (fScaleLimit > -99998 && faZ[iPt] < fScaleLimit)
+                                                               faZ[iPt] = fScaleLimit;
+													               }  }  break;
+                                          case   2 :  // vertical windows, lower sill height directly TO ScaleLimit (sill height min Z, regardless of scale factor)    - SAC 11/10/23
+                                                      for (iPt=0; iPt < iNumPolyCoords; iPt++)
+													               {	if (faZ[iPt] < dMidZ && fScaleLimit > -99998)
+                                                            faZ[iPt] = fScaleLimit;
+                                                      }  break;
+                                          case   3 :  // vertical windows, raise head height, ScaleLimit = head max Z
+                                                      for (iPt=0; iPt < iNumPolyCoords; iPt++)
+													               {	if (faZ[iPt] != fMinZ)
+													               	{	faZ[iPt] = fMinZ + (fScaleFactor * (faZ[iPt] - fMinZ));
+                                                            if (fScaleLimit > -99998 && faZ[iPt] > fScaleLimit)
+                                                               faZ[iPt] = fScaleLimit;
+													               }  }  break;
+                                          case   4 :  // vertical windows, raise head height directly TO ScaleLimit (sill height max Z, regardless of scale factor)
+                                                      for (iPt=0; iPt < iNumPolyCoords; iPt++)
+													               {	if (faZ[iPt] > dMidZ && fScaleLimit > -99998)
+                                                            faZ[iPt] = fScaleLimit;
+                                                      }  break;
+                                       }
                            				fPolyArea = PolygonArea( faX, faY, faZ );
 													fPolyAreaRatio = (fOrigPolyArea <= 0 ? 0 : (fPolyArea / fOrigPolyArea));
-													assert( WithinMargin( fPolyAreaRatio, fScaleFactor, 0.01 ) );
+													// assert( WithinMargin( fPolyAreaRatio, fScaleFactor, 0.01 ) );  - prevent assert when 
 												}
+										      // Window PolyLoop Scaling - WIDTH (X,Y)
+												else if (iScaleMethod >= 5 && iScaleMethod <= 6)
+                                    {
+                                       int iNumParPolyCoords = (int) faParX.size();	
+                                       int iNumSibPolyCoords = (int) faSibX.size();	
+
+                                                //if (iNumPolyCoords > 3)
+                                                //   BEMPX_WriteLogFile( QString( "      ScalePolyLoop() - factor: %1 / limit: %2 / ParentVerts: %3 / SibVerts: %4" ).arg( QString::number(fScaleFactor), QString::number(fScaleLimit), QString::number(iNumParPolyCoords), QString::number(iNumSibPolyCoords) ) );
+                                                //   //BEMPX_WriteLogFile( QString( "      ScalePolyLoop() - factor: %1 / limit: %2 / poly: %3, %4 / %5, %6 / %7, %8 / %9, %10" ).arg( QString::number(fScaleFactor), QString::number(fScaleLimit),
+                                                //   //                     QString::number(faX[0]), QString::number(faY[0]), QString::number(faX[1]), QString::number(faY[1]), QString::number(faX[2]), QString::number(faY[2]), QString::number(faX[3]), QString::number(faY[3]) ) );
+
+                                       if (bWinAlongX)
+                                       {  double dX = fMaxX - fMinX;                double dAdjustEnds = ((fScaleFactor-1) * dX) / 2.0;
+                                          double dNewMaxX = fMaxX + (iScaleMethod == 5 ? dAdjustEnds : 99999);
+                                          double dNewMinX = fMinX - (iScaleMethod == 5 ? dAdjustEnds : 99999);
+                                          for (iPt=0; iPt < iNumParPolyCoords; iPt++)
+                                          {  if (faParX[iPt] >= fMaxX && (faParX[iPt]-fScaleLimit) < dNewMaxX)
+                                                dNewMaxX = (faParX[iPt]-fScaleLimit);
+                                             if (faParX[iPt] <= fMinX && (faParX[iPt]+fScaleLimit) > dNewMinX)
+                                                dNewMinX = (faParX[iPt]+fScaleLimit);
+                                          }
+                                          for (iPt=0; iPt < iNumSibPolyCoords; iPt++)
+                                          {  if (faSibX[iPt] >= fMaxX && (faSibX[iPt]-fScaleLimit) < dNewMaxX)
+                                                dNewMaxX = (faSibX[iPt]-fScaleLimit);
+                                             if (faSibX[iPt] <= fMinX && (faSibX[iPt]+fScaleLimit) > dNewMinX)
+                                                dNewMinX = (faSibX[iPt]+fScaleLimit);
+                                          }
+                                          double dMidX = (fMaxX + fMinX) / 2.0;
+                                          if (dNewMaxX > fMaxX)
+                                          {  double dScaleSide = (dNewMaxX - dMidX) / (fMaxX - dMidX);      assert( dScaleSide > 1.0 );
+                                             for (iPt=0; iPt < iNumPolyCoords; iPt++)
+                                             {  if (faX[iPt] > dMidX)
+                                                   faX[iPt] = dMidX + ((faX[iPt]-dMidX) * dScaleSide);
+                                          }  }
+                                          if (dNewMinX < fMinX)
+                                          {  double dScaleSide = (dMidX - dNewMinX) / (dMidX - fMinX);      assert( dScaleSide > 1.0 );
+                                             for (iPt=0; iPt < iNumPolyCoords; iPt++)
+                                             {  if (faX[iPt] < dMidX)
+                                                   faX[iPt] = dMidX - ((dMidX-faX[iPt]) * dScaleSide);
+                                          }  }
+                                       }
+                                       else if (bWinAlongY)
+                                       {  double dY = fMaxY - fMinY;                double dAdjustEnds = ((fScaleFactor-1) * dY) / 2.0;
+                                          double dNewMaxY = fMaxY + (iScaleMethod == 5 ? dAdjustEnds : 99999);
+                                          double dNewMinY = fMinY - (iScaleMethod == 5 ? dAdjustEnds : 99999);
+                                          for (iPt=0; iPt < iNumParPolyCoords; iPt++)
+                                          {  if (faParY[iPt] >= fMaxY && (faParY[iPt]-fScaleLimit) < dNewMaxY)
+                                                dNewMaxY = (faParY[iPt]-fScaleLimit);
+                                             if (faParY[iPt] <= fMinY && (faParY[iPt]+fScaleLimit) > dNewMinY)
+                                                dNewMinY = (faParY[iPt]+fScaleLimit);
+                                          }
+                                          for (iPt=0; iPt < iNumSibPolyCoords; iPt++)
+                                          {  if (faSibY[iPt] >= fMaxY && (faSibY[iPt]-fScaleLimit) < dNewMaxY)
+                                                dNewMaxY = (faSibY[iPt]-fScaleLimit);
+                                             if (faSibY[iPt] <= fMinY && (faSibY[iPt]+fScaleLimit) > dNewMinY)
+                                                dNewMinY = (faSibY[iPt]+fScaleLimit);
+                                          }
+                                          double dMidY = (fMaxY + fMinY) / 2.0;
+                                          if (dNewMaxY > fMaxY)
+                                          {  double dScaleSide = (dNewMaxY - dMidY) / (fMaxY - dMidY);      assert( dScaleSide > 1.0 );
+                                             for (iPt=0; iPt < iNumPolyCoords; iPt++)
+                                             {  if (faY[iPt] > dMidY)
+                                                   faY[iPt] = dMidY + ((faY[iPt]-dMidY) * dScaleSide);
+                                          }  }
+                                          if (dNewMinY < fMinY)
+                                          {  double dScaleSide = (dMidY - dNewMinY) / (dMidY - fMinY);      assert( dScaleSide > 1.0 );
+                                             for (iPt=0; iPt < iNumPolyCoords; iPt++)
+                                             {  if (faY[iPt] < dMidY)
+                                                   faY[iPt] = dMidY - ((dMidY-faY[iPt]) * dScaleSide);
+                                          }  }
+                                       } 
+                                       else
+                                       {  double dWallAngle, dWinWd;
+                                          if (bWinAlongX)
+                                          {  dWallAngle = (fX2 > fX1 ? 0.0 : sdPi);          dWinWd = fMaxX - fMinX;   }
+                                          else if (bWinAlongY)
+                                          {  dWallAngle = sdHalfPi * (fY2 > fY1 ? 1 : 3);    dWinWd = fMaxY - fMinY;   }
+                                          else
+                                          {
+                                                            //   BEMPX_WriteLogFile( QString( "            fMinX: %1 / fMinY: %2 / fMaxX: %3 / fMaxY: %4" ).arg( QString::number(fMinX),
+                                                            //                        QString::number(fMinY), QString::number(fMaxX), QString::number(fMaxY) ) );
+                                             dWinWd     = XYLen( fMinX, fMinY, fMaxX, fMaxY );
+                                             dWallAngle = LineAngle( fX1, fX2, fY1, fY2, 0.01 );
+                                          }
+
+                                          if (fScaleFactor < 1.0)    // making window narrower
+                                          {  // no parent or sibling checks needed if SHRINKING window
+                                             // simpler - but not ever expected to get here, so bail for now
+                                             sErrMsg = QString( "ScalePolyLoop() error:  Not compatible (yet) with Shrinking window width (expected shift of sill height via scale method = 0)" );
+												         ExpSetErr( error, EXP_RuleProc, sErrMsg );
+                                          }
+                                          else if (fScaleFactor > 1.0)     // making window WIDER
+                                          {  double fWallMinX = 99999, fWallMinY = 99999, fWallMaxX = -9999, fWallMaxY = -9999;
+                                             //int iNumWallPolyCoords = (int) faParX.size();
+												         for (iPt=0; iPt < iNumParPolyCoords; iPt++)
+													      {	if (faParX[iPt] < fWallMinX)
+													      		fWallMinX = faParX[iPt];
+													      	if (faParY[iPt] < fWallMinY)
+													      		fWallMinY = faParY[iPt];
+                                                if (faParX[iPt] > fWallMaxX)
+													      		fWallMaxX = faParX[iPt];
+													      	if (faParY[iPt] > fWallMaxY)
+													      		fWallMaxY = faParY[iPt];
+                                             }
+                                             double dWinMidX = ((fMaxX + fMinX) / 2.0);
+                                             double dWinMidY = ((fMaxY + fMinY) / 2.0);
+                                             double dWallWd  = XYLen( fWallMinX, fWallMinY, fWallMaxX, fWallMaxY );
+                                             double dMidToEnd1, dMidToEnd2;
+                                             dMidToEnd1 = dMidToEnd2 = (iScaleMethod == 6 ? dWallWd : (fScaleFactor * dWinWd) / 2.0 );
+                                             double dWallAngleOpp = dWallAngle + (dWallAngle < sdPi ? sdPi : -sdPi);
+  												         for (iPt=0; iPt < iNumParPolyCoords; iPt++)
+                                                if (XYLen( dWinMidX, dWinMidY, faParX[iPt], faParY[iPt] ) > (dWinWd/2.0))     // ignore wall verts within existing window section
+                                                {  double dWallPtAng = LineAngle( dWinMidX, faParX[iPt], dWinMidY, faParY[iPt], 0.01 );
+                                                   double dMidWinToWallPt = XYLen( dWinMidX, dWinMidY, faParX[iPt], faParY[iPt] ) - fScaleLimit;
+                                                                  // QString qsDbgMsg = QString( "            pt %1:  dWallPtAng %2 / dMidWinToWallPt %3" ).arg( QString::number(iPt), QString::number(dWallPtAng), QString::number(dMidWinToWallPt) );
+                                                   if ( WithinMargin( dWallPtAng, dWallAngle, 0.2 ) && dMidToEnd2 > dMidWinToWallPt )
+                                                   {  
+                                                                  // qsDbgMsg += QString( "  /  dMidToEnd2 %1 -> %2" ).arg( QString::number(dMidToEnd2), QString::number(dMidWinToWallPt) );
+                                                      dMidToEnd2 = dMidWinToWallPt;
+                                                   }
+                                                   else if ( WithinMargin( dWallPtAng, dWallAngleOpp, 0.2 ) && dMidToEnd1 > dMidWinToWallPt )
+                                                   {  
+                                                                  // qsDbgMsg += QString( "  /  dMidToEnd1 %1 -> %2" ).arg( QString::number(dMidToEnd1), QString::number(dMidWinToWallPt) );
+                                                      dMidToEnd1 = dMidWinToWallPt;
+                                                   }
+                                                                  // BEMPX_WriteLogFile( qsDbgMsg );
+                                                }
+  												         for (iPt=0; iPt < iNumSibPolyCoords; iPt++)
+                                                if (XYLen( dWinMidX, dWinMidY, faSibX[iPt], faSibY[iPt] ) > (dWinWd/2.0))     // ignore sibling verts within existing window section
+                                                {  double dSibPtAng = LineAngle( dWinMidX, faSibX[iPt], dWinMidY, faSibY[iPt], 0.01 );
+                                                   double dMidWinToSibPt = XYLen( dWinMidX, dWinMidY, faSibX[iPt], faSibY[iPt] ) - fScaleLimit;
+                                                   if ( WithinMargin( dSibPtAng, dWallAngle, 0.2 ) && dMidToEnd2 > dMidWinToSibPt )
+                                                      dMidToEnd2 = dMidWinToSibPt;
+                                                   else if ( WithinMargin( dSibPtAng, dWallAngleOpp, 0.2 ) && dMidToEnd1 > dMidWinToSibPt )
+                                                      dMidToEnd1 = dMidWinToSibPt;
+                                                }
+
+                                                         //   if (iNumPolyCoords > 3)
+                                                         //      BEMPX_WriteLogFile( QString( "            dWallAngle: %1 / dWinWd: %2 / dMidToEnd2: %3 / dMidToEnd1: %4 / midpoint: %5, %6" ).arg( QString::number(dWallAngle),
+                                                         //                           QString::number(dWinWd), QString::number(dMidToEnd2), QString::number(dMidToEnd1), QString::number(dWinMidX), QString::number(dWinMidY) ) );
+                                                         //   if (iNumPolyCoords > 3)
+                                                         //      BEMPX_WriteLogFile( QString( "            initial poly:  %1, %2  /  %3, %4" ).arg( 
+                                                         //                           QString::number(faX[0]), QString::number(faY[0]), QString::number(faX[2]), QString::number(faY[2]) ) );
+                                                         //      //BEMPX_WriteLogFile( QString( "            initial poly:  %1, %2  /  %3, %4  /  %5, %6  /  %7, %8" ).arg( 
+                                                         //      //                     QString::number(faX[0]), QString::number(faY[0]), QString::number(faX[1]), QString::number(faY[1]), QString::number(faX[2]), QString::number(faY[2]), QString::number(faX[3]), QString::number(faY[3]) ) );
+
+                                             // Update Window Polygon vertices
+                                             double dScaleTowardPt2 = dMidToEnd2 / (dWinWd/2.0);      assert( dScaleTowardPt2 >= 1.0 );
+                                             double dScaleTowardPt1 = dMidToEnd1 / (dWinWd/2.0);      assert( dScaleTowardPt1 >= 1.0 );
+  												         for (iPt=0; iPt < iNumPolyCoords; iPt++)
+                                                if (!WithinMargin( dWinMidX, faX[iPt], 0.1 ) ||
+                                                    !WithinMargin( dWinMidY, faY[iPt], 0.1 ))        // leave point unchanged if it is same as WinMidXY
+                                                {  double dPtAng = LineAngle( dWinMidX, faX[iPt], dWinMidY, faY[iPt], 0.01 );
+                                                   double dMidWinToPt = XYLen( dWinMidX, dWinMidY, faX[iPt], faY[iPt] );
+                                                   if ( WithinMargin( dPtAng, dWallAngle, 0.2 ) )
+                                                   {  faX[iPt] = dWinMidX + (dMidWinToPt * dScaleTowardPt2 * cos( dWallAngle ));
+                                                      faY[iPt] = dWinMidY + (dMidWinToPt * dScaleTowardPt2 * sin( dWallAngle ));
+                                                   }
+                                                   else if ( WithinMargin( dPtAng, dWallAngleOpp, 0.2 ) )
+                                                   {  faX[iPt] = dWinMidX + (dMidWinToPt * dScaleTowardPt1 * cos( dWallAngleOpp ));
+                                                      faY[iPt] = dWinMidY + (dMidWinToPt * dScaleTowardPt1 * sin( dWallAngleOpp ));
+                                                   }
+                                                   else
+                                                   {  assert( false );
+                                                }  }
+
+                                                         //   if (iNumPolyCoords > 3)
+                                                         //      BEMPX_WriteLogFile( QString( "              final poly:  %1, %2  /  %3, %4" ).arg( 
+                                                         //                           QString::number(faX[0]), QString::number(faY[0]), QString::number(faX[2]), QString::number(faY[2]) ) );
+                                                         //      //BEMPX_WriteLogFile( QString( "              final poly:  %1, %2  /  %3, %4  /  %5, %6  /  %7, %8" ).arg( 
+                                                         //      //                     QString::number(faX[0]), QString::number(faY[0]), QString::number(faX[1]), QString::number(faY[1]), QString::number(faX[2]), QString::number(faY[2]), QString::number(faX[3]), QString::number(faY[3]) ) );
+
+                                          }
+                                       }
+                           				fPolyArea = PolygonArea( faX, faY, faZ );
+													fPolyAreaRatio = (fOrigPolyArea <= 0 ? 0 : (fPolyArea / fOrigPolyArea));
+                                    }
+                                    // --- SKYLIGHT SCALING ---
 												else if (iScaleMethod == 1)
 												{	//iNumPolyCoords = (int) faX.size();
                                        if (iNumPolyCoords == 4)
 													{
-							// CHECK FOR PAIRS OF SIDE LENGTHS BEING EQUAL ???
+							                     // CHECK FOR PAIRS OF SIDE LENGTHS BEING EQUAL ???
 														if (TRUE)
 														{	double fCntrVctrFctr = sqrt(fScaleFactor);
 															for (iPt=0; iPt < iNumPolyCoords; iPt++)
@@ -3598,7 +3965,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
                            		if (op == BF_ScalePolyLp && fPolyArea > 0)
 											{	int iErrantPolyCoordSetting = 0, iVal, iSetRetVal;
-										// post final PolyLoop data BACK TO  BEMBase
+										   // post final PolyLoop data BACK TO  BEMBase
 												for (iPt=0; (iErrantPolyCoordSetting == 0 && iPt < iNumPolyCoords); iPt++)
 												{	for (iVal=0; (iErrantPolyCoordSetting == 0 && iVal < 3); iVal++)
 													{	double fVal = (iVal==0 ? faX[iPt] : (iVal==1 ? faY[iPt] : faZ[iPt]));
@@ -3614,7 +3981,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													}
 												}
 												// SAC 10/29/13 - added reset of PolyLp:Area property so that it is consistent w/ the revised area (iff return value of this rule not setting PolyLp:Area)
-								// note: resetting PolyLp:Area does NOT cause other PolyLp properties to get reset, such as XYLen, ZBottom, ZTop, ZHgt...
+								         // note: resetting PolyLp:Area does NOT cause other PolyLp properties to get reset, such as XYLen, ZBottom, ZTop, ZHgt...
 												if (pEval->lLocDBID != ruleSet.getGeomIDs()->m_lDBID_PolyLp_Area)
 												{	iSetRetVal = BEMPX_SetBEMData( ruleSet.getGeomIDs()->m_lDBID_PolyLp_Area, BEMP_Flt, (void*) &fPolyArea, BEMO_User, iPolyLpObjIdx, BEMS_RuleDefined /*pEval->eLocStatus*/,
                                   													BEMO_User /*pEval->eLocObjType*/, TRUE /*bPerformSetBEMDataResets*/, -1 /*iBEMProcIdx*/ );
@@ -3622,12 +3989,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												}
 											}
 
-	if (op == BF_ScalePolyLp && pEval->bVerboseOutput)
-	{	sErrMsg = QString( "      ScalePolyLoop( %1, %2 ) on '%3' --> orig area: %4 | scaled area: %5 | area ratio: %6" ).arg( QString::number( iScaleMethod ), QString::number( fScaleFactor ), sScalePolyName, QString::number( fOrigPolyArea ), QString::number( fPolyArea ), QString::number( (fOrigPolyArea > 0 ? fPolyArea / fOrigPolyArea : -1) ) );
-		//BEMMessageBox( sErrMsg, NULL, 3 /*error*/ );
-      BEMPX_WriteLogFile( sErrMsg );
-	}
-
+	                                          if (op == BF_ScalePolyLp && pEval->bVerboseOutput)
+	                                          {	sErrMsg = QString( "      ScalePolyLoop( %1, %2 ) on '%3' --> orig area: %4 | scaled area: %5 | area ratio: %6" ).arg( QString::number( iScaleMethod ), QString::number( fScaleFactor ), sScalePolyName, QString::number( fOrigPolyArea ), QString::number( fPolyArea ), QString::number( (fOrigPolyArea > 0 ? fPolyArea / fOrigPolyArea : -1) ) );
+	                                          	//BEMMessageBox( sErrMsg, NULL, 3 /*error*/ );
+                                                BEMPX_WriteLogFile( sErrMsg );
+	                                          }
 										}
 
 										pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
@@ -4025,7 +4391,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										}
 										else
 										{	if (strlen( (const char*) pNode->pValue ) > 0)
-											{	dVal = BEMPX_StringToFloat( (const char*) pNode->pValue );
+											{	if (strlen( (const char*) pNode->pValue )==2 && boost::iequals( (const char*) pNode->pValue, "--" ))     // prevent calling BEMPX_StringToFloat() w/ '--' - SAC 11/04/23
+                                       dVal = 0.0;
+                                    else
+                                       dVal = BEMPX_StringToFloat( (const char*) pNode->pValue );
 												free( pNode->pValue );
 											}
 											pNode->type = EXP_Value;
@@ -4611,6 +4980,128 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 					         }
 					         break;
 							}
+
+      case BF_CopyComp :   // "CopyComp",        3-5 arguments - ( CompType, DestObjName, SourceObjName, < optional: (0/1)CopyPrimaryDefaultDataAsUserDefined, (0/1)CopyChildren > ) - SAC 11/29/23
+         {  ExpNode* pNode = NULL;
+            bool bAllGood = (nArgs >= 3 && nArgs <= 5);
+            if (!bAllGood)
+            {  if (nArgs < 3)
+                  ExpSetErr( error, EXP_RuleProc, QString( "%1() requires at least 3 arguments: CompType, DestObjName and SourceObjName." ).arg( FuncName(op) ) );
+               else
+                  ExpSetErr( error, EXP_RuleProc, QString( "%1() cannot have more than 5 arguments: CompType, DestObjName, SourceObjName, (0/1)CopyPrimaryDefaultDataAsUserDefined and (0/1)CopyChildren." ).arg( FuncName(op) ) );
+            }
+            else
+            {  bool bCopyPrimaryDefaultDataAsUserDefined=false, bCopyChildren=false;
+               QString qsDestCompName, qsSrcCompName;
+               BEMObject *pDestObj, *pSrcObj;
+               int i1CompClass = 0, iError;
+               if (nArgs >= 5)
+               {  pNode = ExpxStackPop( stack );      nArgs--;
+                  if (pNode)
+                  {  bAllGood = (pNode->type == EXP_Value);
+                     if (!bAllGood)
+                        ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #5 invalid: expecting integer (0/1) (CopyChildren)." ).arg( FuncName(op) ) );
+                     else
+                        bCopyChildren = (pNode->fValue != 0);
+                     ExpxNodeDelete( pNode );
+               }  }
+               if (bAllGood && nArgs >= 4)
+               {  pNode = ExpxStackPop( stack );      nArgs--;
+                  if (pNode)
+                  {  bAllGood = (pNode->type == EXP_Value);
+                     if (!bAllGood)
+                        ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #4 invalid: expecting integer (0/1) (CopyPrimaryDefaultDataAsUserDefined)." ).arg( FuncName(op) ) );
+                     else
+                        bCopyPrimaryDefaultDataAsUserDefined = (pNode->fValue != 0);
+                     ExpxNodeDelete( pNode );
+               }  }
+               if (bAllGood && nArgs >= 3)
+               {  pNode = ExpxStackPop( stack );      nArgs--;
+                  if (pNode)
+                  {  bAllGood = (pNode->type == EXP_String);
+                     if (!bAllGood)
+                        ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #3 invalid: expecting string (source component name)." ).arg( FuncName(op) ) );
+                     else
+                        qsSrcCompName = (char*) pNode->pValue;
+                     ExpxNodeDelete( pNode );
+               }  }
+               if (bAllGood && nArgs >= 2)
+               {  pNode = ExpxStackPop( stack );      nArgs--;
+                  if (pNode)
+                  {  bAllGood = (pNode->type == EXP_String);
+                     if (!bAllGood)
+                        ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #2 invalid: expecting string (destination component name)." ).arg( FuncName(op) ) );
+                     else
+                        qsDestCompName = (char*) pNode->pValue;
+                     ExpxNodeDelete( pNode );
+               }  }
+               if (bAllGood && nArgs >= 1)
+               {  pNode = ExpxStackPop( stack );      nArgs--;
+                  if (pNode)
+                  {  bAllGood = (pNode->type == EXP_Value);
+                     if (!bAllGood)
+                        ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #1 invalid: expecting component type to copy." ).arg( FuncName(op) ) );
+                     else
+                        i1CompClass = (int) pNode->fValue;
+                     ExpxNodeDelete( pNode );
+               }  }
+               if (bAllGood)
+               {  bAllGood = false;
+                  if (i1CompClass < 1 || i1CompClass > BEMPX_GetNumClasses())
+                     ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #1 error: invalid component type (%2)." ).arg( FuncName(op), QString::number(i1CompClass) ) );
+                  else if (qsDestCompName.isEmpty())
+                     ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #2 error: no destination component name specified." ).arg( FuncName(op) ) );
+                  else
+                  {  pDestObj = BEMPX_GetObjectByName( i1CompClass, iError, qsDestCompName.toLocal8Bit().constData() );
+                     if (pDestObj)
+                        bAllGood = true;
+                     else
+                        ExpSetErr( error, EXP_RuleProc, QString( "%1() error: destination component not found (type %2 '%3')." ).arg( FuncName(op), QString::number(i1CompClass), qsDestCompName ) );
+               }  }
+               if (bAllGood)
+               {  bAllGood = false;
+                  if (qsSrcCompName.isEmpty())
+                     ExpSetErr( error, EXP_RuleProc, QString( "%1() argument #3 error: no source component name specified." ).arg( FuncName(op) ) );
+                  else
+                  {  pSrcObj = BEMPX_GetObjectByName( i1CompClass, iError, qsSrcCompName.toLocal8Bit().constData() );
+                     if (pSrcObj)
+                        bAllGood = true;
+                     else
+                        ExpSetErr( error, EXP_RuleProc, QString( "%1() error: source component not found (type %2 '%3')." ).arg( FuncName(op), QString::number(i1CompClass), qsSrcCompName ) );
+               }  }
+               if (bAllGood && !BEMPX_CopyComponent( pDestObj, pSrcObj, -1 /*iBEMProcIdx*/, bCopyPrimaryDefaultDataAsUserDefined, bCopyChildren ))
+               {  ExpSetErr( error, EXP_RuleProc, QString( "%1() error encountered copying source component '%2' to '%3'." ).arg( FuncName(op), qsSrcCompName, qsDestCompName ) );
+                  bAllGood = false;
+               }
+               if (bAllGood)
+               {  pNode = ExpNode_new();
+                  pNode->type = EXP_String;
+                  pNode->pValue = malloc( qsDestCompName.length() + 1 );
+                  strcpy( (char*) pNode->pValue, (const char*) qsDestCompName.toLocal8Bit().constData() );
+               }
+            }
+
+            if (!bAllGood)
+            {  if (nArgs < 1)
+                  pNode = ExpNode_new(); 
+               else
+               {  pNode = ExpxStackPop( stack );
+                  for (int i=1; i<nArgs; i++)
+                  {  ExpxNodeDelete( pNode );
+                     pNode = ExpxStackPop( stack );
+                  }
+                  if (pNode->type == EXP_String)
+                  {  free( pNode->pValue );
+                     pNode->pValue = NULL;
+               }  }
+               pNode->type = EXP_Invalid;
+               pNode->fValue = 0;
+            }
+
+            // Push argument node back onto the stack to serve as return value
+            ExpxStackPush( stack, pNode );
+            break;
+         }
 
       case BF_Format      :
       case BF_FormatNL    : // SAC 12/11/20

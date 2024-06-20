@@ -97,6 +97,7 @@ BOOL ebAppInitialized = FALSE;
 BOOL ebInitiateProjectCreation = TRUE;
 BOOL ebInitiateBatchProcViaStartDlg = FALSE;	// SAC 11/14/17
 BOOL ebInitiateCommSlrOptOutViaStartDlg = FALSE;  // SAC 03/28/23
+BOOL ebInitiateOldCUACImportViaStartDlg = FALSE;  // SAC 09/18/23
 BOOL ebDisplayAllUIControls = FALSE;
 BOOL ebAnalysisRangeChecks = TRUE;
 BOOL ebShowHelpFollowingWizard = TRUE;  // SAC 2/14/01
@@ -2256,7 +2257,7 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
       	   if (bLoadDefault)
       	      // set this string to be the default which will be installed into the next created 'Project' component
       	      BEMPX_SetRulesetFilename( sRuleFile );
-      	
+
       	   // SAC 2/1/99 - screen data resetting stuff
       	   CWnd* pMainWnd = AfxGetMainWnd();
       	   if (pMainWnd == NULL)

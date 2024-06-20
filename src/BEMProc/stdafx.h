@@ -5,6 +5,8 @@
 
 #pragma once
 
+#define _HAS_AUTO_PTR_ETC 1      // ISO C++ 17 std compatibility - SAC 09/14/23
+
 #include "targetver.h"
 
 #define NOMINMAX                 // prevent:  warning C4003: not enough actual parameters for macro 'min'   w/ inclusion of QtCore\QDateTime.h

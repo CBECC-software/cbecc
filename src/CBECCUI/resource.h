@@ -190,6 +190,7 @@
 #define IDB_DEFAULT24                   330
 #define IDB_DEFAULT24G                  331
 #define IDC_START_PVOPTOUT              332
+#define IDC_START_OLDCUAC               333
 #define IDS_VER_INFO_LANG               999
 #define IDC_MAINTAB                     1000
 #define IDC_COMPTYPE                    1002
@@ -489,14 +490,17 @@
 #define IDM_TOOLS_VIEWCUACDETRPT        33040
 #define IDM_TOOLS_VIEWCUACDETCSV        33041
 #define IDM_TOOLS_PVOPTOUT              33042
+#define IDM_TOOLS_OLDCUACIMPORT         33043
+#define IDM_DISPLAYCUACDLG              33044
+#define IDM_TOOLS_CSVRATETABLES         33045
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        333
-#define _APS_NEXT_COMMAND_VALUE         33043
+#define _APS_NEXT_RESOURCE_VALUE        334
+#define _APS_NEXT_COMMAND_VALUE         33046
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif

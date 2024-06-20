@@ -57,6 +57,10 @@ using namespace boost::posix_time;
 #include <QtCore/qtextstream.h>
 #include <QtCore/QXmlStreamWriter>
 #include <QtCore/QXmlStreamReader>
+#include <QtCore/QJSONDocument>
+#include <QtCore/QJSONObject>
+#include <QtCore/QJSONArray>
+#include <QtCore/QJSONValue>
 #pragma warning(default : 4127)
 
 #define  MAX_COLUMN  78
@@ -6308,3 +6312,611 @@ bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,*/ long
 	return bRetVal;
 }
 
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+BEMObject* CreateJsonObject( int& iRetVal, int& iNewObjIdx, QString* psMsg, int iClassID, BEMClass* pBEMClass, const char* objName, QString& qsCompIdxPrefix, int iBEMProcIdx )     // SAC 08/16/23
+{
+   BEMObject* pBEMObj = NULL;
+   int iNumObjs = BEMPX_GetNumObjects( iClassID, BEMO_User, iBEMProcIdx );
+   QString qsCr8CompName;
+   // mods to ensure consistency between object names across versions of object listings - SAC 12/18/23
+   int iAppendObjIdx=0;
+   if (objName != NULL)
+   {  qsCr8CompName = objName;
+      if (!qsCompIdxPrefix.isEmpty())     // SAC 12/18/23
+         qsCr8CompName += qsCompIdxPrefix;
+   }
+   else
+   {  //BEMPX_GetDefaultComponentName( iClassID, qsCr8CompName );
+      qsCr8CompName = pBEMClass->getDefaultNameTemplate().left( pBEMClass->getDefaultNameTemplate().length()-3 );
+      //if (qsCompIdxPrefix.isEmpty())
+      //   qsCr8CompName += QString("%1"   ).arg( QString::number( iNumObjs+1 ) );
+      //else
+      //   qsCr8CompName += QString("%1-%2").arg( qsCompIdxPrefix, QString::number( iNumObjs+1 ) );
+      if (!qsCompIdxPrefix.isEmpty())
+         qsCr8CompName += qsCompIdxPrefix;
+      int iNumObjsWithThisPrefix = BEMPX_GetNumObjectsWithNameStarting( iClassID, qsCr8CompName, BEMO_User /*BEM_ObjType*/, iBEMProcIdx );
+      if (iNumObjsWithThisPrefix < 0)
+         iAppendObjIdx = iNumObjs+1;
+      else if (iNumObjsWithThisPrefix > 0)
+         iAppendObjIdx = iNumObjsWithThisPrefix + 1;
+      if (iAppendObjIdx != 0)
+      {  if (qsCompIdxPrefix.isEmpty())
+            qsCr8CompName += QString( "%1").arg( QString::number( iAppendObjIdx ) );
+         else
+            qsCr8CompName += QString("-%1").arg( QString::number( iAppendObjIdx ) );
+   }  }
+
+   pBEMObj = BEMPX_CreateObject( iClassID, qsCr8CompName.toLocal8Bit().constData(), NULL /*BEMObject* pParent*/,
+                                 BEMO_User /*BEM_ObjType*/, TRUE /*bDefaultParent*/, TRUE /*bAutoCreate*/, iBEMProcIdx );
+   if (pBEMObj == NULL)
+   {  iRetVal = -31;
+      if (psMsg)
+         *psMsg = QString( "error: creating %1 '%2'" ).arg( pBEMClass->getShortName(), qsCr8CompName );
+   }
+   else
+   {
+      iNewObjIdx = iNumObjs;
+      if (objName != NULL)
+      {  // no change to qsCompIdxPrefix
+      }
+      else if (qsCompIdxPrefix.isEmpty())
+         qsCompIdxPrefix  = QString( "%1").arg( QString::number( iAppendObjIdx ) );
+      else
+         qsCompIdxPrefix += QString("-%1").arg( QString::number( iAppendObjIdx ) );
+   }
+   return pBEMObj;
+}
+
+// recursive function to load BEM object from QJsonObject
+BEMObject* LoadComponentFromJsonObject( QJsonObject& obj, int& iRetVal, QString* psMsg, int iClassID, const char* objName, QString qsCompIdxPrefix,      // SAC 08/16/23
+                                          int iBEMProcIdx, const char* fileNamePropertyType, const char* fileName, const char* propertyToIncludeInObjName )
+{
+   BEMObject* pBEMObj = NULL;
+   int iError;
+   BEMClass* pBEMClass = BEMPX_GetClass( iClassID, iError, iBEMProcIdx );
+   int iNumPropTypes   = BEMPX_GetNumPropertyTypes( iClassID );
+   if (pBEMClass == NULL)
+   {  iRetVal = -11;
+      if (psMsg)
+         *psMsg = QString( "error: unable to find BEM class #%1" ).arg( QString::number(iClassID) );
+   }
+   else if (iNumPropTypes < 1)
+   {  iRetVal = -12;
+      if (psMsg)
+         *psMsg = QString( "error: invalid number of BEM class %1 property types (%2)" ).arg( pBEMClass->getShortName(), QString::number(iNumPropTypes) );
+   }
+   else if (!BEMPX_CanCreateAnotherUserObject( iClassID, 1, iBEMProcIdx ))
+   {  iRetVal = -13;
+      if (psMsg)
+         *psMsg = QString( "error: unable to create another BEM object of type %1" ).arg( pBEMClass->getShortName() );
+   }
+   else
+   {
+      if (qsCompIdxPrefix.isEmpty() && propertyToIncludeInObjName && strlen( propertyToIncludeInObjName ) > 0)    // SAC 12/18/23
+      {  //long lDBID = BEMPX_GetDatabaseID( propertyToIncludeInObjName, iClassID );
+         QJsonValue qjVal = obj.value(propertyToIncludeInObjName);
+         if (qjVal.isUndefined() || qjVal.isNull())
+            qsCompIdxPrefix = "undef";    // undefined/null elements
+         else if (qjVal.isBool())
+            qsCompIdxPrefix = (qjVal.toBool() ? "true" : "false");
+         else if (qjVal.isString())
+            qsCompIdxPrefix = qjVal.toString();
+         else if (qjVal.isDouble())
+            qsCompIdxPrefix = QString::number( qjVal.toDouble() );
+         else if (qjVal.isObject())
+         {  QJsonObject valObj = qjVal.toObject();
+            if (valObj.isEmpty())
+               qsCompIdxPrefix = "missing";    // empty object
+            else
+               qsCompIdxPrefix = "CantLoadObjectHere";    // error - to do??
+         }
+      }
+
+      int iNewObjIdx = -1;
+      for (int iClsPropTypeIdx = 1; (iClsPropTypeIdx <= iNumPropTypes && iRetVal >= 0); iClsPropTypeIdx++)
+      {
+         BEMPropertyType* pPropType = BEMPX_GetPropertyType( iClassID, iClsPropTypeIdx, iBEMProcIdx );      assert( pPropType != NULL );
+         if (pPropType == NULL)
+         {  iRetVal = -14;
+            if (psMsg)
+               *psMsg = QString( "error: unable to find property type #%1 of class '%2'" ).arg( QString::number(iClsPropTypeIdx), pBEMClass->getShortName() );
+         }
+         else if (!pPropType->getInputClassInfo().isEmpty() && pPropType->getInputClassInfo().compare("n/a")==0)
+         {  // don't attempt to load this property from the JSON file, as it is not there
+            if (fileNamePropertyType && fileName && pPropType->getShortName().compare(fileNamePropertyType)==0)
+            {  int iSetBEMStr = BEMPX_SetBEMData( BEMPX_GetDBID( iClassID, iClsPropTypeIdx, 1 ), BEMP_Str, (void*) fileName, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                     //BEMPX_WriteLogFile( QString("LoadComponentFromJsonObject() setting %1 '%2' (idx %3) %4 to '%5'").arg( pBEMClass->getShortName(), objName, QString::number(iNewObjIdx), fileNamePropertyType, fileName ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+               if (iSetBEMStr < 0)
+               {  iRetVal = -32;
+                  if (psMsg)
+                     *psMsg = QString( "error: setting string '%1' to %2:%3 (%4)" ).arg( fileName, pBEMClass->getShortName(), pPropType->getShortName(), QString::number(iSetBEMStr) );
+               }
+         }  }
+         else
+         {  QString qsJSONPropName = ( pPropType->getInputClassInfo().isEmpty() ? pPropType->getShortName() : pPropType->getInputClassInfo() );
+            int iArrayLen = pPropType->getNumValues();
+            if (iArrayLen > 1)
+            {
+               QJsonArray qvPropArr = obj.value(qsJSONPropName).toArray();
+               if (qvPropArr.isEmpty())
+               {  // do nothing - skip past empty array
+               }
+               else if (qvPropArr.count() > iArrayLen)
+               {  iRetVal = -15;
+                  if (psMsg)
+                     *psMsg = QString( "error: %1 JSON array number of elements (%2) exceeds the corresponding BEM array length (%3)" ).arg( qsJSONPropName, QString::number(qvPropArr.count()), QString::number(iArrayLen) );
+               }
+               else
+               {  for (int i1Arr = 1; (i1Arr <= qvPropArr.count() && iRetVal >= 0); i1Arr++)
+                  {
+                     long lDBID = BEMPX_GetDBID( iClassID, iClsPropTypeIdx, i1Arr );
+                     if (pPropType->getPropType() == BEMP_Obj)
+                     {
+                        QJsonObject arrObj = qvPropArr[i1Arr-1].toObject();
+                        if (arrObj.isEmpty())
+                        {  // allow empty 
+                           iRetVal = -16;
+                           if (psMsg)
+                              *psMsg = QString( "error: %1 JSON array object #%2 empty" ).arg( qsJSONPropName, QString::number(i1Arr) );
+                        }
+                        else
+                        {  if (iNewObjIdx < 0)
+                              pBEMObj = CreateJsonObject( iRetVal, iNewObjIdx, psMsg, iClassID, pBEMClass, objName, qsCompIdxPrefix, iBEMProcIdx );
+                           if (iRetVal >= 0 && iNewObjIdx >= 0)
+                           {
+                              int iArrObjClassID = pPropType->getObj1ClassIdx(0);      assert( iArrObjClassID > 0 );
+                              BEMClass* pArrObjBEMClass = BEMPX_GetClass( iArrObjClassID, iError, iBEMProcIdx );        assert( pArrObjBEMClass != NULL );
+                              BEMObject* pArrBEMObj = LoadComponentFromJsonObject( arrObj, iRetVal, psMsg, iArrObjClassID, NULL /*objName*/, qsCompIdxPrefix, iBEMProcIdx, NULL, NULL, NULL );
+                              if (pArrBEMObj && iRetVal >= 0)
+                              {
+                                 int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Obj, (void*) pArrBEMObj, BEMO_User, iNewObjIdx,
+                                                     BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                                 if (iSetBEMObj < 0)
+                                 {  iRetVal = -17;
+                                    if (psMsg)
+                                       *psMsg = QString( "error: setting %1 BEM object '%2' to %3:%4[%5]" ).arg( pArrObjBEMClass->getShortName(), pArrBEMObj->getName(), pBEMClass->getShortName(), pPropType->getShortName(), QString::number(i1Arr) );
+                              }  }
+                     }  }  }
+                     else
+                     {
+                        QJsonValue qjVal = qvPropArr[i1Arr-1];
+                        if (qjVal.isBool())
+                        {  if (pPropType->getPropType() == BEMP_Int)
+                           {  long lBool = (qjVal.toBool() ? 1 : 0);
+                              int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lBool, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                              if (iSetBEMObj < 0)
+                              {  iRetVal = -25;
+                                 if (psMsg)
+                                    *psMsg = QString( "error: setting integer %1 to %2:%3[%4]" ).arg( QString::number(lBool), pBEMClass->getShortName(), pPropType->getShortName(), QString::number(i1Arr) );
+                           }  }
+                           else
+                           {  iRetVal = -26;
+                              if (psMsg)
+                                 *psMsg = QString( "error: %1 JSON bool element inconsistent w/ type of BEM property (expecting integer)" ).arg( qsJSONPropName );
+                        }  }
+                        else if (qjVal.isString() && (pPropType->getPropType() == BEMP_Str || pPropType->getPropType() == BEMP_Sym))
+                        {  QString qsVal = qjVal.toString();
+                           int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_QStr, (void*) &qsVal, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                           if (iSetBEMObj < 0)
+                           {  iRetVal = -27;
+                              if (psMsg)
+                                 *psMsg = QString( "error: setting string '%1' to %2:%3[%4]" ).arg( qsVal, pBEMClass->getShortName(), pPropType->getShortName(), QString::number(i1Arr) );
+                           }
+                        }
+                        else if (qjVal.isDouble() && (pPropType->getPropType() == BEMP_Int || pPropType->getPropType() == BEMP_Flt))
+                        {  if (pPropType->getPropType() == BEMP_Int)
+                           {  long lVal = qjVal.toInt();
+                              int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lVal, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                              if (iSetBEMObj < 0)
+                              {  iRetVal = -28;
+                                 if (psMsg)
+                                    *psMsg = QString( "error: setting integer %1 to %2:%3[%4]" ).arg( QString::number(lVal), pBEMClass->getShortName(), pPropType->getShortName(), QString::number(i1Arr) );
+                           }  }
+                           else
+                           {  double dVal = qjVal.toDouble();
+                              int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Flt, (void*) &dVal, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                              if (iSetBEMObj < 0)
+                              {  iRetVal = -29;
+                                 if (psMsg)
+                                    *psMsg = QString( "error: setting double %1 to %2:%3[%4]" ).arg( QString::number(dVal), pBEMClass->getShortName(), pPropType->getShortName(), QString::number(i1Arr) );
+                           }  }
+                        }
+                        else
+                        {  iRetVal = -30;
+                           if (psMsg)
+                              *psMsg = QString( "error: unexpected data types in JSON vs. BEM for %1:%2[%3]" ).arg( pBEMClass->getShortName(), pPropType->getShortName(), QString::number(i1Arr) );
+                        }
+                     }
+                  }  // end of loop over array elements
+            }  }
+            else     // setting SINGLE element property
+            {
+               QJsonValue qjVal = obj.value(qsJSONPropName);
+               long lDBID = BEMPX_GetDBID( iClassID, iClsPropTypeIdx, 1 );
+               if (qjVal.isUndefined() || qjVal.isNull())
+               {  // skip past undefined/null elements
+               }
+               else
+               {  if (iNewObjIdx < 0)
+                     pBEMObj = CreateJsonObject( iRetVal, iNewObjIdx, psMsg, iClassID, pBEMClass, objName, qsCompIdxPrefix, iBEMProcIdx );
+                  if (iRetVal >= 0 && iNewObjIdx >= 0)
+                  {
+                     if (qjVal.isBool())
+                     {  if (pPropType->getPropType() == BEMP_Int)
+                        {  long lBool = (qjVal.toBool() ? 1 : 0);
+                           int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lBool, BEMO_User, iNewObjIdx,
+                                               BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                           if (iSetBEMObj < 0)
+                           {  iRetVal = -18;
+                              if (psMsg)
+                                 *psMsg = QString( "error: setting integer %1 to %2:%3" ).arg( QString::number(lBool), pBEMClass->getShortName(), pPropType->getShortName() );
+                        }  }
+                        else
+                        {  iRetVal = -19;
+                           if (psMsg)
+                              *psMsg = QString( "error: %1 JSON bool element inconsistent w/ type of BEM property (expecting integer)" ).arg( qsJSONPropName );
+                     }  }
+                     else if (qjVal.isString() && (pPropType->getPropType() == BEMP_Str || pPropType->getPropType() == BEMP_Sym))
+                     {  QString qsVal = qjVal.toString();
+                        int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_QStr, (void*) &qsVal, BEMO_User, iNewObjIdx,
+                                               BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                        if (iSetBEMObj < 0)
+                        {  iRetVal = -20;
+                           if (psMsg)
+                              *psMsg = QString( "error: setting string '%1' to %2:%3" ).arg( qsVal, pBEMClass->getShortName(), pPropType->getShortName() );
+                        }
+                     }
+                     else if (qjVal.isDouble() && (pPropType->getPropType() == BEMP_Int || pPropType->getPropType() == BEMP_Flt))
+                     {  if (pPropType->getPropType() == BEMP_Int)
+                        {  long lVal = qjVal.toInt();
+                           int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lVal, BEMO_User, iNewObjIdx,
+                                               BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                           if (iSetBEMObj < 0)
+                           {  iRetVal = -21;
+                              if (psMsg)
+                                 *psMsg = QString( "error: setting integer %1 to %2:%3" ).arg( QString::number(lVal), pBEMClass->getShortName(), pPropType->getShortName() );
+                        }  }
+                        else
+                        {  double dVal = qjVal.toDouble();
+                           int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Flt, (void*) &dVal, BEMO_User, iNewObjIdx,
+                                               BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                           if (iSetBEMObj < 0)
+                           {  iRetVal = -22;
+                              if (psMsg)
+                                 *psMsg = QString( "error: setting double %1 to %2:%3" ).arg( QString::number(dVal), pBEMClass->getShortName(), pPropType->getShortName() );
+                        }  }
+                     }
+                     else if (qjVal.isObject() && pPropType->getPropType() == BEMP_Obj)
+                     {  QJsonObject valObj = qjVal.toObject();
+                        if (valObj.isEmpty())
+                        {  // skip past empty obejct
+                        }
+                        else
+                        {  int iValObjClassID = pPropType->getObj1ClassIdx(0);      assert( iValObjClassID > 0 );
+                           BEMClass* pValObjBEMClass = BEMPX_GetClass( iValObjClassID, iError, iBEMProcIdx );        assert( pValObjBEMClass != NULL );
+                           BEMObject* pValBEMObj = LoadComponentFromJsonObject( valObj, iRetVal, psMsg, iValObjClassID, NULL /*objName*/, qsCompIdxPrefix, iBEMProcIdx, NULL, NULL, NULL );
+                           if (pValBEMObj && iRetVal >= 0)
+                           {
+                              int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Obj, (void*) pValBEMObj, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                              if (iSetBEMObj < 0)
+                              {  iRetVal = -23;
+                                 if (psMsg)
+                                    *psMsg = QString( "error: setting %1 BEM object '%2' to %3:%4" ).arg( pValObjBEMClass->getShortName(), pValBEMObj->getName(), pBEMClass->getShortName(), pPropType->getShortName() );
+                        }  }  }
+                     }
+                     else
+                     {  iRetVal = -24;
+                        if (psMsg)
+                           *psMsg = QString( "error: unexpected data types in JSON vs. BEM for %1:%2" ).arg( pBEMClass->getShortName(), pPropType->getShortName() );
+                     }
+                  }
+            }  }
+         }
+      }  // end of loop over PropTypes
+   }
+
+   return pBEMObj;
+}
+
+// return value:  < 0 => error code  /  >= 0 => 0-based object index
+// added fileNamePropertyType argument - SAC 08/28/23
+int BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
+                                     int iBEMProcIdx, QString* psMsg /*=NULL*/, const char* fileNamePropertyType /*=NULL*/,       // SAC 08/15/23
+                                     const char* propertyToIncludeInObjName /*=NULL*/ )    // SAC 12/18/23
+{	int iRetVal = 0;
+//	ptime t1(microsec_clock::local_time());  // SAC 10/24/13
+	QString sFileName = fileName;
+	QFile file( sFileName );
+	if (!file.open( QFile::ReadOnly | QFile::Text ))
+	{	iRetVal = -1;
+      if (psMsg)
+         *psMsg = QString( "error opening JSON file: %1" ).arg( fileName );
+   }
+	else
+	{  QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+      QJsonObject obj   = doc.object();            // get root
+      if (doc.isEmpty())
+      {  iRetVal = -2;
+         if (psMsg)
+            *psMsg = QString( "error: main JSON file object missing or invalid" );
+      }
+      else
+      {  int iClassID = BEMPX_GetDBComponentID( objType );
+         if (iClassID < 1)
+         {  iRetVal = -3;
+            if (psMsg)
+               *psMsg = QString( "error: class ID not found for '%1'" ).arg( objType );
+         }
+         else
+         {  int iNumClassObjs = BEMPX_GetNumObjects( iClassID, BEMO_User, iBEMProcIdx );
+            QString qsCompIdxPrefix;
+            BEMObject* pMainBEMObj = LoadComponentFromJsonObject( obj, iRetVal, psMsg, iClassID, objName, qsCompIdxPrefix /*QString("%1").arg(QString::number(iNumClassObjs+1))*/,
+                                                                  iBEMProcIdx, fileNamePropertyType, fileName, propertyToIncludeInObjName );
+            if (pMainBEMObj && iRetVal >= 0)
+               iRetVal = iNumClassObjs;
+            else if (pMainBEMObj == NULL)
+            {  if (iRetVal == 0)
+               {  iRetVal = -4;
+                  if (psMsg)
+                     *psMsg = QString( "error: %1 object not found in JSON file: %2" ).arg( objType, fileName );
+            }  }
+   }  }  }
+
+	return iRetVal;
+}
+
+long GetFileSize(std::string filename)
+{   struct stat stat_buf;
+    int rc = stat(filename.c_str(), &stat_buf);
+    return rc == 0 ? stat_buf.st_size : -1;
+}
+
+// return value:  > 0 => error code:
+//    1 : file size smaller than minimum specified
+//    2 : error opening JSON file
+//    3 : main JSON file object missing or invalid
+//    4 : required element missing from JSON file
+//    else : 'Code' from JSON file
+int BEMPX_GetJSONFileErrorCode( const char* fileName, QString* psMsg /*=NULL*/, const char* pszReqdElement /*=NULL*/, long lMinFileSize /*=0*/ )	   // SAC 09/04/23
+{	int iRetVal = 0;
+      //	ptime t1(microsec_clock::local_time());  // SAC 10/24/13
+   if (lMinFileSize > 0)
+   {	long lFileSize = GetFileSize( fileName );
+      if (lFileSize < lMinFileSize)
+      {  iRetVal = 1;
+         if (psMsg)
+            *psMsg = QString( "JSON file smaller (%1) than minimum size of %2, file: %3" ).arg( QString::number(lFileSize), QString::number(lMinFileSize), fileName );
+   }  }
+   if (iRetVal == 0)
+   {
+   	QString sFileName = fileName;
+   	QFile file( sFileName );
+   	if (!file.open( QFile::ReadOnly | QFile::Text ))
+   	{	iRetVal = 2;
+         if (psMsg)
+            *psMsg = QString( "error opening JSON file: %1" ).arg( fileName );
+      }
+   	else
+   	{  QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+         QJsonObject obj   = doc.object();            // get root
+         if (doc.isEmpty())
+         {  iRetVal = 3;
+            if (psMsg)
+               *psMsg = QString( "error: main JSON file object missing or invalid, file: %1" ).arg( fileName );
+         }
+         else
+         {  QJsonValue qjVal;
+            if (pszReqdElement)     // SAC 09/05/23
+            {  qjVal = obj.value(pszReqdElement);
+               if (qjVal.isUndefined())
+               {  iRetVal = 4;
+                  if (psMsg)
+                     *psMsg = QString( "error: required element '%1' missing from JSON file: %2" ).arg( pszReqdElement, fileName );
+            }  }
+            if (iRetVal == 0)
+            {  qjVal = obj.value("Code");
+               if (!qjVal.isUndefined() && !qjVal.isNull())
+               {  if (qjVal.isDouble())
+                  {  iRetVal = qjVal.toInt();
+                     qjVal = obj.value("Message");
+                     if (qjVal.isString())
+                     {  if (psMsg)
+                           *psMsg = qjVal.toString();
+                     }
+                     else 
+                        iRetVal = 0;  // OK if Code & Message NOT present...?
+               }  }
+   }  }  }  }
+	return iRetVal;
+}
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+void PropertyToStringForCSV( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet /*=TRUE*/, BOOL bIsUserInputMode )
+{
+   // get the data type of this property
+   int iDataType = pProp->getType()->getPropType();
+   if ( (iDataType == BEMP_Int) || (iDataType == BEMP_Sym) )
+   {  // integer or symbolic data => stored in database as integer
+      if (iDataType == BEMP_Int)
+      {
+         long lTemp = pProp->getInt();
+
+         // SAC 9/25/99 - Conversion of special DATE data from local time to GMT
+         if (pProp->getType()->getObjTypeValue(0) == 1)
+         {
+            // Get local delta from GMT
+            struct _timeb tstruct;
+#pragma warning(disable : 4996)
+            _ftime( &tstruct );
+#pragma warning(default : 4996)
+            lTemp -= (tstruct.timezone * 60);
+         }
+
+         // integer => simple format
+         sData = QString( "%1" ).arg( QString::number(lTemp) );
+      }
+      else // if (iDataType == BEMP_Sym)
+      {  // symbol => convert integer value to symbol string and enclose in double quotes
+	// SAC 9/23/16 - kludge to replcate MFC behavior where blank symbol strings are written to project file as "(null)"
+      	QString qsSym = GetSymbolStringFromPtrs( pProp->getInt(), pObj, pProp, iBEMProcIdx, bOnlyFromCurrentSymDepSet );
+      	if (qsSym.isEmpty())
+      		qsSym = "(null)";
+
+         if (bIsUserInputMode)
+            sData = QString( "\"%1\"" ).arg( qsSym );
+         else
+            sData = QString( "\"%1\"  (%2)" ).arg( qsSym, QString::number(pProp->getInt()) );
+      }
+   }
+   else if (iDataType == BEMP_Flt)
+   {  // float => simple format
+//		if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsNRCCXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType ))  // SAC 4/11/12 - ensure exponential format NOT used for outputting float data		// SAC 12/2/15   // SAC 5/20/20
+			FloatToString_NoExpNotation( sData, pProp->getDouble() );
+//		else
+//      	sData = QString( "%1" ).arg( QString::number(pProp->getDouble()) );
+   }
+   else if (iDataType == BEMP_Str)
+   {  // string => simply enclose in double quotes
+      sData = pProp->getString();
+		if (TRUE)  // m_iFileType != BEMFT_CSE || pProp->getType()->getShortName().right(2).compare("_x") != 0)
+      {	sData.remove( QChar('"') );
+      	sData = QString( "\"%1\"" ).arg( sData );
+		}
+   }
+   else if (iDataType == BEMP_Obj)
+   {  // object
+      BEMObject* pRefObj = pProp->getObj();
+      if (pRefObj != NULL)
+         // if object pointer valid, enclose referenced object in double quotes
+         sData = QString( "\"%1\"" ).arg( pRefObj->getName() );
+//      else if (StatusRequiresWrite( pProp ))
+//         // if object pointer NOT valid but we must output this property, then output "- none -"
+//         sData = QString( "\"%1\"" ).arg( szNone );
+      else  // else don't output property
+         sData.clear();
+   }
+   else
+   {
+      assert( FALSE );
+   }
+}
+
+// return value:  < 0 => error code  /  >= 0 => num objects written
+int BEMPX_WriteComponentsToCSVFile( const char* fileName, const char* objType, int iBEMProcIdx )   // SAC 08/16/23
+{  int iRetVal = 0;
+   int iClassID = BEMPX_GetDBComponentID( objType );
+   if (iClassID < 1)
+   {  iRetVal = -1;
+      //if (psMsg)
+      //   *psMsg = QString( "error: class ID not found for '%1'" ).arg( objType );
+   }
+   else
+   {  int iNumObjs = BEMPX_GetNumObjects( iClassID, BEMO_User, iBEMProcIdx );
+      if (iNumObjs > 0)
+      {
+      	try
+      	{  BEMTextIO file( fileName, BEMTextIO::store );
+            try
+            {
+               int iError, iClsPropTypeIdx;
+               int iNumPropTypes   = BEMPX_GetNumPropertyTypes( iClassID );
+               //if (pBEMClass == NULL)
+               //   iRetVal = -2;
+               //else if (iNumPropTypes < 1)
+               if (iNumPropTypes < 1)
+                  iRetVal = -3;
+               else
+               {  QString qsLine = QString( "\"%1 Name\"," ).arg( objType );
+                  for (iClsPropTypeIdx = 1; (iClsPropTypeIdx <= iNumPropTypes && iRetVal >= 0); iClsPropTypeIdx++)
+                  {
+                     BEMPropertyType* pPropType = BEMPX_GetPropertyType( iClassID, iClsPropTypeIdx, iBEMProcIdx );      assert( pPropType != NULL );
+                     if (pPropType == NULL)
+                        iRetVal = -4;
+                     else
+                     {  int iArrayLen = pPropType->getNumValues();
+                        if (iArrayLen > 1)
+                        {  qsLine += QString( "%1[1]," ).arg( pPropType->getShortName() );
+                           for (int i1Arr = 2; (i1Arr <= iArrayLen && iRetVal >= 0); i1Arr++)
+                              qsLine += QString( "[%1]," ).arg( QString::number(i1Arr) );
+                        }
+                        else
+                           qsLine += QString( "%1," ).arg( pPropType->getShortName() );
+                     }
+                  }
+                  file.WriteWholeRecord( qsLine.toLocal8Bit().constData() );  //, qsLine.length() + 2 );
+                  //file.NewLine();
+
+                  for (int idx=0; (idx < iNumObjs && iRetVal >= 0); idx++)
+                  {  BEMObject* pObj = BEMPX_GetObjectByClass( iClassID, iError, idx, BEMO_User, iBEMProcIdx );
+                     qsLine = QString( "\"%1\"," ).arg( pObj->getName() );
+                     for (iClsPropTypeIdx = 1; (iClsPropTypeIdx <= iNumPropTypes && iRetVal >= 0); iClsPropTypeIdx++)
+                     {
+                        BEMPropertyType* pPropType = BEMPX_GetPropertyType( iClassID, iClsPropTypeIdx, iBEMProcIdx );      assert( pPropType != NULL );
+                        if (pPropType == NULL)
+                           iRetVal = -4;
+                        else
+                        {  int iArrayLen = pPropType->getNumValues();
+                           for (int i1Arr = 1; (i1Arr <= iArrayLen && iRetVal >= 0); i1Arr++)
+                           {
+                              long lDBID  = BEMPX_GetDBID( iClassID, iClsPropTypeIdx, i1Arr );
+                              int iStatus = BEMPX_GetDataStatus( lDBID, idx, BEMO_User, iBEMProcIdx );
+                              if (iStatus < 1)
+                                 qsLine += ",";
+                              else
+                              {
+                                 BEMProperty* pProp = BEMPX_GetProperty( lDBID, iError, idx, BEMO_User, iBEMProcIdx );
+                                 if (pProp == NULL)
+                                    iRetVal = -5;
+                                 else
+                                 {  QString sData;
+   	                              PropertyToStringForCSV( pObj, pProp, sData, iBEMProcIdx, TRUE /*bOnlyFromCurrentSymDepSet*/, TRUE /*bIsUserInputMode*/ );
+					                  //   if (sData.length() > 0 && m_bIsUserInputMode && pProp->getType()->getPropType() == BEMP_Sym &&
+					                  //   	 sData.indexOf("(null)") == 1 && !m_bReportInvalidEnums)	// SAC 6/8/19
+	         	                  //   	PropertyToStringForCSV( pObj, pProp, sData, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/, TRUE /*bIsUserInputMode*/ );		// find enumeration string outside current SymDepList
+                                    qsLine += QString( "%1," ).arg( sData );
+                                 }
+                           }  }
+                     }  }
+                     file.WriteWholeRecord( qsLine.toLocal8Bit().constData() );  //, qsLine.length() + 2 );
+                     //file.NewLine();
+                  }
+               }
+            }
+      		catch (std::exception& e)
+      		{
+      			QString msg = QString( "Error writing %1 data to CSV file: %2\n\t - cause: %3\n" ).arg( objType, fileName, e.what() );
+      			std::cout << msg.toLocal8Bit().constData();
+               BEMMessageBox( msg, "", 2 /*warning*/ );
+      		}
+      	 	catch (...)
+      	  	{
+      			QString msg = QString( "Error writing %1 data to CSV file: %2\n" ).arg( objType, fileName );
+      			std::cout << msg.toLocal8Bit().constData();
+               BEMMessageBox( msg, "", 2 /*warning*/ );
+      	  	}
+      	}
+      	catch (std::exception& e)
+      	{
+      		QString sErrMsg = QString( "Error opening %1 data CSV file: %2\n\t - cause: %3\n" ).arg( objType, fileName, e.what() );
+      		std::cout << sErrMsg.toLocal8Bit().constData();
+      		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+      	}
+       	catch (...)
+        	{
+      		QString sErrMsg = QString( "Error opening %1 data CSV file: %2\n" ).arg( objType, fileName );
+      		std::cout << sErrMsg.toLocal8Bit().constData();
+      		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+        	}
+   }  }
+   return iRetVal;
+}

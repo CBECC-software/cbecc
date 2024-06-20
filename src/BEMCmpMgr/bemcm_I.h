@@ -121,7 +121,8 @@ extern int GenerateReportViaQt(	const char* pszOutPathFile, const char* pszURL, 
 											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );
 extern int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 											const char* pszProxyAddress=NULL, const char* pszProxyCredentials=NULL, const char* pszProxyType=NULL,		// pass NULLs for no proxy
-											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false, int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=CECRptGenDefaultReadWriteTimeoutSecs );      // SAC 06/13/21   // SAC 11/02/22
+											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false, int iConnectTimeoutSecs=10, int iReadWriteTimeoutSecs=CECRptGenDefaultReadWriteTimeoutSecs,
+                                 const char* pszOperationDescrip=NULL, const char* pszPostDescrip=NULL );      // SAC 06/13/21   // SAC 11/02/22   // SAC 08/31/23 (CUAC)
 
 extern int CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy
 										char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false,
