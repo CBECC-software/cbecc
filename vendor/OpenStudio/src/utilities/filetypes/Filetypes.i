@@ -1,9 +1,30 @@
 #ifndef UTILITIES_FILETYPES_I
 #define UTILITIES_FILETYPES_I
 
+
+#if defined(SWIGCSHARP)
+
+  // Avoid triggering a SWIG warning: 'string' is a C# keyword
+  %rename(toString) openstudio::RunOptions::string;
+  %rename(toString) openstudio::WorkflowStepValue::string;
+  %rename(toString) openstudio::WorkflowStepResult::string;
+  %rename(toString) openstudio::WorkflowStep::string;
+  %rename(toString) openstudio::WorkflowJSON::string;
+  %rename(toString) openstudio::CSVFile::string;
+  %rename(toString) openstudio::StandardsJSON::string;
+
+  // Overload resolution
+  %ignore openstudio::WorkflowStepValue::WorkflowStepValue(std::string const&, char const*);
+  %ignore openstudio::MeasureStep::setArgument(std::string const&, char const*);
+
+
+#endif
+
+
 %{
   namespace openstudio{}
   using namespace openstudio;
+  #include <utilities/filetypes/CSVFile.hpp>
   #include <utilities/filetypes/EpwFile.hpp>
   #include <utilities/filetypes/RunOptions.hpp>
   #include <utilities/filetypes/RunOptions_Impl.hpp>
@@ -11,6 +32,7 @@
   #include <utilities/filetypes/WorkflowStep.hpp>
   #include <utilities/filetypes/WorkflowStep_Impl.hpp>
   #include <utilities/filetypes/WorkflowJSON.hpp>
+  #include <utilities/filetypes/StandardsJSON.hpp>
 
   // this is all garbage, I don't know why it is needed, probably comes from quantity
   #include <utilities/units/Quantity.hpp>
@@ -33,6 +55,11 @@
 
 //%import <utilities/units/Quantity.i>
 %import <utilities/data/Variant.i>
+
+%ignore std::vector<openstudio::CSVFile>::vector(size_type);
+%ignore std::vector<openstudio::CSVFile>::resize(size_type);
+%template(CSVFileVector) std::vector<openstudio::CSVFile>;
+%template(OptionalCSVFile) boost::optional<openstudio::CSVFile>;
 
 %template(EpwDataPointVector) std::vector<openstudio::EpwDataPoint>;
 %template(EpwDesignConditionVector) std::vector<openstudio::EpwDesignCondition>;
@@ -71,11 +98,16 @@
 %template(WorkflowJSONVector) std::vector<openstudio::WorkflowJSON>;
 %template(OptionalWorkflowJSON) boost::optional<openstudio::WorkflowJSON>;
 
+%template(StandardsJSONVector) std::vector<openstudio::StandardsJSON>;
+%template(OptionalStandardsJSON) boost::optional<openstudio::StandardsJSON>;
+
+%include <utilities/filetypes/CSVFile.hpp>
 %include <utilities/filetypes/EpwFile.hpp>
 %include <utilities/filetypes/RunOptions.hpp>
 %include <utilities/filetypes/WorkflowStepResult.hpp>
 %include <utilities/filetypes/WorkflowStep.hpp>
 %include <utilities/filetypes/WorkflowJSON.hpp>
+%include <utilities/filetypes/StandardsJSON.hpp>
 
 // extend class
 %extend openstudio::RunOptions{
@@ -108,6 +140,14 @@
 };
 
 %extend openstudio::WorkflowJSON{
+  std::string __str__() {
+    std::ostringstream os;
+    os << *self;
+    return os.str();
+  }
+};
+
+%extend openstudio::StandardsJSON{
   std::string __str__() {
     std::ostringstream os;
     os << *self;

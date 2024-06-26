@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,238 +35,173 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class Shade_Impl;
+    class Shade_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** Shade is a ShadingMaterial that wraps the OpenStudio IDD object 'OS:WindowMaterial:Shade'. */
-class MODEL_API Shade : public ShadingMaterial {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** Shade is a ShadingMaterial that wraps the OpenStudio IDD object 'OS:WindowMaterial:Shade'. */
+  class MODEL_API Shade : public ShadingMaterial
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit Shade(const Model& model,
-    double solarTransmittance = 0.4,
-    double solarReflectance = 0.5,
-    double visibleTransmittance = 0.4,
-    double visibleReflectance = 0.5,
-    double thermalHemisphericalEmissivity = 0.9,
-    double thermalTransmittance = 0.0,
-    double thickness = 0.005,
-    double conductivity = 0.1);
+    explicit Shade(const Model& model, double solarTransmittance = 0.4, double solarReflectance = 0.5, double visibleTransmittance = 0.4,
+                   double visibleReflectance = 0.5, double thermalHemisphericalEmissivity = 0.9, double thermalTransmittance = 0.0,
+                   double thickness = 0.005, double conductivity = 0.1);
 
-  virtual ~Shade() {}
+    virtual ~Shade() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  /** The conductivitiy of the material in W/m*K. */
-  double thermalConductivity() const;
+    /** The conductivitiy of the material in W/m*K. */
+    double thermalConductivity() const;
 
-  /** The conductance of the material in W/m^2*K. */
-  double thermalConductance() const;
+    /** The conductance of the material in W/m^2*K. */
+    double thermalConductance() const;
 
-  /** The resistivity of the material in m*K/W. */
-  double thermalResistivity() const;
+    /** The resistivity of the material in m*K/W. */
+    double thermalResistivity() const;
 
-  /** The resistance of the material in m^2*K/W. */
-  double thermalResistance() const;
+    /** The resistance of the material in m^2*K/W. */
+    double thermalResistance() const;
 
-  double solarTransmittance() const;
+    double solarTransmittance() const;
 
-  Quantity getSolarTransmittance(bool returnIP=false) const;
+    double solarReflectance() const;
 
-  double solarReflectance() const;
+    double visibleTransmittance() const;
 
-  Quantity getSolarReflectance(bool returnIP=false) const;
+    double visibleReflectance() const;
 
-  double visibleTransmittance() const;
+    double thermalHemisphericalEmissivity() const;
 
-  Quantity getVisibleTransmittance(bool returnIP=false) const;
+    double thermalTransmittance() const;
 
-  double visibleReflectance() const;
+    double solarAbsorptance() const;
 
-  Quantity getVisibleReflectance(bool returnIP=false) const;
+    double visibleAbsorptance() const;
 
-  double thermalHemisphericalEmissivity() const;
+    double thickness() const;
 
-  Quantity getThermalHemisphericalEmissivity(bool returnIP=false) const;
+    double conductivity() const;
 
-  double thermalTransmittance() const;
+    double shadetoGlassDistance() const;
 
-  double solarAbsorptance() const;
+    bool isShadetoGlassDistanceDefaulted() const;
 
-  double visibleAbsorptance() const;
+    double topOpeningMultiplier() const;
 
-  Quantity getThermalTransmittance(bool returnIP=false) const;
+    bool isTopOpeningMultiplierDefaulted() const;
 
-  double thickness() const;
+    double bottomOpeningMultiplier() const;
 
-  Quantity getThickness(bool returnIP=false) const;
+    bool isBottomOpeningMultiplierDefaulted() const;
 
-  double conductivity() const;
+    double leftSideOpeningMultiplier() const;
 
-  Quantity getConductivity(bool returnIP=false) const;
+    bool isLeftSideOpeningMultiplierDefaulted() const;
 
-  double shadetoGlassDistance() const;
+    double rightSideOpeningMultiplier() const;
 
-  Quantity getShadetoGlassDistance(bool returnIP=false) const;
+    bool isRightSideOpeningMultiplierDefaulted() const;
 
-  bool isShadetoGlassDistanceDefaulted() const;
+    double airflowPermeability() const;
 
-  double topOpeningMultiplier() const;
+    bool isAirflowPermeabilityDefaulted() const;
 
-  Quantity getTopOpeningMultiplier(bool returnIP=false) const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool isTopOpeningMultiplierDefaulted() const;
+    /** Sets the conductivity of the material in W/m*K, if possible. */
+    bool setThermalConductivity(double value);
 
-  double bottomOpeningMultiplier() const;
+    /** Sets the conductance of the material in W/m^2*K, if possible. */
+    bool setThermalConductance(double value);
 
-  Quantity getBottomOpeningMultiplier(bool returnIP=false) const;
+    /** Sets the resistivity of the material in m*K/W, if possible. */
+    bool setThermalResistivity(double value);
 
-  bool isBottomOpeningMultiplierDefaulted() const;
+    /** Sets the resistance of the material in m^2*K/W, if possible. */
+    bool setThermalResistance(double value);
 
-  double leftSideOpeningMultiplier() const;
+    bool setThermalTransmittance(double thermalTransmittance);
 
-  Quantity getLeftSideOpeningMultiplier(bool returnIP=false) const;
+    bool setSolarTransmittance(double solarTransmittance);
 
-  bool isLeftSideOpeningMultiplierDefaulted() const;
+    bool setSolarReflectance(double solarReflectance);
 
-  double rightSideOpeningMultiplier() const;
+    bool setVisibleTransmittance(double visibleTransmittance);
 
-  Quantity getRightSideOpeningMultiplier(bool returnIP=false) const;
+    bool setVisibleReflectance(double visibleReflectance);
 
-  bool isRightSideOpeningMultiplierDefaulted() const;
+    bool setThermalHemisphericalEmissivity(double thermalHemisphericalEmissivity);
 
-  double airflowPermeability() const;
+    bool setThickness(double thickness);
 
-  Quantity getAirflowPermeability(bool returnIP=false) const;
+    bool setConductivity(double conductivity);
 
-  bool isAirflowPermeabilityDefaulted() const;
+    bool setShadetoGlassDistance(double shadetoGlassDistance);
 
-  //@}
-  /** @name Setters */
-  //@{
+    void resetShadetoGlassDistance();
 
-  /** Sets the conductivity of the material in W/m*K, if possible. */
-  bool setThermalConductivity(double value);
+    bool setTopOpeningMultiplier(double topOpeningMultiplier);
 
-  /** Sets the conductance of the material in W/m^2*K, if possible. */
-  bool setThermalConductance(double value);
+    void resetTopOpeningMultiplier();
 
-  /** Sets the resistivity of the material in m*K/W, if possible. */
-  bool setThermalResistivity(double value);
+    bool setBottomOpeningMultiplier(double bottomOpeningMultiplier);
 
-  /** Sets the resistance of the material in m^2*K/W, if possible. */
-  bool setThermalResistance(double value);
+    void resetBottomOpeningMultiplier();
 
-  bool setThermalTransmittance(double value);
+    bool setLeftSideOpeningMultiplier(double leftSideOpeningMultiplier);
 
-  bool setSolarTransmittance(double value);
+    void resetLeftSideOpeningMultiplier();
 
-  bool setSolarReflectance(double value);
+    bool setRightSideOpeningMultiplier(double rightSideOpeningMultiplier);
 
-  bool setVisibleTransmittance(double value);
+    void resetRightSideOpeningMultiplier();
 
-  bool setVisibleReflectance(double value);
+    bool setAirflowPermeability(double airflowPermeability);
 
-  bool setSolarTransmittance(const Quantity& solarTransmittance);
+    void resetAirflowPermeability();
 
-  bool setSolarReflectance(const Quantity& solarReflectance);
+    //@}
+    /** @name Other */
+    //@{
 
-  bool setVisibleTransmittance(const Quantity& visibleTransmittance);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::Shade_Impl ImplType;
 
-  bool setVisibleReflectance(const Quantity& visibleReflectance);
+    explicit Shade(std::shared_ptr<detail::Shade_Impl> impl);
 
-  bool setThermalHemisphericalEmissivity(double thermalHemisphericalEmissivity);
+    friend class detail::Shade_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.Shade");
+  };
 
-  bool setThermalHemisphericalEmissivity(const Quantity& thermalHemisphericalEmissivity);
+  /** \relates Shade*/
+  typedef boost::optional<Shade> OptionalShade;
 
-  bool setThermalTransmittance(const Quantity& thermalTransmittance);
+  /** \relates Shade*/
+  typedef std::vector<Shade> ShadeVector;
 
-  bool setThickness(double thickness);
+}  // namespace model
+}  // namespace openstudio
 
-  bool setThickness(const Quantity& thickness);
-
-  bool setConductivity(double conductivity);
-
-  bool setConductivity(const Quantity& conductivity);
-
-  bool setShadetoGlassDistance(double shadetoGlassDistance);
-
-  bool setShadetoGlassDistance(const Quantity& shadetoGlassDistance);
-
-  void resetShadetoGlassDistance();
-
-  bool setTopOpeningMultiplier(double topOpeningMultiplier);
-
-  bool setTopOpeningMultiplier(const Quantity& topOpeningMultiplier);
-
-  void resetTopOpeningMultiplier();
-
-  bool setBottomOpeningMultiplier(double bottomOpeningMultiplier);
-
-  bool setBottomOpeningMultiplier(const Quantity& bottomOpeningMultiplier);
-
-  void resetBottomOpeningMultiplier();
-
-  bool setLeftSideOpeningMultiplier(double leftSideOpeningMultiplier);
-
-  bool setLeftSideOpeningMultiplier(const Quantity& leftSideOpeningMultiplier);
-
-  void resetLeftSideOpeningMultiplier();
-
-  bool setRightSideOpeningMultiplier(double rightSideOpeningMultiplier);
-
-  bool setRightSideOpeningMultiplier(const Quantity& rightSideOpeningMultiplier);
-
-  void resetRightSideOpeningMultiplier();
-
-  bool setAirflowPermeability(double airflowPermeability);
-
-  bool setAirflowPermeability(const Quantity& airflowPermeability);
-
-  void resetAirflowPermeability();
-
-  //@}
-  /** @name Other */
-  //@{
-
-  //@}
- protected:
-  /// @cond
-  typedef detail::Shade_Impl ImplType;
-
-  explicit Shade(std::shared_ptr<detail::Shade_Impl> impl);
-
-  friend class detail::Shade_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.Shade");
-};
-
-/** \relates Shade*/
-typedef boost::optional<Shade> OptionalShade;
-
-/** \relates Shade*/
-typedef std::vector<Shade> ShadeVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_SHADE_HPP
-
+#endif  // MODEL_SHADE_HPP

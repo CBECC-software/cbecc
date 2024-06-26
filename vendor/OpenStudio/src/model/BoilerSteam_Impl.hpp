@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,230 +32,153 @@
 
 #include "ModelAPI.hpp"
 #include "StraightComponent_Impl.hpp"
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
 
 namespace openstudio {
 namespace model {
 
-class Node;
+  class Node;
 
-namespace detail {
+  namespace detail {
 
-  /** BoilerSteam_Impl is a StraightComponent_Impl that is the implementation class for BoilerSteam.*/
-  class MODEL_API BoilerSteam_Impl : public StraightComponent_Impl {
+    /** BoilerSteam_Impl is a StraightComponent_Impl that is the implementation class for BoilerSteam.*/
+    class MODEL_API BoilerSteam_Impl : public StraightComponent_Impl
+    {
 
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    BoilerSteam_Impl(const IdfObject& idfObject,
-                     Model_Impl* model,
-                     bool keepHandle);
+      BoilerSteam_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    BoilerSteam_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                     Model_Impl* model,
-                     bool keepHandle);
+      BoilerSteam_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    BoilerSteam_Impl(const BoilerSteam_Impl& other,
-                     Model_Impl* model,
-                     bool keepHandle);
+      BoilerSteam_Impl(const BoilerSteam_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~BoilerSteam_Impl() {}
+      virtual ~BoilerSteam_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual void autosize() override;
+      virtual void autosize() override;
 
-    virtual void applySizingValues() override;
+      virtual void applySizingValues() override;
 
-    virtual unsigned inletPort() const override;
+      virtual unsigned inletPort() const override;
 
-    virtual unsigned outletPort() const override;
+      virtual unsigned outletPort() const override;
 
-    virtual bool addToNode(Node & node) override;
+      virtual bool addToNode(Node& node) override;
 
-    //@}
-    /** @name Getters */
-    //@{
+      //@}
+      /** @name Getters */
+      //@{
 
-    std::string fuelType() const;
+      std::string fuelType() const;
 
-    boost::optional<double> maximumOperatingPressure() const;
+      boost::optional<double> maximumOperatingPressure() const;
 
-    OSOptionalQuantity getMaximumOperatingPressure(bool returnIP=false) const;
+      boost::optional<double> theoreticalEfficiency() const;
 
-    boost::optional<double> theoreticalEfficiency() const;
+      boost::optional<double> designOutletSteamTemperature() const;
 
-    OSOptionalQuantity getTheoreticalEfficiency(bool returnIP=false) const;
+      boost::optional<double> nominalCapacity() const;
 
-    boost::optional<double> designOutletSteamTemperature() const;
+      bool isNominalCapacityAutosized() const;
 
-    OSOptionalQuantity getDesignOutletSteamTemperature(bool returnIP=false) const;
+      boost::optional<double> minimumPartLoadRatio() const;
 
-    boost::optional<double> nominalCapacity() const;
+      boost::optional<double> maximumPartLoadRatio() const;
 
-    OSOptionalQuantity getNominalCapacity(bool returnIP=false) const;
+      boost::optional<double> optimumPartLoadRatio() const;
 
-    bool isNominalCapacityAutosized() const;
+      boost::optional<double> coefficient1ofFuelUseFunctionofPartLoadRatioCurve() const;
 
-    boost::optional<double> minimumPartLoadRatio() const;
+      boost::optional<double> coefficient2ofFuelUseFunctionofPartLoadRatioCurve() const;
 
-    OSOptionalQuantity getMinimumPartLoadRatio(bool returnIP=false) const;
+      boost::optional<double> coefficient3ofFuelUseFunctionofPartLoadRatioCurve() const;
 
-    boost::optional<double> maximumPartLoadRatio() const;
+      double sizingFactor() const;
 
-    OSOptionalQuantity getMaximumPartLoadRatio(bool returnIP=false) const;
+      bool isSizingFactorDefaulted() const;
 
-    boost::optional<double> optimumPartLoadRatio() const;
+      boost::optional<double> autosizedNominalCapacity() const;
 
-    OSOptionalQuantity getOptimumPartLoadRatio(bool returnIP=false) const;
+      std::string endUseSubcategory() const;
 
-    boost::optional<double> coefficient1ofFuelUseFunctionofPartLoadRatioCurve() const;
+      //@}
+      /** @name Setters */
+      //@{
 
-    OSOptionalQuantity getCoefficient1ofFuelUseFunctionofPartLoadRatioCurve(bool returnIP=false) const;
+      bool setFuelType(const std::string& fuelType);
 
-    boost::optional<double> coefficient2ofFuelUseFunctionofPartLoadRatioCurve() const;
+      bool setMaximumOperatingPressure(boost::optional<double> maximumOperatingPressure);
 
-    OSOptionalQuantity getCoefficient2ofFuelUseFunctionofPartLoadRatioCurve(bool returnIP=false) const;
+      void resetMaximumOperatingPressure();
 
-    boost::optional<double> coefficient3ofFuelUseFunctionofPartLoadRatioCurve() const;
+      bool setTheoreticalEfficiency(boost::optional<double> theoreticalEfficiency);
 
-    OSOptionalQuantity getCoefficient3ofFuelUseFunctionofPartLoadRatioCurve(bool returnIP=false) const;
+      void resetTheoreticalEfficiency();
 
-    double sizingFactor() const;
+      bool setDesignOutletSteamTemperature(boost::optional<double> designOutletSteamTemperature);
 
-    Quantity getSizingFactor(bool returnIP=false) const;
+      void resetDesignOutletSteamTemperature();
 
-    bool isSizingFactorDefaulted() const;
+      bool setNominalCapacity(boost::optional<double> nominalCapacity);
 
-    boost::optional<double> autosizedNominalCapacity() const ;
+      void resetNominalCapacity();
 
-    std::string endUseSubcategory() const;
+      void autosizeNominalCapacity();
 
+      bool setMinimumPartLoadRatio(boost::optional<double> minimumPartLoadRatio);
 
-    //@}
-    /** @name Setters */
-    //@{
+      void resetMinimumPartLoadRatio();
 
-    bool setFuelType(std::string fuelType);
+      bool setMaximumPartLoadRatio(boost::optional<double> maximumPartLoadRatio);
 
-    bool setMaximumOperatingPressure(boost::optional<double> maximumOperatingPressure);
+      void resetMaximumPartLoadRatio();
 
-    bool setMaximumOperatingPressure(const OSOptionalQuantity& maximumOperatingPressure);
+      bool setOptimumPartLoadRatio(boost::optional<double> optimumPartLoadRatio);
 
-    void resetMaximumOperatingPressure();
+      void resetOptimumPartLoadRatio();
 
-    bool setTheoreticalEfficiency(boost::optional<double> theoreticalEfficiency);
+      bool setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient1ofFuelUseFunctionofPartLoadRatioCurve);
 
-    bool setTheoreticalEfficiency(const OSOptionalQuantity& theoreticalEfficiency);
+      void resetCoefficient1ofFuelUseFunctionofPartLoadRatioCurve();
 
-    void resetTheoreticalEfficiency();
+      bool setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient2ofFuelUseFunctionofPartLoadRatioCurve);
 
-    bool setDesignOutletSteamTemperature(boost::optional<double> designOutletSteamTemperature);
+      void resetCoefficient2ofFuelUseFunctionofPartLoadRatioCurve();
 
-    bool setDesignOutletSteamTemperature(const OSOptionalQuantity& designOutletSteamTemperature);
+      bool setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient3ofFuelUseFunctionofPartLoadRatioCurve);
 
-    void resetDesignOutletSteamTemperature();
+      void resetCoefficient3ofFuelUseFunctionofPartLoadRatioCurve();
 
-    bool setNominalCapacity(boost::optional<double> nominalCapacity);
+      bool setSizingFactor(double sizingFactor);
 
-    bool setNominalCapacity(const OSOptionalQuantity& nominalCapacity);
+      void resetSizingFactor();
 
-    void resetNominalCapacity();
+      bool setEndUseSubcategory(const std::string& endUseSubcategory);
 
-    void autosizeNominalCapacity();
+      //@}
+      /** @name Other */
+      //@{
 
-    bool setMinimumPartLoadRatio(boost::optional<double> minimumPartLoadRatio);
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.BoilerSteam");
 
-    bool setMinimumPartLoadRatio(const OSOptionalQuantity& minimumPartLoadRatio);
+      std::vector<std::string> fuelTypeValues() const;
+    };
 
-    void resetMinimumPartLoadRatio();
+  }  // namespace detail
 
-    bool setMaximumPartLoadRatio(boost::optional<double> maximumPartLoadRatio);
+}  // namespace model
+}  // namespace openstudio
 
-    bool setMaximumPartLoadRatio(const OSOptionalQuantity& maximumPartLoadRatio);
-
-    void resetMaximumPartLoadRatio();
-
-    bool setOptimumPartLoadRatio(boost::optional<double> optimumPartLoadRatio);
-
-    bool setOptimumPartLoadRatio(const OSOptionalQuantity& optimumPartLoadRatio);
-
-    void resetOptimumPartLoadRatio();
-
-    bool setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient1ofFuelUseFunctionofPartLoadRatioCurve);
-
-    bool setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve(const OSOptionalQuantity& coefficient1ofFuelUseFunctionofPartLoadRatioCurve);
-
-    void resetCoefficient1ofFuelUseFunctionofPartLoadRatioCurve();
-
-    bool setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient2ofFuelUseFunctionofPartLoadRatioCurve);
-
-    bool setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve(const OSOptionalQuantity& coefficient2ofFuelUseFunctionofPartLoadRatioCurve);
-
-    void resetCoefficient2ofFuelUseFunctionofPartLoadRatioCurve();
-
-    bool setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient3ofFuelUseFunctionofPartLoadRatioCurve);
-
-    bool setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve(const OSOptionalQuantity& coefficient3ofFuelUseFunctionofPartLoadRatioCurve);
-
-    void resetCoefficient3ofFuelUseFunctionofPartLoadRatioCurve();
-
-    bool setSizingFactor(double sizingFactor);
-
-    bool setSizingFactor(const Quantity& sizingFactor);
-
-    void resetSizingFactor();
-
-    bool setEndUseSubcategory(const std::string & endUseSubcategory);
-
-
-    //@}
-    /** @name Other */
-    //@{
-
-
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.BoilerSteam");
-
-    std::vector<std::string> fuelTypeValues() const;
-    openstudio::OSOptionalQuantity maximumOperatingPressure_SI() const;
-    openstudio::OSOptionalQuantity maximumOperatingPressure_IP() const;
-    openstudio::OSOptionalQuantity theoreticalEfficiency_SI() const;
-    openstudio::OSOptionalQuantity theoreticalEfficiency_IP() const;
-    openstudio::OSOptionalQuantity designOutletSteamTemperature_SI() const;
-    openstudio::OSOptionalQuantity designOutletSteamTemperature_IP() const;
-    openstudio::OSOptionalQuantity nominalCapacity_SI() const;
-    openstudio::OSOptionalQuantity nominalCapacity_IP() const;
-    openstudio::OSOptionalQuantity minimumPartLoadRatio_SI() const;
-    openstudio::OSOptionalQuantity minimumPartLoadRatio_IP() const;
-    openstudio::OSOptionalQuantity maximumPartLoadRatio_SI() const;
-    openstudio::OSOptionalQuantity maximumPartLoadRatio_IP() const;
-    openstudio::OSOptionalQuantity optimumPartLoadRatio_SI() const;
-    openstudio::OSOptionalQuantity optimumPartLoadRatio_IP() const;
-    openstudio::OSOptionalQuantity coefficient1ofFuelUseFunctionofPartLoadRatioCurve_SI() const;
-    openstudio::OSOptionalQuantity coefficient1ofFuelUseFunctionofPartLoadRatioCurve_IP() const;
-    openstudio::OSOptionalQuantity coefficient2ofFuelUseFunctionofPartLoadRatioCurve_SI() const;
-    openstudio::OSOptionalQuantity coefficient2ofFuelUseFunctionofPartLoadRatioCurve_IP() const;
-    openstudio::OSOptionalQuantity coefficient3ofFuelUseFunctionofPartLoadRatioCurve_SI() const;
-    openstudio::OSOptionalQuantity coefficient3ofFuelUseFunctionofPartLoadRatioCurve_IP() const;
-    openstudio::Quantity sizingFactor_SI() const;
-    openstudio::Quantity sizingFactor_IP() const;
-
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_BOILERSTEAM_IMPL_HPP
+#endif  // MODEL_BOILERSTEAM_IMPL_HPP

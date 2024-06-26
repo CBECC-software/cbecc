@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,354 +33,209 @@
 #include "ModelAPI.hpp"
 #include "Glazing_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
-
 namespace openstudio {
 namespace model {
 
-class MaterialPropertyGlazingSpectralData;
+  class MaterialPropertyGlazingSpectralData;
 
-namespace detail {
+  namespace detail {
 
-  /** StandardGlazing_Impl is a Glazing_Impl that is the implementation class for StandardGlazing.*/
-  class MODEL_API StandardGlazing_Impl : public Glazing_Impl {
+    /** StandardGlazing_Impl is a Glazing_Impl that is the implementation class for StandardGlazing.*/
+    class MODEL_API StandardGlazing_Impl : public Glazing_Impl
+    {
 
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
+      StandardGlazing_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      StandardGlazing_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
+      StandardGlazing_Impl(const StandardGlazing_Impl& other, Model_Impl* model, bool keepHandle);
 
+      virtual ~StandardGlazing_Impl() {}
 
+      //@}
 
+      /** @name Virtual Methods */
+      //@{
 
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
+      virtual IddObjectType iddObjectType() const override;
 
+      //@}
+      /** @name Getters */
+      //@{
 
+      std::string opticalDataType() const;
 
+      boost::optional<std::string> windowGlassSpectralDataSetName() const;
 
+      boost::optional<MaterialPropertyGlazingSpectralData> windowGlassSpectralDataSet() const;
 
+      /** Get the thickness of the material. */
+      virtual double thickness() const override;
 
+      double solarTransmittance() const;
 
+      boost::optional<double> solarTransmittanceatNormalIncidence() const;
 
+      boost::optional<double> frontSideSolarReflectanceatNormalIncidence() const;
 
+      boost::optional<double> backSideSolarReflectanceatNormalIncidence() const;
 
+      virtual boost::optional<double> getVisibleTransmittance() const override;
 
+      boost::optional<double> visibleTransmittanceatNormalIncidence() const;
 
+      boost::optional<double> frontSideVisibleReflectanceatNormalIncidence() const;
 
+      boost::optional<double> backSideVisibleReflectanceatNormalIncidence() const;
 
+      double infraredTransmittance() const;
 
+      double infraredTransmittanceatNormalIncidence() const;
 
+      bool isInfraredTransmittanceatNormalIncidenceDefaulted() const;
 
+      double frontSideInfraredHemisphericalEmissivity() const;
 
+      bool isFrontSideInfraredHemisphericalEmissivityDefaulted() const;
 
+      double backSideInfraredHemisphericalEmissivity() const;
 
+      bool isBackSideInfraredHemisphericalEmissivityDefaulted() const;
 
+      /** The conductivitiy of the material in W/m*K. */
+      double thermalConductivity() const;
 
+      double conductivity() const;
 
+      bool isConductivityDefaulted() const;
 
+      double dirtCorrectionFactorforSolarandVisibleTransmittance() const;
 
+      bool isDirtCorrectionFactorforSolarandVisibleTransmittanceDefaulted() const;
 
+      bool solarDiffusing() const;
 
+      bool isSolarDiffusingDefaulted() const;
 
+      //@}
+      /** @name Setters */
+      //@{
 
+      bool setOpticalDataType(const std::string& opticalDataType);
 
+      bool setWindowGlassSpectralDataSetName(boost::optional<std::string> windowGlassSpectralDataSetName);
+      void resetWindowGlassSpectralDataSetName();
 
+      bool setWindowGlassSpectralDataSet(const MaterialPropertyGlazingSpectralData& spectralData);
+      void resetWindowGlassSpectralDataSet();
 
+      /** Set thickness to value (m). */
+      virtual bool setThickness(double thickness) override;
 
+      bool setSolarTransmittance(double value);
 
+      bool setSolarTransmittanceatNormalIncidence(boost::optional<double> solarTransmittanceatNormalIncidence);
 
+      void resetSolarTransmittanceatNormalIncidence();
 
+      bool setFrontSideSolarReflectanceatNormalIncidence(boost::optional<double> frontSideSolarReflectanceatNormalIncidence);
 
+      void resetFrontSideSolarReflectanceatNormalIncidence();
 
+      bool setBackSideSolarReflectanceatNormalIncidence(boost::optional<double> backSideSolarReflectanceatNormalIncidence);
 
+      void resetBackSideSolarReflectanceatNormalIncidence();
 
+      bool setVisibleTransmittance(double value);
 
+      bool setVisibleTransmittanceatNormalIncidence(boost::optional<double> visibleTransmittanceatNormalIncidence);
 
+      void resetVisibleTransmittanceatNormalIncidence();
 
+      bool setFrontSideVisibleReflectanceatNormalIncidence(boost::optional<double> frontSideVisibleReflectanceatNormalIncidence);
 
+      void resetFrontSideVisibleReflectanceatNormalIncidence();
 
+      bool setBackSideVisibleReflectanceatNormalIncidence(boost::optional<double> backSideVisibleReflectanceatNormalIncidence);
 
+      void resetBackSideVisibleReflectanceatNormalIncidence();
 
+      bool setInfraredTransmittance(double value);
 
+      bool setInfraredTransmittanceatNormalIncidence(double infraredTransmittanceatNormalIncidence);
 
+      void resetInfraredTransmittanceatNormalIncidence();
 
+      bool setFrontSideInfraredHemisphericalEmissivity(double frontSideInfraredHemisphericalEmissivity);
 
+      void resetFrontSideInfraredHemisphericalEmissivity();
 
+      bool setBackSideInfraredHemisphericalEmissivity(double backSideInfraredHemisphericalEmissivity);
 
+      void resetBackSideInfraredHemisphericalEmissivity();
 
+      /** Sets the conductivity of the material in W/m*K, if possible. */
+      bool setThermalConductivity(double value);
 
-    // TODO: Add relationships for objects related to this one, but not pointed to by the underlying data.
-    //       Such relationships can be generated by the GenerateRelationships.rb script.
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+      bool setConductivity(double conductivity);
 
-    StandardGlazing_Impl(const IdfObject& idfObject,
-                         Model_Impl* model,
-                         bool keepHandle);
+      void resetConductivity();
 
-    StandardGlazing_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                         Model_Impl* model,
-                         bool keepHandle);
+      bool setDirtCorrectionFactorforSolarandVisibleTransmittance(double dirtCorrectionFactorforSolarandVisibleTransmittance);
 
-    StandardGlazing_Impl(const StandardGlazing_Impl& other,
-                         Model_Impl* model,
-                         bool keepHandle);
+      void resetDirtCorrectionFactorforSolarandVisibleTransmittance();
 
-    virtual ~StandardGlazing_Impl() {}
+      bool setSolarDiffusing(bool solarDiffusing);
 
-    //@}
+      void resetSolarDiffusing();
 
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Other */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      /** The conductance of the material in W/m^2*K. */
+      double thermalConductance() const;
 
-    virtual IddObjectType iddObjectType() const override;
+      /** The resistivity of the material in m*K/W. */
+      double thermalResistivity() const;
 
-    //@}
-    /** @name Getters */
-    //@{
+      /** The resistance of the material in m^2*K/W. */
+      double thermalResistance() const;
 
-    std::string opticalDataType() const;
+      double interiorVisibleReflectance() const;
 
-    boost::optional<std::string> windowGlassSpectralDataSetName() const;
+      double exteriorVisibleReflectance() const;
 
-    boost::optional<MaterialPropertyGlazingSpectralData> windowGlassSpectralDataSet() const;
+      virtual boost::optional<double> interiorVisibleAbsorptance() const override;
 
-    /** Get the thickness of the material. */
-    virtual double thickness() const override;
+      virtual boost::optional<double> exteriorVisibleAbsorptance() const override;
 
-    double solarTransmittance() const;
+      /** Sets the conductance of the material in W/m^2*K, if possible. */
+      bool setThermalConductance(double value);
 
-    Quantity getThickness(bool returnIP=false) const;
+      /** Sets the resistivity of the material in m*K/W, if possible. */
+      bool setThermalResistivity(double value);
 
-    boost::optional<double> solarTransmittanceatNormalIncidence() const;
+      /** Sets the resistance of the material in m^2*K/W, if possible. */
+      bool setThermalResistance(double value);
 
-    OSOptionalQuantity getSolarTransmittanceatNormalIncidence(bool returnIP=false) const;
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.StandardGlazing");
 
-    boost::optional<double> frontSideSolarReflectanceatNormalIncidence() const;
+      std::vector<std::string> opticalDataTypeValues() const;
+    };
 
-    OSOptionalQuantity getFrontSideSolarReflectanceatNormalIncidence(bool returnIP=false) const;
+  }  // namespace detail
 
-    boost::optional<double> backSideSolarReflectanceatNormalIncidence() const;
+}  // namespace model
+}  // namespace openstudio
 
-    OSOptionalQuantity getBackSideSolarReflectanceatNormalIncidence(bool returnIP=false) const;
-
-    virtual boost::optional<double> getVisibleTransmittance() const override;
-
-    boost::optional<double> visibleTransmittanceatNormalIncidence() const;
-
-    OSOptionalQuantity getVisibleTransmittanceatNormalIncidence(bool returnIP=false) const;
-
-    boost::optional<double> frontSideVisibleReflectanceatNormalIncidence() const;
-
-    OSOptionalQuantity getFrontSideVisibleReflectanceatNormalIncidence(bool returnIP=false) const;
-
-    boost::optional<double> backSideVisibleReflectanceatNormalIncidence() const;
-
-    OSOptionalQuantity getBackSideVisibleReflectanceatNormalIncidence(bool returnIP=false) const;
-
-    double infraredTransmittance() const;
-
-    double infraredTransmittanceatNormalIncidence() const;
-
-    Quantity getInfraredTransmittanceatNormalIncidence(bool returnIP=false) const;
-
-    bool isInfraredTransmittanceatNormalIncidenceDefaulted() const;
-
-    double frontSideInfraredHemisphericalEmissivity() const;
-
-    Quantity getFrontSideInfraredHemisphericalEmissivity(bool returnIP=false) const;
-
-    bool isFrontSideInfraredHemisphericalEmissivityDefaulted() const;
-
-    double backSideInfraredHemisphericalEmissivity() const;
-
-    Quantity getBackSideInfraredHemisphericalEmissivity(bool returnIP=false) const;
-
-    bool isBackSideInfraredHemisphericalEmissivityDefaulted() const;
-
-    /** The conductivitiy of the material in W/m*K. */
-    double thermalConductivity() const;
-
-    double conductivity() const;
-
-    Quantity getConductivity(bool returnIP=false) const;
-
-    bool isConductivityDefaulted() const;
-
-    double dirtCorrectionFactorforSolarandVisibleTransmittance() const;
-
-    Quantity getDirtCorrectionFactorforSolarandVisibleTransmittance(bool returnIP=false) const;
-
-    bool isDirtCorrectionFactorforSolarandVisibleTransmittanceDefaulted() const;
-
-    bool solarDiffusing() const;
-
-    bool isSolarDiffusingDefaulted() const;
-
-    //@}
-    /** @name Setters */
-    //@{
-
-    bool setOpticalDataType(std::string opticalDataType);
-
-    bool setWindowGlassSpectralDataSetName(boost::optional<std::string> windowGlassSpectralDataSetName);
-    void resetWindowGlassSpectralDataSetName();
-
-    bool setWindowGlassSpectralDataSet(const MaterialPropertyGlazingSpectralData& spectralData);
-    void resetWindowGlassSpectralDataSet();
-
-    /** Set thickness to value (m). */
-    virtual bool setThickness(double value) override;
-
-    bool setThickness(const Quantity& thickness);
-
-    bool setSolarTransmittance(double value);
-
-    bool setSolarTransmittanceatNormalIncidence(boost::optional<double> solarTransmittanceatNormalIncidence);
-
-    bool setSolarTransmittanceatNormalIncidence(const OSOptionalQuantity& solarTransmittanceatNormalIncidence);
-
-    void resetSolarTransmittanceatNormalIncidence();
-
-    bool setFrontSideSolarReflectanceatNormalIncidence(boost::optional<double> frontSideSolarReflectanceatNormalIncidence);
-
-    bool setFrontSideSolarReflectanceatNormalIncidence(const OSOptionalQuantity& frontSideSolarReflectanceatNormalIncidence);
-
-    void resetFrontSideSolarReflectanceatNormalIncidence();
-
-    bool setBackSideSolarReflectanceatNormalIncidence(boost::optional<double> backSideSolarReflectanceatNormalIncidence);
-
-    bool setBackSideSolarReflectanceatNormalIncidence(const OSOptionalQuantity& backSideSolarReflectanceatNormalIncidence);
-
-    void resetBackSideSolarReflectanceatNormalIncidence();
-
-    bool setVisibleTransmittance(double value);
-
-    bool setVisibleTransmittanceatNormalIncidence(boost::optional<double> visibleTransmittanceatNormalIncidence);
-
-    bool setVisibleTransmittanceatNormalIncidence(const OSOptionalQuantity& visibleTransmittanceatNormalIncidence);
-
-    void resetVisibleTransmittanceatNormalIncidence();
-
-    bool setFrontSideVisibleReflectanceatNormalIncidence(boost::optional<double> frontSideVisibleReflectanceatNormalIncidence);
-
-    bool setFrontSideVisibleReflectanceatNormalIncidence(const OSOptionalQuantity& frontSideVisibleReflectanceatNormalIncidence);
-
-    void resetFrontSideVisibleReflectanceatNormalIncidence();
-
-    bool setBackSideVisibleReflectanceatNormalIncidence(boost::optional<double> backSideVisibleReflectanceatNormalIncidence);
-
-    bool setBackSideVisibleReflectanceatNormalIncidence(const OSOptionalQuantity& backSideVisibleReflectanceatNormalIncidence);
-
-    void resetBackSideVisibleReflectanceatNormalIncidence();
-
-    bool setInfraredTransmittance(double value);
-
-    bool setInfraredTransmittanceatNormalIncidence(double infraredTransmittanceatNormalIncidence);
-
-    bool setInfraredTransmittanceatNormalIncidence(const Quantity& infraredTransmittanceatNormalIncidence);
-
-    void resetInfraredTransmittanceatNormalIncidence();
-
-    bool setFrontSideInfraredHemisphericalEmissivity(double frontSideInfraredHemisphericalEmissivity);
-
-    bool setFrontSideInfraredHemisphericalEmissivity(const Quantity& frontSideInfraredHemisphericalEmissivity);
-
-    void resetFrontSideInfraredHemisphericalEmissivity();
-
-    bool setBackSideInfraredHemisphericalEmissivity(double backSideInfraredHemisphericalEmissivity);
-
-    bool setBackSideInfraredHemisphericalEmissivity(const Quantity& backSideInfraredHemisphericalEmissivity);
-
-    void resetBackSideInfraredHemisphericalEmissivity();
-
-    /** Sets the conductivity of the material in W/m*K, if possible. */
-    bool setThermalConductivity(double value);
-
-    bool setConductivity(double conductivity);
-
-    bool setConductivity(const Quantity& conductivity);
-
-    void resetConductivity();
-
-    bool setDirtCorrectionFactorforSolarandVisibleTransmittance(double dirtCorrectionFactorforSolarandVisibleTransmittance);
-
-    bool setDirtCorrectionFactorforSolarandVisibleTransmittance(const Quantity& dirtCorrectionFactorforSolarandVisibleTransmittance);
-
-    void resetDirtCorrectionFactorforSolarandVisibleTransmittance();
-
-    bool setSolarDiffusing(bool solarDiffusing);
-
-    void resetSolarDiffusing();
-
-    //@}
-    /** @name Other */
-    //@{
-
-    /** The conductance of the material in W/m^2*K. */
-    double thermalConductance() const;
-
-    /** The resistivity of the material in m*K/W. */
-    double thermalResistivity() const;
-
-    /** The resistance of the material in m^2*K/W. */
-    double thermalResistance() const;
-
-    double interiorVisibleReflectance() const;
-
-    double exteriorVisibleReflectance() const;
-
-    virtual boost::optional<double> interiorVisibleAbsorptance() const override;
-
-    virtual boost::optional<double> exteriorVisibleAbsorptance() const override;
-
-    /** Sets the conductance of the material in W/m^2*K, if possible. */
-    bool setThermalConductance(double value);
-
-    /** Sets the resistivity of the material in m*K/W, if possible. */
-    bool setThermalResistivity(double value);
-
-    /** Sets the resistance of the material in m^2*K/W, if possible. */
-    bool setThermalResistance(double value);
-
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.StandardGlazing");
-
-    std::vector<std::string> opticalDataTypeValues() const;
-    openstudio::Quantity thickness_SI() const;
-    openstudio::Quantity thickness_IP() const;
-    openstudio::OSOptionalQuantity solarTransmittanceatNormalIncidence_SI() const;
-    openstudio::OSOptionalQuantity solarTransmittanceatNormalIncidence_IP() const;
-    openstudio::OSOptionalQuantity frontSideSolarReflectanceatNormalIncidence_SI() const;
-    openstudio::OSOptionalQuantity frontSideSolarReflectanceatNormalIncidence_IP() const;
-    openstudio::OSOptionalQuantity backSideSolarReflectanceatNormalIncidence_SI() const;
-    openstudio::OSOptionalQuantity backSideSolarReflectanceatNormalIncidence_IP() const;
-    openstudio::OSOptionalQuantity visibleTransmittanceatNormalIncidence_SI() const;
-    openstudio::OSOptionalQuantity visibleTransmittanceatNormalIncidence_IP() const;
-    openstudio::OSOptionalQuantity frontSideVisibleReflectanceatNormalIncidence_SI() const;
-    openstudio::OSOptionalQuantity frontSideVisibleReflectanceatNormalIncidence_IP() const;
-    openstudio::OSOptionalQuantity backSideVisibleReflectanceatNormalIncidence_SI() const;
-    openstudio::OSOptionalQuantity backSideVisibleReflectanceatNormalIncidence_IP() const;
-    openstudio::Quantity infraredTransmittanceatNormalIncidence_SI() const;
-    openstudio::Quantity infraredTransmittanceatNormalIncidence_IP() const;
-    openstudio::Quantity frontSideInfraredHemisphericalEmissivity_SI() const;
-    openstudio::Quantity frontSideInfraredHemisphericalEmissivity_IP() const;
-    openstudio::Quantity backSideInfraredHemisphericalEmissivity_SI() const;
-    openstudio::Quantity backSideInfraredHemisphericalEmissivity_IP() const;
-    openstudio::Quantity conductivity_SI() const;
-    openstudio::Quantity conductivity_IP() const;
-    openstudio::Quantity dirtCorrectionFactorforSolarandVisibleTransmittance_SI() const;
-    openstudio::Quantity dirtCorrectionFactorforSolarandVisibleTransmittance_IP() const;
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_STANDARDGLAZING_IMPL_HPP
+#endif  // MODEL_STANDARDGLAZING_IMPL_HPP

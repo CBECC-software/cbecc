@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -38,28 +38,29 @@
 namespace openstudio {
 namespace model {
 
-class Curve;
-class AirflowNetworkEquivlentDuct;
-class Schedule;
+  class Curve;
+  class AirflowNetworkEquivlentDuct;
+  class Schedule;
 
-namespace detail {
-  class CoilHeatingGas_Impl;
-} // detail
+  namespace detail {
+    class CoilHeatingGas_Impl;
+  }  // namespace detail
 
-/** CoilHeatingGas is an interface to the IDD object named "OS:Coil:Heating:Gas"
+  /** CoilHeatingGas is an interface to the IDD object named "OS:Coil:Heating:Gas"
  *
  *  The purpose of this class is to simplify the construction and manipulation
  *  OS:Coil:Heating:Gas objects in energyplus.
  *
  *  As of EnergyPlus Version 8.6 this object maps to Coil:Heating:Fuel.
  */
-class MODEL_API CoilHeatingGas : public StraightComponent {
+  class MODEL_API CoilHeatingGas : public StraightComponent
+  {
 
- public:
-  /** @name Constructors and Destructors */
-  //@{
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /** Constructs a new CoilHeatingGas object and places it inside the
+    /** Constructs a new CoilHeatingGas object and places it inside the
    *  model.  The object is fully initialized with all companion objects.
    *
    * Sets GasBurnerEffeciency to .8
@@ -67,116 +68,109 @@ class MODEL_API CoilHeatingGas : public StraightComponent {
    * Sets ParasiticElectricLoad to 0
    * Sets ParasiticGasLoad to 0
    */
-  explicit CoilHeatingGas(const Model& model,
-                          Schedule& schedule);
+    explicit CoilHeatingGas(const Model& model, Schedule& schedule);
 
-  explicit CoilHeatingGas(const Model& model);
+    explicit CoilHeatingGas(const Model& model);
 
-  virtual ~CoilHeatingGas() {}
+    virtual ~CoilHeatingGas() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters and Setters */
-  //@{
+    /** @name Getters and Setters */
+    //@{
 
-  /**  Returns the Schedule referred to by the Availability Schedule field. **/
-  Schedule availabilitySchedule() const;
+    /**  Returns the Schedule referred to by the Availability Schedule field. **/
+    Schedule availabilitySchedule() const;
 
-  /** \deprecated */
-  Schedule availableSchedule() const;
+    /** \deprecated */
+    Schedule availableSchedule() const;
 
-  /** Sets the Schedule referred to by the Availability Schedule field. **/
-  bool setAvailabilitySchedule(Schedule& schedule);
+    /** Sets the Schedule referred to by the Availability Schedule field. **/
+    bool setAvailabilitySchedule(Schedule& schedule);
 
-  /** \deprecated */
-  bool setAvailableSchedule(Schedule& schedule);
+    /** \deprecated */
+    bool setAvailableSchedule(Schedule& schedule);
 
-  /** Returns a list of valid fuel types. **/
-  static std::vector<std::string> validFuelTypeValues();
+    /** Returns a list of valid fuel types. **/
+    static std::vector<std::string> validFuelTypeValues();
 
-  /** Gets the coil fuel type **/
-  std::string fuelType() const;
+    /** Gets the coil fuel type **/
+    std::string fuelType() const;
 
-  /** Sets the fuel type. **/
-  bool setFuelType(const std::string& fuelType);
+    /** Sets the fuel type. **/
+    bool setFuelType(const std::string& fuelType);
 
-  /** Resets the fuel type to its default. **/
-  void resetFuelType();
+    /** Resets the fuel type to its default. **/
+    void resetFuelType();
 
-  /** Returns the value of the GasBurnerEfficiency field. **/
-  double gasBurnerEfficiency() const;
+    /** Returns the value of the GasBurnerEfficiency field. **/
+    double gasBurnerEfficiency() const;
 
-  /** Sets the value of the GasBurnerEfficiency field. **/
-  bool setGasBurnerEfficiency(double value);
+    /** Sets the value of the GasBurnerEfficiency field. **/
+    bool setGasBurnerEfficiency(double value);
 
-  /** Returns the value of the ParasiticElectricLoad field. **/
-  double parasiticElectricLoad() const;
+    /** Returns the value of the ParasiticElectricLoad field. **/
+    double parasiticElectricLoad() const;
 
-  /** Sets the value of the ParasiticElectricLoad field. **/
-  bool setParasiticElectricLoad(double value);
+    /** Sets the value of the ParasiticElectricLoad field. **/
+    bool setParasiticElectricLoad(double value);
 
-  /** Returns the value of the ParasiticGasLoad field. **/
-  double parasiticGasLoad() const;
+    /** Returns the value of the ParasiticGasLoad field. **/
+    double parasiticGasLoad() const;
 
-  /** Sets the value of the ParasiticGasLoad field. **/
-  bool setParasiticGasLoad(double value);
+    /** Sets the value of the ParasiticGasLoad field. **/
+    bool setParasiticGasLoad(double value);
 
-  boost::optional<double> nominalCapacity() const;
+    boost::optional<double> nominalCapacity() const;
 
-  OSOptionalQuantity getNominalCapacity(bool returnIP=false) const;
+    bool isNominalCapacityAutosized() const;
 
-  bool isNominalCapacityAutosized() const;
+    bool setNominalCapacity(double nominalCapacity);
 
-  bool setNominalCapacity(double nominalCapacity);
+    void resetNominalCapacity();
 
-  bool setNominalCapacity(const Quantity& nominalCapacity);
+    void autosizeNominalCapacity();
 
-  void resetNominalCapacity();
+    boost::optional<Curve> partLoadFractionCorrelationCurve() const;
 
-  void autosizeNominalCapacity();
+    bool setPartLoadFractionCorrelationCurve(const Curve& curve);
 
-  boost::optional<Curve> partLoadFractionCorrelationCurve() const;
+    void resetPartLoadFractionCorrelationCurve();
 
-  bool setPartLoadFractionCorrelationCurve( const Curve& curve );
+    /** Creates a new equivalent duct object if an object is not already attached. */
+    AirflowNetworkEquivalentDuct getAirflowNetworkEquivalentDuct(double length, double diameter);
 
-  void resetPartLoadFractionCorrelationCurve();
+    /** Returns the attached equivalent duct object, if any. */
+    boost::optional<AirflowNetworkEquivalentDuct> airflowNetworkEquivalentDuct() const;
 
-  /** Creates a new equivalent duct object if an object is not already attached. */
-  AirflowNetworkEquivalentDuct getAirflowNetworkEquivalentDuct(double length, double diameter);
-  
-  /** Returns the attached equivalent duct object, if any. */
-  boost::optional<AirflowNetworkEquivalentDuct> airflowNetworkEquivalentDuct() const;
+    boost::optional<double> autosizedNominalCapacity() const;
+    //@}
+   protected:
+    friend class Model;
 
-  boost::optional<double> autosizedNominalCapacity() const ;
-  //@}
- protected:
+    friend class openstudio::IdfObject;
 
-  friend class Model;
+    /// @cond
 
-  friend class openstudio::IdfObject;
+    typedef detail::CoilHeatingGas_Impl ImplType;
 
-  /// @cond
+    explicit CoilHeatingGas(std::shared_ptr<detail::CoilHeatingGas_Impl> impl);
 
-  typedef detail::CoilHeatingGas_Impl ImplType;
+   private:
+    REGISTER_LOGGER("openstudio.model.CoilHeatingGas");
 
-  explicit CoilHeatingGas(std::shared_ptr<detail::CoilHeatingGas_Impl> impl);
+    /// @endcond
+  };
 
- private:
+  /** \relates CoilHeatingGas */
+  typedef boost::optional<CoilHeatingGas> OptionalCoilHeatingGas;
 
-  REGISTER_LOGGER("openstudio.model.CoilHeatingGas");
+  /** \relates CoilHeatingGas */
+  typedef std::vector<CoilHeatingGas> CoilHeatingGasVector;
 
-  /// @endcond
-};
+}  // namespace model
+}  // namespace openstudio
 
-/** \relates CoilHeatingGas */
-typedef boost::optional<CoilHeatingGas> OptionalCoilHeatingGas;
-
-/** \relates CoilHeatingGas */
-typedef std::vector<CoilHeatingGas> CoilHeatingGasVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_COILHEATINGGAS_HPP
+#endif  // MODEL_COILHEATINGGAS_HPP

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,44 +36,42 @@
 namespace openstudio {
 namespace model {
 
-class PlantLoop;
+  class PlantLoop;
 
-namespace detail{
-  class PlantEquipmentOperationScheme_Impl;
-}
+  namespace detail {
+    class PlantEquipmentOperationScheme_Impl;
+  }
 
-class MODEL_API PlantEquipmentOperationScheme : public ModelObject {
+  class MODEL_API PlantEquipmentOperationScheme : public ModelObject
+  {
 
-  public:
+   public:
+    PlantEquipmentOperationScheme(IddObjectType type, const Model& model);
 
-  PlantEquipmentOperationScheme(IddObjectType type,const Model& model);
+    virtual ~PlantEquipmentOperationScheme() {}
 
-  virtual ~PlantEquipmentOperationScheme() {}
+    boost::optional<PlantLoop> plantLoop() const;
 
-  friend class openstudio::IdfObject;
+   protected:
+    /// @cond
+    typedef detail::PlantEquipmentOperationScheme_Impl ImplType;
 
-  boost::optional<PlantLoop> plantLoop() const;
+    explicit PlantEquipmentOperationScheme(std::shared_ptr<detail::PlantEquipmentOperationScheme_Impl> impl);
 
-  /// @cond
+    friend class detail::PlantEquipmentOperationScheme_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.PlantEquipmentOperationScheme");
+  };
 
-  typedef detail::PlantEquipmentOperationScheme_Impl ImplType;
+  typedef boost::optional<PlantEquipmentOperationScheme> OptionalPlantEquipmentOperationScheme;
 
-  explicit PlantEquipmentOperationScheme(std::shared_ptr<detail::PlantEquipmentOperationScheme_Impl> impl);
+  typedef std::vector<PlantEquipmentOperationScheme> PlantEquipmentOperationSchemeVector;
 
-  private:
+}  // namespace model
+}  // namespace openstudio
 
-  REGISTER_LOGGER("openstudio.model.PlantEquipmentOperationScheme");
-
-  /// @endcond
-
-};
-
-typedef boost::optional<PlantEquipmentOperationScheme> OptionalPlantEquipmentOperationScheme;
-
-typedef std::vector<PlantEquipmentOperationScheme> PlantEquipmentOperationSchemeVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_PLANTEQUIPMENTOPERATIONSCHEME_HPP
-
+#endif  // MODEL_PLANTEQUIPMENTOPERATIONSCHEME_HPP

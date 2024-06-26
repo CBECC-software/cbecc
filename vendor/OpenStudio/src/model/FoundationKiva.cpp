@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -30,6 +30,8 @@
 #include <vector>
 #include "FoundationKiva.hpp"
 #include "FoundationKiva_Impl.hpp"
+#include "FoundationKivaSettings.hpp"
+#include "FoundationKivaSettings_Impl.hpp"
 #include "Material.hpp"
 #include "Material_Impl.hpp"
 #include "ConstructionBase.hpp"
@@ -40,6 +42,8 @@
 #include "Model.hpp"
 #include "Model_Impl.hpp"
 
+#include "../utilities/idf/WorkspaceExtensibleGroup.hpp"
+
 #include <utilities/idd/IddEnums.hxx>
 #include <utilities/idd/OS_Foundation_Kiva_FieldEnums.hxx>
 
@@ -48,471 +52,643 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  CustomBlock::CustomBlock(const Material& material, double depth, double xPosition, double zPosition)
+    : m_material(material), m_depth(depth), m_xPosition(xPosition), m_zPosition(zPosition) {
 
-  FoundationKiva_Impl::FoundationKiva_Impl(const IdfObject& idfObject,
-                                           Model_Impl* model,
-                                           bool keepHandle)
-    : ModelObject_Impl(idfObject,model,keepHandle)
-  {
-    OS_ASSERT(idfObject.iddObject().type() == FoundationKiva::iddObjectType());
+    if (m_depth < 0) {
+      LOG_AND_THROW("Unable to create custom block, depth of " << m_depth << " less than 0");
+    }
   }
 
-  FoundationKiva_Impl::FoundationKiva_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                           Model_Impl* model,
-                                           bool keepHandle)
-    : ModelObject_Impl(other,model,keepHandle)
-  {
-    OS_ASSERT(other.iddObject().type() == FoundationKiva::iddObjectType());
+  Material CustomBlock::material() const {
+    return m_material;
   }
 
-  FoundationKiva_Impl::FoundationKiva_Impl(const FoundationKiva_Impl& other,
-                                           Model_Impl* model,
-                                           bool keepHandle)
-    : ModelObject_Impl(other,model,keepHandle)
-  {}
-
-  const std::vector<std::string>& FoundationKiva_Impl::outputVariableNames() const
-  {
-    static std::vector<std::string> result;
-    return result;
+  double CustomBlock::depth() const {
+    return m_depth;
   }
 
-  IddObjectType FoundationKiva_Impl::iddObjectType() const {
-    return FoundationKiva::iddObjectType();
+  double CustomBlock::xPosition() const {
+    return m_xPosition;
   }
 
-  boost::optional<Material> FoundationKiva_Impl::interiorHorizontalInsulationMaterial() const {
-    return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::InteriorHorizontalInsulationMaterialName);
+  double CustomBlock::zPosition() const {
+    return m_zPosition;
   }
 
-  double FoundationKiva_Impl::interiorHorizontalInsulationDepth() const {
-    boost::optional<double> value = getDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth, true);
-    OS_ASSERT(value);
-    return value.get();
+  std::ostream& operator<<(std::ostream& out, const openstudio::model::CustomBlock& customBlock) {
+    out << "material name=" << customBlock.material().name().get() << ", depth=" << customBlock.depth() << ", x position=" << customBlock.xPosition()
+        << ", z position=" << customBlock.zPosition();
+    return out;
   }
 
-  bool FoundationKiva_Impl::isInteriorHorizontalInsulationDepthDefaulted() const {
-    return isEmpty(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth);
+  namespace detail {
+
+    FoundationKiva_Impl::FoundationKiva_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(idfObject, model, keepHandle) {
+      OS_ASSERT(idfObject.iddObject().type() == FoundationKiva::iddObjectType());
+    }
+
+    FoundationKiva_Impl::FoundationKiva_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(other, model, keepHandle) {
+      OS_ASSERT(other.iddObject().type() == FoundationKiva::iddObjectType());
+    }
+
+    FoundationKiva_Impl::FoundationKiva_Impl(const FoundationKiva_Impl& other, Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(other, model, keepHandle) {}
+
+    ModelObject FoundationKiva_Impl::clone(Model model) const {
+      auto result = ModelObject_Impl::clone(model);
+
+      // FoundationKiva cannot be used without FoundationKivaSettings.
+      // Note that FoundationKiva can be constructed without FoundationKivaSettings
+      auto targetModelSettings = model.getOptionalUniqueModelObject<FoundationKivaSettings>();
+      if (!targetModelSettings) {
+        // If the target model does not already have FoundationKivaSettings,
+        // and the source model does have settings, then bring them over
+        auto sourceModelSettings = this->model().getOptionalUniqueModelObject<FoundationKivaSettings>();
+        if (sourceModelSettings) {
+          sourceModelSettings->clone(model);
+        }
+      }
+
+      return result;
+    }
+
+    const std::vector<std::string>& FoundationKiva_Impl::outputVariableNames() const {
+      static const std::vector<std::string> result;
+      return result;
+    }
+
+    IddObjectType FoundationKiva_Impl::iddObjectType() const {
+      return FoundationKiva::iddObjectType();
+    }
+
+    boost::optional<double> FoundationKiva_Impl::initialIndoorAirTemperature() {
+      return getDouble(OS_Foundation_KivaFields::InitialIndoorAirTemperature);
+    }
+
+    boost::optional<Material> FoundationKiva_Impl::interiorHorizontalInsulationMaterial() const {
+      return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::InteriorHorizontalInsulationMaterialName);
+    }
+
+    double FoundationKiva_Impl::interiorHorizontalInsulationDepth() const {
+      boost::optional<double> value = getDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool FoundationKiva_Impl::isInteriorHorizontalInsulationDepthDefaulted() const {
+      return isEmpty(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth);
+    }
+
+    boost::optional<double> FoundationKiva_Impl::interiorHorizontalInsulationWidth() {
+      return getDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationWidth);
+    }
+
+    boost::optional<Material> FoundationKiva_Impl::interiorVerticalInsulationMaterial() const {
+      return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::InteriorVerticalInsulationMaterialName);
+    }
+
+    boost::optional<double> FoundationKiva_Impl::interiorVerticalInsulationDepth() {
+      return getDouble(OS_Foundation_KivaFields::InteriorVerticalInsulationDepth);
+    }
+
+    boost::optional<Material> FoundationKiva_Impl::exteriorHorizontalInsulationMaterial() const {
+      return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::ExteriorHorizontalInsulationMaterialName);
+    }
+
+    boost::optional<double> FoundationKiva_Impl::exteriorHorizontalInsulationDepth() {
+      return getDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationDepth);
+    }
+
+    double FoundationKiva_Impl::exteriorHorizontalInsulationWidth() const {
+      boost::optional<double> value = getDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool FoundationKiva_Impl::isExteriorHorizontalInsulationWidthDefaulted() const {
+      return isEmpty(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth);
+    }
+
+    boost::optional<Material> FoundationKiva_Impl::exteriorVerticalInsulationMaterial() const {
+      return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::ExteriorVerticalInsulationMaterialName);
+    }
+
+    boost::optional<double> FoundationKiva_Impl::exteriorVerticalInsulationDepth() {
+      return getDouble(OS_Foundation_KivaFields::ExteriorVerticalInsulationDepth);
+    }
+
+    double FoundationKiva_Impl::wallHeightAboveGrade() const {
+      boost::optional<double> value = getDouble(OS_Foundation_KivaFields::WallHeightAboveGrade, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool FoundationKiva_Impl::isWallHeightAboveGradeDefaulted() const {
+      return isEmpty(OS_Foundation_KivaFields::WallHeightAboveGrade);
+    }
+
+    double FoundationKiva_Impl::wallDepthBelowSlab() const {
+      boost::optional<double> value = getDouble(OS_Foundation_KivaFields::WallDepthBelowSlab, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool FoundationKiva_Impl::isWallDepthBelowSlabDefaulted() const {
+      return isEmpty(OS_Foundation_KivaFields::WallDepthBelowSlab);
+    }
+
+    boost::optional<ConstructionBase> FoundationKiva_Impl::footingWallConstruction() const {
+      return getObject<ModelObject>().getModelObjectTarget<ConstructionBase>(OS_Foundation_KivaFields::FootingWallConstructionName);
+    }
+
+    boost::optional<Material> FoundationKiva_Impl::footingMaterial() const {
+      return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::FootingMaterialName);
+    }
+
+    double FoundationKiva_Impl::footingDepth() const {
+      boost::optional<double> value = getDouble(OS_Foundation_KivaFields::FootingDepth, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool FoundationKiva_Impl::isFootingDepthDefaulted() const {
+      return isEmpty(OS_Foundation_KivaFields::FootingDepth);
+    }
+
+    bool FoundationKiva_Impl::setInitialIndoorAirTemperature(double initialIndoorAirTemperature) {
+      bool result = setDouble(OS_Foundation_KivaFields::InitialIndoorAirTemperature, initialIndoorAirTemperature);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    bool FoundationKiva_Impl::setInteriorHorizontalInsulationMaterial(const Material& material) {
+      return setPointer(OS_Foundation_KivaFields::InteriorHorizontalInsulationMaterialName, material.handle());
+    }
+
+    void FoundationKiva_Impl::resetInteriorHorizontalInsulationMaterial() {
+      bool result = setString(OS_Foundation_KivaFields::InteriorHorizontalInsulationMaterialName, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setInteriorHorizontalInsulationDepth(double interiorHorizontalInsulationDepth) {
+      bool result = setDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth, interiorHorizontalInsulationDepth);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    void FoundationKiva_Impl::resetInteriorHorizontalInsulationDepth() {
+      bool result = setString(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setInteriorHorizontalInsulationWidth(double interiorHorizontalInsulationWidth) {
+      bool result = setDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationWidth, interiorHorizontalInsulationWidth);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    bool FoundationKiva_Impl::setInteriorVerticalInsulationMaterial(const Material& material) {
+      return setPointer(OS_Foundation_KivaFields::InteriorVerticalInsulationMaterialName, material.handle());
+    }
+
+    void FoundationKiva_Impl::resetInteriorVerticalInsulationMaterial() {
+      bool result = setString(OS_Foundation_KivaFields::InteriorVerticalInsulationMaterialName, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setInteriorVerticalInsulationDepth(double interiorVerticalInsulationDepth) {
+      bool result = setDouble(OS_Foundation_KivaFields::InteriorVerticalInsulationDepth, interiorVerticalInsulationDepth);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    bool FoundationKiva_Impl::setExteriorHorizontalInsulationMaterial(const Material& material) {
+      return setPointer(OS_Foundation_KivaFields::ExteriorHorizontalInsulationMaterialName, material.handle());
+    }
+
+    void FoundationKiva_Impl::resetExteriorHorizontalInsulationMaterial() {
+      bool result = setString(OS_Foundation_KivaFields::ExteriorHorizontalInsulationMaterialName, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setExteriorHorizontalInsulationDepth(double exteriorHorizontalInsulationDepth) {
+      bool result = setDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationDepth, exteriorHorizontalInsulationDepth);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    bool FoundationKiva_Impl::setExteriorHorizontalInsulationWidth(double exteriorHorizontalInsulationWidth) {
+      bool result = setDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth, exteriorHorizontalInsulationWidth);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    void FoundationKiva_Impl::resetExteriorHorizontalInsulationWidth() {
+      bool result = setString(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setExteriorVerticalInsulationMaterial(const Material& material) {
+      return setPointer(OS_Foundation_KivaFields::ExteriorVerticalInsulationMaterialName, material.handle());
+    }
+
+    void FoundationKiva_Impl::resetExteriorVerticalInsulationMaterial() {
+      bool result = setString(OS_Foundation_KivaFields::ExteriorVerticalInsulationMaterialName, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setExteriorVerticalInsulationDepth(double exteriorVerticalInsulationDepth) {
+      bool result = setDouble(OS_Foundation_KivaFields::ExteriorVerticalInsulationDepth, exteriorVerticalInsulationDepth);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    bool FoundationKiva_Impl::setWallHeightAboveGrade(double wallHeightAboveGrade) {
+      bool result = setDouble(OS_Foundation_KivaFields::WallHeightAboveGrade, wallHeightAboveGrade);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    void FoundationKiva_Impl::resetWallHeightAboveGrade() {
+      bool result = setString(OS_Foundation_KivaFields::WallHeightAboveGrade, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setWallDepthBelowSlab(double wallDepthBelowSlab) {
+      bool result = setDouble(OS_Foundation_KivaFields::WallDepthBelowSlab, wallDepthBelowSlab);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    void FoundationKiva_Impl::resetWallDepthBelowSlab() {
+      bool result = setString(OS_Foundation_KivaFields::WallDepthBelowSlab, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setFootingWallConstruction(const ConstructionBase& construction) {
+      return setPointer(OS_Foundation_KivaFields::FootingWallConstructionName, construction.handle());
+    }
+
+    void FoundationKiva_Impl::resetFootingWallConstruction() {
+      bool result = setString(OS_Foundation_KivaFields::FootingWallConstructionName, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setFootingMaterial(const Material& material) {
+      return setPointer(OS_Foundation_KivaFields::FootingMaterialName, material.handle());
+    }
+
+    void FoundationKiva_Impl::resetFootingMaterial() {
+      bool result = setString(OS_Foundation_KivaFields::FootingMaterialName, "");
+      OS_ASSERT(result);
+    }
+
+    bool FoundationKiva_Impl::setFootingDepth(double footingDepth) {
+      bool result = setDouble(OS_Foundation_KivaFields::FootingDepth, footingDepth);
+      OS_ASSERT(result);
+      return result;
+    }
+
+    void FoundationKiva_Impl::resetFootingDepth() {
+      bool result = setString(OS_Foundation_KivaFields::FootingDepth, "");
+      OS_ASSERT(result);
+    }
+
+    SurfaceVector FoundationKiva_Impl::surfaces() const {
+      return getObject<ModelObject>().getModelObjectSources<Surface>(Surface::iddObjectType());
+    }
+
+    unsigned int FoundationKiva_Impl::numberofCustomBlocks() const {
+      return numExtensibleGroups();
+    }
+
+    bool FoundationKiva_Impl::addCustomBlock(const CustomBlock& customBlock) {
+      bool result;
+
+      unsigned int num = numberofCustomBlocks();
+      // Max number of custom blocks is 10
+      if (num >= 10) {
+        LOG(Warn, briefDescription() << " already has 10 custom blocks which is the limit");
+        result = false;
+      } else {
+        // Push an extensible group
+        WorkspaceExtensibleGroup eg = getObject<ModelObject>().pushExtensibleGroup().cast<WorkspaceExtensibleGroup>();
+        bool material = eg.setPointer(OS_Foundation_KivaExtensibleFields::CustomBlockMaterialName, customBlock.material().handle());
+        bool depth = eg.setDouble(OS_Foundation_KivaExtensibleFields::CustomBlockDepth, customBlock.depth());
+        bool xPosition = eg.setDouble(OS_Foundation_KivaExtensibleFields::CustomBlockXPosition, customBlock.xPosition());
+        bool zPosition = eg.setDouble(OS_Foundation_KivaExtensibleFields::CustomBlockZPosition, customBlock.zPosition());
+        if (material && depth && xPosition && zPosition) {
+          result = true;
+        } else {
+          // Something went wrong
+          // So erase the new extensible group
+          getObject<ModelObject>().eraseExtensibleGroup(eg.groupIndex());
+          result = false;
+        }
+        result = true;
+      }
+      return result;
+    }
+
+    bool FoundationKiva_Impl::addCustomBlock(const Material& material, double depth, double xPosition, double zPosition) {
+      // Make a custom block, and then call the above function
+      CustomBlock customBlock(material, depth, xPosition, zPosition);
+      return addCustomBlock(customBlock);
+    }
+
+    bool FoundationKiva_Impl::removeCustomBlock(unsigned groupIndex) {
+      bool result;
+
+      unsigned int num = numberofCustomBlocks();
+      if (groupIndex < num) {
+        getObject<ModelObject>().eraseExtensibleGroup(groupIndex);
+        result = true;
+      } else {
+        result = false;
+      }
+      return result;
+    }
+
+    void FoundationKiva_Impl::removeAllCustomBlocks() {
+      getObject<ModelObject>().clearExtensibleGroups();
+    }
+
+    std::vector<CustomBlock> FoundationKiva_Impl::customBlocks() const {
+      std::vector<CustomBlock> result;
+
+      std::vector<IdfExtensibleGroup> groups = extensibleGroups();
+
+      for (const auto& group : groups) {
+        boost::optional<WorkspaceObject> wo =
+          group.cast<WorkspaceExtensibleGroup>().getTarget(OS_Foundation_KivaExtensibleFields::CustomBlockMaterialName);
+        boost::optional<Material> material = wo->optionalCast<Material>();
+        boost::optional<double> depth = group.cast<WorkspaceExtensibleGroup>().getDouble(OS_Foundation_KivaExtensibleFields::CustomBlockDepth);
+        boost::optional<double> xPosition =
+          group.cast<WorkspaceExtensibleGroup>().getDouble(OS_Foundation_KivaExtensibleFields::CustomBlockXPosition);
+        boost::optional<double> zPosition =
+          group.cast<WorkspaceExtensibleGroup>().getDouble(OS_Foundation_KivaExtensibleFields::CustomBlockZPosition);
+
+        if (material && depth && xPosition && zPosition) {
+          CustomBlock customBlock(material.get(), depth.get(), xPosition.get(), zPosition.get());
+          result.push_back(customBlock);
+        }
+      }
+
+      return result;
+    }
+
+    bool FoundationKiva_Impl::addCustomBlocks(const std::vector<CustomBlock>& customBlocks) {
+      unsigned int num = numberofCustomBlocks();
+      if ((num + customBlocks.size()) > 10) {
+        LOG(Warn, briefDescription() << " would have more than the 10 maximum custom blocks");
+        return false;
+      } else {
+        for (const CustomBlock& customBlock : customBlocks) {
+          addCustomBlock(customBlock);
+        }
+        return true;
+      }
+    }
+
+  }  // namespace detail
+
+  FoundationKiva::FoundationKiva(Model& model) : ModelObject(FoundationKiva::iddObjectType(), model) {}
+
+  IddObjectType FoundationKiva::iddObjectType() {
+    return IddObjectType(IddObjectType::OS_Foundation_Kiva);
   }
 
-  boost::optional<double> FoundationKiva_Impl::interiorHorizontalInsulationWidth() {
-    return getDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationWidth);
-  }
-  
-  boost::optional<Material> FoundationKiva_Impl::interiorVerticalInsulationMaterial() const {
-    return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::InteriorVerticalInsulationMaterialName);
+  boost::optional<double> FoundationKiva::initialIndoorAirTemperature() {
+    return getImpl<detail::FoundationKiva_Impl>()->initialIndoorAirTemperature();
   }
 
-  boost::optional<double> FoundationKiva_Impl::interiorVerticalInsulationDepth() {
-    return getDouble(OS_Foundation_KivaFields::InteriorVerticalInsulationDepth);
+  boost::optional<Material> FoundationKiva::interiorHorizontalInsulationMaterial() const {
+    return getImpl<detail::FoundationKiva_Impl>()->interiorHorizontalInsulationMaterial();
   }
 
-  boost::optional<Material> FoundationKiva_Impl::exteriorHorizontalInsulationMaterial() const {
-    return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::ExteriorHorizontalInsulationMaterialName);
+  double FoundationKiva::interiorHorizontalInsulationDepth() const {
+    return getImpl<detail::FoundationKiva_Impl>()->interiorHorizontalInsulationDepth();
   }
 
-  boost::optional<double> FoundationKiva_Impl::exteriorHorizontalInsulationDepth() {
-    return getDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationDepth);
+  bool FoundationKiva::isInteriorHorizontalInsulationDepthDefaulted() const {
+    return getImpl<detail::FoundationKiva_Impl>()->isInteriorHorizontalInsulationDepthDefaulted();
   }
 
-  double FoundationKiva_Impl::exteriorHorizontalInsulationWidth() const {
-    boost::optional<double> value = getDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth, true);
-    OS_ASSERT(value);
-    return value.get();
+  boost::optional<double> FoundationKiva::interiorHorizontalInsulationWidth() {
+    return getImpl<detail::FoundationKiva_Impl>()->interiorHorizontalInsulationWidth();
   }
 
-  bool FoundationKiva_Impl::isExteriorHorizontalInsulationWidthDefaulted() const {
-    return isEmpty(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth);
+  boost::optional<Material> FoundationKiva::interiorVerticalInsulationMaterial() const {
+    return getImpl<detail::FoundationKiva_Impl>()->interiorVerticalInsulationMaterial();
   }
 
-  boost::optional<Material> FoundationKiva_Impl::exteriorVerticalInsulationMaterial() const {
-    return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::ExteriorVerticalInsulationMaterialName);
+  boost::optional<double> FoundationKiva::interiorVerticalInsulationDepth() {
+    return getImpl<detail::FoundationKiva_Impl>()->interiorVerticalInsulationDepth();
   }
 
-  boost::optional<double> FoundationKiva_Impl::exteriorVerticalInsulationDepth() {
-    return getDouble(OS_Foundation_KivaFields::ExteriorVerticalInsulationDepth);
+  boost::optional<Material> FoundationKiva::exteriorHorizontalInsulationMaterial() const {
+    return getImpl<detail::FoundationKiva_Impl>()->exteriorHorizontalInsulationMaterial();
   }
 
-  double FoundationKiva_Impl::wallHeightAboveGrade() const {
-    boost::optional<double> value = getDouble(OS_Foundation_KivaFields::WallHeightAboveGrade, true);
-    OS_ASSERT(value);
-    return value.get();
+  boost::optional<double> FoundationKiva::exteriorHorizontalInsulationDepth() {
+    return getImpl<detail::FoundationKiva_Impl>()->exteriorHorizontalInsulationDepth();
   }
 
-  bool FoundationKiva_Impl::isWallHeightAboveGradeDefaulted() const {
-    return isEmpty(OS_Foundation_KivaFields::WallHeightAboveGrade);
+  double FoundationKiva::exteriorHorizontalInsulationWidth() const {
+    return getImpl<detail::FoundationKiva_Impl>()->exteriorHorizontalInsulationWidth();
   }
 
-  double FoundationKiva_Impl::wallDepthBelowSlab() const {
-    boost::optional<double> value = getDouble(OS_Foundation_KivaFields::WallDepthBelowSlab, true);
-    OS_ASSERT(value);
-    return value.get();
+  bool FoundationKiva::isExteriorHorizontalInsulationWidthDefaulted() const {
+    return getImpl<detail::FoundationKiva_Impl>()->isExteriorHorizontalInsulationWidthDefaulted();
   }
 
-  bool FoundationKiva_Impl::isWallDepthBelowSlabDefaulted() const {
-    return isEmpty(OS_Foundation_KivaFields::WallDepthBelowSlab);
+  boost::optional<Material> FoundationKiva::exteriorVerticalInsulationMaterial() const {
+    return getImpl<detail::FoundationKiva_Impl>()->exteriorVerticalInsulationMaterial();
   }
 
-  boost::optional<ConstructionBase> FoundationKiva_Impl::footingWallConstruction() const {
-    return getObject<ModelObject>().getModelObjectTarget<ConstructionBase>(OS_Foundation_KivaFields::FootingWallConstructionName);
+  boost::optional<double> FoundationKiva::exteriorVerticalInsulationDepth() {
+    return getImpl<detail::FoundationKiva_Impl>()->exteriorVerticalInsulationDepth();
   }
 
-  boost::optional<Material> FoundationKiva_Impl::footingMaterial() const {
-    return getObject<ModelObject>().getModelObjectTarget<Material>(OS_Foundation_KivaFields::FootingMaterialName);
+  double FoundationKiva::wallHeightAboveGrade() const {
+    return getImpl<detail::FoundationKiva_Impl>()->wallHeightAboveGrade();
   }
 
-  double FoundationKiva_Impl::footingDepth() const {
-    boost::optional<double> value = getDouble(OS_Foundation_KivaFields::FootingDepth, true);
-    OS_ASSERT(value);
-    return value.get();
+  bool FoundationKiva::isWallHeightAboveGradeDefaulted() const {
+    return getImpl<detail::FoundationKiva_Impl>()->isWallHeightAboveGradeDefaulted();
   }
 
-  bool FoundationKiva_Impl::isFootingDepthDefaulted() const {
-    return isEmpty(OS_Foundation_KivaFields::FootingDepth);
+  double FoundationKiva::wallDepthBelowSlab() const {
+    return getImpl<detail::FoundationKiva_Impl>()->wallDepthBelowSlab();
   }
 
-  bool FoundationKiva_Impl::setInteriorHorizontalInsulationMaterial(const Material& material) {
-    return setPointer(OS_Foundation_KivaFields::InteriorHorizontalInsulationMaterialName, material.handle());
+  bool FoundationKiva::isWallDepthBelowSlabDefaulted() const {
+    return getImpl<detail::FoundationKiva_Impl>()->isWallDepthBelowSlabDefaulted();
   }
 
-  void FoundationKiva_Impl::resetInteriorHorizontalInsulationMaterial() {
-    bool result = setString(OS_Foundation_KivaFields::InteriorHorizontalInsulationMaterialName, "");
-    OS_ASSERT(result);
+  boost::optional<ConstructionBase> FoundationKiva::footingWallConstruction() const {
+    return getImpl<detail::FoundationKiva_Impl>()->footingWallConstruction();
   }
 
-  bool FoundationKiva_Impl::setInteriorHorizontalInsulationDepth(double interiorHorizontalInsulationDepth) {
-    bool result = setDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth, interiorHorizontalInsulationDepth);
-    OS_ASSERT(result);
-    return result;
+  boost::optional<Material> FoundationKiva::footingMaterial() const {
+    return getImpl<detail::FoundationKiva_Impl>()->footingMaterial();
   }
 
-  void FoundationKiva_Impl::resetInteriorHorizontalInsulationDepth() {
-    bool result = setString(OS_Foundation_KivaFields::InteriorHorizontalInsulationDepth, "");
-    OS_ASSERT(result);
+  double FoundationKiva::footingDepth() const {
+    return getImpl<detail::FoundationKiva_Impl>()->footingDepth();
   }
 
-  bool FoundationKiva_Impl::setInteriorHorizontalInsulationWidth(double interiorHorizontalInsulationWidth) {
-    bool result = setDouble(OS_Foundation_KivaFields::InteriorHorizontalInsulationWidth, interiorHorizontalInsulationWidth);
-    OS_ASSERT(result);
-    return result;
+  bool FoundationKiva::isFootingDepthDefaulted() const {
+    return getImpl<detail::FoundationKiva_Impl>()->isFootingDepthDefaulted();
   }
 
-  bool FoundationKiva_Impl::setInteriorVerticalInsulationMaterial(const Material& material) {
-    return setPointer(OS_Foundation_KivaFields::InteriorVerticalInsulationMaterialName, material.handle());
+  bool FoundationKiva::setInitialIndoorAirTemperature(double initialIndoorAirTemperature) {
+    return getImpl<detail::FoundationKiva_Impl>()->setInitialIndoorAirTemperature(initialIndoorAirTemperature);
   }
 
-  void FoundationKiva_Impl::resetInteriorVerticalInsulationMaterial() {
-    bool result = setString(OS_Foundation_KivaFields::InteriorVerticalInsulationMaterialName, "");
-    OS_ASSERT(result);
+  bool FoundationKiva::setInteriorHorizontalInsulationMaterial(const Material& material) {
+    return getImpl<detail::FoundationKiva_Impl>()->setInteriorHorizontalInsulationMaterial(material);
   }
 
-  bool FoundationKiva_Impl::setInteriorVerticalInsulationDepth(double interiorVerticalInsulationDepth) {
-    bool result = setDouble(OS_Foundation_KivaFields::InteriorVerticalInsulationDepth, interiorVerticalInsulationDepth);
-    OS_ASSERT(result);
-    return result;
+  void FoundationKiva::resetInteriorHorizontalInsulationMaterial() {
+    getImpl<detail::FoundationKiva_Impl>()->resetInteriorHorizontalInsulationMaterial();
   }
 
-  bool FoundationKiva_Impl::setExteriorHorizontalInsulationMaterial(const Material& material) {
-    return setPointer(OS_Foundation_KivaFields::ExteriorHorizontalInsulationMaterialName, material.handle());
+  bool FoundationKiva::setInteriorHorizontalInsulationDepth(double interiorHorizontalInsulationDepth) {
+    return getImpl<detail::FoundationKiva_Impl>()->setInteriorHorizontalInsulationDepth(interiorHorizontalInsulationDepth);
   }
 
-  void FoundationKiva_Impl::resetExteriorHorizontalInsulationMaterial() {
-    bool result = setString(OS_Foundation_KivaFields::ExteriorHorizontalInsulationMaterialName, "");
-    OS_ASSERT(result);
+  void FoundationKiva::resetInteriorHorizontalInsulationDepth() {
+    getImpl<detail::FoundationKiva_Impl>()->resetInteriorHorizontalInsulationDepth();
   }
 
-  bool FoundationKiva_Impl::setExteriorHorizontalInsulationDepth(double exteriorHorizontalInsulationDepth) {
-    bool result = setDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationDepth, exteriorHorizontalInsulationDepth);
-    OS_ASSERT(result);
-    return result;
+  bool FoundationKiva::setInteriorHorizontalInsulationWidth(double interiorHorizontalInsulationWidth) {
+    return getImpl<detail::FoundationKiva_Impl>()->setInteriorHorizontalInsulationWidth(interiorHorizontalInsulationWidth);
   }
 
-  bool FoundationKiva_Impl::setExteriorHorizontalInsulationWidth(double exteriorHorizontalInsulationWidth) {
-    bool result = setDouble(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth, exteriorHorizontalInsulationWidth);
-    OS_ASSERT(result);
-    return result;
+  bool FoundationKiva::setInteriorVerticalInsulationMaterial(const Material& material) {
+    return getImpl<detail::FoundationKiva_Impl>()->setInteriorVerticalInsulationMaterial(material);
   }
 
-  void FoundationKiva_Impl::resetExteriorHorizontalInsulationWidth() {
-    bool result = setString(OS_Foundation_KivaFields::ExteriorHorizontalInsulationWidth, "");
-    OS_ASSERT(result);
+  void FoundationKiva::resetInteriorVerticalInsulationMaterial() {
+    getImpl<detail::FoundationKiva_Impl>()->resetInteriorVerticalInsulationMaterial();
   }
 
-  bool FoundationKiva_Impl::setExteriorVerticalInsulationMaterial(const Material& material) {
-    return setPointer(OS_Foundation_KivaFields::ExteriorVerticalInsulationMaterialName, material.handle());
+  bool FoundationKiva::setInteriorVerticalInsulationDepth(double interiorVerticalInsulationDepth) {
+    return getImpl<detail::FoundationKiva_Impl>()->setInteriorVerticalInsulationDepth(interiorVerticalInsulationDepth);
   }
 
-  void FoundationKiva_Impl::resetExteriorVerticalInsulationMaterial() {
-    bool result = setString(OS_Foundation_KivaFields::ExteriorVerticalInsulationMaterialName, "");
-    OS_ASSERT(result);
+  bool FoundationKiva::setExteriorHorizontalInsulationMaterial(const Material& material) {
+    return getImpl<detail::FoundationKiva_Impl>()->setExteriorHorizontalInsulationMaterial(material);
   }
 
-  bool FoundationKiva_Impl::setExteriorVerticalInsulationDepth(double exteriorVerticalInsulationDepth) {
-    bool result = setDouble(OS_Foundation_KivaFields::ExteriorVerticalInsulationDepth, exteriorVerticalInsulationDepth);
-    OS_ASSERT(result);
-    return result;
+  void FoundationKiva::resetExteriorHorizontalInsulationMaterial() {
+    getImpl<detail::FoundationKiva_Impl>()->resetExteriorHorizontalInsulationMaterial();
   }
 
-  bool FoundationKiva_Impl::setWallHeightAboveGrade(double wallHeightAboveGrade) {
-    bool result = setDouble(OS_Foundation_KivaFields::WallHeightAboveGrade, wallHeightAboveGrade);
-    OS_ASSERT(result);
-    return result;
+  bool FoundationKiva::setExteriorHorizontalInsulationDepth(double exteriorHorizontalInsulationDepth) {
+    return getImpl<detail::FoundationKiva_Impl>()->setExteriorHorizontalInsulationDepth(exteriorHorizontalInsulationDepth);
   }
 
-  void FoundationKiva_Impl::resetWallHeightAboveGrade() {
-    bool result = setString(OS_Foundation_KivaFields::WallHeightAboveGrade, "");
-    OS_ASSERT(result);
+  bool FoundationKiva::setExteriorHorizontalInsulationWidth(double exteriorHorizontalInsulationWidth) {
+    return getImpl<detail::FoundationKiva_Impl>()->setExteriorHorizontalInsulationWidth(exteriorHorizontalInsulationWidth);
   }
 
-  bool FoundationKiva_Impl::setWallDepthBelowSlab(double wallDepthBelowSlab) {
-    bool result = setDouble(OS_Foundation_KivaFields::WallDepthBelowSlab, wallDepthBelowSlab);
-    OS_ASSERT(result);
-    return result;
+  void FoundationKiva::resetExteriorHorizontalInsulationWidth() {
+    getImpl<detail::FoundationKiva_Impl>()->resetExteriorHorizontalInsulationWidth();
   }
 
-  void FoundationKiva_Impl::resetWallDepthBelowSlab() {
-    bool result = setString(OS_Foundation_KivaFields::WallDepthBelowSlab, "");
-    OS_ASSERT(result);
+  bool FoundationKiva::setExteriorVerticalInsulationMaterial(const Material& material) {
+    return getImpl<detail::FoundationKiva_Impl>()->setExteriorVerticalInsulationMaterial(material);
   }
 
-  bool FoundationKiva_Impl::setFootingWallConstruction(const ConstructionBase& construction) {
-    return setPointer(OS_Foundation_KivaFields::FootingWallConstructionName, construction.handle());
+  void FoundationKiva::resetExteriorVerticalInsulationMaterial() {
+    getImpl<detail::FoundationKiva_Impl>()->resetExteriorVerticalInsulationMaterial();
   }
 
-  void FoundationKiva_Impl::resetFootingWallConstruction() {
-    bool result = setString(OS_Foundation_KivaFields::FootingWallConstructionName, "");
-    OS_ASSERT(result);
+  bool FoundationKiva::setExteriorVerticalInsulationDepth(double exteriorVerticalInsulationDepth) {
+    return getImpl<detail::FoundationKiva_Impl>()->setExteriorVerticalInsulationDepth(exteriorVerticalInsulationDepth);
   }
 
-  bool FoundationKiva_Impl::setFootingMaterial(const Material& material) {
-    return setPointer(OS_Foundation_KivaFields::FootingMaterialName, material.handle());
+  bool FoundationKiva::setWallHeightAboveGrade(double wallHeightAboveGrade) {
+    return getImpl<detail::FoundationKiva_Impl>()->setWallHeightAboveGrade(wallHeightAboveGrade);
   }
 
-  void FoundationKiva_Impl::resetFootingMaterial() {
-    bool result = setString(OS_Foundation_KivaFields::FootingMaterialName, "");
-    OS_ASSERT(result);
+  void FoundationKiva::resetWallHeightAboveGrade() {
+    getImpl<detail::FoundationKiva_Impl>()->resetWallHeightAboveGrade();
   }
 
-  bool FoundationKiva_Impl::setFootingDepth(double footingDepth) {
-    bool result = setDouble(OS_Foundation_KivaFields::FootingDepth, footingDepth);
-    OS_ASSERT(result);
-    return result;
+  bool FoundationKiva::setWallDepthBelowSlab(double wallDepthBelowSlab) {
+    return getImpl<detail::FoundationKiva_Impl>()->setWallDepthBelowSlab(wallDepthBelowSlab);
   }
 
-  void FoundationKiva_Impl::resetFootingDepth() {
-    bool result = setString(OS_Foundation_KivaFields::FootingDepth, "");
-    OS_ASSERT(result);
+  void FoundationKiva::resetWallDepthBelowSlab() {
+    getImpl<detail::FoundationKiva_Impl>()->resetWallDepthBelowSlab();
   }
 
-  SurfaceVector FoundationKiva_Impl::surfaces() const {
-    return getObject<ModelObject>().getModelObjectSources<Surface>(Surface::iddObjectType());
+  bool FoundationKiva::setFootingWallConstruction(const ConstructionBase& construction) {
+    return getImpl<detail::FoundationKiva_Impl>()->setFootingWallConstruction(construction);
   }
 
-} // detail
+  void FoundationKiva::resetFootingWallConstruction() {
+    getImpl<detail::FoundationKiva_Impl>()->resetFootingWallConstruction();
+  }
 
-FoundationKiva::FoundationKiva(Model& model)
-  : ModelObject(FoundationKiva::iddObjectType(), model)
-{}
+  bool FoundationKiva::setFootingMaterial(const Material& material) {
+    return getImpl<detail::FoundationKiva_Impl>()->setFootingMaterial(material);
+  }
 
-IddObjectType FoundationKiva::iddObjectType() {
-  return IddObjectType(IddObjectType::OS_Foundation_Kiva);
-}
+  void FoundationKiva::resetFootingMaterial() {
+    getImpl<detail::FoundationKiva_Impl>()->resetFootingMaterial();
+  }
 
-boost::optional<Material> FoundationKiva::interiorHorizontalInsulationMaterial() const {
-  return getImpl<detail::FoundationKiva_Impl>()->interiorHorizontalInsulationMaterial();
-}
+  bool FoundationKiva::setFootingDepth(double footingDepth) {
+    return getImpl<detail::FoundationKiva_Impl>()->setFootingDepth(footingDepth);
+  }
 
-double FoundationKiva::interiorHorizontalInsulationDepth() const {
-  return getImpl<detail::FoundationKiva_Impl>()->interiorHorizontalInsulationDepth();
-}
+  void FoundationKiva::resetFootingDepth() {
+    getImpl<detail::FoundationKiva_Impl>()->resetFootingDepth();
+  }
 
-bool FoundationKiva::isInteriorHorizontalInsulationDepthDefaulted() const {
-  return getImpl<detail::FoundationKiva_Impl>()->isInteriorHorizontalInsulationDepthDefaulted();
-}
+  std::vector<Surface> FoundationKiva::surfaces() const {
+    return getImpl<detail::FoundationKiva_Impl>()->surfaces();
+  }
 
-boost::optional<double> FoundationKiva::interiorHorizontalInsulationWidth() {
-  return getImpl<detail::FoundationKiva_Impl>()->interiorHorizontalInsulationWidth();
-}
+  unsigned int FoundationKiva::numberofCustomBlocks() const {
+    return getImpl<detail::FoundationKiva_Impl>()->numberofCustomBlocks();
+  }
 
-boost::optional<Material> FoundationKiva::interiorVerticalInsulationMaterial() const {
-  return getImpl<detail::FoundationKiva_Impl>()->interiorVerticalInsulationMaterial();
-}
+  bool FoundationKiva::addCustomBlock(const CustomBlock& customBlock) {
+    return getImpl<detail::FoundationKiva_Impl>()->addCustomBlock(customBlock);
+  }
 
-boost::optional<double> FoundationKiva::interiorVerticalInsulationDepth() {
-  return getImpl<detail::FoundationKiva_Impl>()->interiorVerticalInsulationDepth();
-}
+  bool FoundationKiva::addCustomBlock(const Material& material, double depth, double xPosition, double zPosition) {
+    return getImpl<detail::FoundationKiva_Impl>()->addCustomBlock(material, depth, xPosition, zPosition);
+  }
 
-boost::optional<Material> FoundationKiva::exteriorHorizontalInsulationMaterial() const {
-  return getImpl<detail::FoundationKiva_Impl>()->exteriorHorizontalInsulationMaterial();
-}
+  void FoundationKiva::removeCustomBlock(int groupIndex) {
+    getImpl<detail::FoundationKiva_Impl>()->removeCustomBlock(groupIndex);
+  }
 
-boost::optional<double> FoundationKiva::exteriorHorizontalInsulationDepth() {
-  return getImpl<detail::FoundationKiva_Impl>()->exteriorHorizontalInsulationDepth();
-}
+  void FoundationKiva::removeAllCustomBlocks() {
+    getImpl<detail::FoundationKiva_Impl>()->removeAllCustomBlocks();
+  }
 
-double FoundationKiva::exteriorHorizontalInsulationWidth() const {
-  return getImpl<detail::FoundationKiva_Impl>()->exteriorHorizontalInsulationWidth();
-}
+  std::vector<CustomBlock> FoundationKiva::customBlocks() const {
+    return getImpl<detail::FoundationKiva_Impl>()->customBlocks();
+  }
 
-bool FoundationKiva::isExteriorHorizontalInsulationWidthDefaulted() const {
-  return getImpl<detail::FoundationKiva_Impl>()->isExteriorHorizontalInsulationWidthDefaulted();
-}
+  bool FoundationKiva::addCustomBlocks(const std::vector<CustomBlock>& customBlocks) {
+    return getImpl<detail::FoundationKiva_Impl>()->addCustomBlocks(customBlocks);
+  }
 
-boost::optional<Material> FoundationKiva::exteriorVerticalInsulationMaterial() const {
-  return getImpl<detail::FoundationKiva_Impl>()->exteriorVerticalInsulationMaterial();
-}
+  /// @cond
+  FoundationKiva::FoundationKiva(std::shared_ptr<detail::FoundationKiva_Impl> impl) : ModelObject(std::move(impl)) {}
 
-boost::optional<double> FoundationKiva::exteriorVerticalInsulationDepth() {
-  return getImpl<detail::FoundationKiva_Impl>()->exteriorVerticalInsulationDepth();
-}
+  /// @endcond
 
-double FoundationKiva::wallHeightAboveGrade() const {
-  return getImpl<detail::FoundationKiva_Impl>()->wallHeightAboveGrade();
-}
-
-bool FoundationKiva::isWallHeightAboveGradeDefaulted() const {
-  return getImpl<detail::FoundationKiva_Impl>()->isWallHeightAboveGradeDefaulted();
-}
-
-double FoundationKiva::wallDepthBelowSlab() const {
-  return getImpl<detail::FoundationKiva_Impl>()->wallDepthBelowSlab();
-}
-
-bool FoundationKiva::isWallDepthBelowSlabDefaulted() const {
-  return getImpl<detail::FoundationKiva_Impl>()->isWallDepthBelowSlabDefaulted();
-}
-
-boost::optional<ConstructionBase> FoundationKiva::footingWallConstruction() const {
-  return getImpl<detail::FoundationKiva_Impl>()->footingWallConstruction();
-}
-
-boost::optional<Material> FoundationKiva::footingMaterial() const {
-  return getImpl<detail::FoundationKiva_Impl>()->footingMaterial();
-}
-
-double FoundationKiva::footingDepth() const {
-  return getImpl<detail::FoundationKiva_Impl>()->footingDepth();
-}
-
-bool FoundationKiva::isFootingDepthDefaulted() const {
-  return getImpl<detail::FoundationKiva_Impl>()->isFootingDepthDefaulted();
-}
-
-bool FoundationKiva::setInteriorHorizontalInsulationMaterial(const Material& material) {
-  return getImpl<detail::FoundationKiva_Impl>()->setInteriorHorizontalInsulationMaterial(material);
-}
-
-void FoundationKiva::resetInteriorHorizontalInsulationMaterial() {
-  getImpl<detail::FoundationKiva_Impl>()->resetInteriorHorizontalInsulationMaterial();
-}
-
-bool FoundationKiva::setInteriorHorizontalInsulationDepth(double interiorHorizontalInsulationDepth) {
-  return getImpl<detail::FoundationKiva_Impl>()->setInteriorHorizontalInsulationDepth(interiorHorizontalInsulationDepth);
-}
-
-void FoundationKiva::resetInteriorHorizontalInsulationDepth() {
-  getImpl<detail::FoundationKiva_Impl>()->resetInteriorHorizontalInsulationDepth();
-}
-
-bool FoundationKiva::setInteriorHorizontalInsulationWidth(double interiorHorizontalInsulationWidth) {
-  return getImpl<detail::FoundationKiva_Impl>()->setInteriorHorizontalInsulationWidth(interiorHorizontalInsulationWidth);
-}
-
-bool FoundationKiva::setInteriorVerticalInsulationMaterial(const Material& material) {
-  return getImpl<detail::FoundationKiva_Impl>()->setInteriorVerticalInsulationMaterial(material);
-}
-
-void FoundationKiva::resetInteriorVerticalInsulationMaterial() {
-  getImpl<detail::FoundationKiva_Impl>()->resetInteriorVerticalInsulationMaterial();
-}
-
-bool FoundationKiva::setInteriorVerticalInsulationDepth(double interiorVerticalInsulationDepth) {
-  return getImpl<detail::FoundationKiva_Impl>()->setInteriorVerticalInsulationDepth(interiorVerticalInsulationDepth);
-}
-
-bool FoundationKiva::setExteriorHorizontalInsulationMaterial(const Material& material) {
-  return getImpl<detail::FoundationKiva_Impl>()->setExteriorHorizontalInsulationMaterial(material);
-}
-
-void FoundationKiva::resetExteriorHorizontalInsulationMaterial() {
-  getImpl<detail::FoundationKiva_Impl>()->resetExteriorHorizontalInsulationMaterial();
-}
-
-bool FoundationKiva::setExteriorHorizontalInsulationDepth(double exteriorHorizontalInsulationDepth) {
-  return getImpl<detail::FoundationKiva_Impl>()->setExteriorHorizontalInsulationDepth(exteriorHorizontalInsulationDepth);
-}
-
-bool FoundationKiva::setExteriorHorizontalInsulationWidth(double exteriorHorizontalInsulationWidth) {
-  return getImpl<detail::FoundationKiva_Impl>()->setExteriorHorizontalInsulationWidth(exteriorHorizontalInsulationWidth);
-}
-
-void FoundationKiva::resetExteriorHorizontalInsulationWidth() {
-  getImpl<detail::FoundationKiva_Impl>()->resetExteriorHorizontalInsulationWidth();
-}
-
-bool FoundationKiva::setExteriorVerticalInsulationMaterial(const Material& material) {
-  return getImpl<detail::FoundationKiva_Impl>()->setExteriorVerticalInsulationMaterial(material);
-}
-
-void FoundationKiva::resetExteriorVerticalInsulationMaterial() {
-  getImpl<detail::FoundationKiva_Impl>()->resetExteriorVerticalInsulationMaterial();
-}
-
-bool FoundationKiva::setExteriorVerticalInsulationDepth(double exteriorVerticalInsulationDepth) {
-  return getImpl<detail::FoundationKiva_Impl>()->setExteriorVerticalInsulationDepth(exteriorVerticalInsulationDepth);
-}
-
-bool FoundationKiva::setWallHeightAboveGrade(double wallHeightAboveGrade) {
-  return getImpl<detail::FoundationKiva_Impl>()->setWallHeightAboveGrade(wallHeightAboveGrade);
-}
-
-void FoundationKiva::resetWallHeightAboveGrade() {
-  getImpl<detail::FoundationKiva_Impl>()->resetWallHeightAboveGrade();
-}
-
-bool FoundationKiva::setWallDepthBelowSlab(double wallDepthBelowSlab) {
-  return getImpl<detail::FoundationKiva_Impl>()->setWallDepthBelowSlab(wallDepthBelowSlab);
-}
-
-void FoundationKiva::resetWallDepthBelowSlab() {
-  getImpl<detail::FoundationKiva_Impl>()->resetWallDepthBelowSlab();
-}
-
-bool FoundationKiva::setFootingWallConstruction(const ConstructionBase& construction) {
-  return getImpl<detail::FoundationKiva_Impl>()->setFootingWallConstruction(construction);
-}
-
-void FoundationKiva::resetFootingWallConstruction() {
-  getImpl<detail::FoundationKiva_Impl>()->resetFootingWallConstruction();
-}
-
-bool FoundationKiva::setFootingMaterial(const Material& material) {
-  return getImpl<detail::FoundationKiva_Impl>()->setFootingMaterial(material);
-}
-
-void FoundationKiva::resetFootingMaterial() {
-  getImpl<detail::FoundationKiva_Impl>()->resetFootingMaterial();
-}
-
-bool FoundationKiva::setFootingDepth(double footingDepth) {
-  return getImpl<detail::FoundationKiva_Impl>()->setFootingDepth(footingDepth);
-}
-
-void FoundationKiva::resetFootingDepth() {
-  getImpl<detail::FoundationKiva_Impl>()->resetFootingDepth();
-}
-
-std::vector<Surface> FoundationKiva::surfaces() const {
-  return getImpl<detail::FoundationKiva_Impl>()->surfaces();
-}
-
-/// @cond
-FoundationKiva::FoundationKiva(std::shared_ptr<detail::FoundationKiva_Impl> impl)
-  : ModelObject(std::move(impl))
-{}
-
-/// @endcond
-
-} // model
-} // openstudio
+}  // namespace model
+}  // namespace openstudio

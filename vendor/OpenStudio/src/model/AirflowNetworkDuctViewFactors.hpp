@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -34,100 +34,116 @@
 #include "ModelObject.hpp"
 #include <vector>
 #include <unordered_map>
+#include "PlanarSurface.hpp"
 
 namespace openstudio {
 
 namespace model {
 
-class PlanarSurface;
-class AirflowNetworkLinkage;
+  class AirflowNetworkLinkage;
 
-namespace detail {
+  namespace detail {
 
-  class AirflowNetworkDuctViewFactors_Impl;
+    class AirflowNetworkDuctViewFactors_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** AirflowNetworkDuctViewFactors is a ModelObject that wraps the OpenStudio IDD object 'OS:AirflowNetworkDuctViewFactors'. */
-class MODEL_API AirflowNetworkDuctViewFactors : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** This class implements a single point of a viewFactors, meant to replace std::pair<PlanarSurface, double> */
+  class MODEL_API ViewFactorData
+  {
+   public:
+    ViewFactorData(const PlanarSurface& s, double y);
 
-  explicit AirflowNetworkDuctViewFactors(const Model& model);
+    PlanarSurface planarSurface() const;
+    double viewFactor() const;
 
-  virtual ~AirflowNetworkDuctViewFactors() {}
+   private:
+    openstudio::model::PlanarSurface m_planarSurface;
+    double m_viewFactor;
+  };
 
-  //@}
+  // Overload operator<<
+  MODEL_API std::ostream& operator<<(std::ostream& out, const openstudio::model::ViewFactorData& vf);
 
-  static IddObjectType iddObjectType();
+  /** AirflowNetworkDuctViewFactors is a ModelObject that wraps the OpenStudio IDD object 'OS:AirflowNetworkDuctViewFactors'. */
+  class MODEL_API AirflowNetworkDuctViewFactors : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /** @name Getters */
-  //@{
+    explicit AirflowNetworkDuctViewFactors(const Model& model);
 
-  // TODO: Check return type. From object lists, some candidates are: AirflowNetworkComponent.
-  AirflowNetworkLinkage linkage() const;
+    virtual ~AirflowNetworkDuctViewFactors() {}
 
-  double ductSurfaceExposureFraction() const;
+    //@}
 
-  bool isDuctSurfaceExposureFractionDefaulted() const;
+    static IddObjectType iddObjectType();
 
-  double ductSurfaceEmittance() const;
+    /** @name Getters */
+    //@{
 
-  bool isDuctSurfaceEmittanceDefaulted() const;
+    AirflowNetworkLinkage linkage() const;
 
-  boost::optional<double> getViewFactor(const PlanarSurface &surf) const;
+    double ductSurfaceExposureFraction() const;
 
-  std::vector<std::pair<PlanarSurface, double>> viewFactors() const;
+    bool isDuctSurfaceExposureFractionDefaulted() const;
 
-  //std::unordered_map<PlanarSurface, double> viewFactorMap() const;
+    double ductSurfaceEmittance() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool isDuctSurfaceEmittanceDefaulted() const;
 
-  bool setLinkage(const AirflowNetworkLinkage& linkage);
+    boost::optional<double> getViewFactor(const PlanarSurface& surf) const;
 
-  bool setDuctSurfaceExposureFraction(double ductSurfaceExposureFraction);
+    std::vector<ViewFactorData> viewFactors() const;
 
-  void resetDuctSurfaceExposureFraction();
+    //std::unordered_map<PlanarSurface, double> viewFactorMap() const;
 
-  bool setDuctSurfaceEmittance(double ductSurfaceEmittance);
+    //@}
+    /** @name Setters */
+    //@{
 
-  void resetDuctSurfaceEmittance();
+    bool setLinkage(const AirflowNetworkLinkage& linkage);
 
-  bool setViewFactor(const PlanarSurface &surf, double F);
-  bool removeViewFactor(const PlanarSurface &surf);
-  void resetViewFactors();
+    bool setDuctSurfaceExposureFraction(double ductSurfaceExposureFraction);
 
-  //@}
-  /** @name Other */
-  //@{
+    void resetDuctSurfaceExposureFraction();
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::AirflowNetworkDuctViewFactors_Impl ImplType;
+    bool setDuctSurfaceEmittance(double ductSurfaceEmittance);
 
-  explicit AirflowNetworkDuctViewFactors(std::shared_ptr<detail::AirflowNetworkDuctViewFactors_Impl> impl);
+    void resetDuctSurfaceEmittance();
 
-  friend class detail::AirflowNetworkDuctViewFactors_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.AirflowNetworkDuctViewFactors");
-};
+    bool setViewFactor(const PlanarSurface& surf, double F);
+    bool removeViewFactor(const PlanarSurface& surf);
+    void resetViewFactors();
 
-/** \relates AirflowNetworkDuctViewFactors*/
-typedef boost::optional<AirflowNetworkDuctViewFactors> OptionalAirflowNetworkDuctViewFactors;
+    //@}
+    /** @name Other */
+    //@{
 
-/** \relates AirflowNetworkDuctViewFactors*/
-typedef std::vector<AirflowNetworkDuctViewFactors> AirflowNetworkDuctViewFactorsVector;
+    //@}
+   protected:
+    /// @cond
+    typedef detail::AirflowNetworkDuctViewFactors_Impl ImplType;
 
-} // model
-} // openstudio
+    explicit AirflowNetworkDuctViewFactors(std::shared_ptr<detail::AirflowNetworkDuctViewFactors_Impl> impl);
 
-#endif // MODEL_AIRFLOWNETWORKDUCTVIEWFACTORS_HPP
+    friend class detail::AirflowNetworkDuctViewFactors_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.AirflowNetworkDuctViewFactors");
+  };
 
+  /** \relates AirflowNetworkDuctViewFactors*/
+  typedef boost::optional<AirflowNetworkDuctViewFactors> OptionalAirflowNetworkDuctViewFactors;
+
+  /** \relates AirflowNetworkDuctViewFactors*/
+  typedef std::vector<AirflowNetworkDuctViewFactors> AirflowNetworkDuctViewFactorsVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_AIRFLOWNETWORKDUCTVIEWFACTORS_HPP

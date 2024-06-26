@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,107 +36,108 @@
 namespace openstudio {
 namespace model {
 
-class Schedule;
-class Node;
-class AirflowNewtorkEquivalentDuct;
+  class Schedule;
+  class Node;
+  class AirflowNewtorkEquivalentDuct;
 
-namespace detail {
+  namespace detail {
 
-class CoilHeatingElectric_Impl;
+    class CoilHeatingElectric_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** CoilHeatingElectric is a StraightComponent that wraps the OpenStudio IDD
+  /** CoilHeatingElectric is a StraightComponent that wraps the OpenStudio IDD
  *  object 'OS_Coil_Heating_Electric'. */
-class MODEL_API CoilHeatingElectric : public StraightComponent {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  class MODEL_API CoilHeatingElectric : public StraightComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  CoilHeatingElectric(const Model& model, Schedule & schedule);
+    CoilHeatingElectric(const Model& model, Schedule& schedule);
 
-  CoilHeatingElectric(const Model& model);
+    CoilHeatingElectric(const Model& model);
 
-  virtual ~CoilHeatingElectric() {}
+    virtual ~CoilHeatingElectric() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  Schedule availabilitySchedule() const;
+    Schedule availabilitySchedule() const;
 
-  double efficiency() const;
+    double efficiency() const;
 
-  bool isEfficiencyDefaulted() const;
+    bool isEfficiencyDefaulted() const;
 
-  boost::optional<double> nominalCapacity() const;
+    boost::optional<double> nominalCapacity() const;
 
-  bool isNominalCapacityDefaulted() const;
+    bool isNominalCapacityDefaulted() const;
 
-  bool isNominalCapacityAutosized() const;
+    bool isNominalCapacityAutosized() const;
 
-  boost::optional<Node> temperatureSetpointNode() const;
+    boost::optional<Node> temperatureSetpointNode() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool setAvailabilitySchedule(Schedule & schedule );
+    bool setAvailabilitySchedule(Schedule& schedule);
 
-  bool setEfficiency(double efficiency);
+    bool setEfficiency(double efficiency);
 
-  void resetEfficiency();
+    void resetEfficiency();
 
-  bool setNominalCapacity(double nominalCapacity);
+    bool setNominalCapacity(double nominalCapacity);
 
-  void resetNominalCapacity();
+    void resetNominalCapacity();
 
-  void autosizeNominalCapacity();
+    void autosizeNominalCapacity();
 
-  bool setTemperatureSetpointNode(Node & temperatureSetpointNode);
+    bool setTemperatureSetpointNode(Node& temperatureSetpointNode);
 
-  void resetTemperatureSetpointNode();
+    void resetTemperatureSetpointNode();
 
-  //@}
+    //@}
 
-  /** Creates a new equivalent duct object if an object is not already attached. */
-  AirflowNetworkEquivalentDuct getAirflowNetworkEquivalentDuct(double length, double diameter);
-  
-  /** Returns the attached equivalent duct object, if any. */
-  boost::optional<AirflowNetworkEquivalentDuct> airflowNetworkEquivalentDuct() const;
+    /** Creates a new equivalent duct object if an object is not already attached. */
+    AirflowNetworkEquivalentDuct getAirflowNetworkEquivalentDuct(double length, double diameter);
 
-  boost::optional<double> autosizedNominalCapacity() const ;
- protected:
-  /// @cond
+    /** Returns the attached equivalent duct object, if any. */
+    boost::optional<AirflowNetworkEquivalentDuct> airflowNetworkEquivalentDuct() const;
 
-  typedef detail::CoilHeatingElectric_Impl ImplType;
+    boost::optional<double> autosizedNominalCapacity() const;
 
-  friend class detail::CoilHeatingElectric_Impl;
+   protected:
+    /// @cond
 
-  friend class Model;
+    typedef detail::CoilHeatingElectric_Impl ImplType;
 
-  friend class openstudio::IdfObject;
+    friend class detail::CoilHeatingElectric_Impl;
 
-  explicit CoilHeatingElectric(std::shared_ptr<detail::CoilHeatingElectric_Impl> impl);
+    friend class Model;
 
-  /// @endcond
+    friend class openstudio::IdfObject;
 
-  private:
+    explicit CoilHeatingElectric(std::shared_ptr<detail::CoilHeatingElectric_Impl> impl);
 
-  REGISTER_LOGGER("openstudio.model.CoilHeatingElectric");
-};
+    /// @endcond
 
-/** \relates CoilHeatingElectric*/
-typedef boost::optional<CoilHeatingElectric> OptionalCoilHeatingElectric;
+   private:
+    REGISTER_LOGGER("openstudio.model.CoilHeatingElectric");
+  };
 
-/** \relates CoilHeatingElectric*/
-typedef std::vector<CoilHeatingElectric> CoilHeatingElectricVector;
+  /** \relates CoilHeatingElectric*/
+  typedef boost::optional<CoilHeatingElectric> OptionalCoilHeatingElectric;
 
-} // model
+  /** \relates CoilHeatingElectric*/
+  typedef std::vector<CoilHeatingElectric> CoilHeatingElectricVector;
 
-} // openstudio
+}  // namespace model
 
-#endif // MODEL_COILHEATINGELECTRIC_HPP
+}  // namespace openstudio
+
+#endif  // MODEL_COILHEATINGELECTRIC_HPP

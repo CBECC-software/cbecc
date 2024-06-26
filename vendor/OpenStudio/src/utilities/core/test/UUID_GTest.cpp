@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,8 +35,6 @@
 #include <iostream>
 #include <set>
 
-#include <QVariant>
-
 using std::cout;
 using openstudio::UUID;
 using openstudio::createUUID;
@@ -46,8 +44,7 @@ using openstudio::toString;
 using std::string;
 using std::stringstream;
 
-TEST(UUID, Constuctors)
-{
+TEST(UUID, Constuctors) {
   // default constructor should be null
   UUID null;
   EXPECT_TRUE(null.isNull());
@@ -72,14 +69,13 @@ TEST(UUID, Constuctors)
   EXPECT_TRUE(uuid4.isNull());
 }
 
-TEST(UUID, BigSet)
-{
+TEST(UUID, BigSet) {
   // create a bunch of uuids, insert into set, make sure no uuids collided
   //unsigned numUUIDS = 1000000;
   unsigned numUUIDS = 1000;
   std::set<UUID> uuids;
 
-  for(unsigned i=0; i < numUUIDS; ++i){
+  for (unsigned i = 0; i < numUUIDS; ++i) {
     uuids.insert(createUUID());
   }
 
@@ -87,21 +83,11 @@ TEST(UUID, BigSet)
   EXPECT_EQ(numUUIDS, uuids.size());
 }
 
-TEST(UUID, UUID_QVariant)
-{
-  UUID uuid = createUUID();
-  QVariant variant = QVariant::fromValue(uuid);
-  EXPECT_EQ("openstudio::UUID", std::string(variant.typeName()));
-  ASSERT_TRUE(variant.canConvert<UUID>());
-  UUID uuid2 = variant.value<UUID>();
-  EXPECT_TRUE(uuid == uuid2);
-}
-
 TEST(UUID, UUID_UID) {
   UUID uuid = createUUID();
   std::string uuidStr = toString(uuid);
   std::string uidStr = removeBraces(uuid);
-  EXPECT_EQ("{" + uidStr + "}",uuidStr);
-  EXPECT_EQ(uuid,toUUID(uuidStr));
-  EXPECT_EQ(uuid,toUUID(uidStr)); // no extra conversion process
+  EXPECT_EQ("{" + uidStr + "}", uuidStr);
+  EXPECT_EQ(uuid, toUUID(uuidStr));
+  EXPECT_EQ(uuid, toUUID(uidStr));  // no extra conversion process
 }

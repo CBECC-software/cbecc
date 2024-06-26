@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -39,165 +39,177 @@ class Date;
 
 namespace model {
 
-class ScheduleDay;
-class ScheduleRuleset;
+  class ScheduleDay;
+  class ScheduleRuleset;
 
-namespace detail {
+  namespace detail {
 
-  class ScheduleRule_Impl;
-  class ScheduleRuleset_Impl;
+    class ScheduleRule_Impl;
+    class ScheduleRuleset_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** ScheduleRule is a ParentObject that wraps the OpenStudio IDD object 'OS:Schedule:Rule'. */
-class MODEL_API ScheduleRule : public ParentObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** ScheduleRule is a ParentObject that wraps the OpenStudio IDD object 'OS:Schedule:Rule'. */
+  class MODEL_API ScheduleRule : public ParentObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /// Constructor associates this rule with the given ruleset.  This rule is made to be the highest priority rule.
-  /// A new ScheduleDay is created which is owned by (a child of) this rule.
-  explicit ScheduleRule(ScheduleRuleset& scheduleRuleset);
+    /// Constructor associates this rule with the given ruleset.  This rule is made to be the highest priority rule.
+    /// A new ScheduleDay is created which is owned by (a child of) this rule.
+    explicit ScheduleRule(ScheduleRuleset& scheduleRuleset);
 
-  /// Constructor associates this rule with the given ruleset. This rule is made to be the highest priority rule.
-  /// The given daySchedule is cloned and the new object is owned by (a child of) this rule.
-  explicit ScheduleRule(ScheduleRuleset& scheduleRuleset, const ScheduleDay& daySchedule);
+    /// Constructor associates this rule with the given ruleset. This rule is made to be the highest priority rule.
+    /// The given daySchedule is cloned and the new object is owned by (a child of) this rule.
+    explicit ScheduleRule(ScheduleRuleset& scheduleRuleset, const ScheduleDay& daySchedule);
 
-  virtual ~ScheduleRule() {}
+    virtual ~ScheduleRule() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> validDateSpecificationTypeValues();
+    static std::vector<std::string> validDateSpecificationTypeValues();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  ScheduleRuleset scheduleRuleset() const;
+    ScheduleRuleset scheduleRuleset() const;
 
-  int ruleIndex() const;
+    int ruleIndex() const;
 
-  ScheduleDay daySchedule() const;
+    ScheduleDay daySchedule() const;
 
-  bool applySunday() const;
+    bool applySunday() const;
 
-  bool applyMonday() const;
+    bool applyMonday() const;
 
-  bool applyTuesday() const;
- 
-  bool applyWednesday() const;
+    bool applyTuesday() const;
 
-  bool applyThursday() const;
- 
-  bool applyFriday() const;
+    bool applyWednesday() const;
 
-  bool applySaturday() const;
+    bool applyThursday() const;
 
-  //bool applyHoliday() const;
+    bool applyFriday() const;
 
-  std::string dateSpecificationType() const;
+    bool applySaturday() const;
 
-  /// Returns the start date of the date range if set.
-  /// A start date > end date indicates that the range wraps around the year.
-  boost::optional<openstudio::Date> startDate() const;
+    // Note: there is no applyHoliday, instead that's implemented at the ScheduleRule's level
 
-  /// Returns the end date of the date range if set.
-  /// A start date > end date indicates that the range wraps around the year.
-  boost::optional<openstudio::Date> endDate() const;
+    std::string dateSpecificationType() const;
 
-  /// Returns the specific dates specified if any.
-  std::vector<openstudio::Date> specificDates() const;
+    /// Returns the start date of the date range if set.
+    /// A start date > end date indicates that the range wraps around the year.
+    boost::optional<openstudio::Date> startDate() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    /// Returns the end date of the date range if set.
+    /// A start date > end date indicates that the range wraps around the year.
+    boost::optional<openstudio::Date> endDate() const;
 
-  bool setApplySunday(bool applySunday);
+    /// Returns the specific dates specified if any.
+    std::vector<openstudio::Date> specificDates() const;
 
-  void setApplySundayNoFail(bool applySunday);
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool setApplyMonday(bool applyMonday);
+    bool setApplySunday(bool applySunday);
 
-  void setApplyMondayNoFail(bool applyMonday);
+    void setApplySundayNoFail(bool applySunday);
 
-  bool setApplyTuesday(bool applyTuesday);
+    bool setApplyMonday(bool applyMonday);
 
-  void setApplyTuesdayNoFail(bool applyTuesday);
+    void setApplyMondayNoFail(bool applyMonday);
 
-  bool setApplyWednesday(bool applyWednesday);
+    bool setApplyTuesday(bool applyTuesday);
 
-  void setApplyWednesdayNoFail(bool applyWednesday);
+    void setApplyTuesdayNoFail(bool applyTuesday);
 
-  bool setApplyThursday(bool applyThursday);
+    bool setApplyWednesday(bool applyWednesday);
 
-  void setApplyThursdayNoFail(bool applyThursday);
+    void setApplyWednesdayNoFail(bool applyWednesday);
 
-  bool setApplyFriday(bool applyFriday);
+    bool setApplyThursday(bool applyThursday);
 
-  void setApplyFridayNoFail(bool applyFriday);
+    void setApplyThursdayNoFail(bool applyThursday);
 
-  bool setApplySaturday(bool applySaturday);
+    bool setApplyFriday(bool applyFriday);
 
-  void setApplySaturdayNoFail(bool applySaturday);
+    void setApplyFridayNoFail(bool applyFriday);
 
-  //bool setApplyHoliday(bool applyHoliday);
+    bool setApplySaturday(bool applySaturday);
 
-  //void setApplyHolidayNoFail(bool applyHoliday);
+    void setApplySaturdayNoFail(bool applySaturday);
 
-  /// Sets the start date of the date range, will delete any specific dates specified.
-  /// A start date > end date indicates that the range wraps around the year.
-  bool setStartDate(const openstudio::Date& date);
+    /// Sets the start date of the date range, will delete any specific dates specified.
+    /// A start date > end date indicates that the range wraps around the year.
+    bool setStartDate(const openstudio::Date& date);
 
-  /// Sets the end date of the date range, will delete any specific dates specified.
-  /// A start date > end date indicates that the range wraps around the year.
-  bool setEndDate(const openstudio::Date& date);
+    /// Sets the end date of the date range, will delete any specific dates specified.
+    /// A start date > end date indicates that the range wraps around the year.
+    bool setEndDate(const openstudio::Date& date);
 
-  /// Adds a specific date, will delete start and end dates.
-  bool addSpecificDate(const openstudio::Date& date);
+    /// Adds a specific date, will delete start and end dates.
+    bool addSpecificDate(const openstudio::Date& date);
 
-  // ensure that this object does not contain the date 2/29
-  void ensureNoLeapDays();
+    // ensure that this object does not contain the date 2/29
+    void ensureNoLeapDays();
 
-  //@}
-  /** @name Other */
-  //@{
+    //@}
+    /** @name Other */
+    //@{
 
-  /// Returns true if this rule covers the given date.
-  bool containsDate(const openstudio::Date& date);
+    /// Returns true if this rule covers the given date.
+    bool containsDate(const openstudio::Date& date);
 
-  /// Returns whether or not this rule covers each given date.
-  std::vector<bool> containsDates(const std::vector<openstudio::Date>& dates);
+    /// Returns whether or not this rule covers each given date.
+    std::vector<bool> containsDates(const std::vector<openstudio::Date>& dates);
 
-  //@}
- protected:
+    // Convenience methods
+    /** Returns true if the rule applies to all days from Monday to Sunday */
+    bool applyAllDays() const;
+    /** Returns true if the rule applies to all weekdays Monday to Friday */
+    bool applyWeekdays() const;
+    /** Returns true if the rule applies to Saturday and Sunday */
+    bool applyWeekends() const;
 
-  friend class detail::ScheduleRuleset_Impl;
-  bool setRuleIndex(int index);
+    // calls setApplyMonday to setApplySunday */
+    bool setApplyAllDays(bool applyAllDays);
 
-  /// @cond
-  typedef detail::ScheduleRule_Impl ImplType;
+    // calls setApplyMonday to setApplyFriday */
+    bool setApplyWeekdays(bool applyWeekdays);
 
-  explicit ScheduleRule(std::shared_ptr<detail::ScheduleRule_Impl> impl);
+    // calls setApplySaturday and setApplySunday */
+    bool setApplyWeekends(bool applyWeekends);
 
-  friend class detail::ScheduleRule_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
+    //@}
+   protected:
+    friend class detail::ScheduleRuleset_Impl;
+    bool setRuleIndex(int index);
 
-  /// @endcond
- private:
+    /// @cond
+    typedef detail::ScheduleRule_Impl ImplType;
 
-  REGISTER_LOGGER("openstudio.model.ScheduleRule");
-};
+    explicit ScheduleRule(std::shared_ptr<detail::ScheduleRule_Impl> impl);
 
-/** \relates ScheduleRule */
-typedef boost::optional<ScheduleRule> OptionalScheduleRule;
+    friend class detail::ScheduleRule_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
 
-/** \relates ScheduleRule */
-typedef std::vector<ScheduleRule> ScheduleRuleVector;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.ScheduleRule");
+  };
 
-} // model
-} // openstudio
+  /** \relates ScheduleRule */
+  typedef boost::optional<ScheduleRule> OptionalScheduleRule;
 
-#endif // MODEL_SCHEDULERULE_HPP
+  /** \relates ScheduleRule */
+  typedef std::vector<ScheduleRule> ScheduleRuleVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_SCHEDULERULE_HPP

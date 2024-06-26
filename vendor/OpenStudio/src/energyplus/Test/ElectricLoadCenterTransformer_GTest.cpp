@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -70,8 +70,6 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <QThread>
-
 #include <resources.hxx>
 
 #include <sstream>
@@ -81,7 +79,6 @@
 using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
-
 
 TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer) {
 
@@ -122,8 +119,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer) {
   std::vector<IdfExtensibleGroup> extensibleGroups = object.extensibleGroups();
   EXPECT_EQ(0u, extensibleGroups.size());
 
-  model.save(toPath("./ElectricLoadCenterTransformer.osm"), true);
-  workspace.save(toPath("./ElectricLoadCenterTransformer.idf"), true);
+  // model.save(toPath("./ElectricLoadCenterTransformer.osm"), true);
+  // workspace.save(toPath("./ElectricLoadCenterTransformer.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer2) {
@@ -149,8 +146,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer2) {
   EXPECT_EQ(s.nameString(), object.getString(ElectricLoadCenter_TransformerFields::AvailabilityScheduleName, false).get());
   EXPECT_EQ(zone1.nameString(), object.getString(ElectricLoadCenter_TransformerFields::ZoneName, false).get());
 
-  model.save(toPath("./ElectricLoadCenterTransformer2.osm"), true);
-  workspace.save(toPath("./ElectricLoadCenterTransformer2.idf"), true);
+  // model.save(toPath("./ElectricLoadCenterTransformer2.osm"), true);
+  // workspace.save(toPath("./ElectricLoadCenterTransformer2.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer3) {
@@ -183,8 +180,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer3) {
   std::vector<IdfExtensibleGroup> extensibleGroups = object.extensibleGroups();
   EXPECT_EQ(3u, extensibleGroups.size());
 
-  model.save(toPath("./ElectricLoadCenterTransformer2.osm"), true);
-  workspace.save(toPath("./ElectricLoadCenterTransformer2.idf"), true);
+  // model.save(toPath("./ElectricLoadCenterTransformer2.osm"), true);
+  // workspace.save(toPath("./ElectricLoadCenterTransformer2.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer_Distribution) {
@@ -203,14 +200,14 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorElectricLoadCenterTransformer_Distrib
   ForwardTranslator forwardTranslator;
   Workspace workspace = forwardTranslator.translateModel(model);
 
-  model.save(toPath("./ElectricLoadCenterDistribution.osm"), true);
-  workspace.save(toPath("./ElectricLoadCenterDistribution.idf"), true);
+  // model.save(toPath("./ElectricLoadCenterDistribution.osm"), true);
+  // workspace.save(toPath("./ElectricLoadCenterDistribution.idf"), true);
 
   WorkspaceObject transformer = workspace.getObjectsByType(IddObjectType::ElectricLoadCenter_Transformer)[0];
   WorkspaceObject distribution = workspace.getObjectsByType(IddObjectType::ElectricLoadCenter_Distribution)[0];
 
   EXPECT_EQ(transformer.nameString(), distribution.getString(ElectricLoadCenter_DistributionFields::TransformerObjectName, false).get());
 
-  model.save(toPath("./ElectricLoadCenterDistribution.osm"), true);
-  workspace.save(toPath("./ElectricLoadCenterDistribution.idf"), true);
+  // model.save(toPath("./ElectricLoadCenterDistribution.osm"), true);
+  // workspace.save(toPath("./ElectricLoadCenterDistribution.idf"), true);
 }

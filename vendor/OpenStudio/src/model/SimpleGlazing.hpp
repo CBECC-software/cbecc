@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,94 +35,77 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class SimpleGlazing_Impl;
+    class SimpleGlazing_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** SimpleGlazing is a Glazing that wraps the OpenStudio IDD object 'OS:WindowMaterial:SimpleGlazingSystem'. */
-class MODEL_API SimpleGlazing : public Glazing {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** SimpleGlazing is a Glazing that wraps the OpenStudio IDD object 'OS:WindowMaterial:SimpleGlazingSystem'. */
+  class MODEL_API SimpleGlazing : public Glazing
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit SimpleGlazing(const Model& model,
-    double uFactor = 0.1,
-    double solarHeatGainCoefficient = 0.1);
+    explicit SimpleGlazing(const Model& model, double uFactor = 0.1, double solarHeatGainCoefficient = 0.1);
 
-  virtual ~SimpleGlazing() {}
+    virtual ~SimpleGlazing() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  double uFactor() const;
+    double uFactor() const;
 
-  Quantity getUFactor(bool returnIP=false) const;
+    double solarHeatGainCoefficient() const;
 
-  double solarHeatGainCoefficient() const;
+    boost::optional<double> visibleTransmittance() const;
 
-  Quantity getSolarHeatGainCoefficient(bool returnIP=false) const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  boost::optional<double> visibleTransmittance() const;
+    bool setUFactor(double uFactor);
 
-  OSOptionalQuantity getVisibleTransmittance(bool returnIP=false) const;
+    bool setSolarHeatGainCoefficient(double solarHeatGainCoefficient);
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool setVisibleTransmittance(double visibleTransmittance);
 
-  bool setUFactor(double uFactor);
+    void resetVisibleTransmittance();
 
-  bool setUFactor(const Quantity& uFactor);
+    //@}
+    /** @name Other */
+    //@{
 
-  bool setSolarHeatGainCoefficient(double solarHeatGainCoefficient);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::SimpleGlazing_Impl ImplType;
 
-  bool setSolarHeatGainCoefficient(const Quantity& solarHeatGainCoefficient);
+    explicit SimpleGlazing(std::shared_ptr<detail::SimpleGlazing_Impl> impl);
 
-  bool setVisibleTransmittance(double visibleTransmittance);
+    friend class detail::SimpleGlazing_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.SimpleGlazing");
+  };
 
-  bool setVisibleTransmittance(const Quantity& visibleTransmittance);
+  /** \relates SimpleGlazing*/
+  typedef boost::optional<SimpleGlazing> OptionalSimpleGlazing;
 
-  void resetVisibleTransmittance();
+  /** \relates SimpleGlazing*/
+  typedef std::vector<SimpleGlazing> SimpleGlazingVector;
 
-  //@}
-  /** @name Other */
-  //@{
+}  // namespace model
+}  // namespace openstudio
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::SimpleGlazing_Impl ImplType;
-
-  explicit SimpleGlazing(std::shared_ptr<detail::SimpleGlazing_Impl> impl);
-
-  friend class detail::SimpleGlazing_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.SimpleGlazing");
-};
-
-/** \relates SimpleGlazing*/
-typedef boost::optional<SimpleGlazing> OptionalSimpleGlazing;
-
-/** \relates SimpleGlazing*/
-typedef std::vector<SimpleGlazing> SimpleGlazingVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_SIMPLEGLAZING_HPP
-
+#endif  // MODEL_SIMPLEGLAZING_HPP

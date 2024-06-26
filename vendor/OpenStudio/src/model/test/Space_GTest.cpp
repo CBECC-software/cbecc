@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -40,6 +40,7 @@
 #include "../SpaceType_Impl.hpp"
 #include "../Space.hpp"
 #include "../Space_Impl.hpp"
+#include "../BuildingStory.hpp"
 #include "../ScheduleCompact.hpp"
 #include "../Surface.hpp"
 #include "../Surface_Impl.hpp"
@@ -63,7 +64,6 @@
 
 #include "../../utilities/core/UUID.hpp"
 
-#include "../../utilities/data/Attribute.hpp"
 #include "../../utilities/geometry/Point3d.hpp"
 #include "../../utilities/geometry/Vector3d.hpp"
 #include "../../utilities/geometry/Transformation.hpp"
@@ -77,8 +77,7 @@
 using namespace openstudio;
 using namespace openstudio::model;
 
-TEST_F(ModelFixture, Space)
-{
+TEST_F(ModelFixture, Space) {
   Model model;
 
   Space space1(model);
@@ -86,13 +85,12 @@ TEST_F(ModelFixture, Space)
 
   ASSERT_TRUE(space1.name());
   ASSERT_TRUE(space2.name());
-  EXPECT_NE("",space1.name().get());
-  EXPECT_NE("",space2.name().get());
-  EXPECT_NE(space1.name().get(),space2.name().get());
+  EXPECT_NE("", space1.name().get());
+  EXPECT_NE("", space2.name().get());
+  EXPECT_NE(space1.name().get(), space2.name().get());
 }
 
-TEST_F(ModelFixture, Space_Clone)
-{
+TEST_F(ModelFixture, Space_Clone) {
   Model model;
   Space space(model);
   ASSERT_TRUE(space.name());
@@ -142,11 +140,9 @@ TEST_F(ModelFixture, Space_Clone)
   EXPECT_NE(surface.handle(), spaceClone.surfaces()[0].handle());
   ASSERT_EQ(static_cast<unsigned>(1), spaceClone.surfaces()[0].subSurfaces().size());
   EXPECT_NE(subSurface.handle(), spaceClone.surfaces()[0].subSurfaces()[0].handle());
-
 }
 
-TEST_F(ModelFixture, Space_FloorArea)
-{
+TEST_F(ModelFixture, Space_FloorArea) {
   Model model;
   Space space(model);
 
@@ -256,39 +252,7 @@ TEST_F(ModelFixture, Space_FloorArea)
   EXPECT_NEAR(6, space.floorArea(), 0.0001);
 }
 
-TEST_F(ModelFixture, Space_Attributes)
-{
-  Model model;
-  Space space(model);
-
-  // Removed due to removal of attributes
-  // boost::optional<openstudio::Attribute> attribute;
-  // std::vector<Attribute> attributes = space.attributes();
-
-  ASSERT_TRUE(space.name());
-  std::string spaceName = space.name().get();
-
-  // EXPECT_TRUE(space.isSettableAttribute("name"));
-  // EXPECT_TRUE(space.isOptionalAttribute("name"));
-  // attribute = space.getAttribute("name");
-  // ASSERT_TRUE(attribute);
-  // EXPECT_EQ("name", attribute->name()); // from ModelObject
-  // EXPECT_EQ(spaceName, attribute->valueAsString());
-  // EXPECT_TRUE(space.setAttribute("name", "Office Space"));
-  // EXPECT_EQ("Office Space", space.name().get());
-
-  // EXPECT_FALSE(space.isSettableAttribute("floorArea"));
-  // EXPECT_FALSE(space.isOptionalAttribute("floorArea"));
-  // attribute = space.getAttribute("floorArea");
-  // ASSERT_TRUE(attribute);
-  // ASSERT_EQ("floorArea", attribute->name());
-  // EXPECT_NO_THROW(attribute->valueAsDouble());
-  // EXPECT_THROW(attribute->valueAsBoolean(),std::exception);
-  // EXPECT_FALSE(space.setAttribute("floorArea", 0.0));
-}
-
-TEST_F(ModelFixture, Space_ThermalZone)
-{
+TEST_F(ModelFixture, Space_ThermalZone) {
   Model model;
   Space space(model);
   ThermalZone thermalZone1(model);
@@ -309,8 +273,7 @@ TEST_F(ModelFixture, Space_ThermalZone)
   EXPECT_EQ(space.multiplier(), thermalZone2.multiplier());
 }
 
-TEST_F(ModelFixture, Space_Lights)
-{
+TEST_F(ModelFixture, Space_Lights) {
   Model model;
   Space space(model);
 
@@ -385,27 +348,25 @@ TEST_F(ModelFixture, Space_Lights)
   EXPECT_EQ(0, space.lightingPowerPerFloorArea());
 }
 
-
-TEST_F(ModelFixture, Space_Transformation)
-{
+TEST_F(ModelFixture, Space_Transformation) {
   Model model;
   Space space(model);
-  Point3d origin(0,0,0);
-  Point3d x1(1,0,0);
+  Point3d origin(0, 0, 0);
+  Point3d x1(1, 0, 0);
 
   Transformation transformation = space.transformation();
 
-  Point3d test = transformation*origin;
+  Point3d test = transformation * origin;
   EXPECT_DOUBLE_EQ(0, test.x());
   EXPECT_DOUBLE_EQ(0, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
 
-  test = transformation*x1;
+  test = transformation * x1;
   EXPECT_DOUBLE_EQ(1, test.x());
   EXPECT_DOUBLE_EQ(0, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
 
-  EXPECT_TRUE(space.setTransformation(Transformation::translation(Vector3d(1,0,0))));
+  EXPECT_TRUE(space.setTransformation(Transformation::translation(Vector3d(1, 0, 0))));
   EXPECT_DOUBLE_EQ(1, space.xOrigin());
   EXPECT_DOUBLE_EQ(0, space.yOrigin());
   EXPECT_DOUBLE_EQ(0, space.zOrigin());
@@ -413,29 +374,30 @@ TEST_F(ModelFixture, Space_Transformation)
 
   transformation = space.transformation();
 
-  test = transformation*origin;
+  test = transformation * origin;
   EXPECT_DOUBLE_EQ(1, test.x());
   EXPECT_DOUBLE_EQ(0, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
 
-  test = transformation*x1;
+  test = transformation * x1;
   EXPECT_DOUBLE_EQ(2, test.x());
   EXPECT_DOUBLE_EQ(0, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
 
-  EXPECT_TRUE(space.setTransformation(Transformation::translation(Vector3d(1,0,0))*Transformation::rotation(Vector3d(0,0,1),-openstudio::degToRad(90))));
+  EXPECT_TRUE(
+    space.setTransformation(Transformation::translation(Vector3d(1, 0, 0)) * Transformation::rotation(Vector3d(0, 0, 1), -openstudio::degToRad(90))));
   EXPECT_DOUBLE_EQ(1, space.xOrigin());
   EXPECT_DOUBLE_EQ(0, space.yOrigin());
   EXPECT_DOUBLE_EQ(0, space.zOrigin());
   EXPECT_DOUBLE_EQ(90, space.directionofRelativeNorth());
 
   transformation = space.transformation();
-  test = transformation*origin;
+  test = transformation * origin;
   EXPECT_EQ(1, test.x());
   EXPECT_EQ(0, test.y());
   EXPECT_EQ(0, test.z());
 
-  test = transformation*x1;
+  test = transformation * x1;
   EXPECT_DOUBLE_EQ(1, test.x());
   EXPECT_DOUBLE_EQ(-1, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
@@ -443,53 +405,54 @@ TEST_F(ModelFixture, Space_Transformation)
   EXPECT_TRUE(space.setTransformation(Transformation()));
 
   transformation = space.transformation();
-  test = transformation*origin;
+  test = transformation * origin;
   EXPECT_DOUBLE_EQ(0, test.x());
   EXPECT_DOUBLE_EQ(0, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
 
-  test = transformation*x1;
+  test = transformation * x1;
   EXPECT_DOUBLE_EQ(1, test.x());
   EXPECT_DOUBLE_EQ(0, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
 
-  EXPECT_TRUE(space.changeTransformation(Transformation::translation(Vector3d(1,0,0))*Transformation::rotation(Vector3d(0,0,1),-openstudio::degToRad(90))));
+  EXPECT_TRUE(space.changeTransformation(Transformation::translation(Vector3d(1, 0, 0))
+                                         * Transformation::rotation(Vector3d(0, 0, 1), -openstudio::degToRad(90))));
   EXPECT_DOUBLE_EQ(1, space.xOrigin());
   EXPECT_DOUBLE_EQ(0, space.yOrigin());
   EXPECT_DOUBLE_EQ(0, space.zOrigin());
   EXPECT_DOUBLE_EQ(90, space.directionofRelativeNorth());
 
   transformation = space.transformation();
-  test = transformation*origin;
+  test = transformation * origin;
   EXPECT_EQ(1, test.x());
   EXPECT_EQ(0, test.y());
   EXPECT_EQ(0, test.z());
 
-  test = transformation*x1;
+  test = transformation * x1;
   EXPECT_DOUBLE_EQ(1, test.x());
   EXPECT_DOUBLE_EQ(-1, test.y());
   EXPECT_DOUBLE_EQ(0, test.z());
 }
 
-TEST_F(ModelFixture, Space_Transformation2)
-{
+TEST_F(ModelFixture, Space_Transformation2) {
   Model model;
   Space space(model);
   Point3dVector points;
-  points.push_back(Point3d(1,0,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(1,1,0));
+  points.push_back(Point3d(1, 0, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(1, 1, 0));
   Surface surface(points, model);
   surface.setSpace(space);
 
-  EXPECT_TRUE(circularEqual(points, space.transformation()*points));
-  EXPECT_TRUE(circularEqual(points, space.transformation()*surface.vertices()));
+  EXPECT_TRUE(circularEqual(points, space.transformation() * points));
+  EXPECT_TRUE(circularEqual(points, space.transformation() * surface.vertices()));
 
-  EXPECT_TRUE(space.changeTransformation(Transformation::translation(Vector3d(1,0,0))*Transformation::rotation(Vector3d(0,0,1),-openstudio::degToRad(90))));
+  EXPECT_TRUE(space.changeTransformation(Transformation::translation(Vector3d(1, 0, 0))
+                                         * Transformation::rotation(Vector3d(0, 0, 1), -openstudio::degToRad(90))));
 
-  EXPECT_FALSE(circularEqual(points, space.transformation()*points));
-  EXPECT_TRUE(circularEqual(points, space.transformation()*surface.vertices()));
+  EXPECT_FALSE(circularEqual(points, space.transformation() * points));
+  EXPECT_TRUE(circularEqual(points, space.transformation() * surface.vertices()));
 }
 
 TEST_F(ModelFixture, Space_IddAssumptions) {
@@ -499,15 +462,14 @@ TEST_F(ModelFixture, Space_IddAssumptions) {
   EXPECT_TRUE(space.partofTotalFloorArea());
 }
 
-TEST_F(ModelFixture, Space_BoundingBox)
-{
+TEST_F(ModelFixture, Space_BoundingBox) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(1,0,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(1,1,0));
+  points.push_back(Point3d(1, 0, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(1, 1, 0));
 
   Space space1(model);
   Surface surface1(points, model);
@@ -522,27 +484,26 @@ TEST_F(ModelFixture, Space_BoundingBox)
 
   EXPECT_TRUE(box1.intersects(box2));
 
-  EXPECT_TRUE(space2.setTransformation(Transformation::translation(Vector3d(1,0,0))));
+  EXPECT_TRUE(space2.setTransformation(Transformation::translation(Vector3d(1, 0, 0))));
 
   box2 = space2.transformation() * space2.boundingBox();
 
   EXPECT_TRUE(box1.intersects(box2));
 
-  EXPECT_TRUE(space2.setTransformation(Transformation::translation(Vector3d(1,1,0))));
+  EXPECT_TRUE(space2.setTransformation(Transformation::translation(Vector3d(1, 1, 0))));
 
   box2 = space2.transformation() * space2.boundingBox();
 
   EXPECT_TRUE(box1.intersects(box2));
 
-  EXPECT_TRUE(space2.setTransformation(Transformation::translation(Vector3d(2,2,0))));
+  EXPECT_TRUE(space2.setTransformation(Transformation::translation(Vector3d(2, 2, 0))));
 
   box2 = space2.transformation() * space2.boundingBox();
 
   EXPECT_FALSE(box1.intersects(box2));
 }
 
-TEST_F(ModelFixture, Space_hardApplySpaceType_false)
-{
+TEST_F(ModelFixture, Space_hardApplySpaceType_false) {
   Model model;
 
   SpaceType spaceType(model);
@@ -594,8 +555,7 @@ TEST_F(ModelFixture, Space_hardApplySpaceType_false)
   EXPECT_EQ(1u, spaceType.lights().size());
 }
 
-TEST_F(ModelFixture, Space_SurfaceMatch_2WallsWindow)
-{
+TEST_F(ModelFixture, Space_SurfaceMatch_2WallsWindow) {
   Model model;
   Space space1(model);
   Space space2(model);
@@ -685,8 +645,7 @@ TEST_F(ModelFixture, Space_SurfaceMatch_2WallsWindow)
   EXPECT_FALSE(window2.adjacentSubSurface());
 }
 
-TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest)
-{
+TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest) {
   Model model;
 
   Point3dVector points;
@@ -699,9 +658,9 @@ TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest)
   int Ny = 2;
   int Nz = 2;
 
-  for(int i = 0; i < Nx; ++i){
-    for(int j = 0; j < Ny; ++j){
-      for(int k = 0; k < Nz; ++k){
+  for (int i = 0; i < Nx; ++i) {
+    for (int j = 0; j < Ny; ++j) {
+      for (int k = 0; k < Nz; ++k) {
         boost::optional<Space> space = Space::fromFloorPrint(points, 1, model);
         ASSERT_TRUE(space);
         space->setXOrigin(i);
@@ -712,7 +671,7 @@ TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest)
         std::vector<Surface> searchResults;
 
         // add window to north wall
-        searchResults = space->findSurfaces(0.0,0.0,90.0,90.0);
+        searchResults = space->findSurfaces(0.0, 0.0, 90.0, 90.0);
         ASSERT_EQ(1u, searchResults.size());
 
         subSurfacePoints.clear();
@@ -725,7 +684,7 @@ TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest)
         northWindow.setSurface(searchResults[0]);
 
         // add window to south wall
-        searchResults = space->findSurfaces(180.0,180.0,90.0,90.0);
+        searchResults = space->findSurfaces(180.0, 180.0, 90.0, 90.0);
         ASSERT_EQ(1u, searchResults.size());
 
         subSurfacePoints.clear();
@@ -738,7 +697,7 @@ TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest)
         southWindow.setSurface(searchResults[0]);
 
         // add door to east wall
-        searchResults = space->findSurfaces(90.0,90.0,90.0,90.0);
+        searchResults = space->findSurfaces(90.0, 90.0, 90.0, 90.0);
         ASSERT_EQ(1u, searchResults.size());
 
         subSurfacePoints.clear();
@@ -751,7 +710,7 @@ TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest)
         eastDoor.setSurface(searchResults[0]);
 
         // add door to west wall
-        searchResults = space->findSurfaces(270.0,270.0,90.0,90.0);
+        searchResults = space->findSurfaces(270.0, 270.0, 90.0, 90.0);
         ASSERT_EQ(1u, searchResults.size());
 
         subSurfacePoints.clear();
@@ -769,11 +728,10 @@ TEST_F(ModelFixture, Space_SurfaceMatch_LargeTest)
   SpaceVector spaces = model.getModelObjects<Space>();
   matchSurfaces(spaces);
 
-  model.save(toPath("./Space_SurfaceMatch_LargeTest.osm"), true);
+  // model.save(toPath("./Space_SurfaceMatch_LargeTest.osm"), true);
 }
 
-TEST_F(ModelFixture, Space_FindSurfaces)
-{
+TEST_F(ModelFixture, Space_FindSurfaces) {
   Model model;
 
   Point3dVector floorPrint;
@@ -788,43 +746,42 @@ TEST_F(ModelFixture, Space_FindSurfaces)
   std::vector<Surface> searchResults;
 
   // find north wall
-  searchResults = space1->findSurfaces(0.0,0.0,90.0,90.0);
+  searchResults = space1->findSurfaces(0.0, 0.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 1, 0).dot(searchResults[0].outwardNormal()));
 
   // find north wall
-  searchResults = space1->findSurfaces(359.0,1.0,90.0,90.0);
+  searchResults = space1->findSurfaces(359.0, 1.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 1, 0).dot(searchResults[0].outwardNormal()));
 
   // find east wall
-  searchResults = space1->findSurfaces(90.0,90.0,90.0,90.0);
+  searchResults = space1->findSurfaces(90.0, 90.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(1,0,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(1, 0, 0).dot(searchResults[0].outwardNormal()));
 
   // find south wall
-  searchResults = space1->findSurfaces(180.0,180.0,90.0,90.0);
+  searchResults = space1->findSurfaces(180.0, 180.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,-1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, -1, 0).dot(searchResults[0].outwardNormal()));
 
   // find west wall
-  searchResults = space1->findSurfaces(270.0,270.0,90.0,90.0);
+  searchResults = space1->findSurfaces(270.0, 270.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(-1,0,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(-1, 0, 0).dot(searchResults[0].outwardNormal()));
 
   // find floor
-  searchResults = space1->findSurfaces(boost::none,boost::none,180.0,180.0);
+  searchResults = space1->findSurfaces(boost::none, boost::none, 180.0, 180.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,0,-1).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 0, -1).dot(searchResults[0].outwardNormal()));
 
   // find ceiling
-  searchResults = space1->findSurfaces(boost::none,boost::none,0.0,0.0);
+  searchResults = space1->findSurfaces(boost::none, boost::none, 0.0, 0.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,0,1).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 0, 1).dot(searchResults[0].outwardNormal()));
 }
 
-TEST_F(ModelFixture, Space_FindSurfaces_Translated)
-{
+TEST_F(ModelFixture, Space_FindSurfaces_Translated) {
   Model model;
 
   Point3dVector floorPrint;
@@ -841,44 +798,42 @@ TEST_F(ModelFixture, Space_FindSurfaces_Translated)
   std::vector<Surface> searchResults;
 
   // find north wall
-  searchResults = space1->findSurfaces(0.0,0.0,90.0,90.0);
+  searchResults = space1->findSurfaces(0.0, 0.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 1, 0).dot(searchResults[0].outwardNormal()));
 
   // find north wall
-  searchResults = space1->findSurfaces(359.0,1.0,90.0,90.0);
+  searchResults = space1->findSurfaces(359.0, 1.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 1, 0).dot(searchResults[0].outwardNormal()));
 
   // find east wall
-  searchResults = space1->findSurfaces(90.0,90.0,90.0,90.0);
+  searchResults = space1->findSurfaces(90.0, 90.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(1,0,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(1, 0, 0).dot(searchResults[0].outwardNormal()));
 
   // find south wall
-  searchResults = space1->findSurfaces(180.0,180.0,90.0,90.0);
+  searchResults = space1->findSurfaces(180.0, 180.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,-1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, -1, 0).dot(searchResults[0].outwardNormal()));
 
   // find west wall
-  searchResults = space1->findSurfaces(270.0,270.0,90.0,90.0);
+  searchResults = space1->findSurfaces(270.0, 270.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(-1,0,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(-1, 0, 0).dot(searchResults[0].outwardNormal()));
 
   // find floor
-  searchResults = space1->findSurfaces(boost::none,boost::none,180.0,180.0);
+  searchResults = space1->findSurfaces(boost::none, boost::none, 180.0, 180.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,0,-1).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 0, -1).dot(searchResults[0].outwardNormal()));
 
   // find ceiling
-  searchResults = space1->findSurfaces(boost::none,boost::none,0.0,0.0);
+  searchResults = space1->findSurfaces(boost::none, boost::none, 0.0, 0.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,0,1).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 0, 1).dot(searchResults[0].outwardNormal()));
 }
 
-
-TEST_F(ModelFixture, Space_FindSurfaces_Translated_Rotated)
-{
+TEST_F(ModelFixture, Space_FindSurfaces_Translated_Rotated) {
   Model model;
 
   Point3dVector floorPrint;
@@ -896,38 +851,37 @@ TEST_F(ModelFixture, Space_FindSurfaces_Translated_Rotated)
   std::vector<Surface> searchResults;
 
   // find north wall
-  searchResults = space1->findSurfaces(20.0,20.0,90.0,90.0);
+  searchResults = space1->findSurfaces(20.0, 20.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 1, 0).dot(searchResults[0].outwardNormal()));
 
   // find east wall
-  searchResults = space1->findSurfaces(110.0,110.0,90.0,90.0);
+  searchResults = space1->findSurfaces(110.0, 110.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(1,0,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(1, 0, 0).dot(searchResults[0].outwardNormal()));
 
   // find south wall
-  searchResults = space1->findSurfaces(200.0,200.0,90.0,90.0);
+  searchResults = space1->findSurfaces(200.0, 200.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,-1,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, -1, 0).dot(searchResults[0].outwardNormal()));
 
   // find west wall
-  searchResults = space1->findSurfaces(290.0,290.0,90.0,90.0);
+  searchResults = space1->findSurfaces(290.0, 290.0, 90.0, 90.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(-1,0,0).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(-1, 0, 0).dot(searchResults[0].outwardNormal()));
 
   // find floor
-  searchResults = space1->findSurfaces(boost::none,boost::none,180.0,180.0);
+  searchResults = space1->findSurfaces(boost::none, boost::none, 180.0, 180.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,0,-1).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 0, -1).dot(searchResults[0].outwardNormal()));
 
   // find ceiling
-  searchResults = space1->findSurfaces(boost::none,boost::none,0.0,0.0);
+  searchResults = space1->findSurfaces(boost::none, boost::none, 0.0, 0.0);
   ASSERT_TRUE(searchResults.size() == 1);
-  EXPECT_DOUBLE_EQ(1, Vector3d(0,0,1).dot(searchResults[0].outwardNormal()));
+  EXPECT_DOUBLE_EQ(1, Vector3d(0, 0, 1).dot(searchResults[0].outwardNormal()));
 }
 
-TEST_F(ModelFixture, Space_Remove)
-{
+TEST_F(ModelFixture, Space_Remove) {
   Model model;
 
   Space space(model);
@@ -964,8 +918,7 @@ TEST_F(ModelFixture, Space_Remove)
   EXPECT_TRUE(surfaceWatcher.removedFromWorkspace());
 }
 
-TEST_F(ModelFixture, Space_Remove2)
-{
+TEST_F(ModelFixture, Space_Remove2) {
   Model model;
 
   Space space(model);
@@ -1003,8 +956,7 @@ TEST_F(ModelFixture, Space_Remove2)
   EXPECT_FALSE(surfaceWatcher.removedFromWorkspace());
 }
 
-TEST_F(ModelFixture, Space_FloorPrint1)
-{
+TEST_F(ModelFixture, Space_FloorPrint1) {
   Model model;
 
   Space space(model);
@@ -1147,11 +1099,9 @@ TEST_F(ModelFixture, Space_FloorPrint1)
   EXPECT_DOUBLE_EQ(0, getDistance(floorPrint[7], Point3d(2, 2, 0))) << floorPrint;
   EXPECT_DOUBLE_EQ(0, getDistance(floorPrint[8], Point3d(1, 2, 0))) << floorPrint;
   EXPECT_DOUBLE_EQ(0, getDistance(floorPrint[9], Point3d(0, 3, 0))) << floorPrint;
-
 }
 
-TEST_F(ModelFixture, Space_FloorPrint2)
-{
+TEST_F(ModelFixture, Space_FloorPrint2) {
   Model model;
 
   Space space(model);
@@ -1211,8 +1161,7 @@ TEST_F(ModelFixture, Space_FloorPrint2)
   EXPECT_DOUBLE_EQ(0, getDistance(floorPrint[3], Point3d(0, 2, 0))) << floorPrint;
 }
 
-TEST_F(ModelFixture, Space_Cost)
-{
+TEST_F(ModelFixture, Space_Cost) {
   Model model;
 
   Point3dVector floorPrint;
@@ -1253,11 +1202,11 @@ TEST_F(ModelFixture, Space_InfiltrationDesignFlowRate) {
   Space space = *ospace;
 
   // check dimensions
-  EXPECT_DOUBLE_EQ(100.0,space.floorArea());
-  EXPECT_DOUBLE_EQ(360.0,space.volume());
-  EXPECT_DOUBLE_EQ(144.0,space.exteriorWallArea());
-  EXPECT_DOUBLE_EQ(244.0,space.exteriorArea()); // ground does not count
-  EXPECT_DOUBLE_EQ(0.0,space.infiltrationDesignFlowRate());
+  EXPECT_DOUBLE_EQ(100.0, space.floorArea());
+  EXPECT_DOUBLE_EQ(360.0, space.volume());
+  EXPECT_DOUBLE_EQ(144.0, space.exteriorWallArea());
+  EXPECT_DOUBLE_EQ(244.0, space.exteriorArea());  // ground does not count
+  EXPECT_DOUBLE_EQ(0.0, space.infiltrationDesignFlowRate());
 
   // add an infiltration object
   SpaceInfiltrationDesignFlowRate spaceInfiltration(model);
@@ -1265,11 +1214,11 @@ TEST_F(ModelFixture, Space_InfiltrationDesignFlowRate) {
   spaceInfiltration.setAirChangesperHour(1.0);
 
   // check infiltration getters
-  EXPECT_DOUBLE_EQ(0.1,space.infiltrationDesignFlowRate());
-  EXPECT_DOUBLE_EQ(0.001,space.infiltrationDesignFlowPerSpaceFloorArea());
-  EXPECT_DOUBLE_EQ(4.0983606557377049E-4,space.infiltrationDesignFlowPerExteriorSurfaceArea());
-  EXPECT_DOUBLE_EQ(6.9444444444444447E-4,space.infiltrationDesignFlowPerExteriorWallArea());
-  EXPECT_DOUBLE_EQ(1.0,space.infiltrationDesignAirChangesPerHour());
+  EXPECT_DOUBLE_EQ(0.1, space.infiltrationDesignFlowRate());
+  EXPECT_DOUBLE_EQ(0.001, space.infiltrationDesignFlowPerSpaceFloorArea());
+  EXPECT_DOUBLE_EQ(4.0983606557377049E-4, space.infiltrationDesignFlowPerExteriorSurfaceArea());
+  EXPECT_DOUBLE_EQ(6.9444444444444447E-4, space.infiltrationDesignFlowPerExteriorWallArea());
+  EXPECT_DOUBLE_EQ(1.0, space.infiltrationDesignAirChangesPerHour());
 
   // create a space type with infiltration
   SpaceType spaceType(model);
@@ -1279,23 +1228,22 @@ TEST_F(ModelFixture, Space_InfiltrationDesignFlowRate) {
   space.setSpaceType(spaceType);
 
   // check infiltration getters again
-  EXPECT_DOUBLE_EQ(0.172,space.infiltrationDesignFlowRate());
-  EXPECT_DOUBLE_EQ(0.00172,space.infiltrationDesignFlowPerSpaceFloorArea());
-  EXPECT_DOUBLE_EQ(7.0491803278688531E-4,space.infiltrationDesignFlowPerExteriorSurfaceArea());
-  EXPECT_DOUBLE_EQ(11.944444444444446E-4,space.infiltrationDesignFlowPerExteriorWallArea());
-  EXPECT_DOUBLE_EQ(1.72,space.infiltrationDesignAirChangesPerHour());
+  EXPECT_DOUBLE_EQ(0.172, space.infiltrationDesignFlowRate());
+  EXPECT_DOUBLE_EQ(0.00172, space.infiltrationDesignFlowPerSpaceFloorArea());
+  EXPECT_DOUBLE_EQ(7.0491803278688531E-4, space.infiltrationDesignFlowPerExteriorSurfaceArea());
+  EXPECT_DOUBLE_EQ(11.944444444444446E-4, space.infiltrationDesignFlowPerExteriorWallArea());
+  EXPECT_DOUBLE_EQ(1.72, space.infiltrationDesignAirChangesPerHour());
 
   // go ahead and check building now
   Building building = model.getUniqueModelObject<Building>();
-  EXPECT_DOUBLE_EQ(0.172,building.infiltrationDesignFlowRate());
-  EXPECT_DOUBLE_EQ(0.00172,building.infiltrationDesignFlowPerSpaceFloorArea());
-  EXPECT_DOUBLE_EQ(7.0491803278688531E-4,building.infiltrationDesignFlowPerExteriorSurfaceArea());
-  EXPECT_DOUBLE_EQ(11.944444444444446E-4,building.infiltrationDesignFlowPerExteriorWallArea());
-  EXPECT_DOUBLE_EQ(1.72,building.infiltrationDesignAirChangesPerHour());
+  EXPECT_DOUBLE_EQ(0.172, building.infiltrationDesignFlowRate());
+  EXPECT_DOUBLE_EQ(0.00172, building.infiltrationDesignFlowPerSpaceFloorArea());
+  EXPECT_DOUBLE_EQ(7.0491803278688531E-4, building.infiltrationDesignFlowPerExteriorSurfaceArea());
+  EXPECT_DOUBLE_EQ(11.944444444444446E-4, building.infiltrationDesignFlowPerExteriorWallArea());
+  EXPECT_DOUBLE_EQ(1.72, building.infiltrationDesignAirChangesPerHour());
 }
 
-TEST_F(ModelFixture,Space_Plenum)
-{
+TEST_F(ModelFixture, Space_Plenum) {
   model::Model model = openstudio::model::Model();
 
   model::SpaceType spaceType(model);
@@ -1389,39 +1337,38 @@ TEST_F(ModelFixture,Space_Plenum)
   ASSERT_EQ(2u, plenumSpaces.size());
 }
 
-
-TEST_F(ModelFixture, Space_Intersect_OneToFour){
+TEST_F(ModelFixture, Space_Intersect_OneToFour) {
 
   double areaTol = 0.000001;
   double xOrigin = 20.0;
 
   // space 1 has one large surface, space 2 has 4 rectangles, test that intersection is correct independent of rotation and intersect order
-  for (double rotation = 0; rotation < 360.0; rotation += 10.0){
-    for (unsigned iStart = 0; iStart < 4; ++iStart){
+  for (double rotation = 0; rotation < 360.0; rotation += 10.0) {
+    for (unsigned iStart = 0; iStart < 4; ++iStart) {
 
-      Transformation t = Transformation::rotation(Vector3d(0,0,1), degToRad(rotation));
+      Transformation t = Transformation::rotation(Vector3d(0, 0, 1), degToRad(rotation));
 
       Model model;
       Space space1(model);
       Space space2(model);
 
       Point3dVector points;
-      points.push_back(Point3d(xOrigin,  0, 20));
-      points.push_back(Point3d(xOrigin,  0,  0));
-      points.push_back(Point3d(xOrigin, 10,  0));
+      points.push_back(Point3d(xOrigin, 0, 20));
+      points.push_back(Point3d(xOrigin, 0, 0));
+      points.push_back(Point3d(xOrigin, 10, 0));
       points.push_back(Point3d(xOrigin, 10, 20));
-      Surface surface(t*points, model);
+      Surface surface(t * points, model);
       surface.setSpace(space1);
       EXPECT_NEAR(200.0, surface.grossArea(), areaTol);
 
       std::vector<Surface> surfaces;
-      for (unsigned i = 0; i < 4; ++i){
+      for (unsigned i = 0; i < 4; ++i) {
         points.clear();
-        points.push_back(Point3d(xOrigin, 10, (i+1)*5));
-        points.push_back(Point3d(xOrigin, 10,  i*5));
-        points.push_back(Point3d(xOrigin,  0,  i*5));
-        points.push_back(Point3d(xOrigin,  0, (i+1)*5));
-        Surface tempSurface(t*points, model);
+        points.push_back(Point3d(xOrigin, 10, (i + 1) * 5));
+        points.push_back(Point3d(xOrigin, 10, i * 5));
+        points.push_back(Point3d(xOrigin, 0, i * 5));
+        points.push_back(Point3d(xOrigin, 0, (i + 1) * 5));
+        Surface tempSurface(t * points, model);
         tempSurface.setSpace(space2);
         EXPECT_NEAR(50.0, tempSurface.grossArea(), areaTol);
         surfaces.push_back(tempSurface);
@@ -1431,14 +1378,14 @@ TEST_F(ModelFixture, Space_Intersect_OneToFour){
       space1.matchSurfaces(space2);
 
       EXPECT_EQ(4u, space1.surfaces().size());
-      for (const Surface& s : space1.surfaces()){
+      for (const Surface& s : space1.surfaces()) {
         EXPECT_EQ(4u, s.vertices().size());
         EXPECT_NEAR(50.0, s.grossArea(), areaTol);
         EXPECT_TRUE(s.adjacentSurface());
       }
 
       EXPECT_EQ(4u, space2.surfaces().size());
-      for (const Surface& s : space2.surfaces()){
+      for (const Surface& s : space2.surfaces()) {
         EXPECT_EQ(4u, s.vertices().size());
         EXPECT_NEAR(50.0, s.grossArea(), areaTol);
         EXPECT_TRUE(s.adjacentSurface());
@@ -1447,38 +1394,38 @@ TEST_F(ModelFixture, Space_Intersect_OneToFour){
   }
 }
 
-TEST_F(ModelFixture, Space_Intersect_FourToOne){
+TEST_F(ModelFixture, Space_Intersect_FourToOne) {
 
   double areaTol = 0.000001;
   double xOrigin = 20.0;
 
   // space 1 has one large surface, space 2 has 4 rectangles, test that intersection is correct independent of rotation and intersect order
-  for (double rotation = 0; rotation < 360.0; rotation += 10.0){
-    for (unsigned iStart = 0; iStart < 4; ++iStart){
+  for (double rotation = 0; rotation < 360.0; rotation += 10.0) {
+    for (unsigned iStart = 0; iStart < 4; ++iStart) {
 
-      Transformation t = Transformation::rotation(Vector3d(0,0,1), degToRad(rotation));
+      Transformation t = Transformation::rotation(Vector3d(0, 0, 1), degToRad(rotation));
 
       Model model;
       Space space1(model);
       Space space2(model);
 
       Point3dVector points;
-      points.push_back(Point3d(xOrigin,  0, 20));
-      points.push_back(Point3d(xOrigin,  0,  0));
-      points.push_back(Point3d(xOrigin, 10,  0));
+      points.push_back(Point3d(xOrigin, 0, 20));
+      points.push_back(Point3d(xOrigin, 0, 0));
+      points.push_back(Point3d(xOrigin, 10, 0));
       points.push_back(Point3d(xOrigin, 10, 20));
-      Surface surface(t*points, model);
+      Surface surface(t * points, model);
       surface.setSpace(space1);
       EXPECT_NEAR(200.0, surface.grossArea(), areaTol);
 
       std::vector<Surface> surfaces;
-      for (unsigned i = 0; i < 4; ++i){
+      for (unsigned i = 0; i < 4; ++i) {
         points.clear();
-        points.push_back(Point3d(xOrigin, 10, (i+1)*5));
-        points.push_back(Point3d(xOrigin, 10,  i*5));
-        points.push_back(Point3d(xOrigin,  0,  i*5));
-        points.push_back(Point3d(xOrigin,  0, (i+1)*5));
-        Surface tempSurface(t*points, model);
+        points.push_back(Point3d(xOrigin, 10, (i + 1) * 5));
+        points.push_back(Point3d(xOrigin, 10, i * 5));
+        points.push_back(Point3d(xOrigin, 0, i * 5));
+        points.push_back(Point3d(xOrigin, 0, (i + 1) * 5));
+        Surface tempSurface(t * points, model);
         tempSurface.setSpace(space2);
         EXPECT_NEAR(50.0, tempSurface.grossArea(), areaTol);
         surfaces.push_back(tempSurface);
@@ -1488,14 +1435,14 @@ TEST_F(ModelFixture, Space_Intersect_FourToOne){
       space2.matchSurfaces(space1);
 
       EXPECT_EQ(4u, space1.surfaces().size());
-      for (const Surface& s : space1.surfaces()){
+      for (const Surface& s : space1.surfaces()) {
         EXPECT_EQ(4u, s.vertices().size());
         EXPECT_NEAR(50.0, s.grossArea(), areaTol);
         EXPECT_TRUE(s.adjacentSurface());
       }
 
       EXPECT_EQ(4u, space2.surfaces().size());
-      for (const Surface& s : space2.surfaces()){
+      for (const Surface& s : space2.surfaces()) {
         EXPECT_EQ(4u, s.vertices().size());
         EXPECT_NEAR(50.0, s.grossArea(), areaTol);
         EXPECT_TRUE(s.adjacentSurface());
@@ -1504,8 +1451,7 @@ TEST_F(ModelFixture, Space_Intersect_FourToOne){
   }
 }
 
-TEST_F(ModelFixture, Space_LifeCycleCost)
-{
+TEST_F(ModelFixture, Space_LifeCycleCost) {
   Model model;
   Space space(model);
   EXPECT_EQ(0, space.lifeCycleCosts().size());
@@ -1519,8 +1465,7 @@ TEST_F(ModelFixture, Space_LifeCycleCost)
   EXPECT_EQ(0, model.getConcreteModelObjects<LifeCycleCost>().size());
 }
 
-TEST_F(ModelFixture, Space_hardApplySpaceType_Plenum)
-{
+TEST_F(ModelFixture, Space_hardApplySpaceType_Plenum) {
   Model m;
   Space s(m);
   ThermalZone z(m);
@@ -1535,11 +1480,9 @@ TEST_F(ModelFixture, Space_hardApplySpaceType_Plenum)
   s.hardApplySpaceType(true);
 
   ASSERT_NE(m.plenumSpaceType().handle(), s.spaceType().get().handle());
-
 }
 
-TEST_F(ModelFixture, Space_hardApplySpaceType_Plenum2)
-{
+TEST_F(ModelFixture, Space_hardApplySpaceType_Plenum2) {
   Model m;
   Space s1(m);
   Space s2(m);
@@ -1560,4 +1503,516 @@ TEST_F(ModelFixture, Space_hardApplySpaceType_Plenum2)
   ASSERT_NE(m.plenumSpaceType().handle(), s1.spaceType().get().handle());
   ASSERT_NE(m.plenumSpaceType().handle(), s2.spaceType().get().handle());
   ASSERT_NE(s1.spaceType().get().handle(), s2.spaceType().get().handle());
+}
+
+TEST_F(ModelFixture, Space_intersectSurfaces_degenerate1) {
+  Model m;
+  std::vector<Point3d> vertices;
+
+  // bottom floor
+  BuildingStory bottomStory(m);
+
+  // bottom core
+  vertices.clear();
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  boost::optional<Space> bottomCore = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomCore);
+  bottomCore->setZOrigin(0);
+  bottomCore->setBuildingStory(bottomStory);
+  bottomCore->setName("bottomCore");
+
+  // bottom top
+  vertices.clear();
+  vertices.push_back(Point3d(-17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  boost::optional<Space> bottomTop = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomTop);
+  bottomTop->setZOrigin(0);
+  bottomTop->setBuildingStory(bottomStory);
+  bottomTop->setName("bottomTop");
+
+  // bottom right
+  vertices.clear();
+  vertices.push_back(Point3d(17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  boost::optional<Space> bottomRight = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomRight);
+  bottomRight->setZOrigin(0);
+  bottomRight->setBuildingStory(bottomStory);
+  bottomRight->setName("bottomRight");
+
+  // bottom bottom
+  vertices.clear();
+  vertices.push_back(Point3d(17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(-17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  boost::optional<Space> bottomBottom = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomBottom);
+  bottomBottom->setZOrigin(0);
+  bottomBottom->setBuildingStory(bottomStory);
+  bottomBottom->setName("bottomBottom");
+
+  // bottom left
+  vertices.clear();
+  vertices.push_back(Point3d(-17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(-17.5976, -11.7318, 0));
+  boost::optional<Space> bottomLeft = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomLeft);
+  bottomLeft->setZOrigin(0);
+  bottomLeft->setBuildingStory(bottomStory);
+  bottomLeft->setName("bottomLeft");
+
+  // top floor
+  BuildingStory topStory(m);
+
+  // top core
+  vertices.clear();
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  boost::optional<Space> topCore = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topCore);
+  topCore->setZOrigin(3);
+  topCore->setBuildingStory(topStory);
+  topCore->setName("topCore");
+
+  // top top
+  vertices.clear();
+  vertices.push_back(Point3d(-12.4434, 8.2956, 0));
+  vertices.push_back(Point3d(12.4434, 8.2956, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  boost::optional<Space> topTop = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topTop);
+  topTop->setZOrigin(3);
+  topTop->setBuildingStory(topStory);
+  topTop->setName("topTop");
+
+  // top right
+  vertices.clear();
+  vertices.push_back(Point3d(12.4434, 8.2956, 0));
+  vertices.push_back(Point3d(12.4434, -8.2956, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  boost::optional<Space> topRight = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topRight);
+  topRight->setZOrigin(3);
+  topRight->setBuildingStory(topStory);
+  topRight->setName("topRight");
+
+  // top bottom
+  vertices.clear();
+  vertices.push_back(Point3d(12.4434, -8.2956, 0));
+  vertices.push_back(Point3d(-12.4434, -8.2956, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  boost::optional<Space> topBottom = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topBottom);
+  topBottom->setZOrigin(3);
+  topBottom->setBuildingStory(topStory);
+  topBottom->setName("topBottom");
+
+  // top left
+  vertices.clear();
+  vertices.push_back(Point3d(-12.4434, 8.2956, 0));
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(-12.4434, -8.2956, 0));
+  boost::optional<Space> topLeft = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topLeft);
+  topLeft->setZOrigin(3);
+  topLeft->setBuildingStory(topStory);
+  topLeft->setName("topLeft");
+
+  // create thermal zones
+  std::vector<Space> spaces = m.getConcreteModelObjects<Space>();
+  for (auto& space : spaces) {
+    ThermalZone z(m);
+    space.setThermalZone(z);
+  }
+
+  // Rename surfaces to be able to debug what's going on
+  for (auto& space : spaces) {
+    int n_floors = 0;
+    int n_walls = 0;
+    int n_roofs = 0;
+    for (auto& surface : space.surfaces()) {
+      if (istringEqual("Floor", surface.surfaceType())) {
+        surface.setName(space.nameString() + " Floor " + std::to_string(n_floors++));
+      } else if (istringEqual("RoofCeiling", surface.surfaceType())) {
+        surface.setName(space.nameString() + " RoofCeiling " + std::to_string(n_roofs++));
+      } else if (istringEqual("Wall", surface.surfaceType())) {
+        surface.setName(space.nameString() + " Wall " + std::to_string(n_walls++));
+      }
+    }
+  }
+
+  // TODO: Temp
+  openstudio::path outpath = resourcesPath() / toPath("model/Space_intersectSurfaces_degenerate1_before_intersect.osm");
+  m.save(outpath, true);
+
+  intersectSurfaces(spaces);
+  matchSurfaces(spaces);
+
+  double exteriorFloorArea = 0;
+  double interiorFloorArea = 0;
+  double exteriorRoofArea = 0;
+  double interiorRoofArea = 0;
+  double exteriorWallArea = 0;
+  double interiorWallArea = 0;
+
+  std::vector<Surface> surfaces = m.getConcreteModelObjects<Surface>();
+  for (auto& surface : surfaces) {
+    if (istringEqual(surface.surfaceType(), "RoofCeiling")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Outdoors")) {
+        exteriorRoofArea += surface.grossArea();
+      } else {
+        interiorRoofArea += surface.grossArea();
+      }
+    } else if (istringEqual(surface.surfaceType(), "Floor")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Ground")) {
+        exteriorFloorArea += surface.grossArea();
+      } else {
+        interiorFloorArea += surface.grossArea();
+      }
+    } else if (istringEqual(surface.surfaceType(), "Wall")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Outdoors")) {
+        exteriorWallArea += surface.grossArea();
+      } else {
+        interiorWallArea += surface.grossArea();
+      }
+    }
+  }
+
+  EXPECT_NEAR(exteriorFloorArea, 825.8048, 0.01);
+  EXPECT_NEAR(interiorFloorArea, 412.9019, 0.01);
+  EXPECT_NEAR(exteriorRoofArea, 825.8048, 0.01);
+  EXPECT_NEAR(interiorRoofArea, 412.9019, 0.01);
+
+  outpath = resourcesPath() / toPath("model/Space_intersectSurfaces_degenerate1_after_intersect.osm");
+  m.save(outpath, true);
+  //m.save("intersect1.osm", true);
+}
+
+TEST_F(ModelFixture, Space_intersectSurfaces_degenerate2) {
+  Model m;
+  std::vector<Point3d> vertices;
+
+  // bottom floor
+
+  // bottom core
+  vertices.clear();
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  boost::optional<Space> bottomCore = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomCore);
+  bottomCore->setZOrigin(0);
+
+  // bottom top
+  vertices.clear();
+  vertices.push_back(Point3d(-17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  boost::optional<Space> bottomTop = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomTop);
+  bottomTop->setZOrigin(0);
+
+  // bottom right
+  vertices.clear();
+  vertices.push_back(Point3d(17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  boost::optional<Space> bottomRight = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomRight);
+  bottomRight->setZOrigin(0);
+
+  // bottom bottom
+  vertices.clear();
+  vertices.push_back(Point3d(17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(-17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  boost::optional<Space> bottomBottom = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomBottom);
+  bottomBottom->setZOrigin(0);
+
+  // bottom left
+  vertices.clear();
+  vertices.push_back(Point3d(-17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(-17.5976, -11.7318, 0));
+  boost::optional<Space> bottomLeft = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomLeft);
+  bottomLeft->setZOrigin(0);
+
+  // top floor
+
+  // top core
+  vertices.clear();
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  boost::optional<Space> topCore = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topCore);
+  topCore->setZOrigin(3);
+
+  // top top
+  vertices.clear();
+  vertices.push_back(Point3d(-14.1614, 8.2956, 0));
+  vertices.push_back(Point3d(14.1614, 8.2956, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  boost::optional<Space> topTop = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topTop);
+  topTop->setZOrigin(3);
+
+  // top right
+  vertices.clear();
+  vertices.push_back(Point3d(14.1614, 8.2956, 0));
+  vertices.push_back(Point3d(14.1614, -8.2956, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  boost::optional<Space> topRight = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topRight);
+  topRight->setZOrigin(3);
+
+  // top bottom
+  vertices.clear();
+  vertices.push_back(Point3d(14.1614, -8.2956, 0));
+  vertices.push_back(Point3d(-14.1614, -8.2956, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  boost::optional<Space> topBottom = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topBottom);
+  topBottom->setZOrigin(3);
+
+  // top left
+  vertices.clear();
+  vertices.push_back(Point3d(-14.1614, 8.2956, 0));
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(-14.1614, -8.2956, 0));
+  boost::optional<Space> topLeft = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topLeft);
+  topLeft->setZOrigin(3);
+
+  // create thermal zones
+  std::vector<Space> spaces = m.getConcreteModelObjects<Space>();
+  for (auto& space : spaces) {
+    ThermalZone z(m);
+    space.setThermalZone(z);
+  }
+
+  intersectSurfaces(spaces);
+  matchSurfaces(spaces);
+
+  double exteriorFloorArea = 0;
+  double interiorFloorArea = 0;
+  double exteriorRoofArea = 0;
+  double interiorRoofArea = 0;
+  double exteriorWallArea = 0;
+  double interiorWallArea = 0;
+
+  std::vector<Surface> surfaces = m.getConcreteModelObjects<Surface>();
+  for (auto& surface : surfaces) {
+    if (istringEqual(surface.surfaceType(), "RoofCeiling")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Outdoors")) {
+        exteriorRoofArea += surface.grossArea();
+      } else {
+        interiorRoofArea += surface.grossArea();
+      }
+    } else if (istringEqual(surface.surfaceType(), "Floor")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Ground")) {
+        exteriorFloorArea += surface.grossArea();
+      } else {
+        interiorFloorArea += surface.grossArea();
+      }
+    } else if (istringEqual(surface.surfaceType(), "Wall")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Outdoors")) {
+        exteriorWallArea += surface.grossArea();
+      } else {
+        interiorWallArea += surface.grossArea();
+      }
+    }
+  }
+
+  EXPECT_NEAR(exteriorFloorArea, 825.8048, 0.01);
+  //EXPECT_NEAR(interiorFloorArea, 412.9019, 0.01);
+  EXPECT_NEAR(exteriorRoofArea, 825.8048, 0.01);
+  //EXPECT_NEAR(interiorRoofArea, 412.9019, 0.01);
+
+  //m.save("intersect2.osm", true);
+}
+
+TEST_F(ModelFixture, Space_intersectSurfaces_degenerate3) {
+  Model m;
+  std::vector<Point3d> vertices;
+
+  // bottom floor
+
+  // bottom core
+  vertices.clear();
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  boost::optional<Space> bottomCore = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomCore);
+  bottomCore->setZOrigin(0);
+
+  // bottom top
+  vertices.clear();
+  vertices.push_back(Point3d(-17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  boost::optional<Space> bottomTop = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomTop);
+  bottomTop->setZOrigin(0);
+
+  // bottom right
+  vertices.clear();
+  vertices.push_back(Point3d(17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(13.0256, 7.1598, 0));
+  boost::optional<Space> bottomRight = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomRight);
+  bottomRight->setZOrigin(0);
+
+  // bottom bottom
+  vertices.clear();
+  vertices.push_back(Point3d(17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(-17.5976, -11.7318, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(13.0256, -7.1598, 0));
+  boost::optional<Space> bottomBottom = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomBottom);
+  bottomBottom->setZOrigin(0);
+
+  // bottom left
+  vertices.clear();
+  vertices.push_back(Point3d(-17.5976, 11.7318, 0));
+  vertices.push_back(Point3d(-13.0256, 7.1598, 0));
+  vertices.push_back(Point3d(-13.0256, -7.1598, 0));
+  vertices.push_back(Point3d(-17.5976, -11.7318, 0));
+  boost::optional<Space> bottomLeft = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(bottomLeft);
+  bottomLeft->setZOrigin(0);
+
+  // top floor
+
+  // top core
+  vertices.clear();
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  boost::optional<Space> topCore = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topCore);
+  topCore->setZOrigin(3);
+
+  // top top
+  vertices.clear();
+  vertices.push_back(Point3d(-15.4434, 8.2956, 0));
+  vertices.push_back(Point3d(15.4434, 8.2956, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  boost::optional<Space> topTop = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topTop);
+  topTop->setZOrigin(3);
+
+  // top right
+  vertices.clear();
+  vertices.push_back(Point3d(15.4434, 8.2956, 0));
+  vertices.push_back(Point3d(15.4434, -8.2956, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(7.8714, 3.7236, 0));
+  boost::optional<Space> topRight = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topRight);
+  topRight->setZOrigin(3);
+
+  // top bottom
+  vertices.clear();
+  vertices.push_back(Point3d(15.4434, -8.2956, 0));
+  vertices.push_back(Point3d(-15.4434, -8.2956, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(7.8714, -3.7236, 0));
+  boost::optional<Space> topBottom = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topBottom);
+  topBottom->setZOrigin(3);
+
+  // top left
+  vertices.clear();
+  vertices.push_back(Point3d(-15.4434, 8.2956, 0));
+  vertices.push_back(Point3d(-7.8714, 3.7236, 0));
+  vertices.push_back(Point3d(-7.8714, -3.7236, 0));
+  vertices.push_back(Point3d(-15.4434, -8.2956, 0));
+  boost::optional<Space> topLeft = Space::fromFloorPrint(vertices, 3, m);
+  ASSERT_TRUE(topLeft);
+  topLeft->setZOrigin(3);
+
+  // create thermal zones
+  std::vector<Space> spaces = m.getConcreteModelObjects<Space>();
+  for (auto& space : spaces) {
+    ThermalZone z(m);
+    space.setThermalZone(z);
+  }
+
+  intersectSurfaces(spaces);
+  matchSurfaces(spaces);
+
+  double exteriorFloorArea = 0;
+  double interiorFloorArea = 0;
+  double exteriorRoofArea = 0;
+  double interiorRoofArea = 0;
+  double exteriorWallArea = 0;
+  double interiorWallArea = 0;
+
+  std::vector<Surface> surfaces = m.getConcreteModelObjects<Surface>();
+  for (auto& surface : surfaces) {
+    if (istringEqual(surface.surfaceType(), "RoofCeiling")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Outdoors")) {
+        exteriorRoofArea += surface.grossArea();
+      } else {
+        interiorRoofArea += surface.grossArea();
+      }
+    } else if (istringEqual(surface.surfaceType(), "Floor")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Ground")) {
+        exteriorFloorArea += surface.grossArea();
+      } else {
+        interiorFloorArea += surface.grossArea();
+      }
+    } else if (istringEqual(surface.surfaceType(), "Wall")) {
+      if (istringEqual(surface.outsideBoundaryCondition(), "Outdoors")) {
+        exteriorWallArea += surface.grossArea();
+      } else {
+        interiorWallArea += surface.grossArea();
+      }
+    }
+  }
+
+  EXPECT_NEAR(exteriorFloorArea, 825.8048, 0.01);
+  //EXPECT_NEAR(interiorFloorArea, 412.9019, 0.01);
+  EXPECT_NEAR(exteriorRoofArea, 825.8048, 0.01);
+  //EXPECT_NEAR(interiorRoofArea, 412.9019, 0.01);
+
+  //m.save("intersect3.osm", true);
 }

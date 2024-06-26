@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -60,8 +60,7 @@ using namespace openstudio;
 using namespace openstudio::model;
 using std::string;
 
-TEST_F(ModelFixture, ElectricLoadCenterTransformer_Constructor)
-{
+TEST_F(ModelFixture, ElectricLoadCenterTransformer_Constructor) {
   Model model;
 
   Building building = model.getUniqueModelObject<Building>();
@@ -82,7 +81,7 @@ TEST_F(ModelFixture, ElectricLoadCenterTransformer_Constructor)
   EXPECT_TRUE(elct.isPhaseDefaulted());
   EXPECT_EQ("Aluminum", elct.conductorMaterial());
   EXPECT_TRUE(elct.isConductorMaterialDefaulted());
-  EXPECT_EQ(150,elct.fullLoadTemperatureRise());
+  EXPECT_EQ(150, elct.fullLoadTemperatureRise());
   EXPECT_TRUE(elct.isFullLoadTemperatureRiseDefaulted());
   EXPECT_EQ(0.1, elct.fractionofEddyCurrentLosses());
   EXPECT_TRUE(elct.isFractionofEddyCurrentLossesDefaulted());
@@ -102,10 +101,9 @@ TEST_F(ModelFixture, ElectricLoadCenterTransformer_Constructor)
   EXPECT_EQ(0u, elct.meters().size());
   EXPECT_FALSE(elct.getMeter(0));
 
-  model.save(toPath("./ELCT_ctor.osm"), true);
+  // model.save(toPath("./ELCT_ctor.osm"), true);
 }
-TEST_F(ModelFixture, ElectricLoadCenterTransformer_ModelObjects)
-{
+TEST_F(ModelFixture, ElectricLoadCenterTransformer_ModelObjects) {
   Model model;
 
   Building building = model.getUniqueModelObject<Building>();
@@ -125,14 +123,13 @@ TEST_F(ModelFixture, ElectricLoadCenterTransformer_ModelObjects)
   //Zone
   EXPECT_TRUE(elct.setZone(zone1));
   EXPECT_TRUE(elct.zone());
-  EXPECT_EQ(zone1.handle(),elct.zone().get().handle());
+  EXPECT_EQ(zone1.handle(), elct.zone().get().handle());
   elct.resetZone();
   EXPECT_FALSE(elct.zone());
 
-  model.save(toPath("./ELCT_modelobject.osm"), true);
+  // model.save(toPath("./ELCT_modelobject.osm"), true);
 }
-TEST_F(ModelFixture, ElectricLoadCenterTransformer_Extensible)
-{
+TEST_F(ModelFixture, ElectricLoadCenterTransformer_Extensible) {
   Model model;
 
   Building building = model.getUniqueModelObject<Building>();
@@ -169,18 +166,17 @@ TEST_F(ModelFixture, ElectricLoadCenterTransformer_Extensible)
   EXPECT_TRUE(elct.getMeter(1));
   EXPECT_TRUE(elct.getMeter(2));
   EXPECT_EQ(meter3.nameString(), elct.getMeter(2).get());
-  //remove 2nd
-  EXPECT_TRUE(elct.eraseMeter(2));
+  //remove 2nd (0-indexed)
+  EXPECT_TRUE(elct.eraseMeter(1));
   EXPECT_EQ(2u, elct.meters().size());
   EXPECT_TRUE(elct.getMeter(0));
   EXPECT_TRUE(elct.getMeter(1));
   EXPECT_FALSE(elct.getMeter(2));
-  //meter3 is now in the second slot
+  //meter3 is now in the second slot (0-indexed)
   EXPECT_EQ(meter3.nameString(), elct.getMeter(1).get());
   //remove all
   elct.eraseMeters();
   EXPECT_EQ(0u, elct.meters().size());
 
-  model.save(toPath("./ELCT_extensible.osm"), true);
+  // model.save(toPath("./ELCT_extensible.osm"), true);
 }
-

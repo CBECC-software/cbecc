@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,132 +36,116 @@
 namespace openstudio {
 namespace model {
 
-class Schedule;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-class DesignSpecificationOutdoorAir_Impl;
+    class DesignSpecificationOutdoorAir_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** DesignSpecificationOutdoorAir is a ModelObject that wraps the OpenStudio IDD
+  /** DesignSpecificationOutdoorAir is a ModelObject that wraps the OpenStudio IDD
  *  object 'OS:DesignSpecification:OutdoorAir'. */
-class MODEL_API DesignSpecificationOutdoorAir : public ResourceObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  class MODEL_API DesignSpecificationOutdoorAir : public ResourceObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit DesignSpecificationOutdoorAir(const Model& model);
+    explicit DesignSpecificationOutdoorAir(const Model& model);
 
-  virtual ~DesignSpecificationOutdoorAir() {}
+    virtual ~DesignSpecificationOutdoorAir() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> outdoorAirMethodValues();
+    static std::vector<std::string> outdoorAirMethodValues();
 
-  /** \deprecated */
-  static std::vector<std::string> validOutdoorAirMethodValues();
+    /** \deprecated */
+    static std::vector<std::string> validOutdoorAirMethodValues();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  std::string outdoorAirMethod() const;
+    std::string outdoorAirMethod() const;
 
-  bool isOutdoorAirMethodDefaulted() const;
+    bool isOutdoorAirMethodDefaulted() const;
 
-  double outdoorAirFlowperPerson() const;
+    double outdoorAirFlowperPerson() const;
 
-  Quantity getOutdoorAirFlowperPerson(bool returnIP=false) const;
+    bool isOutdoorAirFlowperPersonDefaulted() const;
 
-  bool isOutdoorAirFlowperPersonDefaulted() const;
+    double outdoorAirFlowperFloorArea() const;
 
-  double outdoorAirFlowperFloorArea() const;
+    bool isOutdoorAirFlowperFloorAreaDefaulted() const;
 
-  Quantity getOutdoorAirFlowperFloorArea(bool returnIP=false) const;
+    double outdoorAirFlowRate() const;
 
-  bool isOutdoorAirFlowperFloorAreaDefaulted() const;
+    bool isOutdoorAirFlowRateDefaulted() const;
 
-  double outdoorAirFlowRate() const;
+    double outdoorAirFlowAirChangesperHour() const;
 
-  Quantity getOutdoorAirFlowRate(bool returnIP=false) const;
+    bool isOutdoorAirFlowAirChangesperHourDefaulted() const;
 
-  bool isOutdoorAirFlowRateDefaulted() const;
+    /** In EnergyPlus 8.7.0 and above this field maps to the EnergyPlus field named "Outdoor Air Schedule Name" **/
+    boost::optional<Schedule> outdoorAirFlowRateFractionSchedule() const;
 
-  double outdoorAirFlowAirChangesperHour() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  Quantity getOutdoorAirFlowAirChangesperHour(bool returnIP=false) const;
+    bool setOutdoorAirMethod(const std::string& outdoorAirMethod);
 
-  bool isOutdoorAirFlowAirChangesperHourDefaulted() const;
+    void resetOutdoorAirMethod();
 
-  /** In EnergyPlus 8.7.0 and above this field maps to the EnergyPlus field named "Outdoor Air Schedule Name" **/
-  boost::optional<Schedule> outdoorAirFlowRateFractionSchedule() const;
+    bool setOutdoorAirFlowperPerson(double outdoorAirFlowperPerson);
 
-  //@}
-  /** @name Setters */
-  //@{
+    void resetOutdoorAirFlowperPerson();
 
-  bool setOutdoorAirMethod(std::string outdoorAirMethod);
+    bool setOutdoorAirFlowperFloorArea(double outdoorAirFlowperFloorArea);
 
-  void resetOutdoorAirMethod();
+    void resetOutdoorAirFlowperFloorArea();
 
-  bool setOutdoorAirFlowperPerson(double outdoorAirFlowperPerson);
+    bool setOutdoorAirFlowRate(double outdoorAirFlowRate);
 
-  bool setOutdoorAirFlowperPerson(const Quantity& outdoorAirFlowperPerson);
+    void resetOutdoorAirFlowRate();
 
-  void resetOutdoorAirFlowperPerson();
+    bool setOutdoorAirFlowAirChangesperHour(double outdoorAirFlowAirChangesperHour);
 
-  bool setOutdoorAirFlowperFloorArea(double outdoorAirFlowperFloorArea);
+    void resetOutdoorAirFlowAirChangesperHour();
 
-  bool setOutdoorAirFlowperFloorArea(const Quantity& outdoorAirFlowperFloorArea);
+    /** In EnergyPlus 8.7.0 and above this field maps to the EnergyPlus field named "Outdoor Air Schedule Name" **/
+    bool setOutdoorAirFlowRateFractionSchedule(Schedule& schedule);
 
-  void resetOutdoorAirFlowperFloorArea();
+    void resetOutdoorAirFlowRateFractionSchedule();
 
-  bool setOutdoorAirFlowRate(double outdoorAirFlowRate);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::DesignSpecificationOutdoorAir_Impl ImplType;
 
-  bool setOutdoorAirFlowRate(const Quantity& outdoorAirFlowRate);
+    explicit DesignSpecificationOutdoorAir(std::shared_ptr<detail::DesignSpecificationOutdoorAir_Impl> impl);
 
-  void resetOutdoorAirFlowRate();
+    friend class detail::DesignSpecificationOutdoorAir_Impl;
 
-  bool setOutdoorAirFlowAirChangesperHour(double outdoorAirFlowAirChangesperHour);
+    friend class Model;
 
-  bool setOutdoorAirFlowAirChangesperHour(const Quantity& outdoorAirFlowAirChangesperHour);
+    friend class IdfObject;
 
-  void resetOutdoorAirFlowAirChangesperHour();
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.DesignSpecificationOutdoorAir");
+  };
 
-  /** In EnergyPlus 8.7.0 and above this field maps to the EnergyPlus field named "Outdoor Air Schedule Name" **/
-  bool setOutdoorAirFlowRateFractionSchedule(Schedule& schedule);
+  /** \relates DesignSpecificationOutdoorAir*/
+  typedef boost::optional<DesignSpecificationOutdoorAir> OptionalDesignSpecificationOutdoorAir;
 
-  void resetOutdoorAirFlowRateFractionSchedule();
+  /** \relates DesignSpecificationOutdoorAir*/
+  typedef std::vector<DesignSpecificationOutdoorAir> DesignSpecificationOutdoorAirVector;
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::DesignSpecificationOutdoorAir_Impl ImplType;
+}  // namespace model
+}  // namespace openstudio
 
-  explicit DesignSpecificationOutdoorAir(std::shared_ptr<detail::DesignSpecificationOutdoorAir_Impl> impl);
-
-  friend class detail::DesignSpecificationOutdoorAir_Impl;
-
-  friend class Model;
-
-  friend class IdfObject;
-
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.DesignSpecificationOutdoorAir");
-};
-
-/** \relates DesignSpecificationOutdoorAir*/
-typedef boost::optional<DesignSpecificationOutdoorAir> OptionalDesignSpecificationOutdoorAir;
-
-/** \relates DesignSpecificationOutdoorAir*/
-typedef std::vector<DesignSpecificationOutdoorAir> DesignSpecificationOutdoorAirVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_DESIGNSPECIFICATIONOUTDOORAIR_HPP
-
+#endif  // MODEL_DESIGNSPECIFICATIONOUTDOORAIR_HPP

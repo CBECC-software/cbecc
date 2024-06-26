@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,142 +35,97 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class MasslessOpaqueMaterial_Impl;
+    class MasslessOpaqueMaterial_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** MasslessOpaqueMaterial is a OpaqueMaterial that wraps the OpenStudio IDD object 'OS:Material:NoMass'. */
-class MODEL_API MasslessOpaqueMaterial : public OpaqueMaterial {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** MasslessOpaqueMaterial is a OpaqueMaterial that wraps the OpenStudio IDD object 'OS:Material:NoMass'. */
+  class MODEL_API MasslessOpaqueMaterial : public OpaqueMaterial
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit MasslessOpaqueMaterial(const Model& model,
-    std::string roughness = "Smooth",
-    double thermalResistance = 0.1);
+    explicit MasslessOpaqueMaterial(const Model& model, const std::string& roughness = "Smooth", double thermalResistance = 0.1);
 
-  virtual ~MasslessOpaqueMaterial() {}
+    virtual ~MasslessOpaqueMaterial() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> roughnessValues();
+    static std::vector<std::string> roughnessValues();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  std::string roughness() const;
+    std::string roughness() const;
 
-  double thermalResistance() const;
+    double thermalResistance() const;
 
-  Quantity getThermalResistance(bool returnIP=false) const;
+    boost::optional<double> thermalAbsorptance() const;
 
-  boost::optional<double> thermalAbsorptance() const;
+    bool isThermalAbsorptanceDefaulted() const;
 
-  Quantity getThermalAbsorptance(bool returnIP=false) const;
+    boost::optional<double> solarAbsorptance() const;
 
-  bool isThermalAbsorptanceDefaulted() const;
+    bool isSolarAbsorptanceDefaulted() const;
 
-  boost::optional<double> solarAbsorptance() const;
+    boost::optional<double> visibleAbsorptance() const;
 
-  Quantity getSolarAbsorptance(bool returnIP=false) const;
+    bool isVisibleAbsorptanceDefaulted() const;
 
-  bool isSolarAbsorptanceDefaulted() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  boost::optional<double> visibleAbsorptance() const;
+    bool setRoughness(const std::string& roughness);
 
-  Quantity getVisibleAbsorptance(bool returnIP=false) const;
+    bool setThermalResistance(double thermalResistance);
 
-  bool isVisibleAbsorptanceDefaulted() const;
+    bool setThermalAbsorptance(double thermalAbsorptance);
 
-  double conductivity() const;
+    void resetThermalAbsorptance();
 
-  Quantity getConductivity(bool returnIP=false) const;
+    bool setSolarAbsorptance(double solarAbsorptance);
 
-  double density() const;
+    void resetSolarAbsorptance();
 
-  Quantity getDensity(bool returnIP=false) const;
+    bool setVisibleAbsorptance(double visibleAbsorptance);
 
-  double specificHeat() const;
+    void resetVisibleAbsorptance();
 
-  Quantity getSpecificHeat(bool returnIP=false) const;
+    //@}
+    /** @name Other */
+    //@{
 
-  //@}
-  /** @name Setters */
-  //@{
+    //@}
+   protected:
+    /// @cond
+    typedef detail::MasslessOpaqueMaterial_Impl ImplType;
 
-  bool setRoughness(std::string roughness);
+    explicit MasslessOpaqueMaterial(std::shared_ptr<detail::MasslessOpaqueMaterial_Impl> impl);
 
-  bool setThermalResistance(double thermalResistance);
+    friend class detail::MasslessOpaqueMaterial_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.MasslessOpaqueMaterial");
+  };
 
-  bool setThermalResistance(const Quantity& thermalResistance);
+  /** \relates MasslessOpaqueMaterial*/
+  typedef boost::optional<MasslessOpaqueMaterial> OptionalMasslessOpaqueMaterial;
 
-  bool setThermalAbsorptance(double thermalAbsorptance);
+  /** \relates MasslessOpaqueMaterial*/
+  typedef std::vector<MasslessOpaqueMaterial> MasslessOpaqueMaterialVector;
 
-  bool setThermalAbsorptance(const Quantity& thermalAbsorptance);
+}  // namespace model
+}  // namespace openstudio
 
-  void resetThermalAbsorptance();
-
-  bool setSolarAbsorptance(double solarAbsorptance);
-
-  bool setSolarAbsorptance(const Quantity& solarAbsorptance);
-
-  void resetSolarAbsorptance();
-
-  bool setVisibleAbsorptance(double visibleAbsorptance);
-
-  bool setVisibleAbsorptance(const Quantity& visibleAbsorptance);
-
-  void resetVisibleAbsorptance();
-
-  bool setConductivity(double conductivity);
-
-  bool setConductivity(const Quantity& conductivity);
-
-  bool setDensity(double density);
-
-  bool setDensity(const Quantity& density);
-
-  bool setSpecificHeat(double specificHeat);
-
-  bool setSpecificHeat(const Quantity& specificHeat);
-
-  //@}
-  /** @name Other */
-  //@{
-
-  //@}
- protected:
-  /// @cond
-  typedef detail::MasslessOpaqueMaterial_Impl ImplType;
-
-  explicit MasslessOpaqueMaterial(std::shared_ptr<detail::MasslessOpaqueMaterial_Impl> impl);
-
-  friend class detail::MasslessOpaqueMaterial_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.MasslessOpaqueMaterial");
-};
-
-/** \relates MasslessOpaqueMaterial*/
-typedef boost::optional<MasslessOpaqueMaterial> OptionalMasslessOpaqueMaterial;
-
-/** \relates MasslessOpaqueMaterial*/
-typedef std::vector<MasslessOpaqueMaterial> MasslessOpaqueMaterialVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_MASSLESSOPAQUEMATERIAL_HPP
-
+#endif  // MODEL_MASSLESSOPAQUEMATERIAL_HPP

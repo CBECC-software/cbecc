@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,132 +35,114 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class HeatBalanceAlgorithm_Impl;
+    class HeatBalanceAlgorithm_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** HeatBalanceAlgorithm derives from ModelObject and is an interface to the OpenStudio IDD object named "HeatBalanceAlgorithm".
+  /** HeatBalanceAlgorithm derives from ModelObject and is an interface to the OpenStudio IDD object named "HeatBalanceAlgorithm".
  *
  *  HeatBalanceAlgorithm is a unique object that specifies the global heat and moisture algorithms
  *  used across building construction calculations. HeatBalanceAlgorithm does not have a public constructor because it is a unique ModelObject.
  *  To get the HeatBalanceAlgorithm object for a Model or create one if it does not yet exist use model.getUniqueObject<HeatBalanceAlgorithm>().
  *  To get the HeatBalanceAlgorithm object for a Model but not create one if it does not yet exist use model.getOptionalUniqueObject<HeatBalanceAlgorithm>().
  */
-class MODEL_API HeatBalanceAlgorithm : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  class MODEL_API HeatBalanceAlgorithm : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  virtual ~HeatBalanceAlgorithm() {}
+    virtual ~HeatBalanceAlgorithm() {}
 
-  //@}
-  /** @name Static Methods */
-  //@{
+    //@}
+    /** @name Static Methods */
+    //@{
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  //static std::vector<std::string> validAlgorithmValues(); TODO delete
-  static std::vector<std::string> algorithmValues();
+    //static std::vector<std::string> validAlgorithmValues(); TODO delete
+    static std::vector<std::string> algorithmValues();
 
-  //@}
-  /** @name Getters */
-  //@{
+    //@}
+    /** @name Getters */
+    //@{
 
-  std::string algorithm() const;
+    std::string algorithm() const;
 
-  bool isAlgorithmDefaulted() const;
+    bool isAlgorithmDefaulted() const;
 
-  double surfaceTemperatureUpperLimit() const;
+    double surfaceTemperatureUpperLimit() const;
 
-  Quantity getSurfaceTemperatureUpperLimit(bool returnIP=false) const;
+    bool isSurfaceTemperatureUpperLimitDefaulted() const;
 
-  bool isSurfaceTemperatureUpperLimitDefaulted() const;
+    double minimumSurfaceConvectionHeatTransferCoefficientValue() const;
 
-  double minimumSurfaceConvectionHeatTransferCoefficientValue() const;
+    bool isMinimumSurfaceConvectionHeatTransferCoefficientValueDefaulted() const;
 
-  Quantity getMinimumSurfaceConvectionHeatTransferCoefficientValue(bool returnIP=false) const;
+    double maximumSurfaceConvectionHeatTransferCoefficientValue() const;
 
-  bool isMinimumSurfaceConvectionHeatTransferCoefficientValueDefaulted() const;
+    bool isMaximumSurfaceConvectionHeatTransferCoefficientValueDefaulted() const;
 
-  double maximumSurfaceConvectionHeatTransferCoefficientValue() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  Quantity getMaximumSurfaceConvectionHeatTransferCoefficientValue(bool returnIP=false) const;
+    bool setAlgorithm(std::string algorithm);
 
-  bool isMaximumSurfaceConvectionHeatTransferCoefficientValueDefaulted() const;
+    void resetAlgorithm();
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool setSurfaceTemperatureUpperLimit(double surfaceTemperatureUpperLimit);
 
-  bool setAlgorithm(std::string algorithm);
+    void resetSurfaceTemperatureUpperLimit();
 
-  void resetAlgorithm();
+    bool setMinimumSurfaceConvectionHeatTransferCoefficientValue(double minimumSurfaceConvectionHeatTransferCoefficientValue);
 
-  bool setSurfaceTemperatureUpperLimit(double surfaceTemperatureUpperLimit);
+    void resetMinimumSurfaceConvectionHeatTransferCoefficientValue();
 
-  bool setSurfaceTemperatureUpperLimit(const Quantity& surfaceTemperatureUpperLimit);
+    bool setMaximumSurfaceConvectionHeatTransferCoefficientValue(double maximumSurfaceConvectionHeatTransferCoefficientValue);
 
-  void resetSurfaceTemperatureUpperLimit();
+    void resetMaximumSurfaceConvectionHeatTransferCoefficientValue();
 
-  bool setMinimumSurfaceConvectionHeatTransferCoefficientValue(double minimumSurfaceConvectionHeatTransferCoefficientValue);
+    //@}
 
-  bool setMinimumSurfaceConvectionHeatTransferCoefficientValue(const Quantity& minimumSurfaceConvectionHeatTransferCoefficientValue);
+   protected:
+    /** @name Constructors and Destructors */
+    //@{
 
-  void resetMinimumSurfaceConvectionHeatTransferCoefficientValue();
+    /// Constructs a new HeatBalanceAlgorithm object in the model.
+    explicit HeatBalanceAlgorithm(const Model& model);
 
-  bool setMaximumSurfaceConvectionHeatTransferCoefficientValue(double maximumSurfaceConvectionHeatTransferCoefficientValue);
+    //@}
 
-  bool setMaximumSurfaceConvectionHeatTransferCoefficientValue(const Quantity& maximumSurfaceConvectionHeatTransferCoefficientValue);
+    /// @cond
 
-  void resetMaximumSurfaceConvectionHeatTransferCoefficientValue();
+    typedef detail::HeatBalanceAlgorithm_Impl ImplType;
 
-  //@}
+    friend class detail::HeatBalanceAlgorithm_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    explicit HeatBalanceAlgorithm(Model& model);
+    // constructor
+    explicit HeatBalanceAlgorithm(std::shared_ptr<detail::HeatBalanceAlgorithm_Impl> impl);
 
- protected:
+   private:
+    REGISTER_LOGGER("openstudio.model.HeatBalanceAlgorithm");
 
-  /** @name Constructors and Destructors */
-  //@{
+    /// @endcond
+  };
 
-  /// Constructs a new HeatBalanceAlgorithm object in the model.
-  explicit HeatBalanceAlgorithm(const Model& model);
+  /** \relates HeatBalanceAlgorithm*/
+  typedef boost::optional<HeatBalanceAlgorithm> OptionalHeatBalanceAlgorithm;
 
-  //@}
+  /** \relates HeatBalanceAlgorithm*/
+  typedef std::vector<HeatBalanceAlgorithm> HeatBalanceAlgorithmVector;
 
-  /// @cond
+}  // namespace model
+}  // namespace openstudio
 
-  typedef detail::HeatBalanceAlgorithm_Impl ImplType;
-
-  friend class detail::HeatBalanceAlgorithm_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  explicit HeatBalanceAlgorithm(Model& model);
-  // constructor
-  explicit HeatBalanceAlgorithm(std::shared_ptr<detail::HeatBalanceAlgorithm_Impl> impl);
-
- private:
-
-  REGISTER_LOGGER("openstudio.model.HeatBalanceAlgorithm");
-
-  /// @endcond
-
-};
-
-/** \relates HeatBalanceAlgorithm*/
-typedef boost::optional<HeatBalanceAlgorithm> OptionalHeatBalanceAlgorithm;
-
-/** \relates HeatBalanceAlgorithm*/
-typedef std::vector<HeatBalanceAlgorithm> HeatBalanceAlgorithmVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_HEATBALANCEALGORITHM_HPP
-
+#endif  // MODEL_HEATBALANCEALGORITHM_HPP

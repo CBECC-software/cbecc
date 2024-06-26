@@ -9,10 +9,16 @@
 %template(PathPair) std::pair<openstudio::path, openstudio::path>;
 %template(PathPairVector) std::vector<std::pair<openstudio::path, openstudio::path> >;
 
+#if defined(SWIGCSHARP)
+
+  // Avoid triggering a SWIG warning: 'string' is a C# keyword
+  %rename(toString) openstudio::path::string;
+
+#endif
+
 %{
   #include <utilities/core/Path.hpp>
   #include <utilities/core/PathHelpers.hpp>
-  #include <utilities/core/String.hpp>
 
   namespace openstudio{
 //    #ifdef _WINDOWS
@@ -40,8 +46,8 @@
 
     // Recursively deletes the contents of p if it exists, then deletes file p itself.
     // Returns the number of files removed.
-    unsigned long remove_all(const path& p){
-      return boost::filesystem::remove_all(p);
+    unsigned remove_all(const path& p){
+      return static_cast<unsigned>(boost::filesystem::remove_all(p));
     }
 
     // The contents and attributes of the file from_fp resolves to are copied to the file to_fp resolves to.
@@ -100,6 +106,7 @@ namespace openstudio {
     //PathStringType file_string() const;
     //PathStringType directory_string() const;
     //PathStringType external_file_string() const;
+    // This generates a CSHARP SWIG warning: 'string' is a C# keyword: renamed above
     path string() const;
 
     path root_path() const;
@@ -132,21 +139,16 @@ namespace openstudio {
   // DLM: deprecate in favor of path.to_s
   std::string toString(const path& p);
 
-  // path to QString.
-  // DLM: deprecate
-  //QString toQString(const path& p);
-
+  // C# not happy about overloads, so just leave the std::string one
+#ifndef SWIGCSHARP
   // UTF-8 encoded char* to path
   // DLM: deprecate
   path toPath(const char* s);
+#endif
 
   // UTF-8 encoded std::string to path
   // DLM: deprecate in favor of Path.new(string)
   path toPath(const std::string& s);
-
-  // QString to path
-  // DLM: deprecate
-  //path toPath(const QString& q);
 
   // does the path exist
   bool exists(const path& p);
@@ -159,7 +161,7 @@ namespace openstudio {
 
   // Recursively deletes the contents of p if it exists, then deletes file p itself.
   // Returns the number of files removed.
-  unsigned long remove_all(const path& p);
+  unsigned remove_all(const path& p);
 
   // The contents and attributes of the file from_fp resolves to are copied to the file to_fp resolves to.
   void copy_file(const path& from_path, const path& to_path);
@@ -375,6 +377,7 @@ namespace openstudio {
 
 
 %include <utilities/core/PathHelpers.hpp>
+%include <utilities/core/String.i>
 
 
 // DLM@20100101: demo purposes only, should be able to automatically convert a string input, delete when working

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -34,7 +34,6 @@
 #include "../ForwardTranslator.hpp"
 #include "../ReverseTranslator.hpp"
 
-
 // Objects of interest
 #include "../../model/GeneratorMicroTurbine.hpp"
 #include "../../model/GeneratorMicroTurbine_Impl.hpp"
@@ -66,7 +65,6 @@
 #include "../../model/ElectricLoadCenterDistribution.hpp"
 #include "../../model/ElectricLoadCenterDistribution_Impl.hpp"
 
-
 // IDF FieldEnums
 #include <utilities/idd/Generator_MicroTurbine_FieldEnums.hxx>
 // #include <utilities/idd/OS_Generator_MicroTurbine_HeatRecovery_FieldEnums.hxx>
@@ -87,10 +85,7 @@
 
 #include "../../utilities/idf/IdfExtensibleGroup.hpp"
 
-
 #include <boost/algorithm/string/predicate.hpp>
-
-#include <QThread>
 
 #include <resources.hxx>
 
@@ -101,23 +96,19 @@
 // Debug
 #include "../../utilities/core/Logger.hpp"
 
-
 using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
 
-
 /**
  * Tests whether the ForwarTranslator will handle the name of the GeneratorMicroTurbine correctly in the PlantEquipmentOperationHeatingLoad
  **/
-TEST_F(EnergyPlusFixture,ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop) {
 
   // TODO: Temporarily output the Log in the console with the Trace (-3) level
   // for debug
   // openstudio::Logger::instance().standardOutLogger().enable();
   // openstudio::Logger::instance().standardOutLogger().setLogLevel(Trace);
-
 
   // Create a model, a mchp, a mchpHR, a plantLoop and an electricalLoadCenter
   Model model;
@@ -165,12 +156,12 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop)
   EXPECT_EQ(mchpHR.inletModelObject()->name().get(), idf_mchp.getString(Generator_MicroTurbineFields::HeatRecoveryWaterInletNodeName).get());
   EXPECT_EQ(mchpHR.outletModelObject()->name().get(), idf_mchp.getString(Generator_MicroTurbineFields::HeatRecoveryWaterOutletNodeName).get());
 
-  OptionalWorkspaceObject idf_operation(workspace.getObjectByTypeAndName(IddObjectType::PlantEquipmentOperation_HeatingLoad,*(operation.name())));
+  OptionalWorkspaceObject idf_operation(workspace.getObjectByTypeAndName(IddObjectType::PlantEquipmentOperation_HeatingLoad, *(operation.name())));
   ASSERT_TRUE(idf_operation);
   // Get the extensible
   ASSERT_EQ(1u, idf_operation->numExtensibleGroups());
   // IdfExtensibleGroup eg = idf_operation.getExtensibleGroup(0);
-   // idf_operation.targets[0]
+  // idf_operation.targets[0]
   ASSERT_EQ(1u, idf_operation->targets().size());
   WorkspaceObject plantEquipmentList(idf_operation->targets()[0]);
   ASSERT_EQ(2u, plantEquipmentList.extensibleGroups().size());
@@ -184,13 +175,11 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop)
   ASSERT_EQ("WaterHeater:Mixed", eg2.getString(PlantEquipmentListExtensibleFields::EquipmentObjectType).get());
   EXPECT_EQ(waterHeater.name().get(), eg2.getString(PlantEquipmentListExtensibleFields::EquipmentName).get());
 
-  model.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop.osm"), true);
-  workspace.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop.idf"), true);
-
+  // model.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop.osm"), true);
+  // workspace.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_PlantLoop.idf"), true);
 }
 //test orphaning the generator before FT
-TEST_F(EnergyPlusFixture, ForwardTranslatorGeneratorMicroTurbine_ELCD_Orphan)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslatorGeneratorMicroTurbine_ELCD_Orphan) {
   // Create a model, a mchp, a mchpHR, a plantLoop and an electricalLoadCenter
   Model model;
 
@@ -207,6 +196,7 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorGeneratorMicroTurbine_ELCD_Orphan)
   // Add it on the same branch as the chpHR, right after it
   Node mchpHROutletNode = mchpHR.outletModelObject()->cast<Node>();
   ASSERT_TRUE(waterHeater.addToNode(mchpHROutletNode));
+  EXPECT_TRUE(waterHeater.plantLoop());
 
   // Create a plantEquipmentOperationHeatingLoad
   PlantEquipmentOperationHeatingLoad operation(model);
@@ -234,7 +224,6 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorGeneratorMicroTurbine_ELCD_Orphan)
   //ASSERT_EQ(1u, workspace.getObjectsByType(IddObjectType::WaterHeater_Mixed).size());
   ASSERT_EQ(0u, workspace.getObjectsByType(IddObjectType::ElectricLoadCenter_Distribution).size());
 
-  //model.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_orhpan.osm"), true);
-  //workspace.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_orphan.idf"), true);
-
+  // model.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_orhpan.osm"), true);
+  // workspace.save(toPath("./ForwardTranslatorGeneratorMicroTurbine_ELCD_orphan.idf"), true);
 }

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,96 +36,84 @@
 namespace openstudio {
 namespace model {
 
-class Schedule;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-  class SpaceInfiltrationEffectiveLeakageArea_Impl;
+    class SpaceInfiltrationEffectiveLeakageArea_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** SpaceInfiltrationEffectiveLeakageArea is a SpaceLoad that wraps the OpenStudio
+  /** SpaceInfiltrationEffectiveLeakageArea is a SpaceLoad that wraps the OpenStudio
  *  IDD object 'OS:SpaceInfiltration:EffectiveLeakageArea'. */
-class MODEL_API SpaceInfiltrationEffectiveLeakageArea : public SpaceLoad {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  class MODEL_API SpaceInfiltrationEffectiveLeakageArea : public SpaceLoad
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit SpaceInfiltrationEffectiveLeakageArea(const Model& model);
+    explicit SpaceInfiltrationEffectiveLeakageArea(const Model& model);
 
-  virtual ~SpaceInfiltrationEffectiveLeakageArea() {}
+    virtual ~SpaceInfiltrationEffectiveLeakageArea() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  /** Returns the (fractional) infiltration schedule.  If this object does not
+    /** Returns the (fractional) infiltration schedule.  If this object does not
    *  specify a schedule this function will search the hierarchy. */
-  boost::optional<Schedule> schedule() const;
+    boost::optional<Schedule> schedule() const;
 
-  /** Returns true if this object does not specify a schedule directly. */
-  bool isScheduleDefaulted() const;
+    /** Returns true if this object does not specify a schedule directly. */
+    bool isScheduleDefaulted() const;
 
-  double effectiveAirLeakageArea() const;
+    double effectiveAirLeakageArea() const;
 
-  Quantity getEffectiveAirLeakageArea(bool returnIP=false) const;
+    double stackCoefficient() const;
 
-  double stackCoefficient() const;
+    double windCoefficient() const;
 
-  Quantity getStackCoefficient(bool returnIP=false) const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  double windCoefficient() const;
+    /** Sets the (fractional) Schedule. */
+    bool setSchedule(Schedule& schedule);
 
-  Quantity getWindCoefficient(bool returnIP=false) const;
+    /** Resets the (fractional) Schedule. */
+    void resetSchedule();
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool setEffectiveAirLeakageArea(double effectiveAirLeakageArea);
 
-  /** Sets the (fractional) Schedule. */
-  bool setSchedule(Schedule& schedule);
+    bool setStackCoefficient(double stackCoefficient);
 
-  /** Resets the (fractional) Schedule. */
-  void resetSchedule();
+    bool setWindCoefficient(double windCoefficient);
 
-  bool setEffectiveAirLeakageArea(double effectiveAirLeakageArea);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::SpaceInfiltrationEffectiveLeakageArea_Impl ImplType;
 
-  bool setEffectiveAirLeakageArea(const Quantity& effectiveAirLeakageArea);
+    explicit SpaceInfiltrationEffectiveLeakageArea(std::shared_ptr<detail::SpaceInfiltrationEffectiveLeakageArea_Impl> impl);
 
-  bool setStackCoefficient(double stackCoefficient);
+    friend class Model;
+    friend class IdfObject;
 
-  bool setStackCoefficient(const Quantity& stackCoefficient);
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.SpaceInfiltrationEffectiveLeakageArea");
+  };
 
-  bool setWindCoefficient(double windCoefficient);
+  /** \relates SpaceInfiltrationEffectiveLeakageArea*/
+  typedef boost::optional<SpaceInfiltrationEffectiveLeakageArea> OptionalSpaceInfiltrationEffectiveLeakageArea;
 
-  bool setWindCoefficient(const Quantity& windCoefficient);
+  /** \relates SpaceInfiltrationEffectiveLeakageArea*/
+  typedef std::vector<SpaceInfiltrationEffectiveLeakageArea> SpaceInfiltrationEffectiveLeakageAreaVector;
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::SpaceInfiltrationEffectiveLeakageArea_Impl ImplType;
+}  // namespace model
+}  // namespace openstudio
 
-  explicit SpaceInfiltrationEffectiveLeakageArea(std::shared_ptr<detail::SpaceInfiltrationEffectiveLeakageArea_Impl> impl);
-
-  friend class Model;
-  friend class IdfObject;
-
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.SpaceInfiltrationEffectiveLeakageArea");
-};
-
-/** \relates SpaceInfiltrationEffectiveLeakageArea*/
-typedef boost::optional<SpaceInfiltrationEffectiveLeakageArea> OptionalSpaceInfiltrationEffectiveLeakageArea;
-
-/** \relates SpaceInfiltrationEffectiveLeakageArea*/
-typedef std::vector<SpaceInfiltrationEffectiveLeakageArea> SpaceInfiltrationEffectiveLeakageAreaVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_SPACEINFILTRATIONEFFECTIVELEAKAGEAREA_HPP
-
+#endif  // MODEL_SPACEINFILTRATIONEFFECTIVELEAKAGEAREA_HPP

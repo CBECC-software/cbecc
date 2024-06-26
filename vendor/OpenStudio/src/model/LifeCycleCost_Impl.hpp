@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -40,99 +40,102 @@ namespace model {
 
   class SpaceLoadDefinition;
 
-namespace detail {
+  namespace detail {
 
-class MODEL_API LifeCycleCost_Impl : public ModelObject_Impl
-{
+    class MODEL_API LifeCycleCost_Impl : public ModelObject_Impl
+    {
 
+     public:
+      // constructor
+      LifeCycleCost_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      // construct from workspace
+      LifeCycleCost_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
+      // clone copy constructor
+      LifeCycleCost_Impl(const LifeCycleCost_Impl& other, Model_Impl* model, bool keepHandle);
 
-public:
-  // constructor
-  LifeCycleCost_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      // virtual destructor
+      virtual ~LifeCycleCost_Impl() {}
 
-  // construct from workspace
-  LifeCycleCost_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                 Model_Impl* model,
-                 bool keepHandle);
+      virtual IddObjectType iddObjectType() const override {
+        return LifeCycleCost::iddObjectType();
+      }
 
-  // clone copy constructor
-  LifeCycleCost_Impl(const LifeCycleCost_Impl& other,Model_Impl* model,bool keepHandle);
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-  // virtual destructor
-  virtual ~LifeCycleCost_Impl(){}
+      /** @name Getters */
+      //@{
 
-  virtual IddObjectType iddObjectType() const override {return LifeCycleCost::iddObjectType();}
+      std::string category() const;
 
-  virtual const std::vector<std::string>& outputVariableNames() const override;
+      std::string itemType() const;
 
-  /** @name Getters */
-  //@{
+      ModelObject item() const;
 
-  std::string category() const;
+      double cost() const;
 
-  std::string itemType() const;
+      std::vector<std::string> validCostUnitsValues() const;
 
-  ModelObject item() const;
+      std::string costUnits() const;
 
-  double cost() const;
+      std::string startOfCosts() const;
+      bool isStartOfCostsDefaulted() const;
 
-  std::vector<std::string> validCostUnitsValues() const;
+      int yearsFromStart() const;
+      bool isYearsFromStartDefaulted() const;
+      int monthsFromStart() const;
+      bool isMonthsFromStartDefaulted() const;
 
-  std::string costUnits() const;
+      int repeatPeriodYears() const;
+      bool isRepeatPeriodYearsDefaulted() const;
+      int repeatPeriodMonths() const;
+      bool isRepeatPeriodMonthsDefaulted() const;
 
-  int yearsFromStart() const;
-  bool isYearsFromStartDefaulted() const;
-  int monthsFromStart() const;
-  bool isMonthsFromStartDefaulted() const;
+      //@}
+      /** @name Setters */
+      //@{
 
-  int repeatPeriodYears() const;
-  bool isRepeatPeriodYearsDefaulted() const;
-  int repeatPeriodMonths() const;
-  bool isRepeatPeriodMonthsDefaulted() const;
+      bool setCategory(const std::string& category);
 
-  //@}
-  /** @name Setters */
-  //@{
+      bool setCost(double cost);
 
-  bool setCategory(const std::string& category);
+      bool setCostUnits(const std::string& costUnits);
 
-  bool setCost(double cost);
+      bool setStartOfCosts(const std::string& startOfCosts);
+      void resetStartOfCosts();
 
-  bool setCostUnits(const std::string& costUnits);
+      bool setYearsFromStart(int yearsFromStart);
+      void resetYearsFromStart();
+      bool setMonthsFromStart(int monthsFromStart);
+      void resetMonthsFromStart();
 
-  bool setYearsFromStart(int yearsFromStart);
-  void resetYearsFromStart();
-  bool setMonthsFromStart(int monthsFromStart);
-  void resetMonthsFromStart();
+      bool setRepeatPeriodYears(int repeatPeriodYears);
+      void resetRepeatPeriodYears();
+      bool setRepeatPeriodMonths(int repeatPeriodMonths);
+      void resetRepeatPeriodMonths();
 
-  bool setRepeatPeriodYears(int repeatPeriodYears);
-  void resetRepeatPeriodYears();
-  bool setRepeatPeriodMonths(int repeatPeriodMonths);
-  void resetRepeatPeriodMonths();
+      //@}
 
-  //@}
+      double totalCost() const;
 
-  double totalCost() const;
+      bool convertToCostPerEach();
 
-  bool convertToCostPerEach();
+      boost::optional<int> costedQuantity() const;
 
-  boost::optional<int> costedQuantity() const;
+      boost::optional<double> costedArea() const;
 
-  boost::optional<double> costedArea() const;
+      boost::optional<int> costedThermalZones() const;
 
-  boost::optional<int> costedThermalZones() const;
+     private:
+      REGISTER_LOGGER("openstudio.model.LifeCycleCost");
 
-private:
-  REGISTER_LOGGER("openstudio.model.LifeCycleCost");
+      //double getArea(const SpaceLoadInstance& spaceLoadInstance) const;
+      //double getArea(const SpaceLoadDefinition& spaceLoadDefinition) const;
+    };
 
-  //double getArea(const SpaceLoadInstance& spaceLoadInstance) const;
-  //double getArea(const SpaceLoadDefinition& spaceLoadDefinition) const;
-};
+  }  // namespace detail
+}  // namespace model
+}  // namespace openstudio
 
-} // detail
-} // model
-} // openstudio
-
-#endif // MODEL_LIFECYCLECOST_IMPL_HPP
+#endif  // MODEL_LIFECYCLECOST_IMPL_HPP

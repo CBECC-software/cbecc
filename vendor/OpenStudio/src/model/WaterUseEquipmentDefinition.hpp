@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,73 +35,64 @@
 
 namespace openstudio {
 
-  class Quantity;
-  class OSOptionalQuantity;
-
 namespace model {
 
-class Schedule;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-  class WaterUseEquipmentDefinition_Impl;
+    class WaterUseEquipmentDefinition_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** WaterUseEquipmentDefinition is a SpaceLoadDefinition that wraps the OpenStudio IDD object 'OS:WaterUse:Equipment:Definition'. */
-class MODEL_API WaterUseEquipmentDefinition : public SpaceLoadDefinition {
-  public:
+  /** WaterUseEquipmentDefinition is a SpaceLoadDefinition that wraps the OpenStudio IDD object 'OS:WaterUse:Equipment:Definition'. */
+  class MODEL_API WaterUseEquipmentDefinition : public SpaceLoadDefinition
+  {
+   public:
+    explicit WaterUseEquipmentDefinition(const Model& model);
 
-  explicit WaterUseEquipmentDefinition(const Model& model);
+    virtual ~WaterUseEquipmentDefinition() {}
 
-  virtual ~WaterUseEquipmentDefinition() {}
+    static IddObjectType iddObjectType();
 
-  static IddObjectType iddObjectType();
+    std::string endUseSubcategory() const;
+    bool isEndUseSubcategoryDefaulted() const;
+    bool setEndUseSubcategory(const std::string& endUseSubcategory);
+    void resetEndUseSubcategory();
 
-  std::string endUseSubcategory() const;
-  bool isEndUseSubcategoryDefaulted() const;
-  bool setEndUseSubcategory(std::string endUseSubcategory);
-  void resetEndUseSubcategory();
+    double peakFlowRate() const;
+    bool setPeakFlowRate(double peakFlowRate);
+    boost::optional<Schedule> targetTemperatureSchedule() const;
+    bool setTargetTemperatureSchedule(const Schedule& targetTemperatureSchedule);
+    void resetTargetTemperatureSchedule();
 
-  double peakFlowRate() const;
-  Quantity getPeakFlowRate(bool returnIP=false) const;
-  bool setPeakFlowRate(double peakFlowRate);
-  bool setPeakFlowRate(const Quantity& peakFlowRate);
+    boost::optional<Schedule> sensibleFractionSchedule() const;
+    bool setSensibleFractionSchedule(const Schedule& sensibleFractionSchedule);
+    void resetSensibleFractionSchedule();
 
-  boost::optional<Schedule> targetTemperatureSchedule() const;
-  bool setTargetTemperatureSchedule(const Schedule& targetTemperatureSchedule);
-  void resetTargetTemperatureSchedule();
+    boost::optional<Schedule> latentFractionSchedule() const;
+    bool setLatentFractionSchedule(const Schedule& latentFractionSchedule);
+    void resetLatentFractionSchedule();
 
-  boost::optional<Schedule> sensibleFractionSchedule() const;
-  bool setSensibleFractionSchedule(const Schedule& sensibleFractionSchedule);
-  void resetSensibleFractionSchedule();
+   protected:
+    typedef detail::WaterUseEquipmentDefinition_Impl ImplType;
 
-  boost::optional<Schedule> latentFractionSchedule() const;
-  bool setLatentFractionSchedule(const Schedule& latentFractionSchedule);
-  void resetLatentFractionSchedule();
+    explicit WaterUseEquipmentDefinition(std::shared_ptr<detail::WaterUseEquipmentDefinition_Impl> impl);
 
-  protected:
+    friend class detail::WaterUseEquipmentDefinition_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
 
-  typedef detail::WaterUseEquipmentDefinition_Impl ImplType;
+   private:
+    REGISTER_LOGGER("openstudio.model.WaterUseEquipmentDefinition");
+  };
 
-  explicit WaterUseEquipmentDefinition(std::shared_ptr<detail::WaterUseEquipmentDefinition_Impl> impl);
+  typedef boost::optional<WaterUseEquipmentDefinition> OptionalWaterUseEquipmentDefinition;
 
-  friend class detail::WaterUseEquipmentDefinition_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
+  typedef std::vector<WaterUseEquipmentDefinition> WaterUseEquipmentDefinitionVector;
 
-  private:
+}  // namespace model
+}  // namespace openstudio
 
-  REGISTER_LOGGER("openstudio.model.WaterUseEquipmentDefinition");
-};
-
-typedef boost::optional<WaterUseEquipmentDefinition> OptionalWaterUseEquipmentDefinition;
-
-typedef std::vector<WaterUseEquipmentDefinition> WaterUseEquipmentDefinitionVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_WATERUSEEQUIPMENTDEFINITION_HPP
-
+#endif  // MODEL_WATERUSEEQUIPMENTDEFINITION_HPP

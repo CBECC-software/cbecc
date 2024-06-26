@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,152 +37,169 @@ namespace openstudio {
 
 namespace model {
 
-class Schedule;
-class ThermalZone;
+  class Schedule;
+  class ThermalZone;
 
-namespace detail {
+  namespace detail {
 
-  class HeaderedPumpsVariableSpeed_Impl;
+    class HeaderedPumpsVariableSpeed_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** HeaderedPumpsVariableSpeed is a StraightComponent that wraps the OpenStudio IDD object 'OS:HeaderedPumps:VariableSpeed'. */
-class MODEL_API HeaderedPumpsVariableSpeed : public StraightComponent {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** HeaderedPumpsVariableSpeed is a StraightComponent that wraps the OpenStudio IDD object 'OS:HeaderedPumps:VariableSpeed'. */
+  class MODEL_API HeaderedPumpsVariableSpeed : public StraightComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit HeaderedPumpsVariableSpeed(const Model& model);
+    explicit HeaderedPumpsVariableSpeed(const Model& model);
 
-  virtual ~HeaderedPumpsVariableSpeed() {}
+    virtual ~HeaderedPumpsVariableSpeed() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> flowSequencingControlSchemeValues();
+    static std::vector<std::string> flowSequencingControlSchemeValues();
 
-  static std::vector<std::string> pumpControlTypeValues();
+    static std::vector<std::string> pumpControlTypeValues();
 
-  /** @name Getters */
-  //@{
+    static std::vector<std::string> designPowerSizingMethodValues();
 
-  /** In EnergyPlus 8.5.0 and above this property maps to the EnergyPlus field "Total Design Flow Rate" **/
-  boost::optional<double> totalRatedFlowRate() const;
+    /** @name Getters */
+    //@{
 
-  bool isTotalRatedFlowRateAutosized() const;
+    /** In EnergyPlus 8.5.0 and above this property maps to the EnergyPlus field "Total Design Flow Rate" **/
+    boost::optional<double> totalRatedFlowRate() const;
 
-  int numberofPumpsinBank() const;
+    bool isTotalRatedFlowRateAutosized() const;
 
-  std::string flowSequencingControlScheme() const;
+    int numberofPumpsinBank() const;
 
-  /** In EnergyPlus 8.5.0 and above this property maps to the EnergyPlus field "Design Pump Head" **/
-  double ratedPumpHead() const;
+    std::string flowSequencingControlScheme() const;
 
-  /** In EnergyPlus 8.5.0 and above this property maps to the EnergyPlus field "Design Power Consumption" **/
-  boost::optional<double> ratedPowerConsumption() const;
+    /** In EnergyPlus 8.5.0 and above this property maps to the EnergyPlus field "Design Pump Head" **/
+    double ratedPumpHead() const;
 
-  bool isRatedPowerConsumptionAutosized() const;
+    /** In EnergyPlus 8.5.0 and above this property maps to the EnergyPlus field "Design Power Consumption" **/
+    boost::optional<double> ratedPowerConsumption() const;
 
-  double motorEfficiency() const;
+    bool isRatedPowerConsumptionAutosized() const;
 
-  double fractionofMotorInefficienciestoFluidStream() const;
+    double motorEfficiency() const;
 
-  double coefficient1ofthePartLoadPerformanceCurve() const;
+    double fractionofMotorInefficienciestoFluidStream() const;
 
-  double coefficient2ofthePartLoadPerformanceCurve() const;
+    double coefficient1ofthePartLoadPerformanceCurve() const;
 
-  double coefficient3ofthePartLoadPerformanceCurve() const;
+    double coefficient2ofthePartLoadPerformanceCurve() const;
 
-  double coefficient4ofthePartLoadPerformanceCurve() const;
+    double coefficient3ofthePartLoadPerformanceCurve() const;
 
-  double minimumFlowRateFraction() const;
+    double coefficient4ofthePartLoadPerformanceCurve() const;
 
-  std::string pumpControlType() const;
+    double minimumFlowRateFraction() const;
 
-  boost::optional<Schedule> pumpFlowRateSchedule() const;
+    std::string pumpControlType() const;
 
-  boost::optional<ThermalZone> thermalZone() const;
+    boost::optional<Schedule> pumpFlowRateSchedule() const;
 
-  double skinLossRadiativeFraction() const;
+    boost::optional<ThermalZone> thermalZone() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    double skinLossRadiativeFraction() const;
 
-  bool setTotalRatedFlowRate(double totalRatedFlowRate);
+    std::string designPowerSizingMethod() const;
 
-  void autosizeTotalRatedFlowRate();
+    double designElectricPowerPerUnitFlowRate() const;
 
-  bool setNumberofPumpsinBank(int numberofPumpsinBank);
+    double designShaftPowerPerUnitFlowRatePerUnitHead() const;
 
-  bool setFlowSequencingControlScheme(std::string flowSequencingControlScheme);
+    std::string endUseSubcategory() const;
 
-  bool setRatedPumpHead(double ratedPumpHead);
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool setRatedPowerConsumption(double ratedPowerConsumption);
+    bool setTotalRatedFlowRate(double totalRatedFlowRate);
 
-  void autosizeRatedPowerConsumption();
+    void autosizeTotalRatedFlowRate();
 
-  bool setMotorEfficiency(double motorEfficiency);
+    bool setNumberofPumpsinBank(int numberofPumpsinBank);
 
-  bool setFractionofMotorInefficienciestoFluidStream(double fractionofMotorInefficienciestoFluidStream);
+    bool setFlowSequencingControlScheme(const std::string& flowSequencingControlScheme);
 
-  bool setCoefficient1ofthePartLoadPerformanceCurve(double coefficient1ofthePartLoadPerformanceCurve);
+    bool setRatedPumpHead(double ratedPumpHead);
 
-  bool setCoefficient2ofthePartLoadPerformanceCurve(double coefficient2ofthePartLoadPerformanceCurve);
+    bool setRatedPowerConsumption(double ratedPowerConsumption);
 
-  bool setCoefficient3ofthePartLoadPerformanceCurve(double coefficient3ofthePartLoadPerformanceCurve);
+    void autosizeRatedPowerConsumption();
 
-  bool setCoefficient4ofthePartLoadPerformanceCurve(double coefficient4ofthePartLoadPerformanceCurve);
+    bool setMotorEfficiency(double motorEfficiency);
 
-  bool setMinimumFlowRateFraction(double minimumFlowRateFraction);
+    bool setFractionofMotorInefficienciestoFluidStream(double fractionofMotorInefficienciestoFluidStream);
 
-  bool setPumpControlType(std::string pumpControlType);
+    bool setCoefficient1ofthePartLoadPerformanceCurve(double coefficient1ofthePartLoadPerformanceCurve);
 
-  bool setPumpFlowRateSchedule(Schedule& schedule);
+    bool setCoefficient2ofthePartLoadPerformanceCurve(double coefficient2ofthePartLoadPerformanceCurve);
 
-  void resetPumpFlowRateSchedule();
+    bool setCoefficient3ofthePartLoadPerformanceCurve(double coefficient3ofthePartLoadPerformanceCurve);
 
-  bool setThermalZone(const ThermalZone& thermalZone);
+    bool setCoefficient4ofthePartLoadPerformanceCurve(double coefficient4ofthePartLoadPerformanceCurve);
 
-  void resetThermalZone();
+    bool setMinimumFlowRateFraction(double minimumFlowRateFraction);
 
-  bool setSkinLossRadiativeFraction(double skinLossRadiativeFraction);
+    bool setPumpControlType(const std::string& pumpControlType);
 
-  //@}
-  /** @name Other */
-  //@{
+    bool setPumpFlowRateSchedule(Schedule& schedule);
 
-  boost::optional<double> autosizedTotalRatedFlowRate() const ;
+    void resetPumpFlowRateSchedule();
 
-  boost::optional<double> autosizedRatedPowerConsumption() const ;
+    bool setThermalZone(const ThermalZone& thermalZone);
 
+    void resetThermalZone();
 
+    bool setSkinLossRadiativeFraction(double skinLossRadiativeFraction);
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::HeaderedPumpsVariableSpeed_Impl ImplType;
+    bool setDesignPowerSizingMethod(const std::string& designPowerSizingMethod);
 
-  explicit HeaderedPumpsVariableSpeed(std::shared_ptr<detail::HeaderedPumpsVariableSpeed_Impl> impl);
+    bool setDesignElectricPowerPerUnitFlowRate(double designElectricPowerPerUnitFlowRate);
 
-  friend class detail::HeaderedPumpsVariableSpeed_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.HeaderedPumpsVariableSpeed");
-};
+    bool setDesignShaftPowerPerUnitFlowRatePerUnitHead(double designShaftPowerPerUnitFlowRatePerUnitHead);
 
-/** \relates HeaderedPumpsVariableSpeed*/
-typedef boost::optional<HeaderedPumpsVariableSpeed> OptionalHeaderedPumpsVariableSpeed;
+    bool setEndUseSubcategory(const std::string& endUseSubcategory);
 
-/** \relates HeaderedPumpsVariableSpeed*/
-typedef std::vector<HeaderedPumpsVariableSpeed> HeaderedPumpsVariableSpeedVector;
+    //@}
+    /** @name Other */
+    //@{
 
-} // model
-} // openstudio
+    boost::optional<double> autosizedTotalRatedFlowRate() const;
 
-#endif // MODEL_HEADEREDPUMPSVARIABLESPEED_HPP
+    boost::optional<double> autosizedRatedPowerConsumption() const;
+
+    //@}
+   protected:
+    /// @cond
+    typedef detail::HeaderedPumpsVariableSpeed_Impl ImplType;
+
+    explicit HeaderedPumpsVariableSpeed(std::shared_ptr<detail::HeaderedPumpsVariableSpeed_Impl> impl);
+
+    friend class detail::HeaderedPumpsVariableSpeed_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.HeaderedPumpsVariableSpeed");
+  };
+
+  /** \relates HeaderedPumpsVariableSpeed*/
+  typedef boost::optional<HeaderedPumpsVariableSpeed> OptionalHeaderedPumpsVariableSpeed;
+
+  /** \relates HeaderedPumpsVariableSpeed*/
+  typedef std::vector<HeaderedPumpsVariableSpeed> HeaderedPumpsVariableSpeedVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_HEADEREDPUMPSVARIABLESPEED_HPP

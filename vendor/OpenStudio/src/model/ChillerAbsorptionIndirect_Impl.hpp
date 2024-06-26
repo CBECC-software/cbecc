@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,208 +36,234 @@
 namespace openstudio {
 namespace model {
 
-class Curve;
+  class Curve;
 
-namespace detail {
+  namespace detail {
 
-  /** ChillerAbsorptionIndirect_Impl is a WaterToWaterComponent_Impl that is the implementation class for ChillerAbsorptionIndirect.*/
-  class MODEL_API ChillerAbsorptionIndirect_Impl : public WaterToWaterComponent_Impl {
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+    /** ChillerAbsorptionIndirect_Impl is a WaterToWaterComponent_Impl that is the implementation class for ChillerAbsorptionIndirect.*/
+    class MODEL_API ChillerAbsorptionIndirect_Impl : public WaterToWaterComponent_Impl
+    {
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    ChillerAbsorptionIndirect_Impl(const IdfObject& idfObject,
-                                   Model_Impl* model,
-                                   bool keepHandle);
+      ChillerAbsorptionIndirect_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    ChillerAbsorptionIndirect_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                   Model_Impl* model,
-                                   bool keepHandle);
+      ChillerAbsorptionIndirect_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    ChillerAbsorptionIndirect_Impl(const ChillerAbsorptionIndirect_Impl& other,
-                                   Model_Impl* model,
-                                   bool keepHandle);
+      ChillerAbsorptionIndirect_Impl(const ChillerAbsorptionIndirect_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~ChillerAbsorptionIndirect_Impl() {}
+      virtual ~ChillerAbsorptionIndirect_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual unsigned supplyInletPort() const override;
-    virtual unsigned supplyOutletPort() const override;
-    virtual unsigned demandInletPort() const override;
-    virtual unsigned demandOutletPort() const override;
-    virtual unsigned tertiaryInletPort() const override;
-    virtual unsigned tertiaryOutletPort() const override;
+      // chilledWaterLoop
+      virtual unsigned supplyInletPort() const override;
+      virtual unsigned supplyOutletPort() const override;
 
-    //@}
-    /** @name Getters */
-    //@{
+      // condenserWaterLoop
+      virtual unsigned demandInletPort() const override;
+      virtual unsigned demandOutletPort() const override;
 
-    boost::optional<double> nominalCapacity() const;
+      //generatorLoop
+      virtual unsigned tertiaryInletPort() const override;
+      virtual unsigned tertiaryOutletPort() const override;
 
-    bool isNominalCapacityAutosized() const;
+      /* This function will perform a check if trying to add it to a node that is on the demand side of a plant loop.
+     * If:
+     *     - the node is on the demand side of a loop
+     *     - the node isn't on the current condenser water loop itself
+     *     - the chiller doesn't already have a generator (tertiary) loop,
+     * then it tries to add it to the Tertiary loop.
+     * In all other cases, it will call the base class' method WaterToWaterComponent_Impl::addToNode()
+     */
+      virtual bool addToNode(Node& node) override;
 
-    boost::optional<double> nominalPumpingPower() const;
+      /* Restricts addToTertiaryNode to a node that is on the supply side of a plant loop (tertiary = generator (heating) Loop)
+     * Will also set the Generator Heat Source Type to 'HotWater' */
+      virtual bool addToTertiaryNode(Node& node) override;
 
-    bool isNominalPumpingPowerAutosized() const;
+      /** Override to switch the Generator Heat Source Type to 'Steam' **/
+      virtual bool removeFromTertiaryPlantLoop() override;
 
-    double minimumPartLoadRatio() const;
+      virtual std::vector<ModelObject> children() const override;
 
-    double maximumPartLoadRatio() const;
+      virtual ModelObject clone(Model model) const override;
 
-    double optimumPartLoadRatio() const;
+      virtual void autosize() override;
 
-    double designCondenserInletTemperature() const;
+      virtual void applySizingValues() override;
 
-    double condenserInletTemperatureLowerLimit() const;
+      //@}
+      /** @name Getters */
+      //@{
 
-    double chilledWaterOutletTemperatureLowerLimit() const;
+      boost::optional<double> nominalCapacity() const;
 
-    boost::optional<double> designChilledWaterFlowRate() const;
+      bool isNominalCapacityAutosized() const;
 
-    bool isDesignChilledWaterFlowRateAutosized() const;
+      boost::optional<double> nominalPumpingPower() const;
 
-    boost::optional<double> designCondenserWaterFlowRate() const;
+      bool isNominalPumpingPowerAutosized() const;
 
-    bool isDesignCondenserWaterFlowRateAutosized() const;
+      double minimumPartLoadRatio() const;
 
-    std::string chillerFlowMode() const;
+      double maximumPartLoadRatio() const;
 
-    Curve generatorHeatInputFunctionofPartLoadRatioCurve() const;
+      double optimumPartLoadRatio() const;
 
-    Curve pumpElectricInputFunctionofPartLoadRatioCurve() const;
+      double designCondenserInletTemperature() const;
 
-    Curve capacityCorrectionFunctionofCondenserTemperatureCurve() const;
+      double condenserInletTemperatureLowerLimit() const;
 
-    Curve capacityCorrectionFunctionofChilledWaterTemperatureCurve() const;
+      double chilledWaterOutletTemperatureLowerLimit() const;
 
-    Curve capacityCorrectionFunctionofGeneratorTemperatureCurve() const;
+      boost::optional<double> designChilledWaterFlowRate() const;
 
-    Curve generatorHeatInputCorrectionFunctionofCondenserTemperatureCurve() const;
+      bool isDesignChilledWaterFlowRateAutosized() const;
 
-    Curve generatorHeatInputCorrectionFunctionofChilledWaterTemperatureCurve() const;
+      boost::optional<double> designCondenserWaterFlowRate() const;
 
-    std::string generatorHeatSourceType() const;
+      bool isDesignCondenserWaterFlowRateAutosized() const;
 
-    boost::optional<double> designGeneratorFluidFlowRate() const;
+      std::string chillerFlowMode() const;
 
-    bool isDesignGeneratorFluidFlowRateAutosized() const;
+      Curve generatorHeatInputFunctionofPartLoadRatioCurve() const;
 
-    double temperatureLowerLimitGeneratorInlet() const;
+      Curve pumpElectricInputFunctionofPartLoadRatioCurve() const;
 
-    double degreeofSubcoolinginSteamGenerator() const;
+      Curve capacityCorrectionFunctionofCondenserTemperatureCurve() const;
 
-    double degreeofSubcoolinginSteamCondensateLoop() const;
+      Curve capacityCorrectionFunctionofChilledWaterTemperatureCurve() const;
 
-    double sizingFactor() const;
+      Curve capacityCorrectionFunctionofGeneratorTemperatureCurve() const;
 
-  boost::optional<double> autosizedNominalCapacity() const ;
+      Curve generatorHeatInputCorrectionFunctionofCondenserTemperatureCurve() const;
 
-  boost::optional<double> autosizedNominalPumpingPower() const ;
+      Curve generatorHeatInputCorrectionFunctionofChilledWaterTemperatureCurve() const;
 
-  boost::optional<double> autosizedDesignChilledWaterFlowRate() const ;
+      std::string generatorHeatSourceType() const;
 
-  boost::optional<double> autosizedDesignCondenserWaterFlowRate() const ;
+      boost::optional<double> designGeneratorFluidFlowRate() const;
 
-  boost::optional<double> autosizedDesignGeneratorFluidFlowRate() const ;
+      bool isDesignGeneratorFluidFlowRateAutosized() const;
 
-  virtual void autosize() override;
+      double temperatureLowerLimitGeneratorInlet() const;
 
-  virtual void applySizingValues() override;
+      double degreeofSubcoolinginSteamGenerator() const;
 
-    //@}
-    /** @name Setters */
-    //@{
+      double degreeofSubcoolinginSteamCondensateLoop() const;
 
-    bool setNominalCapacity(boost::optional<double> nominalCapacity);
+      double sizingFactor() const;
 
-    void autosizeNominalCapacity();
+      //@}
+      /** @name Setters */
+      //@{
 
-    bool setNominalPumpingPower(boost::optional<double> nominalPumpingPower);
+      bool setNominalCapacity(boost::optional<double> nominalCapacity);
 
-    void autosizeNominalPumpingPower();
+      void autosizeNominalCapacity();
 
-    bool setMinimumPartLoadRatio(double minimumPartLoadRatio);
+      bool setNominalPumpingPower(boost::optional<double> nominalPumpingPower);
 
-    bool setMaximumPartLoadRatio(double maximumPartLoadRatio);
+      void autosizeNominalPumpingPower();
 
-    bool setOptimumPartLoadRatio(double optimumPartLoadRatio);
+      bool setMinimumPartLoadRatio(double minimumPartLoadRatio);
 
-    bool setDesignCondenserInletTemperature(double designCondenserInletTemperature);
+      bool setMaximumPartLoadRatio(double maximumPartLoadRatio);
 
-    bool setCondenserInletTemperatureLowerLimit(double condenserInletTemperatureLowerLimit);
+      bool setOptimumPartLoadRatio(double optimumPartLoadRatio);
 
-    bool setChilledWaterOutletTemperatureLowerLimit(double chilledWaterOutletTemperatureLowerLimit);
+      bool setDesignCondenserInletTemperature(double designCondenserInletTemperature);
 
-    bool setDesignChilledWaterFlowRate(boost::optional<double> designChilledWaterFlowRate);
+      bool setCondenserInletTemperatureLowerLimit(double condenserInletTemperatureLowerLimit);
 
-    void autosizeDesignChilledWaterFlowRate();
+      bool setChilledWaterOutletTemperatureLowerLimit(double chilledWaterOutletTemperatureLowerLimit);
 
-    bool setDesignCondenserWaterFlowRate(boost::optional<double> designCondenserWaterFlowRate);
+      bool setDesignChilledWaterFlowRate(boost::optional<double> designChilledWaterFlowRate);
 
-    void autosizeDesignCondenserWaterFlowRate();
+      void autosizeDesignChilledWaterFlowRate();
 
-    bool setChillerFlowMode(std::string chillerFlowMode);
+      bool setDesignCondenserWaterFlowRate(boost::optional<double> designCondenserWaterFlowRate);
 
-    bool setGeneratorHeatInputFunctionofPartLoadRatioCurve(const Curve& curve);
+      void autosizeDesignCondenserWaterFlowRate();
 
-    bool setPumpElectricInputFunctionofPartLoadRatioCurve(const Curve& curve);
+      bool setChillerFlowMode(std::string chillerFlowMode);
 
-    bool setCapacityCorrectionFunctionofCondenserTemperatureCurve(const Curve& curve);
+      bool setGeneratorHeatInputFunctionofPartLoadRatioCurve(const Curve& curve);
 
-    bool setCapacityCorrectionFunctionofChilledWaterTemperatureCurve(const Curve& curve);
+      bool setPumpElectricInputFunctionofPartLoadRatioCurve(const Curve& curve);
 
-    bool setCapacityCorrectionFunctionofGeneratorTemperatureCurve(const Curve& curve);
+      bool setCapacityCorrectionFunctionofCondenserTemperatureCurve(const Curve& curve);
 
-    bool setGeneratorHeatInputCorrectionFunctionofCondenserTemperatureCurve(const Curve& curve);
+      bool setCapacityCorrectionFunctionofChilledWaterTemperatureCurve(const Curve& curve);
 
-    bool setGeneratorHeatInputCorrectionFunctionofChilledWaterTemperatureCurve(const Curve& curve);
+      bool setCapacityCorrectionFunctionofGeneratorTemperatureCurve(const Curve& curve);
 
-    // TODO: This needs to be set automatically based on plant loop connected to it
-    bool setGeneratorHeatSourceType(std::string generatorHeatSourceType);
+      bool setGeneratorHeatInputCorrectionFunctionofCondenserTemperatureCurve(const Curve& curve);
 
-    bool setDesignGeneratorFluidFlowRate(boost::optional<double> designGeneratorFluidFlowRate);
+      bool setGeneratorHeatInputCorrectionFunctionofChilledWaterTemperatureCurve(const Curve& curve);
 
-    void autosizeDesignGeneratorFluidFlowRate();
+      bool setGeneratorHeatSourceType(std::string generatorHeatSourceType);
 
-    bool setTemperatureLowerLimitGeneratorInlet(double temperatureLowerLimitGeneratorInlet);
+      bool setDesignGeneratorFluidFlowRate(boost::optional<double> designGeneratorFluidFlowRate);
 
-    bool setDegreeofSubcoolinginSteamGenerator(double degreeofSubcoolinginSteamGenerator);
+      void autosizeDesignGeneratorFluidFlowRate();
 
-    bool setDegreeofSubcoolinginSteamCondensateLoop(double degreeofSubcoolinginSteamCondensateLoop);
+      bool setTemperatureLowerLimitGeneratorInlet(double temperatureLowerLimitGeneratorInlet);
 
-    bool setSizingFactor(double sizingFactor);
+      bool setDegreeofSubcoolinginSteamGenerator(double degreeofSubcoolinginSteamGenerator);
 
-    //@}
-    /** @name Other */
-    //@{
+      bool setDegreeofSubcoolinginSteamCondensateLoop(double degreeofSubcoolinginSteamCondensateLoop);
 
-    std::vector<ModelObject> children() const override;
-    ModelObject clone(Model model) const override;
+      bool setSizingFactor(double sizingFactor);
 
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.ChillerAbsorptionIndirect");
+      //@}
+      /** @name Other */
+      //@{
 
-    boost::optional<Curve> optionalGeneratorHeatInputFunctionofPartLoadRatioCurve() const;
-    boost::optional<Curve> optionalPumpElectricInputFunctionofPartLoadRatioCurve() const;
-    boost::optional<Curve> optionalCapacityCorrectionFunctionofCondenserTemperatureCurve() const;
-    boost::optional<Curve> optionalCapacityCorrectionFunctionofChilledWaterTemperatureCurve() const;
-    boost::optional<Curve> optionalCapacityCorrectionFunctionofGeneratorTemperatureCurve() const;
-    boost::optional<Curve> optionalGeneratorHeatInputCorrectionFunctionofCondenserTemperatureCurve() const;
-    boost::optional<Curve> optionalGeneratorHeatInputCorrectionFunctionofChilledWaterTemperatureCurve() const;
-  };
+      boost::optional<double> autosizedNominalCapacity() const;
 
-} // detail
+      boost::optional<double> autosizedNominalPumpingPower() const;
 
-} // model
-} // openstudio
+      boost::optional<double> autosizedDesignChilledWaterFlowRate() const;
 
-#endif // MODEL_CHILLERABSORPTIONINDIRECT_IMPL_HPP
+      boost::optional<double> autosizedDesignCondenserWaterFlowRate() const;
+
+      boost::optional<double> autosizedDesignGeneratorFluidFlowRate() const;
+
+      /** Convenience Function to return the Chilled Water Loop (chiller on supply) **/
+      boost::optional<PlantLoop> chilledWaterLoop() const;
+
+      /** Convenience Function to return the Condenser Water Loop (chiller on demand side) **/
+      boost::optional<PlantLoop> condenserWaterLoop() const;
+
+      /** Convenience Function to return the Generator Loop (chiller on the demand side - tertiary) **/
+      boost::optional<PlantLoop> generatorLoop() const;
+
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.ChillerAbsorptionIndirect");
+
+      boost::optional<Curve> optionalGeneratorHeatInputFunctionofPartLoadRatioCurve() const;
+      boost::optional<Curve> optionalPumpElectricInputFunctionofPartLoadRatioCurve() const;
+      boost::optional<Curve> optionalCapacityCorrectionFunctionofCondenserTemperatureCurve() const;
+      boost::optional<Curve> optionalCapacityCorrectionFunctionofChilledWaterTemperatureCurve() const;
+      boost::optional<Curve> optionalCapacityCorrectionFunctionofGeneratorTemperatureCurve() const;
+      boost::optional<Curve> optionalGeneratorHeatInputCorrectionFunctionofCondenserTemperatureCurve() const;
+      boost::optional<Curve> optionalGeneratorHeatInputCorrectionFunctionofChilledWaterTemperatureCurve() const;
+    };
+
+  }  // namespace detail
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_CHILLERABSORPTIONINDIRECT_IMPL_HPP

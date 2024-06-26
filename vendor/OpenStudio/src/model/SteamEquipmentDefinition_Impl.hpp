@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,179 +32,110 @@
 
 #include "ModelAPI.hpp"
 #include "SpaceLoadDefinition_Impl.hpp"
-#include "attributes.hpp"
 
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  /** SteamEquipmentDefinition_Impl is a SpaceLoadDefinition_Impl that is the implementation class for SteamEquipmentDefinition.*/
-  class MODEL_API SteamEquipmentDefinition_Impl : public SpaceLoadDefinition_Impl {
+    /** SteamEquipmentDefinition_Impl is a SpaceLoadDefinition_Impl that is the implementation class for SteamEquipmentDefinition.*/
+    class MODEL_API SteamEquipmentDefinition_Impl : public SpaceLoadDefinition_Impl
+    {
 
-    Q_PROPERTY(openstudio::OSOptionalQuantity designLevel_SI
-               READ designLevel_SI
-               WRITE setDesignLevel);
-    Q_PROPERTY(openstudio::OSOptionalQuantity designLevel_IP
-               READ designLevel_IP
-               WRITE setDesignLevel);
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperSpaceFloorArea_SI
-               READ wattsperSpaceFloorArea_SI
-               WRITE setWattsperSpaceFloorArea);
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperSpaceFloorArea_IP
-               READ wattsperSpaceFloorArea_IP
-               WRITE setWattsperSpaceFloorArea);
+      SteamEquipmentDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperPerson_SI
-               READ wattsperPerson_SI
-               WRITE setWattsperPerson);
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperPerson_IP
-               READ wattsperPerson_IP
-               WRITE setWattsperPerson);
+      SteamEquipmentDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    Q_PROPERTY(openstudio::Quantity fractionRadiant_SI
-               READ fractionRadiant_SI
-               WRITE setFractionRadiant);
-    Q_PROPERTY(openstudio::Quantity fractionRadiant_IP
-               READ fractionRadiant_IP
-               WRITE setFractionRadiant);
+      SteamEquipmentDefinition_Impl(const SteamEquipmentDefinition_Impl& other, Model_Impl* model, bool keepHandle);
 
-    Q_PROPERTY(openstudio::Quantity fractionLatent_SI
-               READ fractionLatent_SI
-               WRITE setFractionLatent);
-    Q_PROPERTY(openstudio::Quantity fractionLatent_IP
-               READ fractionLatent_IP
-               WRITE setFractionLatent);
+      virtual ~SteamEquipmentDefinition_Impl() {}
 
-    Q_PROPERTY(openstudio::Quantity fractionLost_SI
-               READ fractionLost_SI
-               WRITE setFractionLost);
-    Q_PROPERTY(openstudio::Quantity fractionLost_IP
-               READ fractionLost_IP
-               WRITE setFractionLost);
+      //@}
 
-   public:
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    /** @name Constructors and Destructors */
-    //@{
+      virtual IddObjectType iddObjectType() const override;
 
-    SteamEquipmentDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      /** @name Getters */
+      //@{
 
-    SteamEquipmentDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                  Model_Impl* model,
-                                  bool keepHandle);
+      std::string designLevelCalculationMethod() const;
+      boost::optional<double> designLevel() const;
+      boost::optional<double> wattsperSpaceFloorArea() const;
+      boost::optional<double> wattsperPerson() const;
 
-    SteamEquipmentDefinition_Impl(const SteamEquipmentDefinition_Impl& other,
-                                  Model_Impl* model,
-                                  bool keepHandle);
+      double fractionLatent() const;
+      bool isFractionLatentDefaulted() const;
 
-    virtual ~SteamEquipmentDefinition_Impl() {}
+      double fractionRadiant() const;
+      bool isFractionRadiantDefaulted() const;
 
-    //@}
+      double fractionLost() const;
+      bool isFractionLostDefaulted() const;
 
-    // TODO: Remove
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      //@}
+      /** @name Setters */
+      //@{
 
-    virtual IddObjectType iddObjectType() const override;
+      /// Sets designLevelCalculationMethod to 'DesignLevel', clears wattsperSpaceFloorArea
+      /// and wattsperPerson, and sets designLevel.
+      bool setDesignLevel(boost::optional<double> designLevel);
 
-    // Attributes
+      /// Sets designLevelCalculationMethod to 'Watts/Area', clears designLevel
+      /// and wattsperPerson, and sets wattsperSpaceFloorArea.
+      bool setWattsperSpaceFloorArea(boost::optional<double> wattsperSpaceFloorArea);
 
-    ATTRIBUTE_DEFINITION(1,0,0,designLevel,DesignLevel)
-    ATTRIBUTE_DEFINITION(1,0,0,wattsperPerson,WattsperPerson)
-    ATTRIBUTE_DEFINITION(1,0,0,wattsperSpaceFloorArea,WattsperSpaceFloorArea)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionRadiant,FractionRadiant)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionLatent,FractionLatent)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionLost,FractionLost)
+      /// Sets designLevelCalculationMethod to 'Watts/Person', clears designLevel
+      /// and wattsperSpaceFloorArea, and sets wattsperPerson.
+      bool setWattsperPerson(boost::optional<double> wattsperPerson);
 
-    /** @name Getters */
-    //@{
+      bool setFractionLatent(double fractionLatent);
+      void resetFractionLatent();
 
-    std::string designLevelCalculationMethod() const;
+      bool setFractionRadiant(double fractionRadiant);
+      void resetFractionRadiant();
 
-    //boost::optional<double> designLevel() const;
+      bool setFractionLost(double fractionLost);
+      void resetFractionLost();
 
-    //boost::optional<double> wattsperSpaceFloorArea() const;
+      //@}
+      /** @name Other */
+      //@{
 
-    //boost::optional<double> wattsperPerson() const;
-
-    //double fractionLatent() const;
-
-    //bool isFractionLatentDefaulted() const;
-
-    //double fractionRadiant() const;
-
-    //bool isFractionRadiantDefaulted() const;
-
-    //double fractionLost() const;
-
-    //bool isFractionLostDefaulted() const;
-
-    //@}
-    /** @name Setters */
-    //@{
-
-    ///// Sets designLevelCalculationMethod to 'DesignLevel', clears wattsperSpaceFloorArea
-    ///// and wattsperPerson, and sets designLevel.
-    //bool setDesignLevel(boost::optional<double> designLevel);
-
-    ///// Sets designLevelCalculationMethod to 'Watts/Area', clears designLevel
-    ///// and wattsperPerson, and sets wattsperSpaceFloorArea.
-    //bool setWattsperSpaceFloorArea(boost::optional<double> wattsperSpaceFloorArea);
-
-    ///// Sets designLevelCalculationMethod to 'Watts/Person', clears designLevel
-    ///// and wattsperSpaceFloorArea, and sets wattsperPerson.
-    //bool setWattsperPerson(boost::optional<double> wattsperPerson);
-
-    //bool setFractionLatent(double fractionLatent);
-
-    //void resetFractionLatent();
-
-    //bool setFractionRadiant(double fractionRadiant);
-
-    //void resetFractionRadiant();
-
-    //bool setFractionLost(double fractionLost);
-
-    //void resetFractionLost();
-
-    //@}
-    /** @name Other */
-    //@{
-
-    /** Returns the design level represented by this definition, assuming floorArea (m^2) and
+      /** Returns the design level represented by this definition, assuming floorArea (m^2) and
      *  numPeople. */
-    double getDesignLevel(double floorArea, double numPeople) const;
+      double getDesignLevel(double floorArea, double numPeople) const;
 
-    /** Returns the watts/m^2 represented by this definition, assuming floorArea (m^2) and
+      /** Returns the watts/m^2 represented by this definition, assuming floorArea (m^2) and
      *  numPeople. */
-    double getPowerPerFloorArea(double floorArea, double numPeople) const;
+      double getPowerPerFloorArea(double floorArea, double numPeople) const;
 
-    /** Returns the watts/person represented by this definition, assuming floorArea (m^2) and
+      /** Returns the watts/person represented by this definition, assuming floorArea (m^2) and
      *  numPeople. */
-    double getPowerPerPerson(double floorArea, double numPeople) const;
+      double getPowerPerPerson(double floorArea, double numPeople) const;
 
-    /** If method is a \link validDesignLevelCalculationMethodValues valid design level
+      /** If method is a \link validDesignLevelCalculationMethodValues valid design level
      *  calculation method \endlink, changes this definition to an equivalent power level, under
      *  the assumptions of floorArea (m^2) and numPeople. */
-    bool setDesignLevelCalculationMethod(const std::string& method,
-                                         double floorArea,
-                                         double numPeople);
+      bool setDesignLevelCalculationMethod(const std::string& method, double floorArea, double numPeople);
 
-    virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
+      virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
 
-    virtual std::vector<std::string> emsInternalVariableNames() const override;
+      virtual std::vector<std::string> emsInternalVariableNames() const override;
 
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.SteamEquipmentDefinition");
-  };
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.SteamEquipmentDefinition");
+    };
 
-} // detail
+  }  // namespace detail
 
-} // model
-} // openstudio
+}  // namespace model
+}  // namespace openstudio
 
-#endif // MODEL_STEAMEQUIPMENTDEFINITION_IMPL_HPP
-
+#endif  // MODEL_STEAMEQUIPMENTDEFINITION_IMPL_HPP

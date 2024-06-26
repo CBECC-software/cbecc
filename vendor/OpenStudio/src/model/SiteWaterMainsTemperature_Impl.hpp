@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,117 +33,86 @@
 #include "ModelAPI.hpp"
 #include "ModelObject_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
-
 namespace openstudio {
 namespace model {
 
-class Schedule;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-  /** SiteWaterMainsTemperature_Impl is a ModelObject_Impl that is the implementation class for SiteWaterMainsTemperature.*/
-  class MODEL_API SiteWaterMainsTemperature_Impl : public ModelObject_Impl {
+    /** SiteWaterMainsTemperature_Impl is a ModelObject_Impl that is the implementation class for SiteWaterMainsTemperature.*/
+    class MODEL_API SiteWaterMainsTemperature_Impl : public ModelObject_Impl
+    {
 
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
+      SiteWaterMainsTemperature_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      SiteWaterMainsTemperature_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
+      SiteWaterMainsTemperature_Impl(const SiteWaterMainsTemperature_Impl& other, Model_Impl* model, bool keepHandle);
 
+      virtual ~SiteWaterMainsTemperature_Impl() {}
 
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
+      virtual boost::optional<ParentObject> parent() const override;
 
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
+      virtual IddObjectType iddObjectType() const override;
 
+      virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
 
+      //@}
+      /** @name Getters */
+      //@{
 
+      std::string calculationMethod() const;
 
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+      boost::optional<Schedule> temperatureSchedule() const;
 
-    SiteWaterMainsTemperature_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      boost::optional<double> annualAverageOutdoorAirTemperature() const;
 
-    SiteWaterMainsTemperature_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                   Model_Impl* model,
-                                   bool keepHandle);
+      boost::optional<double> maximumDifferenceInMonthlyAverageOutdoorAirTemperatures() const;
 
-    SiteWaterMainsTemperature_Impl(const SiteWaterMainsTemperature_Impl& other,
-                                   Model_Impl* model,
-                                   bool keepHandle);
+      //@}
+      /** @name Setters */
+      //@{
 
-    virtual ~SiteWaterMainsTemperature_Impl() {}
+      bool setCalculationMethod(std::string calculationMethod);
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      bool setTemperatureSchedule(Schedule& schedule);
 
-    virtual boost::optional<ParentObject> parent() const override;
+      void resetTemperatureSchedule();
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      bool setAnnualAverageOutdoorAirTemperature(boost::optional<double> annualAverageOutdoorAirTemperature);
 
-    virtual IddObjectType iddObjectType() const override;
+      void resetAnnualAverageOutdoorAirTemperature();
 
-    virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
+      bool
+        setMaximumDifferenceInMonthlyAverageOutdoorAirTemperatures(boost::optional<double> maximumDifferenceInMonthlyAverageOutdoorAirTemperatures);
 
-    //@}
-    /** @name Getters */
-    //@{
+      void resetMaximumDifferenceInMonthlyAverageOutdoorAirTemperatures();
 
-    std::string calculationMethod() const;
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.SiteWaterMainsTemperature");
 
-    boost::optional<Schedule> temperatureSchedule() const;
+      std::vector<std::string> calculationMethodValues() const;
+      boost::optional<ModelObject> temperatureScheduleAsModelObject() const;
 
-    boost::optional<double> annualAverageOutdoorAirTemperature() const;
+      bool setTemperatureScheduleAsModelObject(const boost::optional<ModelObject>& temperatureSchedule);
+    };
 
-    OSOptionalQuantity getAnnualAverageOutdoorAirTemperature(bool returnIP=false) const;
+  }  // namespace detail
 
-    boost::optional<double> maximumDifferenceInMonthlyAverageOutdoorAirTemperatures() const;
+}  // namespace model
+}  // namespace openstudio
 
-    OSOptionalQuantity getMaximumDifferenceInMonthlyAverageOutdoorAirTemperatures(bool returnIP=false) const;
-
-    //@}
-    /** @name Setters */
-    //@{
-
-    bool setCalculationMethod(std::string calculationMethod);
-
-    bool setTemperatureSchedule(Schedule& schedule);
-
-    void resetTemperatureSchedule();
-
-    bool setAnnualAverageOutdoorAirTemperature(boost::optional<double> annualAverageOutdoorAirTemperature);
-
-    bool setAnnualAverageOutdoorAirTemperature(const OSOptionalQuantity& annualAverageOutdoorAirTemperature);
-
-    void resetAnnualAverageOutdoorAirTemperature();
-
-    bool setMaximumDifferenceInMonthlyAverageOutdoorAirTemperatures(boost::optional<double> maximumDifferenceInMonthlyAverageOutdoorAirTemperatures);
-
-    bool setMaximumDifferenceInMonthlyAverageOutdoorAirTemperatures(const OSOptionalQuantity& maximumDifferenceInMonthlyAverageOutdoorAirTemperatures);
-
-    void resetMaximumDifferenceInMonthlyAverageOutdoorAirTemperatures();
-
-    //@}
-   protected:
-
-   private:
-    REGISTER_LOGGER("openstudio.model.SiteWaterMainsTemperature");
-
-    std::vector<std::string> calculationMethodValues() const;
-    openstudio::OSOptionalQuantity annualAverageOutdoorAirTemperature_SI() const;
-    openstudio::OSOptionalQuantity annualAverageOutdoorAirTemperature_IP() const;
-    openstudio::OSOptionalQuantity maximumDifferenceInMonthlyAverageOutdoorAirTemperatures_SI() const;
-    openstudio::OSOptionalQuantity maximumDifferenceInMonthlyAverageOutdoorAirTemperatures_IP() const;
-
-    boost::optional<ModelObject> temperatureScheduleAsModelObject() const;
-
-    bool setTemperatureScheduleAsModelObject(const boost::optional<ModelObject>& temperatureSchedule);
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_SITEWATERMAINSTEMPERATURE_IMPL_HPP
+#endif  // MODEL_SITEWATERMAINSTEMPERATURE_IMPL_HPP

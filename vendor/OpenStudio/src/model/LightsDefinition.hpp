@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,152 +36,136 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class LightsDefinition_Impl;
+    class LightsDefinition_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** LightsDefinition is a SpaceLoadDefinition that wraps the OpenStudio IDD object
+  /** LightsDefinition is a SpaceLoadDefinition that wraps the OpenStudio IDD object
  *  'OS_Lights_Definition'. Its fields are derived from the EnergyPlus IDD object
  *  'Lights'. \sa Lights
  */
-class MODEL_API LightsDefinition : public SpaceLoadDefinition {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  class MODEL_API LightsDefinition : public SpaceLoadDefinition
+  {
 
-  explicit LightsDefinition(const Model& model);
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  virtual ~LightsDefinition() {}
+    explicit LightsDefinition(const Model& model);
 
-  //@}
+    virtual ~LightsDefinition() {}
 
-  static IddObjectType iddObjectType();
+    //@}
 
-  static std::vector<std::string> validDesignLevelCalculationMethodValues();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    static std::vector<std::string> validDesignLevelCalculationMethodValues();
 
-  std::string designLevelCalculationMethod() const;
+    /** @name Getters */
+    //@{
 
-  boost::optional<double> lightingLevel() const;
+    std::string designLevelCalculationMethod() const;
+    boost::optional<double> lightingLevel() const;
+    boost::optional<double> wattsperSpaceFloorArea() const;
+    boost::optional<double> wattsperPerson() const;
 
-  boost::optional<double> wattsperSpaceFloorArea() const;
+    double fractionRadiant() const;
+    bool isFractionRadiantDefaulted() const;
 
-  boost::optional<double> wattsperPerson() const;
+    double fractionVisible() const;
+    bool isFractionVisibleDefaulted() const;
 
-  double fractionRadiant() const;
+    double returnAirFraction() const;
+    bool isReturnAirFractionDefaulted() const;
 
-  bool isFractionRadiantDefaulted() const;
+    bool returnAirFractionCalculatedfromPlenumTemperature() const;
+    bool isReturnAirFractionCalculatedfromPlenumTemperatureDefaulted() const;
 
-  double fractionVisible() const;
+    double returnAirFractionFunctionofPlenumTemperatureCoefficient1() const;
+    bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient1Defaulted() const;
 
-  bool isFractionVisibleDefaulted() const;
+    double returnAirFractionFunctionofPlenumTemperatureCoefficient2() const;
+    bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient2Defaulted() const;
 
-  double returnAirFraction() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool isReturnAirFractionDefaulted() const;
+    /// Sets designLevelCalculationMethod to 'LightingLevel', clears wattsperSpaceFloorArea
+    /// and wattsperPerson, and sets lightingLevel.
+    bool setLightingLevel(double lightingLevel);
 
-  bool returnAirFractionCalculatedfromPlenumTemperature() const;
+    /// Sets designLevelCalculationMethod to 'Watts/Area', clears lightingLevel
+    /// and wattsperPerson, and sets wattsperSpaceFloorArea.
+    bool setWattsperSpaceFloorArea(double wattsperSpaceFloorArea);
 
-  bool isReturnAirFractionCalculatedfromPlenumTemperatureDefaulted() const;
+    /// Sets designLevelCalculationMethod to 'Watts/Person', clears lightingLevel
+    /// and wattsperSpaceFloorArea, and sets wattsperPerson.
+    bool setWattsperPerson(double wattsperPerson);
 
-  double returnAirFractionFunctionofPlenumTemperatureCoefficient1() const;
+    bool setFractionRadiant(double fractionRadiant);
+    void resetFractionRadiant();
 
-  bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient1Defaulted() const;
+    bool setFractionVisible(double fractionVisible);
+    void resetFractionVisible();
 
-  double returnAirFractionFunctionofPlenumTemperatureCoefficient2() const;
+    bool setReturnAirFraction(double returnAirFraction);
+    void resetReturnAirFraction();
 
-  bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient2Defaulted() const;
+    bool setReturnAirFractionCalculatedfromPlenumTemperature(bool returnAirFractionCalculatedfromPlenumTemperature);
+    void resetReturnAirFractionCalculatedfromPlenumTemperature();
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient1(double returnAirFractionFunctionofPlenumTemperatureCoefficient1);
+    void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient1();
 
-  /// Sets designLevelCalculationMethod to 'LightingLevel', clears wattsperSpaceFloorArea
-  /// and wattsperPerson, and sets lightingLevel.
-  bool setLightingLevel(double lightingLevel);
+    bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient2(double returnAirFractionFunctionofPlenumTemperatureCoefficient2);
+    void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient2();
 
-  /// Sets designLevelCalculationMethod to 'Watts/Area', clears lightingLevel
-  /// and wattsperPerson, and sets wattsperSpaceFloorArea.
-  bool setWattsperSpaceFloorArea(double wattsperSpaceFloorArea);
+    //@}
+    /** @name Other */
+    //@{
 
-  /// Sets designLevelCalculationMethod to 'Watts/Person', clears lightingLevel
-  /// and wattsperSpaceFloorArea, and sets wattsperPerson.
-  bool setWattsperPerson(double wattsperPerson);
-
-  bool setFractionRadiant(double fractionRadiant);
-
-  void resetFractionRadiant();
-
-  bool setFractionVisible(double fractionVisible);
-
-  void resetFractionVisible();
-
-  bool setReturnAirFraction(double returnAirFraction);
-
-  void resetReturnAirFraction();
-
-  bool setReturnAirFractionCalculatedfromPlenumTemperature(bool returnAirFractionCalculatedfromPlenumTemperature);
-
-  void resetReturnAirFractionCalculatedfromPlenumTemperature();
-
-  bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient1(double returnAirFractionFunctionofPlenumTemperatureCoefficient1);
-
-  void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient1();
-
-  bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient2(double returnAirFractionFunctionofPlenumTemperatureCoefficient2);
-
-  void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient2();
-
-  //@}
-  /** @name Other */
-  //@{
-
-  /** Returns the lighting level represented by this definition, assuming floorArea (m^2) and
+    /** Returns the lighting level represented by this definition, assuming floorArea (m^2) and
    *  numPeople. */
-  double getLightingPower(double floorArea, double numPeople) const;
+    double getLightingPower(double floorArea, double numPeople) const;
 
-  /** Returns the watts/m^2 represented by this definition, assuming floorArea (m^2) and
+    /** Returns the watts/m^2 represented by this definition, assuming floorArea (m^2) and
    *  numPeople. */
-  double getPowerPerFloorArea(double floorArea, double numPeople) const;
+    double getPowerPerFloorArea(double floorArea, double numPeople) const;
 
-  /** Returns the watts/person represented by this definition, assuming floorArea (m^2) and
+    /** Returns the watts/person represented by this definition, assuming floorArea (m^2) and
    *  numPeople. */
-  double getPowerPerPerson(double floorArea, double numPeople) const;
+    double getPowerPerPerson(double floorArea, double numPeople) const;
 
-  /** If method is a \link validDesignLevelCalculationMethodValues valid design level
+    /** If method is a \link validDesignLevelCalculationMethodValues valid design level
    *  calculation method \endlink, changes this definition to an equivalent lighting level, under
    *  the assumptions of floorArea (m^2) and numPeople. */
-  bool setDesignLevelCalculationMethod(const std::string& method,
-                                       double floorArea,
-                                       double numPeople);
+    bool setDesignLevelCalculationMethod(const std::string& method, double floorArea, double numPeople);
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::LightsDefinition_Impl ImplType;
+    //@}
+   protected:
+    /// @cond
+    typedef detail::LightsDefinition_Impl ImplType;
 
-  friend class Model;
-  friend class openstudio::IdfObject;
+    friend class Model;
+    friend class openstudio::IdfObject;
 
-  explicit LightsDefinition(std::shared_ptr<detail::LightsDefinition_Impl> impl);
+    explicit LightsDefinition(std::shared_ptr<detail::LightsDefinition_Impl> impl);
 
-  /// @endcond
- private:
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.LightsDefinition");
+  };
 
-  REGISTER_LOGGER("openstudio.model.LightsDefinition");
-};
+  /** \relates LightsDefinition*/
+  typedef boost::optional<LightsDefinition> OptionalLightsDefinition;
 
-/** \relates LightsDefinition*/
-typedef boost::optional<LightsDefinition> OptionalLightsDefinition;
+  /** \relates LightsDefinition*/
+  typedef std::vector<LightsDefinition> LightsDefinitionVector;
 
-/** \relates LightsDefinition*/
-typedef std::vector<LightsDefinition> LightsDefinitionVector;
+}  // namespace model
+}  // namespace openstudio
 
-} // model
-} // openstudio
-
-#endif // MODEL_LIGHTSDEFINITION_HPP
+#endif  // MODEL_LIGHTSDEFINITION_HPP

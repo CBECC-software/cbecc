@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,416 +37,427 @@ namespace openstudio {
 
 namespace model {
 
-class ThermalZone;
-class Schedule;
-class HVACComponent;
-class UnitarySystemPerformanceMultispeed;
+  class ThermalZone;
+  class Schedule;
+  class HVACComponent;
+  class UnitarySystemPerformanceMultispeed;
 
-namespace detail {
+  namespace detail {
 
-  class AirLoopHVACUnitarySystem_Impl;
+    class AirLoopHVACUnitarySystem_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** AirLoopHVACUnitarySystem is a WaterToAirComponent that wraps the OpenStudio IDD object 'OS:AirLoopHVAC:UnitarySystem'. */
-class MODEL_API AirLoopHVACUnitarySystem : public ZoneHVACComponent {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** AirLoopHVACUnitarySystem is a WaterToAirComponent that wraps the OpenStudio IDD object 'OS:AirLoopHVAC:UnitarySystem'. */
+  class MODEL_API AirLoopHVACUnitarySystem : public ZoneHVACComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit AirLoopHVACUnitarySystem(const Model& model);
+    explicit AirLoopHVACUnitarySystem(const Model& model);
 
-  virtual ~AirLoopHVACUnitarySystem() {}
+    virtual ~AirLoopHVACUnitarySystem() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> controlTypeValues();
+    static std::vector<std::string> controlTypeValues();
 
-  static std::vector<std::string> dehumidificationControlTypeValues();
+    static std::vector<std::string> dehumidificationControlTypeValues();
 
-  static std::vector<std::string> fanPlacementValues();
+    static std::vector<std::string> fanPlacementValues();
 
-  static std::vector<std::string> latentLoadControlValues();
+    static std::vector<std::string> latentLoadControlValues();
 
-  static std::vector<std::string> supplyAirFlowRateMethodDuringCoolingOperationValues();
+    static std::vector<std::string> supplyAirFlowRateMethodDuringCoolingOperationValues();
 
-  static std::vector<std::string> supplyAirFlowRateMethodDuringHeatingOperationValues();
+    static std::vector<std::string> supplyAirFlowRateMethodDuringHeatingOperationValues();
 
-  static std::vector<std::string> supplyAirFlowRateMethodWhenNoCoolingorHeatingisRequiredValues();
+    static std::vector<std::string> supplyAirFlowRateMethodWhenNoCoolingorHeatingisRequiredValues();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  std::string controlType() const;
+    std::string controlType() const;
 
-  bool isControlTypeDefaulted() const;
+    bool isControlTypeDefaulted() const;
 
-  boost::optional<ThermalZone> controllingZoneorThermostatLocation() const;
+    boost::optional<ThermalZone> controllingZoneorThermostatLocation() const;
 
-  std::string dehumidificationControlType() const;
+    std::string dehumidificationControlType() const;
 
-  bool isDehumidificationControlTypeDefaulted() const;
+    bool isDehumidificationControlTypeDefaulted() const;
 
-  boost::optional<Schedule> availabilitySchedule() const;
+    boost::optional<Schedule> availabilitySchedule() const;
 
-  boost::optional<HVACComponent> supplyFan() const;
+    boost::optional<HVACComponent> supplyFan() const;
 
-  boost::optional<std::string> fanPlacement() const;
+    boost::optional<std::string> fanPlacement() const;
 
-  boost::optional<Schedule> supplyAirFanOperatingModeSchedule() const;
+    boost::optional<Schedule> supplyAirFanOperatingModeSchedule() const;
 
-  boost::optional<HVACComponent> heatingCoil() const;
+    boost::optional<HVACComponent> heatingCoil() const;
 
-  double dXHeatingCoilSizingRatio() const;
+    double dXHeatingCoilSizingRatio() const;
 
-  bool isDXHeatingCoilSizingRatioDefaulted() const;
+    bool isDXHeatingCoilSizingRatioDefaulted() const;
 
-  boost::optional<HVACComponent> coolingCoil() const;
+    boost::optional<HVACComponent> coolingCoil() const;
 
-  bool useDOASDXCoolingCoil() const;
+    bool useDOASDXCoolingCoil() const;
 
-  bool isUseDOASDXCoolingCoilDefaulted() const;
+    bool isUseDOASDXCoolingCoilDefaulted() const;
 
-  /** As of EnergyPlus version 8.7.0 this field maps to MinimumSupplyAirTemperature **/
-  double dOASDXCoolingCoilLeavingMinimumAirTemperature() const;
+    /** As of EnergyPlus version 8.7.0 this field maps to MinimumSupplyAirTemperature **/
+    double dOASDXCoolingCoilLeavingMinimumAirTemperature() const;
 
-  bool isDOASDXCoolingCoilLeavingMinimumAirTemperatureDefaulted() const;
+    // Note JM 2019-09-27: I would probably make this field \required instead and remove this.
+    bool isDOASDXCoolingCoilLeavingMinimumAirTemperatureDefaulted() const;
 
-  std::string latentLoadControl() const;
+    bool isDOASDXCoolingCoilLeavingMinimumAirTemperatureAutosized() const;
 
-  bool isLatentLoadControlDefaulted() const;
+    std::string latentLoadControl() const;
 
-  boost::optional<HVACComponent> supplementalHeatingCoil() const;
+    bool isLatentLoadControlDefaulted() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate Method" **/
-  boost::optional<std::string> supplyAirFlowRateMethodDuringCoolingOperation() const;
+    boost::optional<HVACComponent> supplementalHeatingCoil() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate" **/
-  boost::optional<double> supplyAirFlowRateDuringCoolingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate Method" **/
+    boost::optional<std::string> supplyAirFlowRateMethodDuringCoolingOperation() const;
 
-  bool isSupplyAirFlowRateDuringCoolingOperationAutosized() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate" **/
+    boost::optional<double> supplyAirFlowRateDuringCoolingOperation() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate Per Floor Area" **/
-  boost::optional<double> supplyAirFlowRatePerFloorAreaDuringCoolingOperation() const;
+    bool isSupplyAirFlowRateDuringCoolingOperationAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Fraction of Autosized Cooling Supply Air Flow Rate" **/
-  boost::optional<double> fractionofAutosizedDesignCoolingSupplyAirFlowRate() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate Per Floor Area" **/
+    boost::optional<double> supplyAirFlowRatePerFloorAreaDuringCoolingOperation() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate Per Unit of Capacity" **/
-  boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Fraction of Autosized Cooling Supply Air Flow Rate" **/
+    boost::optional<double> fractionofAutosizedDesignCoolingSupplyAirFlowRate() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate Method" **/
-  boost::optional<std::string> supplyAirFlowRateMethodDuringHeatingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate Per Unit of Capacity" **/
+    boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate" **/
-  boost::optional<double> supplyAirFlowRateDuringHeatingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate Method" **/
+    boost::optional<std::string> supplyAirFlowRateMethodDuringHeatingOperation() const;
 
-  bool isSupplyAirFlowRateDuringHeatingOperationAutosized() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate" **/
+    boost::optional<double> supplyAirFlowRateDuringHeatingOperation() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate Per Floor Area" **/
-  boost::optional<double> supplyAirFlowRatePerFloorAreaduringHeatingOperation() const;
+    bool isSupplyAirFlowRateDuringHeatingOperationAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Fraction of Autosized Heating Supply Air Flow Rate" **/
-  boost::optional<double> fractionofAutosizedDesignHeatingSupplyAirFlowRate() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate Per Floor Area" **/
+    boost::optional<double> supplyAirFlowRatePerFloorAreaduringHeatingOperation() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate Per Unit of Capacity" **/
-  boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Fraction of Autosized Heating Supply Air Flow Rate" **/
+    boost::optional<double> fractionofAutosizedDesignHeatingSupplyAirFlowRate() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Method" **/
-  boost::optional<std::string> supplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate Per Unit of Capacity" **/
+    boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate" **/
-  boost::optional<double> supplyAirFlowRateWhenNoCoolingorHeatingisRequired() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Method" **/
+    boost::optional<std::string> supplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired() const;
 
-  bool isSupplyAirFlowRateWhenNoCoolingorHeatingisRequiredAutosized() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate" **/
+    boost::optional<double> supplyAirFlowRateWhenNoCoolingorHeatingisRequired() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Per Floor Area" **/
-  boost::optional<double> supplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired() const;
+    bool isSupplyAirFlowRateWhenNoCoolingorHeatingisRequiredAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Fraction of Autosized Cooling Supply Air Flow Rate" **/
-  boost::optional<double> fractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Per Floor Area" **/
+    boost::optional<double> supplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Fraction of Autosized Heating Supply Air Flow Rate" **/
-  boost::optional<double> fractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Fraction of Autosized Cooling Supply Air Flow Rate" **/
+    boost::optional<double> fractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Per Unit of Capacity During Cooling Operation" **/
-  boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Fraction of Autosized Heating Supply Air Flow Rate" **/
+    boost::optional<double> fractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Per Unit of Capacity During Heating Operation" **/
-  boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Per Unit of Capacity During Cooling Operation" **/
+    boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired() const;
 
-  boost::optional<double> maximumSupplyAirTemperature() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate Per Unit of Capacity During Heating Operation" **/
+    boost::optional<double> designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired() const;
 
-  bool isMaximumSupplyAirTemperatureDefaulted() const;
+    boost::optional<double> maximumSupplyAirTemperature() const;
 
-  bool isMaximumSupplyAirTemperatureAutosized() const;
+    bool isMaximumSupplyAirTemperatureDefaulted() const;
 
-  double maximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation() const;
+    bool isMaximumSupplyAirTemperatureAutosized() const;
 
-  bool isMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperationDefaulted() const;
+    double maximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation() const;
 
-  boost::optional<std::string> outdoorDryBulbTemperatureSensorNodeName() const;
+    bool isMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperationDefaulted() const;
 
-  double maximumCyclingRate() const;
+    boost::optional<std::string> outdoorDryBulbTemperatureSensorNodeName() const;
 
-  bool isMaximumCyclingRateDefaulted() const;
+    double maximumCyclingRate() const;
 
-  double heatPumpTimeConstant() const;
+    bool isMaximumCyclingRateDefaulted() const;
 
-  bool isHeatPumpTimeConstantDefaulted() const;
+    double heatPumpTimeConstant() const;
 
-  double fractionofOnCyclePowerUse() const;
+    bool isHeatPumpTimeConstantDefaulted() const;
 
-  bool isFractionofOnCyclePowerUseDefaulted() const;
+    double fractionofOnCyclePowerUse() const;
 
-  double heatPumpFanDelayTime() const;
+    bool isFractionofOnCyclePowerUseDefaulted() const;
 
-  bool isHeatPumpFanDelayTimeDefaulted() const;
+    double heatPumpFanDelayTime() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Ancillary On-Cycle Electric Power" **/
-  double ancilliaryOnCycleElectricPower() const;
+    bool isHeatPumpFanDelayTimeDefaulted() const;
 
-  bool isAncilliaryOnCycleElectricPowerDefaulted() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Ancillary On-Cycle Electric Power" **/
+    double ancilliaryOnCycleElectricPower() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Ancillary Off-Cycle Electric Power" **/
-  double ancilliaryOffCycleElectricPower() const;
+    bool isAncilliaryOnCycleElectricPowerDefaulted() const;
 
-  bool isAncilliaryOffCycleElectricPowerDefaulted() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Ancillary Off-Cycle Electric Power" **/
+    double ancilliaryOffCycleElectricPower() const;
 
-  // double designHeatRecoveryWaterFlowRate() const;
+    bool isAncilliaryOffCycleElectricPowerDefaulted() const;
 
-  // bool isDesignHeatRecoveryWaterFlowRateDefaulted() const;
+    // double designHeatRecoveryWaterFlowRate() const;
 
-  // double maximumTemperatureforHeatRecovery() const;
+    // bool isDesignHeatRecoveryWaterFlowRateDefaulted() const;
 
-  // bool isMaximumTemperatureforHeatRecoveryDefaulted() const;
+    // double maximumTemperatureforHeatRecovery() const;
 
-  boost::optional<UnitarySystemPerformanceMultispeed> designSpecificationMultispeedObject() const;
+    // bool isMaximumTemperatureforHeatRecoveryDefaulted() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    boost::optional<UnitarySystemPerformanceMultispeed> designSpecificationMultispeedObject() const;
 
-  bool setControlType(std::string controlType);
+    //@}
+    /** @name Setters */
+    //@{
 
-  void resetControlType();
+    bool setControlType(std::string controlType);
 
-  bool setControllingZoneorThermostatLocation(const ThermalZone& thermalZone);
+    void resetControlType();
 
-  void resetControllingZoneorThermostatLocation();
+    bool setControllingZoneorThermostatLocation(const ThermalZone& thermalZone);
 
-  bool setDehumidificationControlType(std::string dehumidificationControlType);
+    void resetControllingZoneorThermostatLocation();
 
-  void resetDehumidificationControlType();
+    bool setDehumidificationControlType(std::string dehumidificationControlType);
 
-  bool setAvailabilitySchedule(Schedule& schedule);
+    void resetDehumidificationControlType();
 
-  void resetAvailabilitySchedule();
+    bool setAvailabilitySchedule(Schedule& schedule);
 
-  bool setSupplyFan(const HVACComponent& supplyFan);
+    void resetAvailabilitySchedule();
 
-  void resetSupplyFan();
+    bool setSupplyFan(const HVACComponent& supplyFan);
 
-  bool setFanPlacement(std::string fanPlacement);
+    void resetSupplyFan();
 
-  void resetFanPlacement();
+    bool setFanPlacement(std::string fanPlacement);
 
-  bool setSupplyAirFanOperatingModeSchedule(Schedule& schedule);
+    void resetFanPlacement();
 
-  void resetSupplyAirFanOperatingModeSchedule();
+    bool setSupplyAirFanOperatingModeSchedule(Schedule& schedule);
 
-  bool setHeatingCoil(const HVACComponent& heatingCoil);
+    void resetSupplyAirFanOperatingModeSchedule();
 
-  void resetHeatingCoil();
+    bool setHeatingCoil(const HVACComponent& heatingCoil);
 
-  bool setDXHeatingCoilSizingRatio(double dXHeatingCoilSizingRatio);
+    void resetHeatingCoil();
 
-  void resetDXHeatingCoilSizingRatio();
+    bool setDXHeatingCoilSizingRatio(double dXHeatingCoilSizingRatio);
 
-  bool setCoolingCoil(const HVACComponent& coolingCoil);
+    void resetDXHeatingCoilSizingRatio();
 
-  void resetCoolingCoil();
+    bool setCoolingCoil(const HVACComponent& coolingCoil);
 
-  bool setUseDOASDXCoolingCoil(bool useDOASDXCoolingCoil);
+    void resetCoolingCoil();
 
-  void resetUseDOASDXCoolingCoil();
+    bool setUseDOASDXCoolingCoil(bool useDOASDXCoolingCoil);
 
-  /** As of EnergyPlus version 8.7.0 this field maps to MinimumSupplyAirTemperature **/
-  bool setDOASDXCoolingCoilLeavingMinimumAirTemperature(double dOASDXCoolingCoilLeavingMinimumAirTemperature);
+    void resetUseDOASDXCoolingCoil();
 
-  void resetDOASDXCoolingCoilLeavingMinimumAirTemperature();
+    /** As of EnergyPlus version 8.7.0 this field maps to MinimumSupplyAirTemperature **/
+    bool setDOASDXCoolingCoilLeavingMinimumAirTemperature(double dOASDXCoolingCoilLeavingMinimumAirTemperature);
 
-  bool setLatentLoadControl(std::string latentLoadControl);
+    void autosizeDOASDXCoolingCoilLeavingMinimumAirTemperature();
 
-  void resetLatentLoadControl();
+    // Would remove
+    void resetDOASDXCoolingCoilLeavingMinimumAirTemperature();
 
-  bool setSupplementalHeatingCoil(const HVACComponent& supplementalHeatingCoil);
+    bool setLatentLoadControl(std::string latentLoadControl);
 
-  void resetSupplementalHeatingCoil();
+    void resetLatentLoadControl();
 
-  bool setSupplyAirFlowRateMethodDuringCoolingOperation(std::string supplyAirFlowRateMethodDuringCoolingOperation);
+    bool setSupplementalHeatingCoil(const HVACComponent& supplementalHeatingCoil);
 
-  void resetSupplyAirFlowRateMethodDuringCoolingOperation();
+    void resetSupplementalHeatingCoil();
 
-  bool setSupplyAirFlowRateDuringCoolingOperation(double supplyAirFlowRateDuringCoolingOperation);
+    bool setSupplyAirFlowRateMethodDuringCoolingOperation(std::string supplyAirFlowRateMethodDuringCoolingOperation);
 
-  void resetSupplyAirFlowRateDuringCoolingOperation();
+    void resetSupplyAirFlowRateMethodDuringCoolingOperation();
 
-  void autosizeSupplyAirFlowRateDuringCoolingOperation();
+    bool setSupplyAirFlowRateDuringCoolingOperation(double supplyAirFlowRateDuringCoolingOperation);
 
-  bool setSupplyAirFlowRatePerFloorAreaDuringCoolingOperation(double supplyAirFlowRatePerFloorAreaDuringCoolingOperation);
+    void resetSupplyAirFlowRateDuringCoolingOperation();
 
-  void resetSupplyAirFlowRatePerFloorAreaDuringCoolingOperation();
+    void autosizeSupplyAirFlowRateDuringCoolingOperation();
 
-  bool setFractionofAutosizedDesignCoolingSupplyAirFlowRate(double fractionofAutosizedDesignCoolingSupplyAirFlowRate);
+    bool setSupplyAirFlowRatePerFloorAreaDuringCoolingOperation(double supplyAirFlowRatePerFloorAreaDuringCoolingOperation);
 
-  void resetFractionofAutosizedDesignCoolingSupplyAirFlowRate();
+    void resetSupplyAirFlowRatePerFloorAreaDuringCoolingOperation();
 
-  bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation(double designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation);
+    bool setFractionofAutosizedDesignCoolingSupplyAirFlowRate(double fractionofAutosizedDesignCoolingSupplyAirFlowRate);
 
-  void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation();
+    void resetFractionofAutosizedDesignCoolingSupplyAirFlowRate();
 
-  bool setSupplyAirFlowRateMethodDuringHeatingOperation(std::string supplyAirFlowRateMethodDuringHeatingOperation);
+    bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation(double designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation);
 
-  void resetSupplyAirFlowRateMethodDuringHeatingOperation();
+    void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperation();
 
-  bool setSupplyAirFlowRateDuringHeatingOperation(double supplyAirFlowRateDuringHeatingOperation);
+    bool setSupplyAirFlowRateMethodDuringHeatingOperation(std::string supplyAirFlowRateMethodDuringHeatingOperation);
 
-  void resetSupplyAirFlowRateDuringHeatingOperation();
+    void resetSupplyAirFlowRateMethodDuringHeatingOperation();
 
-  void autosizeSupplyAirFlowRateDuringHeatingOperation();
+    bool setSupplyAirFlowRateDuringHeatingOperation(double supplyAirFlowRateDuringHeatingOperation);
 
-  bool setSupplyAirFlowRatePerFloorAreaduringHeatingOperation(double supplyAirFlowRatePerFloorAreaduringHeatingOperation);
+    void resetSupplyAirFlowRateDuringHeatingOperation();
 
-  void resetSupplyAirFlowRatePerFloorAreaduringHeatingOperation();
+    void autosizeSupplyAirFlowRateDuringHeatingOperation();
 
-  bool setFractionofAutosizedDesignHeatingSupplyAirFlowRate(double fractionofAutosizedDesignHeatingSupplyAirFlowRate);
+    bool setSupplyAirFlowRatePerFloorAreaduringHeatingOperation(double supplyAirFlowRatePerFloorAreaduringHeatingOperation);
 
-  void resetFractionofAutosizedDesignHeatingSupplyAirFlowRate();
+    void resetSupplyAirFlowRatePerFloorAreaduringHeatingOperation();
 
-  bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation(double designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation);
+    bool setFractionofAutosizedDesignHeatingSupplyAirFlowRate(double fractionofAutosizedDesignHeatingSupplyAirFlowRate);
 
-  void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation();
+    void resetFractionofAutosizedDesignHeatingSupplyAirFlowRate();
 
-  bool setSupplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired(std::string supplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired);
+    bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation(double designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation);
 
-  void resetSupplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired();
+    void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperation();
 
-  bool setSupplyAirFlowRateWhenNoCoolingorHeatingisRequired(double supplyAirFlowRateWhenNoCoolingorHeatingisRequired);
+    bool setSupplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired(std::string supplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired);
 
-  void resetSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
+    void resetSupplyAirFlowRateMethodWhenNoCoolingorHeatingisRequired();
 
-  void autosizeSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
+    bool setSupplyAirFlowRateWhenNoCoolingorHeatingisRequired(double supplyAirFlowRateWhenNoCoolingorHeatingisRequired);
 
-  bool setSupplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired(double supplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired);
+    void resetSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
 
-  void resetSupplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired();
+    void autosizeSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
 
-  bool setFractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired(double fractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired);
+    bool setSupplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired(double supplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired);
 
-  void resetFractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
+    void resetSupplyAirFlowRatePerFloorAreaWhenNoCoolingorHeatingisRequired();
 
-  bool setFractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired(double fractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired);
+    bool setFractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired(
+      double fractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired);
 
-  void resetFractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
+    void resetFractionofAutosizedDesignCoolingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
 
-  bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired(double designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired);
+    bool setFractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired(
+      double fractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired);
 
-  void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired();
+    void resetFractionofAutosizedDesignHeatingSupplyAirFlowRateWhenNoCoolingorHeatingisRequired();
 
-  bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired(double designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired);
+    bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired(
+      double designSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired);
 
-  void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired();
+    void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringCoolingOperationWhenNoCoolingorHeatingisRequired();
 
-  bool setMaximumSupplyAirTemperature(double maximumSupplyAirTemperature);
+    bool setDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired(
+      double designSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired);
 
-  void resetMaximumSupplyAirTemperature();
+    void resetDesignSupplyAirFlowRatePerUnitofCapacityDuringHeatingOperationWhenNoCoolingorHeatingisRequired();
 
-  void autosizeMaximumSupplyAirTemperature();
+    bool setMaximumSupplyAirTemperature(double maximumSupplyAirTemperature);
 
-  bool setMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation(double maximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation);
+    void resetMaximumSupplyAirTemperature();
 
-  void resetMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation();
+    void autosizeMaximumSupplyAirTemperature();
 
-  bool setOutdoorDryBulbTemperatureSensorNodeName(std::string outdoorDryBulbTemperatureSensorNodeName);
+    bool setMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation(double maximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation);
 
-  void resetOutdoorDryBulbTemperatureSensorNodeName();
+    void resetMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation();
 
-  bool setMaximumCyclingRate(double maximumCyclingRate);
+    bool setOutdoorDryBulbTemperatureSensorNodeName(std::string outdoorDryBulbTemperatureSensorNodeName);
 
-  void resetMaximumCyclingRate();
+    void resetOutdoorDryBulbTemperatureSensorNodeName();
 
-  bool setHeatPumpTimeConstant(double heatPumpTimeConstant);
+    bool setMaximumCyclingRate(double maximumCyclingRate);
 
-  void resetHeatPumpTimeConstant();
+    void resetMaximumCyclingRate();
 
-  bool setFractionofOnCyclePowerUse(double fractionofOnCyclePowerUse);
+    bool setHeatPumpTimeConstant(double heatPumpTimeConstant);
 
-  void resetFractionofOnCyclePowerUse();
+    void resetHeatPumpTimeConstant();
 
-  bool setHeatPumpFanDelayTime(double heatPumpFanDelayTime);
+    bool setFractionofOnCyclePowerUse(double fractionofOnCyclePowerUse);
 
-  void resetHeatPumpFanDelayTime();
+    void resetFractionofOnCyclePowerUse();
 
-  bool setAncilliaryOnCycleElectricPower(double ancilliaryOnCycleElectricPower);
+    bool setHeatPumpFanDelayTime(double heatPumpFanDelayTime);
 
-  void resetAncilliaryOnCycleElectricPower();
+    void resetHeatPumpFanDelayTime();
 
-  bool setAncilliaryOffCycleElectricPower(double ancilliaryOffCycleElectricPower);
+    bool setAncilliaryOnCycleElectricPower(double ancilliaryOnCycleElectricPower);
 
-  void resetAncilliaryOffCycleElectricPower();
+    void resetAncilliaryOnCycleElectricPower();
 
-  // bool setDesignHeatRecoveryWaterFlowRate(double designHeatRecoveryWaterFlowRate);
+    bool setAncilliaryOffCycleElectricPower(double ancilliaryOffCycleElectricPower);
 
-  // void resetDesignHeatRecoveryWaterFlowRate();
+    void resetAncilliaryOffCycleElectricPower();
 
-  // bool setMaximumTemperatureforHeatRecovery(double maximumTemperatureforHeatRecovery);
+    // bool setDesignHeatRecoveryWaterFlowRate(double designHeatRecoveryWaterFlowRate);
 
-  // void resetMaximumTemperatureforHeatRecovery();
+    // void resetDesignHeatRecoveryWaterFlowRate();
 
-  bool setDesignSpecificationMultispeedObject(const UnitarySystemPerformanceMultispeed& unitarySystemPerformace);
+    // bool setMaximumTemperatureforHeatRecovery(double maximumTemperatureforHeatRecovery);
 
-  void resetDesignSpecificationMultispeedObject();
+    // void resetMaximumTemperatureforHeatRecovery();
 
-  //@}
-  /** @name Other */
-  //@{
+    bool setDesignSpecificationMultispeedObject(const UnitarySystemPerformanceMultispeed& unitarySystemPerformace);
 
-  boost::optional<double> autosizedSupplyAirFlowRateDuringCoolingOperation() const ;
+    void resetDesignSpecificationMultispeedObject();
 
-  boost::optional<double> autosizedSupplyAirFlowRateDuringHeatingOperation() const ;
+    //@}
+    /** @name Other */
+    //@{
 
-  boost::optional<double> autosizedSupplyAirFlowRateWhenNoCoolingorHeatingisRequired() const ;
+    boost::optional<double> autosizedSupplyAirFlowRateDuringCoolingOperation() const;
 
-  boost::optional<double> autosizedMaximumSupplyAirTemperature() const ;
+    boost::optional<double> autosizedSupplyAirFlowRateDuringHeatingOperation() const;
 
+    boost::optional<double> autosizedSupplyAirFlowRateWhenNoCoolingorHeatingisRequired() const;
 
+    boost::optional<double> autosizedMaximumSupplyAirTemperature() const;
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::AirLoopHVACUnitarySystem_Impl ImplType;
+    boost::optional<double> autosizedDOASDXCoolingCoilLeavingMinimumAirTemperature() const;
 
-  explicit AirLoopHVACUnitarySystem(std::shared_ptr<detail::AirLoopHVACUnitarySystem_Impl> impl);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::AirLoopHVACUnitarySystem_Impl ImplType;
 
-  friend class detail::AirLoopHVACUnitarySystem_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.AirLoopHVACUnitarySystem");
-};
+    explicit AirLoopHVACUnitarySystem(std::shared_ptr<detail::AirLoopHVACUnitarySystem_Impl> impl);
 
-/** \relates AirLoopHVACUnitarySystem*/
-typedef boost::optional<AirLoopHVACUnitarySystem> OptionalAirLoopHVACUnitarySystem;
+    friend class detail::AirLoopHVACUnitarySystem_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.AirLoopHVACUnitarySystem");
+  };
 
-/** \relates AirLoopHVACUnitarySystem*/
-typedef std::vector<AirLoopHVACUnitarySystem> AirLoopHVACUnitarySystemVector;
+  /** \relates AirLoopHVACUnitarySystem*/
+  typedef boost::optional<AirLoopHVACUnitarySystem> OptionalAirLoopHVACUnitarySystem;
 
-} // model
-} // openstudio
+  /** \relates AirLoopHVACUnitarySystem*/
+  typedef std::vector<AirLoopHVACUnitarySystem> AirLoopHVACUnitarySystemVector;
 
-#endif // MODEL_AIRLOOPHVACUNITARYSYSTEM_HPP
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_AIRLOOPHVACUNITARYSYSTEM_HPP

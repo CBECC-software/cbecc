@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -38,151 +38,157 @@
 namespace openstudio {
 namespace model {
 
-class Schedule;
-class Curve;
+  class Schedule;
+  class Curve;
 
-namespace detail {
-  class EvaporativeCoolerDirectResearchSpecial_Impl;
-} // detail
+  namespace detail {
+    class EvaporativeCoolerDirectResearchSpecial_Impl;
+  }  // namespace detail
 
-/** EvaporativeCoolerDirectResearchSpecial is a StraightComponent that wraps the
+  /** EvaporativeCoolerDirectResearchSpecial is a StraightComponent that wraps the
  *  IDD object named "OS:EvaporativeCooler:Direct:ResearchSpecial". */
-class MODEL_API EvaporativeCoolerDirectResearchSpecial : public StraightComponent {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  class MODEL_API EvaporativeCoolerDirectResearchSpecial : public StraightComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /** Constructs a new EvaporativeCoolerDirectResearchSpecial object and places it inside the
+    /** Constructs a new EvaporativeCoolerDirectResearchSpecial object and places it inside the
    *  model.  The object is fully initialized with all companion objects.
    */
-  explicit EvaporativeCoolerDirectResearchSpecial(const Model& model, Schedule & schedule);
+    explicit EvaporativeCoolerDirectResearchSpecial(const Model& model, Schedule& schedule);
 
-  virtual ~EvaporativeCoolerDirectResearchSpecial() {}
+    virtual ~EvaporativeCoolerDirectResearchSpecial() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters and Setters */
-  //@{
+    /** @name Getters and Setters */
+    //@{
 
-  /** Returns the Schedule referred to by the Availability Schedule field. **/
-  Schedule availabilitySchedule() const;
+    /** Returns the Schedule referred to by the Availability Schedule field. **/
+    Schedule availabilitySchedule() const;
 
-  /** \deprecated */
-  Schedule availableSchedule() const;
+    /** \deprecated */
+    Schedule availableSchedule() const;
 
-  /** Sets the Schedule referred to by the AvailabilitySchedule field. **/
-  bool setAvailabilitySchedule(Schedule& schedule);
+    /** Sets the Schedule referred to by the AvailabilitySchedule field. **/
+    bool setAvailabilitySchedule(Schedule& schedule);
 
-  /** \deprecated */
-  bool setAvailableSchedule(Schedule& schedule);
+    /** \deprecated */
+    bool setAvailableSchedule(Schedule& schedule);
 
-  /** Returns the value of the CoolerEffectiveness field. **/
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooler Design Effectiveness" **/
-  double coolerEffectiveness() const;
+    /** Returns the value of the CoolerDesignEffectiveness field. **/
+    double coolerDesignEffectiveness() const;
 
-  /** Sets the value of the CoolerEffectiveness field. **/
-  bool setCoolerEffectiveness( double value );
+    /** Deprecated: In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooler Design Effectiveness" **/
+    double coolerEffectiveness() const;
 
-  /** Returns the value of the RecirculatingWaterPumpPowerConsumption field. **/
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Recirculating Water Pump Design Power" **/
-  boost::optional<double> recirculatingWaterPumpPowerConsumption() const;
+    /** Sets the value of the CoolerDesignEffectiveness field. **/
+    bool setCoolerDesignEffectiveness(double value);
 
-  /** Sets the value of the RecirculatingWaterPumpPowerConsumption field. **/
-  bool setRecirculatingWaterPumpPowerConsumption( double value );
+    /** Deprecated: In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooler Design Effectiveness" **/
+    bool setCoolerEffectiveness(double value);
 
-  void autosizeRecirculatingWaterPumpPowerConsumption();
+    /** Returns the value of the RecirculatingWaterPumpPowerConsumption field. **/
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Recirculating Water Pump Design Power" **/
+    boost::optional<double> recirculatingWaterPumpPowerConsumption() const;
 
-  bool isRecirculatingWaterPumpPowerConsumptionAutosized() const;
+    /** Sets the value of the RecirculatingWaterPumpPowerConsumption field. **/
+    bool setRecirculatingWaterPumpPowerConsumption(double value);
 
-  /** Returns the value of the PrimaryAirDesignFlowRate field. **/
-  boost::optional<double> primaryAirDesignFlowRate() const;
+    void autosizeRecirculatingWaterPumpPowerConsumption();
 
-  /** Sets the value of the PrimaryAirDesignFlowRate field. **/
-  bool setPrimaryAirDesignFlowRate( double value );
+    bool isRecirculatingWaterPumpPowerConsumptionAutosized() const;
 
-  void autosizePrimaryAirDesignFlowRate();
+    /** Returns the value of the PrimaryAirDesignFlowRate field. **/
+    boost::optional<double> primaryAirDesignFlowRate() const;
 
-  bool isPrimaryAirDesignFlowRateAutosized() const;
+    /** Sets the value of the PrimaryAirDesignFlowRate field. **/
+    bool setPrimaryAirDesignFlowRate(double value);
 
-  /** Returns the Node referred to by the SensorNodeName field. **/
-  boost::optional<Node> sensorNode() const;
+    void autosizePrimaryAirDesignFlowRate();
 
-  /** Sets the Node referred to by the SensorNodeName field. **/
-  bool setSensorNode( const Node & node );
+    bool isPrimaryAirDesignFlowRateAutosized() const;
 
-  /** Returns the value of the DriftLossFraction field. **/
-  double driftLossFraction() const;
+    /** Returns the Node referred to by the SensorNodeName field. **/
+    boost::optional<Node> sensorNode() const;
 
-  /** Sets the value of the DriftLossFraction field. **/
-  bool setDriftLossFraction( double value );
+    /** Sets the Node referred to by the SensorNodeName field. **/
+    bool setSensorNode(const Node& node);
 
-  /** Returns the value of the BlowdownConcentrationRatio field. **/
-  double blowdownConcentrationRatio() const;
+    /** Returns the value of the DriftLossFraction field. **/
+    double driftLossFraction() const;
 
-  /** Sets the value of the BlowdownConcentrationRatio field. **/
-  bool setBlowdownConcentrationRatio( double value );
+    /** Sets the value of the DriftLossFraction field. **/
+    bool setDriftLossFraction(double value);
 
-  boost::optional<Curve> effectivenessFlowRatioModifierCurve() const;
+    /** Returns the value of the BlowdownConcentrationRatio field. **/
+    double blowdownConcentrationRatio() const;
 
-  bool setEffectivenessFlowRatioModifierCurve(const Curve& curve);
+    /** Sets the value of the BlowdownConcentrationRatio field. **/
+    bool setBlowdownConcentrationRatio(double value);
 
-  void resetEffectivenessFlowRatioModifierCurve();
+    boost::optional<Curve> effectivenessFlowRatioModifierCurve() const;
 
-  double waterPumpPowerSizingFactor() const;
+    bool setEffectivenessFlowRatioModifierCurve(const Curve& curve);
 
-  bool setWaterPumpPowerSizingFactor(double waterPumpPowerSizingFactor);
+    void resetEffectivenessFlowRatioModifierCurve();
 
-  boost::optional<Curve> waterPumpPowerModifierCurve() const;
+    double waterPumpPowerSizingFactor() const;
 
-  bool setWaterPumpPowerModifierCurve(const Curve& curve);
+    bool setWaterPumpPowerSizingFactor(double waterPumpPowerSizingFactor);
 
-  void resetWaterPumpPowerModifierCurve();
+    boost::optional<Curve> waterPumpPowerModifierCurve() const;
 
-  /** Sets the minimum and maximum operation temperatures **/
+    bool setWaterPumpPowerModifierCurve(const Curve& curve);
 
-  /** Returns the value of the EvaporativeOperationMinimumDrybulbTemperature field. **/
-  double evaporativeOperationMinimumDrybulbTemperature() const;
-  /** Sets the value of the EvaporativeOperationMinimumDrybulbTemperature field. **/
-  bool setEvaporativeOperationMinimumDrybulbTemperature(double evaporativeOperationMinimumDrybulbTemperature);
+    void resetWaterPumpPowerModifierCurve();
 
-  /** Returns the value of the EvaporativeOperationMaximumLimitWetbulbTemperature field. **/
-  double evaporativeOperationMaximumLimitWetbulbTemperature() const;
-  /** Sets the value of the EvaporativeOperationMaximumLimitWetbulbTemperature field. **/
-  bool setEvaporativeOperationMaximumLimitWetbulbTemperature(double evaporativeOperationMaximumLimitWetbulbTemperature);
+    /** Sets the minimum and maximum operation temperatures **/
 
-  /** Returns the value of the EvaporativeOperationMaximumLimitDrybulbTemperature field. **/
-  double evaporativeOperationMaximumLimitDrybulbTemperature() const;
-  /** Sets the value of the EvaporativeOperationMaximumLimitDrybulbTemperature field. **/
-  bool setEvaporativeOperationMaximumLimitDrybulbTemperature(double evaporativeOperationMaximumLimitDrybulbTemperature);
+    /** Returns the value of the EvaporativeOperationMinimumDrybulbTemperature field. **/
+    double evaporativeOperationMinimumDrybulbTemperature() const;
+    /** Sets the value of the EvaporativeOperationMinimumDrybulbTemperature field. **/
+    bool setEvaporativeOperationMinimumDrybulbTemperature(double evaporativeOperationMinimumDrybulbTemperature);
 
+    /** Returns the value of the EvaporativeOperationMaximumLimitWetbulbTemperature field. **/
+    double evaporativeOperationMaximumLimitWetbulbTemperature() const;
+    /** Sets the value of the EvaporativeOperationMaximumLimitWetbulbTemperature field. **/
+    bool setEvaporativeOperationMaximumLimitWetbulbTemperature(double evaporativeOperationMaximumLimitWetbulbTemperature);
 
-  boost::optional<double> autosizedRecirculatingWaterPumpPowerConsumption() const ;
+    /** Returns the value of the EvaporativeOperationMaximumLimitDrybulbTemperature field. **/
+    double evaporativeOperationMaximumLimitDrybulbTemperature() const;
+    /** Sets the value of the EvaporativeOperationMaximumLimitDrybulbTemperature field. **/
+    bool setEvaporativeOperationMaximumLimitDrybulbTemperature(double evaporativeOperationMaximumLimitDrybulbTemperature);
 
-  boost::optional<double> autosizedPrimaryAirDesignFlowRate() const ;
+    boost::optional<double> autosizedRecirculatingWaterPumpPowerConsumption() const;
 
-  //@}
- protected:
-  friend class Model;
-  friend class openstudio::IdfObject;
+    boost::optional<double> autosizedPrimaryAirDesignFlowRate() const;
 
-  /// @cond
-  typedef detail::EvaporativeCoolerDirectResearchSpecial_Impl ImplType;
+    //@}
+   protected:
+    friend class Model;
+    friend class openstudio::IdfObject;
 
-  explicit EvaporativeCoolerDirectResearchSpecial(std::shared_ptr<detail::EvaporativeCoolerDirectResearchSpecial_Impl> impl);
- private:
-  REGISTER_LOGGER("openstudio.model.EvaporativeCoolerDirectResearchSpecial");
-  /// @endcond
-};
+    /// @cond
+    typedef detail::EvaporativeCoolerDirectResearchSpecial_Impl ImplType;
 
-/** \relates EvaporativeCoolerDirectResearchSpecial */
-typedef boost::optional<EvaporativeCoolerDirectResearchSpecial> OptionalEvaporativeCoolerDirectResearchSpecial;
+    explicit EvaporativeCoolerDirectResearchSpecial(std::shared_ptr<detail::EvaporativeCoolerDirectResearchSpecial_Impl> impl);
 
-/** \relates EvaporativeCoolerDirectResearchSpecial */
-typedef std::vector<EvaporativeCoolerDirectResearchSpecial> EvaporativeCoolerDirectResearchSpecialVector;
+   private:
+    REGISTER_LOGGER("openstudio.model.EvaporativeCoolerDirectResearchSpecial");
+    /// @endcond
+  };
 
-} // model
-} // openstudio
+  /** \relates EvaporativeCoolerDirectResearchSpecial */
+  typedef boost::optional<EvaporativeCoolerDirectResearchSpecial> OptionalEvaporativeCoolerDirectResearchSpecial;
 
-#endif // MODEL_EVAPORATIVECOOLERDIRECTRESEARCHSPECIAL_HPP
+  /** \relates EvaporativeCoolerDirectResearchSpecial */
+  typedef std::vector<EvaporativeCoolerDirectResearchSpecial> EvaporativeCoolerDirectResearchSpecialVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_EVAPORATIVECOOLERDIRECTRESEARCHSPECIAL_HPP

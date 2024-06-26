@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,81 +35,70 @@
 
 namespace openstudio {
 
-class OSQuantityVector;
-
 namespace model {
 
-class ScheduleTypeLimits;
+  class ScheduleTypeLimits;
 
-namespace detail {
+  namespace detail {
 
-  /** ScheduleBase_Impl is a ResourceObject_Impl that is the implementation class for ScheduleBase.*/
-  class MODEL_API ScheduleBase_Impl : public ResourceObject_Impl {
+    /** ScheduleBase_Impl is a ResourceObject_Impl that is the implementation class for ScheduleBase.*/
+    class MODEL_API ScheduleBase_Impl : public ResourceObject_Impl
+    {
 
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+      // constructor
+      ScheduleBase_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    // constructor
-    ScheduleBase_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      // construct from workspace
+      ScheduleBase_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    // construct from workspace
-    ScheduleBase_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                      Model_Impl* model,
-                      bool keepHandle);
+      // clone copy constructor
+      ScheduleBase_Impl(const ScheduleBase_Impl& other, Model_Impl* model, bool keepHandles);
 
-    // clone copy constructor
-    ScheduleBase_Impl(const ScheduleBase_Impl& other, Model_Impl* model,bool keepHandles);
+      // virtual destructor
+      virtual ~ScheduleBase_Impl() {}
 
-    // virtual destructor
-    virtual ~ScheduleBase_Impl(){}
+      //@}
+      /** @name Getters */
+      //@{
 
-    //@}
-    /** @name Getters */
-    //@{
+      virtual boost::optional<ScheduleTypeLimits> scheduleTypeLimits() const = 0;
 
-    virtual boost::optional<ScheduleTypeLimits> scheduleTypeLimits() const = 0;
+      virtual std::vector<double> values() const = 0;
 
-    virtual std::vector<double> values() const = 0;
+      //@}
+      /** @name Setters */
+      //@{
 
-    OSQuantityVector getValues(bool returnIP=false) const;
+      virtual bool setScheduleTypeLimits(const ScheduleTypeLimits& scheduleTypeLimits) = 0;
 
-    //@}
-    /** @name Setters */
-    //@{
+      virtual bool resetScheduleTypeLimits() = 0;
 
-    virtual bool setScheduleTypeLimits(const ScheduleTypeLimits& scheduleTypeLimits) = 0;
+      // ensure that this object does not contain the date 2/29
+      virtual void ensureNoLeapDays() = 0;
 
-    virtual bool resetScheduleTypeLimits() = 0;
+      //@}
+     protected:
+      virtual bool candidateIsCompatibleWithCurrentUse(const ScheduleTypeLimits& candidate) const = 0;
 
-    // ensure that this object does not contain the date 2/29
-    virtual void ensureNoLeapDays() = 0;
+      virtual bool okToResetScheduleTypeLimits() const = 0;
 
-    //@}
-   protected:
-    boost::optional<Quantity> toQuantity(double value, bool returnIP=false) const;
+      bool valuesAreWithinBounds() const;
 
-    boost::optional<double> toDouble(const Quantity& quantity) const;
+     private:
+      REGISTER_LOGGER("openstudio.model.ScheduleBase");
 
-    virtual bool candidateIsCompatibleWithCurrentUse(const ScheduleTypeLimits& candidate) const = 0;
+      boost::optional<ModelObject> scheduleTypeLimitsAsModelObject() const;
 
-    virtual bool okToResetScheduleTypeLimits() const = 0;
+      bool setScheduleTypeLimitsAsModelObject(const boost::optional<ModelObject>& modelObject);
+    };
 
-    bool valuesAreWithinBounds() const;
+  }  // namespace detail
 
-   private:
-    REGISTER_LOGGER("openstudio.model.ScheduleBase");
+}  // namespace model
+}  // namespace openstudio
 
-    boost::optional<ModelObject> scheduleTypeLimitsAsModelObject() const;
-
-    bool setScheduleTypeLimitsAsModelObject(const boost::optional<ModelObject>& modelObject);
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_SCHEDULEBASE_IMPL_HPP
-
+#endif  // MODEL_SCHEDULEBASE_IMPL_HPP

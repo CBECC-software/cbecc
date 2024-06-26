@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -44,158 +44,201 @@
 namespace openstudio {
 namespace model {
 
-class Material;
-class ConstructionBase;
-class Surface;
+  class Material;
+  class ConstructionBase;
+  class Surface;
 
-namespace detail {
+  namespace detail {
 
-  class FoundationKiva_Impl;
+    class FoundationKiva_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** FoundationKiva is a ModelObject that wraps the OpenStudio IDD object 'OS:Foundation:Kiva'. */
-class MODEL_API FoundationKiva : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** This class implements a custom block */
+  class MODEL_API CustomBlock
+  {
+   public:
+    CustomBlock(const Material& material, double depth, double xPosition, double zPosition);
 
-  explicit FoundationKiva(Model& model);
+    Material material() const;
+    double depth() const;
+    double xPosition() const;
+    double zPosition() const;
 
-  virtual ~FoundationKiva() {}
+   private:
+    Material m_material;
+    double m_depth;
+    double m_xPosition;
+    double m_zPosition;
+    REGISTER_LOGGER("openstudio.model.CustomBlock");
+  };
 
-  //@}
+  // Overload operator<<
+  MODEL_API std::ostream& operator<<(std::ostream& out, const openstudio::model::CustomBlock& customBlock);
 
-  static IddObjectType iddObjectType();
+  /** FoundationKiva is a ModelObject that wraps the OpenStudio IDD object 'OS:Foundation:Kiva'. */
+  class MODEL_API FoundationKiva : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /** @name Getters */
-  //@{
+    explicit FoundationKiva(Model& model);
 
-  boost::optional<Material> interiorHorizontalInsulationMaterial() const;
+    virtual ~FoundationKiva() {}
 
-  double interiorHorizontalInsulationDepth() const;
+    //@}
 
-  bool isInteriorHorizontalInsulationDepthDefaulted() const;
+    static IddObjectType iddObjectType();
 
-  boost::optional<double> interiorHorizontalInsulationWidth();
+    //extensible fields
 
-  boost::optional<Material> interiorVerticalInsulationMaterial() const;
+    bool addCustomBlock(const CustomBlock& customBlock);
 
-  boost::optional<double> interiorVerticalInsulationDepth();
+    bool addCustomBlock(const Material& material, double depth, double xPosition, double zPosition);
 
-  boost::optional<Material> exteriorHorizontalInsulationMaterial() const;
+    void removeCustomBlock(int groupIndex);
 
-  boost::optional<double> exteriorHorizontalInsulationDepth();
+    void removeAllCustomBlocks();
 
-  double exteriorHorizontalInsulationWidth() const;
+    std::vector<CustomBlock> customBlocks() const;
 
-  bool isExteriorHorizontalInsulationWidthDefaulted() const;
+    bool addCustomBlocks(const std::vector<CustomBlock>& customBlocks);
 
-  boost::optional<Material> exteriorVerticalInsulationMaterial() const;
+    /** @name Getters */
+    //@{
 
-  boost::optional<double> exteriorVerticalInsulationDepth();
+    boost::optional<double> initialIndoorAirTemperature();
 
-  double wallHeightAboveGrade() const;
+    boost::optional<Material> interiorHorizontalInsulationMaterial() const;
 
-  bool isWallHeightAboveGradeDefaulted() const;
+    double interiorHorizontalInsulationDepth() const;
 
-  double wallDepthBelowSlab() const;
+    bool isInteriorHorizontalInsulationDepthDefaulted() const;
 
-  bool isWallDepthBelowSlabDefaulted() const;
+    boost::optional<double> interiorHorizontalInsulationWidth();
 
-  boost::optional<ConstructionBase> footingWallConstruction() const;
+    boost::optional<Material> interiorVerticalInsulationMaterial() const;
 
-  boost::optional<Material> footingMaterial() const;
+    boost::optional<double> interiorVerticalInsulationDepth();
 
-  double footingDepth() const;
+    boost::optional<Material> exteriorHorizontalInsulationMaterial() const;
 
-  bool isFootingDepthDefaulted() const;
+    boost::optional<double> exteriorHorizontalInsulationDepth();
 
-  std::vector<Surface> surfaces() const;
+    double exteriorHorizontalInsulationWidth() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool isExteriorHorizontalInsulationWidthDefaulted() const;
 
-  bool setInteriorHorizontalInsulationMaterial(const Material& material);
+    boost::optional<Material> exteriorVerticalInsulationMaterial() const;
 
-  void resetInteriorHorizontalInsulationMaterial();
+    boost::optional<double> exteriorVerticalInsulationDepth();
 
-  bool setInteriorHorizontalInsulationDepth(double interiorHorizontalInsulationDepth);
+    double wallHeightAboveGrade() const;
 
-  void resetInteriorHorizontalInsulationDepth();
+    bool isWallHeightAboveGradeDefaulted() const;
 
-  bool setInteriorHorizontalInsulationWidth(double interiorHorizontalInsulationWidth);
+    double wallDepthBelowSlab() const;
 
-  bool setInteriorVerticalInsulationMaterial(const Material& material);
+    bool isWallDepthBelowSlabDefaulted() const;
 
-  void resetInteriorVerticalInsulationMaterial();
+    boost::optional<ConstructionBase> footingWallConstruction() const;
 
-  bool setInteriorVerticalInsulationDepth(double interiorVerticalInsulationDepth);
+    boost::optional<Material> footingMaterial() const;
 
-  bool setExteriorHorizontalInsulationMaterial(const Material& material);
+    double footingDepth() const;
 
-  void resetExteriorHorizontalInsulationMaterial();
+    bool isFootingDepthDefaulted() const;
 
-  bool setExteriorHorizontalInsulationDepth(double exteriorHorizontalInsulationDepth);
+    std::vector<Surface> surfaces() const;
 
-  bool setExteriorHorizontalInsulationWidth(double exteriorHorizontalInsulationWidth);
+    unsigned int numberofCustomBlocks() const;
 
-  void resetExteriorHorizontalInsulationWidth();
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool setExteriorVerticalInsulationMaterial(const Material& material);
+    bool setInitialIndoorAirTemperature(double initialIndoorAirTemperature);
 
-  void resetExteriorVerticalInsulationMaterial();
+    bool setInteriorHorizontalInsulationMaterial(const Material& material);
 
-  bool setExteriorVerticalInsulationDepth(double exteriorVerticalInsulationDepth);
+    void resetInteriorHorizontalInsulationMaterial();
 
-  bool setWallHeightAboveGrade(double wallHeightAboveGrade);
+    bool setInteriorHorizontalInsulationDepth(double interiorHorizontalInsulationDepth);
 
-  void resetWallHeightAboveGrade();
+    void resetInteriorHorizontalInsulationDepth();
 
-  bool setWallDepthBelowSlab(double wallDepthBelowSlab);
+    bool setInteriorHorizontalInsulationWidth(double interiorHorizontalInsulationWidth);
 
-  void resetWallDepthBelowSlab();
+    bool setInteriorVerticalInsulationMaterial(const Material& material);
 
-  bool setFootingWallConstruction(const ConstructionBase& construction);
+    void resetInteriorVerticalInsulationMaterial();
 
-  void resetFootingWallConstruction();
+    bool setInteriorVerticalInsulationDepth(double interiorVerticalInsulationDepth);
 
-  bool setFootingMaterial(const Material& material);
+    bool setExteriorHorizontalInsulationMaterial(const Material& material);
 
-  void resetFootingMaterial();
+    void resetExteriorHorizontalInsulationMaterial();
 
-  bool setFootingDepth(double footingDepth);
+    bool setExteriorHorizontalInsulationDepth(double exteriorHorizontalInsulationDepth);
 
-  void resetFootingDepth();
+    bool setExteriorHorizontalInsulationWidth(double exteriorHorizontalInsulationWidth);
 
-  //@}
-  /** @name Other */
-  //@{
+    void resetExteriorHorizontalInsulationWidth();
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::FoundationKiva_Impl ImplType;
+    bool setExteriorVerticalInsulationMaterial(const Material& material);
 
-  friend class Model;
-  friend class openstudio::IdfObject;
-  friend class detail::FoundationKiva_Impl;
+    void resetExteriorVerticalInsulationMaterial();
 
-  explicit FoundationKiva(std::shared_ptr<detail::FoundationKiva_Impl> impl);
+    bool setExteriorVerticalInsulationDepth(double exteriorVerticalInsulationDepth);
 
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.FoundationKiva");
-};
+    bool setWallHeightAboveGrade(double wallHeightAboveGrade);
 
-/** \relates FoundationKiva*/
-typedef boost::optional<FoundationKiva> OptionalFoundationKiva;
+    void resetWallHeightAboveGrade();
 
-/** \relates FoundationKiva*/
-typedef std::vector<FoundationKiva> FoundationKivaVector;
+    bool setWallDepthBelowSlab(double wallDepthBelowSlab);
 
-} // model
-} // openstudio
+    void resetWallDepthBelowSlab();
 
-#endif // MODEL_FOUNDATIONKIVA_HPP
+    bool setFootingWallConstruction(const ConstructionBase& construction);
+
+    void resetFootingWallConstruction();
+
+    bool setFootingMaterial(const Material& material);
+
+    void resetFootingMaterial();
+
+    bool setFootingDepth(double footingDepth);
+
+    void resetFootingDepth();
+
+    //@}
+    /** @name Other */
+    //@{
+
+    //@}
+   protected:
+    /// @cond
+    typedef detail::FoundationKiva_Impl ImplType;
+
+    friend class Model;
+    friend class openstudio::IdfObject;
+    friend class detail::FoundationKiva_Impl;
+
+    explicit FoundationKiva(std::shared_ptr<detail::FoundationKiva_Impl> impl);
+
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.FoundationKiva");
+  };
+
+  /** \relates FoundationKiva*/
+  typedef boost::optional<FoundationKiva> OptionalFoundationKiva;
+
+  /** \relates FoundationKiva*/
+  typedef std::vector<FoundationKiva> FoundationKivaVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_FOUNDATIONKIVA_HPP

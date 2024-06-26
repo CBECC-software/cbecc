@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -31,40 +31,24 @@
 
 #include "Logger.hpp"
 
-
+#include <codecvt>
 #include <iomanip>
 
 namespace openstudio {
 
 /** char* to std::string. */
-std::string toString(const char* s)
-{
+std::string toString(const char* s) {
   return std::string(s);
 }
 
 /** string to std::string. */
-std::string toString(const std::string& s)
-{
+std::string toString(const std::string& s) {
   return s;
 }
 
 /** wchar_t* to std::string. */
-std::string toString(const wchar_t* w)
-{
+std::string toString(const wchar_t* w) {
   return toString(std::wstring(w));
-}
-
-/** wstring to std::string. */
-std::string toString(const std::wstring& w)
-{
-  return toString(toQString(w));
-}
-
-/** QString to UTF-8 encoded std::string. */
-std::string toString(const QString& q)
-{
-  const QByteArray& qb = q.toUtf8();
-  return std::string(qb.data());
 }
 
 std::string toString(double v) {
@@ -73,9 +57,9 @@ std::string toString(double v) {
 
   // Return Infinity or NaN as strings, getDouble in IdfObject will fail to convert to double which will cause setDouble to fail
   if (std::isinf(v)) {
-    if (v < 0){
+    if (v < 0) {
       result = "-Infinity";
-    } else{
+    } else {
       result = "Infinity";
     }
   } else if (std::isnan(v)) {
@@ -85,7 +69,6 @@ std::string toString(double v) {
     std::stringstream ss;
     ss << std::setprecision(std::numeric_limits<double>::digits10) << v;
     result = ss.str();
-
   }
 
   return result;
@@ -102,52 +85,32 @@ std::string toString(std::istream& s) {
   return contents;
 }
 
-/** QString to wstring. */
-std::wstring toWString(const QString& q)
-{
-#if defined(Q_OS_WIN)
-  static_assert(sizeof(wchar_t) == sizeof(unsigned short), "Wide characters must have the same size as unsigned shorts");
-  std::wstring w(reinterpret_cast<const wchar_t *>(q.utf16()), q.length());
-  return w;
+///
+/// Note that MSVC has linker issues with wchars for some weird reason
+/// Hence these ifdef workarounds https://stackoverflow.com/questions/32055357/visual-studio-c-2015-stdcodecvt-with-char16-t-or-char32-t
+///
+
+std::wstring toWString(const std::string& s) {
+#if _MSC_VER >= 1900
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+  const auto u16_conv = convert.from_bytes(s);
+  return {u16_conv.begin(), u16_conv.end()};
 #else
-  std::wstring w = q.toStdWString();
-  return w;
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  const auto u16_conv = convert.from_bytes(s);
+  return {u16_conv.begin(), u16_conv.end()};
 #endif
 }
 
-/** UTF-8 encoded std::string to QString. */
-QString toQString(const std::string& s)
-{
-  return QString::fromUtf8(s.c_str());
-}
-
-/** wstring to QString. */
-QString toQString(const std::wstring& w)
-{
-#if defined(Q_OS_WIN)
-  static_assert(sizeof(wchar_t) == sizeof(unsigned short), "Wide characters must have the same size as unsigned shorts");
-  return QString::fromUtf16(reinterpret_cast<const unsigned short *>(w.data()), w.length());
+std::string toString(const std::wstring& utf16_string) {
+#if _MSC_VER >= 1900
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+  return convert.to_bytes(utf16_string.data(), utf16_string.data() + utf16_string.size());
 #else
-  return QString::fromStdWString(w);
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  const std::u16string u16string{utf16_string.begin(), utf16_string.end()};
+  return convert.to_bytes(u16string);
 #endif
-
 }
 
-namespace detail{
-  StringMetaTypeInitializer::StringMetaTypeInitializer()
-  {
-    // int type;
-    /* type =*/ qRegisterMetaType<std::string>("std::string");
-    /* type =*/ qRegisterMetaType<std::vector<std::string> >("std::vector<std::string>");
-  }
-  static StringMetaTypeInitializer __stringMetaTypeInitializer__;
-}
-
-} // openstudio
-
-// allow string to be written to QTextStream
-QTextStream& operator<<(QTextStream& qts, const std::string& s)
-{
-  qts << openstudio::toQString(s);
-  return qts;
-}
+}  // namespace openstudio

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,31 +37,36 @@
 #include "../../core/Logger.hpp"
 #include "../../core/FileLogSink.hpp"
 
-class BCLFixture : public ::testing::Test {
+class BCLFixture : public ::testing::Test
+{
  protected:
-  // initialize for each test
+  // initialize for each test: create unique library path to call LocalBCL::instance(currentLocalBCLPath)
   virtual void SetUp() override;
 
-  // tear down after each test
+  // tear down after each test: delete currentLocalBCLPath
   virtual void TearDown() override;
 
   // initialize static members
-  static void SetUpTestCase();
+  static void SetUpTestSuite();
 
   // tear down static members
-  static void TearDownTestCase();
+  static void TearDownTestSuite();
 
   // set up logging
   REGISTER_LOGGER("BCLFixture");
 
+ public:
+  // This is assigned in SetUp, per test, so doesn't have to be static
+  std::string prodAuthKey;
+  std::string devAuthKey;
+
   // Note: storage for static variables must be defined in a separate .cpp file
-  static std::string prodAuthKey;
-  static std::string devAuthKey;
-  static std::string defaultProdAuthKey;
-  static std::string defaultDevAuthKey;
+  const static std::string defaultProdAuthKey;
+  const static std::string defaultDevAuthKey;
   static boost::optional<openstudio::FileLogSink> logFile;
 
-  virtual ~BCLFixture() {}
+  // Unique path to the current test's BCL location
+  openstudio::path currentLocalBCLPath;
 };
 
-#endif // UTILITIES_BCL_TEST_BCLFIXTURE_HPP
+#endif  // UTILITIES_BCL_TEST_BCLFIXTURE_HPP

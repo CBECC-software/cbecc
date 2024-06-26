@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -31,187 +31,165 @@
 
 #include "../core/Assert.hpp"
 
-#include <QDomDocument>
+#include <pugixml.hpp>
 
-namespace openstudio{
+namespace openstudio {
 
-  BCLMeasureOutput::BCLMeasureOutput(const QDomElement& element)
-  {
-    // todo: escape name
-    m_name = element.firstChildElement("name").firstChild().nodeValue().toStdString();
+BCLMeasureOutput::BCLMeasureOutput(const pugi::xml_node& element) {
+  // TODO: escape name
+  // cppcheck-suppress useInitializationList
+  m_name = element.child("name").text().as_string();
 
-    m_displayName = element.firstChildElement("display_name").firstChild().nodeValue().toStdString();
+  m_displayName = element.child("display_name").text().as_string();
 
-    if (!element.firstChildElement("short_name").isNull()){
-      m_shortName = element.firstChildElement("short_name").firstChild().nodeValue().toStdString();
-    }
+  m_shortName = element.child("short_name").text().as_string();
+  ;
 
-    if (!element.firstChildElement("description").isNull()){
-      m_description = element.firstChildElement("description").firstChild().nodeValue().toStdString();
-    }
+  m_description = element.child("description").text().as_string();
 
-    m_type = element.firstChildElement("type").firstChild().nodeValue().toStdString();
+  m_type = element.child("type").text().as_string();
 
-    if (!element.firstChildElement("units").isNull()){
-      m_units = element.firstChildElement("units").firstChild().nodeValue().toStdString();
-    }
+  m_units = element.child("units").text().as_string();
 
-    QString test = element.firstChildElement("model_dependent").firstChild().nodeValue();
-    if (test == "true"){
-      m_modelDependent = true;
-    } else {
-      m_modelDependent = false;
-    }
+  const std::string test = element.child("model_dependent").text().as_string();
+  m_modelDependent = false;
+  if (test == "true") {
+    m_modelDependent = true;
+  }
+}
 
+BCLMeasureOutput::BCLMeasureOutput(const std::string& name, const std::string& displayName, const boost::optional<std::string>& shortName,
+                                   const boost::optional<std::string>& description, const std::string& type,
+                                   const boost::optional<std::string>& units, bool modelDependent)
+  : m_name(name),
+    m_displayName(displayName),
+    m_shortName(shortName),
+    m_description(description),
+    m_type(type),
+    m_units(units),
+    m_modelDependent(modelDependent) {}
+
+std::string BCLMeasureOutput::name() const {
+  return m_name;
+}
+
+std::string BCLMeasureOutput::displayName() const {
+  return m_displayName;
+}
+
+boost::optional<std::string> BCLMeasureOutput::shortName() const {
+  return m_shortName;
+}
+
+boost::optional<std::string> BCLMeasureOutput::description() const {
+  return m_description;
+}
+
+std::string BCLMeasureOutput::type() const {
+  return m_type;
+}
+
+boost::optional<std::string> BCLMeasureOutput::units() const {
+  return m_units;
+}
+
+bool BCLMeasureOutput::modelDependent() const {
+  return m_modelDependent;
+}
+
+void BCLMeasureOutput::writeValues(pugi::xml_node& element) const {
+  auto subelement = element.append_child("name");
+  auto text = subelement.text();
+  text.set(m_name.c_str());
+
+  subelement = element.append_child("display_name");
+  text = subelement.text();
+  text.set(m_displayName.c_str());
+
+  if (m_shortName) {
+    subelement = element.append_child("short_name");
+    text = subelement.text();
+    text.set((*m_shortName).c_str());
   }
 
-  BCLMeasureOutput::BCLMeasureOutput(const std::string& name, const std::string& displayName,
-                                         const boost::optional<std::string>& shortName,
-                                         const boost::optional<std::string>& description,
-                                         const std::string& type, const boost::optional<std::string>& units,
-                                         bool modelDependent)
-                                         : m_name(name), m_displayName(displayName),
-                                         m_shortName(shortName), m_description(description),
-                                         m_type(type), m_units(units), m_modelDependent(modelDependent)
-  {
+  if (m_description) {
+    subelement = element.append_child("description");
+    text = subelement.text();
+    text.set((*m_description).c_str());
   }
 
-  std::string BCLMeasureOutput::name() const
-  {
-    return m_name;
+  subelement = element.append_child("type");
+  text = subelement.text();
+  text.set(m_type.c_str());
+
+  if (m_units) {
+    subelement = element.append_child("units");
+    text = subelement.text();
+    text.set((*m_units).c_str());
   }
 
-  std::string BCLMeasureOutput::displayName() const
-  {
-    return m_displayName;
+  subelement = element.append_child("model_dependent");
+  text = subelement.text();
+  text.set(m_modelDependent ? "true" : "false");
+}
+
+bool BCLMeasureOutput::operator==(const BCLMeasureOutput& other) const {
+  if (m_name != other.name()) {
+    return false;
   }
 
-  boost::optional<std::string> BCLMeasureOutput::shortName() const
-  {
-    return m_shortName;
+  if (m_displayName != other.displayName()) {
+    return false;
   }
 
-  boost::optional<std::string> BCLMeasureOutput::description() const
-  {
-    return m_description;
-  }
-
-  std::string BCLMeasureOutput::type() const
-  {
-    return m_type;
-  }
-
-  boost::optional<std::string> BCLMeasureOutput::units() const
-  {
-    return m_units;
-  }
-
-  bool BCLMeasureOutput::modelDependent() const
-  {
-    return m_modelDependent;
-  }
-
-  void BCLMeasureOutput::writeValues(QDomDocument& doc, QDomElement& element) const
-  {
-    QDomElement nameElement = doc.createElement("name");
-    element.appendChild(nameElement);
-    nameElement.appendChild(doc.createTextNode(toQString(m_name)));
-
-    QDomElement displayNameElement = doc.createElement("display_name");
-    element.appendChild(displayNameElement);
-    displayNameElement.appendChild(doc.createTextNode(toQString(m_displayName)));
-
-    if (m_shortName){
-      QDomElement shortNameElement = doc.createElement("short_name");
-      element.appendChild(shortNameElement);
-      shortNameElement.appendChild(doc.createTextNode(toQString(*m_shortName)));
-    }
-
-    if (m_description){
-      QDomElement descriptionElement = doc.createElement("description");
-      element.appendChild(descriptionElement);
-      descriptionElement.appendChild(doc.createTextNode(toQString(*m_description)));
-    }
-
-    QDomElement typeElement = doc.createElement("type");
-    element.appendChild(typeElement);
-    typeElement.appendChild(doc.createTextNode(toQString(m_type)));
-
-    if (m_units){
-      QDomElement unitsElement = doc.createElement("units");
-      element.appendChild(unitsElement);
-      unitsElement.appendChild(doc.createTextNode(toQString(*m_units)));
-    }
-
-    QDomElement modelDependentElement = doc.createElement("model_dependent");
-    element.appendChild(modelDependentElement);
-    modelDependentElement.appendChild(doc.createTextNode(m_modelDependent ? "true" : "false"));
-  }
-
-  bool BCLMeasureOutput::operator == (const BCLMeasureOutput& other) const
-  {
-    if (m_name != other.name()){
+  if (m_shortName && !other.shortName()) {
+    return false;
+  } else if (!m_shortName && other.shortName()) {
+    return false;
+  } else if (m_shortName && other.shortName()) {
+    if (m_shortName.get() != other.shortName().get()) {
       return false;
     }
-
-    if (m_displayName != other.displayName()){
-      return false;
-    }
-
-    if (m_shortName && !other.shortName()){
-      return false;
-    } else if (!m_shortName && other.shortName()){
-      return false;
-    } else if (m_shortName && other.shortName()){
-      if (m_shortName.get() != other.shortName().get()){
-        return false;
-      }
-    }
-
-    if (m_description && !other.description()){
-      return false;
-    } else if (!m_description && other.description()){
-      return false;
-    } else if (m_description && other.description()){
-      if (m_description.get() != other.description().get()){
-        return false;
-      }
-    }
-
-    if (m_type != other.type()){
-      return false;
-    }
-
-    if (m_units && !other.units()){
-      return false;
-    } else if (!m_units && other.units()){
-      return false;
-    } else if (m_units && other.units()){
-      if (m_units.get() != other.units().get()){
-        return false;
-      }
-    }
-
-    if (m_modelDependent != other.modelDependent()){
-      return false;
-    }
-
-    return true;
   }
 
-  std::ostream& operator<<(std::ostream& os, const BCLMeasureOutput& argument)
-  {
-    QDomDocument doc;
-    QDomElement element = doc.createElement(QString("Output"));
-    doc.appendChild(element);
-    argument.writeValues(doc, element);
-
-    QString str;
-    QTextStream qts(&str);
-    doc.save(qts, 2);
-    os << str.toStdString();
-    return os;
+  if (m_description && !other.description()) {
+    return false;
+  } else if (!m_description && other.description()) {
+    return false;
+  } else if (m_description && other.description()) {
+    if (m_description.get() != other.description().get()) {
+      return false;
+    }
   }
 
+  if (m_type != other.type()) {
+    return false;
+  }
 
-} // openstudio
+  if (m_units && !other.units()) {
+    return false;
+  } else if (!m_units && other.units()) {
+    return false;
+  } else if (m_units && other.units()) {
+    if (m_units.get() != other.units().get()) {
+      return false;
+    }
+  }
+
+  if (m_modelDependent != other.modelDependent()) {
+    return false;
+  }
+
+  return true;
+}
+
+std::ostream& operator<<(std::ostream& os, const BCLMeasureOutput& output) {
+  pugi::xml_document doc;
+  auto element = doc.append_child("Output");
+  output.writeValues(element);
+
+  doc.save(os, "  ");
+  return os;
+}
+
+}  // namespace openstudio

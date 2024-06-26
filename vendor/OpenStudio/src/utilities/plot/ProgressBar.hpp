@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -34,100 +34,77 @@
 #include "../core/Macro.hpp"
 #include "../core/String.hpp"
 
-#include <QProgressBar>
 #include <nano/nano_signal_slot.hpp>
 
 #include <memory>
 
-namespace openstudio{
+namespace openstudio {
 
-  /** ProgressBar wraps a QProgressBar and provides virtual methods setRange, setValue, and setWindowTitle(QString)
+/** ProgressBar is a pure virtual class providing virtual methods setRange, setValue, and setWindowTitle   
    *  which may be overridden.
-   *
-   *  ProgressBar an atypical QObject because it is designed to be stack allocated.  In many cases it
-   *  would be preferred to connect your own heap allocated QObject to the signals directly rather
-   *  than using this convenience class.
    **/
-  class UTILITIES_API ProgressBar {
+class UTILITIES_API ProgressBar
+{
 
-  public:
+ public:
+  /// virtual destructor
+  virtual ~ProgressBar();
 
-    /// constructor
-    ProgressBar(QWidget* parent = nullptr);
+  /// get min
+  virtual int minimum() const = 0;
 
-    /// constructor
-    ProgressBar(bool visible, QWidget* parent = nullptr);
+  /// set min
+  virtual void setMinimum(int min) = 0;
 
-    /// constructor from impl
-    //ProgressBar(const std::shared_ptr<QProgressBar>& impl);
+  /// get max
+  virtual int maximum() const = 0;
 
-    /// virtual destructor
-    virtual ~ProgressBar();
+  /// set max
+  virtual void setMaximum(int max) = 0;
 
-    /// get min
-    int minimum() const;
+  /// get value
+  virtual int value() const = 0;
 
-    /// set min
-    void setMinimum(int min);
+  /// get the window title
+  virtual std::string windowTitle() const = 0;
 
-    /// get max
-    int maximum() const;
+  /// set the window title
+  virtual void setWindowTitle(const std::string& title) = 0;
 
-    /// set max
-    void setMaximum(int max);
+  /// get the text
+  virtual std::string text() const = 0;
 
-    /// get value
-    int value() const;
+  /// get if visible
+  virtual bool isVisible() const = 0;
 
-    /// get the window title
-    std::string windowTitle() const;
+  /// set if visible
+  virtual void setVisible(bool visible) = 0;
 
-    /// set the window title
-    void setWindowTitle(const std::string& title);
-
-    /// get the text
-    std::string text() const;
-
-    /// get if visible
-    bool isVisible() const;
-
-    /// set if visible
-    void setVisible(bool visible);
-
-    /// virtual method called every time percentageUpdated fires
-    virtual void onPercentageUpdated(double percentage);
+  /// virtual method called every time percentageUpdated fires
+  virtual void onPercentageUpdated(double percentage);
 
   // public slots:
 
-    /// set range
-    void setRange(int min, int max);
+  /// set range
+  virtual void setRange(int min, int max) = 0;
 
-    /// set value
-    void setValue(int value);
-
-    /// set window title
-    void setWindowTitle(const QString& windowTitle);
+  /// set value
+  virtual void setValue(int value) = 0;
 
   // signals:
 
-    /// called every time progress increases by 1% more than last progress
-    Nano::Signal<void(double)> percentageUpdated;
+  /// called every time progress increases by 1% more than last progress
+  Nano::Signal<void(double)> percentageUpdated;
 
+ protected:
+  ProgressBar();
 
-  protected:
+  void updatePercentage();
 
-    /// return the impl
-    //std::shared_ptr<QProgressBar> impl() const;
+ private:
+  double m_percentage;
+};
 
-  private:
-    /// impl
-    std::shared_ptr<QProgressBar> m_impl;
+}  // namespace openstudio
 
-    void updatePercentage();
-
-    double m_percentage;
-  };
-
-} // openstudio
-
-#endif //UTILITIES_PLOT_PROGRESSBAR_HPP
+#endif  //UTILITIES_PLOT_PROGRESSBAR_HPP

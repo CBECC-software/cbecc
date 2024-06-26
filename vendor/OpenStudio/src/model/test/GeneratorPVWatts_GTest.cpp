@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -51,18 +51,16 @@ TEST_F(ModelFixture, GeneratorPVWatts_GeneratorPVWatts) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   ASSERT_EXIT(
-  {
-    // create a model to use
-    Model model;
+    {
+      // create a model to use
+      Model model;
 
-    // create a foundation kiva object to use
-    GeneratorPVWatts generator(model, 1);
+      // create a foundation kiva object to use
+      GeneratorPVWatts generator(model, 1);
 
-    exit(0);
-  },
-    ::testing::ExitedWithCode(0),
-    ""
-    );
+      exit(0);
+    },
+    ::testing::ExitedWithCode(0), "");
 
   // create a model to use
   Model model;

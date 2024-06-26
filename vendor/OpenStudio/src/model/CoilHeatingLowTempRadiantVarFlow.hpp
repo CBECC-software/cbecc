@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -39,107 +39,116 @@ namespace openstudio {
 
 namespace model {
 
-class Schedule;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-  class CoilHeatingLowTempRadiantVarFlow_Impl;
+    class CoilHeatingLowTempRadiantVarFlow_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** CoilHeatingLowTempRadiantVarFlow is a StraightComponent that wraps the OpenStudio IDD object 'OS:Coil:Heating:LowTemperatureRadiant:VariableFlow'. */
-class MODEL_API CoilHeatingLowTempRadiantVarFlow : public StraightComponent {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** CoilHeatingLowTempRadiantVarFlow is a StraightComponent that wraps the OpenStudio IDD object 'OS:Coil:Heating:LowTemperatureRadiant:VariableFlow'. */
+  class MODEL_API CoilHeatingLowTempRadiantVarFlow : public StraightComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit CoilHeatingLowTempRadiantVarFlow(const Model& model,
-                                            Schedule& heatingControlTemperature);
+    explicit CoilHeatingLowTempRadiantVarFlow(const Model& model, Schedule& heatingControlTemperature);
 
-  virtual ~CoilHeatingLowTempRadiantVarFlow() {}
+    virtual ~CoilHeatingLowTempRadiantVarFlow() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    static std::vector<std::string> heatingDesignCapacityMethodValues();
 
-  boost::optional<double> maximumHotWaterFlow() const;
+    /** @name Getters */
+    //@{
 
-  //OSOptionalQuantity getMaximumHotWaterFlow(bool returnIP=false) const;
+    boost::optional<double> maximumHotWaterFlow() const;
 
-  bool isMaximumHotWaterFlowDefaulted() const;
+    bool isMaximumHotWaterFlowDefaulted() const;
 
-  bool isMaximumHotWaterFlowAutosized() const;
+    bool isMaximumHotWaterFlowAutosized() const;
 
-  double heatingControlThrottlingRange() const;
+    double heatingControlThrottlingRange() const;
 
-  //Quantity getHeatingControlThrottlingRange(bool returnIP=false) const;
+    bool isHeatingControlThrottlingRangeDefaulted() const;
 
-  bool isHeatingControlThrottlingRangeDefaulted() const;
+    boost::optional<Schedule> heatingControlTemperatureSchedule() const;
 
-  boost::optional<Schedule> heatingControlTemperatureSchedule() const;
+    std::string heatingDesignCapacityMethod() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    boost::optional<double> heatingDesignCapacity() const;
+    bool isHeatingDesignCapacityAutosized() const;
 
-  bool setMaximumHotWaterFlow(double maximumHotWaterFlow);
+    double heatingDesignCapacityPerFloorArea() const;
 
-  //bool setMaximumHotWaterFlow(const Quantity& maximumHotWaterFlow);
+    double fractionofAutosizedHeatingDesignCapacity() const;
 
-  void resetMaximumHotWaterFlow();
+    //@}
+    /** @name Setters */
+    //@{
 
-  void autosizeMaximumHotWaterFlow();
+    bool setMaximumHotWaterFlow(double maximumHotWaterFlow);
 
-  bool setHeatingControlThrottlingRange(double heatingControlThrottlingRange);
+    void resetMaximumHotWaterFlow();
 
-  //bool setHeatingControlThrottlingRange(const Quantity& heatingControlThrottlingRange);
+    void autosizeMaximumHotWaterFlow();
 
-  void resetHeatingControlThrottlingRange();
+    bool setHeatingControlThrottlingRange(double heatingControlThrottlingRange);
 
-  // TODO: Check argument type. From object lists, some candidates are: Schedule.
-  bool setHeatingControlTemperatureSchedule(Schedule& schedule);
+    void resetHeatingControlThrottlingRange();
 
-  void resetHeatingControlTemperatureSchedule();
+    bool setHeatingControlTemperatureSchedule(Schedule& schedule);
 
-  //@}
-  /** @name Other */
-  //@{
+    void resetHeatingControlTemperatureSchedule();
 
-  boost::optional<double> autosizedMaximumHotWaterFlow() const ;
+    bool setHeatingDesignCapacityMethod(const std::string& heatingDesignCapacityMethod);
 
+    bool setHeatingDesignCapacity(double heatingDesignCapacity);
+    void autosizeHeatingDesignCapacity();
 
+    bool setHeatingDesignCapacityPerFloorArea(double heatingDesignCapacityPerFloorArea);
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::CoilHeatingLowTempRadiantVarFlow_Impl ImplType;
+    bool setFractionofAutosizedHeatingDesignCapacity(double fractionofAutosizedHeatingDesignCapacity);
 
-  explicit CoilHeatingLowTempRadiantVarFlow(std::shared_ptr<detail::CoilHeatingLowTempRadiantVarFlow_Impl> impl);
+    //@}
+    /** @name Other */
+    //@{
 
-  friend class detail::CoilHeatingLowTempRadiantVarFlow_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.CoilHeatingLowTempRadiantVarFlow");
+    boost::optional<double> autosizedMaximumHotWaterFlow() const;
 
-  // Used to find the ZoneHVAC that contains this coil
-  boost::optional<ZoneHVACLowTempRadiantVarFlow> parentZoneHVAC() const;
+    boost::optional<double> autosizedHeatingDesignCapacity() const;
 
-};
+    //@}
+   protected:
+    /// @cond
+    typedef detail::CoilHeatingLowTempRadiantVarFlow_Impl ImplType;
 
-/** \relates CoilHeatingLowTempRadiantVarFlow*/
-typedef boost::optional<CoilHeatingLowTempRadiantVarFlow> OptionalCoilHeatingLowTempRadiantVarFlow;
+    explicit CoilHeatingLowTempRadiantVarFlow(std::shared_ptr<detail::CoilHeatingLowTempRadiantVarFlow_Impl> impl);
 
-/** \relates CoilHeatingLowTempRadiantVarFlow*/
-typedef std::vector<CoilHeatingLowTempRadiantVarFlow> CoilHeatingLowTempRadiantVarFlowVector;
+    friend class detail::CoilHeatingLowTempRadiantVarFlow_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.CoilHeatingLowTempRadiantVarFlow");
 
-} // model
-} // openstudio
+    // Used to find the ZoneHVAC that contains this coil
+    boost::optional<ZoneHVACLowTempRadiantVarFlow> parentZoneHVAC() const;
+  };
 
-#endif // MODEL_COILHEATINGLOWTEMPRADIANTVARFLOW_HPP
+  /** \relates CoilHeatingLowTempRadiantVarFlow*/
+  typedef boost::optional<CoilHeatingLowTempRadiantVarFlow> OptionalCoilHeatingLowTempRadiantVarFlow;
 
+  /** \relates CoilHeatingLowTempRadiantVarFlow*/
+  typedef std::vector<CoilHeatingLowTempRadiantVarFlow> CoilHeatingLowTempRadiantVarFlowVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_COILHEATINGLOWTEMPRADIANTVARFLOW_HPP

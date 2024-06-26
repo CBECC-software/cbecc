@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,55 +35,59 @@
 
 namespace openstudio {
 namespace model {
-namespace detail {
-  class Version_Impl;
-}
+  namespace detail {
+    class Version_Impl;
+  }
 
-class MODEL_API Version : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //{
+  class MODEL_API Version : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //{
 
-  virtual ~Version() {}
+    virtual ~Version() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //{
+    /** @name Getters */
+    //{
 
-  std::string versionIdentifier() const;
+    std::string versionIdentifier() const;
 
-  //@}
- protected:
-  /** @name Setters */
-  //@{
+    boost::optional<std::string> prereleaseIdentifier() const;
 
-  bool setVersionIdentifier(const std::string& s);
+    //@}
+   protected:
+    /** @name Setters */
+    //@{
 
-  //@}
+    bool setVersionIdentifier(const std::string& s);
+    bool setPrereleaseIdentifier(const std::string& s);
 
-  // constructor
-  explicit Version(const Model& model);
+    //@}
 
-  typedef detail::Version_Impl ImplType;
+    // constructor
+    explicit Version(const Model& model);
 
-  friend class detail::Model_Impl;
-  friend class openstudio::IdfObject;
-  friend class Model;
+    typedef detail::Version_Impl ImplType;
 
-  // constructor
-  explicit Version(std::shared_ptr<detail::Version_Impl> impl);
+    friend class detail::Model_Impl;
+    friend class openstudio::IdfObject;
+    friend class Model;
 
- private:
-  REGISTER_LOGGER("openstudio.model.RunPeriod");
-};
+    // constructor
+    explicit Version(std::shared_ptr<detail::Version_Impl> impl);
 
-/** \relates Version */
-typedef boost::optional<Version> OptionalVersion;
+   private:
+    REGISTER_LOGGER("openstudio.model.RunPeriod");
+  };
 
-}
-}
+  /** \relates Version */
+  typedef boost::optional<Version> OptionalVersion;
+
+}  // namespace model
+}  // namespace openstudio
 
 #endif

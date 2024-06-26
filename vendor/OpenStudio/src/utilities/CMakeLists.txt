@@ -2,10 +2,6 @@
 
 set(target_name openstudio_utilities)
 
-include_directories(${CMAKE_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/idd)
-
 include(idd/CMakeLists.txt)
 include(idf/CMakeLists.txt)
 include(sql/CMakeLists.txt)
@@ -16,8 +12,6 @@ CONFIGURE_FILE_WITH_CHECKSUM("core/ApplicationPathHelpers.cxx.in" "${CMAKE_CURRE
 set(core_src
   core/ApplicationPathHelpers.hpp
   ${CMAKE_CURRENT_BINARY_DIR}/core/ApplicationPathHelpers.cxx
-  core/Application.hpp
-  core/Application.cpp
   core/Assert.hpp
   core/Checksum.hpp
   core/Checksum.cpp
@@ -57,8 +51,6 @@ set(core_src
   core/Path.cpp
   core/PathHelpers.hpp
   core/PathHelpers.cpp
-  core/PathWatcher.hpp
-  core/PathWatcher.cpp
   core/Queue.hpp
   core/RubyInterpreter.hpp
   core/RubyException.hpp
@@ -75,11 +67,8 @@ set(core_src
   core/System.cpp
   core/UpdateManager.hpp
   core/UpdateManager.cpp
-  core/Url.hpp
   core/UUID.hpp
   core/UUID.cpp
-  core/URLHelpers.hpp
-  core/URLHelpers.cpp
   core/UnzipFile.hpp
   core/UnzipFile.cpp
   core/ZipFile.hpp
@@ -97,8 +86,6 @@ set(data_src
   data/EndUses.cpp
   data/Matrix.hpp
   data/Matrix.cpp
-  data/Tag.hpp
-  data/Tag.cpp
   data/TimeSeries.hpp
   data/TimeSeries.cpp
   data/Variant.hpp
@@ -108,11 +95,17 @@ set(data_src
 )
 
 set(filetypes_src
+  filetypes/CSVFile.hpp
+  filetypes/CSVFile_Impl.hpp
+  filetypes/CSVFile.cpp
   filetypes/EpwFile.hpp
   filetypes/EpwFile.cpp
   filetypes/RunOptions.hpp
   filetypes/RunOptions_Impl.hpp
   filetypes/RunOptions.cpp
+  filetypes/StandardsJSON.hpp
+  filetypes/StandardsJSON_Impl.hpp
+  filetypes/StandardsJSON.cpp
   filetypes/WorkflowJSON.hpp
   filetypes/WorkflowJSON_Impl.hpp
   filetypes/WorkflowJSON.cpp
@@ -141,6 +134,8 @@ set(geometry_src
   geometry/Point3d.cpp
   geometry/PointLatLon.hpp
   geometry/PointLatLon.cpp
+  geometry/RoofGeometry.cpp
+  geometry/RoofGeometry.hpp
   geometry/ThreeJS.hpp
   geometry/ThreeJS.cpp
   geometry/Transformation.hpp
@@ -193,133 +188,30 @@ set(bcl_src
   bcl/RemoteBCL.cpp
 )
 
-#set(cloud_src
-#  cloud/AWSProvider.hpp
-#  cloud/AWSProvider_Impl.hpp
-#  cloud/AWSProvider.cpp
-#  cloud/CloudProvider.hpp
-#  cloud/CloudProvider_Impl.hpp
-#  cloud/CloudProvider.cpp
-#  cloud/OSServer.hpp
-#  cloud/OSServer_Impl.hpp
-#  cloud/OSServer.cpp
-#  cloud/VagrantProvider.hpp
-#  cloud/VagrantProvider_Impl.hpp
-#  cloud/VagrantProvider.cpp
-#)
-
 set(documentation_src
   mainpage.hpp
 )
 
-set(${target_name}_depends
-  sqlite
-  jsoncpp
-  #litesql
-  #litesql-util
-  miniziplib
-  ${Boost_LIBRARIES}
-  #JWD: On Ubuntu 14.04, the thread lib is included in Boost_LIBRARIES
-  # ${CMAKE_THREAD_LIBS}
-)
-
-if(WIN32)
-  list(APPEND ${target_name}_depends qtwinmigrate)
-  list(APPEND ${target_name}_depends mpr)
-endif()
-
-# moc files
-set(bcl_moc
-  bcl/BCL.hpp
-  bcl/LocalBCL.hpp
-  bcl/RemoteBCL.hpp
-)
-
-#set(cloud_moc
-#  cloud/AWSProvider_Impl.hpp
-#  cloud/CloudProvider_Impl.hpp
-#  cloud/OSServer_Impl.hpp
-#  cloud/VagrantProvider_Impl.hpp
-#)
-
-set(core_moc
-  core/PathWatcher.hpp
-  core/UpdateManager.hpp
-)
-
-set(idf_moc
-#  idf/IdfObject_Impl.hpp
-#  idf/IdfObjectWatcher.hpp
-#  idf/WorkspaceObjectWatcher.hpp
-#  idf/WorkspaceObject_Impl.hpp
-#  idf/Workspace_Impl.hpp
-#  idf/WorkspaceWatcher.hpp
-)
-
-set(data_moc
-#  data/Attribute_Impl.hpp
-)
-
-set(plot_moc
-#  plot/ProgressBar.hpp
-)
-
-###############################################################################
-# idf_moc files include generated source code.  It is important that these
-# generated files are generated before moc runs.
-# The following commands make sure that happens.
-# This could be done by simply touching the moc'ed files in the source tree
-# but in the spirit of keeping the source tree clean, we copy them into the
-# build directory instead.
-#
-# DLM: This is no longer needed as GenerateIddFactoryRun will run before anything in utilities is built
-#
-###############################################################################
-#foreach(f IN LISTS idf_moc)
-#  string(REGEX REPLACE hpp$ hxx fxx ${f})
-#  list(APPEND idfxx_moc ${CMAKE_CURRENT_BINARY_DIR}/${fxx})
-#  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${fxx}
-#    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${f} ${CMAKE_CURRENT_BINARY_DIR}/${fxx}
-#    DEPENDS
-#    ${CMAKE_CURRENT_BINARY_DIR}/idd/IddEnums.hxx
-#    ${CMAKE_CURRENT_BINARY_DIR}/idd/IddFieldEnums.hxx
-#    ${CMAKE_CURRENT_BINARY_DIR}/idd/IddFactory.hxx
-#    ${CMAKE_CURRENT_BINARY_DIR}/idd/IddFactory.cxx
-#    ${CMAKE_CURRENT_SOURCE_DIR}/${f}
-#  )
-#endforeach()
-###############################################################################
-
-## Qt MOC generation
-qt5_wrap_cpp_minimally(bcl_moc_src ${bcl_moc})
-#qt5_wrap_cpp_minimally(cloud_moc_src ${cloud_moc})
-qt5_wrap_cpp_minimally(core_moc_src ${core_moc}) # RM
-qt5_wrap_cpp_minimally(idf_moc_src ${idfxx_moc})
-qt5_wrap_cpp_minimally(data_moc_src ${data_moc}) # RM
-qt5_wrap_cpp_minimally(plot_moc_src ${plot_moc}) # [sudo] RM [-rf]
-
-
 # embedded files, bump again to update common files
 file(GLOB_RECURSE BCL_TEMPLATES  FOLLOW_SYMLINKS "${CMAKE_CURRENT_SOURCE_DIR}/bcl/templates/**/*.*")
-foreach( _FILE ${BCL_TEMPLATES} )
+foreach(_FILE ${BCL_TEMPLATES})
   file(RELATIVE_PATH LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bcl/" ${_FILE})
   list(APPEND E_FILES ${_FILE})
   list(APPEND E_PATHS ${LOCATION})
 endforeach()
 
 file(GLOB_RECURSE IDD_FILES  FOLLOW_SYMLINKS "${CMAKE_CURRENT_SOURCE_DIR}/idd/versions/*/*.idd")
-foreach( _FILE ${IDD_FILES} )
+foreach(_FILE ${IDD_FILES})
   file(RELATIVE_PATH LOCATION "${CMAKE_CURRENT_SOURCE_DIR}" ${_FILE})
   list(APPEND E_FILES ${_FILE})
   list(APPEND E_PATHS ${LOCATION})
 endforeach()
 
-include("${CMAKE_SOURCE_DIR}/embedded/EmbedFiles.cmake")
+include("${PROJECT_SOURCE_DIR}/embedded/EmbedFiles.cmake")
 embed_files("${E_FILES}" "${E_PATHS}" EMBEDDED_OUTPUT openstudio)
 
 # set up groups of source files for Visual Studio
 source_group(bcl FILES ${bcl_src})
-#source_group(cloud FILES ${cloud_src})
 source_group(core FILES ${core_src})
 source_group(data FILES ${data_src})
 source_group(filetypes FILES ${filetypes_src})
@@ -334,42 +226,30 @@ source_group(units FILES ${units_src})
 source_group(documentation FILES ${documentation_src})
 source_group(embedded FILES ${EMBEDDED_OUTPUT})
 
-if(UNIX)
-  set(SWIG_DEPENDS "SWIG")
-else()
-  set(SWIG_DEPENDS "")
-endif()
-
-
+# Must call CMake itself in order to set the SWIG_LIB env var for add_custom_command
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/SWIGRubyRuntime.hxx"
-  COMMAND "${SWIG_EXECUTABLE}"
+  COMMAND ${CMAKE_COMMAND} -E env SWIG_LIB="${SWIG_LIB}"
+          "${SWIG_EXECUTABLE}"
+          "-v"
           "-ruby"
           -external-runtime "${CMAKE_CURRENT_BINARY_DIR}/SWIGRubyRuntime.hxx"
-  DEPENDS "${SWIG_DEPENDS}"
 )
 
 set(${target_name}_src
   UtilitiesAPI.hpp
   "${CMAKE_CURRENT_BINARY_DIR}/SWIGRubyRuntime.hxx" # referenced here to make sure it is generated when and where we expect
   ${bcl_src}
-  ${bcl_moc_src}
-#  ${cloud_src}
-#  ${cloud_moc_src}
   ${core_src}
-  ${core_moc_src}
   ${data_src}
-  ${data_moc_src}
   ${documentation_src}
   ${filetypes_src}
   ${idd_src}
   ${idf_src}
-  ${idf_moc_src}
   ${sql_src}
   ${geometry_src}
   ${math_src}
   ${plot_src}
-  ${plot_moc_src}
   ${time_src}
   ${units_src}
   ${EMBEDDED_OUTPUT}
@@ -378,11 +258,7 @@ set(${target_name}_src
 set(${target_name}_test_src
   ${idd_test_src}
   ${idf_test_src}
-  ${idf_test_moc_src}
   ${sql_test_src}
-
-#  cloud/test/AWSProvider_GTest.cpp
-#  cloud/test/VagrantProvider_GTest.cpp
 
   core/test/CoreFixture.hpp
   core/test/CoreFixture.cpp
@@ -397,7 +273,6 @@ set(${target_name}_test_src
   core/test/Logger_GTest.cpp
   core/test/Optional_GTest.cpp
   core/test/Path_GTest.cpp
-  core/test/PathWatcher_GTest.cpp
   core/test/SharedFromThis_GTest.cpp
   core/test/System_GTest.cpp
   core/test/String_GTest.cpp
@@ -415,8 +290,10 @@ set(${target_name}_test_src
   data/Test/Variant_GTest.cpp
   data/Test/Vector_GTest.cpp
 
+  filetypes/test/CSVFile_GTest.cpp
   filetypes/test/EpwFile_GTest.cpp
   filetypes/test/WorkflowJSON_GTest.cpp
+  filetypes/test/StandardsJSON_GTest.cpp
 
   geometry/Test/BoundingBox_GTest.cpp
   geometry/Test/GeometryFixture.hpp
@@ -424,6 +301,7 @@ set(${target_name}_test_src
   geometry/Test/Geometry_GTest.cpp
   geometry/Test/Intersection_GTest.cpp
   geometry/Test/Plane_GTest.cpp
+  geometry/Test/RoofGeometry_GTest.cpp
   geometry/Test/ThreeJS_GTest.cpp
   geometry/Test/FloorplanJS_GTest.cpp
   geometry/Test/Transformation_GTest.cpp
@@ -431,8 +309,6 @@ set(${target_name}_test_src
   math/test/FloatCompare_GTest.cpp
   math/test/Permutation_GTest.cpp
   math/test/Primes_GTest.cpp
-
-  plot/Test/ProgressBar_GTest.cpp
 
   time/Test/Calendar_GTest.cpp
   time/Test/Date_GTest.cpp
@@ -469,12 +345,11 @@ set(${target_name}_test_src
 
 set(${target_name}_swig_src
   #  Utilities.i
-  ${CMAKE_BINARY_DIR}/src/OpenStudio.hxx
+  ${PROJECT_BINARY_DIR}/src/OpenStudio.hxx
   ${idd_swig_src}
   ${idf_swig_src}
   ${sql_swig_src}
   bcl/LocalBCL.i
-  core/Application.i
   core/Checksum.i
   core/CommonImport.i
   core/CommonInclude.i
@@ -483,19 +358,15 @@ set(${target_name}_swig_src
   core/Exception.i
   core/Logger.i
   core/Path.i
-  core/PathWatcher.i
-  core/Qt.i
   core/Singleton.i
   core/System.i
   core/UpdateManager.i
-  core/Url.i
   core/UUID.i
   core/UnzipFile.i
   core/ZipFile.i
   core/ruby/LanguageSpecific.i
   core/python/LanguageSpecific.i
   core/csharp/LanguageSpecific.i
-#  cloud/Cloud.i
   filetypes/Filetypes.i
   geometry/Geometry.i
   time/Time.i
@@ -511,7 +382,6 @@ set(${target_name}_swig_src
   data/TimeSeries.i
   data/Variant.i
   data/Vector.i
-  plot/Plot.i
   plot/ProgressBar.i
   units/Scale.i
   units/ScaleFactory.i
@@ -523,81 +393,50 @@ set(${target_name}_swig_src
   units/QuantityConverter.i
 )
 
-#include subdir for pch
-add_subdirectory(pch)
 
-add_library(${target_name}
-  ${${target_name}_src}
-)
-add_dependencies("${target_name}" GenerateIddFactoryRun)
-
-if(UNIX)
-  add_dependencies("${target_name}" SWIG)
-endif()
-
-AddPCH(${target_name})
-
-# No need to install static lib
-#if(NOT APPLE)
-#  install(TARGETS ${target_name}
-#    RUNTIME DESTINATION bin
-#    LIBRARY DESTINATION lib
-#  )
-#endif()
-
-target_link_libraries(${target_name} PUBLIC ${${target_name}_depends} GeographicLib_STATIC ${QT_LIBS})
-
-CREATE_SRC_GROUPS("${${target_name}_test_src}")
-CREATE_TEST_TARGETS(${target_name} "${${target_name}_test_src}" "${${target_name}_depends}")
-
-set(${target_name}_static_depends
-  sqlite
-  jsoncpp
-  miniziplib
-  ${Boost_LIBRARIES}
+set(${target_name}_depends
+  CONAN_PKG::sqlite3
+  CONAN_PKG::jsoncpp
+  CONAN_PKG::zlib
+  CONAN_PKG::fmt
+  CONAN_PKG::pugixml
+  CONAN_PKG::boost
+  CONAN_PKG::cpprestsdk
+  CONAN_PKG::openssl
+  CONAN_PKG::geographiclib
 )
 
 if(WIN32)
-  list(APPEND ${target_name}_static_depends qtwinmigrate_static)
-  list(APPEND ${target_name}_static_depends mpr)
+  list(APPEND ${target_name}_depends mpr)
+elseif(APPLE)
+  list(APPEND ${target_name}_depends ${SECURITY_FRAMEWORK})
+  # For cpprest
+  list(APPEND ${target_name}_depends ${COREFOUNDATION_LIBRARY})
 endif()
 
-add_library(${target_name}_static
+add_library(${target_name}
+  OBJECT
   ${${target_name}_src}
 )
-add_dependencies("${target_name}_static" GenerateIddFactoryRun)
+add_dependencies(${target_name} GenerateIddFactoryRun)
 
-target_link_libraries(${target_name}_static ${${target_name}_static_depends} GeographicLib_STATIC)
 
-target_include_directories(${target_name}_static PUBLIC ${QT_STATIC_INCLUDES})
+set(${target_name}_depends ${${target_name}_depends} PARENT_SCOPE)
 
-list(LENGTH QT_STATIC_LIBS QT_STATIC_LIBS_LENGTH)
-list(LENGTH QT_STATIC_LIBS_D QT_STATIC_LIBS_D_LENGTH)
-if (NOT ${QT_STATIC_LIBS_LENGTH} EQUAL ${QT_STATIC_LIBS_D_LENGTH})
-  message(FATAL_ERROR "Mismatched sizes QT_STATIC_LIBS ${QT_STATIC_LIBS_LENGTH} != QT_STATIC_LIBS_D #{QT_STATIC_LIBS_D_LENGTH}")
-endif()
-
-math(EXPR N "${QT_STATIC_LIBS_LENGTH} - 1")
-foreach(i RANGE ${N})
-  list(GET QT_STATIC_LIBS ${i} lib_)
-  list(GET QT_STATIC_LIBS_D ${i} libd)
-  target_link_libraries(${target_name}_static optimized ${lib_} debug ${libd})
-endforeach()
-
-target_compile_definitions(${target_name}_static PUBLIC ${QT_DEFS})
-
-if(NOT BUILD_SHARED_LIBS)
-  target_compile_definitions(${target_name} PUBLIC openstudio_utilities_EXPORTS)
-  target_compile_definitions(${target_name}_static PUBLIC openstudio_utilities_EXPORTS)
-endif()
+target_link_libraries(${target_name} PUBLIC ${${target_name}_depends})
+target_compile_definitions(${target_name} PRIVATE openstudio_utilities_EXPORTS SHARED_OS_LIBS)
+target_include_directories(${target_name} PUBLIC ${PROJECT_BINARY_DIR})
+target_include_directories(${target_name} PUBLIC ${PROJECT_BINARY_DIR}/src)
 
 if(BUILD_TESTING)
-  add_dependencies("${target_name}_tests" openstudio_energyplus_resources)
+  CREATE_TEST_TARGETS(${target_name} "${${target_name}_test_src}" openstudiolib)
+  add_dependencies(${target_name}_tests openstudio_model_resources)
+  add_dependencies(${target_name}_tests openstudio_energyplus_resources)
 endif()
 
 CREATE_SRC_GROUPS("${${target_name}_swig_src}")
 
-set(swig_target_name ${target_name}_static)
+set(swig_target_name ${target_name})
 
 MAKE_SWIG_TARGET(OpenStudioUtilitiesCore utilitiescore "${CMAKE_CURRENT_SOURCE_DIR}/UtilitiesCore.i" "${${target_name}_swig_src}" ${swig_target_name} "")
 

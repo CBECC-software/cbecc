@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,137 +36,147 @@
 namespace openstudio {
 namespace model {
 
-class Schedule;
-class ThermalZone;
+  class Schedule;
+  class ThermalZone;
 
-namespace detail {
+  namespace detail {
 
-  /** HeaderedPumpsConstantSpeed_Impl is a StraightComponent_Impl that is the implementation class for HeaderedPumpsConstantSpeed.*/
-  class MODEL_API HeaderedPumpsConstantSpeed_Impl : public StraightComponent_Impl {
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+    /** HeaderedPumpsConstantSpeed_Impl is a StraightComponent_Impl that is the implementation class for HeaderedPumpsConstantSpeed.*/
+    class MODEL_API HeaderedPumpsConstantSpeed_Impl : public StraightComponent_Impl
+    {
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    HeaderedPumpsConstantSpeed_Impl(const IdfObject& idfObject,
-                                    Model_Impl* model,
-                                    bool keepHandle);
+      HeaderedPumpsConstantSpeed_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    HeaderedPumpsConstantSpeed_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                    Model_Impl* model,
-                                    bool keepHandle);
+      HeaderedPumpsConstantSpeed_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    HeaderedPumpsConstantSpeed_Impl(const HeaderedPumpsConstantSpeed_Impl& other,
-                                    Model_Impl* model,
-                                    bool keepHandle);
+      HeaderedPumpsConstantSpeed_Impl(const HeaderedPumpsConstantSpeed_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~HeaderedPumpsConstantSpeed_Impl() {}
+      virtual ~HeaderedPumpsConstantSpeed_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
+      virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
 
-    //@}
-    /** @name Getters */
-    //@{
+      virtual void autosize() override;
 
-    boost::optional<double> totalRatedFlowRate() const;
+      virtual void applySizingValues() override;
 
-    bool isTotalRatedFlowRateAutosized() const;
+      virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
 
-    int numberofPumpsinBank() const;
+      virtual std::vector<std::string> emsInternalVariableNames() const override;
 
-    std::string flowSequencingControlScheme() const;
+      //@}
+      /** @name Getters */
+      //@{
 
-    double ratedPumpHead() const;
+      boost::optional<double> totalRatedFlowRate() const;
 
-    boost::optional<double> ratedPowerConsumption() const;
+      bool isTotalRatedFlowRateAutosized() const;
 
-    bool isRatedPowerConsumptionAutosized() const;
+      int numberofPumpsinBank() const;
 
-    double motorEfficiency() const;
+      std::string flowSequencingControlScheme() const;
 
-    double fractionofMotorInefficienciestoFluidStream() const;
+      double ratedPumpHead() const;
 
-    std::string pumpControlType() const;
+      boost::optional<double> ratedPowerConsumption() const;
 
-    boost::optional<Schedule> pumpFlowRateSchedule() const;
+      bool isRatedPowerConsumptionAutosized() const;
 
-    boost::optional<ThermalZone> thermalZone() const;
+      double motorEfficiency() const;
 
-    double skinLossRadiativeFraction() const;
+      double fractionofMotorInefficienciestoFluidStream() const;
 
-  boost::optional<double> autosizedTotalRatedFlowRate() const ;
+      std::string pumpControlType() const;
 
-  boost::optional<double> autosizedRatedPowerConsumption() const ;
+      boost::optional<Schedule> pumpFlowRateSchedule() const;
 
-  virtual void autosize() override;
+      boost::optional<ThermalZone> thermalZone() const;
 
-  virtual void applySizingValues() override;
+      double skinLossRadiativeFraction() const;
 
-  virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
+      std::string designPowerSizingMethod() const;
 
-  virtual std::vector<std::string> emsInternalVariableNames() const override;
+      double designElectricPowerPerUnitFlowRate() const;
 
-    //@}
-    /** @name Setters */
-    //@{
+      double designShaftPowerPerUnitFlowRatePerUnitHead() const;
 
-    bool setTotalRatedFlowRate(boost::optional<double> totalRatedFlowRate);
+      std::string endUseSubcategory() const;
 
-    void autosizeTotalRatedFlowRate();
+      boost::optional<double> autosizedTotalRatedFlowRate() const;
 
-    bool setNumberofPumpsinBank(int numberofPumpsinBank);
+      boost::optional<double> autosizedRatedPowerConsumption() const;
 
-    bool setFlowSequencingControlScheme(std::string flowSequencingControlScheme);
+      //@}
+      /** @name Setters */
+      //@{
 
-    bool setRatedPumpHead(double ratedPumpHead);
+      bool setTotalRatedFlowRate(boost::optional<double> totalRatedFlowRate);
 
-    bool setRatedPowerConsumption(boost::optional<double> ratedPowerConsumption);
+      void autosizeTotalRatedFlowRate();
 
-    void autosizeRatedPowerConsumption();
+      bool setNumberofPumpsinBank(int numberofPumpsinBank);
 
-    bool setMotorEfficiency(double motorEfficiency);
+      bool setFlowSequencingControlScheme(const std::string& flowSequencingControlScheme);
 
-    bool setFractionofMotorInefficienciestoFluidStream(double fractionofMotorInefficienciestoFluidStream);
+      bool setRatedPumpHead(double ratedPumpHead);
 
-    bool setPumpControlType(std::string pumpControlType);
+      bool setRatedPowerConsumption(boost::optional<double> ratedPowerConsumption);
 
-    bool setPumpFlowRateSchedule(Schedule& schedule);
+      void autosizeRatedPowerConsumption();
 
-    void resetPumpFlowRateSchedule();
+      bool setMotorEfficiency(double motorEfficiency);
 
-    bool setThermalZone(const boost::optional<ThermalZone>& thermalZone);
+      bool setFractionofMotorInefficienciestoFluidStream(double fractionofMotorInefficienciestoFluidStream);
 
-    void resetThermalZone();
+      bool setPumpControlType(const std::string& pumpControlType);
 
-    bool setSkinLossRadiativeFraction(double skinLossRadiativeFraction);
+      bool setPumpFlowRateSchedule(Schedule& schedule);
 
-    //@}
-    /** @name Other */
-    //@{
+      void resetPumpFlowRateSchedule();
 
-    virtual unsigned inletPort() const override;
+      bool setThermalZone(const boost::optional<ThermalZone>& thermalZone);
 
-    virtual unsigned outletPort() const override;
+      void resetThermalZone();
 
-    bool addToNode(Node & node) override;
+      bool setSkinLossRadiativeFraction(double skinLossRadiativeFraction);
 
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.HeaderedPumpsConstantSpeed");
+      bool setDesignPowerSizingMethod(const std::string& designPowerSizingMethod);
 
-  };
+      bool setDesignElectricPowerPerUnitFlowRate(double designElectricPowerPerUnitFlowRate);
 
-} // detail
+      bool setDesignShaftPowerPerUnitFlowRatePerUnitHead(double designShaftPowerPerUnitFlowRatePerUnitHead);
 
-} // model
-} // openstudio
+      bool setEndUseSubcategory(const std::string& endUseSubcategory);
 
-#endif // MODEL_HEADEREDPUMPSCONSTANTSPEED_IMPL_HPP
+      //@}
+      /** @name Other */
+      //@{
+
+      virtual unsigned inletPort() const override;
+
+      virtual unsigned outletPort() const override;
+
+      bool addToNode(Node& node) override;
+
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.HeaderedPumpsConstantSpeed");
+    };
+
+  }  // namespace detail
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_HEADEREDPUMPSCONSTANTSPEED_IMPL_HPP

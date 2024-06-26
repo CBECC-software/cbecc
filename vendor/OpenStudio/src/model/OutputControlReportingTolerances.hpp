@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,90 +35,79 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class OutputControlReportingTolerances_Impl;
+    class OutputControlReportingTolerances_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** OutputControlReportingTolerances is a ModelObject that wraps the OpenStudio IDD object 'OS:OutputControl:ReportingTolerances'. */
-class MODEL_API OutputControlReportingTolerances : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** OutputControlReportingTolerances is a ModelObject that wraps the OpenStudio IDD object 'OS:OutputControl:ReportingTolerances'. */
+  class MODEL_API OutputControlReportingTolerances : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  virtual ~OutputControlReportingTolerances() {}
+    virtual ~OutputControlReportingTolerances() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  double toleranceforTimeHeatingSetpointNotMet() const;
+    double toleranceforTimeHeatingSetpointNotMet() const;
 
-  Quantity getToleranceforTimeHeatingSetpointNotMet(bool returnIP=false) const;
+    bool isToleranceforTimeHeatingSetpointNotMetDefaulted() const;
 
-  bool isToleranceforTimeHeatingSetpointNotMetDefaulted() const;
+    double toleranceforTimeCoolingSetpointNotMet() const;
 
-  double toleranceforTimeCoolingSetpointNotMet() const;
+    bool isToleranceforTimeCoolingSetpointNotMetDefaulted() const;
 
-  Quantity getToleranceforTimeCoolingSetpointNotMet(bool returnIP=false) const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool isToleranceforTimeCoolingSetpointNotMetDefaulted() const;
+    bool setToleranceforTimeHeatingSetpointNotMet(double toleranceforTimeHeatingSetpointNotMet);
 
-  //@}
-  /** @name Setters */
-  //@{
+    void resetToleranceforTimeHeatingSetpointNotMet();
 
-  bool setToleranceforTimeHeatingSetpointNotMet(double toleranceforTimeHeatingSetpointNotMet);
+    bool setToleranceforTimeCoolingSetpointNotMet(double toleranceforTimeCoolingSetpointNotMet);
 
-  bool setToleranceforTimeHeatingSetpointNotMet(const Quantity& toleranceforTimeHeatingSetpointNotMet);
+    void resetToleranceforTimeCoolingSetpointNotMet();
 
-  void resetToleranceforTimeHeatingSetpointNotMet();
+    //@}
+    /** @name Other */
+    //@{
 
-  bool setToleranceforTimeCoolingSetpointNotMet(double toleranceforTimeCoolingSetpointNotMet);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::OutputControlReportingTolerances_Impl ImplType;
 
-  bool setToleranceforTimeCoolingSetpointNotMet(const Quantity& toleranceforTimeCoolingSetpointNotMet);
+    explicit OutputControlReportingTolerances(std::shared_ptr<detail::OutputControlReportingTolerances_Impl> impl);
 
-  void resetToleranceforTimeCoolingSetpointNotMet();
+    friend class detail::OutputControlReportingTolerances_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    explicit OutputControlReportingTolerances(Model& model);
 
-  //@}
-  /** @name Other */
-  //@{
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.OutputControlReportingTolerances");
+  };
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::OutputControlReportingTolerances_Impl ImplType;
+  /** \relates OutputControlReportingTolerances*/
+  typedef boost::optional<OutputControlReportingTolerances> OptionalOutputControlReportingTolerances;
 
-  explicit OutputControlReportingTolerances(std::shared_ptr<detail::OutputControlReportingTolerances_Impl> impl);
+  /** \relates OutputControlReportingTolerances*/
+  typedef std::vector<OutputControlReportingTolerances> OutputControlReportingTolerancesVector;
 
-  friend class detail::OutputControlReportingTolerances_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  explicit OutputControlReportingTolerances(Model& model);
+}  // namespace model
+}  // namespace openstudio
 
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.OutputControlReportingTolerances");
-};
-
-/** \relates OutputControlReportingTolerances*/
-typedef boost::optional<OutputControlReportingTolerances> OptionalOutputControlReportingTolerances;
-
-/** \relates OutputControlReportingTolerances*/
-typedef std::vector<OutputControlReportingTolerances> OutputControlReportingTolerancesVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_OUTPUTCONTROLREPORTINGTOLERANCES_HPP
-
+#endif  // MODEL_OUTPUTCONTROLREPORTINGTOLERANCES_HPP

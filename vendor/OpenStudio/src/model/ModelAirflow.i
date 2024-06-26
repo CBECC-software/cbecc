@@ -12,12 +12,21 @@
 %import <model/ModelResources.i>
 %import <model/ModelGeometry.i>
 %import <model/ModelHVAC.i>
+// Needed for Fans
+%import <model/ModelStraightComponent.i>
+
 
 #if defined SWIGCSHARP
 
   #undef _csharp_module_name
   #define _csharp_module_name OpenStudioModelAirflow
 
+#endif
+
+#if defined SWIGPYTHON
+  %pythoncode %{
+    Model = openstudiomodelcore.Model
+  %}
 #endif
 
 // May be able to remove these includes once they are included by concrete classes
@@ -30,6 +39,14 @@
   #include <model/AirflowNetworkLinkage_Impl.hpp>
 %}
 
+%extend openstudio::model::ViewFactorData {
+  // Use the overloaded operator<< for string representation
+  std::string __str__() {
+    std::ostringstream os;
+    os << *$self;
+    return os.str();
+  }
+};
 
 // Base classes
 MODELOBJECT_TEMPLATES(AirflowNetworkComponent);
@@ -43,10 +60,12 @@ SWIG_MODELOBJECT(AirflowNetworkLinkage, 0);
 // Concrete classes
 MODELOBJECT_TEMPLATES(AirflowNetworkConstantPressureDrop);
 MODELOBJECT_TEMPLATES(AirflowNetworkCrack);
+MODELOBJECT_TEMPLATES(DetailedOpeningFactorData); // Helper class defined in AirflowNetworkDetailedOpening
 MODELOBJECT_TEMPLATES(AirflowNetworkDetailedOpening);
 MODELOBJECT_TEMPLATES(AirflowNetworkDistributionLinkage);
 MODELOBJECT_TEMPLATES(AirflowNetworkDistributionNode);
 MODELOBJECT_TEMPLATES(AirflowNetworkDuct);
+MODELOBJECT_TEMPLATES(ViewFactorData); // Helper class defined in AirflowNetworkDuctViewFactors
 MODELOBJECT_TEMPLATES(AirflowNetworkDuctViewFactors);
 MODELOBJECT_TEMPLATES(AirflowNetworkEffectiveLeakageArea);
 MODELOBJECT_TEMPLATES(AirflowNetworkEquivalentDuct);

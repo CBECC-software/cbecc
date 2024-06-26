@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -28,10 +28,15 @@
 ***********************************************************************************************************************/
 
 #include "ReverseTranslator.hpp"
+#include "Helpers.hpp"
 
+#include "../model/ExternalFile.hpp"
+#include "../model/ExternalFile_Impl.hpp"
 #include "../model/Model.hpp"
 #include "../model/ScheduleDay.hpp"
 #include "../model/ScheduleDay_Impl.hpp"
+#include "../model/ScheduleFile.hpp"
+#include "../model/ScheduleFile_Impl.hpp"
 #include "../model/ScheduleWeek.hpp"
 #include "../model/ScheduleWeek_Impl.hpp"
 #include "../model/ScheduleYear.hpp"
@@ -47,31 +52,32 @@
 #include "../utilities/time/Date.hpp"
 #include "../utilities/core/Assert.hpp"
 
-#include <QDomElement>
+#include <pugixml.hpp>
 
 namespace openstudio {
 namespace sdd {
 
-  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateScheduleDay(const QDomElement& element, const QDomDocument& doc, openstudio::model::Model& model)
-  {
-    QDomElement nameElement = element.firstChildElement("Name");
-    QDomElement typeElement = element.firstChildElement("Type");
+  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateScheduleDay(const pugi::xml_node& element,
+                                                                                          openstudio::model::Model& model) {
+    pugi::xml_node nameElement = element.child("Name");
+    pugi::xml_node typeElement = element.child("Type");
 
     std::string name;
-    if (nameElement.isNull()){
+    if (!nameElement) {
       LOG(Error, "SchDay element 'Name' is empty.")
-    } else{
-      name = escapeName(nameElement.text());
+    } else {
+      name = escapeName(nameElement.text().as_string());
     }
 
-    if (typeElement.isNull()){
+    if (!typeElement) {
       LOG(Error, "SchDay element 'Type' is empty for SchDay named '" << name << "'.  ScheduleDay will not be created");
       return boost::none;
     }
-    std::string type = escapeName(typeElement.text());
+    std::string type = escapeName(typeElement.text().as_string());
 
-    QDomNodeList hrElements = element.elementsByTagName("Hr");
-    if (hrElements.count() != 24){
+    std::vector<pugi::xml_node> hrElements = makeVectorOfChildren(element, "Hr");
+
+    if (hrElements.size() != 24) {
       LOG(Error, "SchDay does not have 24 'Hr' elements empty for SchDay named '" << name << "'.  ScheduleDay will not be created");
       return boost::none;
     }
@@ -81,176 +87,185 @@ namespace sdd {
 
     boost::optional<model::ScheduleTypeLimits> scheduleTypeLimits = model.getModelObjectByName<model::ScheduleTypeLimits>(type);
     bool isTemperature = false;
-    if (type == "Temperature"){
+    if (type == "Temperature") {
       isTemperature = true;
     }
 
-    if (!scheduleTypeLimits){
-      if (type == "Fraction"){
+    if (!scheduleTypeLimits) {
+      if (type == "Fraction") {
         scheduleTypeLimits = model::ScheduleTypeLimits(model);
         scheduleTypeLimits->setName("Fraction");
         scheduleTypeLimits->setLowerLimitValue(0);
         scheduleTypeLimits->setUpperLimitValue(1);
         scheduleTypeLimits->setNumericType("Continuous");
         scheduleTypeLimits->setUnitType("Dimensionless");
-      }else if (type == "Temperature"){
+      } else if (type == "Temperature") {
         scheduleTypeLimits = model::ScheduleTypeLimits(model);
         scheduleTypeLimits->setName("Temperature");
         scheduleTypeLimits->setUnitType("Temperature");
-      }else if (type == "OnOff"){
+      } else if (type == "OnOff") {
         scheduleTypeLimits = model::ScheduleTypeLimits(model);
         scheduleTypeLimits->setName("OnOff");
         scheduleTypeLimits->setLowerLimitValue(0);
         scheduleTypeLimits->setUpperLimitValue(1);
         scheduleTypeLimits->setNumericType("Discrete");
         scheduleTypeLimits->setUnitType("Availability");
-      }else{
+      } else {
         LOG(Error, "Unknown schedule type '" << type << "'");
       }
     }
-    if (scheduleTypeLimits){
+    if (scheduleTypeLimits) {
       scheduleDay.setScheduleTypeLimits(*scheduleTypeLimits);
     }
 
-    for (int i = 0; i < hrElements.count(); i++){
-      QDomElement hrElement = hrElements.at(i).toElement();
-      double value = hrElement.text().toDouble();
+    for (std::vector<pugi::xml_node>::size_type i = 0; i < hrElements.size(); ++i) {
+      pugi::xml_node hrElement = hrElements[i];
+      double value = hrElement.text().as_double();
 
-      if (isTemperature){
-        value = (value-32.0)/1.8; // deg F to deg C
+      if (isTemperature) {
+        value = (value - 32.0) / 1.8;  // deg F to deg C
       }
 
-      scheduleDay.addValue(openstudio::Time(0, i+1, 0, 0), value);
+      scheduleDay.addValue(openstudio::Time(0, i + 1, 0, 0), value);
     }
 
     return scheduleDay;
   }
 
-  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateScheduleWeek(const QDomElement& element, const QDomDocument& doc, openstudio::model::Model& model)
-  {
-    QDomElement nameElement = element.firstChildElement("Name");
-    QDomElement typeElement = element.firstChildElement("Type");
-    QDomElement schDaySunRefElement = element.firstChildElement("SchDaySunRef");
-    QDomElement schDayMonRefElement = element.firstChildElement("SchDayMonRef");
-    QDomElement schDayTueRefElement = element.firstChildElement("SchDayTueRef");
-    QDomElement schDayWedRefElement = element.firstChildElement("SchDayWedRef");
-    QDomElement schDayThuRefElement = element.firstChildElement("SchDayThuRef");
-    QDomElement schDayFriRefElement = element.firstChildElement("SchDayFriRef");
-    QDomElement schDaySatRefElement = element.firstChildElement("SchDaySatRef");
-    QDomElement schDayHolRefElement = element.firstChildElement("SchDayHolRef");
-    QDomElement schDayClgDDRefElement = element.firstChildElement("SchDayClgDDRef");
-    QDomElement schDayHtgDDRefElement = element.firstChildElement("SchDayHtgDDRef");
+  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateScheduleWeek(const pugi::xml_node& element,
+                                                                                           openstudio::model::Model& model) {
+    pugi::xml_node nameElement = element.child("Name");
+    pugi::xml_node typeElement = element.child("Type");
+    pugi::xml_node schDaySunRefElement = element.child("SchDaySunRef");
+    pugi::xml_node schDayMonRefElement = element.child("SchDayMonRef");
+    pugi::xml_node schDayTueRefElement = element.child("SchDayTueRef");
+    pugi::xml_node schDayWedRefElement = element.child("SchDayWedRef");
+    pugi::xml_node schDayThuRefElement = element.child("SchDayThuRef");
+    pugi::xml_node schDayFriRefElement = element.child("SchDayFriRef");
+    pugi::xml_node schDaySatRefElement = element.child("SchDaySatRef");
+    pugi::xml_node schDayHolRefElement = element.child("SchDayHolRef");
+    pugi::xml_node schDayClgDDRefElement = element.child("SchDayClgDDRef");
+    pugi::xml_node schDayHtgDDRefElement = element.child("SchDayHtgDDRef");
 
     std::string name;
-    if (nameElement.isNull()){
+    if (!nameElement) {
       LOG(Error, "SchWeek element 'Name' is empty.")
-    } else{
-      name = escapeName(nameElement.text());
+    } else {
+      name = escapeName(nameElement.text().as_string());
     }
 
-    if (typeElement.isNull()){
+    if (!typeElement) {
       LOG(Error, "SchWeek element 'Type' is empty for SchWeek named '" << name << "'.  ScheduleWeek will not be created");
       return boost::none;
     }
-    std::string type = escapeName(typeElement.text());
+    std::string type = escapeName(typeElement.text().as_string());
 
     model::ScheduleWeek scheduleWeek(model);
     scheduleWeek.setName(name);
 
-
     boost::optional<model::ScheduleTypeLimits> scheduleTypeLimits = model.getModelObjectByName<model::ScheduleTypeLimits>(type);
-    if (scheduleTypeLimits){
+    if (scheduleTypeLimits) {
       //scheduleWeek.setScheduleTypeLimits(*scheduleTypeLimits);
     }
 
-    if (!schDaySunRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDaySunRefElement.text()));
-      if (scheduleDay){
+    if (schDaySunRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDaySunRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setSundaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Sunday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayMonRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayMonRefElement.text()));
-      if (scheduleDay){
+    if (schDayMonRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayMonRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setMondaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Monday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayTueRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayTueRefElement.text()));
-      if (scheduleDay){
+    if (schDayTueRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayTueRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setTuesdaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Tuesday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayWedRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayWedRefElement.text()));
-      if (scheduleDay){
+    if (schDayWedRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayWedRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setWednesdaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Wednesday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayThuRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayThuRefElement.text()));
-      if (scheduleDay){
+    if (schDayThuRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayThuRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setThursdaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Thursday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayFriRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayFriRefElement.text()));
-      if (scheduleDay){
+    if (schDayFriRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayFriRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setFridaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Friday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDaySatRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDaySatRefElement.text()));
-      if (scheduleDay){
+    if (schDaySatRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDaySatRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setSaturdaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Saturday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayHolRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayHolRefElement.text()));
-      if (scheduleDay){
+    if (schDayHolRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayHolRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setHolidaySchedule(*scheduleDay);
         scheduleWeek.setCustomDay1Schedule(*scheduleDay);
         scheduleWeek.setCustomDay2Schedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Holiday schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayClgDDRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayClgDDRefElement.text()));
-      if (scheduleDay){
+    if (schDayClgDDRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayClgDDRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setSummerDesignDaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Summer Design Day schedule found for week schedule '" << name << "'");
       }
     }
 
-    if (!schDayHtgDDRefElement.isNull()){
-      boost::optional<model::ScheduleDay> scheduleDay = model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayHtgDDRefElement.text()));
-      if (scheduleDay){
+    if (schDayHtgDDRefElement) {
+      boost::optional<model::ScheduleDay> scheduleDay =
+        model.getModelObjectByName<model::ScheduleDay>(escapeName(schDayHtgDDRefElement.text().as_string()));
+      if (scheduleDay) {
         scheduleWeek.setWinterDesignDaySchedule(*scheduleDay);
-      }else{
+      } else {
         LOG(Error, "No Winter Design Day schedule found for week schedule '" << name << "'");
       }
     }
@@ -258,35 +273,96 @@ namespace sdd {
     return scheduleWeek;
   }
 
-  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateSchedule(const QDomElement& element, const QDomDocument& doc, openstudio::model::Model& model)
-  {
-    QDomElement nameElement = element.firstChildElement("Name");
-    QDomElement typeElement = element.firstChildElement("Type");
+  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateSchedule(const pugi::xml_node& element,
+                                                                                       openstudio::model::Model& model) {
+    boost::optional<openstudio::model::ModelObject> result;
 
+    pugi::xml_node nameElement = element.child("Name");
     std::string name;
-    if (nameElement.isNull()){
+    if (!nameElement) {
       LOG(Error, "Sch element 'Name' is empty.")
-    } else{
-      name = escapeName(nameElement.text());
+    } else {
+      name = escapeName(nameElement.text().as_string());
     }
 
-    if (typeElement.isNull()){
+    pugi::xml_node typeElement = element.child("Type");
+
+    if (!typeElement) {
       LOG(Error, "Sch element 'Type' is empty for Sch named '" << name << "'.  ScheduleYear will not be created");
       return boost::none;
     }
-    std::string type = escapeName(typeElement.text());
+    std::string type = escapeName(typeElement.text().as_string());
 
-    QDomNodeList endMonthElements = element.elementsByTagName("EndMonth");
-    QDomNodeList endDayElements = element.elementsByTagName("EndDay");
-    QDomNodeList schWeekRefElements = element.elementsByTagName("SchWeekRef");
+    if (istringEqual("File", type)) {
+      result = translateScheduleFile(element, model);
+    } else {
+      result = translateScheduleYear(element, model);
+    }
 
-    if (endMonthElements.count() != endDayElements.count()){
-      LOG(Error, "Number of 'EndMonth' elements not equal to number of 'EndDay' elements for Sch named '" << name << "'.  ScheduleYear will not be created");
+    return result;
+  }
+
+  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateScheduleFile(const pugi::xml_node& element,
+                                                                                       openstudio::model::Model& model) {
+    const auto name = escapeName(element.child("Name").text().as_string());
+
+    const auto path = element.child("SchFileName").text().as_string();
+    const auto externalFile = openstudio::model::ExternalFile::getExternalFile(model, path);
+    if (! externalFile) {
+      LOG(Error, "The external file path '" << path << "' could not be located");
+      return boost::none;
+    }
+    openstudio::model::ScheduleFile schedule(externalFile.get());
+    schedule.setName(name);
+
+    const auto colIdx = element.child("ColIdx");
+    if (colIdx) {
+      schedule.setColumnNumber(colIdx.text().as_int());
+    }
+
+    const auto rowstoSkipatTop = element.child("RowsToSkipAtTop");
+    if (rowstoSkipatTop) {
+      schedule.setRowstoSkipatTop(rowstoSkipatTop.text().as_int());
+    }
+
+    const auto colSeparator = element.child("ColSeparator");
+    if (colSeparator) {
+      schedule.setColumnSeparator(colSeparator.text().as_string());
+    }
+
+    const auto interpToTimestep = element.child("InterpToTimestep");
+    if (interpToTimestep) {
+      schedule.setInterpolatetoTimestep(interpToTimestep.text().as_bool());
+    }
+
+    const auto minutesPerRow = element.child("MinutesPerRow");
+    if (minutesPerRow) {
+      schedule.setMinutesperItem(minutesPerRow.text().as_string());
+    } else {
+      schedule.setMinutesperItem("60");
+    }
+
+    return schedule;
+  }
+
+  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateScheduleYear(const pugi::xml_node& element,
+                                                                                       openstudio::model::Model& model) {
+    const auto name = escapeName(element.child("Name").text().as_string());
+    const auto type = escapeName(element.child("Type").text().as_string());
+
+    std::vector<pugi::xml_node> endMonthElements = makeVectorOfChildren(element, "EndMonth");
+    std::vector<pugi::xml_node> endDayElements = makeVectorOfChildren(element, "EndDay");
+    std::vector<pugi::xml_node> schWeekRefElements = makeVectorOfChildren(element, "SchWeekRef");
+
+    if (endMonthElements.size() != endDayElements.size()) {
+      LOG(Error,
+          "Number of 'EndMonth' elements not equal to number of 'EndDay' elements for Sch named '" << name << "'.  ScheduleYear will not be created");
       return boost::none;
     }
 
-    if (endMonthElements.count() != schWeekRefElements.count()){
-      LOG(Error, "Number of 'EndMonth' elements not equal to number of 'SchWeekRef' elements for Sch named '" << name << "'.  ScheduleYear will not be created");
+    if (endMonthElements.size() != schWeekRefElements.size()) {
+      LOG(Error, "Number of 'EndMonth' elements not equal to number of 'SchWeekRef' elements for Sch named '"
+                   << name << "'.  ScheduleYear will not be created");
       return boost::none;
     }
 
@@ -294,27 +370,28 @@ namespace sdd {
     scheduleYear.setName(name);
 
     boost::optional<model::ScheduleTypeLimits> scheduleTypeLimits = model.getModelObjectByName<model::ScheduleTypeLimits>(type);
-    if (scheduleTypeLimits){
+    if (scheduleTypeLimits) {
       scheduleYear.setScheduleTypeLimits(*scheduleTypeLimits);
     }
 
-    for (int i = 0; i < endMonthElements.count(); i++){
-      QDomElement endMonthElement = endMonthElements.at(i).toElement();
-      QDomElement endDayElement = endDayElements.at(i).toElement();
-      QDomElement schWeekRefElement = schWeekRefElements.at(i).toElement();
+    for (std::vector<pugi::xml_node>::size_type i = 0; i < endMonthElements.size(); ++i) {
+      pugi::xml_node endMonthElement = endMonthElements[i];
+      pugi::xml_node endDayElement = endDayElements[i];
+      pugi::xml_node schWeekRefElement = schWeekRefElements[i];
 
-      boost::optional<model::ScheduleWeek> scheduleWeek = model.getModelObjectByName<model::ScheduleWeek>(escapeName(schWeekRefElement.text()));
-      if (scheduleWeek){
+      boost::optional<model::ScheduleWeek> scheduleWeek =
+        model.getModelObjectByName<model::ScheduleWeek>(escapeName(schWeekRefElement.text().as_string()));
+      if (scheduleWeek) {
 
         boost::optional<model::YearDescription> yearDescription = model.getOptionalUniqueModelObject<model::YearDescription>();
-        if (yearDescription){
-          MonthOfYear monthOfYear(endMonthElement.text().toUInt());
-          unsigned dayOfMonth = endDayElement.text().toUInt();
+        if (yearDescription) {
+          MonthOfYear monthOfYear(endMonthElement.text().as_uint());
+          unsigned dayOfMonth = endDayElement.text().as_uint();
           Date untilDate(monthOfYear, dayOfMonth, yearDescription->assumedYear());
           scheduleYear.addScheduleWeek(untilDate, *scheduleWeek);
-        }else{
-          MonthOfYear monthOfYear(endMonthElement.text().toUInt());
-          unsigned dayOfMonth = endDayElement.text().toUInt();
+        } else {
+          MonthOfYear monthOfYear(endMonthElement.text().as_uint());
+          unsigned dayOfMonth = endDayElement.text().as_uint();
           Date untilDate(monthOfYear, dayOfMonth);
           scheduleYear.addScheduleWeek(untilDate, *scheduleWeek);
         }
@@ -324,8 +401,8 @@ namespace sdd {
     return scheduleYear;
   }
 
-  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateHoliday(const QDomElement& element, const QDomDocument& doc, openstudio::model::Model& model)
-  {
+  boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateHoliday(const pugi::xml_node& element,
+                                                                                      openstudio::model::Model& model) {
     //<Name>Thanksgiving Day</Name>
     //<SpecMthd>Fourth</SpecMthd>
     //<DayOfWeek>Thursday</DayOfWeek>
@@ -338,70 +415,70 @@ namespace sdd {
 
     boost::optional<openstudio::model::ModelObject> result;
 
-    QDomElement nameElement = element.firstChildElement("Name");
+    pugi::xml_node nameElement = element.child("Name");
     std::string name;
-    if (nameElement.isNull()){
+    if (!nameElement) {
       LOG(Error, "Hol element 'Name' is empty.")
-    } else{
-      name = escapeName(nameElement.text());
+    } else {
+      name = escapeName(nameElement.text().as_string());
     }
 
-    QDomElement specificationMethodElement = element.firstChildElement("SpecMthd");
-    if (specificationMethodElement.isNull()){
+    pugi::xml_node specificationMethodElement = element.child("SpecMthd");
+    if (!specificationMethodElement) {
       LOG(Error, "Hol element 'SpecMthd' is empty for Hol named '" << name << "'.  Holiday will not be created");
       return boost::none;
     }
 
-    if (specificationMethodElement.text() == "Date"){
-      QDomElement monthElement = element.firstChildElement("Month");
-      QDomElement dayElement = element.firstChildElement("Day");
+    if (openstudio::istringEqual(specificationMethodElement.text().as_string(), "Date")) {
+      pugi::xml_node monthElement = element.child("Month");
+      pugi::xml_node dayElement = element.child("Day");
 
-      if (monthElement.isNull()){
+      if (!monthElement) {
         LOG(Error, "Hol element 'Month' is empty for Hol named '" << name << "'.  Holiday will not be created");
         return boost::none;
       }
 
-      if (dayElement.isNull()){
+      if (!dayElement) {
         LOG(Error, "Hol element 'Day' is empty for Hol named '" << name << "'.  Holiday will not be created");
         return boost::none;
       }
 
-      MonthOfYear monthOfYear(toString(monthElement.text()));
-      unsigned day = dayElement.text().toUInt();
+      MonthOfYear monthOfYear(monthElement.text().as_string());
+      unsigned day = dayElement.text().as_uint();
 
       result = model::RunPeriodControlSpecialDays(monthOfYear, day, model);
-      result->setName(escapeName(nameElement.text()));
+      result->setName(escapeName(nameElement.text().as_string()));
 
-    }else{
-      QDomElement dayOfWeekElement = element.firstChildElement("DayOfWeek");
-      QDomElement monthElement = element.firstChildElement("Month");
+    } else {
+      pugi::xml_node dayOfWeekElement = element.child("DayOfWeek");
+      pugi::xml_node monthElement = element.child("Month");
 
-      if (dayOfWeekElement.isNull()){
+      if (!dayOfWeekElement) {
         LOG(Error, "Hol element 'DayOfWeek' is empty for Hol named '" << name << "'.  Holiday will not be created");
         return boost::none;
       }
 
-      if (monthElement.isNull()){
+      if (!monthElement) {
         LOG(Error, "Hol element 'Month' is empty for Hol named '" << name << "'.  Holiday will not be created");
         return boost::none;
       }
 
       // fifth is treated equivalently to last
-      std::string specificationMethod = toString(specificationMethodElement.text());
-      if (specificationMethod == "Last"){
+      std::string specificationMethod = specificationMethodElement.text().as_string();
+      if (specificationMethod == "Last") {
         specificationMethod = "Fifth";
       }
 
       NthDayOfWeekInMonth nth(specificationMethod);
-      DayOfWeek dayOfWeek(toString(dayOfWeekElement.text()));
-      MonthOfYear monthOfYear(toString(monthElement.text()));
+      DayOfWeek dayOfWeek(dayOfWeekElement.text().as_string());
+      MonthOfYear monthOfYear(monthElement.text().as_string());
 
       result = model::RunPeriodControlSpecialDays(nth, dayOfWeek, monthOfYear, model);
-      result->setName(escapeName(nameElement.text()));
+      result->setName(escapeName(nameElement.text().as_string()));
     }
 
     return result;
   }
 
-} // sdd
-} // openstudio
+}  // namespace sdd
+}  // namespace openstudio

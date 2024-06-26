@@ -57,7 +57,7 @@ namespace openstudio {
  *
  *  Structures for storing data such as \link Vector.hpp vectors\endlink,
  *  \link Matrix.hpp matrices\endlink, and \link TimeSeries time series\endlink. The Attribute
- *  class is used widely throughout OpenStudio. EndUses, Tag, and the enumeration classes in
+ *  class is used for reporting measures in particular; class EndUses and the enumeration classes in
  *  DataEnums.hpp are also of interest.
  *
  *  \section filetypes_sec Filetypes
@@ -120,4 +120,4 @@ namespace openstudio {
  *                         conversions on a vector of values all sharing the same units.
  */
 
-} // openstudio
+}  // namespace openstudio

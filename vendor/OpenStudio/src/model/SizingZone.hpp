@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,315 +35,268 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-class ThermalZone;
+  class ThermalZone;
 
-namespace detail {
+  namespace detail {
 
-  class SizingZone_Impl;
+    class SizingZone_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** SizingZone is a ModelObject that wraps the OpenStudio IDD object 'OS:Sizing:Zone'. */
-class MODEL_API SizingZone : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** SizingZone is a ModelObject that wraps the OpenStudio IDD object 'OS:Sizing:Zone'. */
+  class MODEL_API SizingZone : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit SizingZone(const Model& model, const ThermalZone & thermalZone);
+    explicit SizingZone(const Model& model, const ThermalZone& thermalZone);
 
-  virtual ~SizingZone() {}
+    virtual ~SizingZone() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> coolingDesignAirFlowMethodValues();
-  static std::vector<std::string> heatingDesignAirFlowMethodValues();
-  static std::vector<std::string> zoneCoolingDesignSupplyAirTemperatureInputMethodValues();
-  static std::vector<std::string> zoneHeatingDesignSupplyAirTemperatureInputMethodValues();
+    static std::vector<std::string> coolingDesignAirFlowMethodValues();
+    static std::vector<std::string> heatingDesignAirFlowMethodValues();
+    static std::vector<std::string> zoneCoolingDesignSupplyAirTemperatureInputMethodValues();
+    static std::vector<std::string> zoneHeatingDesignSupplyAirTemperatureInputMethodValues();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  ThermalZone thermalZone() const;
+    ThermalZone thermalZone() const;
 
-  std::string zoneCoolingDesignSupplyAirTemperatureInputMethod() const;
+    std::string zoneCoolingDesignSupplyAirTemperatureInputMethod() const;
 
-  double zoneCoolingDesignSupplyAirTemperature() const;
+    double zoneCoolingDesignSupplyAirTemperature() const;
 
-  Quantity getZoneCoolingDesignSupplyAirTemperature(bool returnIP=false) const;
+    double zoneCoolingDesignSupplyAirTemperatureDifference() const;
 
-  double zoneCoolingDesignSupplyAirTemperatureDifference() const;
+    std::string zoneHeatingDesignSupplyAirTemperatureInputMethod() const;
 
-  std::string zoneHeatingDesignSupplyAirTemperatureInputMethod() const;
+    double zoneHeatingDesignSupplyAirTemperature() const;
 
-  double zoneHeatingDesignSupplyAirTemperature() const;
+    double zoneHeatingDesignSupplyAirTemperatureDifference() const;
 
-  Quantity getZoneHeatingDesignSupplyAirTemperature(bool returnIP=false) const;
+    double zoneCoolingDesignSupplyAirHumidityRatio() const;
 
-  double zoneHeatingDesignSupplyAirTemperatureDifference() const;
+    double zoneHeatingDesignSupplyAirHumidityRatio() const;
 
-  double zoneCoolingDesignSupplyAirHumidityRatio() const;
+    boost::optional<double> zoneHeatingSizingFactor() const;
 
-  Quantity getZoneCoolingDesignSupplyAirHumidityRatio(bool returnIP=false) const;
+    boost::optional<double> zoneCoolingSizingFactor() const;
 
-  double zoneHeatingDesignSupplyAirHumidityRatio() const;
+    std::string coolingDesignAirFlowMethod() const;
 
-  Quantity getZoneHeatingDesignSupplyAirHumidityRatio(bool returnIP=false) const;
+    bool isCoolingDesignAirFlowMethodDefaulted() const;
 
-  boost::optional<double> zoneHeatingSizingFactor() const;
+    double coolingDesignAirFlowRate() const;
 
-  OSOptionalQuantity getZoneHeatingSizingFactor(bool returnIP=false) const;
+    bool isCoolingDesignAirFlowRateDefaulted() const;
 
-  boost::optional<double> zoneCoolingSizingFactor() const;
+    double coolingMinimumAirFlowperZoneFloorArea() const;
 
-  OSOptionalQuantity getZoneCoolingSizingFactor(bool returnIP=false) const;
+    bool isCoolingMinimumAirFlowperZoneFloorAreaDefaulted() const;
 
-  std::string coolingDesignAirFlowMethod() const;
+    double coolingMinimumAirFlow() const;
 
-  bool isCoolingDesignAirFlowMethodDefaulted() const;
+    bool isCoolingMinimumAirFlowDefaulted() const;
 
-  double coolingDesignAirFlowRate() const;
+    double coolingMinimumAirFlowFraction() const;
 
-  Quantity getCoolingDesignAirFlowRate(bool returnIP=false) const;
+    bool isCoolingMinimumAirFlowFractionDefaulted() const;
 
-  bool isCoolingDesignAirFlowRateDefaulted() const;
+    std::string heatingDesignAirFlowMethod() const;
 
-  double coolingMinimumAirFlowperZoneFloorArea() const;
+    bool isHeatingDesignAirFlowMethodDefaulted() const;
 
-  Quantity getCoolingMinimumAirFlowperZoneFloorArea(bool returnIP=false) const;
+    double heatingDesignAirFlowRate() const;
 
-  bool isCoolingMinimumAirFlowperZoneFloorAreaDefaulted() const;
+    bool isHeatingDesignAirFlowRateDefaulted() const;
 
-  double coolingMinimumAirFlow() const;
+    double heatingMaximumAirFlowperZoneFloorArea() const;
 
-  Quantity getCoolingMinimumAirFlow(bool returnIP=false) const;
+    bool isHeatingMaximumAirFlowperZoneFloorAreaDefaulted() const;
 
-  bool isCoolingMinimumAirFlowDefaulted() const;
+    double heatingMaximumAirFlow() const;
 
-  double coolingMinimumAirFlowFraction() const;
+    bool isHeatingMaximumAirFlowDefaulted() const;
 
-  Quantity getCoolingMinimumAirFlowFraction(bool returnIP=false) const;
+    double heatingMaximumAirFlowFraction() const;
 
-  bool isCoolingMinimumAirFlowFractionDefaulted() const;
+    bool isHeatingMaximumAirFlowFractionDefaulted() const;
 
-  std::string heatingDesignAirFlowMethod() const;
+    bool accountforDedicatedOutdoorAirSystem() const;
 
-  bool isHeatingDesignAirFlowMethodDefaulted() const;
+    std::string dedicatedOutdoorAirSystemControlStrategy() const;
 
-  double heatingDesignAirFlowRate() const;
+    boost::optional<double> dedicatedOutdoorAirLowSetpointTemperatureforDesign() const;
 
-  Quantity getHeatingDesignAirFlowRate(bool returnIP=false) const;
+    bool isDedicatedOutdoorAirLowSetpointTemperatureforDesignAutosized() const;
 
-  bool isHeatingDesignAirFlowRateDefaulted() const;
+    boost::optional<double> dedicatedOutdoorAirHighSetpointTemperatureforDesign() const;
 
-  double heatingMaximumAirFlowperZoneFloorArea() const;
+    bool isDedicatedOutdoorAirHighSetpointTemperatureforDesignAutosized() const;
 
-  Quantity getHeatingMaximumAirFlowperZoneFloorArea(bool returnIP=false) const;
+    // Fields from DesignSpecification:ZoneAirDistribution
 
-  bool isHeatingMaximumAirFlowperZoneFloorAreaDefaulted() const;
+    double designZoneAirDistributionEffectivenessinCoolingMode() const;
 
-  double heatingMaximumAirFlow() const;
+    bool isDesignZoneAirDistributionEffectivenessinCoolingModeDefaulted() const;
 
-  Quantity getHeatingMaximumAirFlow(bool returnIP=false) const;
+    double designZoneAirDistributionEffectivenessinHeatingMode() const;
 
-  bool isHeatingMaximumAirFlowDefaulted() const;
+    bool isDesignZoneAirDistributionEffectivenessinHeatingModeDefaulted() const;
 
-  double heatingMaximumAirFlowFraction() const;
+    double designZoneSecondaryRecirculationFraction() const;
 
-  Quantity getHeatingMaximumAirFlowFraction(bool returnIP=false) const;
+    bool isDesignZoneSecondaryRecirculationFractionDefaulted() const;
 
-  bool isHeatingMaximumAirFlowFractionDefaulted() const;
+    double designMinimumZoneVentilationEfficiency() const;
 
-  double designZoneAirDistributionEffectivenessinCoolingMode() const;
+    bool isDesignMinimumZoneVentilationEfficiencyDefaulted() const;
 
-  Quantity getDesignZoneAirDistributionEffectivenessinCoolingMode(bool returnIP=false) const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool isDesignZoneAirDistributionEffectivenessinCoolingModeDefaulted() const;
+    bool setZoneCoolingDesignSupplyAirTemperatureInputMethod(const std::string& value);
 
-  double designZoneAirDistributionEffectivenessinHeatingMode() const;
+    bool setZoneCoolingDesignSupplyAirTemperature(double zoneCoolingDesignSupplyAirTemperature);
 
-  Quantity getDesignZoneAirDistributionEffectivenessinHeatingMode(bool returnIP=false) const;
+    bool setZoneCoolingDesignSupplyAirTemperatureDifference(double value);
 
-  bool isDesignZoneAirDistributionEffectivenessinHeatingModeDefaulted() const;
+    bool setZoneHeatingDesignSupplyAirTemperatureInputMethod(const std::string& value);
 
-  bool accountforDedicatedOutdoorAirSystem() const;
+    bool setZoneHeatingDesignSupplyAirTemperature(double zoneHeatingDesignSupplyAirTemperature);
 
-  std::string dedicatedOutdoorAirSystemControlStrategy() const;
+    bool setZoneHeatingDesignSupplyAirTemperatureDifference(double value);
 
-  boost::optional<double> dedicatedOutdoorAirLowSetpointTemperatureforDesign() const;
+    bool setZoneCoolingDesignSupplyAirHumidityRatio(double zoneCoolingDesignSupplyAirHumidityRatio);
 
-  bool isDedicatedOutdoorAirLowSetpointTemperatureforDesignAutosized() const;
+    bool setZoneHeatingDesignSupplyAirHumidityRatio(double zoneHeatingDesignSupplyAirHumidityRatio);
 
-  boost::optional<double> dedicatedOutdoorAirHighSetpointTemperatureforDesign() const;
+    bool setZoneHeatingSizingFactor(double zoneHeatingSizingFactor);
 
-  bool isDedicatedOutdoorAirHighSetpointTemperatureforDesignAutosized() const;
+    void resetZoneHeatingSizingFactor();
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool setZoneCoolingSizingFactor(double zoneCoolingSizingFactor);
 
-  bool setZoneCoolingDesignSupplyAirTemperatureInputMethod(const std::string &value);
+    void resetZoneCoolingSizingFactor();
 
-  bool setZoneCoolingDesignSupplyAirTemperature(double zoneCoolingDesignSupplyAirTemperature);
+    bool setCoolingDesignAirFlowMethod(const std::string& coolingDesignAirFlowMethod);
 
-  bool setZoneCoolingDesignSupplyAirTemperature(const Quantity& zoneCoolingDesignSupplyAirTemperature);
+    void resetCoolingDesignAirFlowMethod();
 
-  bool setZoneCoolingDesignSupplyAirTemperatureDifference(double value);
+    bool setCoolingDesignAirFlowRate(double coolingDesignAirFlowRate);
 
-  bool setZoneHeatingDesignSupplyAirTemperatureInputMethod(const std::string &value);
+    void resetCoolingDesignAirFlowRate();
 
-  bool setZoneHeatingDesignSupplyAirTemperature(double zoneHeatingDesignSupplyAirTemperature);
+    bool setCoolingMinimumAirFlowperZoneFloorArea(double coolingMinimumAirFlowperZoneFloorArea);
 
-  bool setZoneHeatingDesignSupplyAirTemperature(const Quantity& zoneHeatingDesignSupplyAirTemperature);
+    void resetCoolingMinimumAirFlowperZoneFloorArea();
 
-  bool setZoneHeatingDesignSupplyAirTemperatureDifference(double value);
+    bool setCoolingMinimumAirFlow(double coolingMinimumAirFlow);
 
-  bool setZoneCoolingDesignSupplyAirHumidityRatio(double zoneCoolingDesignSupplyAirHumidityRatio);
+    void resetCoolingMinimumAirFlow();
 
-  bool setZoneCoolingDesignSupplyAirHumidityRatio(const Quantity& zoneCoolingDesignSupplyAirHumidityRatio);
+    bool setCoolingMinimumAirFlowFraction(double coolingMinimumAirFlowFraction);
 
-  bool setZoneHeatingDesignSupplyAirHumidityRatio(double zoneHeatingDesignSupplyAirHumidityRatio);
+    void resetCoolingMinimumAirFlowFraction();
 
-  bool setZoneHeatingDesignSupplyAirHumidityRatio(const Quantity& zoneHeatingDesignSupplyAirHumidityRatio);
+    bool setHeatingDesignAirFlowMethod(const std::string& heatingDesignAirFlowMethod);
 
-  bool setZoneHeatingSizingFactor(double zoneHeatingSizingFactor);
+    void resetHeatingDesignAirFlowMethod();
 
-  bool setZoneHeatingSizingFactor(const Quantity& zoneHeatingSizingFactor);
+    bool setHeatingDesignAirFlowRate(double heatingDesignAirFlowRate);
 
-  void resetZoneHeatingSizingFactor();
+    void resetHeatingDesignAirFlowRate();
 
-  bool setZoneCoolingSizingFactor(double zoneCoolingSizingFactor);
+    bool setHeatingMaximumAirFlowperZoneFloorArea(double heatingMaximumAirFlowperZoneFloorArea);
 
-  bool setZoneCoolingSizingFactor(const Quantity& zoneCoolingSizingFactor);
+    void resetHeatingMaximumAirFlowperZoneFloorArea();
 
-  void resetZoneCoolingSizingFactor();
+    bool setHeatingMaximumAirFlow(double heatingMaximumAirFlow);
 
-  bool setCoolingDesignAirFlowMethod(const std::string &coolingDesignAirFlowMethod);
+    void resetHeatingMaximumAirFlow();
 
-  void resetCoolingDesignAirFlowMethod();
+    bool setHeatingMaximumAirFlowFraction(double heatingMaximumAirFlowFraction);
 
-  bool setCoolingDesignAirFlowRate(double coolingDesignAirFlowRate);
+    void resetHeatingMaximumAirFlowFraction();
 
-  bool setCoolingDesignAirFlowRate(const Quantity& coolingDesignAirFlowRate);
+    bool setAccountforDedicatedOutdoorAirSystem(bool accountforDedicatedOutdoorAirSystem);
 
-  void resetCoolingDesignAirFlowRate();
+    bool setDedicatedOutdoorAirSystemControlStrategy(std::string dedicatedOutdoorAirSystemControlStrategy);
 
-  bool setCoolingMinimumAirFlowperZoneFloorArea(double coolingMinimumAirFlowperZoneFloorArea);
+    bool setDedicatedOutdoorAirLowSetpointTemperatureforDesign(double dedicatedOutdoorAirLowSetpointTemperatureforDesign);
 
-  bool setCoolingMinimumAirFlowperZoneFloorArea(const Quantity& coolingMinimumAirFlowperZoneFloorArea);
+    void autosizeDedicatedOutdoorAirLowSetpointTemperatureforDesign();
 
-  void resetCoolingMinimumAirFlowperZoneFloorArea();
+    bool setDedicatedOutdoorAirHighSetpointTemperatureforDesign(double dedicatedOutdoorAirHighSetpointTemperatureforDesign);
 
-  bool setCoolingMinimumAirFlow(double coolingMinimumAirFlow);
+    void autosizeDedicatedOutdoorAirHighSetpointTemperatureforDesign();
 
-  bool setCoolingMinimumAirFlow(const Quantity& coolingMinimumAirFlow);
+    // Fields from DesignSpecification:ZoneAirDistribution
 
-  void resetCoolingMinimumAirFlow();
+    bool setDesignZoneAirDistributionEffectivenessinCoolingMode(double designZoneAirDistributionEffectivenessinCoolingMode);
 
-  bool setCoolingMinimumAirFlowFraction(double coolingMinimumAirFlowFraction);
+    void resetDesignZoneAirDistributionEffectivenessinCoolingMode();
 
-  bool setCoolingMinimumAirFlowFraction(const Quantity& coolingMinimumAirFlowFraction);
+    bool setDesignZoneAirDistributionEffectivenessinHeatingMode(double designZoneAirDistributionEffectivenessinHeatingMode);
 
-  void resetCoolingMinimumAirFlowFraction();
+    void resetDesignZoneAirDistributionEffectivenessinHeatingMode();
 
-  bool setHeatingDesignAirFlowMethod(std::string heatingDesignAirFlowMethod);
+    bool setDesignZoneSecondaryRecirculationFraction(double designZoneSecondaryRecirculationFraction);
 
-  void resetHeatingDesignAirFlowMethod();
+    void resetDesignZoneSecondaryRecirculationFraction();
 
-  bool setHeatingDesignAirFlowRate(double heatingDesignAirFlowRate);
+    bool setDesignMinimumZoneVentilationEfficiency(double designMinimumZoneVentilationEfficiency);
 
-  bool setHeatingDesignAirFlowRate(const Quantity& heatingDesignAirFlowRate);
+    void resetDesignMinimumZoneVentilationEfficiency();
 
-  void resetHeatingDesignAirFlowRate();
+    //@}
+    /** @name Other */
+    //@{
 
-  bool setHeatingMaximumAirFlowperZoneFloorArea(double heatingMaximumAirFlowperZoneFloorArea);
+    boost::optional<double> autosizedDedicatedOutdoorAirLowSetpointTemperatureforDesign() const;
 
-  bool setHeatingMaximumAirFlowperZoneFloorArea(const Quantity& heatingMaximumAirFlowperZoneFloorArea);
+    boost::optional<double> autosizedDedicatedOutdoorAirHighSetpointTemperatureforDesign() const;
 
-  void resetHeatingMaximumAirFlowperZoneFloorArea();
+    void autosize();
 
-  bool setHeatingMaximumAirFlow(double heatingMaximumAirFlow);
+    void applySizingValues();
 
-  bool setHeatingMaximumAirFlow(const Quantity& heatingMaximumAirFlow);
+    //@}
+   protected:
+    bool setThermalZone(const ThermalZone& thermalZone);
 
-  void resetHeatingMaximumAirFlow();
+    /// @cond
+    typedef detail::SizingZone_Impl ImplType;
 
-  bool setHeatingMaximumAirFlowFraction(double heatingMaximumAirFlowFraction);
+    explicit SizingZone(std::shared_ptr<detail::SizingZone_Impl> impl);
 
-  bool setHeatingMaximumAirFlowFraction(const Quantity& heatingMaximumAirFlowFraction);
+    friend class detail::SizingZone_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    friend class ThermalZone;
 
-  void resetHeatingMaximumAirFlowFraction();
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.SizingZone");
+  };
 
-  bool setDesignZoneAirDistributionEffectivenessinCoolingMode(double designZoneAirDistributionEffectivenessinCoolingMode);
+  /** \relates SizingZone*/
+  typedef boost::optional<SizingZone> OptionalSizingZone;
 
-  bool setDesignZoneAirDistributionEffectivenessinCoolingMode(const Quantity& designZoneAirDistributionEffectivenessinCoolingMode);
+  /** \relates SizingZone*/
+  typedef std::vector<SizingZone> SizingZoneVector;
 
-  void resetDesignZoneAirDistributionEffectivenessinCoolingMode();
+}  // namespace model
+}  // namespace openstudio
 
-  bool setDesignZoneAirDistributionEffectivenessinHeatingMode(double designZoneAirDistributionEffectivenessinHeatingMode);
-
-  bool setDesignZoneAirDistributionEffectivenessinHeatingMode(const Quantity& designZoneAirDistributionEffectivenessinHeatingMode);
-
-  void resetDesignZoneAirDistributionEffectivenessinHeatingMode();
-
-  bool setAccountforDedicatedOutdoorAirSystem(bool accountforDedicatedOutdoorAirSystem);
-
-  bool setDedicatedOutdoorAirSystemControlStrategy(std::string dedicatedOutdoorAirSystemControlStrategy);
-
-  bool setDedicatedOutdoorAirLowSetpointTemperatureforDesign(double dedicatedOutdoorAirLowSetpointTemperatureforDesign);
-
-  void autosizeDedicatedOutdoorAirLowSetpointTemperatureforDesign();
-
-  bool setDedicatedOutdoorAirHighSetpointTemperatureforDesign(double dedicatedOutdoorAirHighSetpointTemperatureforDesign);
-
-  void autosizeDedicatedOutdoorAirHighSetpointTemperatureforDesign();
-
-  //@}
-  /** @name Other */
-  //@{
-
-  boost::optional<double> autosizedDedicatedOutdoorAirLowSetpointTemperatureforDesign() const ;
-
-  boost::optional<double> autosizedDedicatedOutdoorAirHighSetpointTemperatureforDesign() const ;
-
-  void autosize();
-
-  void applySizingValues();
-
-  //@}
- protected:
-
-  bool setThermalZone(const ThermalZone & thermalZone);
-
-  /// @cond
-  typedef detail::SizingZone_Impl ImplType;
-
-  explicit SizingZone(std::shared_ptr<detail::SizingZone_Impl> impl);
-
-  friend class detail::SizingZone_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  friend class ThermalZone;
-
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.SizingZone");
-};
-
-/** \relates SizingZone*/
-typedef boost::optional<SizingZone> OptionalSizingZone;
-
-/** \relates SizingZone*/
-typedef std::vector<SizingZone> SizingZoneVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_SIZINGZONE_HPP
+#endif  // MODEL_SIZINGZONE_HPP

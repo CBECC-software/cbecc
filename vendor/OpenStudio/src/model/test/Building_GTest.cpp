@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -59,8 +59,17 @@
 #include "../PeopleDefinition.hpp"
 #include "../Schedule.hpp"
 #include "../LifeCycleCost.hpp"
+#include "../AirLoopHVAC.hpp"
+#include "../AirLoopHVAC_Impl.hpp"
+#include "../Node.hpp"
+#include "../Node_Impl.hpp"
+#include "../PortList.hpp"
+#include "../PortList_Impl.hpp"
+#include "../OutputMeter.hpp"
+#include "../OutputMeter_Impl.hpp"
+#include "../DefaultScheduleSet.hpp"
+#include "../ScheduleConstant.hpp"
 
-#include "../../utilities/data/Attribute.hpp"
 #include "../../utilities/geometry/Geometry.hpp"
 
 #include <math.h>
@@ -68,8 +77,7 @@
 using namespace openstudio::model;
 using namespace openstudio;
 
-TEST_F(ModelFixture, Building)
-{
+TEST_F(ModelFixture, Building) {
   Model model;
 
   Building building = model.getUniqueModelObject<Building>();
@@ -78,7 +86,6 @@ TEST_F(ModelFixture, Building)
   EXPECT_TRUE(building.isNorthAxisDefaulted());
   EXPECT_FALSE(building.nominalFloortoFloorHeight());
   EXPECT_FALSE(building.getDouble(3));
-
 
   OptionalString buildingName = building.name();
   ASSERT_TRUE(buildingName);
@@ -91,8 +98,7 @@ TEST_F(ModelFixture, Building)
   EXPECT_EQ("Edificio", *buildingName);
 }
 
-TEST_F(ModelFixture, Building_SpaceAttributes)
-{
+TEST_F(ModelFixture, Building_SpaceAttributes) {
   Model model;
 
   Building building = model.getUniqueModelObject<Building>();
@@ -136,7 +142,7 @@ TEST_F(ModelFixture, Building_SpaceAttributes)
   EXPECT_FALSE(building.conditionedFloorArea());
   EXPECT_NEAR(100, building.lightingPower(), 0.0001);
   EXPECT_NEAR(1, building.lightingPowerPerFloorArea(), 0.0001);
-  EXPECT_NEAR(1.0/100.0, building.peoplePerFloorArea(), 0.0001);
+  EXPECT_NEAR(1.0 / 100.0, building.peoplePerFloorArea(), 0.0001);
 
   EXPECT_TRUE(light.setMultiplier(2));
   EXPECT_TRUE(person.setMultiplier(2));
@@ -145,7 +151,7 @@ TEST_F(ModelFixture, Building_SpaceAttributes)
   EXPECT_FALSE(building.conditionedFloorArea());
   EXPECT_NEAR(200, building.lightingPower(), 0.0001);
   EXPECT_NEAR(2, building.lightingPowerPerFloorArea(), 0.0001);
-  EXPECT_NEAR(2.0/100.0, building.peoplePerFloorArea(), 0.0001);
+  EXPECT_NEAR(2.0 / 100.0, building.peoplePerFloorArea(), 0.0001);
 
   ThermalZone thermalZone(model);
   EXPECT_TRUE(thermalZone.setMultiplier(2));
@@ -156,12 +162,10 @@ TEST_F(ModelFixture, Building_SpaceAttributes)
   EXPECT_FALSE(building.conditionedFloorArea());
   EXPECT_NEAR(400, building.lightingPower(), 0.0001);
   EXPECT_NEAR(2, building.lightingPowerPerFloorArea(), 0.0001);
-  EXPECT_NEAR(2.0/100.0, building.peoplePerFloorArea(), 0.0001);
-
+  EXPECT_NEAR(2.0 / 100.0, building.peoplePerFloorArea(), 0.0001);
 }
 
-TEST_F(ModelFixture, Building_SpaceTypeAttributes)
-{
+TEST_F(ModelFixture, Building_SpaceTypeAttributes) {
   Model model;
 
   Building building = model.getUniqueModelObject<Building>();
@@ -206,7 +210,7 @@ TEST_F(ModelFixture, Building_SpaceTypeAttributes)
   EXPECT_FALSE(building.conditionedFloorArea());
   EXPECT_NEAR(100, building.lightingPower(), 0.0001);
   EXPECT_NEAR(1, building.lightingPowerPerFloorArea(), 0.0001);
-  EXPECT_NEAR(1.0/100.0, building.peoplePerFloorArea(), 0.0001);
+  EXPECT_NEAR(1.0 / 100.0, building.peoplePerFloorArea(), 0.0001);
 
   EXPECT_TRUE(light.setMultiplier(2));
   EXPECT_TRUE(person.setMultiplier(2));
@@ -215,7 +219,7 @@ TEST_F(ModelFixture, Building_SpaceTypeAttributes)
   EXPECT_FALSE(building.conditionedFloorArea());
   EXPECT_NEAR(200, building.lightingPower(), 0.0001);
   EXPECT_NEAR(2, building.lightingPowerPerFloorArea(), 0.0001);
-  EXPECT_NEAR(2.0/100.0, building.peoplePerFloorArea(), 0.0001);
+  EXPECT_NEAR(2.0 / 100.0, building.peoplePerFloorArea(), 0.0001);
 
   ThermalZone thermalZone(model);
   EXPECT_TRUE(thermalZone.setMultiplier(2));
@@ -226,12 +230,10 @@ TEST_F(ModelFixture, Building_SpaceTypeAttributes)
   EXPECT_FALSE(building.conditionedFloorArea());
   EXPECT_NEAR(400, building.lightingPower(), 0.0001);
   EXPECT_NEAR(2, building.lightingPowerPerFloorArea(), 0.0001);
-  EXPECT_NEAR(2.0/100.0, building.peoplePerFloorArea(), 0.0001);
-
+  EXPECT_NEAR(2.0 / 100.0, building.peoplePerFloorArea(), 0.0001);
 }
 
-TEST_F(ModelFixture, Building_SpaceType)
-{
+TEST_F(ModelFixture, Building_SpaceType) {
   Model model;
 
   Building building = model.getUniqueModelObject<Building>();
@@ -251,18 +253,16 @@ TEST_F(ModelFixture, Building_SpaceType)
   EXPECT_TRUE(space.isSpaceTypeDefaulted());
 }
 
-TEST_F(ModelFixture,Building_StandardsInformation) {
+TEST_F(ModelFixture, Building_StandardsInformation) {
   Model model;
   Building building = model.getUniqueModelObject<Building>();
   EXPECT_FALSE(building.standardsNumberOfStories());
   building.setStandardsNumberOfStories(3);
   ASSERT_TRUE(building.standardsNumberOfStories());
-  EXPECT_EQ(3,building.standardsNumberOfStories().get());
+  EXPECT_EQ(3, building.standardsNumberOfStories().get());
 }
 
-
-TEST_F(ModelFixture, Building_Cost)
-{
+TEST_F(ModelFixture, Building_Cost) {
   Model model;
   Building building = model.getUniqueModelObject<Building>();
 
@@ -300,8 +300,7 @@ TEST_F(ModelFixture, Building_Cost)
   EXPECT_DOUBLE_EQ(120, cost3->totalCost());
 }
 
-TEST_F(ModelFixture, Building_Clone)
-{
+TEST_F(ModelFixture, Building_Clone) {
   // Remember that Building is a unique object
   // There are basically three scenarios to consider,
   // cloning into the same model, cloning into a different model that already has a building object,
@@ -316,7 +315,7 @@ TEST_F(ModelFixture, Building_Clone)
 
     // Don't expect cloning into the same model to do anything.
     // Just return the Building instance
-    EXPECT_EQ(building,buildingClone);
+    EXPECT_EQ(building, buildingClone);
   }
 
   // Clone into a different model that already has a Building instance.
@@ -339,25 +338,25 @@ TEST_F(ModelFixture, Building_Clone)
     space1.setThermalZone(zone);
     space2.setThermalZone(zone);
 
-    EXPECT_NE(modelBuilding,libraryBuilding);
+    EXPECT_NE(modelBuilding, libraryBuilding);
 
     // Expect that the original modelBuilding will be removed and replaced by a clone of the libraryBuilding
     auto clone = libraryBuilding.clone(model);
 
     EXPECT_TRUE(modelBuilding.handle().isNull());
-    EXPECT_NE(modelBuilding,clone);
+    EXPECT_NE(modelBuilding, clone);
 
-    EXPECT_EQ(1u,model.getModelObjects<Building>().size());
-    EXPECT_EQ(2u,model.getModelObjects<Space>().size());
+    EXPECT_EQ(1u, model.getModelObjects<Building>().size());
+    EXPECT_EQ(2u, model.getModelObjects<Space>().size());
 
     auto zones = model.getModelObjects<ThermalZone>();
 
-    ASSERT_EQ(1u,zones.size());
-    EXPECT_EQ(2u,zones.front().spaces().size());
+    ASSERT_EQ(1u, zones.size());
+    EXPECT_EQ(2u, zones.front().spaces().size());
 
     auto stories = model.getModelObjects<BuildingStory>();
-    ASSERT_EQ(1u,stories.size());
-    ASSERT_EQ(2u,stories.front().spaces().size());
+    ASSERT_EQ(1u, stories.size());
+    ASSERT_EQ(2u, stories.front().spaces().size());
   }
 
   // Clone into a different model that does not already have a Building instance.
@@ -379,32 +378,31 @@ TEST_F(ModelFixture, Building_Clone)
     space1.setThermalZone(zone);
     space2.setThermalZone(zone);
 
-    EXPECT_EQ(1u,library.getModelObjects<Building>().size());
-    EXPECT_EQ(2u,library.getModelObjects<Space>().size());
-    EXPECT_EQ(1u,library.getModelObjects<ThermalZone>().size());
-    EXPECT_EQ(1u,library.getModelObjects<BuildingStory>().size());
-    EXPECT_EQ(2u,zone.spaces().size());
+    EXPECT_EQ(1u, library.getModelObjects<Building>().size());
+    EXPECT_EQ(2u, library.getModelObjects<Space>().size());
+    EXPECT_EQ(1u, library.getModelObjects<ThermalZone>().size());
+    EXPECT_EQ(1u, library.getModelObjects<BuildingStory>().size());
+    EXPECT_EQ(2u, zone.spaces().size());
 
     auto modelBuilding = libraryBuilding.clone(model).cast<Building>();
 
-    EXPECT_NE(libraryBuilding,modelBuilding);
+    EXPECT_NE(libraryBuilding, modelBuilding);
 
-    EXPECT_EQ(1u,model.getModelObjects<Building>().size());
-    EXPECT_EQ(2u,model.getModelObjects<Space>().size());
+    EXPECT_EQ(1u, model.getModelObjects<Building>().size());
+    EXPECT_EQ(2u, model.getModelObjects<Space>().size());
 
     auto zones = model.getModelObjects<ThermalZone>();
 
-    ASSERT_EQ(1u,zones.size());
-    EXPECT_EQ(2u,zones.front().spaces().size());
+    ASSERT_EQ(1u, zones.size());
+    EXPECT_EQ(2u, zones.front().spaces().size());
 
     auto stories = model.getModelObjects<BuildingStory>();
-    ASSERT_EQ(1u,stories.size());
-    ASSERT_EQ(2u,stories.front().spaces().size());
+    ASSERT_EQ(1u, stories.size());
+    ASSERT_EQ(2u, stories.front().spaces().size());
   }
 }
 
-TEST_F(ModelFixture, Building_Rotations)
-{
+TEST_F(ModelFixture, Building_Rotations) {
   Model model;
   Building building = model.getUniqueModelObject<Building>();
   Space space(model);
@@ -456,5 +454,93 @@ TEST_F(ModelFixture, Building_Rotations)
   EXPECT_NEAR(1, spaceGroup.transformation().matrix()(0, 0), 0.0001);
   EXPECT_NEAR(1, spaceGroup.buildingTransformation().matrix()(0, 0), 0.0001);
   EXPECT_NEAR(cos(degToRad(degrees)), spaceGroup.siteTransformation().matrix()(0, 0), 0.0001);
+}
 
+TEST_F(ModelFixture, Building_remove) {
+
+  Model m;
+  ThermalZone z(m);
+  AirLoopHVAC a(m);
+
+  a.addBranchForZone(z);
+  // 4 basic AirLoopHVAC nodes (supply/demand inlet/outlet Nodes)
+  // One AirLoopHVAC branch node before and one after ThermalZones
+  // 1 Zone Air Node
+  EXPECT_EQ(7, m.getModelObjects<Node>().size());
+  // Zone Inlet Port List, Zone Return Air Port List, Zone Air Exhaust Port List
+  EXPECT_EQ(3, m.getModelObjects<PortList>().size());
+  EXPECT_EQ(1, m.getModelObjects<ThermalZone>().size());
+
+  m.getUniqueModelObject<Building>().remove();
+  // 4 basic airLoopHVAC Nodes plus the Drop node between demand splitter and mixer
+  EXPECT_EQ(5, m.getModelObjects<Node>().size());
+  // Zone Inlet Port List, Zone Return Air Port List, Zone Air Exhaust Port List
+  EXPECT_EQ(0, m.getModelObjects<PortList>().size());
+  EXPECT_EQ(0, m.getModelObjects<ThermalZone>().size());
+
+  // TODO: JM 2019-05-13 Once HVAC is handled (#2449), we should adjust this portion.
+  // For now this tests that at least we don't end up with bad connections
+  ASSERT_EQ(1, m.getModelObjects<AirLoopHVAC>().size());
+  EXPECT_NO_THROW(m.getModelObjects<AirLoopHVAC>()[0].components());
+}
+
+TEST_F(ModelFixture, Building_remove_exampleModel) {
+
+  Model m = exampleModel();
+
+  EXPECT_NE(0, m.getModelObjects<Space>().size());
+  EXPECT_NE(0, m.getModelObjects<ThermalZone>().size());
+  EXPECT_NE(0, m.getModelObjects<ShadingSurfaceGroup>().size());
+  EXPECT_NE(0, m.getModelObjects<BuildingStory>().size());
+
+  // Creates three meters, but facility-level ones only
+  unsigned ori_meters = m.getModelObjects<OutputMeter>().size();
+  // Add one Building level one
+  OutputMeter meter(m);
+  meter.setName("Electricity:Building");
+  EXPECT_EQ(InstallLocationType::Building, meter.installLocationType().get().value());
+
+  EXPECT_NO_THROW(m.getUniqueModelObject<Building>().remove());
+
+  EXPECT_EQ(0, m.getModelObjects<Space>().size());
+  EXPECT_EQ(0, m.getModelObjects<ThermalZone>().size());
+
+  // There is one Site Shading group that should be left untouched
+  // The other two are Space and Building level, so should be removed
+  EXPECT_EQ(1, m.getModelObjects<ShadingSurfaceGroup>().size());
+  EXPECT_EQ(0, m.getModelObjects<BuildingStory>().size());
+  EXPECT_EQ(ori_meters, m.getModelObjects<OutputMeter>().size());
+
+  // TODO: JM 2019-05-13 Once HVAC is handled (#2449), we should adjust this portion.
+  // For now this tests that at least we don't end up with bad connections
+  ASSERT_EQ(1, m.getModelObjects<AirLoopHVAC>().size());
+  EXPECT_NO_THROW(m.getModelObjects<AirLoopHVAC>()[0].components());
+}
+
+TEST_F(ModelFixture, Building_getDefaultSchedule) {
+  Model model;
+
+  Building building = model.getUniqueModelObject<Building>();
+  DefaultScheduleSet bldgDefaultScheduleSet(model);
+  ScheduleConstant sch_bldg_people(model);
+  EXPECT_TRUE(bldgDefaultScheduleSet.setNumberofPeopleSchedule(sch_bldg_people));
+  EXPECT_TRUE(building.setDefaultScheduleSet(bldgDefaultScheduleSet));
+
+  SpaceType spaceType(model);
+  EXPECT_TRUE(building.setSpaceType(spaceType));
+
+  DefaultScheduleSet spDefaultScheduleSet(model);
+  ScheduleConstant sch_sp_people(model);
+  EXPECT_TRUE(spDefaultScheduleSet.setNumberofPeopleSchedule(sch_sp_people));
+  ScheduleConstant sch_sp_hours(model);
+  EXPECT_TRUE(spDefaultScheduleSet.setHoursofOperationSchedule(sch_sp_hours));
+  EXPECT_TRUE(spaceType.setDefaultScheduleSet(spDefaultScheduleSet));
+
+  // Building and its SpaceType both have a people schedule. It should return the building's one in priority
+  ASSERT_TRUE(building.getDefaultSchedule(DefaultScheduleType::NumberofPeopleSchedule));
+  EXPECT_EQ(sch_bldg_people.handle(), building.getDefaultSchedule(DefaultScheduleType::NumberofPeopleSchedule)->handle());
+
+  // Building doesn't have an hours of operation schedule, but its SpaceType does so it should return the SpaceType's one
+  ASSERT_TRUE(building.getDefaultSchedule(DefaultScheduleType::HoursofOperationSchedule));
+  EXPECT_EQ(sch_sp_hours.handle(), building.getDefaultSchedule(DefaultScheduleType::HoursofOperationSchedule)->handle());
 }

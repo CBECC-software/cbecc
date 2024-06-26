@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -29,54 +29,34 @@
 
 #include "Optional.hpp"
 
-
 namespace openstudio {
 
-  std::ostream& operator<<(std::ostream& os, const boost::optional<double>& x)
-  {
-    if (x) {
-      os << x.get();
-    }
-    return os;
+std::ostream& operator<<(std::ostream& os, const boost::optional<double>& x) {
+  if (x) {
+    os << x.get();
   }
+  return os;
+}
 
-  std::ostream& operator<<(std::ostream& os, const boost::optional<unsigned>& x)
-  {
-    if (x) {
-      os << x.get();
-    }
-    return os;
+std::ostream& operator<<(std::ostream& os, const boost::optional<unsigned>& x) {
+  if (x) {
+    os << x.get();
   }
+  return os;
+}
 
-  std::ostream& operator<<(std::ostream& os, const boost::optional<int>& x)
-  {
-    if (x) {
-      os << x.get();
-    }
-    return os;
+std::ostream& operator<<(std::ostream& os, const boost::optional<int>& x) {
+  if (x) {
+    os << x.get();
   }
+  return os;
+}
 
-  std::ostream& operator<<(std::ostream& os, const boost::optional<std::string>& x)
-  {
-    if (x) {
-      os << x.get();
-    }
-    return os;
+std::ostream& operator<<(std::ostream& os, const boost::optional<std::string>& x) {
+  if (x) {
+    os << x.get();
   }
+  return os;
+}
 
-  namespace detail{
-    OptionalMetaTypeInitializer::OptionalMetaTypeInitializer()
-    {
-      // int type;
-      /* type = */ qRegisterMetaType<boost::optional<double> >("boost::optional<double>");
-      /* type = */ qRegisterMetaType<boost::optional<unsigned> >("boost::optional<unsigned>");
-      /* type = */ qRegisterMetaType<boost::optional<int> >("boost::optional<int>");
-      /* type = */ qRegisterMetaType<boost::optional<std::string> >("boost::optional<std::string>");
-    }
-
-     static OptionalMetaTypeInitializer __optionalMetaTypeInitializer__;
-  }
-
-} // openstudio
-
-
+}  // namespace openstudio

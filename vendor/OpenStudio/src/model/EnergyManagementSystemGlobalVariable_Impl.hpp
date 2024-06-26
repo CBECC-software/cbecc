@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,58 +36,60 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  /** EnergyManagementSystemGlobalVariable_Impl is a ModelObject_Impl that is the implementation class for EnergyManagementSystemGlobalVariable.*/
-  class MODEL_API EnergyManagementSystemGlobalVariable_Impl : public ModelObject_Impl {
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+    /** EnergyManagementSystemGlobalVariable_Impl is a ModelObject_Impl that is the implementation class for EnergyManagementSystemGlobalVariable.*/
+    class MODEL_API EnergyManagementSystemGlobalVariable_Impl : public ModelObject_Impl
+    {
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    EnergyManagementSystemGlobalVariable_Impl(const IdfObject& idfObject,
-                                              Model_Impl* model,
-                                              bool keepHandle);
+      EnergyManagementSystemGlobalVariable_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    EnergyManagementSystemGlobalVariable_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                              Model_Impl* model,
-                                              bool keepHandle);
+      EnergyManagementSystemGlobalVariable_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    EnergyManagementSystemGlobalVariable_Impl(const EnergyManagementSystemGlobalVariable_Impl& other,
-                                              Model_Impl* model,
-                                              bool keepHandle);
+      EnergyManagementSystemGlobalVariable_Impl(const EnergyManagementSystemGlobalVariable_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~EnergyManagementSystemGlobalVariable_Impl() {}
+      virtual ~EnergyManagementSystemGlobalVariable_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    //@}
-    /** @name Getters */
-    //@{
+      bool exportToBCVTB() const;
 
-    //@}
-    /** @name Setters */
-    //@{
+      bool isExportToBCVTBDefaulted() const;
 
-    //@}
-    /** @name Other */
-    //@{
+      bool setExportToBCVTB(bool exportToBCVTB);
 
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.EnergyManagementSystemGlobalVariable");
-  };
+      void resetExportToBCVTB();
 
-} // detail
+      //@}
+      /** @name Getters */
+      //@{
 
-} // model
-} // openstudio
+      //@}
+      /** @name Setters */
+      //@{
 
-#endif // MODEL_ENERGYMANAGEMENTSYSTEMGLOBALVARIABLE_IMPL_HPP
+      //@}
+      /** @name Other */
+      //@{
 
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.EnergyManagementSystemGlobalVariable");
+    };
+
+  }  // namespace detail
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_ENERGYMANAGEMENTSYSTEMGLOBALVARIABLE_IMPL_HPP

@@ -1,6 +1,13 @@
 #ifndef UTILITIES_CORE_CORE_I
 #define UTILITIES_CORE_CORE_I
 
+#if defined(SWIGCSHARP)
+
+  // Avoid triggering a SWIG warning: 'fixed' is a C# keyword
+  %rename(fixedFormat) openstudio::FloatFormat::fixed;
+
+#endif
+
 // does not turn on directors for all classes, just enables them
 %module(directors="1") OpenStudio
 
@@ -17,7 +24,6 @@
   #include <utilities/math/FloatCompare.hpp>
 
   #include <OpenStudio.hxx>
-  #include <QAction>
 %}
 
 #if defined(SWIGJAVA)
@@ -25,7 +31,6 @@
   %ignore openstudio::toString(const std::string&);
   %ignore openstudio::toString(const std::wstring&);
   %ignore openstudio::toString(const char *);
-  %ignore openstudio::toQString(const std::wstring& w);
 #endif
 
 %ignore openstudio::getApplicationSourceDirectory();
@@ -33,20 +38,16 @@
 %ignore openstudio::applicationIsRunningFromBuildDirectory();
 %ignore openstudio::moduleIsRunningFromBuildDirectory();
 
-%include <utilities/core/Qt.i>
 %include <utilities/core/Enum.i>
 //%include <utilities/core/Exception.i> // moved ahead in include order in CommonInclude
+%include <utilities/core/String.i>
 %include <utilities/core/Path.i>
 %include <OpenStudio.hxx>
 %include <utilities/core/ApplicationPathHelpers.hpp>
-%include <utilities/core/PathWatcher.i>
-%include <utilities/core/String.hpp>
 %include <utilities/core/StringHelpers.hpp>
 %include <utilities/core/Singleton.i>
-%include <utilities/core/Application.i>
 %include <utilities/core/Logger.i>
 %include <utilities/core/UpdateManager.i>
-%include <utilities/core/Url.i>
 %include <utilities/core/UUID.i>
 %include <utilities/core/Checksum.i>
 %include <utilities/core/Optional.hpp>
@@ -58,16 +59,14 @@
 %include <utilities/core/System.i>
 #endif
 
-%template(QSqlDatabasePtr) std::shared_ptr<QSqlDatabase>;
 %template(FileReferenceTypeVector) std::vector<openstudio::FileReferenceType>;
 %template(OptionalFileReferenceType) boost::optional<openstudio::FileReferenceType>;
 %ignore std::vector<openstudio::FileReference>::vector(size_type);
 %ignore std::vector<openstudio::FileReference>::resize(size_type);
 %template(FileReferenceVector) std::vector<openstudio::FileReference>;
 %template(OptionalFileReference) boost::optional<openstudio::FileReference>;
-%template(OptionalQUrl) boost::optional<QUrl>;
-%template(OptionalQVariant) boost::optional<QVariant>;
 %template(OptionalVersionString) boost::optional<openstudio::VersionString>;
+%template(VersionStringPair) std::pair<openstudio::VersionString, std::string>;
 
 %include <utilities/core/FileReference.hpp>
 

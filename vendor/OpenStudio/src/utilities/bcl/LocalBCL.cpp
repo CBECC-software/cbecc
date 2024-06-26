@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -29,691 +29,1493 @@
 
 #include "LocalBCL.hpp"
 #include "RemoteBCL.hpp"
-#include "../core/Application.hpp"
 #include "../core/Assert.hpp"
 #include "../time/DateTime.hpp"
 #include "../core/PathHelpers.hpp"
+#include "../core/FilesystemHelpers.hpp"
 
-#include <QDir>
-#include <QIcon>
-#include <QInputDialog>
-#include <QSettings>
-#include <QSqlQuery>
+#include <sqlite3.h>
 
+#include <boost/algorithm/string/replace.hpp>
 
+namespace openstudio {
 
-namespace openstudio{
+LocalBCL::LocalBCL(const path& libraryPath)
+  : m_libraryPath(libraryPath.lexically_normal()), m_dbName("components.sql"), m_dbVersion("1.3"), m_connectionOpen(false) {
+  //TODO: QT-Separation-Move
+  //Make sure a QApplication exists
+  //openstudio::Application::instance().application(false);
 
-  LocalBCL::LocalBCL(const path& libraryPath):
-    m_libraryPath(QDir().cleanPath(toQString(libraryPath))),
-    m_dbName(QString("/components.sql")),
-    dbVersion("1.3")
-  {
-    //Make sure a QApplication exists
-    openstudio::Application::instance().application(false);
+  //Check for BCL directory
+  if (!openstudio::filesystem::is_directory(m_libraryPath) || !openstudio::filesystem::exists(m_libraryPath)) {
+    openstudio::filesystem::create_directory(m_libraryPath);
+  }
+  // Now we know the library path exists for sure (needed for canonical call),
+  // we convert to an absolute path with no symlink, or dot, or dot-dot elements
+  m_libraryPath = openstudio::filesystem::canonical(m_libraryPath);
 
-    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", m_libraryPath+m_dbName);
-    database.setDatabaseName(m_libraryPath+m_dbName);
+  m_sqliteFilePath = m_libraryPath / m_dbName;
+  m_sqliteFilename = toString(m_sqliteFilePath.make_preferred().native());
 
-    //Check for BCL directory
-    if (!QDir(m_libraryPath).exists())
-    {
-      QDir().mkpath(m_libraryPath);
-    }
-    //Check for local database
-    if (!openstudio::filesystem::exists(openstudio::toPath(m_libraryPath+m_dbName)))
-    {
-      initializeLocalDb();
-    }
+  //Check for local database
+  bool initschema = !openstudio::filesystem::exists(m_sqliteFilePath);
 
-    bool test = database.isValid();
-    OS_ASSERT(test);
-    if (!database.isOpen())
-    {
-      test = database.open();
-      OS_ASSERT(test);
-    }
-
-    //Check for out-of-date database
-    updateLocalDb();
-
-    //Retrieve oauthConsumerKeys from database
-    QSqlQuery query(database);
-    query.exec("SELECT data FROM Settings WHERE name='prodAuthKey'");
-    if (query.next())
-    {
-      m_prodAuthKey = toString(query.value(0).toString());
-    }
-    query.exec("SELECT data FROM Settings WHERE name='devAuthKey'");
-    if (query.next())
-    {
-      m_devAuthKey = toString(query.value(0).toString());
-    }
+  // Open the database
+  int success = sqlite3_open_v2(m_sqliteFilename.c_str(), &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_EXCLUSIVE, nullptr);
+  if (success != SQLITE_OK) {
+    LOG_AND_THROW("Unable to open connection for LocalBCL at '" << m_sqliteFilename << "'.");
+  } else {
+    m_connectionOpen = true;
   }
 
-  // http://sqlite.org/faq.html#q14
-  QString LocalBCL::escape(const std::string& s) const
-  {
-      return toQString(s).replace("'","''");
+  // If need to create it, and it didn't go well, throw
+  if (initschema && !initializeLocalDb()) {
+    LOG_AND_THROW("Unable to initialize Local Database");
   }
 
-  LocalBCL &LocalBCL::instance()
+  //Check for out-of-date database
+  if (!updateLocalDb()) {
+    LOG_AND_THROW("Unable to update Local Database");
+  }
+
+  // Retrieve oauthConsumerKeys from database
   {
-    std::shared_ptr<LocalBCL> &ptr = instanceInternal();
-    if (!ptr) {
-      QSettings settings("OpenStudio", "LocalBCL");
-      // DLM: might want to put this somewhere a little more hidden
-      ptr = std::shared_ptr<LocalBCL>(new LocalBCL(toPath(settings.value("libraryPath",
-        QDir::homePath().append("/BCL")).toString())));
+    std::string statement = "SELECT data FROM Settings WHERE name='prodAuthKey'";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      LOG_AND_THROW("Unable to prepare m_prodAuthKey Statement");
     }
-    return *ptr;
-  }
-
-  LocalBCL &LocalBCL::instance(const path& libraryPath)
-  {
-    std::shared_ptr<LocalBCL> &ptr = instanceInternal();
-    if (ptr) {
-      ptr = std::shared_ptr<LocalBCL>(new LocalBCL(libraryPath));
+    if (sqlite3_step(sqlStmtPtr) == SQLITE_ROW) {
+      m_prodAuthKey = columnText(sqlite3_column_text(sqlStmtPtr, 0));
     }
-    else
-    {
-      if (ptr->libraryPath() != toQString(libraryPath)) {
-        ptr.reset();
-        ptr = std::shared_ptr<LocalBCL>(new LocalBCL(libraryPath));
-      }
+    // must finalize to prevent memory leaks
+    sqlite3_finalize(sqlStmtPtr);
+  }
+
+  {
+    std::string statement = "SELECT data FROM Settings WHERE name='devAuthKey'";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      LOG_AND_THROW("Unable to prepare m_prodAuthKey Statement");
     }
-    return *ptr;
-  }
-
-  std::shared_ptr<LocalBCL> &LocalBCL::instanceInternal()
-  {
-    static std::shared_ptr<LocalBCL> instance;
-    return instance;
-  }
-
-  void LocalBCL::close()
-  {
-    instanceInternal().reset();
-  }
-
-  LocalBCL::~LocalBCL()
-  {
-    // we cannot cleanup if the driver has already bee
-    if (QSqlDatabase::isDriverAvailable("QSQLITE"))
-    {
-      {
-        QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName, false);
-        if (database.isValid() && database.isOpen())
-        {
-          database.close();
-        }
-      }
-      QSqlDatabase::removeDatabase(m_libraryPath+m_dbName);
+    if (sqlite3_step(sqlStmtPtr) == SQLITE_ROW) {
+      m_devAuthKey = columnText(sqlite3_column_text(sqlStmtPtr, 0));
     }
+    // must finalize to prevent memory leaks
+    sqlite3_finalize(sqlStmtPtr);
   }
+}
 
-  bool LocalBCL::initializeLocalDb()
-  {
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    if (database.open())
-    {
-      QSqlQuery query(database);
-      bool success = query.exec("CREATE TABLE Settings (name VARCHAR, data VARCHAR)");
-      success = success && query.exec("CREATE TABLE Components (uid VARCHAR, version_id VARCHAR, "
-        "name VARCHAR, description VARCHAR, date_added DATETIME, date_modified DATETIME)");
-      success = success && query.exec("CREATE TABLE Files (uid VARCHAR, version_id VARCHAR, filename VARCHAR, "
-        "filetype VARCHAR, usage_type VARCHAR, checksum VARCHAR)");
-      success = success && query.exec("CREATE TABLE Attributes (uid VARCHAR, version_id VARCHAR, name VARCHAR, "
-        "value VARCHAR, units VARCHAR, type VARCHAR)");
-      success = success && query.exec("CREATE TABLE Measures (uid VARCHAR, version_id VARCHAR, name VARCHAR, "
-        "description VARCHAR, modeler_description VARCHAR, date_added DATETIME, date_modified DATETIME)");
-      query.prepare("INSERT INTO Settings VALUES (:name, :data)");
-      query.bindValue(":name", "dbVersion");
-      query.bindValue(":data", dbVersion);
-      success = success && query.exec();
-      query.bindValue(":name", "prodAuthKey");
-      query.bindValue(":data", "");
-      success = success && query.exec();
-      query.bindValue(":name", "devAuthKey");
-      query.bindValue(":data", "");
-      success = success && query.exec();
-      return success;
-    }
+bool LocalBCL::beginTransaction() {
+  if (!m_db) {
+    LOG(Warn, "Cannot begin transaction without an open database");
     return false;
   }
 
-  bool LocalBCL::updateLocalDb()
-  {
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
+  char* err = nullptr;
+  if (sqlite3_exec(m_db, "BEGIN", nullptr, nullptr, &err) != SQLITE_OK) {
+    std::string errstr;
 
-    // If latest version, do nothing
-    bool success = query.exec("SELECT data FROM Settings WHERE name='dbVersion'");
-    if (success && query.next())
-    {
-      QString localDbVersion = query.value(0).toString();
-      if (localDbVersion == dbVersion)
-      {
+    if (err) {
+      errstr = err;
+      sqlite3_free(err);
+    }
+
+    LOG(Error, "Cannot begin transaction: " << errstr);
+
+    return false;
+  }
+
+  return true;
+}
+
+bool LocalBCL::commitTransaction() {
+  if (!m_db) {
+    LOG(Warn, "Cannot commit transaction without an open database");
+    return false;
+  }
+
+  char* err = nullptr;
+  if (sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, &err) != SQLITE_OK) {
+    std::string errstr;
+
+    if (err) {
+      errstr = err;
+      sqlite3_free(err);
+    }
+
+    LOG(Error, "Cannot commit transaction: " << errstr);
+
+    if (rollbackTransaction()) {
+      LOG(Warn, "Rolled back transaction.");
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+bool LocalBCL::rollbackTransaction() {
+  if (!m_db) {
+    LOG(Warn, "Cannot rollback transaction without an open database");
+    return false;
+  }
+
+  char* err = nullptr;
+  if (sqlite3_exec(m_db, "ROLLBACK", nullptr, nullptr, &err) != SQLITE_OK) {
+    std::string errstr;
+
+    if (err) {
+      errstr = err;
+      sqlite3_free(err);
+    }
+
+    // TODO: LOG AND THROW?
+    // LOG(Error, "Cannot Rollback transaction! " << errstr);
+    LOG_AND_THROW("Cannot Rollback Transaction!" << errstr);
+    return false;
+  }
+
+  return true;
+}
+
+openstudio::filesystem::path LocalBCL::dbPath() const {
+  return m_libraryPath / m_dbName;
+}
+
+std::string LocalBCL::columnText(const unsigned char* column) {
+  return std::string(reinterpret_cast<const char*>(column));
+}
+
+// http://sqlite.org/faq.html#q14
+std::string LocalBCL::escape(const std::string& s) {
+  return boost::replace_all_copy(s, "'", "''");
+}
+
+LocalBCL& LocalBCL::instance() {
+  std::shared_ptr<LocalBCL>& ptr = instanceInternal();
+  if (!ptr) {
+    // DLM: might want to put this somewhere a little more hidden
+    ptr = std::shared_ptr<LocalBCL>(new LocalBCL(openstudio::filesystem::home_path() / toPath("BCL")));
+  }
+  return *ptr;
+}
+
+LocalBCL& LocalBCL::instance(const path& libraryPath) {
+  std::shared_ptr<LocalBCL>& ptr = instanceInternal();
+  if (ptr == nullptr) {
+    // Doesn't exist yet: no problem, just go ahead and create it
+    ptr = std::shared_ptr<LocalBCL>(new LocalBCL(libraryPath));
+  } else {
+    // Try to avoid doing something if the canonical path asked matches the one we have in store
+    openstudio::path canLibraryPath(libraryPath);
+    // If libraryPath is an existing dir, take the canonical path, so that it matches what we stored in the Ctor
+    if (openstudio::filesystem::is_directory(canLibraryPath) && openstudio::filesystem::exists(canLibraryPath)) {
+      canLibraryPath = openstudio::filesystem::canonical(canLibraryPath);
+    }
+    if (ptr->libraryPath() != canLibraryPath) {
+      // TODO: same comment as in LocalBCL::close, can we be sure that ptr.reset() actually ends up calling the dtor?
+      ptr->closeConnection();
+      ptr.reset();
+      ptr = std::shared_ptr<LocalBCL>(new LocalBCL(libraryPath));
+    }
+  }
+  return *ptr;
+}
+
+std::shared_ptr<LocalBCL>& LocalBCL::instanceInternal() {
+  static std::shared_ptr<LocalBCL> instance;
+  return instance;
+}
+
+void LocalBCL::close() {
+  // Close the connection to the database if needed.
+  // TODO: something is bugging me here. why are we using a std::shared_ptr and not unique_ptr?
+  // shared_ptr -> reset() should destroy the object (which calls closeConnection) if it's only reference left, which it should...
+  // TODO: probabably not needed
+  instanceInternal()->closeConnection();
+  // reset pointer
+  instanceInternal().reset();
+}
+
+bool LocalBCL::closeConnection() {
+  // Close the connection to the database if needed
+  if (m_connectionOpen) {
+    sqlite3_close(m_db);
+    m_connectionOpen = false;
+  }
+  return true;
+}
+
+LocalBCL::~LocalBCL() {
+  // Close the connection to the database if needed
+  closeConnection();
+}
+
+bool LocalBCL::initializeLocalDb() {
+  std::string create_statements(
+    "CREATE TABLE Settings (name VARCHAR, data VARCHAR);"
+    "CREATE TABLE Components (uid VARCHAR, version_id VARCHAR, name VARCHAR, description VARCHAR, date_added DATETIME, date_modified DATETIME);"
+    "CREATE TABLE Files (uid VARCHAR, version_id VARCHAR, filename VARCHAR, filetype VARCHAR, usage_type VARCHAR, checksum VARCHAR);"
+    "CREATE TABLE Attributes (uid VARCHAR, version_id VARCHAR, name VARCHAR, value VARCHAR, units VARCHAR, type VARCHAR);"
+    "CREATE TABLE Measures (uid VARCHAR, version_id VARCHAR, name VARCHAR, description VARCHAR, modeler_description VARCHAR, date_added DATETIME, "
+    "date_modified DATETIME);");
+
+  char* err = nullptr;
+  if (sqlite3_exec(m_db, create_statements.c_str(), nullptr, nullptr, &err) != SQLITE_OK) {
+    std::string errstr;
+
+    if (err) {
+      errstr = err;
+      sqlite3_free(err);
+    }
+
+    LOG(Error, "Erorr in initializeLocalDb when creating tables: " << errstr);
+    return false;
+  }
+
+  sqlite3_stmt* sqlStmtPtr = nullptr;
+  // 1=name, 2=value
+  std::string insert_statement = "INSERT INTO Settings VALUES (?, ?)";
+  if (sqlite3_prepare_v2(m_db, insert_statement.c_str(), insert_statement.size(), &sqlStmtPtr, nullptr) != SQLITE_OK) {
+    LOG(Error, "Error preparing insert statement");
+    // Note JM 2020-03-30: There's no need to call `sqlite3_finalize(sqlStmtPtr);`
+    // if prepare_v2 has failed since you wouldn't have a valid handle, but it's a harmless no-op so for consistency/forcing
+    // us to remember to do it, I do anyways
+    sqlite3_finalize(sqlStmtPtr);  // No-op
+    return false;
+  }
+
+  std::vector<std::pair<std::string, std::string>> vals = {
+    {"dbVersion", m_dbVersion},
+    {"prodAuthKey", ""},
+    {"devAuthKey", ""},
+  };
+
+  bool errorsFound = false;
+  for (const auto& p : vals) {
+    if (sqlite3_bind_text(sqlStmtPtr, 1, p.first.c_str(), p.first.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+      LOG(Error, "Error binding to the 1st parameter (initializeLocalDb): " << p.first);
+      errorsFound = true;
+    } else if (sqlite3_bind_text(sqlStmtPtr, 2, p.second.c_str(), p.second.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+      LOG(Error, "Error binding to the 2nd parameter (initializeLocalDb): " << p.second);
+      errorsFound = true;
+    } else if (sqlite3_step(sqlStmtPtr) != SQLITE_DONE) {
+      LOG(Error, "Error executing prepared statement");
+      errorsFound = true;
+    }
+
+    if (errorsFound) {
+      // must finalize to prevent memory leaks (which resets too)
+      sqlite3_finalize(sqlStmtPtr);
+      return false;
+    }
+
+    // Reset the statement to allow binding variables on the next iteration
+    sqlite3_reset(sqlStmtPtr);
+  }
+
+  sqlite3_finalize(sqlStmtPtr);
+
+  return true;
+}
+
+bool LocalBCL::updateLocalDb() {
+
+  std::string localDbVersion;
+
+  {
+    // Get current version from the sqlite file in question
+    std::string statement = "SELECT data FROM Settings WHERE name='dbVersion'";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Unable to prepare dbVersion Statement");
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return false;
+    }
+    // If this doesn't return, it may be normal (old version), so don't return / log an error
+    if (sqlite3_step(sqlStmtPtr) == SQLITE_ROW) {
+      localDbVersion = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+      // If already latest version, do nothing
+      if (localDbVersion == m_dbVersion) {
+        sqlite3_finalize(sqlStmtPtr);
         return true;
       }
     }
+    sqlite3_finalize(sqlStmtPtr);
+  }
 
-    // 1.0, 1.1 -> 1.2
-    success = query.exec("SELECT oauthConsumerKey, dbVersion FROM Settings");
-    if (success && query.next())
+  // 1.0, 1.1 -> 1.2
+  {
+    // Get current version from the sqlite file in question
+    std::string statement = "SELECT oauthConsumerKey, dbVersion FROM Settings";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Unable to prepare dbVersion 1.0/1.1 Statement");
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return false;
+    }
+    // If this doesn't return, it may be normal (not the right version), so don't return / log an error
+    // Otherwise, we expect one row, with the two values we care about about
+    if (sqlite3_step(sqlStmtPtr) == SQLITE_ROW) {
+
+      std::string oauthConsumerKey = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+      localDbVersion = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+      sqlite3_finalize(sqlStmtPtr);
+
+      // If already latest version, do nothing
+      if (localDbVersion == "1.0" || localDbVersion == "1.1") {
+
+        // Start a transaction, so we can handle failures without messing up the database
+        if (!beginTransaction()) {
+          return false;
+        }
+
+        std::string update_statements("ALTER TABLE Components ADD date_added DATETIME;"
+                                      "ALTER TABLE Components ADD date_modified DATETIME;"
+                                      "DROP TABLE Settings;"
+                                      "CREATE TABLE Settings (name VARCHAR, data VARCHAR);");
+
+        char* err = nullptr;
+        if (sqlite3_exec(m_db, update_statements.c_str(), nullptr, nullptr, &err) != SQLITE_OK) {
+          std::string errstr;
+
+          if (err) {
+            errstr = err;
+            sqlite3_free(err);
+          }
+
+          LOG(Error, "Error in UpdateLocalDb when altering tables from 1.0/1.1 to " << m_dbVersion << ": " << errstr);
+          // Rollback changes
+          rollbackTransaction();
+          return false;
+        }
+
+        // Insertion block
+        {
+          sqlite3_stmt* sqlInsertStmtPtr = nullptr;
+          // 1=name, 2=value
+          std::string insert_statement = "INSERT INTO Settings VALUES (?, ?)";
+          if (sqlite3_prepare_v2(m_db, insert_statement.c_str(), insert_statement.size(), &sqlInsertStmtPtr, nullptr) != SQLITE_OK) {
+            LOG(Error, "Error preparing insert statement");
+            sqlite3_finalize(sqlInsertStmtPtr);  // No-op
+            rollbackTransaction();
+            return false;
+          }
+
+          std::vector<std::pair<std::string, std::string>> vals = {
+            {"dbVersion", m_dbVersion},
+            // old oauthConsumerKey becomes prodAuthKey
+            {"prodAuthKey", oauthConsumerKey},
+            {"devAuthKey", ""},
+          };
+
+          bool errorsFound = false;
+          for (const auto& p : vals) {
+            if (sqlite3_bind_text(sqlInsertStmtPtr, 1, p.first.c_str(), p.first.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+              LOG(Error, "Error binding to the 1st parameter: " << p.first);
+              errorsFound = true;
+            } else if (sqlite3_bind_text(sqlInsertStmtPtr, 2, p.second.c_str(), p.second.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+              LOG(Error, "Error binding to the 2nd parameter: " << p.second);
+              errorsFound = true;
+            } else if (sqlite3_step(sqlInsertStmtPtr) != SQLITE_DONE) {
+              LOG(Error, "Error executing prepared statement");
+              errorsFound = true;
+            }
+
+            if (errorsFound) {
+              // Rollback changes
+              sqlite3_finalize(sqlInsertStmtPtr);  // No-op
+              rollbackTransaction();
+              return false;
+            }
+
+            // Reset the statement to allow binding variables on the next iteration
+            sqlite3_reset(sqlInsertStmtPtr);
+          }
+
+          sqlite3_finalize(sqlStmtPtr);
+        }
+
+        // Commit changes now that everything went well
+        return commitTransaction();
+      }
+    }
+  }  // End version 1.0/1.1
+
+  // 1.2 -> 1.3
+  if (localDbVersion == "1.2") {
+
+    // Start a transaction, so we can handle failures without messing up the database
+    if (!beginTransaction()) {
+      return false;
+    }
+
+    // First update
     {
-      QString oauthConsumerKey = query.value(0).toString();
-      QString localDbVersion = query.value(1).toString();
-      if (localDbVersion == "1.1" || localDbVersion == "1.0")
-      {
-        success = success && query.exec("ALTER TABLE Components ADD date_added DATETIME");
-        success = success && query.exec("ALTER TABLE Components ADD date_modified DATETIME");
+      std::string update_statements("ALTER TABLE Attributes ADD version_id VARCHAR;"
+                                    "ALTER TABLE Files ADD version_id VARCHAR;"
+                                    "UPDATE Attributes SET type = 'string' WHERE type = 'varchar';"
+                                    "ALTER TABLE Files ADD usage_type VARCHAR;"
+                                    "ALTER TABLE Files ADD checksum VARCHAR;"
+                                    "CREATE TABLE Measures (uid VARCHAR, version_id VARCHAR, name VARCHAR, description VARCHAR, modeler_description "
+                                    "VARCHAR, date_added DATETIME, date_modified DATETIME);"
+                                    "UPDATE Settings SET data = "
+                                    + m_dbVersion + " WHERE name = 'dbVersion';");
 
-        success = success && query.exec("DROP TABLE Settings");
-        success = success && query.exec("CREATE TABLE Settings (name VARCHAR, data VARCHAR)");
-        query.prepare("INSERT INTO Settings VALUES (:name, :data)");
-        query.bindValue(":name", "dbVersion");
-        query.bindValue(":data", dbVersion);
-        success = success && query.exec();
+      char* err = nullptr;
+      if (sqlite3_exec(m_db, update_statements.c_str(), nullptr, nullptr, &err) != SQLITE_OK) {
+        std::string errstr;
 
-        query.bindValue(":name", "prodAuthKey");
-        query.bindValue(":data", oauthConsumerKey);
-        success = success && query.exec();
+        if (err) {
+          errstr = err;
+          sqlite3_free(err);
+        }
 
-        query.bindValue(":name", "devAuthKey");
-        query.bindValue(":data", "");
-        success = success && query.exec();
-        return success;
+        LOG(Error, "Error in UpdateLocalDb when altering tables from 1.2 to " << m_dbVersion << ": " << errstr);
+        // Rollback changes
+        rollbackTransaction();
+        return false;
       }
     }
 
-    // 1.2 -> 1.3
-    success = query.exec("SELECT data FROM Settings WHERE name='dbVersion'");
-    if (success && query.next())
+    // Now, Loop on the components table to update version_ID
     {
-      QString localDbVersion = query.value(0).toString();
-      if (localDbVersion == "1.2")
-      {
-        success = success && query.exec("ALTER TABLE Attributes ADD version_id VARCHAR");
-        success = success && query.exec("ALTER TABLE Files ADD version_id VARCHAR");
-        success = success && query.exec("SELECT uid, version_id FROM Components WHERE uid IN (SELECT DISTINCT uid FROM Components)");
-        QSqlQuery queryLoop(database);
-        while (query.next()) {
-          queryLoop.prepare("UPDATE Attributes SET version_ID = :versionId WHERE uid = :uid");
-          queryLoop.bindValue(":versionId", query.value(1));
-          queryLoop.bindValue(":uid", query.value(0));
-          success = success && queryLoop.exec();
-          queryLoop.prepare("UPDATE Files SET version_ID = :versionId WHERE uid = :uid");
-          queryLoop.bindValue(":versionId", query.value(1));
-          queryLoop.bindValue(":uid", query.value(0));
-          success = success && queryLoop.exec();
+
+      // Update statement
+      std::string update_attribute_record = "UPDATE Attributes SET version_ID=? WHERE uid=?";
+      sqlite3_stmt* updateAtrStmtPtr;
+      if (sqlite3_prepare_v2(m_db, update_attribute_record.c_str(), update_attribute_record.size(), &updateAtrStmtPtr, nullptr) != SQLITE_OK) {
+        LOG(Error, "Error preparing update_attribute_record statement");
+        sqlite3_finalize(updateAtrStmtPtr);  // No-op
+        rollbackTransaction();
+        return false;
+      }
+
+      std::string update_file_record = "UPDATE Files SET version_ID=? WHERE uid=?";
+      sqlite3_stmt* updateFileStmtPtr;
+      if (sqlite3_prepare_v2(m_db, update_file_record.c_str(), update_file_record.size(), &updateFileStmtPtr, nullptr) != SQLITE_OK) {
+        LOG(Error, "Error preparing update_file_record statement");
+        // Rollback changes
+        sqlite3_finalize(updateFileStmtPtr);  // No-op
+        sqlite3_finalize(updateAtrStmtPtr);   // Needed
+        rollbackTransaction();
+        return false;
+      }
+
+      // Get current version from the sqlite file in question
+      std::string statement = "SELECT uid, version_id FROM Components WHERE uid IN (SELECT DISTINCT uid FROM Components)";
+      sqlite3_stmt* sqlStmtPtr;
+      int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+      if (code != SQLITE_OK) {
+        LOG(Error, "Unable to prepare current version Statement: " << statement);
+        sqlite3_finalize(sqlStmtPtr);  // No-op
+        return false;
+      }
+
+      bool errorsFound = false;
+
+      // Loop until done (or failed)
+      while ((!errorsFound) && (code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE)) {
+        code = sqlite3_step(sqlStmtPtr);
+        if (code == SQLITE_ROW) {
+          // Get values from SELECT
+          std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+          std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+
+          // Update record
+          if (sqlite3_bind_text(updateAtrStmtPtr, 1, uid.c_str(), uid.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+            LOG(Error, "updateAtrStmtPtr: Error binding to the 1st parameter uid=" << uid);
+            errorsFound = true;
+          } else if (sqlite3_bind_text(updateAtrStmtPtr, 2, version_id.c_str(), version_id.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+            LOG(Error, "updateAtrStmtPtr: Error binding to the 2nd parameter version_id=" << version_id);
+            errorsFound = true;
+          } else if (sqlite3_step(updateAtrStmtPtr) != SQLITE_DONE) {
+            LOG(Error, "Error executing prepared updateAtrStmtPtr");
+            errorsFound = true;
+          } else {
+            // Reset the statement to allow binding variables on the next iteration
+            sqlite3_reset(updateAtrStmtPtr);
+          }
+
+          // Update record
+          if (sqlite3_bind_text(updateFileStmtPtr, 1, uid.c_str(), uid.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+            LOG(Error, "updateFileStmtPtr: Error binding to the 1st parameter uid=" << uid);
+            errorsFound = true;
+          } else if (sqlite3_bind_text(updateFileStmtPtr, 2, version_id.c_str(), version_id.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+            LOG(Error, "updateFileStmtPtr: Error binding to the 2nd parameter version_id=" << version_id);
+            errorsFound = true;
+          } else if (sqlite3_step(updateFileStmtPtr) != SQLITE_DONE) {
+            LOG(Error, "Error executing prepared updateFileStmtPtr");
+            errorsFound = true;
+          } else {
+            // Reset the statement to allow binding variables on the next iteration
+            sqlite3_reset(updateFileStmtPtr);
+          }
+
+        } else  // i didn't get a row.  something is wrong so set the exit condition.
+        {       // should never get here since i test for all documented return states above
+          code = SQLITE_DONE;
         }
+      }  // End loop on each uid, version_id
 
-        success = success && query.exec("UPDATE Attributes SET type = 'string' WHERE type = 'varchar'");
+      // Finalize all statements whether it suceeded or not
+      sqlite3_finalize(sqlStmtPtr);
+      sqlite3_finalize(updateAtrStmtPtr);
+      sqlite3_finalize(updateFileStmtPtr);
 
-        query.exec("SELECT uid, version_id, directory FROM Components");
-        while (query.next()) {
-          path src = toPath(m_libraryPath + "/" + query.value(0).toString() + "/" + query.value(1).toString() + query.value(2).toString().mid(query.value(2).toString().lastIndexOf("/")));
-          path dest = src.parent_path();
+      if (errorsFound || code != SQLITE_DONE) {
+        // Rollback changes
+        rollbackTransaction();
+        return false;
+      }
+    }  // End of update of the version_id
+
+    // Change paths
+    {
+      // Get current version from the sqlite file in question
+      std::string statement = "SELECT uid, version_id, directory FROM Components";
+      sqlite3_stmt* sqlStmtPtr;
+      int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+      if (code != SQLITE_OK) {
+        LOG(Error, "Unable to prepare current version Statement: " << statement);
+        sqlite3_finalize(sqlStmtPtr);  // No-op
+        return false;
+      }
+
+      // Loop until done (or failed)
+      while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+      {
+        code = sqlite3_step(sqlStmtPtr);
+        if (code == SQLITE_ROW) {
+          // Get values from SELECT
+          std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+          std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+          std::string directory = columnText(sqlite3_column_text(sqlStmtPtr, 2));
+
+          // Remove trailing separator (`/` or `\`)
+          openstudio::path p_directory(directory);
+          openstudio::path src = m_libraryPath / uid / version_id / p_directory.remove_trailing_separator().filename();
+          openstudio::path dest = src.parent_path();
+
           openstudio::filesystem::remove(dest / toPath("DISCLAIMER.txt"));
           openstudio::filesystem::remove(dest / toPath("README.txt"));
           openstudio::filesystem::remove(dest / toPath("output.xml"));
           copyDirectory(src, dest);
           removeDirectory(src);
+
+        } else  // i didn't get a row.  something is wrong so set the exit condition.
+        {       // should never get here since i test for all documented return states above
+          code = SQLITE_DONE;
+        }
+      }  // End loop on each uid, version_id, directory
+
+      // Finalize statement whether it suceeded or not
+      sqlite3_finalize(sqlStmtPtr);
+
+      // TODO: this still deleted the files already...
+      if (code != SQLITE_DONE) {
+        // Rollback changes
+        rollbackTransaction();
+        return false;
+      }
+
+    }  // End update paths
+
+    // Final update
+    {
+
+      std::string update_statements(
+        "ALTER TABLE Components RENAME TO ComponentsTmp;"
+        "CREATE TABLE Components(uid VARCHAR, version_id VARCHAR, name VARCHAR, description VARCHAR, date_added DATETIME, date_modified DATETIME);"
+        "INSERT INTO Components SELECT uid, version_id, name, type, date_added, date_modified FROM ComponentsTmp;"
+        "DROP TABLE ComponentsTmp;");
+
+      char* err = nullptr;
+      if (sqlite3_exec(m_db, update_statements.c_str(), nullptr, nullptr, &err) != SQLITE_OK) {
+        std::string errstr;
+
+        if (err) {
+          errstr = err;
+          sqlite3_free(err);
         }
 
-        success = success && query.exec("ALTER TABLE Components RENAME TO ComponentsTmp");
-        success = success && query.exec("CREATE TABLE Components(uid VARCHAR, version_id VARCHAR, name VARCHAR, description VARCHAR, date_added DATETIME, date_modified DATETIME)");
-        success = success && query.exec("INSERT INTO Components SELECT uid, version_id, name, type, date_added, date_modified FROM ComponentsTmp");
-        success = success && query.exec("DROP TABLE ComponentsTmp");
-
-        success = success && query.exec("ALTER TABLE Files ADD usage_type VARCHAR");
-        success = success && query.exec("ALTER TABLE Files ADD checksum VARCHAR");
-
-        success = success && query.exec("CREATE TABLE Measures (uid VARCHAR, version_id VARCHAR, name VARCHAR, description VARCHAR, modeler_description VARCHAR, date_added DATETIME, date_modified DATETIME)");
-
-        query.prepare("UPDATE Settings SET data = :dbVersion WHERE name = 'dbVersion'");
-        query.bindValue(":dbVersion", dbVersion);
-        success = success && query.exec();
-        return success;
+        LOG(Error, "Error in UpdateLocalDb when altering final tables from 1.2 to " << m_dbVersion << ": " << errstr);
+        // Rollback changes
+        rollbackTransaction();
+        return false;
       }
     }
 
+    // Commit changes now that everything went well
+    return commitTransaction();
+
+  }  // End 1.2 -> 1.3
+
+  return false;
+}
+
+/// Inherited members
+
+boost::optional<BCLComponent> LocalBCL::getComponent(const std::string& uid, const std::string& versionId) const {
+  boost::optional<BCLComponent> result;
+
+  if (m_db) {
+
+    if (versionId.empty()) {
+
+      std::string statement = "SELECT version_id FROM Components WHERE uid='" + escape(uid) + "'";
+      sqlite3_stmt* sqlStmtPtr;
+      if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+        LOG(Error, "Unable to prepare version_id Statement");
+        sqlite3_finalize(sqlStmtPtr);  // No-op
+        return boost::none;
+      }
+
+      if (sqlite3_step(sqlStmtPtr) == SQLITE_ROW) {
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        result = boost::optional<BCLComponent>(m_libraryPath / uid / version_id);
+      }
+      // Finalize statement to prevent memory leak
+      sqlite3_finalize(sqlStmtPtr);
+    } else {
+      std::string statement = "SELECT version_id FROM Components WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+      sqlite3_stmt* sqlStmtPtr;
+      if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+        LOG(Error, "Unable to prepare version_id Statement from uid and versionId.");
+        sqlite3_finalize(sqlStmtPtr);  // No-op
+        return boost::none;
+      }
+
+      if (sqlite3_step(sqlStmtPtr) == SQLITE_ROW) {
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        result = boost::optional<BCLComponent>(m_libraryPath / uid / version_id);
+      }
+      // Finalize statement to prevent memory leak
+      sqlite3_finalize(sqlStmtPtr);
+    }
+  }
+
+  return result;
+}
+
+boost::optional<BCLMeasure> LocalBCL::getMeasure(const std::string& uid, const std::string& versionId) const {
+  boost::optional<BCLMeasure> result;
+
+  if (m_db) {
+
+    if (versionId.empty()) {
+
+      std::string statement = "SELECT version_id FROM Measures WHERE uid='" + escape(uid) + "'";
+      sqlite3_stmt* sqlStmtPtr;
+      int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+      if (code != SQLITE_OK) {
+        LOG(Error, "Unable to prepare version_id Statement: " << statement);
+        sqlite3_finalize(sqlStmtPtr);  // No-op
+        return boost::none;
+      }
+
+      // We seek the most recent modified one in case we find several, so store that
+      boost::optional<DateTime> mostRecentModified;
+
+      // Loop until done (or failed)
+      while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+      {
+        code = sqlite3_step(sqlStmtPtr);
+        if (code == SQLITE_ROW) {
+          // Get values from SELECT
+          std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+
+          try {
+            BCLMeasure measure(m_libraryPath / uid / version_id);
+
+            boost::optional<DateTime> versionModified = measure.versionModified();
+            if (mostRecentModified) {
+              if (versionModified && versionModified.get() > mostRecentModified.get()) {
+                mostRecentModified = versionModified;
+                result = measure;
+              }
+            } else {
+              mostRecentModified = versionModified;
+              result = measure;
+            }
+          } catch (const std::exception& e) {
+            LOG(Error, "Cannot find BCL measure at '" << m_libraryPath / uid / version_id << "': " << e.what());
+          }
+
+        } else  // i didn't get a row.  something is wrong so set the exit condition.
+        {       // should never get here since i test for all documented return states above
+          code = SQLITE_DONE;
+        }
+      }  // End loop on each match
+
+      // Finalize statement whether it suceeded or not
+      sqlite3_finalize(sqlStmtPtr);
+
+    } else {
+
+      std::string statement = "SELECT version_id FROM Measures WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+      sqlite3_stmt* sqlStmtPtr;
+      if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+        sqlite3_finalize(sqlStmtPtr);  // No-op
+        LOG(Error, "Unable to prepare version_id Statement");
+      }
+
+      if (sqlite3_step(sqlStmtPtr) == SQLITE_ROW) {
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        try {
+          result = boost::optional<BCLMeasure>(m_libraryPath / uid / version_id);
+        } catch (const std::exception& e) {
+          LOG(Error, "Cannot find BCL measure at '" << m_libraryPath / uid / version_id << "': " << e.what());
+        }
+      }
+      // Finalize statement to prevent memory leak
+      sqlite3_finalize(sqlStmtPtr);
+    }
+  }
+
+  return result;
+}
+
+std::vector<BCLComponent> LocalBCL::components() const {
+  std::vector<BCLComponent> allComponents;
+
+  if (m_db) {
+    std::string statement = "SELECT uid, version_id FROM Components";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Unable to prepare components Statement");
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return allComponents;
+    }
+
+    int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+    if (code != SQLITE_OK) {
+      LOG(Error, "Unable to prepare components Statement: " << statement);
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return allComponents;
+    }
+
+    // Loop until done (or failed)
+    while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+    {
+      code = sqlite3_step(sqlStmtPtr);
+      if (code == SQLITE_ROW) {
+        // Get values from SELECT
+        std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+
+        boost::optional<BCLComponent> current(m_libraryPath / uid / version_id);
+        if (current) {
+          allComponents.push_back(current.get());
+        }
+
+      } else  // i didn't get a row.  something is wrong so set the exit condition.
+      {       // should never get here since i test for all documented return states above
+        code = SQLITE_DONE;
+      }
+    }  // End loop on each match
+
+    // Finalize statement to prevent memory leak
+    sqlite3_finalize(sqlStmtPtr);
+  }
+  return allComponents;
+}
+
+std::vector<BCLMeasure> LocalBCL::measures() const {
+  std::vector<BCLMeasure> allMeasures;
+
+  if (m_db) {
+    std::string statement = "SELECT uid, version_id FROM Measures";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Unable to prepare measures Statement");
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return allMeasures;
+    }
+
+    int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+    if (code != SQLITE_OK) {
+      LOG(Error, "Unable to prepare measures Statement: " << statement);
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return allMeasures;
+    }
+
+    // Loop until done (or failed)
+    while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+    {
+      code = sqlite3_step(sqlStmtPtr);
+      if (code == SQLITE_ROW) {
+        // Get values from SELECT
+        std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+
+        boost::optional<BCLMeasure> current = BCLMeasure::load(m_libraryPath / uid / version_id);
+        if (current) {
+          allMeasures.push_back(current.get());
+        }
+
+      } else  // i didn't get a row.  something is wrong so set the exit condition.
+      {       // should never get here since i test for all documented return states above
+        code = SQLITE_DONE;
+      }
+    }  // End loop on each match
+
+    // Finalize statement to prevent memory leak
+    sqlite3_finalize(sqlStmtPtr);
+  }
+
+  return allMeasures;
+}
+
+std::vector<std::string> LocalBCL::measureUids() const {
+  std::vector<std::string> uids;
+
+  if (m_db) {
+    std::string statement = "SELECT DISTINCT uid FROM Measures";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Unable to prepare measureUids Statement");
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return uids;
+    }
+
+    int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+    if (code != SQLITE_OK) {
+      LOG(Error, "Unable to prepare measureUids Statement: " << statement);
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return uids;
+    }
+
+    // Loop until done (or failed)
+    while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+    {
+      code = sqlite3_step(sqlStmtPtr);
+      if (code == SQLITE_ROW) {
+        // Get values from SELECT
+        uids.push_back(columnText(sqlite3_column_text(sqlStmtPtr, 0)));
+      } else  // i didn't get a row.  something is wrong so set the exit condition.
+      {       // should never get here since i test for all documented return states above
+        code = SQLITE_DONE;
+      }
+    }  // End loop on each match
+
+    // Finalize statement to prevent memory leak
+    sqlite3_finalize(sqlStmtPtr);
+  }
+
+  return uids;
+}
+
+std::vector<BCLComponent> LocalBCL::searchComponents(const std::string& searchTerm, const std::string& componentType) const {
+  std::vector<BCLComponent> results;
+
+  if (m_db) {
+    std::string statement("SELECT uid, version_id FROM Components where name"
+                          "  LIKE \"%"
+                          + searchTerm + "%\" OR description LIKE \"%" + searchTerm + "%\"");
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Unable to prepare searchComponents Statement");
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return results;
+    }
+
+    int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+    if (code != SQLITE_OK) {
+      LOG(Error, "Unable to prepare searchComponents Statement: " << statement);
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return results;
+    }
+
+    // Loop until done (or failed)
+    while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+    {
+      code = sqlite3_step(sqlStmtPtr);
+      if (code == SQLITE_ROW) {
+        // Get values from SELECT
+        std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+
+        boost::optional<BCLComponent> current(m_libraryPath / uid / version_id);
+        if (current) {
+          results.push_back(current.get());
+        }
+      } else  // i didn't get a row.  something is wrong so set the exit condition.
+      {       // should never get here since i test for all documented return states above
+        code = SQLITE_DONE;
+      }
+    }  // End loop on each match
+
+    // Finalize statement to prevent memory leak
+    sqlite3_finalize(sqlStmtPtr);
+  }
+
+  return results;
+}
+
+std::vector<BCLComponent> LocalBCL::searchComponents(const std::string& searchTerm, const unsigned componentTypeTID) const {
+  return searchComponents(searchTerm, "");
+}
+
+std::vector<BCLMeasure> LocalBCL::searchMeasures(const std::string& searchTerm, const std::string& componentType) const {
+
+  std::vector<BCLMeasure> results;
+
+  if (m_db) {
+    std::string statement("SELECT uid, version_id FROM Measures where name LIKE \"%" + searchTerm
+                          + "%\""
+                            "  OR description LIKE \"%"
+                          + searchTerm + "%\" OR modeler_description LIKE \"%" + searchTerm + "%\"");
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Unable to prepare searchMeasures Statement");
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return results;
+    }
+
+    int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+    if (code != SQLITE_OK) {
+      LOG(Error, "Unable to prepare searchMeasures Statement: " << statement);
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return results;
+    }
+
+    // Loop until done (or failed)
+    while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+    {
+      code = sqlite3_step(sqlStmtPtr);
+      if (code == SQLITE_ROW) {
+        // Get values from SELECT
+        std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+
+        boost::optional<BCLMeasure> current = BCLMeasure::load(m_libraryPath / uid / version_id);
+        if (current) {
+          results.push_back(current.get());
+        }
+      } else  // i didn't get a row.  something is wrong so set the exit condition.
+      {       // should never get here since i test for all documented return states above
+        code = SQLITE_DONE;
+      }
+    }  // End loop on each match
+
+    // Finalize statement to prevent memory leak
+    sqlite3_finalize(sqlStmtPtr);
+  }
+
+  return results;
+}
+
+std::vector<BCLMeasure> LocalBCL::searchMeasures(const std::string& searchTerm, const unsigned componentTypeTID) const {
+  return searchMeasures(searchTerm, "");
+}
+
+/// Class members
+
+// cppcheck-suppress constParameter
+bool LocalBCL::addComponent(BCLComponent& component) {
+  //Check for uid
+  if (m_db && !component.uid().empty() && !component.versionId().empty()) {
+
+    // Start a transaction, so we can handle failures without messing up the database
+    if (!beginTransaction()) {
+      return false;
+    }
+
+    std::string uid = component.uid();
+    std::string versionId = component.versionId();
+
+    std::string statement = "DELETE FROM Components WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+    if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+      // Rollback changes
+      LOG(Error, "addComponent: statement failed, rolling back: " << statement);
+      rollbackTransaction();
+      return false;
+    }
+
+    {
+      std::stringstream ss;
+      ss << "INSERT INTO Components (uid, version_id, name, description, date_added, date_modified) "
+         << "VALUES('" << escape(uid) << "', '" << escape(versionId) << "', '" << escape(component.name()) << "', '"
+         << escape(component.description()) << "', datetime('now','localtime'), datetime('now','localtime'));";
+
+      statement = ss.str();
+
+      if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+        // Rollback changes
+        LOG(Error, "addComponent: statement failed, rolling back: " << statement);
+        rollbackTransaction();
+        return false;
+      }
+    }
+
+    // Insert files
+    statement = "DELETE FROM Files WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+    if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+      // Rollback changes
+      LOG(Error, "addComponent: statement failed, rolling back: " << statement);
+      rollbackTransaction();
+      return false;
+    }
+
+    if (!component.files().empty()) {
+      for (int i = 0; i < (int)component.files().size(); i++) {
+
+        std::stringstream ss;
+        ss << "INSERT INTO Files (uid, version_id, filename, filetype) "
+           << "VALUES('" << escape(uid) << "', '" << escape(versionId) << "', '" << escape(component.files()[i]) << "', '"
+           << escape(component.filetypes()[i]) << "');";
+
+        statement = ss.str();
+
+        if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+          // Rollback changes
+          LOG(Error, "addComponent: statement failed, rolling back: " << statement);
+          rollbackTransaction();
+          return false;
+        }
+      }
+    }  // End insert all component's files
+
+    // Insert Attributes
+    statement = "DELETE FROM Attributes WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+    if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+      // Rollback changes
+      LOG(Error, "addComponent: statement failed, rolling back: " << statement);
+      rollbackTransaction();
+      return false;
+    }
+
+    for (const Attribute& attribute : component.attributes()) {
+      std::string dataValue, dataType;
+      if (attribute.valueType().value() == AttributeValueType::Boolean) {
+        dataValue = boost::lexical_cast<std::string>(attribute.valueAsBoolean());
+        dataType = "boolean";
+      } else if (attribute.valueType().value() == AttributeValueType::Integer) {
+        dataValue = boost::lexical_cast<std::string>(attribute.valueAsInteger());
+        dataType = "int";
+      } else if (attribute.valueType().value() == AttributeValueType::Double) {
+        dataValue = formatString(attribute.valueAsDouble());
+        dataType = "float";
+      } else {
+        dataValue = attribute.valueAsString();
+        dataType = "string";
+      }
+
+      std::stringstream ss;
+      ss << "INSERT INTO Attributes (uid, version_id, name, value, units, type) "
+         << "VALUES('" << escape(uid) << "', '" << escape(versionId) << "', '" << escape(attribute.name()) << "', '" << escape(dataValue) << "', '"
+         << escape(attribute.units() ? attribute.units().get() : "") << "', '" << escape(dataType) << "');";
+
+      statement = ss.str();
+
+      if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+        // Rollback changes
+        LOG(Error, "addComponent: statement failed, rolling back: " << statement);
+        rollbackTransaction();
+        return false;
+      }
+    }  // End insert each attribute
+
+    // Commit changes now that everything went well
+    return commitTransaction();
+
+  }  // End check uid
+
+  return false;
+}
+
+// cppcheck-suppress constParameter
+bool LocalBCL::removeComponent(BCLComponent& component) {
+  // if uid is empty or not found in database return false
+  if (!m_db || component.uid().empty() || component.versionId().empty()) {
     return false;
   }
 
-  /// Inherited members
+  // Start by deleting stuff from the SQL file
+  // We don't expect any of these to fail really, if it isn't present, then it still returns OK
+  // But let's be prudent and still start a transaction
 
-  boost::optional<BCLComponent> LocalBCL::getComponent(const std::string& uid, const std::string& versionId) const
-  {
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    if (versionId.empty())
-    {
-      query.exec(QString("SELECT version_id FROM Components WHERE uid='%1'").arg(escape(uid)));
-      if (query.next())
-      {
-        return boost::optional<BCLComponent>(toString(m_libraryPath) + "/" + uid + "/" + toString(query.value(0).toString()));
-      }
-      return boost::none;
-    }
-    query.exec(QString("SELECT version_id FROM Components WHERE uid='%1' AND version_id='%2'").arg(escape(uid), escape(versionId)));
-    if (query.next())
-    {
-      return boost::optional<BCLComponent>(toString(m_libraryPath) + "/" + uid + "/" + versionId);
-    }
-    return boost::none;
+  // Start a transaction, so we can handle failures without messing up the database
+  if (!beginTransaction()) {
+    return false;
   }
 
-  boost::optional<BCLMeasure> LocalBCL::getMeasure(const std::string& uid, const std::string& versionId) const
-  {
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    if (versionId.empty())
-    {
+  std::string uid = component.uid();
+  std::string versionId = component.versionId();
 
-      boost::optional<DateTime> mostRecentModified;
-      boost::optional<BCLMeasure> mostRecentMeasure;
-      query.exec(QString("SELECT version_id FROM Measures WHERE uid='%1'").arg(escape(uid)));
-      while (query.next())
-      {
-        try{
-          BCLMeasure measure(toPath(m_libraryPath) / toPath(uid) / toPath(toString(query.value(0).toString())));
-
-          boost::optional<DateTime> versionModified = measure.versionModified();
-          if (mostRecentModified){
-            if (versionModified && versionModified.get() > mostRecentModified.get()){
-              mostRecentModified = versionModified;
-              mostRecentMeasure = measure;
-            }
-          } else {
-            mostRecentModified = versionModified;
-            mostRecentMeasure = measure;
-          }
-        }catch(const std::exception&){
-        }
-      }
-
-      return mostRecentMeasure;
-    }
-    query.exec(QString("SELECT version_id FROM Measures WHERE uid='%1' AND version_id='%2'").arg(escape(uid), escape(versionId)));
-    if (query.next())
-    {
-      try{
-        return boost::optional<BCLMeasure>(toPath(m_libraryPath) / toPath(uid) / toPath(versionId));
-      }catch(const std::exception&){
-      }
-    }
-    return boost::none;
+  std::string statement("DELETE FROM Components WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId)
+                        + "';"
+                          "DELETE FROM Files WHERE uid='"
+                        + escape(uid) + "' AND version_id='" + escape(versionId)
+                        + "';"
+                          "DELETE FROM Attributes WHERE uid='"
+                        + escape(uid) + "' AND version_id='" + escape(versionId) + "';");
+  if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+    LOG(Error, "Couldn't delete component from SQL file: " << statement);
+    // Rollback changes
+    rollbackTransaction();
+    return false;
   }
 
-  std::vector<BCLComponent> LocalBCL::components() const
-  {
-    std::vector<BCLComponent> allComponents;
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    query.exec("SELECT uid, version_id FROM Components");
-    while (query.next())
-    {
-      // DLM: this does not look like it is handling error of missing file correctly
-      boost::optional<BCLComponent> current(toString(toPath(m_libraryPath) / toPath(query.value(0).toString()) / toPath(query.value(1).toString())));
-      if (current)
-      {
-        allComponents.push_back(*current);
-      }
-    }
-    return allComponents;
+  // Commit changes now that everything went well
+  if (!commitTransaction()) {
+    LOG(Error, "Transaction commit failed, will not remove Component from disk.");
+    return false;
   }
 
-  std::vector<BCLMeasure> LocalBCL::measures() const
-  {
-    std::vector<BCLMeasure> allMeasures;
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    query.exec("SELECT uid, version_id FROM Measures");
-    while (query.next())
-    {
-      boost::optional<BCLMeasure> current = BCLMeasure::load(toPath(m_libraryPath) / toPath(query.value(0).toString()) / toPath(query.value(1).toString()));
-      if (current)
-      {
-        allMeasures.push_back(*current);
-      }
+  // proceed deleting component on disk
+  openstudio::path pathToRemove = m_libraryPath / uid / versionId;
+
+  // We look at the parent path, and if we find only one folder = (one versionId), we delete the parent instead
+  // so we don't end up with an empty folder
+  unsigned int n_dirs = 0;
+  for (auto dir_itr = openstudio::filesystem::directory_iterator(pathToRemove.parent_path()); dir_itr != openstudio::filesystem::directory_iterator();
+       ++dir_itr) {
+    const auto p = dir_itr->path();
+    if (openstudio::filesystem::is_directory(p) && openstudio::filesystem::exists(p)) {
+      ++n_dirs;
     }
-    return allMeasures;
   }
 
-  std::vector<std::string> LocalBCL::measureUids() const
+  // Lambda version, doesn't really help clarity here
+  /*
+     *int n_dirs = std::count_if(openstudio::filesystem::directory_iterator(pathToRemove.parent_path()),
+     *                           openstudio::filesystem::directory_iterator(),
+     *                           [](const openstudio::filesystem::directory_entry& d) {
+     *                              const auto p = d.path();
+     *                              return openstudio::filesystem::is_directory(p) && openstudio::filesystem::exists(p);
+     *                            }
+     *                          );
+     */
+
+  if (n_dirs == 1) {
+    pathToRemove = pathToRemove.parent_path();
+  }
+  removeDirectory(pathToRemove);
+
+  return true;
+}
+
+// cppcheck-suppress constParameter
+bool LocalBCL::addMeasure(BCLMeasure& measure) {
+
+  // if uid is empty or not found in database return false
+  if (!m_db || measure.uid().empty() || measure.versionId().empty()) {
+    return false;
+  }
+
+  // Start a transaction, so we can handle failures without messing up the database
+  if (!beginTransaction()) {
+    return false;
+  }
+
+  std::string uid = measure.uid();
+  std::string versionId = measure.versionId();
+
+  std::string statement = "DELETE FROM Measures WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+  if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+    // Rollback changes
+    LOG(Error, "addMeasure: statement failed, rolling back: " << statement);
+    rollbackTransaction();
+    return false;
+  }
+
   {
-    std::vector<std::string> uids;
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    query.exec("SELECT DISTINCT uid FROM Measures");
-    while (query.next())
-    {
-      uids.push_back(toString(query.value(0).toString()));
+    std::stringstream ss;
+    ss << "INSERT INTO Measures (uid, version_id, name, description, modeler_description, date_added, date_modified) "
+       << "VALUES('" << escape(uid) << "', '" << escape(versionId) << "', '" << escape(measure.name()) << "', '" << escape(measure.description())
+       << "', '" << escape(measure.description()) << "'"
+       << ", datetime('now','localtime'), datetime('now','localtime'));";
+
+    statement = ss.str();
+
+    if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+      // Rollback changes
+      LOG(Error, "addMeasure: statement failed, rolling back: " << statement);
+      rollbackTransaction();
+      return false;
     }
+  }
+  // Insert files
+  statement = "DELETE FROM Files WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+  if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+    // Rollback changes
+    LOG(Error, "addMeasure: statement failed, rolling back: " << statement);
+    rollbackTransaction();
+    return false;
+  }
+
+  for (const BCLFileReference& file : measure.files()) {
+
+    std::stringstream ss;
+    ss << "INSERT INTO Files (uid, version_id, filename, filetype, usage_type, checksum) "
+       << "VALUES('" << escape(uid) << "', '" << escape(versionId) << "', '" << escape(file.fileName()) << "', '" << escape(file.fileType()) << "', '"
+       << escape(file.usageType()) << "', '" << escape(file.checksum()) << "');";
+
+    statement = ss.str();
+
+    if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+      // Rollback changes
+      LOG(Error, "addMeasure: statement failed, rolling back: " << statement);
+      rollbackTransaction();
+      return false;
+    }
+  }  // End insert all measure's files
+
+  // Insert Attributes
+  statement = "DELETE FROM Attributes WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId) + "'";
+  if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+    // Rollback changes
+    LOG(Error, "addMeasure: statement failed, rolling back: " << statement);
+    rollbackTransaction();
+    return false;
+  }
+
+  for (const Attribute& attribute : measure.attributes()) {
+    std::string dataValue, dataType;
+    if (attribute.valueType().value() == AttributeValueType::Boolean) {
+      dataValue = boost::lexical_cast<std::string>(attribute.valueAsBoolean());
+      dataType = "boolean";
+    } else if (attribute.valueType().value() == AttributeValueType::Integer) {
+      dataValue = boost::lexical_cast<std::string>(attribute.valueAsInteger());
+      dataType = "int";
+    } else if (attribute.valueType().value() == AttributeValueType::Double) {
+      dataValue = formatString(attribute.valueAsDouble());
+      dataType = "float";
+    } else {
+      dataValue = attribute.valueAsString();
+      dataType = "string";
+    }
+
+    std::stringstream ss;
+    ss << "INSERT INTO Attributes (uid, version_id, name, value, units, type) "
+       << "VALUES('" << escape(uid) << "', '" << escape(versionId) << "', '" << escape(attribute.name()) << "', '" << escape(dataValue) << "', '"
+       << escape(attribute.units() ? attribute.units().get() : "") << "', '" << escape(dataType) << "');";
+
+    statement = ss.str();
+
+    if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+      // Rollback changes
+      LOG(Error, "addMeasure: statement failed, rolling back: " << statement);
+      rollbackTransaction();
+      return false;
+    }
+  }  // End insert each attribute
+
+  // Commit changes now that everything went well
+  return commitTransaction();
+}
+
+// cppcheck-suppress constParameter
+bool LocalBCL::removeMeasure(BCLMeasure& measure) {
+  // if uid is empty
+  if (!m_db || measure.uid().empty() || measure.versionId().empty()) {
+    return false;
+  }
+
+  // TODO: JM 2018-11-14 Check if Measure is actually part of the SQL database first?
+
+  // Start by deleting stuff from the SQL file
+  // We don't expect any of these to fail really, if it isn't present, then it still returns OK
+  // But let's be prudent and still start a transaction
+
+  // Start a transaction, so we can handle failures without messing up the database
+  if (!beginTransaction()) {
+    return false;
+  }
+
+  std::string uid = measure.uid();
+  std::string versionId = measure.versionId();
+
+  std::string statement("DELETE FROM Measures WHERE uid='" + escape(uid) + "' AND version_id='" + escape(versionId)
+                        + "';"
+                          "DELETE FROM Files WHERE uid='"
+                        + escape(uid) + "' AND version_id='" + escape(versionId)
+                        + "';"
+                          "DELETE FROM Attributes WHERE uid='"
+                        + escape(uid) + "' AND version_id='" + escape(versionId) + "';");
+  if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+    LOG(Error, "Couldn't delete measure from SQL file: " << statement);
+    // Rollback changes
+    rollbackTransaction();
+    return false;
+  }
+
+  // Commit changes now that everything went well
+  if (!commitTransaction()) {
+    LOG(Error, "Transaction commit failed, will not remove Measure from disk.");
+    return false;
+  }
+
+  // proceed deleting component on disk
+  openstudio::path pathToRemove = m_libraryPath / uid / versionId;
+
+  // We look at the parent path, and if we find only one folder = (one versionId), we delete the parent instead
+  // so we don't end up with an empty folder
+  unsigned int n_dirs = 0;
+  for (auto dir_itr = openstudio::filesystem::directory_iterator(pathToRemove.parent_path()); dir_itr != openstudio::filesystem::directory_iterator();
+       ++dir_itr) {
+    const auto p = dir_itr->path();
+    if (openstudio::filesystem::is_directory(p) && openstudio::filesystem::exists(p)) {
+      ++n_dirs;
+    }
+  }
+
+  // Lambda version, doesn't really help clarity here
+  /*
+     *int n_dirs = std::count_if(openstudio::filesystem::directory_iterator(pathToRemove.parent_path()),
+     *                           openstudio::filesystem::directory_iterator(),
+     *                           [](const openstudio::filesystem::directory_entry& d) {
+     *                              const auto p = d.path();
+     *                              return openstudio::filesystem::is_directory(p) && openstudio::filesystem::exists(p);
+     *                            }
+     *                          );
+     */
+
+  if (n_dirs == 1) {
+    pathToRemove = pathToRemove.parent_path();
+  }
+  removeDirectory(pathToRemove);
+
+  return true;
+}
+
+std::vector<BCLComponent> LocalBCL::componentAttributeSearch(const std::vector<std::pair<std::string, std::string>>& searchTerms) const {
+  auto uids = attributeSearch(searchTerms, "component");
+  if (uids.empty()) {
+    return std::vector<BCLComponent>();
+  }
+
+  std::vector<BCLComponent> result;
+  for (const auto& uid : uids) {
+    boost::optional<BCLComponent> component = getComponent(uid.first, uid.second);
+    if (component) {
+      result.push_back(*component);
+    }
+  }
+
+  return result;
+}
+
+std::vector<BCLMeasure> LocalBCL::measureAttributeSearch(const std::vector<std::pair<std::string, std::string>>& searchTerms) const {
+  auto uids = this->attributeSearch(searchTerms, "measure");
+  if (uids.empty()) {
+    return std::vector<BCLMeasure>();
+  }
+
+  std::vector<BCLMeasure> result;
+  for (const auto& uid : uids) {
+    boost::optional<BCLMeasure> measure = getMeasure(uid.first, uid.second);
+    if (measure) {
+      result.push_back(*measure);
+    }
+  }
+
+  return result;
+}
+
+std::set<std::pair<std::string, std::string>> LocalBCL::attributeSearch(const std::vector<std::pair<std::string, std::string>>& searchTerms,
+                                                                        const std::string& componentType) const {
+  typedef std::vector<std::pair<std::string, std::string>> UidsVecType;
+  typedef std::set<std::pair<std::string, std::string>> UidsType;
+
+  UidsType uids;
+
+  if (!m_db) {
     return uids;
   }
 
-  std::vector<BCLComponent> LocalBCL::searchComponents(const std::string& searchTerm,
-    const std::string& componentType) const
+  // Make pairs of (uid, version_id)
   {
-    std::vector<BCLComponent> results;
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    query.exec(toQString("SELECT uid, version_id FROM Components where name LIKE \"%"+searchTerm+"%\" OR description LIKE \"%"+searchTerm+"%\""));
-    while (query.next())
+    std::string tableName = (componentType == "component") ? "Components" : ((componentType == "measure") ? "Measures" : "");
+
+    std::string statement = "SELECT DISTINCT uid, version_id FROM " + tableName;
+    sqlite3_stmt* sqlStmtPtr;
+    int code = sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr);
+    if (code != SQLITE_OK) {
+      LOG(Error, "Cannot prepare statement (in searchTerms): " << statement);
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return UidsType();
+    }
+
+    // Loop until done (or failed)
+    while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
     {
-      // DLM: this does not look like it is handling error of missing file correctly
-      boost::optional<BCLComponent> current(toString(toPath(m_libraryPath) / toPath(query.value(0).toString()) / toPath(query.value(1).toString())));
-      if (current)
-      {
-        results.push_back(*current);
+      code = sqlite3_step(sqlStmtPtr);
+      if (code == SQLITE_ROW) {
+        // Get values from SELECT
+        std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+        std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+
+        uids.insert(make_pair(uid, version_id));
+
+      } else  // i didn't get a row.  something is wrong so set the exit condition.
+      {       // should never get here since i test for all documented return states above
+        code = SQLITE_DONE;
       }
-    }
-    return results;
+    }  // End loop on each match
+
+    // Finalize statement to prevent memory leak
+    sqlite3_finalize(sqlStmtPtr);
   }
 
-  std::vector<BCLComponent> LocalBCL::searchComponents(const std::string& searchTerm,
-    const unsigned componentTypeTID) const
+  // Loop on search terms
   {
-    return searchComponents(searchTerm, "");
-  }
 
-  std::vector<BCLMeasure> LocalBCL::searchMeasures(const std::string& searchTerm,
-    const std::string& componentType) const
-  {
-    std::vector<BCLMeasure> results;
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    query.exec(toQString("SELECT uid, version_id FROM Measures where name LIKE \"%"+searchTerm+"%\""
-      "OR description LIKE \"%"+searchTerm+"%\" OR modeler_description LIKE \"%"+searchTerm+"%\""));
-    while (query.next())
-    {
-      boost::optional<BCLMeasure> current = BCLMeasure::load(toPath(m_libraryPath) / toPath(query.value(0).toString()) / toPath(query.value(1).toString()));
-      if (current)
-      {
-        results.push_back(*current);
-      }
-    }
-    return results;
-  }
-
-  std::vector<BCLMeasure> LocalBCL::searchMeasures(const std::string& searchTerm,
-    const unsigned componentTypeTID) const
-  {
-    return searchMeasures(searchTerm, "");
-  }
-
-  /// Class members
-
-  bool LocalBCL::addComponent(BCLComponent& component)
-  {
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    //Check for uid
-    if (!component.uid().empty() && !component.versionId().empty())
-    {
-      if (!query.exec(QString("DELETE FROM Components WHERE uid='%1' AND version_id='%2'").arg(
-        escape(component.uid()), escape(component.versionId()))))
-        return false;
-
-      if (!query.exec(QString("INSERT INTO Components (uid, version_id, name, description, "
-        "date_added, date_modified) VALUES('%1', '%2', '%3', '%4', %5, %6)").arg(
-        escape(component.uid()), escape(component.versionId()), escape(component.name()),
-        escape(component.description()), "datetime('now','localtime')", "datetime('now','localtime')")))
-        return false;
-
-      //Insert files
-      if (!query.exec(QString("DELETE FROM Files WHERE uid='%1' AND version_id='%2'").arg(
-          escape(component.uid()), escape(component.versionId()))))
-          return false;
-      if (!component.files().empty())
-      {
-        for (int i=0; i < (int) component.files().size(); i++)
-        {
-          if (!query.exec(QString("INSERT INTO Files (uid, version_id, filename, filetype) "
-            "VALUES('%1', '%2', '%3', '%4')").arg(escape(component.uid()), escape(component.versionId()),
-            escape(component.files()[i]), escape(component.filetypes()[i]))))
-            return false;
-        }
-      }
-      //Insert attributes
-      if (!query.exec(QString("DELETE FROM Attributes WHERE uid='%1' AND version_id='%2'").arg(
-          escape(component.uid()), escape(component.versionId()))))
-          return false;
-      if (!component.attributes().empty())
-      {
-        for (const Attribute& attribute : component.attributes())
-        {
-          std::string dataValue, dataType;
-          if (attribute.valueType().value() == AttributeValueType::Boolean) {
-            dataValue = boost::lexical_cast<std::string>(attribute.valueAsBoolean());
-            dataType = "boolean";
-          } else if (attribute.valueType().value() == AttributeValueType::Integer) {
-            dataValue = boost::lexical_cast<std::string>(attribute.valueAsInteger());
-            dataType = "int";
-          } else if (attribute.valueType().value() == AttributeValueType::Double) {
-            dataValue = formatString(attribute.valueAsDouble());
-            dataType = "float";
-          } else {
-            dataValue = attribute.valueAsString();
-            dataType = "string";
-          }
-
-          if (!query.exec(QString("INSERT INTO Attributes (uid, version_id, name, value, units, type) "
-            "VALUES('%1', '%2', '%3', '%4', '%5', '%6')").arg(escape(component.uid()), escape(component.versionId()),
-            escape(attribute.name()), escape(dataValue), escape(attribute.units() ? attribute.units().get() : ""),
-            escape(dataType))))
-            return false;
-        }
-      }
-      return true;
+    // Prepare a statement that we'll bind
+    // (Note: do not do name='?', it won't think it's a bind parameter)
+    std::string statement = "SELECT uid, version_id FROM Attributes WHERE name=? COLLATE NOCASE AND value=? COLLATE NOCASE";
+    sqlite3_stmt* sqlStmtPtr;
+    if (sqlite3_prepare_v2(m_db, statement.c_str(), -1, &sqlStmtPtr, nullptr) != SQLITE_OK) {
+      LOG(Error, "Cannot prepare statement (in searchTerms): " << statement);
+      sqlite3_finalize(sqlStmtPtr);  // No-op
+      return UidsType();
     }
 
-    return false;
-  }
-
-  bool LocalBCL::removeComponent(BCLComponent& component)
-  {
-    // if uid is empty or not found in database return false
-    if (component.uid().empty() || component.versionId().empty()){
-      return false;
-    }
-
-    // proceed deleting component
-    openstudio::path pathToRemove = toPath(m_libraryPath) / toPath(component.uid()) / toPath(component.versionId());
-    QDir dir(toQString(pathToRemove.parent_path()));
-    dir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
-    // Only one versionId, delete the uid directory
-    if (dir.entryInfoList().size() == 1)
-    {
-      pathToRemove = pathToRemove.parent_path();
-    }
-    removeDirectory(pathToRemove);
-
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    bool test = query.exec(QString("DELETE FROM Components WHERE uid='%1' AND version_id='%2'").arg(escape(component.uid()),
-      escape(component.versionId())));
-    OS_ASSERT(test);
-
-    test = query.exec(QString("DELETE FROM Files WHERE uid='%1' AND version_id='%2'").arg(escape(component.uid()),
-      escape(component.versionId())));
-    OS_ASSERT(test);
-
-    test = query.exec(QString("DELETE FROM Attributes WHERE uid='%1' AND version_id='%2'").arg(escape(component.uid()),
-      escape(component.versionId())));
-    OS_ASSERT(test);
-
-    return true;
-  }
-
-  bool LocalBCL::addMeasure(BCLMeasure& measure)
-  {
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    //Check for uid
-    if (!measure.uid().empty() && !measure.versionId().empty())
-    {
-      if (!query.exec(QString("DELETE FROM Measures WHERE uid='%1' AND version_id='%2'").arg(
-        escape(measure.uid()), escape(measure.versionId()))))
-        return false;
-
-      if (!query.exec(QString("INSERT INTO Measures (uid, version_id, name, description, modeler_description, "
-        "date_added, date_modified) VALUES('%1', '%2', '%3', '%4', '%5', %6, %7)").arg(
-        escape(measure.uid()), escape(measure.versionId()), escape(measure.name()), escape(measure.description()),
-        escape(measure.modelerDescription()), "datetime('now','localtime')", "datetime('now','localtime')")))
-        return false;
-
-      //Insert files
-      if (!query.exec(QString("DELETE FROM Files WHERE uid='%1' AND version_id='%2'").arg(
-          escape(measure.uid()), escape(measure.versionId()))))
-          return false;
-      if (!measure.files().empty())
-      {
-        for (const BCLFileReference& file : measure.files())
-        {
-          if (!query.exec(QString("INSERT INTO Files (uid, version_id, filename, filetype, usage_type, checksum) "
-            "VALUES('%1', '%2', '%3', '%4', '%5', '%6')").arg(escape(measure.uid()), escape(measure.versionId()),
-            escape(file.fileName()), escape(file.fileType()), escape(file.usageType()), escape(file.checksum()))))
-            return false;
-        }
-      }
-
-      //Insert attributes
-      if (!query.exec(QString("DELETE FROM Attributes WHERE uid='%1' AND version_id='%2'").arg(
-          escape(measure.uid()), escape(measure.versionId()))))
-          return false;
-      if (!measure.attributes().empty())
-      {
-        for (const Attribute& attribute : measure.attributes())
-        {
-          std::string dataValue, dataType;
-          if (attribute.valueType().value() == AttributeValueType::Boolean) {
-            dataValue = boost::lexical_cast<std::string>(attribute.valueAsBoolean());
-            dataType = "boolean";
-          } else if (attribute.valueType().value() == AttributeValueType::Integer) {
-            dataValue = boost::lexical_cast<std::string>(attribute.valueAsInteger());
-            dataType = "int";
-          } else if (attribute.valueType().value() == AttributeValueType::Double) {
-            dataValue = formatString(attribute.valueAsDouble());
-            dataType = "float";
-          } else {
-            dataValue = attribute.valueAsString();
-            dataType = "string";
-          }
-
-          if (!query.exec(QString("INSERT INTO Attributes (uid, version_id, name, value, units, type) "
-            "VALUES('%1', '%2', '%3', '%4', '%5', '%6')").arg(escape(measure.uid()), escape(measure.versionId()),
-            escape(attribute.name()), escape(dataValue), escape(attribute.units() ? attribute.units().get() : ""),
-            escape(dataType))))
-            return false;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool LocalBCL::removeMeasure(BCLMeasure& measure)
-  {
-    // if uid is empty or not found in database return false
-    if (measure.uid().empty() || measure.versionId().empty()){
-      return false;
-    }
-
-    // proceed deleting measure
-    openstudio::path pathToRemove = toPath(m_libraryPath) / toPath(measure.uid()) / toPath(measure.versionId());
-    QDir dir(toQString(pathToRemove.parent_path()));
-    dir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
-    // Only one versionId, delete the uid directory
-    if (dir.entryInfoList().size() == 1)
-    {
-      pathToRemove = pathToRemove.parent_path();
-    }
-    removeDirectory(pathToRemove);
-
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    bool test = query.exec(QString("DELETE FROM Measures WHERE uid='%1' AND version_id='%2'").arg(escape(measure.uid()),
-      escape(measure.versionId())));
-    OS_ASSERT(test);
-
-    test = query.exec(QString("DELETE FROM Files WHERE uid='%1' AND version_id='%2'").arg(escape(measure.uid()),
-      escape(measure.versionId())));
-    OS_ASSERT(test);
-
-    test = query.exec(QString("DELETE FROM Attributes WHERE uid='%1' AND version_id='%2'").arg(escape(measure.uid()),
-      escape(measure.versionId())));
-    OS_ASSERT(test);
-
-    return true;
-  }
-
-  std::vector<BCLComponent> LocalBCL::componentAttributeSearch(const std::vector<std::pair<std::string, std::string> >& searchTerms) const
-  {
-    auto uids = attributeSearch(searchTerms, "component");
-    if (uids.empty()){
-       return std::vector<BCLComponent>();
-    }
-
-    std::vector<BCLComponent> result;
-    for (const auto & uid : uids)
-    {
-      boost::optional<BCLComponent> component = getComponent(uid.first, uid.second);
-      if (component){
-        result.push_back(*component);
-      }
-    }
-
-    return result;
-  }
-
-  std::vector<BCLMeasure> LocalBCL::measureAttributeSearch(const std::vector<std::pair<std::string, std::string> >& searchTerms) const
-  {
-    auto uids = this->attributeSearch(searchTerms, "measure");
-    if (uids.empty()){
-       return std::vector<BCLMeasure>();
-    }
-
-    std::vector<BCLMeasure> result;
-    for (const auto uid : uids)
-    {
-      boost::optional<BCLMeasure> measure = getMeasure(uid.first, uid.second);
-      if (measure){
-        result.push_back(*measure);
-      }
-    }
-
-    return result;
-  }
-
-
-  std::set<std::pair<std::string, std::string> > LocalBCL::attributeSearch(
-      const std::vector<std::pair<std::string, std::string> >& searchTerms,
-      const std::string& componentType) const
-  {
-    typedef std::vector<std::pair<std::string, std::string> > UidsVecType;
-    typedef std::set<std::pair<std::string, std::string> > UidsType;
-
-    UidsType uids;
-    QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-    QSqlQuery query(database);
-    std::string tableName = componentType == "component" ? "Components" : componentType == "measure" ? "Measures" : "";
-    query.exec(toQString("SELECT DISTINCT uid, version_id FROM " + tableName));
-    while (query.next()) {
-      uids.insert(make_pair(toString(query.value(0).toString()), toString(query.value(1).toString())));
-    }
-
-    for (const auto & searchTerm : searchTerms){
+    for (const auto& searchTerm : searchTerms) {
 
       UidsType theseUids;
-      QString queryString = QString("SELECT uid, version_id FROM Attributes WHERE name='" + escape(searchTerm.first) + "' COLLATE NOCASE AND value='" + escape(searchTerm.second) + "' COLLATE NOCASE");
-      query.exec(queryString);
-      while (query.next()) {
-        theseUids.insert(make_pair(toString(query.value(0).toString()), toString(query.value(1).toString())));
+
+      // Reset the statement to allow binding variables on the next iteration
+      sqlite3_reset(sqlStmtPtr);
+
+      // Bind the values now
+      std::string name = escape(searchTerm.first);
+      std::string value = escape(searchTerm.second);
+
+      if (sqlite3_bind_text(sqlStmtPtr, 1, name.c_str(), name.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+        LOG(Error, "Error binding to the 1st parameter (in searchTerms), name: " << name);
+        sqlite3_finalize(sqlStmtPtr);
+        return UidsType();
+      } else if (sqlite3_bind_text(sqlStmtPtr, 2, value.c_str(), value.size(), SQLITE_TRANSIENT) != SQLITE_OK) {
+        LOG(Error, "Error binding to the 2nd parameter (in searchTerms), value: " << value);
+        sqlite3_finalize(sqlStmtPtr);
+        return UidsType();
       }
+
+      int code = SQLITE_OK;
+
+      // Loop until done (or failed)
+      while ((code != SQLITE_DONE) && (code != SQLITE_BUSY) && (code != SQLITE_ERROR) && (code != SQLITE_MISUSE))  //loop until SQLITE_DONE
+      {
+        code = sqlite3_step(sqlStmtPtr);
+        if (code == SQLITE_ROW) {
+          // Get values from SELECT
+          std::string uid = columnText(sqlite3_column_text(sqlStmtPtr, 0));
+          std::string version_id = columnText(sqlite3_column_text(sqlStmtPtr, 1));
+
+          theseUids.insert(make_pair(uid, version_id));
+
+        } else  // i didn't get a row.  something is wrong so set the exit condition.
+        {       // should never get here since i test for all documented return states above
+          code = SQLITE_DONE;
+        }
+      }  // End loop on each match
 
       UidsVecType newUids(std::max(uids.size(), theseUids.size()));
       auto insertEnd = std::set_intersection(uids.begin(), uids.end(), theseUids.begin(), theseUids.end(), newUids.begin());
@@ -721,170 +1523,118 @@ namespace openstudio{
       uids.clear();
       uids.insert(newUids.begin(), insertEnd);
 
-      if (uids.empty()){
+      if (uids.empty()) {
+        sqlite3_finalize(sqlStmtPtr);
         return UidsType();
       }
-    }
 
-    return uids;
+    }  // End loop on searchTerms
+
+    // Finalize statement to prevent memory leak
+    sqlite3_finalize(sqlStmtPtr);
+  }  // End Loop on search terms
+
+  return uids;
+}
+
+std::string LocalBCL::formatString(double d, unsigned prec) {
+  std::stringstream ss;
+  ss << std::setprecision(prec) << std::showpoint << d;
+  std::string s = ss.str();
+
+  // truncate zeros from the end
+  int i = s.size() - 1;
+  while (i > 0 && s[i] == '0') {
+    --i;
   }
-
-  std::string LocalBCL::formatString(double d, uint prec)
-  {
-    std::stringstream ss;
-    ss << std::setprecision(prec) << std::showpoint << d;
-    std::string s = ss.str();
-
-    // truncate zeros from the end
-    int i = s.size() - 1;
-    while (i > 0 && s[i] == '0')
-    {
-      --i;
+  if (i > 0) {
+    s.erase(i + 1);
+    if (*s.rbegin() == '.') {
+      s.push_back('0');
     }
-    if (i > 0)
-    {
-      s.erase(i + 1);
-      if (*s.rbegin() == '.')
-      {
-        s.push_back('0');
-      }
-    }
-    return s;
   }
+  return s;
+}
 
+std::string LocalBCL::prodAuthKey() const {
+  return m_prodAuthKey;
+}
 
-  bool LocalBCL::prodAuthKeyUserPrompt(QWidget* parent)
-  {
-    // make sure application is initialized
-    Application::instance().application(false);
-
-    QInputDialog inputDlg(parent);
-    inputDlg.setInputMode(QInputDialog::TextInput);
-    inputDlg.setLabelText("BCL Auth Key:                                            ");
-    inputDlg.setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
-    inputDlg.setWindowTitle("Enter Your BCL Auth Key");
-    if (Application::instance().isDefaultInstance())
-    {
-      QIcon icon = QIcon(":/images/os_16.png");
-      icon.addPixmap(QPixmap(":/images/os_32.png"));
-      icon.addPixmap(QPixmap(":/images/os_48.png"));
-      icon.addPixmap(QPixmap(":/images/os_64.png"));
-      icon.addPixmap(QPixmap(":/images/os_128.png"));
-      icon.addPixmap(QPixmap(":/images/os_256.png"));
-      inputDlg.setWindowIcon(icon);
-    }
-    bool result = inputDlg.exec();
-    QString text = inputDlg.textValue();
-
-    if (result && !text.isEmpty()){
-      std::string authKey = toString(text);
-      result = setProdAuthKey(authKey);
-    }
-
-    return result;
-  }
-
-  bool LocalBCL::devAuthKeyUserPrompt(QWidget* parent)
-  {
-    // make sure application is initialized
-    openstudio::Application::instance().application(false);
-
-    QInputDialog inputDlg(parent);
-    inputDlg.setInputMode(QInputDialog::TextInput);
-    inputDlg.setLabelText("BCL Dev Auth Key:                                            ");
-    inputDlg.setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
-    inputDlg.setWindowTitle("Enter Your BCL Dev Auth Key");
-    if (Application::instance().isDefaultInstance())
-    {
-      QIcon icon = QIcon(":/images/os_16.png");
-      icon.addPixmap(QPixmap(":/images/os_32.png"));
-      icon.addPixmap(QPixmap(":/images/os_48.png"));
-      icon.addPixmap(QPixmap(":/images/os_64.png"));
-      icon.addPixmap(QPixmap(":/images/os_128.png"));
-      icon.addPixmap(QPixmap(":/images/os_256.png"));
-      inputDlg.setWindowIcon(icon);
-    }
-    bool result = inputDlg.exec();
-    QString text = inputDlg.textValue();
-
-    if (result && !text.isEmpty()){
-      std::string devAuthKey = toString(text);
-      result = setDevAuthKey(devAuthKey);
-    }
-
-    return result;
-  }
-
-  std::string LocalBCL::prodAuthKey() const
-  {
-    return m_prodAuthKey;
-  }
-
-  bool LocalBCL::setProdAuthKey(const std::string& authKey)
-  {
-    RemoteBCL remoteBCL;
-    if (remoteBCL.setProdAuthKey(authKey))
-    {
-      m_prodAuthKey = authKey;
-      //Overwrite prodAuthKey in database
-      QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-      QSqlQuery query(database);
-      return query.exec(QString("UPDATE Settings SET data='%1' WHERE name='prodAuthKey'").arg(escape(authKey)));
-    }
+bool LocalBCL::setProdAuthKey(const std::string& prodAuthKey) {
+  if (!m_db) {
     return false;
   }
 
-  std::string LocalBCL::devAuthKey() const
-  {
-    return m_devAuthKey;
-  }
-
-  bool LocalBCL::setDevAuthKey(const std::string& authKey)
-  {
-    RemoteBCL remoteBCL;
-    if (remoteBCL.setDevAuthKey(authKey))
-    {
-      m_devAuthKey = authKey;
-      //Overwrite devAuthKey in database
-      QSqlDatabase database = QSqlDatabase::database(m_libraryPath+m_dbName);
-      QSqlQuery query(database);
-      return query.exec(QString("UPDATE Settings SET data='%1' WHERE name='devAuthKey'").arg(escape(authKey)));
-    }
+  RemoteBCL remoteBCL;
+  if (!remoteBCL.setProdAuthKey(prodAuthKey)) {
+    LOG(Error, "prodAuthKey was rejected by RemoteBCL.");
     return false;
   }
 
-  QString LocalBCL::libraryPath() const
-  {
-    return m_libraryPath;
+  // Overwrite prodAuthKey in database
+
+  // Start a transaction, so we can handle failures without messing up the database
+  if (!beginTransaction()) {
+    return false;
   }
 
-  bool LocalBCL::setLibraryPath(const std::string& libraryPath)
-  {
-    //cleanup old straggling one if it exists
-    QSqlDatabase::removeDatabase(m_libraryPath+m_dbName);
+  std::string statement = "UPDATE Settings SET data='" + escape(prodAuthKey) + "' WHERE name='prodAuthKey'";
+  if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+    // Rollback changes
+    LOG(Error, "Cannot update prodAuthKey, rolling back.");
+    rollbackTransaction();
+    return false;
+  }
+  bool result = commitTransaction();
+  if (result) {
+    // Store key
+    m_prodAuthKey = prodAuthKey;
+  }
+  return result;
+}
 
-    QString path = QDir().cleanPath(toQString(libraryPath));
-    if (!QDir(path).exists())
-    {
-      bool success = QDir().mkpath(path);
-      if (!success) return false;
-    }
-    m_libraryPath = path;
+std::string LocalBCL::devAuthKey() const {
+  return m_devAuthKey;
+}
 
-    if (!openstudio::filesystem::exists(openstudio::toPath(path+m_dbName)))
-    {
-      QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", path+m_dbName);
-      database.setDatabaseName(path+m_dbName);
+bool LocalBCL::setDevAuthKey(const std::string& devAuthKey) {
 
-      bool success = initializeLocalDb();
-      if (!success) return false;
-    }
-
-    QSettings settings("OpenStudio", "LocalBCL");
-    settings.setValue("libraryPath", path);
-
-    return true;
+  if (!m_db) {
+    return false;
   }
 
+  RemoteBCL remoteBCL;
 
-} // openstudio
+  if (!remoteBCL.setDevAuthKey(devAuthKey)) {
+    LOG(Error, "devAuthKey was rejected by RemoteBCL.");
+    return false;
+  }
+  // Store key
+  m_devAuthKey = devAuthKey;
+
+  //Overwrite devAuthKey in database
+  // Start a transaction, so we can handle failures without messing up the database
+  if (!beginTransaction()) {
+    return false;
+  }
+
+  std::string statement = "UPDATE Settings SET data='" + escape(devAuthKey) + "' WHERE name='devAuthKey'";
+  if (sqlite3_exec(m_db, statement.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
+    // Rollback changes
+    LOG(Error, "Cannot update devAuthKey, rolling back.")
+    rollbackTransaction();
+    return false;
+  }
+  bool result = commitTransaction();
+  if (result) {
+    // Store key
+    m_devAuthKey = devAuthKey;
+  }
+  return result;
+}
+
+openstudio::path LocalBCL::libraryPath() const {
+  return m_libraryPath;
+}
+
+}  // namespace openstudio

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,9 +32,11 @@
 #include "../Compare.hpp"
 #include "../Logger.hpp"
 
+#include <OpenStudio.hxx>
+
 #include <set>
 #include <vector>
-#include <utility> // for pair
+#include <utility>  // for pair
 
 using std::string;
 using openstudio::istringEqual;
@@ -46,9 +48,7 @@ using openstudio::secondOfPairEqual;
 using openstudio::VersionString;
 using std::shared_ptr;
 
-
-TEST(Compare, istringEqual)
-{
+TEST(Compare, istringEqual) {
   LOG_FREE(Info, "Compare", "Entering istringEqual")
 
   // make sure insensitive string compare works
@@ -61,31 +61,23 @@ TEST(Compare, istringEqual)
   LOG_FREE(Info, "Compare", "Leaving istringEqual")
 }
 
-TEST(Compare, istringEqualMixed)
-{
+TEST(Compare, istringEqualMixed) {
   LOG_FREE(Info, "Compare", "Entering istringEqualMixed")
 
-  EXPECT_TRUE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80",
-                           "Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80"));
+  EXPECT_TRUE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80", "Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80"));
 
-  EXPECT_TRUE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80",
-                           "HELLO WORLD \xd1\x88\xd0\xbd\xd1\x83\xd1\x80"));
+  EXPECT_TRUE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80", "HELLO WORLD \xd1\x88\xd0\xbd\xd1\x83\xd1\x80"));
 
-  EXPECT_TRUE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80",
-                           "HeLLo wOrld \xd1\x88\xd0\xbd\xd1\x83\xd1\x80"));
+  EXPECT_TRUE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80", "HeLLo wOrld \xd1\x88\xd0\xbd\xd1\x83\xd1\x80"));
 
-  EXPECT_FALSE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80",
-                            "Hello World \xd1\x88\xd0\xbd\xd1\x83"));
+  EXPECT_FALSE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80", "Hello World \xd1\x88\xd0\xbd\xd1\x83"));
 
-  EXPECT_FALSE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80",
-                            "Hello World \xd1\x80\xd1\x88\xd0\xbd\xd1\x83"));
+  EXPECT_FALSE(istringEqual("Hello World \xd1\x88\xd0\xbd\xd1\x83\xd1\x80", "Hello World \xd1\x80\xd1\x88\xd0\xbd\xd1\x83"));
 
   LOG_FREE(Info, "Compare", "Leaving istringEqualMixed")
 }
 
-
-TEST(Compare, IstringCompare)
-{
+TEST(Compare, IstringCompare) {
   LOG_FREE(Info, "Compare", "Entering IstringEqual")
 
   // make sure insensitive string compare functor works for sets
@@ -111,8 +103,7 @@ TEST(Compare, IstringCompare)
   LOG_FREE(Info, "Compare", "Leaving IstringEqual")
 }
 
-TEST(Compare, IstringPairCompare)
-{
+TEST(Compare, IstringPairCompare) {
   LOG_FREE(Info, "Compare", "Entering IstringPairCompare")
 
   // make sure insensitive string compare functor works for sets of pairs
@@ -145,90 +136,152 @@ TEST(Compare, IstringPairCompare)
   LOG_FREE(Info, "Compare", "Leaving IstringPairCompare")
 }
 
-TEST(Compare, checkPtrVecEqual)
-{
+TEST(Compare, checkPtrVecEqual) {
   LOG_FREE(Info, "Compare", "Entering IstringPairCompare")
 
-  typedef std::vector<shared_ptr<double> > VectorType;
+  typedef std::vector<shared_ptr<double>> VectorType;
 
   VectorType v1;
   VectorType v2;
-  EXPECT_TRUE(checkPtrVecEqual(v1, v2)); // equal when empty
-  EXPECT_TRUE(checkPtrVecEqual(v1, v1)); // equal to self
-  EXPECT_TRUE(checkPtrVecEqual(v2, v2)); // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v1, v2));  // equal when empty
+  EXPECT_TRUE(checkPtrVecEqual(v1, v1));  // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v2, v2));  // equal to self
 
   shared_ptr<double> p = shared_ptr<double>(new double(1));
   v1.push_back(p);
   v2.push_back(p);
-  EXPECT_TRUE(checkPtrVecEqual(v1, v2)); // euqal
-  EXPECT_TRUE(checkPtrVecEqual(v1, v1)); // equal to self
-  EXPECT_TRUE(checkPtrVecEqual(v2, v2)); // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v1, v2));  // euqal
+  EXPECT_TRUE(checkPtrVecEqual(v1, v1));  // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v2, v2));  // equal to self
 
   p = shared_ptr<double>(new double(2));
   v1.push_back(p);
   v2.push_back(p);
-  EXPECT_TRUE(checkPtrVecEqual(v1, v2)); // equal
-  EXPECT_TRUE(checkPtrVecEqual(v1, v1)); // equal to self
-  EXPECT_TRUE(checkPtrVecEqual(v2, v2)); // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v1, v2));  // equal
+  EXPECT_TRUE(checkPtrVecEqual(v1, v1));  // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v2, v2));  // equal to self
 
   shared_ptr<double> p1 = shared_ptr<double>(new double(3));
   shared_ptr<double> p2 = shared_ptr<double>(new double(3));
   v1.push_back(p1);
   v2.push_back(p2);
-  EXPECT_TRUE(checkPtrVecEqual(v1, v2)); // equal (comparing values)
-  EXPECT_TRUE(checkPtrVecEqual(v1, v1)); // equal to self
-  EXPECT_TRUE(checkPtrVecEqual(v2, v2)); // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v1, v2));  // equal (comparing values)
+  EXPECT_TRUE(checkPtrVecEqual(v1, v1));  // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v2, v2));  // equal to self
 
   p1 = shared_ptr<double>(new double(4));
   v1.push_back(p1);
-  EXPECT_FALSE(checkPtrVecEqual(v1, v2)); // unequal
-  EXPECT_TRUE(checkPtrVecEqual(v1, v1)); // equal to self
-  EXPECT_TRUE(checkPtrVecEqual(v2, v2)); // equal to self
+  EXPECT_FALSE(checkPtrVecEqual(v1, v2));  // unequal
+  EXPECT_TRUE(checkPtrVecEqual(v1, v1));   // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v2, v2));   // equal to self
 
   p2 = shared_ptr<double>(new double(4));
   v2.push_back(p2);
-  EXPECT_TRUE(checkPtrVecEqual(v1, v2)); // equal again
-  EXPECT_TRUE(checkPtrVecEqual(v1, v1)); // equal to self
-  EXPECT_TRUE(checkPtrVecEqual(v2, v2)); // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v1, v2));  // equal again
+  EXPECT_TRUE(checkPtrVecEqual(v1, v1));  // equal to self
+  EXPECT_TRUE(checkPtrVecEqual(v2, v2));  // equal to self
 
   v1.push_back(shared_ptr<double>());
   v2.push_back(shared_ptr<double>());
-  EXPECT_FALSE(checkPtrVecEqual(v1, v2)); // null pointer causes failure
-  EXPECT_FALSE(checkPtrVecEqual(v1, v1)); // null pointer causes failure
-  EXPECT_FALSE(checkPtrVecEqual(v2, v2)); // null pointer causes failure
+  EXPECT_FALSE(checkPtrVecEqual(v1, v2));  // null pointer causes failure
+  EXPECT_FALSE(checkPtrVecEqual(v1, v1));  // null pointer causes failure
+  EXPECT_FALSE(checkPtrVecEqual(v2, v2));  // null pointer causes failure
 
   LOG_FREE(Info, "Compare", "Leaving IstringPairCompare")
 }
 
-TEST(Compare, EqualityForOneHalfOfPair)
-{
-  std::pair<std::string,int> p1("Employee",32);
-  std::pair<int,bool> p2(-246,true);
-  std::pair<bool,std::string> p3(false,"Hello");
+TEST(Compare, EqualityForOneHalfOfPair) {
+  std::pair<std::string, int> p1("Employee", 32);
+  std::pair<int, bool> p2(-246, true);
+  std::pair<bool, std::string> p3(false, "Hello");
 
-  ASSERT_TRUE(firstOfPairEqual(p1,std::string("Employee")));
-  ASSERT_FALSE(secondOfPairEqual(p1,55));
-  ASSERT_TRUE(secondOfPairEqual(p2,true));
-  ASSERT_FALSE(secondOfPairEqual(p3,std::string("World")));
-  ASSERT_FALSE(firstOfPairEqual(p2,0));
+  ASSERT_TRUE(firstOfPairEqual(p1, std::string("Employee")));
+  ASSERT_FALSE(secondOfPairEqual(p1, 55));
+  ASSERT_TRUE(secondOfPairEqual(p2, true));
+  ASSERT_FALSE(secondOfPairEqual(p3, std::string("World")));
+  ASSERT_FALSE(firstOfPairEqual(p2, 0));
 }
 
-TEST(Compare,VersionString) {
+TEST(Compare, VersionString) {
   EXPECT_TRUE(VersionString("3.1.2") < VersionString("3.2.0"));
-  EXPECT_TRUE(VersionString("3.1") < VersionString("3.2.3"));
-  EXPECT_FALSE(VersionString("3.1") < VersionString("3.1.3"));
-  EXPECT_FALSE(VersionString("3.1") > VersionString("3.1.3"));
-  EXPECT_TRUE(VersionString("3.1") == VersionString("3.1.3")); // not the best outcome
+  EXPECT_TRUE(VersionString("3.1.2") < VersionString("3.2.3"));
+  EXPECT_TRUE(VersionString("3.1.2") < VersionString("3.1.3"));
+  EXPECT_TRUE(VersionString("3.1.4") > VersionString("3.1.3"));
+  EXPECT_TRUE(VersionString("3.1.3") == VersionString("3.1.3"));  // not the best outcome
 
-  EXPECT_TRUE(VersionString("3.1.2").fidelityEqual(VersionString("3.2.0")));
-  EXPECT_FALSE(VersionString("3.1").fidelityEqual(VersionString("3.1.3")));
+  EXPECT_TRUE(VersionString("7.1.0+32891") == VersionString("7.1.0"));
+  EXPECT_TRUE(VersionString("7.1.0+32891") == VersionString("7.1.0+32891"));
+  EXPECT_TRUE(VersionString("7.1.0-rc1+32891") < VersionString("7.1.0"));
 
-  EXPECT_TRUE(VersionString("7.1.0.32891") != VersionString("7.0"));
-  EXPECT_TRUE(VersionString("7.1.0.32891") == VersionString("7.1"));
-  EXPECT_FALSE(VersionString("7.1.0.32891").fidelityEqual(VersionString("7.1")));
-
-  EXPECT_TRUE(VersionString("0.7.0") <= VersionString("0.7"));
-  EXPECT_TRUE(VersionString("0.3.1") <= VersionString("0.7"));
+  EXPECT_TRUE(VersionString("0.7.0") <= VersionString("0.7.0"));
+  EXPECT_TRUE(VersionString("0.3.1") <= VersionString("0.7.0"));
 
   EXPECT_TRUE(VersionString("1.0.0") >= VersionString("0.9.1"));
+
+  EXPECT_TRUE(VersionString("3.1.0-rc2") >= VersionString("3.1.0-rc1"));
+  EXPECT_TRUE(VersionString("3.1.0-rc2") > VersionString("3.1.0-rc1"));
+  EXPECT_TRUE(VersionString("3.1.0-rc2") < VersionString("3.1.0-rc3"));
+  EXPECT_TRUE(VersionString("3.1.0-rc2") <= VersionString("3.1.0-rc3"));
+  EXPECT_FALSE(VersionString("3.1.0-rc2+build1") < VersionString("3.1.0-rc2+build2"));
+  EXPECT_FALSE(VersionString("3.1.0-rc2+build1") > VersionString("3.1.0-rc2+build2"));
+  EXPECT_TRUE(VersionString("3.1.0-rc2+build1") == VersionString("3.1.0-rc2+build2"));
+
+  EXPECT_TRUE(VersionString("1.0.0") < VersionString("2.0.0"));
+  EXPECT_TRUE(VersionString("2.0.0") < VersionString("2.1.0"));
+  EXPECT_TRUE(VersionString("2.0.0") < VersionString("2.1.1"));
+
+  EXPECT_TRUE(VersionString("1.0.0-alpha") < VersionString("1.0.0-alpha.1"));
+  EXPECT_TRUE(VersionString("1.0.0-alpha.1") < VersionString("1.0.0-alpha.beta"));
+  EXPECT_TRUE(VersionString("1.0.0-alpha.beta") < VersionString("1.0.0-beta"));
+  EXPECT_TRUE(VersionString("1.0.0-beta") < VersionString("1.0.0-beta.2"));
+  //EXPECT_TRUE(VersionString("1.0.0-beta.2") < VersionString("1.0.0-beta.11")); // we aren't supporting the dot separators in patch release yet
+  EXPECT_TRUE(VersionString("1.0.0-beta.11") < VersionString("1.0.0-rc.1"));
+  EXPECT_TRUE(VersionString("1.0.0-rc.1") < VersionString("1.0.0"));
+
+  EXPECT_NO_THROW(VersionString v(openStudioVersion()));
+  EXPECT_NO_THROW(VersionString vl(openStudioLongVersion()));
+  EXPECT_NO_THROW(VersionString v2);  // Same as v1
+}
+
+TEST(Compare, VersionString_SemVer) {
+
+  // not allowable in semantic versioning but allowed for backwards compatibility
+  VersionString v31("3.1");
+  EXPECT_EQ(3, v31.major());
+  EXPECT_EQ(1, v31.minor());
+  EXPECT_FALSE(v31.patch());
+  EXPECT_EQ("", v31.patchString());
+  EXPECT_EQ("", v31.buildString());
+
+  VersionString v310("3.1.0");
+  EXPECT_EQ(3, v310.major());
+  EXPECT_EQ(1, v310.minor());
+  ASSERT_TRUE(v310.patch());
+  EXPECT_EQ(0, v310.patch().get());
+  EXPECT_EQ("", v310.patchString());
+  EXPECT_EQ("", v310.buildString());
+
+  VersionString v310rc1("3.1.0-rc1");
+  EXPECT_EQ(3, v310rc1.major());
+  EXPECT_EQ(1, v310rc1.minor());
+  ASSERT_TRUE(v310rc1.patch());
+  EXPECT_EQ(0, v310rc1.patch().get());
+  EXPECT_EQ("rc1", v310rc1.patchString());
+  EXPECT_EQ("", v310rc1.buildString());
+
+  VersionString v310sha("3.1.0+b2cad10881576015005245c7b2e089ff66ef437d");
+  EXPECT_EQ(3, v310sha.major());
+  EXPECT_EQ(1, v310sha.minor());
+  ASSERT_TRUE(v310sha.patch());
+  EXPECT_EQ(0, v310sha.patch().get());
+  EXPECT_EQ("", v310sha.patchString());
+  EXPECT_EQ("b2cad10881576015005245c7b2e089ff66ef437d", v310sha.buildString());
+
+  VersionString v310rc1sha("3.1.0-rc1+b2cad10881576015005245c7b2e089ff66ef437d");
+  EXPECT_EQ(3, v310rc1sha.major());
+  EXPECT_EQ(1, v310rc1sha.minor());
+  ASSERT_TRUE(v310rc1sha.patch());
+  EXPECT_EQ(0, v310rc1sha.patch().get());
+  EXPECT_EQ("rc1", v310rc1sha.patchString());
+  EXPECT_EQ("b2cad10881576015005245c7b2e089ff66ef437d", v310rc1sha.buildString());
 }

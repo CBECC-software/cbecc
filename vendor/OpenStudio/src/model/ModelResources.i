@@ -12,7 +12,6 @@
 
 %{
   #include <model/ScheduleTypeRegistry.hpp>
-  #include <QColor>
   #include <utilities/data/TimeSeries.hpp>
   #include <utilities/sql/SqlFile.hpp>
 %}
@@ -26,9 +25,19 @@
   %ignore openstudio::model::SpaceType::spaces;
   %ignore openstudio::model::SpaceLoadDefinition::instances;
   %ignore openstudio::model::ExteriorLoadDefinition::instances;
+  %ignore openstudio::model::ShadingControl::subSurfaces;
+  %ignore openstudio::model::ShadingControl::subSurfaceIndex;
+  %ignore openstudio::model::ShadingControl::addSubSurface;
+  %ignore openstudio::model::ShadingControl::setSubSurfaceIndex;
+  %ignore openstudio::model::ShadingControl::removeSubSurface(const SubSurface& subSurface); // The unsigned index overload is fine
+  %ignore openstudio::model::ShadingControl::addSubSurfaces;
+  %ignore openstudio::model::ShadingControl::setSubSurfaces;
 
+  // CoilCoolingDX is defined in StraightComponent.i
+  %ignore openstudio::model::CoilCoolingDXCurveFitPerformance::coilCoolingDXs;
+  // TODO: why?
   // ignore schedule type
-  %ignore openstudio::model::ScheduleType;
+  // %ignore openstudio::model::ScheduleType;
 
 #endif
 
@@ -41,11 +50,21 @@
 
 #endif
 
+#if defined SWIGPYTHON
+  %pythoncode %{
+    Model = openstudiomodelcore.Model
+  %}
+#endif
+
 namespace openstudio {
 namespace model {
 
 // forward declarations
 class ShadingControl;
+%feature("valuewrapper") SubSurface;
+class SubSurface;
+%feature("valuewrapper") CoilCoolingDX;
+class CoilCoolingDX;
 
 }
 }
@@ -61,6 +80,7 @@ class ShadingControl;
   }
 };
 
+MODELOBJECT_TEMPLATES(ScheduleType)
 MODELOBJECT_TEMPLATES(ScheduleInterval);
 MODELOBJECT_TEMPLATES(ScheduleFixedInterval);
 MODELOBJECT_TEMPLATES(ExternalFile);
@@ -69,6 +89,7 @@ MODELOBJECT_TEMPLATES(ScheduleVariableInterval);
 MODELOBJECT_TEMPLATES(ScheduleCompact);
 MODELOBJECT_TEMPLATES(ScheduleConstant);
 MODELOBJECT_TEMPLATES(DefaultScheduleSet);
+MODELOBJECT_TEMPLATES(SpectralDataField); // Helper class defined in MaterialPropertyGlazingSpectralData
 MODELOBJECT_TEMPLATES(MaterialPropertyGlazingSpectralData);
 MODELOBJECT_TEMPLATES(MaterialPropertyMoisturePenetrationDepthSettings);
 MODELOBJECT_TEMPLATES(Material);
@@ -98,6 +119,7 @@ MODELOBJECT_TEMPLATES(StandardsInformationMaterial);
 MODELOBJECT_TEMPLATES(ConstructionBase);
 MODELOBJECT_TEMPLATES(LayeredConstruction);
 MODELOBJECT_TEMPLATES(Construction);
+MODELOBJECT_TEMPLATES(ConstructionAirBoundary);
 MODELOBJECT_TEMPLATES(ConstructionWithInternalSource);
 MODELOBJECT_TEMPLATES(CFactorUndergroundWallConstruction);
 MODELOBJECT_TEMPLATES(FFactorGroundFloorConstruction);
@@ -146,6 +168,10 @@ MODELOBJECT_TEMPLATES(ExteriorWaterEquipmentDefinition)
 MODELOBJECT_TEMPLATES(RenderingColor);
 MODELOBJECT_TEMPLATES(DesignSpecificationOutdoorAir);
 
+MODELOBJECT_TEMPLATES(CoilCoolingDXCurveFitPerformance);
+MODELOBJECT_TEMPLATES(CoilCoolingDXCurveFitOperatingMode);
+MODELOBJECT_TEMPLATES(CoilCoolingDXCurveFitSpeed);
+
 SWIG_MODELOBJECT(ScheduleInterval, 0);
 SWIG_MODELOBJECT(ScheduleFile, 1);
 SWIG_MODELOBJECT(ExternalFile, 1);
@@ -183,6 +209,7 @@ SWIG_MODELOBJECT(StandardsInformationMaterial, 1);
 SWIG_MODELOBJECT(ConstructionBase, 0);
 SWIG_MODELOBJECT(LayeredConstruction, 0);
 SWIG_MODELOBJECT(Construction, 1);
+SWIG_MODELOBJECT(ConstructionAirBoundary, 1);
 SWIG_MODELOBJECT(ConstructionWithInternalSource, 1);
 SWIG_MODELOBJECT(CFactorUndergroundWallConstruction, 1);
 SWIG_MODELOBJECT(FFactorGroundFloorConstruction, 1);
@@ -229,8 +256,47 @@ SWIG_MODELOBJECT(ExteriorWaterEquipmentDefinition, 1);
 SWIG_MODELOBJECT(RenderingColor, 1);
 SWIG_MODELOBJECT(DesignSpecificationOutdoorAir, 1);
 
+SWIG_MODELOBJECT(CoilCoolingDXCurveFitPerformance, 1);
+SWIG_MODELOBJECT(CoilCoolingDXCurveFitOperatingMode, 1);
+SWIG_MODELOBJECT(CoilCoolingDXCurveFitSpeed, 1);
+
 %include <model/ScheduleTypeRegistry.hpp>
 
+#if defined(SWIGCSHARP) || defined(SWIGJAVA)
+  %inline {
+    namespace openstudio {
+      namespace model {
+
+        // EMS Curve setter  (reimplemented from ModelCore.i)
+        bool setCurveForEMS(openstudio::model::EnergyManagementSystemCurveOrTableIndexVariable ems_curve, openstudio::model::Curve curve) {
+          return ems_curve.setCurveOrTableObject(curve);
+        }
+
+      }
+    }
+  }
+#endif
+
+#if defined(SWIGCSHARP)
+  //%pragma(csharp) imclassimports=%{
+  %pragma(csharp) moduleimports=%{
+
+    using System;
+    using System.Runtime.InteropServices;
+
+    public partial class EnergyManagementSystemCurveOrTableIndexVariable : ModelObject {
+      public bool setCurveOrTableObject(OpenStudio.Curve curve) {
+        return OpenStudio.OpenStudioModelResources.setCurveForEMS(this, curve);
+      }
+
+      // Overloaded Ctor, calling Ctor that doesn't use Curve
+      public EnergyManagementSystemCurveOrTableIndexVariable(Model model, OpenStudio.Curve curve)
+        : this(model) {
+        this.setCurveOrTableObject(curve);
+      }
+    }
+  %}
+#endif
 #endif
 
 

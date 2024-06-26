@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,656 +33,531 @@
 #include "RemoteBCL.hpp"
 
 #include "../core/Assert.hpp"
+#include "../core/StringHelpers.hpp"
 
+#include <pugixml.hpp>
 
+namespace openstudio {
 
-namespace openstudio{
+BCLFacet::BCLFacet(const pugi::xml_node& facetElement) {
+  auto fieldElement = facetElement.child("field");
+  auto labelElement = facetElement.child("label");
+  auto itemElement = facetElement.child("item");
 
-  BCLFacet::BCLFacet(const QDomElement& facetElement)
-  {
-    QDomElement fieldElement = facetElement.firstChildElement("field");
-    QDomElement labelElement = facetElement.firstChildElement("label");
-    QDomElement itemElement = facetElement.firstChildElement("item");
+  OS_ASSERT(fieldElement);
+  OS_ASSERT(labelElement);
+  OS_ASSERT(itemElement);
 
-    OS_ASSERT(!fieldElement.isNull());
-    OS_ASSERT(!labelElement.isNull());
-    OS_ASSERT(!itemElement.isNull());
+  m_field = fieldElement.text().as_string();
 
-    m_field = fieldElement.firstChild().nodeValue().toStdString();
+  m_label = labelElement.text().as_string();
 
-    m_label = labelElement.firstChild().nodeValue().toStdString();
+  while (itemElement) {
+    std::string value = itemElement.child("value").text().as_string();
+    unsigned count = itemElement.child("count").text().as_uint();
+    m_items.push_back(std::make_pair(value, count));
+    itemElement = itemElement.next_sibling("item");
+  }
+}
 
-    while (!itemElement.isNull())
-    {
-      std::string value = itemElement.firstChildElement("value").firstChild().nodeValue().toStdString();
-      uint count = itemElement.firstChildElement("count").firstChild().nodeValue().toUInt();
-      m_items.push_back(std::make_pair(value, count));
-      itemElement = itemElement.nextSiblingElement("item");
+std::string BCLFacet::field() const {
+  return m_field;
+}
+
+std::string BCLFacet::label() const {
+  return m_label;
+}
+
+std::vector<std::pair<std::string, unsigned>> BCLFacet::items() const {
+  return m_items;
+}
+
+BCLTaxonomyTerm::BCLTaxonomyTerm(const pugi::xml_node& taxonomyElement) {
+  auto nameElement = taxonomyElement.child("name");
+  auto tidElement = taxonomyElement.child("tid");
+  auto numResultsElement = taxonomyElement.child("count");
+
+  OS_ASSERT(nameElement);
+  OS_ASSERT(tidElement);
+  OS_ASSERT(numResultsElement);
+
+  m_name = nameElement.text().as_string();
+
+  m_tid = tidElement.text().as_uint();
+
+  m_numResults = numResultsElement.text().as_uint();
+}
+
+std::string BCLTaxonomyTerm::name() const {
+  return m_name;
+}
+
+unsigned BCLTaxonomyTerm::tid() const {
+  return m_tid;
+}
+
+unsigned BCLTaxonomyTerm::numResults() const {
+  return m_numResults;
+}
+
+BCLMetaSearchResult::BCLMetaSearchResult(const pugi::xml_node& resultElement) {
+  auto numResultsElement = resultElement.child("result_count");
+
+  OS_ASSERT(numResultsElement);
+
+  m_numResults = numResultsElement.text().as_uint();
+
+  auto facetElement = resultElement.child("facet");
+  while (facetElement) {
+    auto fieldElement = facetElement.child("field");
+    if (fieldElement) {
+      m_facets.push_back(BCLFacet(facetElement));
+    }
+    facetElement = facetElement.next_sibling("facet");
+  }
+
+  auto taxonomyTermElement = resultElement.child("taxonomy_term");
+  while (taxonomyTermElement) {
+    auto tidElement = taxonomyTermElement.child("tid");
+    if (tidElement) {
+      m_taxonomyTerms.push_back(BCLTaxonomyTerm(taxonomyTermElement));
+    }
+    taxonomyTermElement = taxonomyTermElement.next_sibling("taxonomy_term");
+  }
+}
+
+unsigned BCLMetaSearchResult::numResults() const {
+  return m_numResults;
+}
+
+std::vector<BCLFacet> BCLMetaSearchResult::facets() const {
+  return m_facets;
+}
+
+std::vector<BCLTaxonomyTerm> BCLMetaSearchResult::taxonomyTerms() const {
+  return m_taxonomyTerms;
+}
+
+BCLFile::BCLFile(const pugi::xml_node& fileElement) {
+  auto version = fileElement.child("version");
+  auto softwareProgramElement = version.child("software_program");
+  auto identifierElement = version.child("identifier");
+  auto minCompatibleElement = version.child("min_compatible");
+  auto maxCompatibleElement = version.child("max_compatible");
+  auto filenameElement = fileElement.child("filename");
+  auto urlElement = fileElement.child("url");
+  auto filetypeElement = fileElement.child("filetype");
+  auto usageTypeElement = fileElement.child("usage_type");
+  auto checksumElement = fileElement.child("checksum");
+
+  m_softwareProgram = softwareProgramElement.text().as_string();
+  m_identifier = identifierElement.text().as_string();
+  if (!minCompatibleElement) {
+    try {
+      // if minCompatibleVersion not explicitly set, assume identifier is min
+      m_minCompatibleVersion = VersionString(m_identifier);
+    } catch (const std::exception&) {
+    }
+  } else {
+    try {
+      m_minCompatibleVersion = VersionString(minCompatibleElement.text().as_string());
+    } catch (const std::exception&) {
+    }
+  }
+  if (maxCompatibleElement) {
+    try {
+      m_maxCompatibleVersion = VersionString(maxCompatibleElement.text().as_string());
+    } catch (const std::exception&) {
+    }
+  }
+  m_filename = filenameElement.text().as_string();
+  m_url = urlElement.text().as_string();
+  m_filetype = filetypeElement.text().as_string();
+  m_usageType = usageTypeElement.text().as_string();
+  m_checksum = checksumElement.text().as_string();
+}
+
+std::string BCLFile::softwareProgram() const {
+  return m_softwareProgram;
+}
+
+std::string BCLFile::identifier() const {
+  return m_identifier;
+}
+
+boost::optional<VersionString> BCLFile::minCompatibleVersion() const {
+  return m_minCompatibleVersion;
+}
+
+boost::optional<VersionString> BCLFile::maxCompatibleVersion() const {
+  return m_maxCompatibleVersion;
+}
+
+std::string BCLFile::filename() const {
+  return m_filename;
+}
+
+std::string BCLFile::url() const {
+  return m_url;
+}
+
+std::string BCLFile::filetype() const {
+  return m_filetype;
+}
+
+std::string BCLFile::usageType() const {
+  return m_usageType;
+}
+
+std::string BCLFile::checksum() const {
+  return m_checksum;
+}
+
+BCLProvenance::BCLProvenance(const pugi::xml_node& provenanceElement) {
+  auto authorElement = provenanceElement.child("author");
+  auto datetimeElement = provenanceElement.child("datetime");
+  auto commentElement = provenanceElement.child("comment");
+
+  m_author = authorElement.text().as_string();
+  m_datetime = datetimeElement.text().as_string();
+  m_comment = commentElement.text().as_string();
+}
+
+std::string BCLProvenance::author() const {
+  return m_author;
+}
+
+std::string BCLProvenance::datetime() const {
+  return m_datetime;
+}
+
+std::string BCLProvenance::comment() const {
+  return m_comment;
+}
+
+BCLCost::BCLCost(const pugi::xml_node& costElement) {
+  auto instanceNameElement = costElement.child("instance_name");
+  auto costTypeElement = costElement.child("cost_type");
+  auto categoryElement = costElement.child("category");
+  auto valueElement = costElement.child("value");
+  auto unitsElement = costElement.child("units");
+  auto intervalElement = costElement.child("interval");
+  auto intervalUnitsElement = costElement.child("interval_units");
+  auto yearElement = costElement.child("year");
+  auto locationElement = costElement.child("location");
+  auto currencyElement = costElement.child("currency");
+  auto sourceElement = costElement.child("source");
+  auto referenceComponentNameElement = costElement.child("reference_component_name");
+  auto referenceComponentIdElement = costElement.child("reference_component_id");
+
+  m_instanceName = instanceNameElement.text().as_string();
+  m_costType = costTypeElement.text().as_string();
+  m_category = categoryElement.text().as_string();
+  m_value = valueElement.text().as_double();
+
+  m_units = unitsElement.text().as_string();
+  m_interval = intervalElement.text().as_string();
+  m_intervalUnits = intervalUnitsElement.text().as_string();
+
+  m_year = yearElement.text().as_uint(0);
+
+  m_location = locationElement.text().as_string();
+  m_currency = currencyElement.text().as_string();
+  m_source = sourceElement.text().as_string();
+  m_referenceComponentName = referenceComponentNameElement.text().as_string();
+  m_referenceComponentId = referenceComponentIdElement.text().as_string();
+}
+
+std::string BCLCost::instanceName() const {
+  return m_instanceName;
+}
+
+std::string BCLCost::costType() const {
+  return m_costType;
+}
+
+std::string BCLCost::category() const {
+  return m_category;
+}
+
+double BCLCost::value() const {
+  return m_value;
+}
+
+std::string BCLCost::units() const {
+  return m_units;
+}
+
+std::string BCLCost::interval() const {
+  return m_interval;
+}
+
+std::string BCLCost::intervalUnits() const {
+  return m_intervalUnits;
+}
+
+unsigned BCLCost::year() const {
+  return m_year;
+}
+
+std::string BCLCost::location() const {
+  return m_location;
+}
+
+std::string BCLCost::currency() const {
+  return m_currency;
+}
+
+std::string BCLCost::source() const {
+  return m_source;
+}
+
+std::string BCLCost::referenceComponentName() const {
+  return m_referenceComponentName;
+}
+
+std::string BCLCost::referenceComponentId() const {
+  return m_referenceComponentId;
+}
+
+BCLSearchResult::BCLSearchResult(const pugi::xml_node& componentElement) : m_componentType{componentElement.name()} {
+
+  auto uidElement = componentElement.child("uuid");
+  auto versionIdElement = componentElement.child("vuuid");
+  auto nameElement = componentElement.child("name");
+  auto descriptionElement = componentElement.child("description");
+  auto modelerDescriptionElement = componentElement.child("modeler_description");
+  auto fidelityLevelElement = componentElement.child("fidelity_level");
+  auto provenancesElement = componentElement.child("provenances");
+  auto tagsElement = componentElement.child("tags");
+  auto attributesElement = componentElement.child("attributes");
+  auto filesElement = componentElement.child("files");
+  auto costsElement = componentElement.child("costs");
+
+  OS_ASSERT(nameElement);
+  OS_ASSERT(uidElement);
+  OS_ASSERT(versionIdElement);
+
+  std::string name = nameElement.text().as_string();
+  std::replace(name.begin(), name.end(), '_', ' ');
+  auto index = name.find("  ", 0);
+  while (index != std::string::npos) {
+    name.replace(index, 2, " ");
+    ++index;
+    index = name.find("  ", index);
+  }
+  //QString name = nameElement.firstChild().nodeValue().replace('_', ' ');
+  //while (name.indexOf("  ") != -1) {
+  //  name = name.replace("  ", " ");
+  //}
+  name[0] = std::toupper(name[0]);  // Why is this needed? Won't this be an issue for unicode, etc.?
+  m_name = name;
+
+  if (uidElement) {
+    std::string txt = uidElement.text().as_string();
+    if (txt.length() == 36) {
+      m_uid = txt;
     }
   }
 
-  std::string BCLFacet::field() const
-  {
-    return m_field;
+  if (versionIdElement) {
+    std::string txt = versionIdElement.text().as_string();
+    if (txt.length() == 36) {
+      m_versionId = txt;
+    }
   }
 
-  std::string BCLFacet::label() const
-  {
-    return m_label;
+  m_description = descriptionElement.text().as_string();
+  m_modelerDescription = modelerDescriptionElement.text().as_string();
+  m_fidelityLevel = fidelityLevelElement.text().as_string();
+
+  auto provenanceElement = provenancesElement.child("provenance");
+  while (provenanceElement) {
+    if (provenanceElement.first_child()) {
+      m_provenances.push_back(BCLProvenance(provenanceElement));
+    } else {
+      break;
+    }
+    provenanceElement = provenanceElement.next_sibling("provenance");
+  }
+  auto provenanceRequiredElement = provenancesElement.child("provenance_required");
+  if (provenanceRequiredElement) {
+    std::string required = provenanceRequiredElement.text().as_string();
+    m_provenanceRequired = (required == "true") ? true : false;
   }
 
-  std::vector<std::pair<std::string, uint> > BCLFacet::items() const
-  {
-    return m_items;
+  auto tagElement = tagsElement.child("tag");
+  while (tagElement) {
+    m_tags.push_back(tagElement.text().as_string());
+    tagElement = tagElement.next_sibling("tag");
   }
 
-  BCLTaxonomyTerm::BCLTaxonomyTerm(const QDomElement& taxonomyElement)
-  {
-    QDomElement nameElement = taxonomyElement.firstChildElement("name");
-    QDomElement tidElement = taxonomyElement.firstChildElement("tid");
-    QDomElement numResultsElement = taxonomyElement.firstChildElement("count");
+  auto attributeElement = attributesElement.child("attribute");
+  while (attributeElement) {
+    if (attributeElement.first_child()) {
+      std::string att_name = attributeElement.child("name").text().as_string();
+      std::string value = attributeElement.child("value").text().as_string();
+      std::string datatype = attributeElement.child("datatype").text().as_string();
 
-    OS_ASSERT(!nameElement.isNull());
-    OS_ASSERT(!tidElement.isNull());
-    OS_ASSERT(!numResultsElement.isNull());
+      // Units are optional
+      std::string units = attributeElement.child("units").text().as_string();
 
-    m_name = nameElement.firstChild().nodeValue().toStdString();
+      const auto doubleValue = openstudio::string_conversions::to_no_throw<double>(value);
+      const auto intValue = openstudio::string_conversions::to_no_throw<int>(value);
 
-    m_tid = tidElement.firstChild().nodeValue().toUInt();
-
-    m_numResults = numResultsElement.firstChild().nodeValue().toUInt();
-  }
-
-  std::string BCLTaxonomyTerm::name() const
-  {
-    return m_name;
-  }
-
-  unsigned BCLTaxonomyTerm::tid() const
-  {
-    return m_tid;
-  }
-
-  unsigned BCLTaxonomyTerm::numResults() const
-  {
-    return m_numResults;
-  }
-
-  BCLMetaSearchResult::BCLMetaSearchResult(const QDomElement& resultElement)
-  {
-    QDomElement numResultsElement = resultElement.firstChildElement("result_count");
-
-    OS_ASSERT(!numResultsElement.isNull());
-
-    m_numResults = numResultsElement.firstChild().nodeValue().toUInt();
-
-    QDomElement facetElement = resultElement.firstChildElement("facet");
-    while (!facetElement.isNull())
-    {
-      QDomElement fieldElement = facetElement.firstChildElement("field");
-      if (!fieldElement.isNull()){
-        m_facets.push_back(BCLFacet(facetElement));
+      if (datatype == "float" && doubleValue) {
+        if (units.empty()) {
+          Attribute attr(att_name, *doubleValue);
+          m_attributes.push_back(attr);
+        } else {
+          Attribute attr(att_name, *doubleValue, units);
+          m_attributes.push_back(attr);
+        }
+      } else if (datatype == "int" && intValue) {
+        if (units.empty()) {
+          Attribute attr(att_name, *intValue);
+          m_attributes.push_back(attr);
+        } else {
+          Attribute attr(att_name, *intValue, units);
+          m_attributes.push_back(attr);
+        }
       }
-      facetElement = facetElement.nextSiblingElement("facet");
-    }
-
-    QDomElement taxonomyTermElement = resultElement.firstChildElement("taxonomy_term");
-    while (!taxonomyTermElement.isNull())
-    {
-      QDomElement tidElement = taxonomyTermElement.firstChildElement("tid");
-      if (!tidElement.isNull()){
-        m_taxonomyTerms.push_back(BCLTaxonomyTerm(taxonomyTermElement));
+      // Assume string
+      else {
+        if (units.empty()) {
+          Attribute attr(att_name, value);
+          m_attributes.push_back(attr);
+        } else {
+          Attribute attr(att_name, value, units);
+          m_attributes.push_back(attr);
+        }
+        //LOG(Error, "Error: Unrecognized attribute datatype \"" << datatype << "\"");
       }
-      taxonomyTermElement = taxonomyTermElement.nextSiblingElement("taxonomy_term");
+    } else {
+      break;
     }
+    attributeElement = attributeElement.next_sibling("attribute");
   }
 
-  unsigned BCLMetaSearchResult::numResults() const
-  {
-    return m_numResults;
-  }
-
-  std::vector<BCLFacet> BCLMetaSearchResult::facets() const
-  {
-    return m_facets;
-  }
-
-  std::vector<BCLTaxonomyTerm> BCLMetaSearchResult::taxonomyTerms() const
-  {
-    return m_taxonomyTerms;
-  }
-
-
-  BCLFile::BCLFile(const QDomElement& fileElement)
-  {
-    QDomElement softwareProgramElement = fileElement.firstChildElement("version").firstChildElement("software_program");
-    QDomElement identifierElement = fileElement.firstChildElement("version").firstChildElement("identifier");
-    QDomElement minCompatibleElement = fileElement.firstChildElement("version").firstChildElement("min_compatible");
-    QDomElement maxCompatibleElement = fileElement.firstChildElement("version").firstChildElement("max_compatible");
-    QDomElement filenameElement = fileElement.firstChildElement("filename");
-    QDomElement urlElement = fileElement.firstChildElement("url");
-    QDomElement filetypeElement = fileElement.firstChildElement("filetype");
-    QDomElement usageTypeElement = fileElement.firstChildElement("usage_type");
-    QDomElement checksumElement = fileElement.firstChildElement("checksum");
-
-    m_softwareProgram = softwareProgramElement.firstChild().nodeValue().toStdString();
-    m_identifier = identifierElement.firstChild().nodeValue().toStdString();
-    if (minCompatibleElement.isNull()){
-      try{
-        // if minCompatibleVersion not explicitly set, assume identifier is min
-        m_minCompatibleVersion = VersionString(m_identifier);
-      } catch (const std::exception&){
-      }
-    }else{
-      try{
-        m_minCompatibleVersion = VersionString(minCompatibleElement.firstChild().nodeValue().toStdString());
-      } catch (const std::exception&){
-      }
+  auto fileElement = filesElement.child("file");
+  while (fileElement) {
+    if (fileElement.first_child()) {
+      m_files.push_back(BCLFile(fileElement));
+    } else {
+      break;
     }
-    if (!maxCompatibleElement.isNull()){
-      try{
-        m_maxCompatibleVersion = VersionString(maxCompatibleElement.firstChild().nodeValue().toStdString());
-      } catch (const std::exception&){
-      }
-    }
-    m_filename = filenameElement.firstChild().nodeValue().toStdString();
-    m_url = urlElement.firstChild().nodeValue().toStdString();
-    m_filetype = filetypeElement.firstChild().nodeValue().toStdString();
-    m_usageType = usageTypeElement.firstChild().nodeValue().toStdString();
-    m_checksum = checksumElement.firstChild().nodeValue().toStdString();
+    fileElement = fileElement.next_sibling("file");
   }
 
-  std::string BCLFile::softwareProgram() const
-  {
-    return m_softwareProgram;
-  }
-
-  std::string BCLFile::identifier() const
-  {
-    return m_identifier;
-  }
-
-  boost::optional<VersionString> BCLFile::minCompatibleVersion() const
-  {
-    return m_minCompatibleVersion;
-  }
-
-  boost::optional<VersionString> BCLFile::maxCompatibleVersion() const
-  {
-    return m_maxCompatibleVersion;
-  }
-
-  std::string BCLFile::filename() const
-  {
-    return m_filename;
-  }
-
-  std::string BCLFile::url() const
-  {
-    return m_url;
-  }
-
-  std::string BCLFile::filetype() const
-  {
-    return m_filetype;
-  }
-
-  std::string BCLFile::usageType() const
-  {
-    return m_usageType;
-  }
-
-  std::string BCLFile::checksum() const
-  {
-    return m_checksum;
-  }
-
-
-  BCLProvenance::BCLProvenance(const QDomElement& provenanceElement)
-  {
-    QDomElement authorElement = provenanceElement.firstChildElement("author");
-    QDomElement datetimeElement = provenanceElement.firstChildElement("datetime");
-    QDomElement commentElement = provenanceElement.firstChildElement("comment");
-
-    m_author = authorElement.firstChild().nodeValue().toStdString();
-    m_datetime = datetimeElement.firstChild().nodeValue().toStdString();
-    m_comment = commentElement.firstChild().nodeValue().toStdString();
-  }
-
-  std::string BCLProvenance::author() const
-  {
-    return m_author;
-  }
-
-  std::string BCLProvenance::datetime() const
-  {
-    return m_datetime;
-  }
-
-  std::string BCLProvenance::comment() const
-  {
-    return m_comment;
-  }
-
-
-  BCLCost::BCLCost(const QDomElement& costElement)
-  {
-    QDomElement instanceNameElement = costElement.firstChildElement("instance_name");
-    QDomElement costTypeElement = costElement.firstChildElement("cost_type");
-    QDomElement categoryElement = costElement.firstChildElement("category");
-    QDomElement valueElement = costElement.firstChildElement("value");
-    QDomElement unitsElement = costElement.firstChildElement("units");
-    QDomElement intervalElement = costElement.firstChildElement("interval");
-    QDomElement intervalUnitsElement = costElement.firstChildElement("interval_units");
-    QDomElement yearElement = costElement.firstChildElement("year");
-    QDomElement locationElement = costElement.firstChildElement("location");
-    QDomElement currencyElement = costElement.firstChildElement("currency");
-    QDomElement sourceElement = costElement.firstChildElement("source");
-    QDomElement referenceComponentNameElement = costElement.firstChildElement("reference_component_name");
-    QDomElement referenceComponentIdElement = costElement.firstChildElement("reference_component_id");
-
-    m_instanceName = instanceNameElement.firstChild().nodeValue().toStdString();
-    m_costType = costTypeElement.firstChild().nodeValue().toStdString();
-    m_category = categoryElement.firstChild().nodeValue().toStdString();
-    m_value = valueElement.firstChild().nodeValue().toDouble();
-    if (!unitsElement.isNull()){
-      m_units = unitsElement.firstChild().nodeValue().toStdString();
-    }
-    if (!intervalElement.isNull()){
-      m_interval = intervalElement.firstChild().nodeValue().toStdString();
-    }
-    if (!intervalUnitsElement.isNull()){
-      m_intervalUnits = intervalUnitsElement.firstChild().nodeValue().toStdString();
-    }
-    if (!yearElement.isNull()){
-      m_year = yearElement.firstChild().nodeValue().toUInt();
-    }else{
-      m_year = 0;
-    }
-    if (!locationElement.isNull()){
-      m_location = locationElement.firstChild().nodeValue().toStdString();
-    }
-    if (!currencyElement.isNull()){
-      m_currency = currencyElement.firstChild().nodeValue().toStdString();
-    }
-    if (!sourceElement.isNull()){
-      m_source = sourceElement.firstChild().nodeValue().toStdString();
-    }
-    if (!referenceComponentNameElement.isNull()){
-      m_referenceComponentName = referenceComponentNameElement.firstChild().nodeValue().toStdString();
-    }
-    if (!referenceComponentIdElement.isNull()){
-      m_referenceComponentId = referenceComponentIdElement.firstChild().nodeValue().toStdString();
-    }
-  }
-
-  std::string BCLCost::instanceName() const
-  {
-    return m_instanceName;
-  }
-
-  std::string BCLCost::costType() const
-  {
-    return m_costType;
-  }
-
-  std::string BCLCost::category() const
-  {
-    return m_category;
-  }
-
-  double BCLCost::value() const
-  {
-    return m_value;
-  }
-
-  std::string BCLCost::units() const
-  {
-    return m_units;
-  }
-
-  std::string BCLCost::interval() const
-  {
-    return m_interval;
-  }
-
-  std::string BCLCost::intervalUnits() const
-  {
-    return m_intervalUnits;
-  }
-
-  unsigned BCLCost::year() const
-  {
-    return m_year;
-  }
-
-  std::string BCLCost::location() const
-  {
-    return m_location;
-  }
-
-  std::string BCLCost::currency() const
-  {
-    return m_currency;
-  }
-
-  std::string BCLCost::source() const
-  {
-    return m_source;
-  }
-
-  std::string BCLCost::referenceComponentName() const
-  {
-    return m_referenceComponentName;
-  }
-
-  std::string BCLCost::referenceComponentId() const
-  {
-    return m_referenceComponentId;
-  }
-
-
-  BCLSearchResult::BCLSearchResult(const QDomElement& componentElement)
-  {
-    m_componentType = componentElement.tagName().toStdString();
-
-    QDomElement uidElement = componentElement.firstChildElement("uuid");
-    QDomElement versionIdElement = componentElement.firstChildElement("vuuid");
-    QDomElement nameElement = componentElement.firstChildElement("name");
-    QDomElement descriptionElement = componentElement.firstChildElement("description");
-    QDomElement modelerDescriptionElement = componentElement.firstChildElement("modeler_description");
-    QDomElement fidelityLevelElement = componentElement.firstChildElement("fidelity_level");
-    QDomElement provenancesElement = componentElement.firstChildElement("provenances");
-    QDomElement tagsElement = componentElement.firstChildElement("tags");
-    QDomElement attributesElement = componentElement.firstChildElement("attributes");
-    QDomElement filesElement = componentElement.firstChildElement("files");
-    QDomElement costsElement = componentElement.firstChildElement("costs");
-
-    OS_ASSERT(!nameElement.isNull());
-    OS_ASSERT(!uidElement.isNull());
-    OS_ASSERT(!versionIdElement.isNull());
-
-    QString name = nameElement.firstChild().nodeValue().replace('_', ' ');
-    while (name.indexOf("  ") != -1) {
-      name = name.replace("  ", " ");
-    }
-    name[0] = name[0].toUpper();
-    m_name = name.toStdString();
-
-    if (!uidElement.isNull() && uidElement.firstChild().nodeValue().length() == 36)
-    {
-      m_uid = uidElement.firstChild().nodeValue().toStdString();
-    }
-
-    if (!versionIdElement.isNull() && versionIdElement.firstChild().nodeValue().length() == 36)
-    {
-      m_versionId = versionIdElement.firstChild().nodeValue().toStdString();
-    }
-
-    if (!descriptionElement.isNull())
-    {
-      m_description = descriptionElement.firstChild().nodeValue().toStdString();
-    }
-
-    if (!modelerDescriptionElement.isNull())
-    {
-      m_modelerDescription = modelerDescriptionElement.firstChild().nodeValue().toStdString();
-    }
-
-    if (!fidelityLevelElement.isNull())
-    {
-      m_fidelityLevel= fidelityLevelElement.firstChild().nodeValue().toStdString();
-    }
-
-    QDomElement provenanceElement = provenancesElement.firstChildElement("provenance");
-    while (!provenanceElement.isNull())
-    {
-      if (provenanceElement.hasChildNodes())
-      {
-        m_provenances.push_back(BCLProvenance(provenanceElement));
-      }
-      else
-      {
+  if (m_componentType == "component") {
+    auto costElement = costsElement.child("cost");
+    while (costElement) {
+      if (costElement.first_child()) {
+        m_costs.push_back(BCLCost(costElement));
+      } else {
         break;
       }
-      provenanceElement = provenanceElement.nextSiblingElement("provenance");
-    }
-    QDomElement provenanceRequiredElement = provenancesElement.firstChildElement("provenance_required");
-    if (!provenanceRequiredElement.isNull())
-    {
-      std::string required = provenanceRequiredElement.firstChild().nodeValue().toStdString();
-      m_provenanceRequired = (required == "true") ? true : false;
-    }
-
-    QDomElement tagElement = tagsElement.firstChildElement("tag");
-    while (!tagElement.isNull())
-    {
-      m_tags.push_back(tagElement.firstChild().nodeValue().toStdString());
-      tagElement = tagElement.nextSiblingElement("tag");
-    }
-
-    QDomElement attributeElement = attributesElement.firstChildElement("attribute");
-    while (!attributeElement.isNull())
-    {
-      if (attributeElement.hasChildNodes())
-      {
-        std::string name = attributeElement.firstChildElement("name").firstChild()
-          .nodeValue().toStdString();
-        std::string value = attributeElement.firstChildElement("value").firstChild()
-          .nodeValue().toStdString();
-        std::string datatype = attributeElement.firstChildElement("datatype").firstChild()
-          .nodeValue().toStdString();
-
-        // Units are optional
-        std::string units = attributeElement.firstChildElement("units").firstChild()
-          .nodeValue().toStdString();
-
-        bool doubleOk;
-        double doubleValue = toQString(value).toDouble(&doubleOk);
-
-        bool intOk;
-        int intValue = toQString(value).toInt(&intOk);
-
-        if (datatype == "float" && doubleOk)
-        {
-          if (units.empty())
-          {
-            Attribute attr(name, doubleValue);
-            m_attributes.push_back(attr);
-          }
-          else
-          {
-            Attribute attr(name, doubleValue, units);
-            m_attributes.push_back(attr);
-          }
-        }
-        else if (datatype == "int" && intOk)
-        {
-          if (units.empty())
-          {
-            Attribute attr(name, intValue);
-            m_attributes.push_back(attr);
-          }
-          else
-          {
-            Attribute attr(name, intValue, units);
-            m_attributes.push_back(attr);
-          }
-        }
-        // Assume string
-        else
-        {
-          if (units.empty())
-          {
-            Attribute attr(name, value);
-            m_attributes.push_back(attr);
-          }
-          else
-          {
-            Attribute attr(name, value, units);
-            m_attributes.push_back(attr);
-          }
-          //LOG(Error, "Error: Unrecognized attribute datatype \"" << datatype << "\"");
-        }
-      }
-      else
-      {
-        break;
-      }
-      attributeElement = attributeElement.nextSiblingElement("attribute");
-    }
-
-    QDomElement fileElement = filesElement.firstChildElement("file");
-    while (!fileElement.isNull())
-    {
-      if (fileElement.hasChildNodes())
-      {
-        m_files.push_back(BCLFile(fileElement));
-      }
-      else
-      {
-        break;
-      }
-      fileElement = fileElement.nextSiblingElement("file");
-    }
-
-    if (m_componentType == "component")
-    {
-      QDomElement costElement = costsElement.firstChildElement("cost");
-      while (!costElement.isNull())
-      {
-        if (costElement.hasChildNodes())
-        {
-          m_costs.push_back(BCLCost(costElement));
-        }
-        else
-        {
-          break;
-        }
-        costElement = costElement.nextSiblingElement("cost");
-      }
+      costElement = costElement.next_sibling("cost");
     }
   }
+}
 
-  std::string BCLSearchResult::uid() const
-  {
-    return m_uid;
-  }
+std::string BCLSearchResult::uid() const {
+  return m_uid;
+}
 
-  std::string BCLSearchResult::versionId() const
-  {
-    return m_versionId;
-  }
+std::string BCLSearchResult::versionId() const {
+  return m_versionId;
+}
 
-  std::string BCLSearchResult::name() const
-  {
-    return m_name;
-  }
+std::string BCLSearchResult::name() const {
+  return m_name;
+}
 
-  std::string BCLSearchResult::description() const
-  {
-    return m_description;
-  }
+std::string BCLSearchResult::description() const {
+  return m_description;
+}
 
-  std::string BCLSearchResult::modelerDescription() const
-  {
-    return m_modelerDescription;
-  }
+std::string BCLSearchResult::modelerDescription() const {
+  return m_modelerDescription;
+}
 
-  std::string BCLSearchResult::fidelityLevel() const
-  {
-    return m_fidelityLevel;
-  }
+std::string BCLSearchResult::fidelityLevel() const {
+  return m_fidelityLevel;
+}
 
-  std::string BCLSearchResult::componentType() const
-  {
-    return m_componentType;
-  }
+std::string BCLSearchResult::componentType() const {
+  return m_componentType;
+}
 
-  bool BCLSearchResult::provenanceRequired() const
-  {
-    return m_provenanceRequired;
-  }
+bool BCLSearchResult::provenanceRequired() const {
+  return m_provenanceRequired;
+}
 
-  std::vector<BCLProvenance> BCLSearchResult::provenances() const
-  {
-    return m_provenances;
-  }
+std::vector<BCLProvenance> BCLSearchResult::provenances() const {
+  return m_provenances;
+}
 
-  std::vector<std::string> BCLSearchResult::tags() const
-  {
-    return m_tags;
-  }
+std::vector<std::string> BCLSearchResult::tags() const {
+  return m_tags;
+}
 
-  std::vector<Attribute> BCLSearchResult::attributes() const
-  {
-    return m_attributes;
-  }
+std::vector<Attribute> BCLSearchResult::attributes() const {
+  return m_attributes;
+}
 
-  std::vector<BCLFile> BCLSearchResult::files() const
-  {
-    return m_files;
-  }
+std::vector<BCLFile> BCLSearchResult::files() const {
+  return m_files;
+}
 
-  std::vector<BCLCost> BCLSearchResult::costs() const
-  {
-    return m_costs;
-  }
+std::vector<BCLCost> BCLSearchResult::costs() const {
+  return m_costs;
+}
 
-  BCL::BCL(QObject * parent):
-    QObject(parent)
-  {
-  }
+BCL::BCL() {}
 
-  BCL::~BCL()
-  {
-  }
+BCL::~BCL() {}
 
+boost::optional<BCLComponent> getComponent(const std::string& uid, const std::string& versionId) {
+  OptionalBCLComponent localComponent = LocalBCL::instance().getComponent(uid, versionId);
 
-  boost::optional<BCLComponent> getComponent(const std::string& uid,
-                                             const std::string& versionId)
-  {
-    OptionalBCLComponent localComponent = LocalBCL::instance().getComponent(uid,versionId);
-
-    // if versionId specified, done if localComponent exists
-    if (!versionId.empty() && localComponent) {
-      return localComponent;
-    }
-
-    // versionId.empty() or !localComponent
-    RemoteBCL remoteBCL;
-    OptionalBCLComponent remoteComponent = remoteBCL.getComponent(uid,versionId);
-    if (remoteComponent) {
-      // RemoteBCL class handles updating the LocalBCL
-      localComponent = LocalBCL::instance().getComponent(uid,versionId);
-      OS_ASSERT(localComponent);
-      OS_ASSERT(localComponent.get() == remoteComponent.get());
-    }
-
+  // if versionId specified, done if localComponent exists
+  if (!versionId.empty() && localComponent) {
     return localComponent;
   }
 
-  boost::optional<BCLMeasure> getMeasure(const std::string& uid,
-                                         const std::string& versionId)
-  {
-    OptionalBCLMeasure localMeasure = LocalBCL::instance().getMeasure(uid,versionId);
+  // versionId.empty() or !localComponent
+  RemoteBCL remoteBCL;
+  OptionalBCLComponent remoteComponent = remoteBCL.getComponent(uid, versionId);
+  if (remoteComponent) {
+    // RemoteBCL class handles updating the LocalBCL
+    localComponent = LocalBCL::instance().getComponent(uid, versionId);
+    OS_ASSERT(localComponent);
+    OS_ASSERT(localComponent.get() == remoteComponent.get());
+  }
 
-    // if versionId specified, done if localMeasure exists
-    if (!versionId.empty() && localMeasure) {
-      return localMeasure;
-    }
+  return localComponent;
+}
 
-    // versionId.empty() or !localMeasure
-    RemoteBCL remoteBCL;
-    OptionalBCLMeasure remoteMeasure = remoteBCL.getMeasure(uid,versionId);
-    if (remoteMeasure) {
-      // RemoteBCL class handles updating the LocalBCL
-      localMeasure = LocalBCL::instance().getMeasure(uid,versionId);
-      OS_ASSERT(localMeasure);
-      OS_ASSERT(localMeasure.get() == remoteMeasure.get());
-    }
+boost::optional<BCLMeasure> getMeasure(const std::string& uid, const std::string& versionId) {
+  OptionalBCLMeasure localMeasure = LocalBCL::instance().getMeasure(uid, versionId);
 
+  // if versionId specified, done if localMeasure exists
+  if (!versionId.empty() && localMeasure) {
     return localMeasure;
   }
 
-} // openstudio
+  // versionId.empty() or !localMeasure
+  RemoteBCL remoteBCL;
+  OptionalBCLMeasure remoteMeasure = remoteBCL.getMeasure(uid, versionId);
+  if (remoteMeasure) {
+    // RemoteBCL class handles updating the LocalBCL
+    localMeasure = LocalBCL::instance().getMeasure(uid, versionId);
+    OS_ASSERT(localMeasure);
+    OS_ASSERT(localMeasure.get() == remoteMeasure.get());
+  }
+
+  return localMeasure;
+}
+
+}  // namespace openstudio

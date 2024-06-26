@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,91 +32,70 @@
 
 #include "LayeredConstruction_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
-
 namespace openstudio {
 namespace model {
-namespace detail {
+  namespace detail {
 
-  class MODEL_API ConstructionWithInternalSource_Impl : public LayeredConstruction_Impl
-  {
+    class MODEL_API ConstructionWithInternalSource_Impl : public LayeredConstruction_Impl
+    {
 
+     public:
+      // constructor
+      ConstructionWithInternalSource_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      // construct from workspace
+      ConstructionWithInternalSource_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
+      ConstructionWithInternalSource_Impl(const ConstructionWithInternalSource_Impl& other, Model_Impl* model, bool keepHandle);
 
+      // virtual destructor
+      virtual ~ConstructionWithInternalSource_Impl() {}
 
-
-
-
-
-
-
-
-  public:
-
-    // constructor
-    ConstructionWithInternalSource_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
-
-    // construct from workspace
-    ConstructionWithInternalSource_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                        Model_Impl* model,
-                                        bool keepHandle);
-
-    ConstructionWithInternalSource_Impl(const ConstructionWithInternalSource_Impl& other,
-                                        Model_Impl* model,
-                                        bool keepHandle);
-
-    // virtual destructor
-    virtual ~ConstructionWithInternalSource_Impl(){}
-
-    /** Get all output variables names that could be associated with this object. These variables
+      /** Get all output variables names that could be associated with this object. These variables
      *  may or may not be available for each simulation, need to check report variable dictionary
      *  to see if the variable is available. Each concrete class should override this method.*/
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual int renderingColorIndex() const override;
+      virtual int renderingColorIndex() const override;
 
-    virtual bool eraseLayer(unsigned layerIndex) override;
+      virtual bool eraseLayer(unsigned layerIndex) override;
 
-    virtual bool setLayers(const std::vector<Material>& materials) override;
+      virtual bool setLayers(const std::vector<Material>& materials) override;
 
-    virtual bool setLayer(const ModelPartitionMaterial& modelPartitionMaterial) override;
+      virtual bool setLayer(const ModelPartitionMaterial& modelPartitionMaterial) override;
 
-    /// Returns sourcePresentAfterLayerNumber.
-    int sourcePresentAfterLayerNumber() const;
-    bool setSourcePresentAfterLayerNumber(int sourcePresentAfterLayerNumber);
+      /// Returns sourcePresentAfterLayerNumber.
+      int sourcePresentAfterLayerNumber() const;
+      bool setSourcePresentAfterLayerNumber(int sourcePresentAfterLayerNumber);
 
-    /// Returns temperatureCalculationRequestedAfterLayerNumber.
-    int temperatureCalculationRequestedAfterLayerNumber() const;
-    bool setTemperatureCalculationRequestedAfterLayerNumber(int temperatureCalculationRequestedAfterLayerNumber);
+      /// Returns temperatureCalculationRequestedAfterLayerNumber.
+      int temperatureCalculationRequestedAfterLayerNumber() const;
+      bool setTemperatureCalculationRequestedAfterLayerNumber(int temperatureCalculationRequestedAfterLayerNumber);
 
-    /// Returns dimensionsForTheCTFCalculation.
-    int dimensionsForTheCTFCalculation() const;
-    bool setDimensionsForTheCTFCalculation(int dimensionsForTheCTFCalculation);
+      /// Returns dimensionsForTheCTFCalculation.
+      int dimensionsForTheCTFCalculation() const;
+      bool setDimensionsForTheCTFCalculation(int dimensionsForTheCTFCalculation);
 
-    /// Returns tubeSpacing.
-    double tubeSpacing() const;
-    Quantity getTubeSpacing(bool returnIP = false) const;
-    bool setTubeSpacing(double tubeSpacing);
-    bool setTubeSpacing(const Quantity& tubeSpacing);
+      /// Returns tubeSpacing.
+      double tubeSpacing() const;
+      bool setTubeSpacing(double tubeSpacing);
 
-    ConstructionWithInternalSource reverseConstructionWithInternalSource() const;
+      /// Returns twoDimensionalTemperatureCalculationPosition.
+      double twoDimensionalTemperatureCalculationPosition() const;
+      bool setTwoDimensionalTemperatureCalculationPosition(double twoDimensionalTemperatureCalculationPosition);
 
-  private:
+      ConstructionWithInternalSource reverseConstructionWithInternalSource() const;
 
-    REGISTER_LOGGER("openstudio.model.ConstructionWithInternalSource");
+     private:
+      REGISTER_LOGGER("openstudio.model.ConstructionWithInternalSource");
 
-    openstudio::Quantity tubeSpacing_SI() const;
-    openstudio::Quantity tubeSpacing_IP() const;
+      void onNumLayersChanged();
+    };
 
-    void onNumLayersChanged();
-  };
+  }  // namespace detail
+}  // namespace model
+}  // namespace openstudio
 
-} // detail
-} // model
-} // openstudio
-
-#endif // MODEL_CONSTRUCTIONWITHINTERNALSOURCE_IMPL_HPP
+#endif  // MODEL_CONSTRUCTIONWITHINTERNALSOURCE_IMPL_HPP

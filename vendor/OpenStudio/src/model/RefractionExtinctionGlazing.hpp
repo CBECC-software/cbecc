@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,201 +35,160 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class RefractionExtinctionGlazing_Impl;
+    class RefractionExtinctionGlazing_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** RefractionExtinctionGlazing is a Glazing that wraps the OpenStudio IDD object 'OS:WindowMaterial:Glazing:RefractionExtinctionMethod'. */
-class MODEL_API RefractionExtinctionGlazing : public Glazing {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** RefractionExtinctionGlazing is a Glazing that wraps the OpenStudio IDD object 'OS:WindowMaterial:Glazing:RefractionExtinctionMethod'. */
+  class MODEL_API RefractionExtinctionGlazing : public Glazing
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit RefractionExtinctionGlazing(const Model& model,
-    double thickness = 0.1,
-    double solarIndexofRefraction = 1.1,
-    double solarExtinctionCoefficient = 0.1,
-    double visibleIndexofRefraction = 1.1,
-    double visibleExtinctionCoefficient = 0.1);
+    explicit RefractionExtinctionGlazing(const Model& model, double thickness = 0.1, double solarIndexofRefraction = 1.1,
+                                         double solarExtinctionCoefficient = 0.1, double visibleIndexofRefraction = 1.1,
+                                         double visibleExtinctionCoefficient = 0.1);
     //double dirtCorrectionFactorforSolarandVisibleTransmittance = 0.1);
 
-  virtual ~RefractionExtinctionGlazing() {}
+    virtual ~RefractionExtinctionGlazing() {}
 
-  //@}
-  /** @name Static Methods */
-  //@{
+    //@}
+    /** @name Static Methods */
+    //@{
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  //@}
-  /** @name Getters */
-  //@{
+    //@}
+    /** @name Getters */
+    //@{
 
-  /** The conductivitiy of the material in W/m*K. */
-  double thermalConductivity() const;
+    /** The conductivitiy of the material in W/m*K. */
+    double thermalConductivity() const;
 
-  /** The conductance of the material in W/m^2*K. */
-  double thermalConductance() const;
+    /** The conductance of the material in W/m^2*K. */
+    double thermalConductance() const;
 
-  /** The resistivity of the material in m*K/W. */
-  double thermalResistivity() const;
+    /** The resistivity of the material in m*K/W. */
+    double thermalResistivity() const;
 
-  /** The resistance of the material in m^2*K/W. */
-  double thermalResistance() const;
+    /** The resistance of the material in m^2*K/W. */
+    double thermalResistance() const;
 
-  /** The thermal transmittance of the material (dimensionless fraction). */
-  double thermalTransmittance() const;
+    /** The thermal transmittance of the material (dimensionless fraction). */
+    double thermalTransmittance() const;
 
-  double thickness() const;
+    double thickness() const;
 
-  Quantity getThickness(bool returnIP=false) const;
+    double solarIndexofRefraction() const;
 
-  double solarIndexofRefraction() const;
+    double solarExtinctionCoefficient() const;
 
-  Quantity getSolarIndexofRefraction(bool returnIP=false) const;
+    double visibleIndexofRefraction() const;
 
-  double solarExtinctionCoefficient() const;
+    double visibleExtinctionCoefficient() const;
 
-  Quantity getSolarExtinctionCoefficient(bool returnIP=false) const;
+    double infraredTransmittanceatNormalIncidence() const;
 
-  double visibleIndexofRefraction() const;
+    bool isInfraredTransmittanceatNormalIncidenceDefaulted() const;
 
-  Quantity getVisibleIndexofRefraction(bool returnIP=false) const;
+    double infraredHemisphericalEmissivity() const;
 
-  double visibleExtinctionCoefficient() const;
+    bool isInfraredHemisphericalEmissivityDefaulted() const;
 
-  Quantity getVisibleExtinctionCoefficient(bool returnIP=false) const;
+    double conductivity() const;
 
-  double infraredTransmittanceatNormalIncidence() const;
+    bool isConductivityDefaulted() const;
 
-  Quantity getInfraredTransmittanceatNormalIncidence(bool returnIP=false) const;
+    double dirtCorrectionFactorforSolarandVisibleTransmittance() const;
 
-  bool isInfraredTransmittanceatNormalIncidenceDefaulted() const;
+    bool isDirtCorrectionFactorforSolarandVisibleTransmittanceDefaulted() const;
 
-  double infraredHemisphericalEmissivity() const;
+    bool solarDiffusing() const;
 
-  Quantity getInfraredHemisphericalEmissivity(bool returnIP=false) const;
+    bool isSolarDiffusingDefaulted() const;
 
-  bool isInfraredHemisphericalEmissivityDefaulted() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  double conductivity() const;
+    /** Sets the conductivity of the material in W/m*K, if possible. */
+    bool setThermalConductivity(double value);
 
-  Quantity getConductivity(bool returnIP=false) const;
+    /** Sets the conductance of the material in W/m^2*K, if possible. */
+    bool setThermalConductance(double value);
 
-  bool isConductivityDefaulted() const;
+    /** Sets the resistivity of the material in m*K/W, if possible. */
+    bool setThermalResistivity(double value);
 
-  double dirtCorrectionFactorforSolarandVisibleTransmittance() const;
+    /** Sets the resistance of the material in m^2*K/W, if possible. */
+    bool setThermalResistance(double value);
 
-  Quantity getDirtCorrectionFactorforSolarandVisibleTransmittance(bool returnIP=false) const;
+    bool setThermalTransmittance(double value);
 
-  bool isDirtCorrectionFactorforSolarandVisibleTransmittanceDefaulted() const;
+    bool setThickness(double thickness);
 
-  bool solarDiffusing() const;
+    bool setSolarIndexofRefraction(double solarIndexofRefraction);
 
-  bool isSolarDiffusingDefaulted() const;
+    bool setSolarExtinctionCoefficient(double solarExtinctionCoefficient);
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool setVisibleIndexofRefraction(double visibleIndexofRefraction);
 
-  /** Sets the conductivity of the material in W/m*K, if possible. */
-  bool setThermalConductivity(double value);
+    bool setVisibleExtinctionCoefficient(double visibleExtinctionCoefficient);
 
-  /** Sets the conductance of the material in W/m^2*K, if possible. */
-  bool setThermalConductance(double value);
+    bool setInfraredTransmittanceatNormalIncidence(double infraredTransmittanceatNormalIncidence);
 
-  /** Sets the resistivity of the material in m*K/W, if possible. */
-  bool setThermalResistivity(double value);
+    void resetInfraredTransmittanceatNormalIncidence();
 
-  /** Sets the resistance of the material in m^2*K/W, if possible. */
-  bool setThermalResistance(double value);
+    bool setInfraredHemisphericalEmissivity(double infraredHemisphericalEmissivity);
 
-  bool setThermalTransmittance(double value);
+    void resetInfraredHemisphericalEmissivity();
 
-  bool setThickness(double thickness);
+    bool setConductivity(double conductivity);
 
-  bool setThickness(const Quantity& thickness);
+    void resetConductivity();
 
-  bool setSolarIndexofRefraction(double solarIndexofRefraction);
+    bool setDirtCorrectionFactorforSolarandVisibleTransmittance(double dirtCorrectionFactorforSolarandVisibleTransmittance);
 
-  bool setSolarIndexofRefraction(const Quantity& solarIndexofRefraction);
+    void resetDirtCorrectionFactorforSolarandVisibleTransmittance();
 
-  bool setSolarExtinctionCoefficient(double solarExtinctionCoefficient);
+    bool setSolarDiffusing(bool solarDiffusing);
 
-  bool setSolarExtinctionCoefficient(const Quantity& solarExtinctionCoefficient);
+    void setSolarDiffusingNoFail(bool solarDiffusing);
 
-  bool setVisibleIndexofRefraction(double visibleIndexofRefraction);
+    void resetSolarDiffusing();
 
-  bool setVisibleIndexofRefraction(const Quantity& visibleIndexofRefraction);
+    //@}
+    /** @name Other */
+    //@{
 
-  bool setVisibleExtinctionCoefficient(double visibleExtinctionCoefficient);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::RefractionExtinctionGlazing_Impl ImplType;
 
-  bool setVisibleExtinctionCoefficient(const Quantity& visibleExtinctionCoefficient);
+    explicit RefractionExtinctionGlazing(std::shared_ptr<detail::RefractionExtinctionGlazing_Impl> impl);
 
-  bool setInfraredTransmittanceatNormalIncidence(double infraredTransmittanceatNormalIncidence);
+    friend class detail::RefractionExtinctionGlazing_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.RefractionExtinctionGlazing");
+  };
 
-  bool setInfraredTransmittanceatNormalIncidence(const Quantity& infraredTransmittanceatNormalIncidence);
+  /** \relates RefractionExtinctionGlazing*/
+  typedef boost::optional<RefractionExtinctionGlazing> OptionalRefractionExtinctionGlazing;
 
-  void resetInfraredTransmittanceatNormalIncidence();
+  /** \relates RefractionExtinctionGlazing*/
+  typedef std::vector<RefractionExtinctionGlazing> RefractionExtinctionGlazingVector;
 
-  bool setInfraredHemisphericalEmissivity(double infraredHemisphericalEmissivity);
+}  // namespace model
+}  // namespace openstudio
 
-  bool setInfraredHemisphericalEmissivity(const Quantity& infraredHemisphericalEmissivity);
-
-  void resetInfraredHemisphericalEmissivity();
-
-  bool setConductivity(double conductivity);
-
-  bool setConductivity(const Quantity& conductivity);
-
-  void resetConductivity();
-
-  bool setDirtCorrectionFactorforSolarandVisibleTransmittance(double dirtCorrectionFactorforSolarandVisibleTransmittance);
-
-  bool setDirtCorrectionFactorforSolarandVisibleTransmittance(const Quantity& dirtCorrectionFactorforSolarandVisibleTransmittance);
-
-  void resetDirtCorrectionFactorforSolarandVisibleTransmittance();
-
-  bool setSolarDiffusing(bool solarDiffusing);
-
-  void setSolarDiffusingNoFail(bool solarDiffusing);
-
-  void resetSolarDiffusing();
-
-  //@}
-  /** @name Other */
-  //@{
-
-  //@}
- protected:
-  /// @cond
-  typedef detail::RefractionExtinctionGlazing_Impl ImplType;
-
-  explicit RefractionExtinctionGlazing(std::shared_ptr<detail::RefractionExtinctionGlazing_Impl> impl);
-
-  friend class detail::RefractionExtinctionGlazing_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.RefractionExtinctionGlazing");
-};
-
-/** \relates RefractionExtinctionGlazing*/
-typedef boost::optional<RefractionExtinctionGlazing> OptionalRefractionExtinctionGlazing;
-
-/** \relates RefractionExtinctionGlazing*/
-typedef std::vector<RefractionExtinctionGlazing> RefractionExtinctionGlazingVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_REFRACTIONEXTINCTIONGLAZING_HPP
+#endif  // MODEL_REFRACTIONEXTINCTIONGLAZING_HPP

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -45,233 +45,153 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  SizingParameters_Impl::SizingParameters_Impl(const IdfObject& idfObject,
-                                               Model_Impl* model,
-                                               bool keepHandle)
-    : ModelObject_Impl(idfObject,model,keepHandle)
-  {
-    OS_ASSERT(idfObject.iddObject().type() == SizingParameters::iddObjectType());
-  }
-
-  SizingParameters_Impl::SizingParameters_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                               Model_Impl* model,
-                                               bool keepHandle)
-    : ModelObject_Impl(other,model,keepHandle)
-  {
-    OS_ASSERT(other.iddObject().type() == SizingParameters::iddObjectType());
-  }
-
-  SizingParameters_Impl::SizingParameters_Impl(const SizingParameters_Impl& other,
-                                               Model_Impl* model,
-                                               bool keepHandle)
-    : ModelObject_Impl(other,model,keepHandle)
-  {}
-
-  boost::optional<ParentObject> SizingParameters_Impl::parent() const
-  {
-    boost::optional<SimulationControl> result = this->model().getOptionalUniqueModelObject<SimulationControl>();
-    return boost::optional<ParentObject>(result);
-  }
-
-  const std::vector<std::string>& SizingParameters_Impl::outputVariableNames() const
-  {
-    static std::vector<std::string> result;
-    return result;
-  }
-
-  IddObjectType SizingParameters_Impl::iddObjectType() const {
-    return SizingParameters::iddObjectType();
-  }
-
-  double SizingParameters_Impl::heatingSizingFactor() const {
-    boost::optional<double> value = getDouble(OS_Sizing_ParametersFields::HeatingSizingFactor,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  Quantity SizingParameters_Impl::getHeatingSizingFactor(bool returnIP) const {
-    OptionalDouble value = heatingSizingFactor();
-    OSOptionalQuantity result = getQuantityFromDouble(OS_Sizing_ParametersFields::HeatingSizingFactor, value, returnIP);
-    OS_ASSERT(result.isSet());
-    return result.get();
-  }
-
-  bool SizingParameters_Impl::isHeatingSizingFactorDefaulted() const {
-    return isEmpty(OS_Sizing_ParametersFields::HeatingSizingFactor);
-  }
-
-  double SizingParameters_Impl::coolingSizingFactor() const {
-    boost::optional<double> value = getDouble(OS_Sizing_ParametersFields::CoolingSizingFactor,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  Quantity SizingParameters_Impl::getCoolingSizingFactor(bool returnIP) const {
-    OptionalDouble value = coolingSizingFactor();
-    OSOptionalQuantity result = getQuantityFromDouble(OS_Sizing_ParametersFields::CoolingSizingFactor, value, returnIP);
-    OS_ASSERT(result.isSet());
-    return result.get();
-  }
-
-  bool SizingParameters_Impl::isCoolingSizingFactorDefaulted() const {
-    return isEmpty(OS_Sizing_ParametersFields::CoolingSizingFactor);
-  }
-
-  boost::optional<int> SizingParameters_Impl::timestepsinAveragingWindow() const {
-    return getInt(OS_Sizing_ParametersFields::TimestepsinAveragingWindow,true);
-  }
-
-  bool SizingParameters_Impl::setHeatingSizingFactor(double heatingSizingFactor) {
-    bool result = setDouble(OS_Sizing_ParametersFields::HeatingSizingFactor, heatingSizingFactor);
-    return result;
-  }
-
-  bool SizingParameters_Impl::setHeatingSizingFactor(const Quantity& heatingSizingFactor) {
-    OptionalDouble value = getDoubleFromQuantity(OS_Sizing_ParametersFields::HeatingSizingFactor,heatingSizingFactor);
-    if (!value) {
-      return false;
+    SizingParameters_Impl::SizingParameters_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(idfObject, model, keepHandle) {
+      OS_ASSERT(idfObject.iddObject().type() == SizingParameters::iddObjectType());
     }
-    return setHeatingSizingFactor(value.get());
-  }
 
-  void SizingParameters_Impl::resetHeatingSizingFactor() {
-    bool result = setString(OS_Sizing_ParametersFields::HeatingSizingFactor, "");
-    OS_ASSERT(result);
-  }
-
-  bool SizingParameters_Impl::setCoolingSizingFactor(double coolingSizingFactor) {
-    bool result = setDouble(OS_Sizing_ParametersFields::CoolingSizingFactor, coolingSizingFactor);
-    return result;
-  }
-
-  bool SizingParameters_Impl::setCoolingSizingFactor(const Quantity& coolingSizingFactor) {
-    OptionalDouble value = getDoubleFromQuantity(OS_Sizing_ParametersFields::CoolingSizingFactor,coolingSizingFactor);
-    if (!value) {
-      return false;
+    SizingParameters_Impl::SizingParameters_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(other, model, keepHandle) {
+      OS_ASSERT(other.iddObject().type() == SizingParameters::iddObjectType());
     }
-    return setCoolingSizingFactor(value.get());
-  }
 
-  void SizingParameters_Impl::resetCoolingSizingFactor() {
-    bool result = setString(OS_Sizing_ParametersFields::CoolingSizingFactor, "");
-    OS_ASSERT(result);
-  }
+    SizingParameters_Impl::SizingParameters_Impl(const SizingParameters_Impl& other, Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(other, model, keepHandle) {}
 
-  bool SizingParameters_Impl::setTimestepsinAveragingWindow(boost::optional<int> timestepsinAveragingWindow) {
-    bool result(false);
-    if (timestepsinAveragingWindow) {
-      result = setInt(OS_Sizing_ParametersFields::TimestepsinAveragingWindow, timestepsinAveragingWindow.get());
+    boost::optional<ParentObject> SizingParameters_Impl::parent() const {
+      boost::optional<SimulationControl> result = this->model().getOptionalUniqueModelObject<SimulationControl>();
+      return boost::optional<ParentObject>(result);
     }
-    else {
-      result = setString(OS_Sizing_ParametersFields::TimestepsinAveragingWindow, "");
+
+    const std::vector<std::string>& SizingParameters_Impl::outputVariableNames() const {
+      static const std::vector<std::string> result;
+      return result;
     }
-    return result;
+
+    IddObjectType SizingParameters_Impl::iddObjectType() const {
+      return SizingParameters::iddObjectType();
+    }
+
+    double SizingParameters_Impl::heatingSizingFactor() const {
+      boost::optional<double> value = getDouble(OS_Sizing_ParametersFields::HeatingSizingFactor, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool SizingParameters_Impl::isHeatingSizingFactorDefaulted() const {
+      return isEmpty(OS_Sizing_ParametersFields::HeatingSizingFactor);
+    }
+
+    double SizingParameters_Impl::coolingSizingFactor() const {
+      boost::optional<double> value = getDouble(OS_Sizing_ParametersFields::CoolingSizingFactor, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool SizingParameters_Impl::isCoolingSizingFactorDefaulted() const {
+      return isEmpty(OS_Sizing_ParametersFields::CoolingSizingFactor);
+    }
+
+    boost::optional<int> SizingParameters_Impl::timestepsinAveragingWindow() const {
+      return getInt(OS_Sizing_ParametersFields::TimestepsinAveragingWindow, true);
+    }
+
+    bool SizingParameters_Impl::setHeatingSizingFactor(double heatingSizingFactor) {
+      bool result = setDouble(OS_Sizing_ParametersFields::HeatingSizingFactor, heatingSizingFactor);
+      return result;
+    }
+
+    void SizingParameters_Impl::resetHeatingSizingFactor() {
+      bool result = setString(OS_Sizing_ParametersFields::HeatingSizingFactor, "");
+      OS_ASSERT(result);
+    }
+
+    bool SizingParameters_Impl::setCoolingSizingFactor(double coolingSizingFactor) {
+      bool result = setDouble(OS_Sizing_ParametersFields::CoolingSizingFactor, coolingSizingFactor);
+      return result;
+    }
+
+    void SizingParameters_Impl::resetCoolingSizingFactor() {
+      bool result = setString(OS_Sizing_ParametersFields::CoolingSizingFactor, "");
+      OS_ASSERT(result);
+    }
+
+    bool SizingParameters_Impl::setTimestepsinAveragingWindow(boost::optional<int> timestepsinAveragingWindow) {
+      bool result(false);
+      if (timestepsinAveragingWindow) {
+        result = setInt(OS_Sizing_ParametersFields::TimestepsinAveragingWindow, timestepsinAveragingWindow.get());
+      } else {
+        result = setString(OS_Sizing_ParametersFields::TimestepsinAveragingWindow, "");
+      }
+      return result;
+    }
+
+    void SizingParameters_Impl::resetTimestepsinAveragingWindow() {
+      bool result = setString(OS_Sizing_ParametersFields::TimestepsinAveragingWindow, "");
+      OS_ASSERT(result);
+    }
+
+  }  // namespace detail
+
+  IddObjectType SizingParameters::iddObjectType() {
+    return IddObjectType(IddObjectType::OS_Sizing_Parameters);
   }
 
-  void SizingParameters_Impl::resetTimestepsinAveragingWindow() {
-    bool result = setString(OS_Sizing_ParametersFields::TimestepsinAveragingWindow, "");
-    OS_ASSERT(result);
+  double SizingParameters::heatingSizingFactor() const {
+    return getImpl<detail::SizingParameters_Impl>()->heatingSizingFactor();
   }
 
-  openstudio::Quantity SizingParameters_Impl::heatingSizingFactor_SI() const {
-    return getHeatingSizingFactor(false);
+  bool SizingParameters::isHeatingSizingFactorDefaulted() const {
+    return getImpl<detail::SizingParameters_Impl>()->isHeatingSizingFactorDefaulted();
   }
 
-  openstudio::Quantity SizingParameters_Impl::heatingSizingFactor_IP() const {
-    return getHeatingSizingFactor(true);
+  double SizingParameters::coolingSizingFactor() const {
+    return getImpl<detail::SizingParameters_Impl>()->coolingSizingFactor();
   }
 
-  openstudio::Quantity SizingParameters_Impl::coolingSizingFactor_SI() const {
-    return getCoolingSizingFactor(false);
+  bool SizingParameters::isCoolingSizingFactorDefaulted() const {
+    return getImpl<detail::SizingParameters_Impl>()->isCoolingSizingFactorDefaulted();
   }
 
-  openstudio::Quantity SizingParameters_Impl::coolingSizingFactor_IP() const {
-    return getCoolingSizingFactor(true);
+  boost::optional<int> SizingParameters::timestepsinAveragingWindow() const {
+    return getImpl<detail::SizingParameters_Impl>()->timestepsinAveragingWindow();
   }
 
-} // detail
+  bool SizingParameters::setHeatingSizingFactor(double heatingSizingFactor) {
+    return getImpl<detail::SizingParameters_Impl>()->setHeatingSizingFactor(heatingSizingFactor);
+  }
 
-IddObjectType SizingParameters::iddObjectType() {
-  return IddObjectType(IddObjectType::OS_Sizing_Parameters);
-}
+  void SizingParameters::resetHeatingSizingFactor() {
+    getImpl<detail::SizingParameters_Impl>()->resetHeatingSizingFactor();
+  }
 
-double SizingParameters::heatingSizingFactor() const {
-  return getImpl<detail::SizingParameters_Impl>()->heatingSizingFactor();
-}
+  bool SizingParameters::setCoolingSizingFactor(double coolingSizingFactor) {
+    return getImpl<detail::SizingParameters_Impl>()->setCoolingSizingFactor(coolingSizingFactor);
+  }
 
-Quantity SizingParameters::getHeatingSizingFactor(bool returnIP) const {
-  return getImpl<detail::SizingParameters_Impl>()->getHeatingSizingFactor(returnIP);
-}
+  void SizingParameters::resetCoolingSizingFactor() {
+    getImpl<detail::SizingParameters_Impl>()->resetCoolingSizingFactor();
+  }
 
-bool SizingParameters::isHeatingSizingFactorDefaulted() const {
-  return getImpl<detail::SizingParameters_Impl>()->isHeatingSizingFactorDefaulted();
-}
+  bool SizingParameters::setTimestepsinAveragingWindow(int timestepsinAveragingWindow) {
+    return getImpl<detail::SizingParameters_Impl>()->setTimestepsinAveragingWindow(timestepsinAveragingWindow);
+  }
 
-double SizingParameters::coolingSizingFactor() const {
-  return getImpl<detail::SizingParameters_Impl>()->coolingSizingFactor();
-}
+  void SizingParameters::resetTimestepsinAveragingWindow() {
+    getImpl<detail::SizingParameters_Impl>()->resetTimestepsinAveragingWindow();
+  }
 
-Quantity SizingParameters::getCoolingSizingFactor(bool returnIP) const {
-  return getImpl<detail::SizingParameters_Impl>()->getCoolingSizingFactor(returnIP);
-}
+  /// @cond
+  SizingParameters::SizingParameters(std::shared_ptr<detail::SizingParameters_Impl> impl) : ModelObject(std::move(impl)) {}
 
-bool SizingParameters::isCoolingSizingFactorDefaulted() const {
-  return getImpl<detail::SizingParameters_Impl>()->isCoolingSizingFactorDefaulted();
-}
+  SizingParameters::SizingParameters(Model& model) : ModelObject(SizingParameters::iddObjectType(), model) {
+    setHeatingSizingFactor(1.25);
+    setCoolingSizingFactor(1.15);
+  }
 
-boost::optional<int> SizingParameters::timestepsinAveragingWindow() const {
-  return getImpl<detail::SizingParameters_Impl>()->timestepsinAveragingWindow();
-}
+  /// @endcond
 
-bool SizingParameters::setHeatingSizingFactor(double heatingSizingFactor) {
-  return getImpl<detail::SizingParameters_Impl>()->setHeatingSizingFactor(heatingSizingFactor);
-}
-
-bool SizingParameters::setHeatingSizingFactor(const Quantity& heatingSizingFactor) {
-  return getImpl<detail::SizingParameters_Impl>()->setHeatingSizingFactor(heatingSizingFactor);
-}
-
-void SizingParameters::resetHeatingSizingFactor() {
-  getImpl<detail::SizingParameters_Impl>()->resetHeatingSizingFactor();
-}
-
-bool SizingParameters::setCoolingSizingFactor(double coolingSizingFactor) {
-  return getImpl<detail::SizingParameters_Impl>()->setCoolingSizingFactor(coolingSizingFactor);
-}
-
-bool SizingParameters::setCoolingSizingFactor(const Quantity& coolingSizingFactor) {
-  return getImpl<detail::SizingParameters_Impl>()->setCoolingSizingFactor(coolingSizingFactor);
-}
-
-void SizingParameters::resetCoolingSizingFactor() {
-  getImpl<detail::SizingParameters_Impl>()->resetCoolingSizingFactor();
-}
-
-bool SizingParameters::setTimestepsinAveragingWindow(int timestepsinAveragingWindow) {
-  return getImpl<detail::SizingParameters_Impl>()->setTimestepsinAveragingWindow(timestepsinAveragingWindow);
-}
-
-void SizingParameters::resetTimestepsinAveragingWindow() {
-  getImpl<detail::SizingParameters_Impl>()->resetTimestepsinAveragingWindow();
-}
-
-/// @cond
-SizingParameters::SizingParameters(std::shared_ptr<detail::SizingParameters_Impl> impl)
-  : ModelObject(std::move(impl))
-{}
-
-SizingParameters::SizingParameters(Model& model)
-  : ModelObject(SizingParameters::iddObjectType(),model)
-{
-  setHeatingSizingFactor(1.25);
-  setCoolingSizingFactor(1.15);
-}
-
-/// @endcond
-
-
-} // model
-} // openstudio
-
+}  // namespace model
+}  // namespace openstudio

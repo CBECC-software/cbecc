@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -47,12 +47,9 @@
 #include "../Lights.hpp"
 #include "../LightsDefinition.hpp"
 
-
 #include <utilities/idd/OS_AdditionalProperties_FieldEnums.hxx>
 
-#include "../utilities/geometry/Geometry.hpp"
-#include "../../utilities/units/Quantity.hpp"
-#include "../../utilities/units/Unit.hpp"
+#include "../../utilities/geometry/Geometry.hpp"
 
 using namespace openstudio;
 using namespace openstudio::model;
@@ -61,18 +58,16 @@ TEST_F(ModelFixture, AdditionalProperties_AdditionalProperties) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   ASSERT_EXIT(
-  {
-    // create a model to use
-    Model model;
+    {
+      // create a model to use
+      Model model;
 
-    // create a material object to use
-    StandardOpaqueMaterial material(model);
+      // create a material object to use
+      StandardOpaqueMaterial material(model);
 
-    exit(0);
-  },
-    ::testing::ExitedWithCode(0),
-    ""
-    );
+      exit(0);
+    },
+    ::testing::ExitedWithCode(0), "");
 
   // create a model to use
   Model model;
@@ -91,7 +86,6 @@ TEST_F(ModelFixture, AdditionalProperties_AdditionalProperties) {
   EXPECT_EQ(2, model.modelObjects().size());
   EXPECT_EQ(1, model.getModelObjects<AdditionalProperties>().size());
   EXPECT_EQ(props, props2);
-
 }
 
 // test setting and getting
@@ -152,7 +146,7 @@ TEST_F(ModelFixture, AdditionalProperties_Features) {
   ASSERT_TRUE(dblValue);
   boost::optional<int> intValue = props.getFeatureAsInteger("NumberOfBathrooms");
   ASSERT_FALSE(intValue);
-  ASSERT_FLOAT_EQ(*dblValue, 1.5);
+  ASSERT_DOUBLE_EQ(*dblValue, 1.5);
 
   // Test setting a feature to a value of a different type
   EXPECT_TRUE(props.setFeature("NumberOfBedrooms", 3));
@@ -178,7 +172,6 @@ TEST_F(ModelFixture, AdditionalProperties_Features) {
   std::vector<std::string> suggestedFeatureNames(props2.suggestedFeatureNames());
   ASSERT_EQ(suggestedFeatureNames.size(), 3);
   ASSERT_NE(std::find(suggestedFeatureNames.begin(), suggestedFeatureNames.end(), "MyUniqueFeature"), suggestedFeatureNames.end());
-
 }
 
 // check returning model object pointed to
@@ -318,7 +311,6 @@ TEST_F(ModelFixture, AdditionalProperties_AdditionalProperties2) {
   EXPECT_EQ(1u, model.getConcreteModelObjects<AdditionalProperties>().size());
 }
 
-
 // test that setters work
 TEST_F(ModelFixture, AdditionalProperties_Setters) {
   Model model;
@@ -371,5 +363,4 @@ TEST_F(ModelFixture, AdditionalProperties_Setters) {
   EXPECT_EQ("Double", props.getFeatureDataType("Feature2").get());
   ASSERT_TRUE(props.getFeatureAsDouble("Feature2"));
   EXPECT_EQ(-2.0, props.getFeatureAsDouble("Feature2").get());
-
 }

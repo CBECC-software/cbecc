@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -42,183 +42,109 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  CFactorUndergroundWallConstruction_Impl::CFactorUndergroundWallConstruction_Impl(
-      const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
-    : ConstructionBase_Impl(idfObject, model,keepHandle)
-  {
-    OS_ASSERT(idfObject.iddObject().type() ==
-                 CFactorUndergroundWallConstruction::iddObjectType());
+    CFactorUndergroundWallConstruction_Impl::CFactorUndergroundWallConstruction_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
+      : ConstructionBase_Impl(idfObject, model, keepHandle) {
+      OS_ASSERT(idfObject.iddObject().type() == CFactorUndergroundWallConstruction::iddObjectType());
+    }
+
+    CFactorUndergroundWallConstruction_Impl::CFactorUndergroundWallConstruction_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
+                                                                                     Model_Impl* model, bool keepHandle)
+      : ConstructionBase_Impl(other, model, keepHandle) {
+      OS_ASSERT(other.iddObject().type() == CFactorUndergroundWallConstruction::iddObjectType());
+    }
+
+    CFactorUndergroundWallConstruction_Impl::CFactorUndergroundWallConstruction_Impl(const CFactorUndergroundWallConstruction_Impl& other,
+                                                                                     Model_Impl* model, bool keepHandle)
+      : ConstructionBase_Impl(other, model, keepHandle) {}
+
+    const std::vector<std::string>& CFactorUndergroundWallConstruction_Impl::outputVariableNames() const {
+      static const std::vector<std::string> result;
+      return result;
+    }
+
+    IddObjectType CFactorUndergroundWallConstruction_Impl::iddObjectType() const {
+      return CFactorUndergroundWallConstruction::iddObjectType();
+    }
+
+    bool CFactorUndergroundWallConstruction_Impl::isOpaque() const {
+      return true;
+    }
+
+    bool CFactorUndergroundWallConstruction_Impl::isFenestration() const {
+      return false;
+    }
+
+    bool CFactorUndergroundWallConstruction_Impl::isSolarDiffusing() const {
+      return false;
+    }
+
+    bool CFactorUndergroundWallConstruction_Impl::isModelPartition() const {
+      return false;
+    }
+
+    int CFactorUndergroundWallConstruction_Impl::renderingColorIndex() const {
+      return OS_Construction_CfactorUndergroundWallFields::SurfaceRenderingName;
+    }
+
+    double CFactorUndergroundWallConstruction_Impl::cFactor() const {
+      boost::optional<double> value = getDouble(OS_Construction_CfactorUndergroundWallFields::CFactor, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool CFactorUndergroundWallConstruction_Impl::setCFactor(double cFactor) {
+      bool result = setDouble(OS_Construction_CfactorUndergroundWallFields::CFactor, cFactor);
+      return result;
+    }
+
+    double CFactorUndergroundWallConstruction_Impl::height() const {
+      boost::optional<double> value = getDouble(OS_Construction_CfactorUndergroundWallFields::Height, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool CFactorUndergroundWallConstruction_Impl::setHeight(double height) {
+      bool result = setDouble(OS_Construction_CfactorUndergroundWallFields::Height, height);
+      return result;
+    }
+
+  }  // namespace detail
+
+  CFactorUndergroundWallConstruction::CFactorUndergroundWallConstruction(const Model& model, double cFactor, double height)
+    : ConstructionBase(CFactorUndergroundWallConstruction::iddObjectType(), model) {
+    OS_ASSERT(getImpl<detail::CFactorUndergroundWallConstruction_Impl>());
+
+    this->setCFactor(cFactor);
+    this->setHeight(height);
   }
 
-  CFactorUndergroundWallConstruction_Impl::CFactorUndergroundWallConstruction_Impl(
-      const openstudio::detail::WorkspaceObject_Impl& other,Model_Impl* model,bool keepHandle)
-    : ConstructionBase_Impl(other,model,keepHandle)
-  {
-    OS_ASSERT(other.iddObject().type() == CFactorUndergroundWallConstruction::iddObjectType());
-  }
-
-  CFactorUndergroundWallConstruction_Impl::CFactorUndergroundWallConstruction_Impl(
-      const CFactorUndergroundWallConstruction_Impl& other,Model_Impl* model,bool keepHandle)
-    : ConstructionBase_Impl(other,model,keepHandle)
-  {}
-
-  const std::vector<std::string>& CFactorUndergroundWallConstruction_Impl::outputVariableNames() const
-  {
-    static std::vector<std::string> result;
+  IddObjectType CFactorUndergroundWallConstruction::iddObjectType() {
+    IddObjectType result(IddObjectType::OS_Construction_CfactorUndergroundWall);
     return result;
   }
 
-  IddObjectType CFactorUndergroundWallConstruction_Impl::iddObjectType() const {
-    return CFactorUndergroundWallConstruction::iddObjectType();
+  double CFactorUndergroundWallConstruction::cFactor() const {
+    return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->cFactor();
   }
 
-  bool CFactorUndergroundWallConstruction_Impl::isOpaque() const { return true; }
-
-  bool CFactorUndergroundWallConstruction_Impl::isFenestration() const { return false; }
-
-  bool CFactorUndergroundWallConstruction_Impl::isSolarDiffusing() const { return false; }
-
-  bool CFactorUndergroundWallConstruction_Impl::isModelPartition() const { return false; }
-
-  int CFactorUndergroundWallConstruction_Impl::renderingColorIndex() const
-  {
-    return OS_Construction_CfactorUndergroundWallFields::SurfaceRenderingName;
+  bool CFactorUndergroundWallConstruction::setCFactor(double cFactor) {
+    return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->setCFactor(cFactor);
   }
 
-  //double CFactorUndergroundWallConstruction_Impl::cFactor() const
-  //{
-  //  boost::optional<double> value = getDouble(OS_Construction_CfactorUndergroundWallFields::CFactor,true);
-  //  OS_ASSERT(value);
-  //  return value.get();
-  //}
-
-  double CFactorUndergroundWallConstruction_Impl::cFactor() const {
-    Quantity q = getCFactor(false);
-    return q.value();
+  double CFactorUndergroundWallConstruction::height() const {
+    return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->height();
   }
 
-  Quantity CFactorUndergroundWallConstruction_Impl::getCFactor(bool returnIP) const {
-    OSOptionalQuantity value = getQuantity(OS_Construction_CfactorUndergroundWallFields::CFactor,true,returnIP);
-    OS_ASSERT(value.isSet());
-    return value.get();
+  bool CFactorUndergroundWallConstruction::setHeight(double height) {
+    return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->setHeight(height);
   }
 
-  openstudio::Quantity CFactorUndergroundWallConstruction_Impl::cFactor_SI() const {
-    return getCFactor(false);
-  }
+  /// @cond
+  CFactorUndergroundWallConstruction::CFactorUndergroundWallConstruction(std::shared_ptr<detail::CFactorUndergroundWallConstruction_Impl> impl)
+    : ConstructionBase(std::move(impl)) {}
+  /// @endcond
 
-  openstudio::Quantity CFactorUndergroundWallConstruction_Impl::cFactor_IP() const {
-    return getCFactor(true);
-  }
-
-  bool CFactorUndergroundWallConstruction_Impl::setCFactor(double cFactor) {
-    OSOptionalQuantity temp = getQuantity(OS_Construction_CfactorUndergroundWallFields::CFactor,true,false);
-    bool result = setCFactor(Quantity(cFactor,temp.units()));
-    return result;
-  }
-
-  bool CFactorUndergroundWallConstruction_Impl::setCFactor(const Quantity& cFactor) {
-    return setQuantity(OS_Construction_CfactorUndergroundWallFields::CFactor,cFactor);
-  }
-
-  //double CFactorUndergroundWallConstruction_Impl::height() const
-  //{
-  //  boost::optional<double> value = getDouble(OS_Construction_CfactorUndergroundWallFields::Height,true);
-  //  OS_ASSERT(value);
-  //  return value.get();
-  //}
-
-  double CFactorUndergroundWallConstruction_Impl::height() const {
-    Quantity q = getHeight(false);
-    return q.value();
-  }
-
-  Quantity CFactorUndergroundWallConstruction_Impl::getHeight(bool returnIP) const {
-    OSOptionalQuantity value = getQuantity(OS_Construction_CfactorUndergroundWallFields::Height,true,returnIP);
-    OS_ASSERT(value.isSet());
-    return value.get();
-  }
-
-  openstudio::Quantity CFactorUndergroundWallConstruction_Impl::height_SI() const {
-    return getHeight(false);
-  }
-
-  openstudio::Quantity CFactorUndergroundWallConstruction_Impl::height_IP() const {
-    return getHeight(true);
-  }
-
-  bool CFactorUndergroundWallConstruction_Impl::setHeight(double height) {
-    OSOptionalQuantity temp = getQuantity(OS_Construction_CfactorUndergroundWallFields::Height,true,false);
-    bool result = setHeight(Quantity(height,temp.units()));
-    return result;
-  }
-
-  bool CFactorUndergroundWallConstruction_Impl::setHeight(const Quantity& height) {
-    return setQuantity(OS_Construction_CfactorUndergroundWallFields::Height,height);
-  }
-
-} // detail
-
-CFactorUndergroundWallConstruction::CFactorUndergroundWallConstruction(const Model& model,
-                                                                       double cFactor,
-                                                                       double height)
-  : ConstructionBase(CFactorUndergroundWallConstruction::iddObjectType(),model)
-{
-  OS_ASSERT(getImpl<detail::CFactorUndergroundWallConstruction_Impl>());
-
-  this->setCFactor(cFactor);
-  this->setHeight(height);
-}
-
-IddObjectType CFactorUndergroundWallConstruction::iddObjectType() {
-  IddObjectType result(IddObjectType::OS_Construction_CfactorUndergroundWall);
-  return result;
-}
-
-double CFactorUndergroundWallConstruction::cFactor() const
-{
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->cFactor();
-}
-
-Quantity CFactorUndergroundWallConstruction::getCFactor(bool returnIP) const
-{
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->getCFactor(returnIP);
-}
-
-bool CFactorUndergroundWallConstruction::setCFactor(double cFactor)
-{
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->setCFactor(cFactor);
-}
-
-bool CFactorUndergroundWallConstruction::setCFactor(const Quantity& cFactor)
-{
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->setCFactor(cFactor);
-}
-
-double CFactorUndergroundWallConstruction::height() const {
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->height();
-}
-
-Quantity CFactorUndergroundWallConstruction::getHeight(bool returnIP) const {
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->getHeight(returnIP);
-}
-
-bool CFactorUndergroundWallConstruction::setHeight(double height) {
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->setHeight(height);
-}
-
-bool CFactorUndergroundWallConstruction::setHeight(const Quantity& height) {
-  return getImpl<detail::CFactorUndergroundWallConstruction_Impl>()->setHeight(height);
-}
-
-/// @cond
-CFactorUndergroundWallConstruction::CFactorUndergroundWallConstruction(
-    std::shared_ptr<detail::CFactorUndergroundWallConstruction_Impl> impl)
-  : ConstructionBase(std::move(impl))
-{}
-/// @endcond
-
-} // model
-} // openstudio
+}  // namespace model
+}  // namespace openstudio

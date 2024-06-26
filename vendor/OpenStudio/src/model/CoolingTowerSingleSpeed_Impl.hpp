@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,435 +33,329 @@
 #include "ModelAPI.hpp"
 #include "StraightComponent_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
-
 namespace openstudio {
 namespace model {
 
-class Schedule;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-  /** CoolingTowerSingleSpeed_Impl is a StraightComponent_Impl that is the implementation class for CoolingTowerSingleSpeed.*/
-  class MODEL_API CoolingTowerSingleSpeed_Impl : public StraightComponent_Impl {
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+    /** CoolingTowerSingleSpeed_Impl is a StraightComponent_Impl that is the implementation class for CoolingTowerSingleSpeed.*/
+    class MODEL_API CoolingTowerSingleSpeed_Impl : public StraightComponent_Impl
+    {
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    CoolingTowerSingleSpeed_Impl(const IdfObject& idfObject,
-                                 Model_Impl* model,
-                                 bool keepHandle);
+      CoolingTowerSingleSpeed_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    CoolingTowerSingleSpeed_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                 Model_Impl* model,
-                                 bool keepHandle);
+      CoolingTowerSingleSpeed_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    CoolingTowerSingleSpeed_Impl(const CoolingTowerSingleSpeed_Impl& other,
-                                 Model_Impl* model,
-                                 bool keepHandle);
+      CoolingTowerSingleSpeed_Impl(const CoolingTowerSingleSpeed_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~CoolingTowerSingleSpeed_Impl() {}
+      virtual ~CoolingTowerSingleSpeed_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
+      virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
 
-    virtual unsigned inletPort() const override;
+      virtual unsigned inletPort() const override;
 
-    virtual unsigned outletPort() const override;
+      virtual unsigned outletPort() const override;
 
-    virtual void autosize() override;
+      virtual void autosize() override;
 
-    virtual void applySizingValues() override;
+      virtual void applySizingValues() override;
 
-    //@}
-    /** @name Getters */
-    //@{
+      //@}
+      /** @name Getters */
+      //@{
 
-    boost::optional<double> designWaterFlowRate() const;
+      boost::optional<double> designWaterFlowRate() const;
 
-    OSOptionalQuantity getDesignWaterFlowRate(bool returnIP=false) const;
+      bool isDesignWaterFlowRateAutosized() const;
 
-    bool isDesignWaterFlowRateAutosized() const;
+      boost::optional<double> designAirFlowRate() const;
 
-    boost::optional<double> designAirFlowRate() const;
+      bool isDesignAirFlowRateAutosized() const;
 
-    OSOptionalQuantity getDesignAirFlowRate(bool returnIP=false) const;
+      boost::optional<double> fanPoweratDesignAirFlowRate() const;
 
-    bool isDesignAirFlowRateAutosized() const;
+      bool isFanPoweratDesignAirFlowRateAutosized() const;
 
-    boost::optional<double> fanPoweratDesignAirFlowRate() const;
+      boost::optional<double> uFactorTimesAreaValueatDesignAirFlowRate() const;
 
-    OSOptionalQuantity getFanPoweratDesignAirFlowRate(bool returnIP=false) const;
+      bool isUFactorTimesAreaValueatDesignAirFlowRateAutosized() const;
 
-    bool isFanPoweratDesignAirFlowRateAutosized() const;
+      boost::optional<double> airFlowRateinFreeConvectionRegime() const;
 
-    boost::optional<double> uFactorTimesAreaValueatDesignAirFlowRate() const;
+      bool isAirFlowRateinFreeConvectionRegimeDefaulted() const;
 
-    OSOptionalQuantity getUFactorTimesAreaValueatDesignAirFlowRate(bool returnIP=false) const;
+      bool isAirFlowRateinFreeConvectionRegimeAutosized() const;
 
-    bool isUFactorTimesAreaValueatDesignAirFlowRateAutosized() const;
+      boost::optional<double> uFactorTimesAreaValueatFreeConvectionAirFlowRate() const;
 
-    boost::optional<double> airFlowRateinFreeConvectionRegime() const;
+      bool isUFactorTimesAreaValueatFreeConvectionAirFlowRateDefaulted() const;
 
-    OSOptionalQuantity getAirFlowRateinFreeConvectionRegime(bool returnIP=false) const;
+      bool isUFactorTimesAreaValueatFreeConvectionAirFlowRateAutosized() const;
 
-    bool isAirFlowRateinFreeConvectionRegimeDefaulted() const;
+      std::string performanceInputMethod() const;
 
-    bool isAirFlowRateinFreeConvectionRegimeAutosized() const;
+      bool isPerformanceInputMethodDefaulted() const;
 
-    boost::optional<double> uFactorTimesAreaValueatFreeConvectionAirFlowRate() const;
+      boost::optional<double> nominalCapacity() const;
 
-    OSOptionalQuantity getUFactorTimesAreaValueatFreeConvectionAirFlowRate(bool returnIP=false) const;
+      boost::optional<double> freeConvectionCapacity() const;
 
-    bool isUFactorTimesAreaValueatFreeConvectionAirFlowRateDefaulted() const;
+      double basinHeaterCapacity() const;
 
-    bool isUFactorTimesAreaValueatFreeConvectionAirFlowRateAutosized() const;
+      bool isBasinHeaterCapacityDefaulted() const;
 
-    std::string performanceInputMethod() const;
+      double basinHeaterSetpointTemperature() const;
 
-    bool isPerformanceInputMethodDefaulted() const;
+      bool isBasinHeaterSetpointTemperatureDefaulted() const;
 
-    boost::optional<double> nominalCapacity() const;
+      boost::optional<Schedule> basinHeaterOperatingSchedule() const;
 
-    OSOptionalQuantity getNominalCapacity(bool returnIP=false) const;
+      boost::optional<std::string> evaporationLossMode() const;
 
-    boost::optional<double> freeConvectionCapacity() const;
+      double evaporationLossFactor() const;
 
-    OSOptionalQuantity getFreeConvectionCapacity(bool returnIP=false) const;
+      bool isEvaporationLossFactorDefaulted() const;
 
-    double basinHeaterCapacity() const;
+      double driftLossPercent() const;
 
-    Quantity getBasinHeaterCapacity(bool returnIP=false) const;
+      bool isDriftLossPercentDefaulted() const;
 
-    bool isBasinHeaterCapacityDefaulted() const;
+      boost::optional<std::string> blowdownCalculationMode() const;
 
-    double basinHeaterSetpointTemperature() const;
+      double blowdownConcentrationRatio() const;
 
-    Quantity getBasinHeaterSetpointTemperature(bool returnIP=false) const;
+      bool isBlowdownConcentrationRatioDefaulted() const;
 
-    bool isBasinHeaterSetpointTemperatureDefaulted() const;
+      boost::optional<Schedule> blowdownMakeupWaterUsageSchedule() const;
 
-    boost::optional<Schedule> basinHeaterOperatingSchedule() const;
+      std::string capacityControl() const;
 
-    boost::optional<std::string> evaporationLossMode() const;
+      bool isCapacityControlDefaulted() const;
 
-    double evaporationLossFactor() const;
+      int numberofCells() const;
 
-    Quantity getEvaporationLossFactor(bool returnIP=false) const;
+      bool isNumberofCellsDefaulted() const;
 
-    bool isEvaporationLossFactorDefaulted() const;
+      std::string cellControl() const;
 
-    double driftLossPercent() const;
+      bool isCellControlDefaulted() const;
 
-    Quantity getDriftLossPercent(bool returnIP=false) const;
+      double cellMinimumWaterFlowRateFraction() const;
 
-    bool isDriftLossPercentDefaulted() const;
+      bool isCellMinimumWaterFlowRateFractionDefaulted() const;
 
-    boost::optional<std::string> blowdownCalculationMode() const;
+      double cellMaximumWaterFlowRateFraction() const;
 
-    double blowdownConcentrationRatio() const;
+      bool isCellMaximumWaterFlowRateFractionDefaulted() const;
 
-    Quantity getBlowdownConcentrationRatio(bool returnIP=false) const;
+      double sizingFactor() const;
 
-    bool isBlowdownConcentrationRatioDefaulted() const;
+      bool isSizingFactorDefaulted() const;
 
-    boost::optional<Schedule> blowdownMakeupWaterUsageSchedule() const;
+      boost::optional<double> autosizedDesignWaterFlowRate() const;
 
-    std::string capacityControl() const;
+      boost::optional<double> autosizedDesignAirFlowRate() const;
 
-    bool isCapacityControlDefaulted() const;
+      boost::optional<double> autosizedFanPoweratDesignAirFlowRate() const;
 
-    int numberofCells() const;
+      boost::optional<double> autosizedUFactorTimesAreaValueatDesignAirFlowRate() const;
 
-    bool isNumberofCellsDefaulted() const;
+      boost::optional<double> autosizedAirFlowRateinFreeConvectionRegime() const;
 
-    std::string cellControl() const;
+      boost::optional<double> autosizedUFactorTimesAreaValueatFreeConvectionAirFlowRate() const;
 
-    bool isCellControlDefaulted() const;
+      boost::optional<double> autosizedDesignApproachTemperature() const;
 
-    double cellMinimumWaterFlowRateFraction() const;
+      boost::optional<double> autosizedDesignRangeTemperature() const;
 
-    Quantity getCellMinimumWaterFlowRateFraction(bool returnIP=false) const;
+      //@}
+      /** @name Setters */
+      //@{
 
-    bool isCellMinimumWaterFlowRateFractionDefaulted() const;
+      bool setDesignWaterFlowRate(boost::optional<double> designWaterFlowRate);
 
-    double cellMaximumWaterFlowRateFraction() const;
+      void resetDesignWaterFlowRate();
 
-    Quantity getCellMaximumWaterFlowRateFraction(bool returnIP=false) const;
+      void autosizeDesignWaterFlowRate();
 
-    bool isCellMaximumWaterFlowRateFractionDefaulted() const;
+      bool setDesignAirFlowRate(boost::optional<double> designAirFlowRate);
 
-    double sizingFactor() const;
+      void autosizeDesignAirFlowRate();
 
-    Quantity getSizingFactor(bool returnIP=false) const;
+      bool setFanPoweratDesignAirFlowRate(boost::optional<double> fanPoweratDesignAirFlowRate);
 
-    bool isSizingFactorDefaulted() const;
+      void autosizeFanPoweratDesignAirFlowRate();
 
-    boost::optional<double> autosizedDesignWaterFlowRate() const ;
+      bool setUFactorTimesAreaValueatDesignAirFlowRate(boost::optional<double> uFactorTimesAreaValueatDesignAirFlowRate);
 
-    boost::optional<double> autosizedDesignAirFlowRate() const ;
+      void resetUFactorTimesAreaValueatDesignAirFlowRate();
 
-    boost::optional<double> autosizedFanPoweratDesignAirFlowRate() const ;
+      void autosizeUFactorTimesAreaValueatDesignAirFlowRate();
 
-    boost::optional<double> autosizedUFactorTimesAreaValueatDesignAirFlowRate() const ;
+      bool setAirFlowRateinFreeConvectionRegime(boost::optional<double> airFlowRateinFreeConvectionRegime);
 
-    boost::optional<double> autosizedAirFlowRateinFreeConvectionRegime() const ;
+      void resetAirFlowRateinFreeConvectionRegime();
 
-    boost::optional<double> autosizedUFactorTimesAreaValueatFreeConvectionAirFlowRate() const ;
+      void autosizeAirFlowRateinFreeConvectionRegime();
 
-    boost::optional<double> autosizedDesignApproachTemperature() const;
+      bool setUFactorTimesAreaValueatFreeConvectionAirFlowRate(boost::optional<double> uFactorTimesAreaValueatFreeConvectionAirFlowRate);
 
-    boost::optional<double> autosizedDesignRangeTemperature() const;
+      void resetUFactorTimesAreaValueatFreeConvectionAirFlowRate();
 
-    //@}
-    /** @name Setters */
-    //@{
+      void autosizeUFactorTimesAreaValueatFreeConvectionAirFlowRate();
 
-    bool setDesignWaterFlowRate(boost::optional<double> designWaterFlowRate);
+      bool setPerformanceInputMethod(const std::string& performanceInputMethod);
 
-    bool setDesignWaterFlowRate(const OSOptionalQuantity& designWaterFlowRate);
+      void resetPerformanceInputMethod();
 
-    void resetDesignWaterFlowRate();
+      bool setNominalCapacity(boost::optional<double> nominalCapacity);
 
-    void autosizeDesignWaterFlowRate();
+      void resetNominalCapacity();
 
-    bool setDesignAirFlowRate(boost::optional<double> designAirFlowRate);
+      bool setFreeConvectionCapacity(boost::optional<double> freeConvectionCapacity);
 
-    bool setDesignAirFlowRate(const OSOptionalQuantity& designAirFlowRate);
+      void resetFreeConvectionCapacity();
 
-    void autosizeDesignAirFlowRate();
+      bool setBasinHeaterCapacity(double basinHeaterCapacity);
 
-    bool setFanPoweratDesignAirFlowRate(boost::optional<double> fanPoweratDesignAirFlowRate);
+      void resetBasinHeaterCapacity();
 
-    bool setFanPoweratDesignAirFlowRate(const OSOptionalQuantity& fanPoweratDesignAirFlowRate);
+      bool setBasinHeaterSetpointTemperature(double basinHeaterSetpointTemperature);
 
-    void autosizeFanPoweratDesignAirFlowRate();
+      void resetBasinHeaterSetpointTemperature();
 
-    bool setUFactorTimesAreaValueatDesignAirFlowRate(boost::optional<double> uFactorTimesAreaValueatDesignAirFlowRate);
+      bool setBasinHeaterOperatingSchedule(Schedule& basinHeaterOperatingSchedule);
 
-    bool setUFactorTimesAreaValueatDesignAirFlowRate(const OSOptionalQuantity& uFactorTimesAreaValueatDesignAirFlowRate);
+      void resetBasinHeaterOperatingSchedule();
 
-    void resetUFactorTimesAreaValueatDesignAirFlowRate();
+      bool setEvaporationLossMode(boost::optional<std::string> evaporationLossMode);
 
-    void autosizeUFactorTimesAreaValueatDesignAirFlowRate();
+      void resetEvaporationLossMode();
 
-    bool setAirFlowRateinFreeConvectionRegime(boost::optional<double> airFlowRateinFreeConvectionRegime);
+      bool setEvaporationLossFactor(double evaporationLossFactor);
 
-    bool setAirFlowRateinFreeConvectionRegime(const OSOptionalQuantity& airFlowRateinFreeConvectionRegime);
+      void resetEvaporationLossFactor();
 
-    void resetAirFlowRateinFreeConvectionRegime();
+      bool setDriftLossPercent(double driftLossPercent);
 
-    void autosizeAirFlowRateinFreeConvectionRegime();
+      void resetDriftLossPercent();
 
-    bool setUFactorTimesAreaValueatFreeConvectionAirFlowRate(boost::optional<double> uFactorTimesAreaValueatFreeConvectionAirFlowRate);
+      bool setBlowdownCalculationMode(boost::optional<std::string> blowdownCalculationMode);
 
-    bool setUFactorTimesAreaValueatFreeConvectionAirFlowRate(const OSOptionalQuantity& uFactorTimesAreaValueatFreeConvectionAirFlowRate);
+      void resetBlowdownCalculationMode();
 
-    void resetUFactorTimesAreaValueatFreeConvectionAirFlowRate();
+      bool setBlowdownConcentrationRatio(double blowdownConcentrationRatio);
 
-    void autosizeUFactorTimesAreaValueatFreeConvectionAirFlowRate();
+      void resetBlowdownConcentrationRatio();
 
-    bool setPerformanceInputMethod(std::string performanceInputMethod);
+      bool setBlowdownMakeupWaterUsageSchedule(Schedule& blowdownMakeupWaterUsageSchedule);
 
-    void resetPerformanceInputMethod();
+      void resetBlowdownMakeupWaterUsageSchedule();
 
-    bool setNominalCapacity(boost::optional<double> nominalCapacity);
+      bool setCapacityControl(const std::string& capacityControl);
 
-    bool setNominalCapacity(const OSOptionalQuantity& nominalCapacity);
+      void resetCapacityControl();
 
-    void resetNominalCapacity();
+      bool setNumberofCells(int numberofCells);
 
-    bool setFreeConvectionCapacity(boost::optional<double> freeConvectionCapacity);
+      void resetNumberofCells();
 
-    bool setFreeConvectionCapacity(const OSOptionalQuantity& freeConvectionCapacity);
+      bool setCellControl(const std::string& cellControl);
 
-    void resetFreeConvectionCapacity();
+      void resetCellControl();
 
-    bool setBasinHeaterCapacity(double basinHeaterCapacity);
+      bool setCellMinimumWaterFlowRateFraction(double cellMinimumWaterFlowRateFraction);
 
-    bool setBasinHeaterCapacity(const Quantity& basinHeaterCapacity);
+      void resetCellMinimumWaterFlowRateFraction();
 
-    void resetBasinHeaterCapacity();
+      bool setCellMaximumWaterFlowRateFraction(double cellMaximumWaterFlowRateFraction);
 
-    bool setBasinHeaterSetpointTemperature(double basinHeaterSetpointTemperature);
+      void resetCellMaximumWaterFlowRateFraction();
 
-    bool setBasinHeaterSetpointTemperature(const Quantity& basinHeaterSetpointTemperature);
+      bool setSizingFactor(double sizingFactor);
 
-    void resetBasinHeaterSetpointTemperature();
+      void resetSizingFactor();
 
-    bool setBasinHeaterOperatingSchedule(Schedule& basinHeaterOperatingSchedule);
+      bool addToNode(Node& node) override;
 
-    void resetBasinHeaterOperatingSchedule();
+      double freeConvectionAirFlowRateSizingFactor() const;
 
-    bool setEvaporationLossMode(boost::optional<std::string> evaporationLossMode);
+      bool setFreeConvectionAirFlowRateSizingFactor(double freeConvectionAirFlowRateSizingFactor);
 
-    void resetEvaporationLossMode();
+      double freeConvectionUFactorTimesAreaValueSizingFactor() const;
 
-    bool setEvaporationLossFactor(double evaporationLossFactor);
+      bool setFreeConvectionUFactorTimesAreaValueSizingFactor(double freeConvectionUFactorTimesAreaValueSizingFactor);
 
-    bool setEvaporationLossFactor(const Quantity& evaporationLossFactor);
+      double heatRejectionCapacityAndNominalCapacitySizingRatio() const;
 
-    void resetEvaporationLossFactor();
+      bool setHeatRejectionCapacityAndNominalCapacitySizingRatio(double heatRejectionCapacityAndNominalCapacitySizingRatio);
 
-    bool setDriftLossPercent(double driftLossPercent);
+      double freeConvectionNominalCapacitySizingFactor() const;
 
-    bool setDriftLossPercent(const Quantity& driftLossPercent);
+      bool setFreeConvectionNominalCapacitySizingFactor(double freeConvectionNominalCapacitySizingFactor);
 
-    void resetDriftLossPercent();
+      double designInletAirDryBulbTemperature() const;
 
-    bool setBlowdownCalculationMode(boost::optional<std::string> blowdownCalculationMode);
+      bool setDesignInletAirDryBulbTemperature(double designInletAirDryBulbTemperature);
 
-    void resetBlowdownCalculationMode();
+      double designInletAirWetBulbTemperature() const;
 
-    bool setBlowdownConcentrationRatio(double blowdownConcentrationRatio);
+      bool setDesignInletAirWetBulbTemperature(double designInletAirWetBulbTemperature);
 
-    bool setBlowdownConcentrationRatio(const Quantity& blowdownConcentrationRatio);
+      boost::optional<double> designApproachTemperature() const;
 
-    void resetBlowdownConcentrationRatio();
+      bool isDesignApproachTemperatureAutosized() const;
 
-    bool setBlowdownMakeupWaterUsageSchedule(Schedule& blowdownMakeupWaterUsageSchedule);
+      void autosizeDesignApproachTemperature();
 
-    void resetBlowdownMakeupWaterUsageSchedule();
+      bool setDesignApproachTemperature(double designApproachTemperature);
 
-    bool setCapacityControl(std::string capacityControl);
+      boost::optional<double> designRangeTemperature() const;
 
-    void resetCapacityControl();
+      bool isDesignRangeTemperatureAutosized() const;
 
-    bool setNumberofCells(int numberofCells);
+      bool setDesignRangeTemperature(double designRangeTemperature);
 
-    void resetNumberofCells();
+      void autosizeDesignRangeTemperature();
 
-    bool setCellControl(std::string cellControl);
+      std::string endUseSubcategory() const;
 
-    void resetCellControl();
+      bool setEndUseSubcategory(const std::string& endUseSubcategory);
 
-    bool setCellMinimumWaterFlowRateFraction(double cellMinimumWaterFlowRateFraction);
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.CoolingTowerSingleSpeed");
 
-    bool setCellMinimumWaterFlowRateFraction(const Quantity& cellMinimumWaterFlowRateFraction);
+      std::vector<std::string> performanceInputMethodValues() const;
+      std::vector<std::string> evaporationLossModeValues() const;
+      std::vector<std::string> blowdownCalculationModeValues() const;
+      std::vector<std::string> capacityControlValues() const;
+      std::vector<std::string> cellControlValues() const;
+      boost::optional<ModelObject> basinHeaterOperatingScheduleAsModelObject() const;
+      boost::optional<ModelObject> blowdownMakeupWaterUsageScheduleAsModelObject() const;
 
-    void resetCellMinimumWaterFlowRateFraction();
+      bool setBasinHeaterOperatingScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
+      bool setBlowdownMakeupWaterUsageScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
+    };
 
-    bool setCellMaximumWaterFlowRateFraction(double cellMaximumWaterFlowRateFraction);
+  }  // namespace detail
 
-    bool setCellMaximumWaterFlowRateFraction(const Quantity& cellMaximumWaterFlowRateFraction);
+}  // namespace model
 
-    void resetCellMaximumWaterFlowRateFraction();
+}  // namespace openstudio
 
-    bool setSizingFactor(double sizingFactor);
-
-    bool setSizingFactor(const Quantity& sizingFactor);
-
-    void resetSizingFactor();
-
-    bool addToNode(Node & node) override;
-
-    double freeConvectionAirFlowRateSizingFactor() const;
-
-    bool setFreeConvectionAirFlowRateSizingFactor(double freeConvectionAirFlowRateSizingFactor);
-
-    double freeConvectionUFactorTimesAreaValueSizingFactor() const;
-
-    bool setFreeConvectionUFactorTimesAreaValueSizingFactor(double freeConvectionUFactorTimesAreaValueSizingFactor);
-
-    double heatRejectionCapacityAndNominalCapacitySizingRatio() const;
-
-    bool setHeatRejectionCapacityAndNominalCapacitySizingRatio(double heatRejectionCapacityAndNominalCapacitySizingRatio);
-
-    double freeConvectionNominalCapacitySizingFactor() const;
-
-    bool setFreeConvectionNominalCapacitySizingFactor(double freeConvectionNominalCapacitySizingFactor);
-
-    double designInletAirDryBulbTemperature() const;
-
-    bool setDesignInletAirDryBulbTemperature(double designInletAirDryBulbTemperature);
-
-    double designInletAirWetBulbTemperature() const;
-
-    bool setDesignInletAirWetBulbTemperature(double designInletAirWetBulbTemperature);
-
-    boost::optional<double> designApproachTemperature() const;
-
-    bool isDesignApproachTemperatureAutosized() const;
-
-    void autosizeDesignApproachTemperature();
-
-    bool setDesignApproachTemperature(double designApproachTemperature);
-
-    boost::optional<double> designRangeTemperature() const;
-
-    bool isDesignRangeTemperatureAutosized() const;
-
-    bool setDesignRangeTemperature(double designRangeTemperature);
-
-    void autosizeDesignRangeTemperature();
-
-    std::string endUseSubcategory() const;
-
-    bool setEndUseSubcategory(const std::string & endUseSubcategory);
-
-    //@}
-   protected:
-   private:
-
-    REGISTER_LOGGER("openstudio.model.CoolingTowerSingleSpeed");
-
-    openstudio::OSOptionalQuantity designWaterFlowRate_SI() const;
-    openstudio::OSOptionalQuantity designWaterFlowRate_IP() const;
-    openstudio::OSOptionalQuantity designAirFlowRate_SI() const;
-    openstudio::OSOptionalQuantity designAirFlowRate_IP() const;
-    openstudio::OSOptionalQuantity fanPoweratDesignAirFlowRate_SI() const;
-    openstudio::OSOptionalQuantity fanPoweratDesignAirFlowRate_IP() const;
-    openstudio::OSOptionalQuantity uFactorTimesAreaValueatDesignAirFlowRate_SI() const;
-    openstudio::OSOptionalQuantity uFactorTimesAreaValueatDesignAirFlowRate_IP() const;
-    openstudio::OSOptionalQuantity airFlowRateinFreeConvectionRegime_SI() const;
-    openstudio::OSOptionalQuantity airFlowRateinFreeConvectionRegime_IP() const;
-    openstudio::OSOptionalQuantity uFactorTimesAreaValueatFreeConvectionAirFlowRate_SI() const;
-    openstudio::OSOptionalQuantity uFactorTimesAreaValueatFreeConvectionAirFlowRate_IP() const;
-    std::vector<std::string> performanceInputMethodValues() const;
-    openstudio::OSOptionalQuantity nominalCapacity_SI() const;
-    openstudio::OSOptionalQuantity nominalCapacity_IP() const;
-    openstudio::OSOptionalQuantity freeConvectionCapacity_SI() const;
-    openstudio::OSOptionalQuantity freeConvectionCapacity_IP() const;
-    openstudio::Quantity basinHeaterCapacity_SI() const;
-    openstudio::Quantity basinHeaterCapacity_IP() const;
-    openstudio::Quantity basinHeaterSetpointTemperature_SI() const;
-    openstudio::Quantity basinHeaterSetpointTemperature_IP() const;
-    std::vector<std::string> evaporationLossModeValues() const;
-    openstudio::Quantity evaporationLossFactor_SI() const;
-    openstudio::Quantity evaporationLossFactor_IP() const;
-    openstudio::Quantity driftLossPercent_SI() const;
-    openstudio::Quantity driftLossPercent_IP() const;
-    std::vector<std::string> blowdownCalculationModeValues() const;
-    openstudio::Quantity blowdownConcentrationRatio_SI() const;
-    openstudio::Quantity blowdownConcentrationRatio_IP() const;
-    std::vector<std::string> capacityControlValues() const;
-    std::vector<std::string> cellControlValues() const;
-    openstudio::Quantity cellMinimumWaterFlowRateFraction_SI() const;
-    openstudio::Quantity cellMinimumWaterFlowRateFraction_IP() const;
-    openstudio::Quantity cellMaximumWaterFlowRateFraction_SI() const;
-    openstudio::Quantity cellMaximumWaterFlowRateFraction_IP() const;
-    openstudio::Quantity sizingFactor_SI() const;
-    openstudio::Quantity sizingFactor_IP() const;
-
-    boost::optional<ModelObject> basinHeaterOperatingScheduleAsModelObject() const;
-    boost::optional<ModelObject> blowdownMakeupWaterUsageScheduleAsModelObject() const;
-
-    bool setBasinHeaterOperatingScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
-    bool setBlowdownMakeupWaterUsageScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
-  };
-
-} // detail
-
-} // model
-
-} // openstudio
-
-#endif // MODEL_COOLINGTOWERSINGLESPEED_IMPL_HPP
+#endif  // MODEL_COOLINGTOWERSINGLESPEED_IMPL_HPP

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,44 +36,42 @@
 namespace openstudio {
 namespace model {
 
-class Loop;
+  class Loop;
 
-namespace detail{
-  class AvailabilityManager_Impl;
-}
+  namespace detail {
+    class AvailabilityManager_Impl;
+  }
 
-class MODEL_API AvailabilityManager : public ModelObject {
+  class MODEL_API AvailabilityManager : public ModelObject
+  {
 
-  public:
+   public:
+    AvailabilityManager(IddObjectType type, const Model& model);
 
-  AvailabilityManager(IddObjectType type,const Model& model);
+    virtual ~AvailabilityManager() {}
 
-  virtual ~AvailabilityManager() {}
+    boost::optional<Loop> loop() const;
 
-  friend class openstudio::IdfObject;
+   protected:
+    /// @cond
+    typedef detail::AvailabilityManager_Impl ImplType;
 
-  boost::optional<Loop> loop() const;
+    explicit AvailabilityManager(std::shared_ptr<detail::AvailabilityManager_Impl> impl);
 
-  /// @cond
+    friend class detail::AvailabilityManager_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.AvailabilityManager");
+  };
 
-  typedef detail::AvailabilityManager_Impl ImplType;
+  typedef boost::optional<AvailabilityManager> OptionalAvailabilityManager;
 
-  explicit AvailabilityManager(std::shared_ptr<detail::AvailabilityManager_Impl> impl);
+  typedef std::vector<AvailabilityManager> AvailabilityManagerVector;
 
-  private:
+}  // namespace model
+}  // namespace openstudio
 
-  REGISTER_LOGGER("openstudio.model.AvailabilityManager");
-
-  /// @endcond
-
-};
-
-typedef boost::optional<AvailabilityManager> OptionalAvailabilityManager;
-
-typedef std::vector<AvailabilityManager> AvailabilityManagerVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_AVAILABILITYMANAGER_HPP
-
+#endif  // MODEL_AVAILABILITYMANAGER_HPP

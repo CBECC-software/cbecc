@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -79,272 +79,132 @@
 #include "../utilities/core/Logger.hpp"
 #include "../utilities/core/PathHelpers.hpp"
 #include "../utilities/core/Assert.hpp"
+#include "../utilities/core/FilesystemHelpers.hpp"
 
 #include <OpenStudio.hxx>
 
-#include <QDir>
-#include <QMessageBox>
-#include <QTemporaryFile>
-
-
-
-
 namespace openstudio {
 namespace model {
-
-  bool removeDir(const QString &dirName)
-  {
+  bool replaceDir(const openstudio::path& sourceDir, const openstudio::path& destinationDir) {
     bool result = true;
 
-    LOG_FREE(Info, "removeDir", "removeDir '" << toString(dirName) << "'");
+    // Path **must** exist for `canonical()` to work, `weakly_canonical()` doesn't require this
+    const auto src = openstudio::filesystem::weakly_canonical(sourceDir);
+    const auto dest = openstudio::filesystem::weakly_canonical(destinationDir);
 
-    QDir dir(dirName);
-    if (dir.exists(dirName)) {
-      bool test = true;
-
-      for (const QFileInfo& info : dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden | QDir::AllDirs | QDir::Files, QDir::DirsFirst))
-      {
-        if (info.isDir()) {
-          test = removeDir(info.absoluteFilePath());
-          if (!test){
-            LOG_FREE(Error, "removeDir", "Failed to remove directory '" << toString(info.absoluteFilePath()) << "'");
-            result = false;
-
-            // DLM: do we really want to give up here?
-            //return result;
-          }
-        } else{
-          test = QFile::remove(info.absoluteFilePath());
-          if (!test){
-            LOG_FREE(Error, "removeDir", "Failed to remove file '" << toString(info.absoluteFilePath()) << "'");
-            result = false;
-
-            // DLM: do we really want to give up here?
-            //return result;
-          }
-        }
-      }
-      test = dir.rmdir(dirName);
-      if (!test){
-        LOG_FREE(Error, "removeDir", "Failed to remove directory '" << toString(dirName) << "'");
-        result = false;
-
-        // DLM: do we really want to give up here?
-        //return result;
-      }
+    // If both are the same canonical paths, we do nothing
+    if (src == dest) {
+      LOG_FREE(Warn, "replaceDir",
+               "Refusing to copy directory '" << toString(sourceDir) << "' only itself '" << toString(destinationDir) << "' canonical path: '"
+                                              << toString(src) << "'");
+      return true;  // there is no error, just nothing to do
     }
 
-    return result;
-  }
-
-  bool synchDirStructures(const QString &srcPath, const QString &dstPath)
-  {
-    bool result = true;
-    bool test = true;
-
-    QDir srcDir(srcPath);
-    QDir dstDir(dstPath);
-
-    if (srcDir.canonicalPath() == dstDir.canonicalPath()){
-      LOG_FREE(Warn, "synchDirStructures", "Cannot synch destination '" << toString(dstPath) << "' with source '" << toString(srcPath) << "' because they resolve to the same location");
-      return true; // already synched
+    // If the source dir doesn't exist, there's a problem
+    if (!openstudio::filesystem::exists(src) || !openstudio::filesystem::is_directory(src)) {
+      LOG_FREE(Error, "replaceDir", "Source directory does not exist: " << toString(src));
+      return false;
     }
 
-    LOG_FREE(Info, "synchDirStructures", "Synching destination '" << toString(dstPath) << "' with source '" << toString(srcPath) << "'");
-
-    // remove all files in dst as well as any directories in dst that are not in src
-    for (const QFileInfo &dstItemInfo : dstDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
-    {
-      QString srcItemPath = srcPath + "/" + dstItemInfo.fileName();
-      QString dstItemPath = dstPath + "/" + dstItemInfo.fileName();
-
-      QFileInfo srcItemInfo = QFileInfo(srcItemPath);
-
-      if (dstItemInfo.isDir()){
-
-        if (srcItemInfo.exists() && srcItemInfo.isDir()){
-
-          // directory also exists in source
-          test = synchDirStructures(srcItemPath, dstItemPath);
-          if (!test){
-            LOG_FREE(Error, "synchDirStructures", "Failed to synch destination '" << toString(dstItemPath) << "' with source '" << toString(srcItemPath) << "'");
+    // If the dest dir exists, remove all entries in it
+    if (openstudio::filesystem::exists(dest)) {
+      if (openstudio::filesystem::is_directory(dest)) {
+        for (openstudio::filesystem::directory_iterator end_dir_it, it(dest); it != end_dir_it; ++it) {
+          openstudio::filesystem::path path = it->path();
+          try {
+            openstudio::filesystem::remove_all(path);
+          } catch (const std::exception& e) {
+            LOG_FREE(Error, "replaceDir", "Error deleting: " << toString(path) << e.what());
             result = false;
-
-            // DLM: do we really want to give up here?
-            //return result;
-          }
-
-        } else{
-
-          // directory does not exist in source
-          test = removeDir(dstItemPath);
-          if (!test){
-            LOG_FREE(Error, "synchDirStructures", "Failed to remove directory '" << toString(dstItemPath) << "'");
-            result = false;
-
-            // DLM: do we really want to give up here?
-            //return result;
           }
         }
-
-      } else if (dstItemInfo.isFile()){
-        test = QFile::remove(dstItemInfo.absoluteFilePath());
-        if (!test){
-          LOG_FREE(Error, "synchDirStructures", "Failed to remove file '" << toString(dstItemInfo.absoluteFilePath()) << "'");
-          result = false;
-
-          // DLM: do we really want to give up here?
-          //return result;
-        }
-      }
-    }
-
-    return result;
-  }
-
-  bool copyDir(const QString &srcPath, const QString &dstPath)
-  {
-    bool result = true;
-    bool test = true;
-
-    LOG_FREE(Info, "copyDir", "copyDir '" << toString(srcPath) << "' to '" << toString(dstPath) << "'");
-
-    // ensure directory exists
-    QFileInfo dstInfo(dstPath);
-    QString fileName = dstInfo.fileName();
-    if (!dstInfo.exists() || !dstInfo.isDir()){
-      QDir parentDstDir(QFileInfo(dstPath).path());
-      LOG_FREE(Info, "copyDir", "Creating directory named = '" << toString(fileName) << "' in parentDstDir = '" << toString(parentDstDir.path()) << "'");
-      if (!parentDstDir.mkpath(fileName)){
-        LOG_FREE(Error, "copyDir", "Failed to create directory = '" << toString(fileName) << "' in parentDstDir = '" << toString(parentDstDir.path()) << "'");
+      } else {
+        LOG_FREE(Error, "replaceDir", "Destination exists and is not a directory, aborting: " << toString(dest));
         return false;
       }
     }
 
-    QDir srcDir(srcPath);
-
-    // remove all files in dst as well as any directories in dst that are not in src
-    test = synchDirStructures(srcPath, dstPath);
-    if (!test){
-      LOG_FREE(Error, "copyDir", "Failed to synch destination '" << toString(dstPath) << "' with source '" << toString(srcPath) << "'");
-      result = false;
+    // Now we recreate it, and it must work!
+    if (!openstudio::filesystem::exists(dest)) {
+      try {
+        if (!openstudio::filesystem::create_directory(dest)) {
+          LOG_FREE(Error, "replaceDir", "Could not create destination directory: " << toString(dest));
+          return false;
+        }
+      } catch (const std::exception& e) {
+        LOG_FREE(Error, "replaceDir", "Error creating directory: " << toString(dest) << e.what());
+        return false;
+      }
     }
 
-    // copy all files in src to dst
-    for (const QFileInfo &srcItemInfo : srcDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
-    {
-      QString srcItemPath = srcPath + "/" + srcItemInfo.fileName();
-      QString dstItemPath = dstPath + "/" + srcItemInfo.fileName();
+    for (const auto& dirEnt : openstudio::filesystem::recursive_directory_iterator{src}) {
+      const auto& path = dirEnt.path();
+      auto relativePathStr = path.string();
+      boost::replace_first(relativePathStr, src.string(), "");
 
-      QFileInfo dstItemInfo = QFileInfo(dstItemPath);
-
-      if (srcItemInfo.isDir()) {
-        test = copyDir(srcItemPath, dstItemPath);
-        if (!test){
-          LOG_FREE(Error, "copyDir", "Failed to copy directory '" << toString(srcItemPath) << "' to '" << toString(dstItemPath) << "'");
-          result = false;
-
-          // DLM: do we really want to give up here?
-          //return false;
-        }
-      } else if (srcItemInfo.isFile()) {
-        test = QFile::copy(srcItemPath, dstItemPath);
-        if (!test){
-          LOG_FREE(Error, "copyDir", "Failed to copy file '" << toString(srcItemPath) << "' to '" << toString(dstItemPath) << "'");
-          result = false;
-
-          // DLM: do we really want to give up here?
-          //return false;
-        }
+      try {
+        openstudio::filesystem::copy(path, dest / relativePathStr);
+      } catch (const std::exception& e) {
+        LOG_FREE(Error, "replaceDir",
+                 "Error copying from: " << toString(path) << " to: " << toString(dest / relativePathStr) << " Description: " << e.what());
+        result = false;
       }
     }
 
     return result;
   }
 
-#ifdef Q_OS_WIN
-
-#include <windows.h>
-
-QString longPathName(const QString& path)
-{
-  if (path.isEmpty()){
-    return QString();
-  }
-  QString maybeShort = QDir::toNativeSeparators(path);
-  QByteArray shortName = maybeShort.toLocal8Bit();
-  char longPath[MAX_PATH];
-  int err = GetLongPathName(shortName.constData(), longPath, MAX_PATH);
-  (void)err;
-  return QDir::fromNativeSeparators(QString::fromLocal8Bit(longPath));
-}
-
-#else
-
-QString longPathName(const QString& path)
-{
-  return path;
-}
-
-#endif
-
-  openstudio::path createModelTempDir()
-  {
-    openstudio::path result;
-    auto tempFile = new QTemporaryFile();
-
-    if (tempFile->open())
-    {
-      QString path = longPathName(tempFile->fileName());
-
-      // must close tempFile so you can create directory with same name on Windows
-      delete tempFile;
-
-      QDir modelTempDir(path);
-      LOG_FREE(Info, "createModelTempDir", "Creating directory '" << toString(modelTempDir.path()) << "'");
-      bool test = modelTempDir.mkpath(modelTempDir.path());
-      OS_ASSERT(test);
-
-      result = toPath(path);
-
-      return result;
+  bool removeDir(const openstudio::path& path) {
+    try {
+      const auto count = openstudio::filesystem::remove_all(path);
+      LOG_FREE(Debug, "removeDir", "Removed " << count << " files");
+    } catch (const std::exception& e) {
+      LOG_FREE(Error, "removeDir", "Error removing from: " << toString(path) << " Description: " << e.what());
+      return false;
     }
 
-    delete tempFile;
-
-    OS_ASSERT(false);
-
-    return openstudio::path();
+    return true;
   }
 
-  bool initializeModelTempDir(const openstudio::path& osmPath, const openstudio::path& modelTempDir)
-  {
+  openstudio::path createModelTempDir() {
+    const auto result = openstudio::filesystem::create_temporary_directory("osmodel");
+    LOG_FREE(Info, "createModelTempDir", "Created directory '" << toString(result) << "'");
+    OS_ASSERT(!result.empty());
+    return result;
+  }
+
+  bool initializeModelTempDir(const openstudio::path& osmPath, const openstudio::path& modelTempDir) {
     bool result = true;
 
-    if (osmPath.empty() || !openstudio::filesystem::exists(osmPath)){
+    if (osmPath.empty() || !openstudio::filesystem::exists(osmPath)) {
 
       LOG_FREE(Debug, "initializeModelTempDir", "OSM path '" << toString(osmPath) << "' is empty or does not exist");
       result = false;
 
-    } else{
+    } else {
       openstudio::path fileName = osmPath.filename();
       openstudio::path destination = modelTempDir / fileName;
       LOG_FREE(Debug, "initializeModelTempDir", "Copying '" << toString(osmPath) << "' to '" << toString(destination) << "'");
 
       // copy osm file
-      bool test = QFile::copy(toQString(osmPath), toQString(destination));
-      if (!test){
-        LOG_FREE(Error, "initializeModelTempDir", "Could not copy '" << toString(osmPath) << "' to '" << toString(destination) << "'");
+      bool test = true;
+      try {
+        openstudio::filesystem::copy_file(osmPath, destination);
+        test = true;
+      } catch (const std::exception& e) {
+        LOG_FREE(Error, "initializeModelTempDir",
+                 "Could not copy osm from '" << toString(osmPath) << "' to '" << toString(destination) << "' error" << e.what());
+        test = false;
       }
 
       // Copy all files from existing resources dir into temp dir when opening
       openstudio::path sourceDir = getCompanionFolder(osmPath);
       openstudio::path destDir = modelTempDir / toPath("resources");
-      if (openstudio::filesystem::exists(sourceDir)){
+      if (openstudio::filesystem::exists(sourceDir)) {
         LOG_FREE(Debug, "initializeModelTempDir", "Copying '" << toString(sourceDir) << "' to '" << toString(destDir) << "'");
 
-        test = copyDir(toQString(sourceDir), toQString(destDir));
-        if (!test){
+        test = replaceDir(sourceDir, destDir);
+        if (!test) {
           LOG_FREE(Error, "initializeModelTempDir", "Could not copy '" << toString(sourceDir) << "' to '" << toString(destDir) << "'");
           result = false;
         }
@@ -354,8 +214,7 @@ QString longPathName(const QString& path)
     return result;
   }
 
-  bool updateModelTempDir(openstudio::model::Model& model, const openstudio::path& modelTempDir)
-  {
+  bool updateModelTempDir(openstudio::model::Model& model, const openstudio::path& modelTempDir) {
     bool modified = false;
 
     // Create folder layout
@@ -363,20 +222,17 @@ QString longPathName(const QString& path)
     openstudio::path scriptspath = modelTempDir / openstudio::toPath("resources/measures");
     openstudio::path filespath = modelTempDir / openstudio::toPath("resources/files");
 
-    if (!openstudio::filesystem::exists(runpath))
-    {
+    if (!openstudio::filesystem::exists(runpath)) {
       openstudio::filesystem::create_directories(runpath);
       modified = true;
     }
 
-    if (!openstudio::filesystem::exists(scriptspath))
-    {
+    if (!openstudio::filesystem::exists(scriptspath)) {
       openstudio::filesystem::create_directories(scriptspath);
       modified = true;
     }
 
-    if (!openstudio::filesystem::exists(filespath))
-    {
+    if (!openstudio::filesystem::exists(filespath)) {
       openstudio::filesystem::create_directories(filespath);
       modified = true;
     }
@@ -386,23 +242,22 @@ QString longPathName(const QString& path)
     return modified;
   }
 
-  bool attachWorkflow(openstudio::model::Model& model, const openstudio::path& modelTempDir)
-  {
+  bool attachWorkflow(openstudio::model::Model& model, const openstudio::path& modelTempDir) {
     boost::optional<WorkflowJSON> workflowJSON;
     bool result = false;
 
     openstudio::path oswPath = modelTempDir / openstudio::toPath("resources/workflow.osw");
-    if (boost::filesystem::exists(oswPath)){
+    if (boost::filesystem::exists(oswPath)) {
       workflowJSON = WorkflowJSON::load(oswPath);
-      if (workflowJSON){
+      if (workflowJSON) {
         result = true;
         LOG_FREE(Debug, "attachWorkflow", "Opened existing workflow.osw file");
-      } else{
+      } else {
         LOG_FREE(Error, "attachWorkflow", "Could not open existing workflow.osw file");
       }
     }
 
-    if (!workflowJSON){
+    if (!workflowJSON) {
       workflowJSON = WorkflowJSON();
       workflowJSON->setOswPath(oswPath);
       workflowJSON->save();
@@ -413,16 +268,14 @@ QString longPathName(const QString& path)
     return result;
   }
 
-  openstudio::path initializeModel(openstudio::model::Model model)
-  {
+  openstudio::path initializeModel(openstudio::model::Model model) {
     return initializeModel(model, openstudio::path());
   }
 
-  openstudio::path initializeModel(openstudio::model::Model model, const openstudio::path& savedPath)
-  {
+  openstudio::path initializeModel(openstudio::model::Model model, const openstudio::path& savedPath) {
     openstudio::path modelTempDir = createModelTempDir();
 
-    if (!savedPath.empty() && exists(savedPath)){
+    if (!savedPath.empty() && exists(savedPath)) {
       initializeModelTempDir(savedPath, modelTempDir);
     }
 
@@ -432,8 +285,7 @@ QString longPathName(const QString& path)
     return modelTempDir;
   }
 
-  void initializeModelObjects(openstudio::model::Model model)
-  {
+  void initializeModelObjects(openstudio::model::Model model) {
     // These objects used to be added to the model as you clicked through the App's tabs,
     // resulting in a uncertain set of model changes.  With these changes, every model will
     // always have the following objects after opening in the app.
@@ -460,48 +312,41 @@ QString longPathName(const QString& path)
 
     openstudio::model::LifeCycleCostParameters lifeCycleCostParameters = model.getUniqueModelObject<openstudio::model::LifeCycleCostParameters>();
 
-    for (auto& object : model.objects()){
-      if (object.optionalCast<model::ConstructionBase>()){
+    for (auto& object : model.objects()) {
+      if (object.optionalCast<model::ConstructionBase>()) {
         object.cast<model::ConstructionBase>().standardsInformation();
         object.cast<model::ConstructionBase>().renderingColor();
-      }else if (object.optionalCast<model::Material>()){
+      } else if (object.optionalCast<model::Material>()) {
         object.cast<model::Material>().standardsInformation();
-      }else if (object.optionalCast<model::BuildingStory>()){
+      } else if (object.optionalCast<model::BuildingStory>()) {
         object.cast<model::BuildingStory>().renderingColor();
-      }else if (object.optionalCast<model::LightingSimulationZone>()){
+      } else if (object.optionalCast<model::LightingSimulationZone>()) {
         object.cast<model::LightingSimulationZone>().renderingColor();
-      }else if (object.optionalCast<model::SpaceType>()){
+      } else if (object.optionalCast<model::SpaceType>()) {
         object.cast<model::SpaceType>().renderingColor();
-      }else if (object.optionalCast<model::ThermalZone>()){
+      } else if (object.optionalCast<model::ThermalZone>()) {
         object.cast<model::ThermalZone>().renderingColor();
-      }else if (object.optionalCast<model::BuildingUnit>()){
+      } else if (object.optionalCast<model::BuildingUnit>()) {
         object.cast<model::BuildingUnit>().renderingColor();
       }
     }
   }
 
-  bool saveModelTempDir(const openstudio::path& modelTempDir, const openstudio::path& osmPath)
-  {
+  bool saveModelTempDir(const openstudio::path& modelTempDir, const openstudio::path& osmPath) {
     bool test = true;
-
-    // must remove file, QFile::copy does not overwrite
-    QFileInfo osmInfo(toQString(osmPath));
-    if (osmInfo.exists() && osmInfo.isFile()){
-      test = QFile::remove(toQString(osmPath));
-      if (!test){
-        LOG_FREE(Error, "saveModelTempDir", "Could not remove previous osm at '" << toString(osmPath) << "'");
-      }
-    }
 
     // copy osm file
     openstudio::path srcPath = modelTempDir / osmPath.filename();
-    test = QFile::copy(toQString(srcPath), toQString(osmPath));
-    if (!test){
-      LOG_FREE(Error, "saveModelTempDir", "Could not copy osm from '" << toString(srcPath) << "' to '" << toString(osmPath) << "'");
+
+    try {
+      openstudio::filesystem::copy_file(srcPath, osmPath, openstudio::filesystem::copy_option::overwrite_if_exists);
+      test = true;
+    } catch (const std::exception& e) {
+      LOG_FREE(Error, "saveModelTempDir", "Could not copy osm from '" << toString(srcPath) << "' to '" << toString(osmPath) << "' error" << e.what());
+      test = false;
     }
 
-    if (QFileInfo(toQString(osmPath)).exists()) {
-
+    if (openstudio::filesystem::is_regular_file(osmPath)) {
       // copy resources
       openstudio::path srcDir = modelTempDir / toPath("resources");
       // Get the companion directory
@@ -509,29 +354,27 @@ QString longPathName(const QString& path)
 
       LOG_FREE(Debug, "saveModelTempDir", "Copying " << toString(srcDir) << " to " << toString(dstDir));
 
-      test = copyDir(toQString(srcDir), toQString(dstDir));
-      if (!test){
+      test = replaceDir(srcDir, dstDir);
+      if (!test) {
         LOG_FREE(Error, "saveModelTempDir", "Could not copy '" << toString(srcDir) << "' to '" << toString(dstDir) << "'");
       }
-
     }
 
     return test;
   }
 
-  bool saveModel(openstudio::model::Model model, const openstudio::path& osmPath, const openstudio::path& modelTempDir)
-  {
+  bool saveModel(openstudio::model::Model model, const openstudio::path& osmPath, const openstudio::path& modelTempDir) {
     // set the workflow's path
     openstudio::path oswPath = modelTempDir / openstudio::toPath("resources/workflow.osw");
     boost::optional<openstudio::path> currentOswPath = model.workflowJSON().oswPath();
-    if (!currentOswPath || (oswPath != currentOswPath.get())){
+    if (!currentOswPath || (oswPath != currentOswPath.get())) {
       model.workflowJSON().setOswPath(oswPath);
     }
 
     // set the seed name
     openstudio::path seedFile = toPath("..") / osmPath.filename();
     boost::optional<openstudio::path> currentSeedFile = model.workflowJSON().seedFile();
-    if (!currentSeedFile || (seedFile != currentSeedFile.get())){
+    if (!currentSeedFile || (seedFile != currentSeedFile.get())) {
       model.workflowJSON().setSeedFile(seedFile);
     }
 
@@ -542,9 +385,9 @@ QString longPathName(const QString& path)
     openstudio::path tempModelPath = modelTempDir / osmPath.filename();
     bool modelSaved = model.save(tempModelPath, true);
 
-    if (modelSaved){
+    if (modelSaved) {
       LOG_FREE(Debug, "saveModel", "Saved model to '" << toString(tempModelPath) << "'");
-    } else{
+    } else {
       LOG_FREE(Error, "saveModel", "Failed to save model to '" << toString(tempModelPath) << "'");
     }
 
@@ -553,11 +396,9 @@ QString longPathName(const QString& path)
     return (modelSaved && tempDirSaved);
   }
 
-  void removeModelTempDir(const openstudio::path& modelTempDir)
-  {
-    removeDir(toQString(modelTempDir));
+  void removeModelTempDir(const openstudio::path& modelTempDir) {
+    removeDir(modelTempDir);
   }
 
-} // model
-} // openstudio
-
+}  // namespace model
+}  // namespace openstudio

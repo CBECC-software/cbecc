@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,30 +33,36 @@
 #include "../ForwardTranslator.hpp"
 
 #include "../../model/AirLoopHVAC.hpp"
+#include "../../model/AirLoopHVAC_Impl.hpp"
 
 #include "../../model/Model.hpp"
 #include "../../model/AvailabilityManagerAssignmentList.hpp"
 #include "../../model/AvailabilityManagerAssignmentList_Impl.hpp"
 #include "../../model/AvailabilityManagerScheduledOn.hpp"
 #include "../../model/Node.hpp"
+#include "../../model/Schedule.hpp"
 #include "../../model/ScheduleCompact.hpp"
 #include "../../model/FanVariableVolume.hpp"
 #include "../../model/FanConstantVolume.hpp"
 #include "../../model/AirTerminalSingleDuctSeriesPIUReheat.hpp"
+#include "../../model/AirTerminalSingleDuctConstantVolumeNoReheat.hpp"
 #include "../../model/CoilHeatingElectric.hpp"
-
+#include "../../model/DesignSpecificationOutdoorAir.hpp"
 #include "../../model/Space.hpp"
 #include "../../model/ThermalZone.hpp"
-#include "../../utilities/geometry/Point3d.hpp"
-
-#include "../../model/AirLoopHVAC_Impl.hpp"
 #include "../../model/ThermalZone_Impl.hpp"
+#include "../../model/AirLoopHVACOutdoorAirSystem.hpp"
+#include "../../model/ControllerOutdoorAir.hpp"
+#include "../../model/ControllerMechanicalVentilation.hpp"
+#include "../../model/DesignDay.hpp"
+#include "../../utilities/geometry/Point3d.hpp"
 
 #include <utilities/idd/AirLoopHVAC_FieldEnums.hxx>
 #include <utilities/idd/AvailabilityManagerAssignmentList_FieldEnums.hxx>
 #include <utilities/idd/Fan_ConstantVolume_FieldEnums.hxx>
 #include <utilities/idd/Fan_VariableVolume_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_SeriesPIU_Reheat_FieldEnums.hxx>
+#include <utilities/idd/Controller_MechanicalVentilation_FieldEnums.hxx>
 
 #include <utilities/idd/IddEnums.hxx>
 #include "../../utilities/idf/IdfExtensibleGroup.hpp"
@@ -67,7 +73,7 @@ using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
 
-Model createModelWithDummyAirLoop(){
+Model createModelWithDummyAirLoop() {
 
   // Generate the example Model
   Model m = openstudio::model::exampleModel();
@@ -101,7 +107,6 @@ Model createModelWithDummyAirLoop(){
   a.addBranchForZone(z, piu);
 
   return m;
-
 }
 
 bool checkAvailabilityManagerList(Workspace w, std::vector<std::string> avm_types) {
@@ -129,7 +134,6 @@ bool checkAvailabilityManagerList(Workspace w, std::vector<std::string> avm_type
   }
 
   return true;
-
 }
 
 bool CheckFanSchedules(Workspace w) {
@@ -146,7 +150,8 @@ bool CheckFanSchedules(Workspace w) {
   WorkspaceObject idf_a_fan = _wo.get();
   std::string idf_a_fan_avail = idf_a_fan.getString(Fan_VariableVolumeFields::AvailabilityScheduleName).get();
   if ("HVAC Operation Schedule" != idf_a_fan_avail) {
-    std::cout << "AirLoop Fan Availability Schedule Name was expected to be 'HVAC Operation Schedule', instead it is " << idf_a_fan_avail << std::endl;
+    std::cout << "AirLoop Fan Availability Schedule Name was expected to be 'HVAC Operation Schedule', instead it is " << idf_a_fan_avail
+              << std::endl;
     return false;
   }
 
@@ -167,12 +172,9 @@ bool CheckFanSchedules(Workspace w) {
   }
 
   return true;
-
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_None) {
-
-
 
   Model m = createModelWithDummyAirLoop();
 
@@ -193,9 +195,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_Non
   // Check that the loop availability schedule ended up in the Fan Schedules
   ASSERT_TRUE(CheckFanSchedules(w));
 
-  m.save(toPath("./AirLoopHVAC_AVM_None.osm"), true);
-  w.save(toPath("./AirLoopHVAC_AVM_None.idf"), true);
-
+  // m.save(toPath("./AirLoopHVAC_AVM_None.osm"), true);
+  // w.save(toPath("./AirLoopHVAC_AVM_None.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_NightCycle) {
@@ -220,9 +221,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_Nig
   // Check that the loop availability schedule ended up in the Fan Schedules
   ASSERT_TRUE(CheckFanSchedules(w));
 
-  m.save(toPath("./AirLoopHVAC_AVM_NightCycle.osm"), true);
-  w.save(toPath("./AirLoopHVAC_AVM_NightCycle.idf"), true);
-
+  // m.save(toPath("./AirLoopHVAC_AVM_NightCycle.osm"), true);
+  // w.save(toPath("./AirLoopHVAC_AVM_NightCycle.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_ScheduledOn) {
@@ -248,11 +248,9 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_Sch
   // Check that the loop availability schedule ended up in the Fan Schedules
   ASSERT_TRUE(CheckFanSchedules(w));
 
-  m.save(toPath("./AirLoopHVAC_AVM_ScheduledOn.osm"), true);
-  w.save(toPath("./AirLoopHVAC_AVM_ScheduledOn.idf"), true);
-
+  // m.save(toPath("./AirLoopHVAC_AVM_ScheduledOn.osm"), true);
+  // w.save(toPath("./AirLoopHVAC_AVM_ScheduledOn.idf"), true);
 }
-
 
 TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_NightCycle_ScheduledOn) {
 
@@ -267,7 +265,6 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_Nig
   AvailabilityManagerScheduledOn avm_schOn(m);
   a.addAvailabilityManager(avm_schOn);
 
-
   // Not for this case
 
   // ForwardTranslate
@@ -279,15 +276,87 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_AvailabilityManagers_Nig
   avm_types.push_back("AvailabilityManager:NightCycle");
   avm_types.push_back("AvailabilityManager:ScheduledOn");
 
-
   ASSERT_TRUE(checkAvailabilityManagerList(w, avm_types));
 
   // Check that the loop availability schedule ended up in the Fan Schedules
   ASSERT_TRUE(CheckFanSchedules(w));
 
-  m.save(toPath("./AirLoopHVAC_AVM_NightCycle_ScheduledOn.osm"), true);
-  w.save(toPath("./AirLoopHVAC_AVM_NightCycle_ScheduledOn.idf"), true);
-
+  // m.save(toPath("./AirLoopHVAC_AVM_NightCycle_ScheduledOn.osm"), true);
+  // w.save(toPath("./AirLoopHVAC_AVM_NightCycle_ScheduledOn.idf"), true);
 }
 
+TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_MultiLoop_ControllerMV) {
+  // Test for #3926
 
+  Model m;
+
+  ThermalZone z(m);
+  Space s(m);
+  DesignSpecificationOutdoorAir dsoa(m);
+  EXPECT_TRUE(dsoa.setOutdoorAirMethod("Sum"));
+  EXPECT_TRUE(dsoa.setOutdoorAirFlowAirChangesperHour(0.5));
+  EXPECT_TRUE(s.setThermalZone(z));
+  EXPECT_TRUE(s.setDesignSpecificationOutdoorAir(dsoa));
+
+  // Absolutely need a sizing period for the Sizing:Zone to be translated
+  DesignDay d(m);
+
+  Schedule alwaysOn = m.alwaysOnDiscreteSchedule();
+
+  AirLoopHVAC a1(m);
+  ControllerOutdoorAir controller_oa1(m);
+  AirLoopHVACOutdoorAirSystem oa_sys1(m, controller_oa1);
+  Node supplyInletNode1 = a1.supplyInletNode();
+  EXPECT_TRUE(oa_sys1.addToNode(supplyInletNode1));
+  AirTerminalSingleDuctConstantVolumeNoReheat atu1(m, alwaysOn);
+  EXPECT_TRUE(a1.multiAddBranchForZone(z, atu1));
+
+  AirLoopHVAC a2(m);
+  ControllerOutdoorAir controller_oa2(m);
+  AirLoopHVACOutdoorAirSystem oa_sys2(m, controller_oa2);
+  Node supplyInletNode2 = a2.supplyInletNode();
+  EXPECT_TRUE(oa_sys2.addToNode(supplyInletNode2));
+  AirTerminalSingleDuctConstantVolumeNoReheat atu2(m, alwaysOn);
+  EXPECT_TRUE(a2.multiAddBranchForZone(z, atu2));
+
+  EXPECT_EQ(2u, z.airLoopHVACs().size());
+
+  ForwardTranslator ft;
+  Workspace w = ft.translateModel(m);
+
+  WorkspaceObjectVector idf_controller_mvs(w.getObjectsByType(IddObjectType::Controller_MechanicalVentilation));
+  ASSERT_EQ(2u, idf_controller_mvs.size());
+
+  int i = 1;
+  for (const auto& idf_controller_mv : idf_controller_mvs) {
+    // This construct is weird but I want to showcase that it works fine for the first ControllerMV but not the second one
+    // so I don't want to use ASSERT_EQ
+    if (idf_controller_mv.numExtensibleGroups() == 1u) {
+      IdfExtensibleGroup w_eg = idf_controller_mv.extensibleGroups()[0];
+      EXPECT_EQ(z.nameString(), w_eg.getString(Controller_MechanicalVentilationExtensibleFields::ZoneorZoneListName).get());
+      EXPECT_EQ(dsoa.nameString(), w_eg.getString(Controller_MechanicalVentilationExtensibleFields::DesignSpecificationOutdoorAirObjectName).get());
+    } else {
+      EXPECT_EQ(1u, idf_controller_mv.numExtensibleGroups()) << "Failed for " << idf_controller_mv.nameString() << "(i = " << i << ")";
+    }
+    ++i;
+  }
+}
+
+TEST_F(EnergyPlusFixture, ForwardTranslator_AirLoopHVAC_designReturnAirFlowFractionofSupplyAirFlow) {
+
+  ForwardTranslator ft;
+
+  Model m;
+  AirLoopHVAC a(m);
+  // Test Ctor value (E+ IDD default)
+  EXPECT_TRUE(a.setDesignReturnAirFlowFractionofSupplyAirFlow(0.5));
+  EXPECT_EQ(0.5, a.designReturnAirFlowFractionofSupplyAirFlow());
+
+  Workspace w = ft.translateModel(m);
+
+  // Get AVM list (only one should be present)
+  WorkspaceObjectVector idfObjs(w.getObjectsByType(IddObjectType::AirLoopHVAC));
+  ASSERT_EQ(1u, idfObjs.size());
+  WorkspaceObject idf_loop(idfObjs[0]);
+  EXPECT_EQ(0.5, idf_loop.getDouble(AirLoopHVACFields::DesignReturnAirFlowFractionofSupplyAirFlow).get());
+}

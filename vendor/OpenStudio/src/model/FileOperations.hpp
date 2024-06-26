@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,24 +36,21 @@
 
 #include <boost/optional.hpp>
 
-#include <QString>
-
 #include <map>
 #include <vector>
-
 
 namespace openstudio {
 namespace model {
 
   class Model;
 
-  // Recursively remove dirName.
+  // Recursively remove directory at path.
   // Returns true on success and false if there is an error.
-  //MODEL_API bool removeDir(const QString & dirName);
+  //MODEL_API bool removeDir(const openstudio::path &path);
 
-  // Recursively copies srcPath to dstPath;
-  // If dstPath already exists it will be removed.
-  //MODEL_API bool copyDir(const QString &srcPath, const QString &dstPath);
+  // Recursively copies sourceDir to destinationDir;
+  // If destinationDir - typically that's the Companion Folder - already exists it will be removed and recreated.
+  //MODEL_API bool replaceDir(const openstudio::path &sourceDir, const openstudio::path &destinationDir)
 
   /// Create a temporary directory for an openstudio model
   /// This is where changes to the files, etc are staged
@@ -71,7 +68,7 @@ namespace model {
   /// Returns true if existing WorkflowJSON was found.  If no existing WorkflowJSON is found, a new one is created in the temp dir.
   //MODEL_API bool attachWorkflow(openstudio::model::Model& model, const openstudio::path& modelTempDir);
 
-  /// Initialize a temporary directory for a given model, if savedPath is passed in then existing companion directories are copied to
+  /// Initialize a temporary directory for a given model, if savedPath is passed in then any existing companion directories are copied to
   /// the temporary directory.  Returns path to the temporary directory.
   /// This method combines calls to createModelTempDir, initializeModelTempDir, updateModelTempDir, and attachWorkflow.
   MODEL_API openstudio::path initializeModel(openstudio::model::Model model);
@@ -91,7 +88,7 @@ namespace model {
   // Removes the model temporary directory.
   MODEL_API void removeModelTempDir(const openstudio::path& modelTempDir);
 
-} // model
-} // openstudio
+}  // namespace model
+}  // namespace openstudio
 
-#endif // MODEL_FILEOPERATIONS_HPP
+#endif  // MODEL_FILEOPERATIONS_HPP

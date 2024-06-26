@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,103 +32,80 @@
 
 #include "ModelAPI.hpp"
 #include "ModelObject_Impl.hpp"
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
 
 namespace openstudio {
 namespace model {
 
-class PlantLoop;
+  class PlantLoop;
 
-namespace detail {
+  namespace detail {
 
-  /** SizingPlant_Impl is a ModelObject_Impl that is the implementation class for SizingPlant.*/
-  class MODEL_API SizingPlant_Impl : public ModelObject_Impl {
+    /** SizingPlant_Impl is a ModelObject_Impl that is the implementation class for SizingPlant.*/
+    class MODEL_API SizingPlant_Impl : public ModelObject_Impl
+    {
 
-    public:
+     public:
+      SizingPlant_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    SizingPlant_Impl(const IdfObject& idfObject,
-                     Model_Impl* model,
-                     bool keepHandle);
+      SizingPlant_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    SizingPlant_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                     Model_Impl* model,
-                     bool keepHandle);
+      SizingPlant_Impl(const SizingPlant_Impl& other, Model_Impl* model, bool keepHandle);
 
-    SizingPlant_Impl(const SizingPlant_Impl& other,
-                     Model_Impl* model,
-                     bool keepHandle);
+      virtual ~SizingPlant_Impl() {}
 
-    virtual ~SizingPlant_Impl() {}
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual bool setParent(ParentObject& newParent) override;
 
-    virtual bool setParent(ParentObject& newParent) override;
+      PlantLoop plantLoop() const;
 
-    PlantLoop plantLoop() const;
+      std::string loopType() const;
 
-    std::string loopType() const;
+      double designLoopExitTemperature() const;
 
-    double designLoopExitTemperature() const;
+      double loopDesignTemperatureDifference() const;
 
-    Quantity getDesignLoopExitTemperature(bool returnIP=false) const;
+      std::string sizingOption() const;
 
-    double loopDesignTemperatureDifference() const;
+      int zoneTimestepsinAveragingWindow() const;
 
-    Quantity getLoopDesignTemperatureDifference(bool returnIP=false) const;
+      std::string coincidentSizingFactorMode() const;
 
-    std::string sizingOption() const;
+      bool setPlantLoop(const PlantLoop& plantLoop);
 
-    int zoneTimestepsinAveragingWindow() const;
+      bool setLoopType(const std::string& loopType);
 
-    std::string coincidentSizingFactorMode() const;
+      bool setDesignLoopExitTemperature(double designLoopExitTemperature);
 
-    bool setPlantLoop(const PlantLoop& plantLoop);
+      bool setLoopDesignTemperatureDifference(double loopDesignTemperatureDifference);
 
-    bool setLoopType(std::string loopType);
+      bool setSizingOption(const std::string& sizingOption);
 
-    bool setDesignLoopExitTemperature(double designLoopExitTemperature);
+      bool setZoneTimestepsinAveragingWindow(int zoneTimestepsinAveragingWindow);
 
-    bool setDesignLoopExitTemperature(const Quantity& designLoopExitTemperature);
+      bool setCoincidentSizingFactorMode(const std::string& coincidentSizingFactorMode);
 
-    bool setLoopDesignTemperatureDifference(double loopDesignTemperatureDifference);
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.SizingPlant");
 
-    bool setLoopDesignTemperatureDifference(const Quantity& loopDesignTemperatureDifference);
+      // TODO: Check the return types of these methods.
+      // Optional getters for use by methods like children() so can remove() if the constructor fails.
+      // There are other ways for the public versions of these getters to fail--perhaps all required
+      // objects should be returned as boost::optionals
+      boost::optional<PlantLoop> optionalPlantLoop() const;
 
-    bool setSizingOption(std::string sizingOption);
+      std::vector<std::string> loopTypeValues() const;
+      boost::optional<ModelObject> plantLoopAsModelObject() const;
 
-    bool setZoneTimestepsinAveragingWindow(int zoneTimestepsinAveragingWindow);
+      bool setPlantLoopAsModelObject(const boost::optional<ModelObject>& modelObject);
+    };
 
-    bool setCoincidentSizingFactorMode(std::string coincidentSizingFactorMode);
+  }  // namespace detail
 
-    protected:
+}  // namespace model
+}  // namespace openstudio
 
-    private:
-
-    REGISTER_LOGGER("openstudio.model.SizingPlant");
-
-    // TODO: Check the return types of these methods.
-    // Optional getters for use by methods like children() so can remove() if the constructor fails.
-    // There are other ways for the public versions of these getters to fail--perhaps all required
-    // objects should be returned as boost::optionals
-    boost::optional<PlantLoop> optionalPlantLoop() const;
-
-    std::vector<std::string> loopTypeValues() const;
-    openstudio::Quantity designLoopExitTemperature_SI() const;
-    openstudio::Quantity designLoopExitTemperature_IP() const;
-    openstudio::Quantity loopDesignTemperatureDifference_SI() const;
-    openstudio::Quantity loopDesignTemperatureDifference_IP() const;
-
-    boost::optional<ModelObject> plantLoopAsModelObject() const;
-
-    bool setPlantLoopAsModelObject(const boost::optional<ModelObject>& modelObject);
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_SIZINGPLANT_IMPL_HPP
+#endif  // MODEL_SIZINGPLANT_IMPL_HPP

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,89 +35,111 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  class ThermalZone;
+  class ModelObjectList;
 
-  class MODEL_API ShadowCalculation_Impl : public ModelObject_Impl {
+  namespace detail {
 
+    class MODEL_API ShadowCalculation_Impl : public ModelObject_Impl
+    {
 
+     public:
+      // constructor
+      ShadowCalculation_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      // construct from workspace
+      ShadowCalculation_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
+      // clone copy constructor
+      ShadowCalculation_Impl(const ShadowCalculation_Impl& other, Model_Impl* model, bool keepHandle);
 
+      // virtual destructor
+      virtual ~ShadowCalculation_Impl() {}
 
+      // return the parent object in the hierarchy
+      virtual boost::optional<ParentObject> parent() const override;
 
-   public:
+      // set the parent, child may have to call methods on the parent
+      virtual bool setParent(ParentObject& newParent) override;
 
-    // constructor
-    ShadowCalculation_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      // Get all output variable names that could be associated with this object.
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    // construct from workspace
-    ShadowCalculation_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                           Model_Impl* model,
-                           bool keepHandle);
+      virtual IddObjectType iddObjectType() const override;
 
-    // clone copy constructor
-    ShadowCalculation_Impl(const ShadowCalculation_Impl& other, Model_Impl* model, bool keepHandle);
+      /** @name Getters */
+      //@{
 
-    // virtual destructor
-    virtual ~ShadowCalculation_Impl(){}
+      std::string shadingCalculationMethod() const;
 
-    // return the parent object in the hierarchy
-    virtual boost::optional<ParentObject> parent() const override;
+      std::string shadingCalculationUpdateFrequencyMethod() const;
+      bool isShadingCalculationUpdateFrequencyMethodDefaulted() const;
 
-    // set the parent, child may have to call methods on the parent
-    virtual bool setParent(ParentObject& newParent) override;
+      int shadingCalculationUpdateFrequency() const;
+      bool isShadingCalculationUpdateFrequencyDefaulted() const;
 
-    // Get all output variable names that could be associated with this object.
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      int maximumFiguresInShadowOverlapCalculations() const;
+      bool isMaximumFiguresInShadowOverlapCalculationsDefaulted() const;
 
-    /** @name Getters */
-    //@{
+      std::string polygonClippingAlgorithm() const;
 
-    int calculationFrequency() const;
+      int pixelCountingResolution() const;
 
-    bool isCalculationFrequencyDefaulted() const;
+      std::string skyDiffuseModelingAlgorithm() const;
 
-    int maximumFiguresInShadowOverlapCalculations() const;
+      bool outputExternalShadingCalculationResults() const;
 
-    bool isMaximumFiguresInShadowOverlapCalculationsDefaulted() const;
+      bool disableSelfShadingWithinShadingZoneGroups() const;
 
-    boost::optional<std::string> polygonClippingAlgorithm() const;
+      bool disableSelfShadingFromShadingZoneGroupstoOtherZones() const;
 
-    boost::optional<std::string> skyDiffuseModelingAlgorithm() const;
+      unsigned int numberofShadingZoneGroups() const;
+      std::vector<ThermalZone> getShadingZoneGroup(unsigned groupIndex) const;
 
-    //@}
-    /** @name Setters */
-    //@{
+      //@}
+      /** @name Setters */
+      //@{
 
-    bool setCalculationFrequency(int calculationFrequency);
+      bool setShadingCalculationMethod(const std::string& shadingCalculationMethod);
 
-    void resetCalculationFrequency();
+      bool setShadingCalculationUpdateFrequencyMethod(const std::string& shadingCalculationUpdateFrequencyMethod);
+      void resetShadingCalculationUpdateFrequencyMethod();
 
-    bool setMaximumFiguresInShadowOverlapCalculations(
-        int maximumFiguresInShadowOverlapCalculations);
+      bool setShadingCalculationUpdateFrequency(int shadingCalculationUpdateFrequency);
+      void resetShadingCalculationUpdateFrequency();
 
-    void resetMaximumFiguresInShadowOverlapCalculations();
+      bool setMaximumFiguresInShadowOverlapCalculations(int maximumFiguresInShadowOverlapCalculations);
+      void resetMaximumFiguresInShadowOverlapCalculations();
 
-    bool setPolygonClippingAlgorithm(boost::optional<std::string> polygonClippingAlgorithm);
+      bool setPolygonClippingAlgorithm(const std::string& polygonClippingAlgorithm);
+      void resetPolygonClippingAlgorithm();
 
-    void resetPolygonClippingAlgorithm();
+      bool setPixelCountingResolution(int pixelCountingResolution);
 
-    bool setSkyDiffuseModelingAlgorithm(boost::optional<std::string> skyDiffuseModelingAlgorithm);
+      bool setSkyDiffuseModelingAlgorithm(const std::string& skyDiffuseModelingAlgorithm);
+      void resetSkyDiffuseModelingAlgorithm();
 
-    void resetSkyDiffuseModelingAlgorithm();
+      bool setOutputExternalShadingCalculationResults(bool outputExternalShadingCalculationResults);
 
-    //@}
+      bool setDisableSelfShadingWithinShadingZoneGroups(bool disableSelfShadingWithinShadingZoneGroups);
 
-    virtual IddObjectType iddObjectType() const override;
+      bool setDisableSelfShadingFromShadingZoneGroupstoOtherZones(bool disableSelfShadingFromShadingZoneGroupstoOtherZones);
 
-   private:
+      bool addShadingZoneGroup(const std::vector<ThermalZone>& thermalZones);
+      bool removeShadingZoneGroup(unsigned groupIndex);
+      void removeAllShadingZoneGroups();
 
-    REGISTER_LOGGER("openstudio.model.ShadowCalculation");
-  };
+      //@}
 
-} // detail
+     private:
+      REGISTER_LOGGER("openstudio.model.ShadowCalculation");
 
-} // model
-} // openstudio
+      boost::optional<ModelObjectList> getShadingZoneGroupModelObjectList(unsigned groupIndex) const;
+    };
 
-#endif // MODEL_SHADOWCALCULATION_IMPL_HPP
+  }  // namespace detail
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_SHADOWCALCULATION_IMPL_HPP

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -63,6 +63,9 @@
 #include "../../model/AirLoopHVACZoneSplitter.hpp"
 #include "../../model/AirTerminalSingleDuctConstantVolumeNoReheat.hpp"
 #include "../../model/AirTerminalSingleDuctVAVReheat.hpp"
+#include "../../model/ZoneHVACPackagedTerminalAirConditioner.hpp"
+#include "../../model/FanConstantVolume.hpp"
+#include "../../model/CoilCoolingDXSingleSpeed.hpp"
 #include "../../model/CoilHeatingElectric.hpp"
 #include "../../model/Node.hpp"
 #include "../../model/Node_Impl.hpp"
@@ -93,10 +96,8 @@ using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
 
-
 // OS only has definition
-TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooledDefinition)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooledDefinition) {
   Model model;
   ElectricEquipmentITEAirCooledDefinition definition(model);
 
@@ -104,13 +105,13 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooledDefinit
   Workspace workspace = forwardTranslator.translateModel(model);
 
   std::string errors;
-  for (const LogMessage& error : forwardTranslator.errors()){
+  for (const LogMessage& error : forwardTranslator.errors()) {
     errors += error.logMessage() + "\n";
   }
   EXPECT_EQ(0u, forwardTranslator.errors().size()) << errors;
 
   std::string warnings;
-  for (const LogMessage& warning : forwardTranslator.warnings()){
+  for (const LogMessage& warning : forwardTranslator.warnings()) {
     warnings += warning.logMessage() + "\n";
   }
   EXPECT_EQ(0u, forwardTranslator.warnings().size()) << warnings;
@@ -119,12 +120,10 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooledDefinit
 
   //model.save(toPath("./ITE_translator_definition.osm"), true);
   //workspace.save(toPath("./ITE_translator_definition.idf"), true);
-
 }
 
 // OS has IT object and definition, but no space associated => supposed to not be translated
-TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_NoSpace)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_NoSpace) {
   Model model;
   ElectricEquipmentITEAirCooledDefinition definition(model);
   ElectricEquipmentITEAirCooled electricEquipmentITEAirCooled(definition);
@@ -136,12 +135,10 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_NoSpac
 
   //model.save(toPath("./ITE_translator_NoSpace.osm"), true);
   //workspace.save(toPath("./ITE_translator_NoSpace.idf"), true);
-
 }
 
 // OS has IT object and definition, and a valid space associated => Expected: to be translated
-TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Space)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Space) {
   Model model;
 
   ThermalZone thermalZone(model);
@@ -166,7 +163,6 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Space)
 
   //model.save(toPath("./ITE_translator_Space.osm"), true);
   //workspace.save(toPath("./ITE_translator_Space.idf"), true);
-
 }
 
 // OS has IT object and definition, and a valid spaceType associated => Expected: to be translated, spacetype in OS but space in E+
@@ -201,12 +197,10 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_SpaceT
 
   //model.save(toPath("./ITE_translator_SpaceType.osm"), true);
   //workspace.save(toPath("./ITE_translator_SpaceType.idf"), true);
-
 }
 
-
- //two spaces, one spaceType, one thermalZone => Expected: IT object associated with the spaceType in OS, 
- //but associated with the thermal zone in E+ after two zones being combined.
+//two spaces, one spaceType, one thermalZone => Expected: IT object associated with the spaceType in OS,
+//but associated with the thermal zone in E+ after two zones being combined.
 TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_OneSpaceType_OneThermalZone) {
   Model model;
 
@@ -254,7 +248,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_OneSpa
   //WorkspaceObject zoneListObject = workspace.getObjectsByType(IddObjectType::ZoneList)[0];
 
   ASSERT_TRUE(electricEquipmentITEAirCooledObject.getString(ElectricEquipment_ITE_AirCooledFields::DesignPowerInputCalculationMethod, false));
-  EXPECT_EQ("Watts/Area", electricEquipmentITEAirCooledObject.getString(ElectricEquipment_ITE_AirCooledFields::DesignPowerInputCalculationMethod, false).get());
+  EXPECT_EQ("Watts/Area",
+            electricEquipmentITEAirCooledObject.getString(ElectricEquipment_ITE_AirCooledFields::DesignPowerInputCalculationMethod, false).get());
 
   ASSERT_TRUE(electricEquipmentITEAirCooledObject.getDouble(ElectricEquipment_ITE_AirCooledFields::WattsperZoneFloorArea, false));
   EXPECT_EQ(20.0, electricEquipmentITEAirCooledObject.getDouble(ElectricEquipment_ITE_AirCooledFields::WattsperZoneFloorArea, false).get());
@@ -264,11 +259,9 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_OneSpa
 
   //model.save(toPath("./ITE_translator_OneSpaceType_OneThermalZone.osm"), true);
   //workspace.save(toPath("./ITE_translator_OneSpaceType_OneThermalZone.idf"), true);
-
 }
 
-
-// two spaces, two spaceTypes, one thermalZone => Expected: IT object associated with each spaceType in OS, 
+// two spaces, two spaceTypes, one thermalZone => Expected: IT object associated with each spaceType in OS,
 // but associated with the thermal zone in E+ after two zones being combined.
 TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_TwoSpaceTypes_OneThermalZone) {
   Model model;
@@ -322,11 +315,17 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_TwoSpa
   bool foundITEquipmentPower2000 = false;
   bool foundITEquipmentPower3000 = false;
   for (int i = 0; i < 2; ++i) {
-    ASSERT_TRUE(workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i].getString(ElectricEquipment_ITE_AirCooledFields::DesignPowerInputCalculationMethod, false));
-    EXPECT_EQ("Watts/Unit", workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i].getString(ElectricEquipment_ITE_AirCooledFields::DesignPowerInputCalculationMethod, false).get());
+    ASSERT_TRUE(workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i].getString(
+      ElectricEquipment_ITE_AirCooledFields::DesignPowerInputCalculationMethod, false));
+    EXPECT_EQ("Watts/Unit", workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i]
+                              .getString(ElectricEquipment_ITE_AirCooledFields::DesignPowerInputCalculationMethod, false)
+                              .get());
 
-    ASSERT_TRUE(workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i].getDouble(ElectricEquipment_ITE_AirCooledFields::WattsperUnit, false));
-    double wattsperUnit = workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i].getDouble(ElectricEquipment_ITE_AirCooledFields::WattsperUnit, false).get();
+    ASSERT_TRUE(workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i].getDouble(
+      ElectricEquipment_ITE_AirCooledFields::WattsperUnit, false));
+    double wattsperUnit = workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[i]
+                            .getDouble(ElectricEquipment_ITE_AirCooledFields::WattsperUnit, false)
+                            .get();
 
     if (wattsperUnit == 2000.0) {
       foundITEquipmentPower2000 = true;
@@ -340,12 +339,10 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_TwoSpa
 
   //model.save(toPath("./ITE_translator_TwoSpaceTypes_OneThermalZone.osm"), true);
   //workspace.save(toPath("./ITE_translator_TwoSpaceTypes_OneThermalZone.idf"), true);
-
 }
 
-
 // test the connection of supply air node under default air flow calculation method "FlowFromSystem", no terminal => expect fail
-// two spaces, one spaceType, two thermalZone => Expected: IT object associated with the spaceType in OS, 
+// two spaces, one spaceType, two thermalZone => Expected: IT object associated with the spaceType in OS,
 // but associated with each thermal zone in E+
 TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_SupplyAirNodeConnection) {
   Model model;
@@ -377,16 +374,14 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Supply
   WorkspaceObject electricEquipmentITEAirCooledObject = workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled)[0];
   IdfObject electricEquipmentITEAirCooledIdfObject = electricEquipmentITEAirCooledObject.idfObject();
   WorkspaceObject zoneObject = workspace.getObjectsByType(IddObjectType::Zone)[0];
-  
+
   ASSERT_TRUE(electricEquipmentITEAirCooledObject.getTarget(ElectricEquipment_ITE_AirCooledFields::ZoneName));
   ASSERT_EQ(nodeName, electricEquipmentITEAirCooledIdfObject.getString(ElectricEquipment_ITE_AirCooledFields::SupplyAirNodeName));
   EXPECT_EQ(zoneObject.handle(), electricEquipmentITEAirCooledObject.getTarget(ElectricEquipment_ITE_AirCooledFields::ZoneName)->handle());
 
   //model.save(toPath("./ITE_translator_SupplyAirNodeConnection.osm"), true);
   //workspace.save(toPath("./ITE_translator_SupplyAirNodeConnection.idf"), true);
-
 }
-
 
 // test constraint1: different air flow calculation methods on IT objects of a same space
 TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Constraint1) {
@@ -395,6 +390,12 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Constr
   ThermalZone thermalZone(model);
   Space space(model);
   space.setThermalZone(thermalZone);
+  AirLoopHVAC airLoopHVAC(model);
+  ScheduleCompact schedule(model);
+  CoilHeatingElectric reheatCoil(model);
+  AirTerminalSingleDuctVAVReheat singleDuctVAVTerminal(model, schedule, reheatCoil);
+
+  EXPECT_TRUE(airLoopHVAC.addBranchForZone(thermalZone, singleDuctVAVTerminal));
 
   ElectricEquipmentITEAirCooledDefinition definition1(model);
   ElectricEquipmentITEAirCooled electricEquipmentITEAirCooled1(definition1);
@@ -421,15 +422,15 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Constr
   EXPECT_EQ(zoneObject.handle(), electricEquipmentITEAirCooledObject2.getTarget(ElectricEquipment_ITE_AirCooledFields::ZoneName)->handle());
 
   ASSERT_TRUE(electricEquipmentITEAirCooledObject1.getString(ElectricEquipment_ITE_AirCooledFields::AirFlowCalculationMethod, false));
-  EXPECT_EQ("FlowControlWithApproachTemperatures", electricEquipmentITEAirCooledObject1.getString(ElectricEquipment_ITE_AirCooledFields::AirFlowCalculationMethod, false).get());
+  EXPECT_EQ("FlowControlWithApproachTemperatures",
+            electricEquipmentITEAirCooledObject1.getString(ElectricEquipment_ITE_AirCooledFields::AirFlowCalculationMethod, false).get());
   ASSERT_TRUE(electricEquipmentITEAirCooledObject2.getString(ElectricEquipment_ITE_AirCooledFields::AirFlowCalculationMethod, false));
-  EXPECT_EQ("FlowControlWithApproachTemperatures", electricEquipmentITEAirCooledObject2.getString(ElectricEquipment_ITE_AirCooledFields::AirFlowCalculationMethod, false).get());
+  EXPECT_EQ("FlowControlWithApproachTemperatures",
+            electricEquipmentITEAirCooledObject2.getString(ElectricEquipment_ITE_AirCooledFields::AirFlowCalculationMethod, false).get());
 
   //model.save(toPath("./ITE_translator_constraint1.osm"), true);
   //workspace.save(toPath("./ITE_translator_constraint1.idf"), true);
-
 }
-
 
 // test constraint2: the connection of supply air node under air flow calculation method "FlowControlWithApproachTemperatures" - single duct VAV reheat terminal
 TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Constraint2) {
@@ -438,18 +439,26 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Constr
   AirLoopHVAC airLoopHVAC(model);
   ThermalZone thermalZone1(model);
   ThermalZone thermalZone2(model);
+  ThermalZone thermalZone3(model);
   Space space1(model);
   Space space2(model);
+  Space space3(model);
   space1.setThermalZone(thermalZone1);
   space2.setThermalZone(thermalZone2);
+  space3.setThermalZone(thermalZone3);
   ScheduleCompact schedule(model);
   CoilHeatingElectric reheatCoil(model);
+  CoilHeatingElectric heatCoil(model);
+  FanConstantVolume fan(model);
+  CoilCoolingDXSingleSpeed coolCoil(model);
   AirTerminalSingleDuctVAVReheat singleDuctVAVTerminal(model, schedule, reheatCoil);
-  AirTerminalSingleDuctUncontrolled singleDuctUncontrolledTerminal(model, schedule);
+  AirTerminalSingleDuctConstantVolumeNoReheat singleDuctTerminal(model, schedule);
+  ZoneHVACPackagedTerminalAirConditioner ptac(model, schedule, fan, heatCoil, coolCoil);
 
   // connect the thermal zone to airloopHVAC
   EXPECT_TRUE(airLoopHVAC.addBranchForZone(thermalZone1, singleDuctVAVTerminal));
-  EXPECT_TRUE(airLoopHVAC.addBranchForZone(thermalZone2, singleDuctUncontrolledTerminal));
+  EXPECT_TRUE(airLoopHVAC.addBranchForZone(thermalZone2, singleDuctTerminal));
+  EXPECT_TRUE(ptac.addToThermalZone(thermalZone3));
 
   ElectricEquipmentITEAirCooledDefinition definition1(model);
   ElectricEquipmentITEAirCooled electricEquipmentITEAirCooled1(definition1);
@@ -461,12 +470,17 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Constr
   electricEquipmentITEAirCooled2.setSpace(space2);
   definition2.setAirFlowCalculationMethod("FlowControlWithApproachTemperatures");
 
+  ElectricEquipmentITEAirCooledDefinition definition3(model);
+  ElectricEquipmentITEAirCooled electricEquipmentITEAirCooled3(definition3);
+  electricEquipmentITEAirCooled3.setSpace(space3);
+  definition3.setAirFlowCalculationMethod("FlowControlWithApproachTemperatures");
+
   ForwardTranslator forwardTranslator;
   Workspace workspace = forwardTranslator.translateModel(model);
 
-  // electricEquipmentITEAirCooled2 was not translated because the terminal is not single duct VAV terminal
+  // electricEquipmentITEAirCooled2 and 3 were not translated because the terminal is not single duct VAV terminal
   ASSERT_EQ(1u, workspace.getObjectsByType(IddObjectType::ElectricEquipment_ITE_AirCooled).size());
-  ASSERT_EQ(2u, workspace.getObjectsByType(IddObjectType::Zone).size());
+  ASSERT_EQ(3u, workspace.getObjectsByType(IddObjectType::Zone).size());
 
   // should return warning that "The FlowControlWithApproachTemperatures only applies to ITE zones with single duct VAV terminal unit."
   std::string warnings;
@@ -477,5 +491,4 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_ElectricEquipmentITEAirCooled_Constr
 
   //model.save(toPath("./ITE_translator_constraint2.osm"), true);
   //workspace.save(toPath("./ITE_translator_constraint2.idf"), true);
-
 }

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,106 +33,97 @@
 #include "../UtilitiesAPI.hpp"
 #include "Logger.hpp"
 
+#if (defined(__GNUC__))
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#endif
+#include <cpprest/http_client.h>
+#if (defined(__GNUC__))
+#  pragma GCC diagnostic pop
+#endif
+
+#include <pugixml.hpp>
+
 #include <string>
 #include <vector>
-#include <QObject>
-
-class QNetworkRequest;
-class QNetworkReply;
-class QNetworkAccessManager;
-class QDomElement;
 
 namespace openstudio {
 
-  /** Class for checking whether a new version of OpenStudio is available
+/** Class for checking whether a new version of OpenStudio is available
       for download.
   **/
-  class UTILITIES_API UpdateManager : public QObject{
+class UTILITIES_API UpdateManager
+{
+ public:
+  /// Constructor with application name
+  UpdateManager(const std::string& appName);
 
-    Q_OBJECT;
+  /// Constructor with application name and alternate test Url
+  UpdateManager(const std::string& appName, const std::string& url);
 
-  public:
+  // virtual destructor
+  virtual ~UpdateManager() {}
 
-    /// Constructor with application name
-    UpdateManager(const std::string& appName);
+  /// returns the application name
+  std::string appName() const;
 
-    /// Constructor with application name and alternate test Url
-    UpdateManager(const std::string& appName, const std::string& url);
+  bool waitForFinished(int msec = 120000) const;
 
-    // virtual destructor
-    virtual ~UpdateManager() {}
+  /// returns true when the manager is finished checking for updates
+  bool finished() const;
 
-    /// returns the application name
-    std::string appName() const;
+  /// returns true if an error occurred while checking for updates,
+  /// must call after update manager is finished
+  bool error() const;
 
-    /// returns true when the manager is finished checking for updates
-    bool finished() const;
+  /// returns true if a new major release is available, manager must have
+  /// finished checking for updates with no errors
+  bool newMajorRelease() const;
 
-    /// returns true if an error occurred while checking for updates,
-    /// must call after update manager is finished
-    bool error() const;
+  /// returns true if a new minor release is available, manager must have
+  /// finished checking for updates with no errors
+  bool newMinorRelease() const;
 
-    /// returns true if a new major release is available, manager must have
-    /// finished checking for updates with no errors
-    bool newMajorRelease() const;
+  /// returns true if a new patch release is available, manager must have
+  /// finished checking for updates with no errors
+  bool newPatchRelease() const;
 
-    /// returns true if a new minor release is available, manager must have
-    /// finished checking for updates with no errors
-    bool newMinorRelease() const;
+  /// returns most recent version, manager must have
+  /// finished checking for updates with no errors
+  std::string mostRecentVersion() const;
 
-    /// returns true if a new patch release is available, manager must have
-    /// finished checking for updates with no errors
-    bool newPatchRelease() const;
+  /// returns url for the most recent download, manager must have
+  /// finished checking for updates with no errors
+  std::string mostRecentDownloadUrl() const;
 
-    /// returns most recent version, manager must have
-    /// finished checking for updates with no errors
-    std::string mostRecentVersion() const;
+  /// returns the description of each update since the current release with the most recent first,
+  /// manager must have finished checking for updates with no errors
+  std::vector<std::string> updateMessages() const;
 
-    /// returns url for the most recent download, manager must have
-    /// finished checking for updates with no errors
-    std::string mostRecentDownloadUrl() const;
+ private:
+  REGISTER_LOGGER("openstudio.utilities.UpdateManager");
 
-    /// returns the description of each update since the current release with the most recent first,
-    /// manager must have finished checking for updates with no errors
-    std::vector<std::string> updateMessages() const;
+  std::string m_appName;
+  bool m_finished;
+  bool m_error;
+  bool m_newMajorRelease;
+  bool m_newMinorRelease;
+  bool m_newPatchRelease;
+  std::string m_mostRecentVersion;
+  std::string m_mostRecentDownloadUrl;
+  std::vector<std::string> m_updateMessages;
 
-  public slots:
+  boost::optional<pplx::task<void>> m_httpResponse;
 
-    void replyFinished(QNetworkReply* reply);
+  void processReply(const std::string& reply);
 
-    // override in ruby classes
-    virtual void replyProcessed();
+  // returns true if release being checked is newer than current release
+  bool checkRelease(const pugi::xml_node& release);
 
-  signals:
+  // url used for checking updates
+  static std::string updateUrl(const std::string& appName);
+};
 
-    void processed();
+}  // namespace openstudio
 
-  private:
-
-    REGISTER_LOGGER("openstudio.utilities.UpdateManager");
-
-    std::string m_appName;
-    bool m_finished;
-    bool m_error;
-    bool m_newMajorRelease;
-    bool m_newMinorRelease;
-    bool m_newPatchRelease;
-    std::string m_mostRecentVersion;
-    std::string m_mostRecentDownloadUrl;
-    std::vector<std::string> m_updateMessages;
-
-    // returns true if release being checked is newer than current release
-    bool checkRelease(const QDomElement& release);
-
-    // url used for checking updates
-    std::string updateUrl() const;
-
-    QNetworkAccessManager* m_manager;
-    QNetworkRequest* m_request;
-    QNetworkReply* m_reply;
-
-  };
-
-} // openstudio
-
-#endif // UTILITIES_CORE_UPDATEMANAGER_HPP
+#endif  // UTILITIES_CORE_UPDATEMANAGER_HPP

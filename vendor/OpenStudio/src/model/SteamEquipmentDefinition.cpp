@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,400 +36,369 @@
 #include <utilities/idd/IddEnums.hxx>
 
 #include "../utilities/core/Assert.hpp"
+#include "../utilities/core/Compare.hpp"
 
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  SteamEquipmentDefinition_Impl::SteamEquipmentDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
-    : SpaceLoadDefinition_Impl(idfObject,model,keepHandle)
-  {
-    OS_ASSERT(idfObject.iddObject().type() == SteamEquipmentDefinition::iddObjectType());
-  }
+    SteamEquipmentDefinition_Impl::SteamEquipmentDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
+      : SpaceLoadDefinition_Impl(idfObject, model, keepHandle) {
+      OS_ASSERT(idfObject.iddObject().type() == SteamEquipmentDefinition::iddObjectType());
+    }
 
-  SteamEquipmentDefinition_Impl::SteamEquipmentDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                                               Model_Impl* model,
-                                                               bool keepHandle)
-    : SpaceLoadDefinition_Impl(other,model,keepHandle)
-  {
-    OS_ASSERT(other.iddObject().type() == SteamEquipmentDefinition::iddObjectType());
-  }
+    SteamEquipmentDefinition_Impl::SteamEquipmentDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model,
+                                                                 bool keepHandle)
+      : SpaceLoadDefinition_Impl(other, model, keepHandle) {
+      OS_ASSERT(other.iddObject().type() == SteamEquipmentDefinition::iddObjectType());
+    }
 
-  SteamEquipmentDefinition_Impl::SteamEquipmentDefinition_Impl(const SteamEquipmentDefinition_Impl& other,
-                                                               Model_Impl* model,
-                                                               bool keepHandle)
-    : SpaceLoadDefinition_Impl(other,model,keepHandle)
-  {}
+    SteamEquipmentDefinition_Impl::SteamEquipmentDefinition_Impl(const SteamEquipmentDefinition_Impl& other, Model_Impl* model, bool keepHandle)
+      : SpaceLoadDefinition_Impl(other, model, keepHandle) {}
 
-  // TODO: remove
-  const std::vector<std::string>& SteamEquipmentDefinition_Impl::outputVariableNames() const
-  {
-    static std::vector<std::string> result;
+    const std::vector<std::string>& SteamEquipmentDefinition_Impl::outputVariableNames() const {
+      static const std::vector<std::string> result;
       // Not appropriate: output is listed in SteamEquipment instead
-    return result;
-  }
+      return result;
+    }
 
-  IddObjectType SteamEquipmentDefinition_Impl::iddObjectType() const {
-    return SteamEquipmentDefinition::iddObjectType();
-  }
+    IddObjectType SteamEquipmentDefinition_Impl::iddObjectType() const {
+      return SteamEquipmentDefinition::iddObjectType();
+    }
 
-  ATTRIBUTE_IMPLEMENTATION(1,0,0,designLevel,DesignLevel,
-                           SteamEquipmentDefinition,0,OS_SteamEquipment_Definition,DesignLevel)
+    std::string SteamEquipmentDefinition_Impl::designLevelCalculationMethod() const {
+      boost::optional<std::string> value = getString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
 
-  ATTRIBUTE_IMPLEMENTATION(1,0,0,wattsperSpaceFloorArea,WattsperSpaceFloorArea,
-                           SteamEquipmentDefinition,0,OS_SteamEquipment_Definition,WattsperSpaceFloorArea)
+    boost::optional<double> SteamEquipmentDefinition_Impl::designLevel() const {
+      return getDouble(OS_SteamEquipment_DefinitionFields::DesignLevel, true);
+    }
 
-  ATTRIBUTE_IMPLEMENTATION(1,0,0,wattsperPerson,WattsperPerson,
-                           SteamEquipmentDefinition,0,OS_SteamEquipment_Definition,WattsperPerson)
+    boost::optional<double> SteamEquipmentDefinition_Impl::wattsperSpaceFloorArea() const {
+      return getDouble(OS_SteamEquipment_DefinitionFields::WattsperSpaceFloorArea, true);
+    }
 
-  ATTRIBUTE_IMPLEMENTATION(0,1,0,fractionRadiant,FractionRadiant,
-                           SteamEquipmentDefinition,0,OS_SteamEquipment_Definition,FractionRadiant)
+    boost::optional<double> SteamEquipmentDefinition_Impl::wattsperPerson() const {
+      return getDouble(OS_SteamEquipment_DefinitionFields::WattsperPerson, true);
+    }
 
-  ATTRIBUTE_IMPLEMENTATION(0,1,0,fractionLatent,FractionLatent,
-                           SteamEquipmentDefinition,0,OS_SteamEquipment_Definition,FractionLatent)
+    double SteamEquipmentDefinition_Impl::fractionLatent() const {
+      boost::optional<double> value = getDouble(OS_SteamEquipment_DefinitionFields::FractionLatent, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
 
-  ATTRIBUTE_IMPLEMENTATION(0,1,0,fractionLost,FractionLost,
-                           SteamEquipmentDefinition,0,OS_SteamEquipment_Definition,FractionLost)
+    bool SteamEquipmentDefinition_Impl::isFractionLatentDefaulted() const {
+      return isEmpty(OS_SteamEquipment_DefinitionFields::FractionLatent);
+    }
 
-  std::string SteamEquipmentDefinition_Impl::designLevelCalculationMethod() const {
-    boost::optional<std::string> value = getString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
+    double SteamEquipmentDefinition_Impl::fractionRadiant() const {
+      boost::optional<double> value = getDouble(OS_SteamEquipment_DefinitionFields::FractionRadiant, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
 
-  boost::optional<double> SteamEquipmentDefinition_Impl::designLevel() const {
-    return getDouble(OS_SteamEquipment_DefinitionFields::DesignLevel,true);
-  }
+    bool SteamEquipmentDefinition_Impl::isFractionRadiantDefaulted() const {
+      return isEmpty(OS_SteamEquipment_DefinitionFields::FractionRadiant);
+    }
 
-  boost::optional<double> SteamEquipmentDefinition_Impl::wattsperSpaceFloorArea() const {
-    return getDouble(OS_SteamEquipment_DefinitionFields::WattsperSpaceFloorArea,true);
-  }
+    double SteamEquipmentDefinition_Impl::fractionLost() const {
+      boost::optional<double> value = getDouble(OS_SteamEquipment_DefinitionFields::FractionLost, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
 
-  boost::optional<double> SteamEquipmentDefinition_Impl::wattsperPerson() const {
-    return getDouble(OS_SteamEquipment_DefinitionFields::WattsperPerson,true);
-  }
+    bool SteamEquipmentDefinition_Impl::isFractionLostDefaulted() const {
+      return isEmpty(OS_SteamEquipment_DefinitionFields::FractionLost);
+    }
 
-  double SteamEquipmentDefinition_Impl::fractionLatent() const {
-    boost::optional<double> value = getDouble(OS_SteamEquipment_DefinitionFields::FractionLatent,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  //bool SteamEquipmentDefinition_Impl::isFractionLatentDefaulted() const {
-  //  return isEmpty(OS_SteamEquipment_DefinitionFields::FractionLatent);
-  //}
-
-  double SteamEquipmentDefinition_Impl::fractionRadiant() const {
-    boost::optional<double> value = getDouble(OS_SteamEquipment_DefinitionFields::FractionRadiant,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  //bool SteamEquipmentDefinition_Impl::isFractionRadiantDefaulted() const {
-  //  return isEmpty(OS_SteamEquipment_DefinitionFields::FractionRadiant);
-  //}
-
-  double SteamEquipmentDefinition_Impl::fractionLost() const {
-    boost::optional<double> value = getDouble(OS_SteamEquipment_DefinitionFields::FractionLost,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  //bool SteamEquipmentDefinition_Impl::isFractionLostDefaulted() const {
-  //  return isEmpty(OS_SteamEquipment_DefinitionFields::FractionLost);
-  //}
-
-  bool SteamEquipmentDefinition_Impl::setDesignLevel(boost::optional<double> designLevel) {
-    bool result = false;
-    if (designLevel) {
-      result = setDouble(OS_SteamEquipment_DefinitionFields::DesignLevel, designLevel.get());
-      if (result) {
-        result = setString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod,"EquipmentLevel");
-        OS_ASSERT(result);
-        result = setWattsperSpaceFloorArea(boost::none);
-        OS_ASSERT(result);
-        result = setWattsperPerson(boost::none);
-        OS_ASSERT(result);
+    bool SteamEquipmentDefinition_Impl::setDesignLevel(boost::optional<double> designLevel) {
+      bool result = false;
+      if (designLevel) {
+        result = setDouble(OS_SteamEquipment_DefinitionFields::DesignLevel, designLevel.get());
+        if (result) {
+          result = setString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod, "EquipmentLevel");
+          OS_ASSERT(result);
+          result = setWattsperSpaceFloorArea(boost::none);
+          OS_ASSERT(result);
+          result = setWattsperPerson(boost::none);
+          OS_ASSERT(result);
+        }
+      } else {
+        result = setString(OS_SteamEquipment_DefinitionFields::DesignLevel, "");
       }
-    } else {
-      result = setString(OS_SteamEquipment_DefinitionFields::DesignLevel, "");
+      return result;
     }
-    return result;
-  }
 
-  bool SteamEquipmentDefinition_Impl::setWattsperSpaceFloorArea(boost::optional<double> wattsperSpaceFloorArea) {
-    bool result = false;
-    if (wattsperSpaceFloorArea) {
-      result = setDouble(OS_SteamEquipment_DefinitionFields::WattsperSpaceFloorArea, wattsperSpaceFloorArea.get());
-      if (result) {
-        result = setString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod,"Watts/Area");
-        OS_ASSERT(result);
-        result = setDesignLevel(boost::none);
-        OS_ASSERT(result);
-        result = setWattsperPerson(boost::none);
-        OS_ASSERT(result);
+    bool SteamEquipmentDefinition_Impl::setWattsperSpaceFloorArea(boost::optional<double> wattsperSpaceFloorArea) {
+      bool result = false;
+      if (wattsperSpaceFloorArea) {
+        result = setDouble(OS_SteamEquipment_DefinitionFields::WattsperSpaceFloorArea, wattsperSpaceFloorArea.get());
+        if (result) {
+          result = setString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod, "Watts/Area");
+          OS_ASSERT(result);
+          result = setDesignLevel(boost::none);
+          OS_ASSERT(result);
+          result = setWattsperPerson(boost::none);
+          OS_ASSERT(result);
+        }
+      } else {
+        result = setString(OS_SteamEquipment_DefinitionFields::WattsperSpaceFloorArea, "");
       }
-    } else {
-      result = setString(OS_SteamEquipment_DefinitionFields::WattsperSpaceFloorArea, "");
+      return result;
     }
-    return result;
-  }
 
-  bool SteamEquipmentDefinition_Impl::setWattsperPerson(boost::optional<double> wattsperPerson) {
-    bool result = false;
-    if (wattsperPerson) {
-      result = setDouble(OS_SteamEquipment_DefinitionFields::WattsperPerson, wattsperPerson.get());
-      if (result) {
-        result = setString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod,"Watts/Person");
-        OS_ASSERT(result);
-        result = setDesignLevel(boost::none);
-        OS_ASSERT(result);
-        result = setWattsperSpaceFloorArea(boost::none);
-        OS_ASSERT(result);
+    bool SteamEquipmentDefinition_Impl::setWattsperPerson(boost::optional<double> wattsperPerson) {
+      bool result = false;
+      if (wattsperPerson) {
+        result = setDouble(OS_SteamEquipment_DefinitionFields::WattsperPerson, wattsperPerson.get());
+        if (result) {
+          result = setString(OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod, "Watts/Person");
+          OS_ASSERT(result);
+          result = setDesignLevel(boost::none);
+          OS_ASSERT(result);
+          result = setWattsperSpaceFloorArea(boost::none);
+          OS_ASSERT(result);
+        }
+      } else {
+        result = setString(OS_SteamEquipment_DefinitionFields::WattsperPerson, "");
       }
-    } else {
-      result = setString(OS_SteamEquipment_DefinitionFields::WattsperPerson, "");
+      return result;
     }
+
+    bool SteamEquipmentDefinition_Impl::setFractionLatent(double fractionLatent) {
+
+      double fractionRadiantAndLost = fractionRadiant() + fractionLost();
+      if ((fractionLatent + fractionRadiantAndLost) > 1.0) {
+        LOG(Error, "Radiant Fraction and Lost Fraction sum to " << fractionRadiantAndLost << " and you supplied a Latent Fraction of "
+                                                                << fractionLatent << " which would result in a sum greater than 1.0");
+        return false;
+      }
+      bool result = setDouble(OS_SteamEquipment_DefinitionFields::FractionLatent, fractionLatent);
+      return result;
+    }
+
+    void SteamEquipmentDefinition_Impl::resetFractionLatent() {
+      bool result = setString(OS_SteamEquipment_DefinitionFields::FractionLatent, "");
+      OS_ASSERT(result);
+    }
+
+    bool SteamEquipmentDefinition_Impl::setFractionRadiant(double fractionRadiant) {
+
+      double fractionLatentAndLost = fractionLatent() + fractionLost();
+      if ((fractionRadiant + fractionLatentAndLost) > 1.0) {
+        LOG(Error, "Latent Fraction and Lost Fraction sum to " << fractionLatentAndLost << " and you supplied a Radiant Fraction of "
+                                                               << fractionRadiant << " which would result in a sum greater than 1.0");
+        return false;
+      }
+      bool result = setDouble(OS_SteamEquipment_DefinitionFields::FractionRadiant, fractionRadiant);
+      return result;
+    }
+
+    void SteamEquipmentDefinition_Impl::resetFractionRadiant() {
+      bool result = setString(OS_SteamEquipment_DefinitionFields::FractionRadiant, "");
+      OS_ASSERT(result);
+    }
+
+    bool SteamEquipmentDefinition_Impl::setFractionLost(double fractionLost) {
+
+      double fractionLatentAndRadiant = fractionLatent() + fractionRadiant();
+      if ((fractionLost + fractionLatentAndRadiant) > 1.0) {
+        LOG(Error, "Latent Fraction and Radiant Fraction sum to " << fractionLatentAndRadiant << " and you supplied a Lost Fraction of "
+                                                                  << fractionLost << " which would result in a sum greater than 1.0");
+        return false;
+      }
+      bool result = setDouble(OS_SteamEquipment_DefinitionFields::FractionLost, fractionLost);
+      return result;
+    }
+
+    void SteamEquipmentDefinition_Impl::resetFractionLost() {
+      bool result = setString(OS_SteamEquipment_DefinitionFields::FractionLost, "");
+      OS_ASSERT(result);
+    }
+
+    double SteamEquipmentDefinition_Impl::getDesignLevel(double floorArea, double numPeople) const {
+      std::string method = designLevelCalculationMethod();
+
+      if (openstudio::istringEqual("EquipmentLevel", method)) {
+        return designLevel().get();
+      } else if (openstudio::istringEqual("Watts/Area", method)) {
+        return wattsperSpaceFloorArea().get() * floorArea;
+      } else if (openstudio::istringEqual("Watts/Person", method)) {
+        return wattsperPerson().get() * numPeople;
+      }
+
+      OS_ASSERT(false);
+      return 0.0;
+    }
+
+    double SteamEquipmentDefinition_Impl::getPowerPerFloorArea(double floorArea, double numPeople) const {
+      std::string method = designLevelCalculationMethod();
+
+      if (openstudio::istringEqual("EquipmentLevel", method)) {
+        return designLevel().get() / floorArea;
+      } else if (openstudio::istringEqual("Watts/Area", method)) {
+        return wattsperSpaceFloorArea().get();
+      } else if (openstudio::istringEqual("Watts/Person", method)) {
+        return wattsperPerson().get() * numPeople / floorArea;
+      }
+
+      OS_ASSERT(false);
+      return 0.0;
+    }
+
+    double SteamEquipmentDefinition_Impl::getPowerPerPerson(double floorArea, double numPeople) const {
+      std::string method = designLevelCalculationMethod();
+
+      if (openstudio::istringEqual("EquipmentLevel", method)) {
+        return designLevel().get() / numPeople;
+      } else if (openstudio::istringEqual("Watts/Area", method)) {
+        return wattsperSpaceFloorArea().get() * floorArea / numPeople;
+      } else if (openstudio::istringEqual("Watts/Person", method)) {
+        return wattsperPerson().get();
+      }
+
+      OS_ASSERT(false);
+      return 0.0;
+    }
+
+    bool SteamEquipmentDefinition_Impl::setDesignLevelCalculationMethod(const std::string& method, double floorArea, double numPeople) {
+      if (openstudio::istringEqual("equipmentlevel", method)) {
+        return setDesignLevel(getDesignLevel(floorArea, numPeople));
+      } else if (openstudio::istringEqual("watts/area", method)) {
+        return setWattsperSpaceFloorArea(getPowerPerFloorArea(floorArea, numPeople));
+      } else if (openstudio::istringEqual("watts/person", method)) {
+        return setWattsperPerson(getPowerPerPerson(floorArea, numPeople));
+      }
+
+      return false;
+    }
+
+    std::vector<EMSActuatorNames> SteamEquipmentDefinition_Impl::emsActuatorNames() const {
+      std::vector<EMSActuatorNames> actuators{{"SteamEquipment", "District Heating Power Level"}};
+      return actuators;
+    }
+
+    std::vector<std::string> SteamEquipmentDefinition_Impl::emsInternalVariableNames() const {
+      std::vector<std::string> types{"Process Steam District Heat Design Level"};
+      return types;
+    }
+
+  }  // namespace detail
+
+  SteamEquipmentDefinition::SteamEquipmentDefinition(const Model& model) : SpaceLoadDefinition(SteamEquipmentDefinition::iddObjectType(), model) {
+    OS_ASSERT(getImpl<detail::SteamEquipmentDefinition_Impl>());
+    setDesignLevel(0.0);
+  }
+
+  IddObjectType SteamEquipmentDefinition::iddObjectType() {
+    IddObjectType result(IddObjectType::OS_SteamEquipment_Definition);
     return result;
   }
 
-  bool SteamEquipmentDefinition_Impl::setFractionLatent(double fractionLatent) {
-    bool result = setDouble(OS_SteamEquipment_DefinitionFields::FractionLatent, fractionLatent);
-    return result;
+  std::vector<std::string> SteamEquipmentDefinition::validDesignLevelCalculationMethodValues() {
+    return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(), OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod);
   }
 
-  //void SteamEquipmentDefinition_Impl::resetFractionLatent() {
-  //  bool result = setString(OS_SteamEquipment_DefinitionFields::FractionLatent, "");
-  //  OS_ASSERT(result);
-  //}
-
-  bool SteamEquipmentDefinition_Impl::setFractionRadiant(double fractionRadiant) {
-    bool result = setDouble(OS_SteamEquipment_DefinitionFields::FractionRadiant, fractionRadiant);
-    return result;
+  std::string SteamEquipmentDefinition::designLevelCalculationMethod() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->designLevelCalculationMethod();
   }
 
-  //void SteamEquipmentDefinition_Impl::resetFractionRadiant() {
-  //  bool result = setString(OS_SteamEquipment_DefinitionFields::FractionRadiant, "");
-  //  OS_ASSERT(result);
-  //}
-
-  bool SteamEquipmentDefinition_Impl::setFractionLost(double fractionLost) {
-    bool result = setDouble(OS_SteamEquipment_DefinitionFields::FractionLost, fractionLost);
-    return result;
+  boost::optional<double> SteamEquipmentDefinition::designLevel() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->designLevel();
   }
 
-  //void SteamEquipmentDefinition_Impl::resetFractionLost() {
-  //  bool result = setString(OS_SteamEquipment_DefinitionFields::FractionLost, "");
-  //  OS_ASSERT(result);
-  //}
-
-  double SteamEquipmentDefinition_Impl::getDesignLevel(double floorArea, double numPeople) const
-  {
-    std::string method = designLevelCalculationMethod();
-
-    if (method == "EquipmentLevel") {
-      return designLevel().get();
-    }
-    else if (method == "Watts/Area") {
-      return wattsperSpaceFloorArea().get() * floorArea;
-    }
-    else if (method == "Watts/Person") {
-      return wattsperPerson().get() * numPeople;
-    }
-
-    OS_ASSERT(false);
-    return 0.0;
+  boost::optional<double> SteamEquipmentDefinition::wattsperSpaceFloorArea() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->wattsperSpaceFloorArea();
   }
 
-  double SteamEquipmentDefinition_Impl::getPowerPerFloorArea(double floorArea,
-                                                             double numPeople) const
-  {
-    std::string method = designLevelCalculationMethod();
-
-    if (method == "EquipmentLevel") {
-      return designLevel().get() / floorArea;
-    }
-    else if (method == "Watts/Area") {
-      return wattsperSpaceFloorArea().get();
-    }
-    else if (method == "Watts/Person") {
-      return wattsperPerson().get() * numPeople / floorArea;
-    }
-
-    OS_ASSERT(false);
-    return 0.0;
+  boost::optional<double> SteamEquipmentDefinition::wattsperPerson() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->wattsperPerson();
   }
 
-  double SteamEquipmentDefinition_Impl::getPowerPerPerson(double floorArea,
-                                                          double numPeople) const
-  {
-    std::string method = designLevelCalculationMethod();
-
-    if (method == "EquipmentLevel") {
-      return designLevel().get() / numPeople;
-    }
-    else if (method == "Watts/Area") {
-      return wattsperSpaceFloorArea().get() * floorArea / numPeople;
-    }
-    else if (method == "Watts/Person") {
-      return wattsperPerson().get();
-    }
-
-    OS_ASSERT(false);
-    return 0.0;
+  double SteamEquipmentDefinition::fractionLatent() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->fractionLatent();
   }
 
-  bool SteamEquipmentDefinition_Impl::setDesignLevelCalculationMethod(const std::string& method,
-                                                                      double floorArea,
-                                                                      double numPeople)
-  {
-    std::string wmethod(method);
-    boost::to_lower(wmethod);
-
-    if (wmethod == "equipmentlevel") {
-      return setDesignLevel(getDesignLevel(floorArea,numPeople));
-    }
-    else if (wmethod == "watts/area") {
-      return setWattsperSpaceFloorArea(getPowerPerFloorArea(floorArea,numPeople));
-    }
-    else if (wmethod == "watts/person") {
-      return setWattsperPerson(getPowerPerPerson(floorArea,numPeople));
-    }
-
-    return false;
+  bool SteamEquipmentDefinition::isFractionLatentDefaulted() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->isFractionLatentDefaulted();
   }
 
-  std::vector<EMSActuatorNames> SteamEquipmentDefinition_Impl::emsActuatorNames() const {
-    std::vector<EMSActuatorNames> actuators{ { "SteamEquipment", "District Heating Power Level" } };
-    return actuators;
+  double SteamEquipmentDefinition::fractionRadiant() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->fractionRadiant();
   }
 
-  std::vector<std::string> SteamEquipmentDefinition_Impl::emsInternalVariableNames() const {
-    std::vector<std::string> types{ "Process Steam District Heat Design Level" };
-    return types;
+  bool SteamEquipmentDefinition::isFractionRadiantDefaulted() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->isFractionRadiantDefaulted();
   }
 
-} // detail
+  double SteamEquipmentDefinition::fractionLost() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->fractionLost();
+  }
 
-SteamEquipmentDefinition::SteamEquipmentDefinition(const Model& model)
-  : SpaceLoadDefinition(SteamEquipmentDefinition::iddObjectType(),model)
-{
-  OS_ASSERT(getImpl<detail::SteamEquipmentDefinition_Impl>());
-  setDesignLevel(0.0);
-}
+  bool SteamEquipmentDefinition::isFractionLostDefaulted() const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->isFractionLostDefaulted();
+  }
 
-IddObjectType SteamEquipmentDefinition::iddObjectType() {
-  IddObjectType result(IddObjectType::OS_SteamEquipment_Definition);
-  return result;
-}
+  bool SteamEquipmentDefinition::setDesignLevel(double designLevel) {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->setDesignLevel(designLevel);
+  }
 
-std::vector<std::string> SteamEquipmentDefinition::validDesignLevelCalculationMethodValues() {
-  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
-                        OS_SteamEquipment_DefinitionFields::DesignLevelCalculationMethod);
-}
+  bool SteamEquipmentDefinition::setWattsperSpaceFloorArea(double wattsperSpaceFloorArea) {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->setWattsperSpaceFloorArea(wattsperSpaceFloorArea);
+  }
 
-std::string SteamEquipmentDefinition::designLevelCalculationMethod() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->designLevelCalculationMethod();
-}
+  bool SteamEquipmentDefinition::setWattsperPerson(double wattsperPerson) {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->setWattsperPerson(wattsperPerson);
+  }
 
-boost::optional<double> SteamEquipmentDefinition::designLevel() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->designLevel();
-}
+  bool SteamEquipmentDefinition::setFractionLatent(double fractionLatent) {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->setFractionLatent(fractionLatent);
+  }
 
-boost::optional<double> SteamEquipmentDefinition::wattsperSpaceFloorArea() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->wattsperSpaceFloorArea();
-}
+  void SteamEquipmentDefinition::resetFractionLatent() {
+    getImpl<detail::SteamEquipmentDefinition_Impl>()->resetFractionLatent();
+  }
 
-boost::optional<double> SteamEquipmentDefinition::wattsperPerson() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->wattsperPerson();
-}
+  bool SteamEquipmentDefinition::setFractionRadiant(double fractionRadiant) {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->setFractionRadiant(fractionRadiant);
+  }
 
-double SteamEquipmentDefinition::fractionLatent() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->fractionLatent();
-}
+  void SteamEquipmentDefinition::resetFractionRadiant() {
+    getImpl<detail::SteamEquipmentDefinition_Impl>()->resetFractionRadiant();
+  }
 
-bool SteamEquipmentDefinition::isFractionLatentDefaulted() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->isFractionLatentDefaulted();
-}
+  bool SteamEquipmentDefinition::setFractionLost(double fractionLost) {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->setFractionLost(fractionLost);
+  }
 
-double SteamEquipmentDefinition::fractionRadiant() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->fractionRadiant();
-}
+  void SteamEquipmentDefinition::resetFractionLost() {
+    getImpl<detail::SteamEquipmentDefinition_Impl>()->resetFractionLost();
+  }
 
-bool SteamEquipmentDefinition::isFractionRadiantDefaulted() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->isFractionRadiantDefaulted();
-}
+  double SteamEquipmentDefinition::getDesignLevel(double floorArea, double numPeople) const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->getDesignLevel(floorArea, numPeople);
+  }
 
-double SteamEquipmentDefinition::fractionLost() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->fractionLost();
-}
+  double SteamEquipmentDefinition::getPowerPerFloorArea(double floorArea, double numPeople) const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->getPowerPerFloorArea(floorArea, numPeople);
+  }
 
-bool SteamEquipmentDefinition::isFractionLostDefaulted() const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->isFractionLostDefaulted();
-}
+  double SteamEquipmentDefinition::getPowerPerPerson(double floorArea, double numPeople) const {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->getPowerPerPerson(floorArea, numPeople);
+  }
 
-bool SteamEquipmentDefinition::setDesignLevel(double designLevel) {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->setDesignLevel(designLevel);
-}
+  bool SteamEquipmentDefinition::setDesignLevelCalculationMethod(const std::string& method, double floorArea, double numPeople) {
+    return getImpl<detail::SteamEquipmentDefinition_Impl>()->setDesignLevelCalculationMethod(method, floorArea, numPeople);
+  }
 
-bool SteamEquipmentDefinition::setWattsperSpaceFloorArea(double wattsperSpaceFloorArea) {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->setWattsperSpaceFloorArea(wattsperSpaceFloorArea);
-}
+  /// @cond
+  SteamEquipmentDefinition::SteamEquipmentDefinition(std::shared_ptr<detail::SteamEquipmentDefinition_Impl> impl)
+    : SpaceLoadDefinition(std::move(impl)) {}
+  /// @endcond
 
-bool SteamEquipmentDefinition::setWattsperPerson(double wattsperPerson) {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->setWattsperPerson(wattsperPerson);
-}
-
-bool SteamEquipmentDefinition::setFractionLatent(double fractionLatent) {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->setFractionLatent(fractionLatent);
-}
-
-void SteamEquipmentDefinition::resetFractionLatent() {
-  getImpl<detail::SteamEquipmentDefinition_Impl>()->resetFractionLatent();
-}
-
-bool SteamEquipmentDefinition::setFractionRadiant(double fractionRadiant) {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->setFractionRadiant(fractionRadiant);
-}
-
-void SteamEquipmentDefinition::resetFractionRadiant() {
-  getImpl<detail::SteamEquipmentDefinition_Impl>()->resetFractionRadiant();
-}
-
-bool SteamEquipmentDefinition::setFractionLost(double fractionLost) {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->setFractionLost(fractionLost);
-}
-
-void SteamEquipmentDefinition::resetFractionLost() {
-  getImpl<detail::SteamEquipmentDefinition_Impl>()->resetFractionLost();
-}
-
-double SteamEquipmentDefinition::getDesignLevel(double floorArea, double numPeople) const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->getDesignLevel(floorArea,numPeople);
-}
-
-double SteamEquipmentDefinition::getPowerPerFloorArea(double floorArea, double numPeople) const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->getPowerPerFloorArea(floorArea,numPeople);
-}
-
-double SteamEquipmentDefinition::getPowerPerPerson(double floorArea, double numPeople) const {
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->getPowerPerPerson(floorArea,numPeople);
-}
-
-bool SteamEquipmentDefinition::setDesignLevelCalculationMethod(const std::string& method,
-                                     double floorArea,
-                                     double numPeople)
-{
-  return getImpl<detail::SteamEquipmentDefinition_Impl>()->setDesignLevelCalculationMethod(method,floorArea,numPeople);
-}
-
-/// @cond
-SteamEquipmentDefinition::SteamEquipmentDefinition(std::shared_ptr<detail::SteamEquipmentDefinition_Impl> impl)
-  : SpaceLoadDefinition(std::move(impl))
-{}
-/// @endcond
-
-} // model
-} // openstudio
-
+}  // namespace model
+}  // namespace openstudio

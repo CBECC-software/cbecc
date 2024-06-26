@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,249 +37,258 @@ namespace openstudio {
 
 namespace model {
 
-class Schedule;
-// class CurveLinear;
+  class RefrigerationSystem;
+  class Schedule;
+  // class CurveLinear;
 
-namespace detail {
+  namespace detail {
 
-  class RefrigerationAirChiller_Impl;
+    class RefrigerationAirChiller_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** RefrigerationAirChiller is a ZoneHVACComponent that wraps the OpenStudio IDD object 'OS:ZoneHVAC:Refrigeration:AirChiller'. */
-class MODEL_API RefrigerationAirChiller : public ZoneHVACComponent {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** RefrigerationAirChiller is a ZoneHVACComponent that wraps the OpenStudio IDD object 'OS:ZoneHVAC:Refrigeration:AirChiller'. */
+  class MODEL_API RefrigerationAirChiller : public ZoneHVACComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit RefrigerationAirChiller(const Model& model, Schedule& defrostSchedule);
+    explicit RefrigerationAirChiller(const Model& model, Schedule& defrostSchedule);
 
-  virtual ~RefrigerationAirChiller() {}
+    virtual ~RefrigerationAirChiller() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> capacityRatingTypeValues();
+    static std::vector<std::string> capacityRatingTypeValues();
 
-  // static std::vector<std::string> capacityCorrectionCurveTypeValues();
+    // static std::vector<std::string> capacityCorrectionCurveTypeValues();
 
-  static std::vector<std::string> fanSpeedControlTypeValues();
+    static std::vector<std::string> fanSpeedControlTypeValues();
 
-  static std::vector<std::string> defrostTypeValues();
+    static std::vector<std::string> defrostTypeValues();
 
-  static std::vector<std::string> defrostControlTypeValues();
+    static std::vector<std::string> defrostControlTypeValues();
 
-  static std::vector<std::string> verticalLocationValues();
+    static std::vector<std::string> verticalLocationValues();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  boost::optional<Schedule> availabilitySchedule() const;
+    boost::optional<Schedule> availabilitySchedule() const;
 
-  std::string capacityRatingType() const;
+    std::string capacityRatingType() const;
 
-  boost::optional<double> ratedUnitLoadFactor() const;
+    boost::optional<double> ratedUnitLoadFactor() const;
 
-  boost::optional<double> ratedCapacity() const;
+    boost::optional<double> ratedCapacity() const;
 
-  double ratedRelativeHumidity() const;
+    double ratedRelativeHumidity() const;
 
-  bool isRatedRelativeHumidityDefaulted() const;
+    bool isRatedRelativeHumidityDefaulted() const;
 
-  double ratedCoolingSourceTemperature() const;
+    double ratedCoolingSourceTemperature() const;
 
-  double ratedTemperatureDifferenceDT1() const;
+    double ratedTemperatureDifferenceDT1() const;
 
-  boost::optional<double> maximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature() const;
+    boost::optional<double> maximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature() const;
 
-  double coilMaterialCorrectionFactor() const;
+    double coilMaterialCorrectionFactor() const;
 
-  bool isCoilMaterialCorrectionFactorDefaulted() const;
+    bool isCoilMaterialCorrectionFactorDefaulted() const;
 
-  double refrigerantCorrectionFactor() const;
+    double refrigerantCorrectionFactor() const;
 
-  bool isRefrigerantCorrectionFactorDefaulted() const;
+    bool isRefrigerantCorrectionFactorDefaulted() const;
 
-  // std::string capacityCorrectionCurveType() const;
+    // std::string capacityCorrectionCurveType() const;
 
-  // bool isCapacityCorrectionCurveTypeDefaulted() const;
+    // bool isCapacityCorrectionCurveTypeDefaulted() const;
 
-  // boost::optional<CurveLinear> capacityCorrectionCurve() const;
+    // boost::optional<CurveLinear> capacityCorrectionCurve() const;
 
-  double sHR60CorrectionFactor() const;
+    double sHR60CorrectionFactor() const;
 
-  bool isSHR60CorrectionFactorDefaulted() const;
+    bool isSHR60CorrectionFactorDefaulted() const;
 
-  double ratedTotalHeatingPower() const;
+    double ratedTotalHeatingPower() const;
 
-  boost::optional<Schedule> heatingPowerSchedule() const;
+    boost::optional<Schedule> heatingPowerSchedule() const;
 
-  std::string fanSpeedControlType() const;
+    std::string fanSpeedControlType() const;
 
-  bool isFanSpeedControlTypeDefaulted() const;
+    bool isFanSpeedControlTypeDefaulted() const;
 
-  double ratedFanPower() const;
+    double ratedFanPower() const;
 
-  bool isRatedFanPowerDefaulted() const;
+    bool isRatedFanPowerDefaulted() const;
 
-  double ratedAirFlow() const;
+    double ratedAirFlow() const;
 
-  double minimumFanAirFlowRatio() const;
+    double minimumFanAirFlowRatio() const;
 
-  bool isMinimumFanAirFlowRatioDefaulted() const;
+    bool isMinimumFanAirFlowRatioDefaulted() const;
 
-  std::string defrostType() const;
+    std::string defrostType() const;
 
-  bool isDefrostTypeDefaulted() const;
+    bool isDefrostTypeDefaulted() const;
 
-  std::string defrostControlType() const;
+    std::string defrostControlType() const;
 
-  bool isDefrostControlTypeDefaulted() const;
+    bool isDefrostControlTypeDefaulted() const;
 
-  Schedule defrostSchedule() const;
+    Schedule defrostSchedule() const;
 
-  boost::optional<Schedule> defrostDripDownSchedule() const;
+    boost::optional<Schedule> defrostDripDownSchedule() const;
 
-  boost::optional<double> defrostPower() const;
+    boost::optional<double> defrostPower() const;
 
-  boost::optional<double> temperatureTerminationDefrostFractiontoIce() const;
+    boost::optional<double> temperatureTerminationDefrostFractiontoIce() const;
 
-  std::string verticalLocation() const;
+    std::string verticalLocation() const;
 
-  bool isVerticalLocationDefaulted() const;
+    bool isVerticalLocationDefaulted() const;
 
-  double averageRefrigerantChargeInventory() const;
+    double averageRefrigerantChargeInventory() const;
 
-  bool isAverageRefrigerantChargeInventoryDefaulted() const;
+    bool isAverageRefrigerantChargeInventoryDefaulted() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    // Returns the parent RefrigerationSystem if any
+    boost::optional<RefrigerationSystem> system() const;
 
-  bool setAvailabilitySchedule(Schedule& schedule);
+    //@}
+    /** @name Setters */
+    //@{
 
-  void resetAvailabilitySchedule();
+    bool setAvailabilitySchedule(Schedule& schedule);
 
-  bool setCapacityRatingType(std::string capacityRatingType);
+    void resetAvailabilitySchedule();
 
-  bool setRatedUnitLoadFactor(double ratedUnitLoadFactor);
+    bool setCapacityRatingType(std::string capacityRatingType);
 
-  void resetRatedUnitLoadFactor();
+    bool setRatedUnitLoadFactor(double ratedUnitLoadFactor);
 
-  bool setRatedCapacity(double ratedCapacity);
+    void resetRatedUnitLoadFactor();
 
-  void resetRatedCapacity();
+    bool setRatedCapacity(double ratedCapacity);
 
-  bool setRatedRelativeHumidity(double ratedRelativeHumidity);
+    void resetRatedCapacity();
 
-  void resetRatedRelativeHumidity();
+    bool setRatedRelativeHumidity(double ratedRelativeHumidity);
 
-  bool setRatedCoolingSourceTemperature(double ratedCoolingSourceTemperature);
+    void resetRatedRelativeHumidity();
 
-  bool setRatedTemperatureDifferenceDT1(double ratedTemperatureDifferenceDT1);
+    bool setRatedCoolingSourceTemperature(double ratedCoolingSourceTemperature);
 
-  bool setMaximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature(double maximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature);
+    bool setRatedTemperatureDifferenceDT1(double ratedTemperatureDifferenceDT1);
 
-  void resetMaximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature();
+    bool setMaximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature(
+      double maximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature);
 
-  bool setCoilMaterialCorrectionFactor(double coilMaterialCorrectionFactor);
+    void resetMaximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature();
 
-  void resetCoilMaterialCorrectionFactor();
+    bool setCoilMaterialCorrectionFactor(double coilMaterialCorrectionFactor);
 
-  bool setRefrigerantCorrectionFactor(double refrigerantCorrectionFactor);
+    void resetCoilMaterialCorrectionFactor();
 
-  void resetRefrigerantCorrectionFactor();
+    bool setRefrigerantCorrectionFactor(double refrigerantCorrectionFactor);
 
-  // bool setCapacityCorrectionCurveType(std::string capacityCorrectionCurveType);
+    void resetRefrigerantCorrectionFactor();
 
-  // void resetCapacityCorrectionCurveType();
+    // bool setCapacityCorrectionCurveType(std::string capacityCorrectionCurveType);
 
-  // bool setCapacityCorrectionCurve(const CurveLinear& curveLinear);
+    // void resetCapacityCorrectionCurveType();
 
-  // void resetCapacityCorrectionCurve();
+    // bool setCapacityCorrectionCurve(const CurveLinear& curveLinear);
 
-  bool setSHR60CorrectionFactor(double sHR60CorrectionFactor);
+    // void resetCapacityCorrectionCurve();
 
-  void resetSHR60CorrectionFactor();
+    bool setSHR60CorrectionFactor(double sHR60CorrectionFactor);
 
-  bool setRatedTotalHeatingPower(double ratedTotalHeatingPower);
+    void resetSHR60CorrectionFactor();
 
-  bool setHeatingPowerSchedule(Schedule& schedule);
+    bool setRatedTotalHeatingPower(double ratedTotalHeatingPower);
 
-  void resetHeatingPowerSchedule();
+    bool setHeatingPowerSchedule(Schedule& schedule);
 
-  bool setFanSpeedControlType(std::string fanSpeedControlType);
+    void resetHeatingPowerSchedule();
 
-  void resetFanSpeedControlType();
+    bool setFanSpeedControlType(std::string fanSpeedControlType);
 
-  bool setRatedFanPower(double ratedFanPower);
+    void resetFanSpeedControlType();
 
-  void resetRatedFanPower();
+    bool setRatedFanPower(double ratedFanPower);
 
-  bool setRatedAirFlow(double ratedAirFlow);
+    void resetRatedFanPower();
 
-  bool setMinimumFanAirFlowRatio(double minimumFanAirFlowRatio);
+    bool setRatedAirFlow(double ratedAirFlow);
 
-  void resetMinimumFanAirFlowRatio();
+    bool setMinimumFanAirFlowRatio(double minimumFanAirFlowRatio);
 
-  bool setDefrostType(std::string defrostType);
+    void resetMinimumFanAirFlowRatio();
 
-  void resetDefrostType();
+    bool setDefrostType(std::string defrostType);
 
-  bool setDefrostControlType(std::string defrostControlType);
+    void resetDefrostType();
 
-  void resetDefrostControlType();
+    bool setDefrostControlType(std::string defrostControlType);
 
-  bool setDefrostSchedule(Schedule& schedule);
+    void resetDefrostControlType();
 
-  bool setDefrostDripDownSchedule(Schedule& schedule);
+    bool setDefrostSchedule(Schedule& schedule);
 
-  void resetDefrostDripDownSchedule();
+    bool setDefrostDripDownSchedule(Schedule& schedule);
 
-  bool setDefrostPower(double defrostPower);
+    void resetDefrostDripDownSchedule();
 
-  void resetDefrostPower();
+    bool setDefrostPower(double defrostPower);
 
-  bool setTemperatureTerminationDefrostFractiontoIce(double temperatureTerminationDefrostFractiontoIce);
+    void resetDefrostPower();
 
-  void resetTemperatureTerminationDefrostFractiontoIce();
+    bool setTemperatureTerminationDefrostFractiontoIce(double temperatureTerminationDefrostFractiontoIce);
 
-  // bool setVerticalLocation(std::string verticalLocation);
+    void resetTemperatureTerminationDefrostFractiontoIce();
 
-  // void resetVerticalLocation();
+    // bool setVerticalLocation(std::string verticalLocation);
 
-  bool setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory);
+    // void resetVerticalLocation();
 
-  void resetAverageRefrigerantChargeInventory();
+    bool setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory);
 
-  //@}
-  /** @name Other */
-  //@{
+    void resetAverageRefrigerantChargeInventory();
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::RefrigerationAirChiller_Impl ImplType;
+    // Remove from parent system if any
+    void removeFromSystem();
 
-  explicit RefrigerationAirChiller(std::shared_ptr<detail::RefrigerationAirChiller_Impl> impl);
+    //@}
+    /** @name Other */
+    //@{
 
-  friend class detail::RefrigerationAirChiller_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.RefrigerationAirChiller");
-};
+    //@}
+   protected:
+    /// @cond
+    typedef detail::RefrigerationAirChiller_Impl ImplType;
 
-/** \relates RefrigerationAirChiller*/
-typedef boost::optional<RefrigerationAirChiller> OptionalRefrigerationAirChiller;
+    explicit RefrigerationAirChiller(std::shared_ptr<detail::RefrigerationAirChiller_Impl> impl);
 
-/** \relates RefrigerationAirChiller*/
-typedef std::vector<RefrigerationAirChiller> RefrigerationAirChillerVector;
+    friend class detail::RefrigerationAirChiller_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.RefrigerationAirChiller");
+  };
 
-} // model
-} // openstudio
+  /** \relates RefrigerationAirChiller*/
+  typedef boost::optional<RefrigerationAirChiller> OptionalRefrigerationAirChiller;
 
-#endif // MODEL_REFRIGERATIONAIRCHILLER_HPP
+  /** \relates RefrigerationAirChiller*/
+  typedef std::vector<RefrigerationAirChiller> RefrigerationAirChillerVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_REFRIGERATIONAIRCHILLER_HPP

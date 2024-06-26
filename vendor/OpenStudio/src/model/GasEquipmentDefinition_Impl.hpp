@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,201 +32,112 @@
 
 #include "ModelAPI.hpp"
 #include "SpaceLoadDefinition_Impl.hpp"
-#include "attributes.hpp"
 
 namespace openstudio {
 namespace model {
 
-class GasEquipmentDefinition;
+  class GasEquipmentDefinition;
 
-namespace detail {
+  namespace detail {
 
-  /** GasEquipmentDefinition_Impl is a SpaceLoadDefinition_Impl that is the implementation class for GasEquipmentDefinition.*/
-  class MODEL_API GasEquipmentDefinition_Impl : public SpaceLoadDefinition_Impl {
+    /** GasEquipmentDefinition_Impl is a SpaceLoadDefinition_Impl that is the implementation class for GasEquipmentDefinition.*/
+    class MODEL_API GasEquipmentDefinition_Impl : public SpaceLoadDefinition_Impl
+    {
 
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    Q_PROPERTY(openstudio::OSOptionalQuantity designLevel_SI
-               READ designLevel_SI
-               WRITE setDesignLevel);
-    Q_PROPERTY(openstudio::OSOptionalQuantity designLevel_IP
-               READ designLevel_IP
-               WRITE setDesignLevel);
+      GasEquipmentDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      GasEquipmentDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperSpaceFloorArea_SI
-               READ wattsperSpaceFloorArea_SI
-               WRITE setWattsperSpaceFloorArea);
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperSpaceFloorArea_IP
-               READ wattsperSpaceFloorArea_IP
-               WRITE setWattsperSpaceFloorArea);
+      GasEquipmentDefinition_Impl(const GasEquipmentDefinition_Impl& other, Model_Impl* model, bool keepHandle);
 
+      virtual ~GasEquipmentDefinition_Impl() {}
 
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperPerson_SI
-               READ wattsperPerson_SI
-               WRITE setWattsperPerson);
-    Q_PROPERTY(openstudio::OSOptionalQuantity wattsperPerson_IP
-               READ wattsperPerson_IP
-               WRITE setWattsperPerson);
+      //@}
 
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    Q_PROPERTY(openstudio::Quantity fractionRadiant_SI
-               READ fractionRadiant_SI
-               WRITE setFractionRadiant);
-    Q_PROPERTY(openstudio::Quantity fractionRadiant_IP
-               READ fractionRadiant_IP
-               WRITE setFractionRadiant);
+      virtual IddObjectType iddObjectType() const override;
 
+      /** @name Getters */
+      //@{
 
-    Q_PROPERTY(openstudio::Quantity fractionLatent_SI
-               READ fractionLatent_SI
-               WRITE setFractionLatent);
-    Q_PROPERTY(openstudio::Quantity fractionLatent_IP
-               READ fractionLatent_IP
-               WRITE setFractionLatent);
+      std::string designLevelCalculationMethod() const;
+      boost::optional<double> designLevel() const;
+      boost::optional<double> wattsperSpaceFloorArea() const;
+      boost::optional<double> wattsperPerson() const;
 
+      double fractionLatent() const;
+      bool isFractionLatentDefaulted() const;
 
-    Q_PROPERTY(openstudio::Quantity fractionLost_SI
-               READ fractionLost_SI
-               WRITE setFractionLost);
-    Q_PROPERTY(openstudio::Quantity fractionLost_IP
-               READ fractionLost_IP
-               WRITE setFractionLost);
+      double fractionRadiant() const;
+      bool isFractionRadiantDefaulted() const;
 
-    Q_PROPERTY(double carbonDioxideGenerationRate
-               READ carbonDioxideGenerationRate
-               WRITE setCarbonDioxideGenerationRate
-               RESET resetCarbonDioxideGenerationRate);
+      double fractionLost() const;
+      bool isFractionLostDefaulted() const;
 
-    Q_PROPERTY(openstudio::Quantity carbonDioxideGenerationRate_SI
-               READ carbonDioxideGenerationRate_SI
-               WRITE setFractionLost);
-    Q_PROPERTY(openstudio::Quantity carbonDioxideGenerationRate_IP
-               READ carbonDioxideGenerationRate_IP
-               WRITE setCarbonDioxideGenerationRate);
+      double carbonDioxideGenerationRate() const;
+      bool isCarbonDioxideGenerationRateDefaulted() const;
 
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+      //@}
+      /** @name Setters */
+      //@{
 
-    GasEquipmentDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      bool setDesignLevel(boost::optional<double> designLevel);
 
-    GasEquipmentDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                Model_Impl* model,
-                                bool keepHandle);
+      bool setWattsperSpaceFloorArea(boost::optional<double> wattsperSpaceFloorArea);
 
-    GasEquipmentDefinition_Impl(const GasEquipmentDefinition_Impl& other,
-                                Model_Impl* model,
-                                bool keepHandle);
+      bool setWattsperPerson(boost::optional<double> wattsperPerson);
 
-    virtual ~GasEquipmentDefinition_Impl() {}
+      bool setFractionLatent(double fractionLatent);
+      void resetFractionLatent();
 
-    //@}
+      bool setFractionRadiant(double fractionRadiant);
+      void resetFractionRadiant();
 
-    // TODO: remove
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      bool setFractionLost(double fractionLost);
+      void resetFractionLost();
 
-    virtual IddObjectType iddObjectType() const override;
+      bool setCarbonDioxideGenerationRate(double carbonDioxideGenerationRate);
+      void resetCarbonDioxideGenerationRate();
 
-    // Attributes
+      //@}
+      /** @name Other */
+      //@{
 
-    ATTRIBUTE_DEFINITION(1,0,0,designLevel,DesignLevel)
-    ATTRIBUTE_DEFINITION(1,0,0,wattsperPerson,WattsperPerson)
-    ATTRIBUTE_DEFINITION(1,0,0,wattsperSpaceFloorArea,WattsperSpaceFloorArea)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionRadiant,FractionRadiant)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionLatent,FractionLatent)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionLost,FractionLost)
-    ATTRIBUTE_DEFINITION(0,1,0,carbonDioxideGenerationRate,CarbonDioxideGenerationRate)
-
-    /** @name Getters */
-    //@{
-
-    std::string designLevelCalculationMethod() const;
-
-    //boost::optional<double> designLevel() const;
-
-    //boost::optional<double> wattsperSpaceFloorArea() const;
-
-    //boost::optional<double> wattsperPerson() const;
-
-    //double fractionLatent() const;
-
-    //bool isFractionLatentDefaulted() const;
-
-    //double fractionRadiant() const;
-
-    //bool isFractionRadiantDefaulted() const;
-
-    //double fractionLost() const;
-
-    //bool isFractionLostDefaulted() const;
-
-    //double carbonDioxideGenerationRate() const;
-
-    //bool isCarbonDioxideGenerationRateDefaulted() const;
-
-    //@}
-    /** @name Setters */
-    //@{
-
-    //bool setDesignLevel(boost::optional<double> designLevel);
-
-    //bool setWattsperSpaceFloorArea(boost::optional<double> wattsperSpaceFloorArea);
-
-    //bool setWattsperPerson(boost::optional<double> wattsperPerson);
-
-    //bool setFractionLatent(double fractionLatent);
-
-    //void resetFractionLatent();
-
-    //bool setFractionRadiant(double fractionRadiant);
-
-    //void resetFractionRadiant();
-
-    //bool setFractionLost(double fractionLost);
-
-    //void resetFractionLost();
-
-    //bool setCarbonDioxideGenerationRate(double carbonDioxideGenerationRate);
-
-    //void resetCarbonDioxideGenerationRate();
-
-    //@}
-    /** @name Other */
-    //@{
-
-    /** Returns the design level represented by this definition, assuming floorArea (m^2) and
+      /** Returns the design level represented by this definition, assuming floorArea (m^2) and
      *  numPeople. */
-    double getDesignLevel(double floorArea, double numPeople) const;
+      double getDesignLevel(double floorArea, double numPeople) const;
 
-    /** Returns the watts/m^2 represented by this definition, assuming floorArea (m^2) and
+      /** Returns the watts/m^2 represented by this definition, assuming floorArea (m^2) and
      *  numPeople. */
-    double getPowerPerFloorArea(double floorArea, double numPeople) const;
+      double getPowerPerFloorArea(double floorArea, double numPeople) const;
 
-    /** Returns the watts/person represented by this definition, assuming floorArea (m^2) and
+      /** Returns the watts/person represented by this definition, assuming floorArea (m^2) and
      *  numPeople. */
-    double getPowerPerPerson(double floorArea, double numPeople) const;
+      double getPowerPerPerson(double floorArea, double numPeople) const;
 
-    /** If method is a \link validDesignLevelCalculationMethodValues valid design level
+      /** If method is a \link validDesignLevelCalculationMethodValues valid design level
      *  calculation method \endlink, changes this definition to an equivalent power level, under
      *  the assumptions of floorArea (m^2) and numPeople. */
-    bool setDesignLevelCalculationMethod(const std::string& method,
-                                         double floorArea,
-                                         double numPeople);
+      bool setDesignLevelCalculationMethod(const std::string& method, double floorArea, double numPeople);
 
-    virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
+      virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
 
-    virtual std::vector<std::string> emsInternalVariableNames() const override;
+      virtual std::vector<std::string> emsInternalVariableNames() const override;
 
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.GasEquipmentDefinition");
-  };
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.GasEquipmentDefinition");
+    };
 
-} // detail
+  }  // namespace detail
 
-} // model
-} // openstudio
+}  // namespace model
+}  // namespace openstudio
 
-#endif // MODEL_GASEQUIPMENTDEFINITION_IMPL_HPP
-
+#endif  // MODEL_GASEQUIPMENTDEFINITION_IMPL_HPP

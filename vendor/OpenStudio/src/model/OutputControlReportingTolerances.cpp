@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -40,190 +40,119 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  OutputControlReportingTolerances_Impl::OutputControlReportingTolerances_Impl(const IdfObject& idfObject,
-                                                                               Model_Impl* model,
-                                                                               bool keepHandle)
-    : ModelObject_Impl(idfObject,model,keepHandle)
-  {
-    OS_ASSERT(idfObject.iddObject().type() == OutputControlReportingTolerances::iddObjectType());
-  }
-
-  OutputControlReportingTolerances_Impl::OutputControlReportingTolerances_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                                                               Model_Impl* model,
-                                                                               bool keepHandle)
-    : ModelObject_Impl(other,model,keepHandle)
-  {
-    OS_ASSERT(other.iddObject().type() == OutputControlReportingTolerances::iddObjectType());
-  }
-
-  OutputControlReportingTolerances_Impl::OutputControlReportingTolerances_Impl(const OutputControlReportingTolerances_Impl& other,
-                                                                               Model_Impl* model,
-                                                                               bool keepHandle)
-    : ModelObject_Impl(other,model,keepHandle)
-  {}
-
-  const std::vector<std::string>& OutputControlReportingTolerances_Impl::outputVariableNames() const
-  {
-    static std::vector<std::string> result;
-    return result;
-  }
-
-  IddObjectType OutputControlReportingTolerances_Impl::iddObjectType() const {
-    return OutputControlReportingTolerances::iddObjectType();
-  }
-
-  double OutputControlReportingTolerances_Impl::toleranceforTimeHeatingSetpointNotMet() const {
-    boost::optional<double> value = getDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  Quantity OutputControlReportingTolerances_Impl::getToleranceforTimeHeatingSetpointNotMet(bool returnIP) const {
-    OptionalDouble value = toleranceforTimeHeatingSetpointNotMet();
-    OSOptionalQuantity result = getQuantityFromDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet, value, returnIP);
-    OS_ASSERT(result.isSet());
-    return result.get();
-  }
-
-  bool OutputControlReportingTolerances_Impl::isToleranceforTimeHeatingSetpointNotMetDefaulted() const {
-    return isEmpty(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet);
-  }
-
-  double OutputControlReportingTolerances_Impl::toleranceforTimeCoolingSetpointNotMet() const {
-    boost::optional<double> value = getDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  Quantity OutputControlReportingTolerances_Impl::getToleranceforTimeCoolingSetpointNotMet(bool returnIP) const {
-    OptionalDouble value = toleranceforTimeCoolingSetpointNotMet();
-    OSOptionalQuantity result = getQuantityFromDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet, value, returnIP);
-    OS_ASSERT(result.isSet());
-    return result.get();
-  }
-
-  bool OutputControlReportingTolerances_Impl::isToleranceforTimeCoolingSetpointNotMetDefaulted() const {
-    return isEmpty(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet);
-  }
-
-  bool OutputControlReportingTolerances_Impl::setToleranceforTimeHeatingSetpointNotMet(double toleranceforTimeHeatingSetpointNotMet) {
-    bool result = setDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet, toleranceforTimeHeatingSetpointNotMet);
-    return result;
-  }
-
-  bool OutputControlReportingTolerances_Impl::setToleranceforTimeHeatingSetpointNotMet(const Quantity& toleranceforTimeHeatingSetpointNotMet) {
-    OptionalDouble value = getDoubleFromQuantity(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet,toleranceforTimeHeatingSetpointNotMet);
-    if (!value) {
-      return false;
+    OutputControlReportingTolerances_Impl::OutputControlReportingTolerances_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(idfObject, model, keepHandle) {
+      OS_ASSERT(idfObject.iddObject().type() == OutputControlReportingTolerances::iddObjectType());
     }
-    return setToleranceforTimeHeatingSetpointNotMet(value.get());
-  }
 
-  void OutputControlReportingTolerances_Impl::resetToleranceforTimeHeatingSetpointNotMet() {
-    bool result = setString(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet, "");
-    OS_ASSERT(result);
-  }
-
-  bool OutputControlReportingTolerances_Impl::setToleranceforTimeCoolingSetpointNotMet(double toleranceforTimeCoolingSetpointNotMet) {
-    bool result = setDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet, toleranceforTimeCoolingSetpointNotMet);
-    return result;
-  }
-
-  bool OutputControlReportingTolerances_Impl::setToleranceforTimeCoolingSetpointNotMet(const Quantity& toleranceforTimeCoolingSetpointNotMet) {
-    OptionalDouble value = getDoubleFromQuantity(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet,toleranceforTimeCoolingSetpointNotMet);
-    if (!value) {
-      return false;
+    OutputControlReportingTolerances_Impl::OutputControlReportingTolerances_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
+                                                                                 Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(other, model, keepHandle) {
+      OS_ASSERT(other.iddObject().type() == OutputControlReportingTolerances::iddObjectType());
     }
-    return setToleranceforTimeCoolingSetpointNotMet(value.get());
+
+    OutputControlReportingTolerances_Impl::OutputControlReportingTolerances_Impl(const OutputControlReportingTolerances_Impl& other,
+                                                                                 Model_Impl* model, bool keepHandle)
+      : ModelObject_Impl(other, model, keepHandle) {}
+
+    const std::vector<std::string>& OutputControlReportingTolerances_Impl::outputVariableNames() const {
+      static const std::vector<std::string> result;
+      return result;
+    }
+
+    IddObjectType OutputControlReportingTolerances_Impl::iddObjectType() const {
+      return OutputControlReportingTolerances::iddObjectType();
+    }
+
+    double OutputControlReportingTolerances_Impl::toleranceforTimeHeatingSetpointNotMet() const {
+      boost::optional<double> value = getDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool OutputControlReportingTolerances_Impl::isToleranceforTimeHeatingSetpointNotMetDefaulted() const {
+      return isEmpty(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet);
+    }
+
+    double OutputControlReportingTolerances_Impl::toleranceforTimeCoolingSetpointNotMet() const {
+      boost::optional<double> value = getDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool OutputControlReportingTolerances_Impl::isToleranceforTimeCoolingSetpointNotMetDefaulted() const {
+      return isEmpty(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet);
+    }
+
+    bool OutputControlReportingTolerances_Impl::setToleranceforTimeHeatingSetpointNotMet(double toleranceforTimeHeatingSetpointNotMet) {
+      bool result =
+        setDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet, toleranceforTimeHeatingSetpointNotMet);
+      return result;
+    }
+
+    void OutputControlReportingTolerances_Impl::resetToleranceforTimeHeatingSetpointNotMet() {
+      bool result = setString(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeHeatingSetpointNotMet, "");
+      OS_ASSERT(result);
+    }
+
+    bool OutputControlReportingTolerances_Impl::setToleranceforTimeCoolingSetpointNotMet(double toleranceforTimeCoolingSetpointNotMet) {
+      bool result =
+        setDouble(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet, toleranceforTimeCoolingSetpointNotMet);
+      return result;
+    }
+
+    void OutputControlReportingTolerances_Impl::resetToleranceforTimeCoolingSetpointNotMet() {
+      bool result = setString(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet, "");
+      OS_ASSERT(result);
+    }
+
+  }  // namespace detail
+
+  IddObjectType OutputControlReportingTolerances::iddObjectType() {
+    return IddObjectType(IddObjectType::OS_OutputControl_ReportingTolerances);
   }
 
-  void OutputControlReportingTolerances_Impl::resetToleranceforTimeCoolingSetpointNotMet() {
-    bool result = setString(OS_OutputControl_ReportingTolerancesFields::ToleranceforTimeCoolingSetpointNotMet, "");
-    OS_ASSERT(result);
+  double OutputControlReportingTolerances::toleranceforTimeHeatingSetpointNotMet() const {
+    return getImpl<detail::OutputControlReportingTolerances_Impl>()->toleranceforTimeHeatingSetpointNotMet();
   }
 
-  openstudio::Quantity OutputControlReportingTolerances_Impl::toleranceforTimeHeatingSetpointNotMet_SI() const {
-    return getToleranceforTimeHeatingSetpointNotMet(false);
+  bool OutputControlReportingTolerances::isToleranceforTimeHeatingSetpointNotMetDefaulted() const {
+    return getImpl<detail::OutputControlReportingTolerances_Impl>()->isToleranceforTimeHeatingSetpointNotMetDefaulted();
   }
 
-  openstudio::Quantity OutputControlReportingTolerances_Impl::toleranceforTimeHeatingSetpointNotMet_IP() const {
-    return getToleranceforTimeHeatingSetpointNotMet(true);
+  double OutputControlReportingTolerances::toleranceforTimeCoolingSetpointNotMet() const {
+    return getImpl<detail::OutputControlReportingTolerances_Impl>()->toleranceforTimeCoolingSetpointNotMet();
   }
 
-  openstudio::Quantity OutputControlReportingTolerances_Impl::toleranceforTimeCoolingSetpointNotMet_SI() const {
-    return getToleranceforTimeCoolingSetpointNotMet(false);
+  bool OutputControlReportingTolerances::isToleranceforTimeCoolingSetpointNotMetDefaulted() const {
+    return getImpl<detail::OutputControlReportingTolerances_Impl>()->isToleranceforTimeCoolingSetpointNotMetDefaulted();
   }
 
-  openstudio::Quantity OutputControlReportingTolerances_Impl::toleranceforTimeCoolingSetpointNotMet_IP() const {
-    return getToleranceforTimeCoolingSetpointNotMet(true);
+  bool OutputControlReportingTolerances::setToleranceforTimeHeatingSetpointNotMet(double toleranceforTimeHeatingSetpointNotMet) {
+    return getImpl<detail::OutputControlReportingTolerances_Impl>()->setToleranceforTimeHeatingSetpointNotMet(toleranceforTimeHeatingSetpointNotMet);
   }
 
-} // detail
+  void OutputControlReportingTolerances::resetToleranceforTimeHeatingSetpointNotMet() {
+    getImpl<detail::OutputControlReportingTolerances_Impl>()->resetToleranceforTimeHeatingSetpointNotMet();
+  }
 
-IddObjectType OutputControlReportingTolerances::iddObjectType() {
-  return IddObjectType(IddObjectType::OS_OutputControl_ReportingTolerances);
-}
+  bool OutputControlReportingTolerances::setToleranceforTimeCoolingSetpointNotMet(double toleranceforTimeCoolingSetpointNotMet) {
+    return getImpl<detail::OutputControlReportingTolerances_Impl>()->setToleranceforTimeCoolingSetpointNotMet(toleranceforTimeCoolingSetpointNotMet);
+  }
 
-double OutputControlReportingTolerances::toleranceforTimeHeatingSetpointNotMet() const {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->toleranceforTimeHeatingSetpointNotMet();
-}
+  void OutputControlReportingTolerances::resetToleranceforTimeCoolingSetpointNotMet() {
+    getImpl<detail::OutputControlReportingTolerances_Impl>()->resetToleranceforTimeCoolingSetpointNotMet();
+  }
 
-Quantity OutputControlReportingTolerances::getToleranceforTimeHeatingSetpointNotMet(bool returnIP) const {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->getToleranceforTimeHeatingSetpointNotMet(returnIP);
-}
+  /// @cond
+  OutputControlReportingTolerances::OutputControlReportingTolerances(std::shared_ptr<detail::OutputControlReportingTolerances_Impl> impl)
+    : ModelObject(std::move(impl)) {}
+  OutputControlReportingTolerances::OutputControlReportingTolerances(Model& model)
+    : ModelObject(OutputControlReportingTolerances::iddObjectType(), model) {}
 
-bool OutputControlReportingTolerances::isToleranceforTimeHeatingSetpointNotMetDefaulted() const {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->isToleranceforTimeHeatingSetpointNotMetDefaulted();
-}
+  /// @endcond
 
-double OutputControlReportingTolerances::toleranceforTimeCoolingSetpointNotMet() const {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->toleranceforTimeCoolingSetpointNotMet();
-}
-
-Quantity OutputControlReportingTolerances::getToleranceforTimeCoolingSetpointNotMet(bool returnIP) const {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->getToleranceforTimeCoolingSetpointNotMet(returnIP);
-}
-
-bool OutputControlReportingTolerances::isToleranceforTimeCoolingSetpointNotMetDefaulted() const {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->isToleranceforTimeCoolingSetpointNotMetDefaulted();
-}
-
-bool OutputControlReportingTolerances::setToleranceforTimeHeatingSetpointNotMet(double toleranceforTimeHeatingSetpointNotMet) {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->setToleranceforTimeHeatingSetpointNotMet(toleranceforTimeHeatingSetpointNotMet);
-}
-
-bool OutputControlReportingTolerances::setToleranceforTimeHeatingSetpointNotMet(const Quantity& toleranceforTimeHeatingSetpointNotMet) {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->setToleranceforTimeHeatingSetpointNotMet(toleranceforTimeHeatingSetpointNotMet);
-}
-
-void OutputControlReportingTolerances::resetToleranceforTimeHeatingSetpointNotMet() {
-  getImpl<detail::OutputControlReportingTolerances_Impl>()->resetToleranceforTimeHeatingSetpointNotMet();
-}
-
-bool OutputControlReportingTolerances::setToleranceforTimeCoolingSetpointNotMet(double toleranceforTimeCoolingSetpointNotMet) {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->setToleranceforTimeCoolingSetpointNotMet(toleranceforTimeCoolingSetpointNotMet);
-}
-
-bool OutputControlReportingTolerances::setToleranceforTimeCoolingSetpointNotMet(const Quantity& toleranceforTimeCoolingSetpointNotMet) {
-  return getImpl<detail::OutputControlReportingTolerances_Impl>()->setToleranceforTimeCoolingSetpointNotMet(toleranceforTimeCoolingSetpointNotMet);
-}
-
-void OutputControlReportingTolerances::resetToleranceforTimeCoolingSetpointNotMet() {
-  getImpl<detail::OutputControlReportingTolerances_Impl>()->resetToleranceforTimeCoolingSetpointNotMet();
-}
-
-/// @cond
-OutputControlReportingTolerances::OutputControlReportingTolerances(std::shared_ptr<detail::OutputControlReportingTolerances_Impl> impl)
-  : ModelObject(std::move(impl))
-{}
-OutputControlReportingTolerances::OutputControlReportingTolerances(Model& model)
-  : ModelObject(OutputControlReportingTolerances::iddObjectType(),model)
-{}
-
-/// @endcond
-
-} // model
-} // openstudio
-
+}  // namespace model
+}  // namespace openstudio

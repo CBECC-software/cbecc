@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,88 +35,78 @@
 namespace openstudio {
 namespace model {
 
-class ScheduleConstant;
+  class ScheduleConstant;
 
-namespace detail {
+  namespace detail {
 
-  class MODEL_API ScheduleConstant_Impl : public Schedule_Impl {
+    class MODEL_API ScheduleConstant_Impl : public Schedule_Impl
+    {
 
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    // ETH@20120724 Could have value_SI, value_IP properties, but these should be
-    // boost::optional<Quantity>, not OSOptionalQuantity. The latter is currently supported
-    // by Qt + Attribute, but the former is not.
-   public:
+      // constructor
+      ScheduleConstant_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    /** @name Constructors and Destructors */
-    //@{
+      // construct from workspace
+      ScheduleConstant_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    // constructor
-    ScheduleConstant_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      ScheduleConstant_Impl(const ScheduleConstant_Impl& other, Model_Impl* model, bool keepHandle);
 
-    // construct from workspace
-    ScheduleConstant_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                         Model_Impl* model,
-                         bool keepHandle);
+      // virtual destructor
+      virtual ~ScheduleConstant_Impl() {}
 
-    ScheduleConstant_Impl(const ScheduleConstant_Impl& other, Model_Impl* model,bool keepHandle);
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    // virtual destructor
-    virtual ~ScheduleConstant_Impl(){}
+      // return the parent object in the hierarchy
+      virtual boost::optional<ParentObject> parent() const override;
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      // return any children objects in the hierarchy
+      virtual std::vector<ModelObject> children() const override;
 
-    // return the parent object in the hierarchy
-    virtual boost::optional<ParentObject> parent() const override;
+      // Get all output variable names that could be associated with this object.
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    // return any children objects in the hierarchy
-    virtual std::vector<ModelObject> children() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    // Get all output variable names that could be associated with this object.
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual boost::optional<ScheduleTypeLimits> scheduleTypeLimits() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual std::vector<double> values() const override;
 
-    virtual boost::optional<ScheduleTypeLimits> scheduleTypeLimits() const override;
+      //@}
+      /** @name Getters */
+      //@{
 
-    virtual std::vector<double> values() const override;
+      double value() const;
 
-    //@}
-    /** @name Getters */
-    //@{
+      virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
 
-    double value() const;
+      virtual std::vector<std::string> emsInternalVariableNames() const override;
 
-    boost::optional<Quantity> getValue(bool returnIP=false) const;
+      //@}
+      /** @name Setters */
+      //@{
 
-    virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
+      virtual bool setScheduleTypeLimits(const ScheduleTypeLimits& scheduleTypeLimits) override;
 
-    virtual std::vector<std::string> emsInternalVariableNames() const override;
+      virtual bool resetScheduleTypeLimits() override;
 
-    //@}
-    /** @name Setters */
-    //@{
+      bool setValue(double value);
 
-    virtual bool setScheduleTypeLimits(const ScheduleTypeLimits& scheduleTypeLimits) override;
+      // ensure that this object does not contain the date 2/29
+      virtual void ensureNoLeapDays() override;
 
-    virtual bool resetScheduleTypeLimits() override;
+      //@}
+     private:
+      REGISTER_LOGGER("openstudio.model.ScheduleConstant");
+    };
 
-    bool setValue(double value);
+  }  // namespace detail
 
-    bool setValue(const Quantity& value);
+}  // namespace model
+}  // namespace openstudio
 
-    // ensure that this object does not contain the date 2/29
-    virtual void ensureNoLeapDays() override;
-
-    //@}
-   private:
-    REGISTER_LOGGER("openstudio.model.ScheduleConstant");
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_SCHEDULECONSTANT_IMPL_HPP
+#endif  // MODEL_SCHEDULECONSTANT_IMPL_HPP

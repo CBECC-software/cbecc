@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -34,12 +34,10 @@
 #include <boost/filesystem/fstream.hpp>
 #include <vector>
 
-
 #include "../UtilitiesAPI.hpp"
 
-
 namespace openstudio {
-  typedef boost::filesystem::path path;
+typedef boost::filesystem::path path;
 
 namespace filesystem {
 
@@ -55,6 +53,7 @@ namespace filesystem {
   using boost::filesystem::recursive_directory_iterator;
   using boost::filesystem::filesystem_error;
   using boost::filesystem::copy_option;
+  using boost::filesystem::directory_entry;
 
   // functions
   using boost::filesystem::basename;
@@ -81,12 +80,9 @@ namespace filesystem {
   using boost::filesystem::system_complete;
   using boost::filesystem::temp_directory_path;
   using boost::filesystem::read_symlink;
+  using boost::filesystem::weakly_canonical;
 
-
-}
-}
+}  // namespace filesystem
+}  // namespace openstudio
 
 #endif
-
-
-

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,189 +37,169 @@ namespace openstudio {
 
 namespace model {
 
-class Curve;
+  class Curve;
 
-namespace detail {
+  namespace detail {
 
-  class BoilerHotWater_Impl;
+    class BoilerHotWater_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** BoilerHotWater is a StraightComponent that wraps the OpenStudio IDD object
+  /** BoilerHotWater is a StraightComponent that wraps the OpenStudio IDD object
  *  'OS:Boiler:HotWater'. */
-class MODEL_API BoilerHotWater : public StraightComponent {
- public:
+  class MODEL_API BoilerHotWater : public StraightComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /** @name Constructors and Destructors */
-  //@{
+    explicit BoilerHotWater(const Model& model);
 
-  explicit BoilerHotWater(const Model& model);
+    virtual ~BoilerHotWater() {}
 
-  virtual ~BoilerHotWater() {}
+    //@}
 
-  //@}
+    static IddObjectType iddObjectType();
 
-  static IddObjectType iddObjectType();
+    static std::vector<std::string> validFuelTypeValues();
 
-  static std::vector<std::string> validFuelTypeValues();
+    static std::vector<std::string> validEfficiencyCurveTemperatureEvaluationVariableValues();
 
-  static std::vector<std::string> validEfficiencyCurveTemperatureEvaluationVariableValues();
+    static std::vector<std::string> validBoilerFlowModeValues();
 
-  static std::vector<std::string> validBoilerFlowModeValues();
+    /** @name Getters */
+    //@{
 
-  /** @name Getters */
-  //@{
+    std::string fuelType() const;
 
-  std::string fuelType() const;
+    boost::optional<double> nominalCapacity() const;
 
-  boost::optional<double> nominalCapacity() const;
+    bool isNominalCapacityAutosized() const;
 
-  bool isNominalCapacityAutosized() const;
+    double nominalThermalEfficiency() const;
 
-  double nominalThermalEfficiency() const;
+    boost::optional<std::string> efficiencyCurveTemperatureEvaluationVariable() const;
 
-  boost::optional<std::string> efficiencyCurveTemperatureEvaluationVariable() const;
+    boost::optional<Curve> normalizedBoilerEfficiencyCurve() const;
 
-  boost::optional<Curve> normalizedBoilerEfficiencyCurve() const;
+    boost::optional<double> designWaterFlowRate() const;
 
-  /** As of EnergyPlus version 9.0.0 this field is no longer used
-   */
-  boost::optional<double> designWaterOutletTemperature() const;
+    bool isDesignWaterFlowRateAutosized() const;
 
-  boost::optional<double> designWaterFlowRate() const;
+    double minimumPartLoadRatio() const;
 
-  bool isDesignWaterFlowRateAutosized() const;
+    bool isMinimumPartLoadRatioDefaulted() const;
 
-  double minimumPartLoadRatio() const;
+    double maximumPartLoadRatio() const;
 
-  bool isMinimumPartLoadRatioDefaulted() const;
+    bool isMaximumPartLoadRatioDefaulted() const;
 
-  double maximumPartLoadRatio() const;
+    double optimumPartLoadRatio() const;
 
-  bool isMaximumPartLoadRatioDefaulted() const;
+    bool isOptimumPartLoadRatioDefaulted() const;
 
-  double optimumPartLoadRatio() const;
+    double waterOutletUpperTemperatureLimit() const;
 
-  bool isOptimumPartLoadRatioDefaulted() const;
+    bool isWaterOutletUpperTemperatureLimitDefaulted() const;
 
-  // TODO: Handle Non-Extensible IddField Boiler Water Inlet Node Name.
+    std::string boilerFlowMode() const;
 
-  // TODO: Handle Non-Extensible IddField Boiler Water Outlet Node Name.
+    bool isBoilerFlowModeDefaulted() const;
 
-  double waterOutletUpperTemperatureLimit() const;
+    boost::optional<double> parasiticElectricLoad() const;
 
-  bool isWaterOutletUpperTemperatureLimitDefaulted() const;
+    double sizingFactor() const;
 
-  std::string boilerFlowMode() const;
+    bool isSizingFactorDefaulted() const;
 
-  bool isBoilerFlowModeDefaulted() const;
+    std::string endUseSubcategory() const;
 
-  boost::optional<double> parasiticElectricLoad() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  double sizingFactor() const;
+    bool setFuelType(std::string fuelType);
 
-  bool isSizingFactorDefaulted() const;
+    bool setNominalCapacity(double nominalCapacity);
 
-  std::string endUseSubcategory() const;
+    void resetNominalCapacity();
 
-  //@}
-  /** @name Setters */
-  //@{
+    void autosizeNominalCapacity();
 
-  bool setFuelType(std::string fuelType);
+    bool setNominalThermalEfficiency(double nominalThermalEfficiency);
 
-  bool setNominalCapacity(double nominalCapacity);
+    bool setEfficiencyCurveTemperatureEvaluationVariable(std::string efficiencyCurveTemperatureEvaluationVariable);
 
-  void resetNominalCapacity();
+    void resetEfficiencyCurveTemperatureEvaluationVariable();
 
-  void autosizeNominalCapacity();
+    bool setNormalizedBoilerEfficiencyCurve(const Curve& normalizedBoilerEfficiencyCurve);
 
-  bool setNominalThermalEfficiency(double nominalThermalEfficiency);
+    void resetNormalizedBoilerEfficiencyCurve();
 
-  bool setEfficiencyCurveTemperatureEvaluationVariable(
-      std::string efficiencyCurveTemperatureEvaluationVariable);
+    bool setDesignWaterFlowRate(double designWaterFlowRate);
 
-  void resetEfficiencyCurveTemperatureEvaluationVariable();
+    void resetDesignWaterFlowRate();
 
-  bool setNormalizedBoilerEfficiencyCurve(const Curve& normalizedBoilerEfficiencyCurve);
+    void autosizeDesignWaterFlowRate();
 
-  void resetNormalizedBoilerEfficiencyCurve();
+    bool setMinimumPartLoadRatio(double minimumPartLoadRatio);
 
-  /** As of EnergyPlus version 9.0.0 this field is no longer used
-   */
-  bool setDesignWaterOutletTemperature(double designWaterOutletTemperature);
+    void resetMinimumPartLoadRatio();
 
-  void resetDesignWaterOutletTemperature();
+    bool setMaximumPartLoadRatio(double maximumPartLoadRatio);
 
-  bool setDesignWaterFlowRate(double designWaterFlowRate);
+    void resetMaximumPartLoadRatio();
 
-  void resetDesignWaterFlowRate();
+    bool setOptimumPartLoadRatio(double optimumPartLoadRatio);
 
-  void autosizeDesignWaterFlowRate();
+    void resetOptimumPartLoadRatio();
 
-  bool setMinimumPartLoadRatio(double minimumPartLoadRatio);
+    bool setWaterOutletUpperTemperatureLimit(double waterOutletUpperTemperatureLimit);
 
-  void resetMinimumPartLoadRatio();
+    void resetWaterOutletUpperTemperatureLimit();
 
-  bool setMaximumPartLoadRatio(double maximumPartLoadRatio);
+    bool setBoilerFlowMode(std::string boilerFlowMode);
 
-  void resetMaximumPartLoadRatio();
+    void resetBoilerFlowMode();
 
-  bool setOptimumPartLoadRatio(double optimumPartLoadRatio);
+    bool setParasiticElectricLoad(double parasiticElectricLoad);
 
-  void resetOptimumPartLoadRatio();
+    void resetParasiticElectricLoad();
 
-  // TODO: Handle Non-Extensible IddField Boiler Water Inlet Node Name.
+    bool setSizingFactor(double sizingFactor);
 
-  // TODO: Handle Non-Extensible IddField Boiler Water Outlet Node Name.
+    void resetSizingFactor();
 
-  bool setWaterOutletUpperTemperatureLimit(double waterOutletUpperTemperatureLimit);
+    boost::optional<double> autosizedNominalCapacity() const;
 
-  void resetWaterOutletUpperTemperatureLimit();
+    boost::optional<double> autosizedDesignWaterFlowRate() const;
 
-  bool setBoilerFlowMode(std::string boilerFlowMode);
+    bool setEndUseSubcategory(const std::string& endUseSubcategory);
 
-  void resetBoilerFlowMode();
+    //@}
+   protected:
+    /// @cond
+    typedef detail::BoilerHotWater_Impl ImplType;
 
-  bool setParasiticElectricLoad(double parasiticElectricLoad);
+    friend class detail::BoilerHotWater_Impl;
+    friend class Model;
+    friend class openstudio::detail::IdfObject_Impl;
+    friend class IdfObject;
 
-  void resetParasiticElectricLoad();
+    explicit BoilerHotWater(std::shared_ptr<detail::BoilerHotWater_Impl> impl);
 
-  bool setSizingFactor(double sizingFactor);
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.BoilerHotWater");
+  };
 
-  void resetSizingFactor();
+  /** \relates BoilerHotWater*/
+  typedef boost::optional<BoilerHotWater> OptionalBoilerHotWater;
 
-  boost::optional<double> autosizedNominalCapacity() const ;
+  /** \relates BoilerHotWater*/
+  typedef std::vector<BoilerHotWater> BoilerHotWaterVector;
 
-  boost::optional<double> autosizedDesignWaterFlowRate() const ;
+}  // namespace model
+}  // namespace openstudio
 
-  bool setEndUseSubcategory(const std::string & endUseSubcategory);
-
-  //@}
- protected:
-  /// @cond
-  typedef detail::BoilerHotWater_Impl ImplType;
-
-  friend class detail::BoilerHotWater_Impl;
-  friend class Model;
-  friend class openstudio::detail::IdfObject_Impl;
-  friend class IdfObject;
-
-  explicit BoilerHotWater(std::shared_ptr<detail::BoilerHotWater_Impl> impl);
-
-  /// @endcond
- private:
-
-  REGISTER_LOGGER("openstudio.model.BoilerHotWater");
-};
-
-/** \relates BoilerHotWater*/
-typedef boost::optional<BoilerHotWater> OptionalBoilerHotWater;
-
-/** \relates BoilerHotWater*/
-typedef std::vector<BoilerHotWater> BoilerHotWaterVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_BOILERHOTWATER_HPP
+#endif  // MODEL_BOILERHOTWATER_HPP

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -49,43 +49,46 @@ namespace openstudio {
 
 namespace energyplus {
 
-  boost::optional<IdfObject> ForwardTranslator::translateConstructionWithInternalSource( model::ConstructionWithInternalSource & modelObject )
-{
+  boost::optional<IdfObject> ForwardTranslator::translateConstructionWithInternalSource(model::ConstructionWithInternalSource& modelObject) {
 
-  IdfObject idfObject( openstudio::IddObjectType::Construction_InternalSource );
+    IdfObject idfObject(openstudio::IddObjectType::Construction_InternalSource);
 
-  m_idfObjects.push_back(idfObject);
+    m_idfObjects.push_back(idfObject);
 
-  //Name
-  idfObject.setString(Construction_InternalSourceFields::Name, modelObject.name().get());
+    //Name
+    idfObject.setString(Construction_InternalSourceFields::Name, modelObject.name().get());
 
-  //Source Present After Layer Number
-  idfObject.setInt(Construction_InternalSourceFields::SourcePresentAfterLayerNumber, modelObject.sourcePresentAfterLayerNumber());
+    //Source Present After Layer Number
+    idfObject.setInt(Construction_InternalSourceFields::SourcePresentAfterLayerNumber, modelObject.sourcePresentAfterLayerNumber());
 
-  //Temperature Calculation Requested After Layer Number
-  idfObject.setInt(Construction_InternalSourceFields::TemperatureCalculationRequestedAfterLayerNumber, modelObject.temperatureCalculationRequestedAfterLayerNumber());
+    //Temperature Calculation Requested After Layer Number
+    idfObject.setInt(Construction_InternalSourceFields::TemperatureCalculationRequestedAfterLayerNumber,
+                     modelObject.temperatureCalculationRequestedAfterLayerNumber());
 
-  // Dimensions for the CTF Calculation
-  idfObject.setInt(Construction_InternalSourceFields::DimensionsfortheCTFCalculation, modelObject.dimensionsForTheCTFCalculation());
+    // Dimensions for the CTF Calculation
+    idfObject.setInt(Construction_InternalSourceFields::DimensionsfortheCTFCalculation, modelObject.dimensionsForTheCTFCalculation());
 
-  // Tube Spacing
-  idfObject.setDouble(Construction_InternalSourceFields::TubeSpacing, modelObject.tubeSpacing());
+    // Tube Spacing
+    idfObject.setDouble(Construction_InternalSourceFields::TubeSpacing, modelObject.tubeSpacing());
 
-  //Layers
-  MaterialVector layers = modelObject.layers();
+    // Two Dimensional Temperature Calculation Position
+    idfObject.setDouble(Construction_InternalSourceFields::TwoDimensionalTemperatureCalculationPosition,
+                        modelObject.twoDimensionalTemperatureCalculationPosition());
 
-  unsigned fieldIndex = Construction_InternalSourceFields::TubeSpacing + 1;
-  for(unsigned layerIndex = 0; layerIndex < layers.size(); ++layerIndex ) {
-    Material material = layers[layerIndex];
-    translateAndMapModelObject(material);
-    idfObject.setString(fieldIndex, material.name().get());
-    fieldIndex++;
+    //Layers
+    MaterialVector layers = modelObject.layers();
+
+    unsigned fieldIndex = Construction_InternalSourceFields::TwoDimensionalTemperatureCalculationPosition + 1;
+    for (unsigned layerIndex = 0; layerIndex < layers.size(); ++layerIndex) {
+      Material material = layers[layerIndex];
+      translateAndMapModelObject(material);
+      idfObject.setString(fieldIndex, material.name().get());
+      fieldIndex++;
+    }
+
+    return boost::optional<IdfObject>(idfObject);
   }
 
-  return boost::optional<IdfObject>(idfObject);
-}
+}  // namespace energyplus
 
-} // energyplus
-
-} // openstudio
-
+}  // namespace openstudio

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -38,11 +38,10 @@
 #include "../core/Logger.hpp"
 #include "../core/UUID.hpp"
 
-#include <QVariant>
-#include <QMetaType>
-
-class QDomElement;
-class QDomDocument;
+namespace pugi {
+class xml_document;
+class xml_node;
+}  // namespace pugi
 
 namespace openstudio {
 namespace detail {
@@ -51,227 +50,163 @@ namespace detail {
   {
 
    public:
+    // Note JM 2018-12-04: As far as a I can tell, the only Ctor actually uses are the simple ones,
+    // name, value, optional<string> units
 
-      /// constructors
-      Attribute_Impl(const std::string& name, bool value, const boost::optional<std::string>& units);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     bool value,
-                     const boost::optional<std::string>& units,
-                     const std::string& source = std::string());
+    /// constructors
+    Attribute_Impl(const std::string& name, bool value, const boost::optional<std::string>& units);
+    Attribute_Impl(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+                   const boost::optional<std::string>& displayName, bool value, const boost::optional<std::string>& units,
+                   const std::string& source = std::string());
 
-      Attribute_Impl(const std::string& name, double value, const boost::optional<std::string>& units);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     double value,
-                     const boost::optional<std::string>& units,
-                     const std::string& source = std::string());
+    Attribute_Impl(const std::string& name, double value, const boost::optional<std::string>& units);
+    Attribute_Impl(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+                   const boost::optional<std::string>& displayName, double value, const boost::optional<std::string>& units,
+                   const std::string& source = std::string());
 
-      Attribute_Impl(const std::string& name, const OSOptionalQuantity& value);
+    Attribute_Impl(const std::string& name, int value, const boost::optional<std::string>& units);
+    Attribute_Impl(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+                   const boost::optional<std::string>& displayName, int value, const boost::optional<std::string>& units,
+                   const std::string& source = std::string());
 
-      Attribute_Impl(const std::string& name, const Quantity& value);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     const Quantity& value,
-                     const std::string& source = std::string());
+    Attribute_Impl(const std::string& name, unsigned value, const boost::optional<std::string>& units);
+    Attribute_Impl(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+                   const boost::optional<std::string>& displayName, unsigned value, const boost::optional<std::string>& units,
+                   const std::string& source = std::string());
 
-      Attribute_Impl(const std::string& name, const Unit& value);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     const Unit& value,
-                     const std::string& source = std::string());
+    Attribute_Impl(const std::string& name, const std::string& value, const boost::optional<std::string>& units);
+    Attribute_Impl(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+                   const boost::optional<std::string>& displayName, const std::string& value, const boost::optional<std::string>& units,
+                   const std::string& source = std::string());
 
-      Attribute_Impl(const std::string& name, int value, const boost::optional<std::string>& units);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     int value,
-                     const boost::optional<std::string>& units,
-                     const std::string& source = std::string());
+    Attribute_Impl(const std::string& name, const std::vector<openstudio::Attribute>& value, const boost::optional<std::string>& units);
+    Attribute_Impl(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+                   const boost::optional<std::string>& displayName, const std::vector<openstudio::Attribute>& value,
+                   const boost::optional<std::string>& units, const std::string& source = std::string());
 
-      Attribute_Impl(const std::string& name, unsigned value, const boost::optional<std::string>& units);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     unsigned value,
-                     const boost::optional<std::string>& units,
-                     const std::string& source = std::string());
+    // constructor from xml, throws if required arguments are missing
+    Attribute_Impl(const pugi::xml_node& element);
 
-      Attribute_Impl(const std::string& name, const char* value, const boost::optional<std::string>& units);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     const char* value,
-                     const boost::optional<std::string>& units,
-                     const std::string& source = std::string());
+    Attribute_Impl(const Attribute_Impl& other);
 
-      Attribute_Impl(const std::string& name, const std::string& value, const boost::optional<std::string>& units);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     const std::string& value,
-                     const boost::optional<std::string>& units,
-                     const std::string& source = std::string());
+    // Destructor
+    virtual ~Attribute_Impl() {}
 
-      Attribute_Impl(const std::string& name, const std::vector<openstudio::Attribute>& value, const boost::optional<std::string>& units);
-      Attribute_Impl(const openstudio::UUID& uuid,
-                     const openstudio::UUID& versionUUID,
-                     const std::string& name,
-                     const boost::optional<std::string>& displayName,
-                     const std::vector<openstudio::Attribute>& value,
-                     const boost::optional<std::string>& units,
-                     const std::string& source = std::string());
+    openstudio::UUID uuid() const;
 
-      Attribute_Impl(const QDomElement& element);
-      Attribute_Impl(const Attribute_Impl& other);
+    openstudio::UUID versionUUID() const;
 
-      // Destructor
-      virtual ~Attribute_Impl() {}
+    /// get the name
+    std::string name() const;
 
-      openstudio::UUID uuid() const;
+    // ETH@20140414 - displayName should return a std::string (with returnName=true behavior),
+    // and the return type of setDisplayName should be void.
 
-      openstudio::UUID versionUUID() const;
+    /// get the display name. if returnName and the display name is empty, will return
+    /// name() instead.
+    boost::optional<std::string> displayName(bool returnName = false) const;
 
-      /// get the name
-      std::string name() const;
+    /// set the display name
+    bool setDisplayName(const std::string& displayName);
 
-      // ETH@20140414 - displayName should return a std::string (with returnName=true behavior),
-      // and the return type of setDisplayName should be void.
+    /// clear the display name
+    void clearDisplayName();
 
-      /// get the display name. if returnName and the display name is empty, will return
-      /// name() instead.
-      boost::optional<std::string> displayName(bool returnName=false) const;
+    /// get the (optional) data source
+    std::string source() const;
 
-      /// set the display name
-      bool setDisplayName(const std::string& displayName);
+    /// set the data source
+    void setSource(const std::string& source);
 
-      /// clear the display name
-      void clearDisplayName();
+    /// clear the data source
+    void clearSource();
 
-      /// get the (optional) data source
-      std::string source() const;
+    /// get the attribute value type
+    AttributeValueType valueType() const;
 
-      /// set the data source
-      void setSource(const std::string& source);
+    // Check if it has a value set
+    bool hasValue() const;
 
-      /// clear the data source
-      void clearSource();
+    /// get value as a bool
+    bool valueAsBoolean() const;
 
-      /// get the attribute value type
-      AttributeValueType valueType() const;
+    /// set value. throws if wrong type.
+    void setValue(bool value);
 
-      /// get value as a bool
-      bool valueAsBoolean() const;
+    /// get value as int
+    int valueAsInteger() const;
 
-      /// set value. throws if wrong type.
-      void setValue(bool value);
+    /// set value. throws if wrong type.
+    void setValue(int value);
 
-      /// get value as int
-      int valueAsInteger() const;
+    /// get value as unsigned
+    unsigned valueAsUnsigned() const;
 
-      /// set value. throws if wrong type.
-      void setValue(int value);
+    /// set value. throws if wrong type.
+    void setValue(unsigned value);
 
-      /// get value as unsigned
-      unsigned valueAsUnsigned() const;
+    /// get value as double
+    double valueAsDouble() const;
 
-      /// set value. throws if wrong type.
-      void setValue(unsigned value);
+    /// set value. throws if wrong type.
+    void setValue(double value);
 
-      /// get value as double
-      double valueAsDouble() const;
+    /// get value as string
+    std::string valueAsString() const;
 
-      /// set value. throws if wrong type.
-      void setValue(double value);
+    /// set value. throws if wrong type.
+    void setValue(const char* value);
 
-      /// get value as Quantity
-      Quantity valueAsQuantity() const;
+    /// set value. throws if wrong type.
+    void setValue(const std::string& value);
 
-      /// set value. throws if wrong type.
-      void setValue(const Quantity& value);
+    /// get value as attribute vector
+    std::vector<Attribute> valueAsAttributeVector() const;
 
-      /// get value as Unit
-      Unit valueAsUnit() const;
+    /// set value. throws if wrong type.
+    void setValue(const std::vector<Attribute>& value);
 
-      /// set value. throws if wrong type.
-      void setValue(const Unit& value);
+    /// find child attribute by name
+    boost::optional<Attribute> findChildByName(const std::string& name) const;
 
-      /// get value as string
-      std::string valueAsString() const;
+    /// get the units
+    boost::optional<std::string> units() const;
 
-      /// set value. throws if wrong type.
-      void setValue(const char* value);
+    /// set the units
+    bool setUnits(const std::string& units);
 
-      /// set value. throws if wrong type.
-      void setValue(const std::string& value);
-
-      /// get value as attribute vector
-      std::vector<Attribute> valueAsAttributeVector() const;
-
-      /// set value. throws if wrong type.
-      void setValue(const std::vector<Attribute>& value);
-
-      /// get value as qvariant
-      QVariant valueAsQVariant() const;
-
-      /// find child attribute by name
-      boost::optional<Attribute> findChildByName(const std::string& name) const;
-
-      /// get the units
-      boost::optional<std::string> units() const;
-
-      /// set the units
-      bool setUnits(const std::string& units);
-
-      /** If attribute is a simple type (non-vector), prints attribute's value to std::string as
+    /** If attribute is a simple type (non-vector), prints attribute's value to std::string as
       *  simply as possible. Numeric types print in high precision. Attribute vectors are printed
       *  as XML. */
-      std::string toString() const;
+    std::string toString() const;
 
-      /// write object and all children to xml
-      QDomDocument toXml() const;
+    /// write object and all children to xml
+    pugi::xml_document toXml() const;
 
-      /// comparison
-      bool operator==(const Attribute& other) const;
+    /// comparison
+    bool operator==(const Attribute& other) const;
 
-    protected:
+   protected:
+    friend class openstudio::Attribute;
 
-      friend class openstudio::Attribute;
+    /// write values to an xml element
+    /// override in derived classes
+    virtual void writeValues(pugi::xml_node& element) const;
 
-      // for setting after construction
-      void setValue(const QVariant& value, bool check);
+   private:
+    REGISTER_LOGGER("openstudio.Attribute");
 
-      /// write values to an xml element
-      /// override in derived classes
-      virtual void writeValues(QDomDocument& doc, QDomElement& element) const;
-
-    private:
-
-      REGISTER_LOGGER("openstudio.Attribute");
-
-      openstudio::UUID m_uuid;
-      openstudio::UUID m_versionUUID;
-      std::string m_name;
-      boost::optional<std::string> m_displayName;
-      std::string m_source;
-      AttributeValueType m_valueType;
-      QVariant m_value;
-      boost::optional<std::string> m_units;
+    openstudio::UUID m_uuid;
+    openstudio::UUID m_versionUUID;
+    std::string m_name;
+    boost::optional<std::string> m_displayName;
+    std::string m_source;
+    AttributeValueType m_valueType;
+    OSAttributeVariant m_value;
+    boost::optional<std::string> m_units;
   };
 
-} // detail
-} // openstudio
+}  // namespace detail
+}  // namespace openstudio
 
-#endif // UTILITIES_DATA_ATTRIBUTE_IMPL_HPP
+#endif  // UTILITIES_DATA_ATTRIBUTE_IMPL_HPP

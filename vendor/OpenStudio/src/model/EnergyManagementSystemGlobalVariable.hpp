@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,61 +36,69 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class EnergyManagementSystemGlobalVariable_Impl;
+    class EnergyManagementSystemGlobalVariable_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** EnergyManagementSystemGlobalVariable is a ModelObject that wraps the OpenStudio IDD object 'OS:EnergyManagementSystem:GlobalVariable'. */
-class MODEL_API EnergyManagementSystemGlobalVariable : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** EnergyManagementSystemGlobalVariable is a ModelObject that wraps the OpenStudio IDD object 'OS:EnergyManagementSystem:GlobalVariable'. */
+  class MODEL_API EnergyManagementSystemGlobalVariable : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit EnergyManagementSystemGlobalVariable(const Model& model, const std::string& variableName);
+    explicit EnergyManagementSystemGlobalVariable(const Model& model, const std::string& variableName);
 
-  virtual ~EnergyManagementSystemGlobalVariable() {}
+    virtual ~EnergyManagementSystemGlobalVariable() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    bool exportToBCVTB() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool isExportToBCVTBDefaulted() const;
 
-  //@}
-  /** @name Other */
-  //@{
+    bool setExportToBCVTB(bool exportToBCVTB);
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::EnergyManagementSystemGlobalVariable_Impl ImplType;
+    void resetExportToBCVTB();
 
-  explicit EnergyManagementSystemGlobalVariable(std::shared_ptr<detail::EnergyManagementSystemGlobalVariable_Impl> impl);
+    /** @name Getters */
+    //@{
 
-  friend class detail::EnergyManagementSystemGlobalVariable_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.EnergyManagementSystemGlobalVariable");
-};
+    //@}
+    /** @name Setters */
+    //@{
 
-/** \relates EnergyManagementSystemGlobalVariable*/
-typedef boost::optional<EnergyManagementSystemGlobalVariable> OptionalEnergyManagementSystemGlobalVariable;
+    //@}
+    /** @name Other */
+    //@{
 
-/** \relates EnergyManagementSystemGlobalVariable*/
-typedef std::vector<EnergyManagementSystemGlobalVariable> EnergyManagementSystemGlobalVariableVector;
+    //@}
+   protected:
+    /// @cond
+    typedef detail::EnergyManagementSystemGlobalVariable_Impl ImplType;
 
-} // model
-} // openstudio
+    explicit EnergyManagementSystemGlobalVariable(std::shared_ptr<detail::EnergyManagementSystemGlobalVariable_Impl> impl);
 
-#endif // MODEL_ENERGYMANAGEMENTSYSTEMGLOBALVARIABLE_HPP
+    friend class detail::EnergyManagementSystemGlobalVariable_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.EnergyManagementSystemGlobalVariable");
+  };
 
+  /** \relates EnergyManagementSystemGlobalVariable*/
+  typedef boost::optional<EnergyManagementSystemGlobalVariable> OptionalEnergyManagementSystemGlobalVariable;
+
+  /** \relates EnergyManagementSystemGlobalVariable*/
+  typedef std::vector<EnergyManagementSystemGlobalVariable> EnergyManagementSystemGlobalVariableVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_ENERGYMANAGEMENTSYSTEMGLOBALVARIABLE_HPP

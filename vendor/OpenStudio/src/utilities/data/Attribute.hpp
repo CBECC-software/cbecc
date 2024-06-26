@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -40,87 +40,82 @@
 
 #include <boost/optional.hpp>
 
-#include <QVariant>
-#include <QMetaType>
+#include <variant>
 
-class QDomDocument;
-class QDomElement;
+namespace pugi {
+class xml_document;
+class xml_node;
+}  // namespace pugi
 
 namespace openstudio {
 
-class Unit;
-class Quantity;
-class OSOptionalQuantity;
+class Attribute;
 
-namespace detail{
+namespace detail {
   class Attribute_Impl;
   class EndUsesAttribute_Impl;
-}
+}  // namespace detail
+// TODO: do I really need to add 'unsigned int' as a type, or can I store as int instead (we store AttributeValueType too...)
+// Note JM 2018-11-28:
+// we add std::monostate to allow the variant to be empty basically
+typedef std::variant<std::monostate, bool, double, int, unsigned, std::string, std::vector<Attribute>> OSAttributeVariant;
+
+UTILITIES_API std::ostream& operator<<(std::ostream& os, const OSAttributeVariant& attributeVariant);
+
+// clang-format off
 
 /** \class AttributeValueType
  *  \brief A listing of data types that can be held in an Attribute.
- *  \details See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp. The actual macro
- *  call is:
+ *  \details See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp. The actual macro call is:
  *  \code
-OPENSTUDIO_ENUM( AttributeValueType,
+OPENSTUDIO_ENUM(AttributeValueType,
   ((Boolean)(Boolean)(0))
   ((Double)(Double)(1))
-  ((Quantity)(Quantity)(2))
-  ((Unit)(Unit)(3))
+  // ((Quantity)(Quantity)(2))  // Deprecated
+  // ((Unit)(Unit)(3))          // Deprecated
   ((Integer)(Integer)(4))
   ((Unsigned)(Unsigned)(5))
   ((String)(String)(6))
   ((AttributeVector)(AttributeVector)(7))
 );
  *  \endcode */
-OPENSTUDIO_ENUM( AttributeValueType,
+OPENSTUDIO_ENUM(AttributeValueType,
   ((Boolean)(Boolean)(0))
   ((Double)(Double)(1))
-  ((Quantity)(Quantity)(2))
-  ((Unit)(Unit)(3))
+  // ((Quantity)(Quantity)(2))  // Deprecated
+  // ((Unit)(Unit)(3))          // Deprecated
   ((Integer)(Integer)(4))
   ((Unsigned)(Unsigned)(5))
   ((String)(String)(6))
   ((AttributeVector)(AttributeVector)(7))
 );
 
+// clang-format on
+
 /** AttributeDescription describes what an acceptable Attribute is in a given context. At this
  *  time, it is primarily used in openstudio::analysis::GenericUncertaintyDescription. Note
  *  that AttributeDescription was designed to provide the information needed by a UI developer
  *  to properly prompt a user for the data needed to create a new Attribute. */
-struct UTILITIES_API AttributeDescription {
+struct UTILITIES_API AttributeDescription
+{
   std::string name;
   std::string displayName;
   std::string description;
   std::vector<AttributeValueType> validValueTypes;
   bool required;
-  QVariant defaultValue;
+  OSAttributeVariant defaultValue;
 
-  AttributeDescription(const std::string& t_name,
-                       const std::string& t_displayName,
-                       const std::string& t_description,
-                       const AttributeValueType& t_validValueType,
-                       bool t_required);
+  AttributeDescription(const std::string& t_name, const std::string& t_displayName, const std::string& t_description,
+                       const AttributeValueType& t_validValueType, bool t_required);
 
-  AttributeDescription(const std::string& t_name,
-                       const std::string& t_displayName,
-                       const std::string& t_description,
-                       const AttributeValueType& t_validValueType,
-                       bool t_required,
-                       QVariant t_defaultValue);
+  AttributeDescription(const std::string& t_name, const std::string& t_displayName, const std::string& t_description,
+                       const AttributeValueType& t_validValueType, bool t_required, OSAttributeVariant t_defaultValue);
 
-  AttributeDescription(const std::string& t_name,
-                       const std::string& t_displayName,
-                       const std::string& t_description,
-                       const std::vector<AttributeValueType>& t_validValueTypes,
-                       bool t_required);
+  AttributeDescription(const std::string& t_name, const std::string& t_displayName, const std::string& t_description,
+                       const std::vector<AttributeValueType>& t_validValueTypes, bool t_required);
 
-  AttributeDescription(const std::string& t_name,
-                       const std::string& t_displayName,
-                       const std::string& t_description,
-                       const std::vector<AttributeValueType>& t_validValueTypes,
-                       bool t_required,
-                       QVariant t_defaultValue);
+  AttributeDescription(const std::string& t_name, const std::string& t_displayName, const std::string& t_description,
+                       const std::vector<AttributeValueType>& t_validValueTypes, bool t_required, OSAttributeVariant t_defaultValue);
 };
 
 /** \relates AttributeDescription */
@@ -136,126 +131,82 @@ typedef std::vector<AttributeDescription> AttributeDescriptionVector;
  *   are named in lower camel case, this corresponds to a member or variable name.  Attributes
  *   of vector type are named in upper camel case to correspond to a class or struct name.
  */
-class UTILITIES_API Attribute {
+class UTILITIES_API Attribute
+{
  public:
   typedef detail::Attribute_Impl ImplType;
 
   /// constructors
+
+  // AttributeValueType::Boolean
   Attribute(const std::string& name, bool value);
   Attribute(const std::string& name, bool value, const std::string& units);
   Attribute(const std::string& name, bool value, const boost::optional<std::string>& units);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            bool value,
-            const boost::optional<std::string>& units,
+  Attribute(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+            const boost::optional<std::string>& displayName, bool value, const boost::optional<std::string>& units,
             const std::string& source = std::string());
 
+  // AttributeValueType::Double
   Attribute(const std::string& name, double value);
   Attribute(const std::string& name, double value, const std::string& units);
   Attribute(const std::string& name, double value, const boost::optional<std::string>& units);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            double value,
-            const boost::optional<std::string>& units,
+  Attribute(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+            const boost::optional<std::string>& displayName, double value, const boost::optional<std::string>& units,
             const std::string& source = std::string());
 
-  /** Upon construction, will be of type Quantity or Unit, as appropriate. */
-  Attribute(const std::string& name, const OSOptionalQuantity& value);
-
-  Attribute(const std::string& name, const Quantity& value);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            const Quantity& value,
-            const std::string& source = std::string());
-
-  Attribute(const std::string& name, const Unit& value);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            const Unit& value,
-            const std::string& source = std::string());
-
+  // AttributeValueType::Integer
   Attribute(const std::string& name, int value);
   Attribute(const std::string& name, int value, const std::string& units);
   Attribute(const std::string& name, int value, const boost::optional<std::string>& units);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            int value,
-            const boost::optional<std::string>& units,
+  Attribute(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+            const boost::optional<std::string>& displayName, int value, const boost::optional<std::string>& units,
             const std::string& source = std::string());
 
+  // AttributeValueType::Unsigned
   Attribute(const std::string& name, unsigned value);
   Attribute(const std::string& name, unsigned value, const std::string& units);
   Attribute(const std::string& name, unsigned value, const boost::optional<std::string>& units);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            unsigned value,
-            const boost::optional<std::string>& units,
+  Attribute(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+            const boost::optional<std::string>& displayName, unsigned value, const boost::optional<std::string>& units,
             const std::string& source = std::string());
 
+  // AttributeValueType::String
+  // Const char overload is needed because otherwise it'll resolve to the bool constructor (implicit conversion of pointer to bool)
   Attribute(const std::string& name, const char* value);
   Attribute(const std::string& name, const char* value, const std::string& units);
   Attribute(const std::string& name, const char* value, const boost::optional<std::string>& units);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            const char* value,
-            const boost::optional<std::string>& units,
+  Attribute(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+            const boost::optional<std::string>& displayName, const char* value, const boost::optional<std::string>& units,
             const std::string& source = std::string());
 
   Attribute(const std::string& name, const std::string& value);
   Attribute(const std::string& name, const std::string& value, const std::string& units);
   Attribute(const std::string& name, const std::string& value, const boost::optional<std::string>& units);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            const std::string& value,
-            const boost::optional<std::string>& units,
+  Attribute(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+            const boost::optional<std::string>& displayName, const std::string& value, const boost::optional<std::string>& units,
             const std::string& source = std::string());
 
+  // AttributeValueType::AttributeVector
   Attribute(const std::string& name, const std::vector<openstudio::Attribute>& value);
   Attribute(const std::string& name, const std::vector<openstudio::Attribute>& value, const std::string& units);
   Attribute(const std::string& name, const std::vector<openstudio::Attribute>& value, const boost::optional<std::string>& units);
-  Attribute(const openstudio::UUID& uuid,
-            const openstudio::UUID& versionUUID,
-            const std::string& name,
-            const boost::optional<std::string>& displayName,
-            const std::vector<openstudio::Attribute>& value,
-            const boost::optional<std::string>& units,
-            const std::string& source = std::string());
-
+  Attribute(const openstudio::UUID& uuid, const openstudio::UUID& versionUUID, const std::string& name,
+            const boost::optional<std::string>& displayName, const std::vector<openstudio::Attribute>& value,
+            const boost::optional<std::string>& units, const std::string& source = std::string());
 
   // Destructor
   virtual ~Attribute() {}
 
-
-  explicit Attribute(const QDomElement& element);
+  // constructor from xml, throws if required arguments are missing
+  explicit Attribute(const pugi::xml_node& element);
 
   Attribute(const Attribute& other);
 
   Attribute clone() const;
 
-  /// static constructor from QVariant
-  static boost::optional<Attribute> fromQVariant(const std::string& name, const QVariant& value, const boost::optional<std::string>& units = boost::none);
-
+  // TODO: keep both? Keep public?
   /// static constructor from xml
-  static boost::optional<Attribute> loadFromXml(const openstudio::path& path);
-
-  /// static constructor from loaded xml
-  static boost::optional<Attribute> loadFromXml(const QDomDocument& doc);
+  static boost::optional<Attribute> loadFromXml(const openstudio::path& xmlPath);
 
   openstudio::UUID uuid() const;
 
@@ -266,7 +217,7 @@ class UTILITIES_API Attribute {
 
   /// get the display name. if returnName and the display name is empty, will return
   /// name() instead.
-  boost::optional<std::string> displayName(bool returnName=false) const;
+  boost::optional<std::string> displayName(bool returnName = false) const;
 
   /// set the display name
   bool setDisplayName(const std::string& displayName);
@@ -285,6 +236,9 @@ class UTILITIES_API Attribute {
 
   /// get the attribute value type
   AttributeValueType valueType() const;
+
+  /** Returns true if this Attribute value has been set. */
+  bool hasValue() const;
 
   /// get value as a bool
   bool valueAsBoolean() const;
@@ -310,18 +264,6 @@ class UTILITIES_API Attribute {
   /// set value. throws if wrong type.
   void setValue(double value);
 
-  /// get value as Quantity
-  Quantity valueAsQuantity() const;
-
-  /// set value. throws if wrong type.
-  void setValue(const Quantity& value);
-
-  /// get value as Unit
-  Unit valueAsUnit() const;
-
-  /// set value. throws if wrong type.
-  void setValue(const Unit& value);
-
   /// get value as string
   std::string valueAsString() const;
 
@@ -337,12 +279,6 @@ class UTILITIES_API Attribute {
   /// set value. throws if wrong type.
   void setValue(const std::vector<Attribute>& value);
 
-  /// get value as qvariant
-  QVariant valueAsQVariant() const;
-
-  // set value. throws if wrong type.
-  void setValue(const QVariant& value);
-
   /// find child attribute by name
   boost::optional<Attribute> findChildByName(const std::string& name) const;
 
@@ -357,9 +293,6 @@ class UTILITIES_API Attribute {
   *  as XML. */
   std::string toString() const;
 
-  /// write object and all children to xml
-  QDomDocument toXml() const;
-
   /// write object and all children out as xml to path.
   bool saveToXml(const openstudio::path& path) const;
 
@@ -367,27 +300,31 @@ class UTILITIES_API Attribute {
   bool operator==(const Attribute& other) const;
 
   /// cast to type T, can throw std::bad_cast
-  template<typename T>
-  T cast() const{
+  template <typename T>
+  T cast() const {
     std::shared_ptr<typename T::ImplType> impl = this->getImpl<typename T::ImplType>();
-    if (!impl){
+    if (!impl) {
       throw(std::bad_cast());
     }
     return T(std::move(impl));
   }
 
   /// cast to optional of type T
-  template<typename T>
-  boost::optional<T> optionalCast() const{
+  template <typename T>
+  boost::optional<T> optionalCast() const {
     boost::optional<T> result;
     std::shared_ptr<typename T::ImplType> impl = this->getImpl<typename T::ImplType>();
-    if (impl){
+    if (impl) {
       result = T(std::move(impl));
     }
     return result;
   }
 
  protected:
+  UTILITIES_API friend std::ostream& operator<<(std::ostream& os, const Attribute& attribute);
+  // TODO: remove from public API or make protected/private
+  /// write object and all children to xml
+  pugi::xml_document toXml() const;
 
   friend class detail::Attribute_Impl;
   friend class EndUses;
@@ -396,18 +333,15 @@ class UTILITIES_API Attribute {
   Attribute(const std::shared_ptr<detail::Attribute_Impl>& impl);
 
   /// get the impl
-  template<typename T>
-  std::shared_ptr<T> getImpl() const
-  {
+  template <typename T>
+  std::shared_ptr<T> getImpl() const {
     return std::dynamic_pointer_cast<T>(m_impl);
   }
 
  private:
-
   REGISTER_LOGGER("openstudio.Attribute");
 
   std::shared_ptr<detail::Attribute_Impl> m_impl;
-
 };
 
 /** \relates Attribute */
@@ -435,71 +369,6 @@ UTILITIES_API std::vector<int> getIntVectorFromAttribute(const Attribute& attrib
 // DLM: can this be a member of Attribute?
 UTILITIES_API std::vector<double> getDoubleVectorFromAttribute(const Attribute& attribute);
 
-/** Returns true if candidate and description have matching names and types. \relates Attribute */
-// DLM: can this be a member of Attribute?
-UTILITIES_API bool isConsistent(const Attribute& candidate,const AttributeDescription& description);
+}  // namespace openstudio
 
-/** Copies description's display name over to attribute. Will return false if
- *  !isConsistent(attribute,description). \relates Attribute */
-// DLM: can this be a member of Attribute?
-UTILITIES_API bool prepareForDisplay(Attribute& attribute, const AttributeDescription& description);
-
-/** Saves attributes in a flat json file. Discards uuid and version_uuid information.
- *  Recasts Unsigned attributes as Integer attributes, Quantity attributes as Double
- *  attributes with units, Unit attributes as String attributes. \relates Attribute */
-UTILITIES_API bool saveJSON(const std::vector<Attribute>& attributes,
-                            const openstudio::path& p,
-                            bool overwrite=false);
-
-/** Puts attributes out to os in a flat json format. Discards uuid and version_uuid
- *  information. Recasts Unsigned attributes as Integer attributes, Quantity attributes
- *  as Double attributes with units, Unit attributes as String attributes.
- *  \relates Attribute */
-UTILITIES_API std::ostream& toJSON(const std::vector<Attribute>& attributes,
-                                   std::ostream& os);
-
-/** Returns attributes as a string in a flat json format. Discards uuid and version_uuid
- *  information. Recasts Unsigned attributes as Integer attributes, Quantity attributes
- *  as Double attributes with units, Unit attributes as String attributes.
- *  \relates Attribute */
-UTILITIES_API std::string toJSON(const std::vector<Attribute>& attributes);
-
-/** Returns attributes as a string in a flat json format. Discards uuid and version_uuid
-*  information. Recasts Unsigned attributes as Integer attributes, Quantity attributes
-*  as Double attributes with units, Unit attributes as String attributes. Does not print metadata.
-*  \relates Attribute */
-UTILITIES_API std::string toJSONWithoutMetadata(const std::vector<Attribute>& attributes);
-
-/** Deserializes the flat attribute json format. \relates Attribute */
-UTILITIES_API std::vector<Attribute> toVectorOfAttribute(const openstudio::path& pathToJson);
-
-/** Deserializes the flat attribute json format. \relates Attribute */
-UTILITIES_API std::vector<Attribute> toVectorOfAttribute(std::istream& json);
-
-/** Deserializes the flat attribute json format. \relates Attribute */
-UTILITIES_API std::vector<Attribute> toVectorOfAttribute(const std::string& json);
-
-namespace detail {
-  /** Places attribute's data in a QVariant for JSON serialization. */
-  UTILITIES_API QVariant toVariant(const Attribute& attribute);
-
-  /** Deserializes json variant to Attribute. */
-  UTILITIES_API Attribute toAttribute(const QVariant& variant, const VersionString& version);
-
-  /** Places a vector of attributes' data in a flat QVariant for JSON serialization. Discards
-   *  uuid and version_uuid information. Recasts Unsigned attributes as Integer attributes,
-   *  Quantity attributes as Double attributes with units, Unit attributes as String attributes. */
-  UTILITIES_API QVariant toVariant(const std::vector<Attribute>& attributes);
-
-  /** Deserializes (flat) json variant to std::vector<Attribute>. */
-  UTILITIES_API std::vector<Attribute> toVectorOfAttribute(const QVariant& variant, const VersionString& version);
-}
-
-} // openstudio
-
-// declare these types so we can use them as properties
-//Q_DECLARE_METATYPE(openstudio::Attribute);
-Q_DECLARE_METATYPE(boost::optional<openstudio::Attribute>);
-Q_DECLARE_METATYPE(std::vector<openstudio::Attribute>);
-
-#endif // UTILITIES_DATA_ATTRIBUTE_HPP
+#endif  // UTILITIES_DATA_ATTRIBUTE_HPP

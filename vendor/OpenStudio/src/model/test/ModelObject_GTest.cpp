@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -43,30 +43,12 @@
 #include "../StandardOpaqueMaterial.hpp"
 #include "../StandardOpaqueMaterial_Impl.hpp"
 
-#include "../../utilities/data/Attribute.hpp"
 #include "../../utilities/core/Containers.hpp"
 
 #include <utilities/idd/IddEnums.hxx>
 
 using namespace openstudio;
 using namespace openstudio::model;
-
-TEST_F(ModelFixture, ModelObject_Attributes)
-{
-  // Removed due to removal of attributes
-  // Model model;
-
-  // OptionalWorkspaceObject oObject = model.addObject(IdfObject(IddObjectType::OS_Version));
-  // ASSERT_TRUE(oObject);
-  // ModelObject version = oObject->cast<ModelObject>();
-  // StringVector versionAttributeNames = version.attributeNames();
-  // ASSERT_EQ(static_cast<unsigned>(3),versionAttributeNames.size());
-  // EXPECT_EQ("iddObjectType",versionAttributeNames[0]);
-  // EXPECT_EQ("handle",versionAttributeNames[1]);
-  // EXPECT_EQ("name",versionAttributeNames[2]);
-
-  // EXPECT_FALSE(version.getAttribute("N a m e"));
-}
 
 TEST_F(ModelFixture, ModelObject_Clone_SameModel) {
   // Make model object with resource that has children
@@ -78,16 +60,16 @@ TEST_F(ModelFixture, ModelObject_Clone_SameModel) {
   Surface surface(points, original);
   Construction construction(original);
   surface.setConstruction(construction);
-  construction.standardsInformation(); // creates object
+  construction.standardsInformation();  // creates object
   StandardOpaqueMaterial material(original);
-  construction.setLayers(MaterialVector(1u,material));
-  EXPECT_EQ(4u,original.numObjects());
+  construction.setLayers(MaterialVector(1u, material));
+  EXPECT_EQ(4u, original.numObjects());
 
   // Clone into same model -- new object with different name. resources reused.
   Surface newSurface = surface.clone(original).cast<Surface>();
   EXPECT_FALSE(newSurface == surface);
-  EXPECT_EQ(5u,original.numObjects());
-  EXPECT_NE(surface.name().get(),newSurface.name().get());
+  EXPECT_EQ(5u, original.numObjects());
+  EXPECT_NE(surface.name().get(), newSurface.name().get());
   ASSERT_TRUE(surface.construction());
   ASSERT_TRUE(newSurface.construction());
   EXPECT_TRUE(surface.construction().get() == newSurface.construction().get());
@@ -104,40 +86,42 @@ TEST_F(ModelFixture, ModelObject_Clone_DifferentModel) {
   Surface surface(points, original);
   Construction construction(original);
   surface.setConstruction(construction);
-  construction.standardsInformation(); // creates object
+  construction.standardsInformation();  // creates object
   StandardOpaqueMaterial material(original);
-  construction.setLayers(MaterialVector(1u,material));
-  EXPECT_EQ(4u,original.numObjects());
+  construction.setLayers(MaterialVector(1u, material));
+  EXPECT_EQ(4u, original.numObjects());
 
   // Clone into new model -- everything added
   Model newModel;
-  EXPECT_EQ(0u,newModel.numObjects());
+  EXPECT_EQ(0u, newModel.numObjects());
   Surface newSurface = surface.clone(newModel).cast<Surface>();
-  EXPECT_EQ(4u,newModel.numObjects());
+  EXPECT_EQ(4u, newModel.numObjects());
   EXPECT_TRUE(newModel.isMember(newSurface.handle()));
 
   // Clone into that model again -- object added, resource and children reused
   Surface anotherNewSurface = surface.clone(newModel).cast<Surface>();
   EXPECT_FALSE(anotherNewSurface == newSurface);
-  EXPECT_EQ(5u,newModel.numObjects());
+  EXPECT_EQ(5u, newModel.numObjects());
   ASSERT_TRUE(anotherNewSurface.construction());
   ASSERT_TRUE(newSurface.construction());
   EXPECT_TRUE(anotherNewSurface.construction().get() == newSurface.construction().get());
   EXPECT_TRUE(anotherNewSurface.construction().get().standardsInformation() == newSurface.construction().get().standardsInformation());
-  EXPECT_TRUE(anotherNewSurface.construction().get().cast<LayeredConstruction>().layers() == newSurface.construction().get().cast<LayeredConstruction>().layers());
+  EXPECT_TRUE(anotherNewSurface.construction().get().cast<LayeredConstruction>().layers()
+              == newSurface.construction().get().cast<LayeredConstruction>().layers());
 
   // Change the data in the resource's child
   StandardsInformationConstructionVector stdsInfos = newModel.getModelObjects<StandardsInformationConstruction>();
-  EXPECT_EQ(1u,stdsInfos.size());
+  EXPECT_EQ(1u, stdsInfos.size());
   stdsInfos[0].setIntendedSurfaceType(StandardsInformationConstruction::intendedSurfaceTypeValues()[0]);
 
   // Clone into that model again -- everything added, except resource of resource
   anotherNewSurface = surface.clone(newModel).cast<Surface>();
   EXPECT_FALSE(anotherNewSurface == newSurface);
-  EXPECT_EQ(8u,newModel.numObjects());
+  EXPECT_EQ(8u, newModel.numObjects());
   ASSERT_TRUE(anotherNewSurface.construction());
   ASSERT_TRUE(newSurface.construction());
   EXPECT_FALSE(anotherNewSurface.construction().get() == newSurface.construction().get());
   EXPECT_FALSE(anotherNewSurface.construction().get().standardsInformation() == newSurface.construction().get().standardsInformation());
-  EXPECT_TRUE(anotherNewSurface.construction().get().cast<LayeredConstruction>().layers() == newSurface.construction().get().cast<LayeredConstruction>().layers());
+  EXPECT_TRUE(anotherNewSurface.construction().get().cast<LayeredConstruction>().layers()
+              == newSurface.construction().get().cast<LayeredConstruction>().layers());
 }

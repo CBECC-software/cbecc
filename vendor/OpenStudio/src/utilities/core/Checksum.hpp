@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -38,16 +38,18 @@
 
 namespace openstudio {
 
-  /// return 8 character hex checksum of string
-  UTILITIES_API std::string checksum(const std::string& s);
+/// return 8 character hex checksum of string
+UTILITIES_API std::string checksum(const std::string& s);
 
-  /// return 8 character hex checksum of istream
-  UTILITIES_API std::string checksum(std::istream& is);
+/// return 8 character hex checksum of istream
+UTILITIES_API std::string checksum(std::istream& is);
 
-  /// return 8 character hex checksum of file contents
-  UTILITIES_API std::string checksum(const path& p);
+/// return 8 character hex checksum of file contents
+UTILITIES_API std::string checksum(const path& p);
 
-} // openstudio
+/// returns the CRC-16 checksum of the first len bytes of data.  Replaces Qt implementation qChecksum.
+UTILITIES_API int crc16(const char* ptr, int count);
 
+}  // namespace openstudio
 
-#endif // UTILITIES_CORE_CHECKSUM_HPP
+#endif  // UTILITIES_CORE_CHECKSUM_HPP

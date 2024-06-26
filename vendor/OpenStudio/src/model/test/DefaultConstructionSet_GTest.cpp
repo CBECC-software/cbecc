@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -55,8 +55,7 @@
 using namespace openstudio;
 using namespace openstudio::model;
 
-TEST_F(ModelFixture, DefaultConstructionSet)
-{
+TEST_F(ModelFixture, DefaultConstructionSet) {
   Model model;
 
   DefaultConstructionSet defaultConstructionSet(model);
@@ -126,16 +125,22 @@ TEST_F(ModelFixture, DefaultConstructionSet)
   EXPECT_EQ(construction.handle(), defaultConstructionSet.siteShadingConstruction()->handle());
   defaultConstructionSet.resetSiteShadingConstruction();
   EXPECT_FALSE(defaultConstructionSet.siteShadingConstruction());
+
+  EXPECT_FALSE(defaultConstructionSet.adiabaticSurfaceConstruction());
+  EXPECT_TRUE(defaultConstructionSet.setAdiabaticSurfaceConstruction(construction));
+  ASSERT_TRUE(defaultConstructionSet.adiabaticSurfaceConstruction());
+  EXPECT_EQ(construction.handle(), defaultConstructionSet.adiabaticSurfaceConstruction()->handle());
+  defaultConstructionSet.resetAdiabaticSurfaceConstruction();
+  EXPECT_FALSE(defaultConstructionSet.adiabaticSurfaceConstruction());
 }
 
-TEST_F(ModelFixture, DefaultConstructionSet_ExteriorSurfaces)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_ExteriorSurfaces) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(1,0,0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
   Surface surface(points, model);
   EXPECT_TRUE(surface.setOutsideBoundaryCondition("Outdoors"));
 
@@ -173,23 +178,22 @@ TEST_F(ModelFixture, DefaultConstructionSet_ExteriorSurfaces)
   EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(surface));
 }
 
-TEST_F(ModelFixture, DefaultConstructionSet_InteriorSurfaces)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_InteriorSurfaces) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(1,0,0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
   Space space(model);
   Surface surface(points, model);
   surface.setSpace(space);
   EXPECT_FALSE(surface.setOutsideBoundaryCondition("Surface"));
 
   points.clear();
-  points.push_back(Point3d(1,0,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(0,1,0));
+  points.push_back(Point3d(1, 0, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(0, 1, 0));
   Space space2(model);
   Surface surface2(points, model);
   surface2.setSpace(space2);
@@ -235,15 +239,13 @@ TEST_F(ModelFixture, DefaultConstructionSet_InteriorSurfaces)
   EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(surface));
 }
 
-
-TEST_F(ModelFixture, DefaultConstructionSet_GroundContactSurfaces)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_GroundContactSurfaces) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(1,0,0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
   Surface surface(points, model);
   EXPECT_TRUE(surface.setOutsideBoundaryCondition("Ground"));
 
@@ -281,14 +283,13 @@ TEST_F(ModelFixture, DefaultConstructionSet_GroundContactSurfaces)
   EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(surface));
 }
 
-TEST_F(ModelFixture, DefaultConstructionSet_ExteriorSubSurfaces)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_ExteriorSubSurfaces) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(1,0,0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
   Surface surface(points, model);
   EXPECT_TRUE(surface.setOutsideBoundaryCondition("Outdoors"));
 
@@ -329,23 +330,22 @@ TEST_F(ModelFixture, DefaultConstructionSet_ExteriorSubSurfaces)
   EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(subSurface));
 }
 
-TEST_F(ModelFixture, DefaultConstructionSet_InteriorSubSurfaces)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_InteriorSubSurfaces) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(1,0,0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
   Space space(model);
   Surface surface(points, model);
   surface.setSpace(space);
   EXPECT_FALSE(surface.setOutsideBoundaryCondition("Surface"));
 
   points.clear();
-  points.push_back(Point3d(1,0,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(0,1,0));
+  points.push_back(Point3d(1, 0, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(0, 1, 0));
   Space space2(model);
   Surface surface2(points, model);
   surface2.setSpace(space2);
@@ -394,14 +394,13 @@ TEST_F(ModelFixture, DefaultConstructionSet_InteriorSubSurfaces)
   EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(subSurface));
 }
 
-TEST_F(ModelFixture, DefaultConstructionSet_InteriorPartitionSurface)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_InteriorPartitionSurface) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(1,0,0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
   InteriorPartitionSurface surface(points, model);
 
   DefaultConstructionSet defaultConstructionSet(model);
@@ -416,17 +415,15 @@ TEST_F(ModelFixture, DefaultConstructionSet_InteriorPartitionSurface)
   EXPECT_EQ(construction.handle(), defaultConstructionSet.getDefaultConstruction(surface)->handle());
   defaultConstructionSet.resetInteriorPartitionConstruction();
   EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(surface));
-
 }
 
-TEST_F(ModelFixture, DefaultConstructionSet_ShadingSurface)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_ShadingSurface) {
   Model model;
 
   Point3dVector points;
-  points.push_back(Point3d(0,1,0));
-  points.push_back(Point3d(0,0,0));
-  points.push_back(Point3d(1,0,0));
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
   ShadingSurface surface(points, model);
 
   ShadingSurfaceGroup shadingSurfaceGroup(model);
@@ -478,9 +475,33 @@ TEST_F(ModelFixture, DefaultConstructionSet_ShadingSurface)
   EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(surface));
 }
 
+TEST_F(ModelFixture, DefaultConstructionSet_AdiabaticSurface) {
+  Model model;
 
-TEST_F(ModelFixture, DefaultConstructionSet_Clone)
-{
+  Point3dVector points;
+  points.push_back(Point3d(0, 1, 0));
+  points.push_back(Point3d(0, 0, 0));
+  points.push_back(Point3d(1, 0, 0));
+  Space space(model);
+  Surface surface(points, model);
+  surface.setSpace(space);
+  EXPECT_TRUE(surface.setOutsideBoundaryCondition("Adiabatic"));
+
+  DefaultConstructionSet defaultConstructionSet(model);
+  Construction construction(model);
+
+  EXPECT_FALSE(defaultConstructionSet.adiabaticSurfaceConstruction());
+  EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(surface));
+  EXPECT_TRUE(defaultConstructionSet.setAdiabaticSurfaceConstruction(construction));
+  ASSERT_TRUE(defaultConstructionSet.adiabaticSurfaceConstruction());
+  EXPECT_EQ(construction.handle(), defaultConstructionSet.adiabaticSurfaceConstruction()->handle());
+  ASSERT_TRUE(defaultConstructionSet.getDefaultConstruction(surface));
+  EXPECT_EQ(construction.handle(), defaultConstructionSet.getDefaultConstruction(surface)->handle());
+  defaultConstructionSet.resetAdiabaticSurfaceConstruction();
+  EXPECT_FALSE(defaultConstructionSet.getDefaultConstruction(surface));
+}
+
+TEST_F(ModelFixture, DefaultConstructionSet_Clone) {
   Model model;
 
   StandardOpaqueMaterial m1(model);
@@ -528,12 +549,9 @@ TEST_F(ModelFixture, DefaultConstructionSet_Clone)
   defaultConstructionSet2.setDefaultExteriorSurfaceConstructions(*defExtSurfCons);
   EXPECT_EQ(1u, defaultSurfaceConstructions.getModelObjectSources<model::DefaultConstructionSet>().size());
   EXPECT_EQ(1u, defExtSurfCons->getModelObjectSources<model::DefaultConstructionSet>().size());
-
 }
 
-
-TEST_F(ModelFixture, DefaultConstructionSet_CloneBadName)
-{
+TEST_F(ModelFixture, DefaultConstructionSet_CloneBadName) {
   Model model;
 
   DefaultSurfaceConstructions defaultSurfaceConstructions(model);

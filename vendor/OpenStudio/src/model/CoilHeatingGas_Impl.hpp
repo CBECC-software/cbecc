@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,131 +35,126 @@
 namespace openstudio {
 namespace model {
 
-class Curve;
+  class Curve;
 
-namespace detail {
+  namespace detail {
 
-  class MODEL_API CoilHeatingGas_Impl : public StraightComponent_Impl {
-      public:
-    /** @name Constructors and Destructors */
-    //2{
+    class MODEL_API CoilHeatingGas_Impl : public StraightComponent_Impl
+    {
+     public:
+      /** @name Constructors and Destructors */
+      //2{
 
-    // constructor
-    CoilHeatingGas_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      // constructor
+      CoilHeatingGas_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    // construct from workspace
-    CoilHeatingGas_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                        Model_Impl* model,
-                        bool keepHandle);
+      // construct from workspace
+      CoilHeatingGas_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    // copy constructor
-    CoilHeatingGas_Impl(const CoilHeatingGas_Impl& other, Model_Impl* model, bool keepHandle);
+      // copy constructor
+      CoilHeatingGas_Impl(const CoilHeatingGas_Impl& other, Model_Impl* model, bool keepHandle);
 
-    // virtual destructor
-    virtual ~CoilHeatingGas_Impl(){}
+      // virtual destructor
+      virtual ~CoilHeatingGas_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    // Get all output variable names that could be associated with this object.
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      // Get all output variable names that could be associated with this object.
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
+      virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
 
-    virtual unsigned inletPort() const override;
+      virtual unsigned inletPort() const override;
 
-    virtual unsigned outletPort() const override;
+      virtual unsigned outletPort() const override;
 
-    virtual boost::optional<HVACComponent> containingHVACComponent() const override;
-    virtual boost::optional<ZoneHVACComponent> containingZoneHVACComponent() const override;
+      virtual boost::optional<HVACComponent> containingHVACComponent() const override;
+      virtual boost::optional<ZoneHVACComponent> containingZoneHVACComponent() const override;
 
-    //@}
-    /** @name Getters and Setters */
-    //@{
+      //@}
+      /** @name Getters and Setters */
+      //@{
 
-    Schedule availabilitySchedule() const;
+      Schedule availabilitySchedule() const;
 
-    bool setAvailabilitySchedule(Schedule& schedule);
+      bool setAvailabilitySchedule(Schedule& schedule);
 
-    std::string fuelType() const;
+      std::string fuelType() const;
 
-    bool setFuelType(const std::string& fuelType);
+      bool setFuelType(const std::string& fuelType);
 
-    void resetFuelType();
+      void resetFuelType();
 
-    // Get GasBurnerEfficiency
-    double gasBurnerEfficiency() const;
+      // Get GasBurnerEfficiency
+      double gasBurnerEfficiency() const;
 
-    // Set GasBurnerEfficiency
-    bool setGasBurnerEfficiency(double val);
+      // Set GasBurnerEfficiency
+      bool setGasBurnerEfficiency(double val);
 
-    // Get ParasiticElectricLoad
-    double parasiticElectricLoad() const;
+      // Get ParasiticElectricLoad
+      double parasiticElectricLoad() const;
 
-    // Set parasiticElectricLoad
-    bool setParasiticElectricLoad(double val);
+      // Set parasiticElectricLoad
+      bool setParasiticElectricLoad(double val);
 
-    // Get ParasiticGasLoad
-    double parasiticGasLoad() const;
+      // Get ParasiticGasLoad
+      double parasiticGasLoad() const;
 
-    // Set parasiticGasLoad
-    bool setParasiticGasLoad(double val);
+      // Set parasiticGasLoad
+      bool setParasiticGasLoad(double val);
 
-    boost::optional<double> nominalCapacity() const;
+      boost::optional<double> nominalCapacity() const;
 
-    OSOptionalQuantity getNominalCapacity(bool returnIP=false) const;
+      bool isNominalCapacityAutosized() const;
 
-    bool isNominalCapacityAutosized() const;
+      bool setNominalCapacity(boost::optional<double> nominalCapacity);
 
-    bool setNominalCapacity(boost::optional<double> nominalCapacity);
+      void resetNominalCapacity();
 
-    bool setNominalCapacity(const OSOptionalQuantity& nominalCapacity);
+      void autosizeNominalCapacity();
 
-    void resetNominalCapacity();
+      boost::optional<Curve> partLoadFractionCorrelationCurve() const;
 
-    void autosizeNominalCapacity();
+      bool setPartLoadFractionCorrelationCurve(const Curve& curve);
 
-    boost::optional<Curve> partLoadFractionCorrelationCurve() const;
+      void resetPartLoadFractionCorrelationCurve();
 
-    bool setPartLoadFractionCorrelationCurve( const Curve& curve );
+      std::vector<ModelObject> children() const override;
 
-    void resetPartLoadFractionCorrelationCurve();
+      ModelObject clone(Model model) const override;
 
-    std::vector<ModelObject> children() const override;
+      bool addToNode(Node& node) override;
 
-    ModelObject clone(Model model) const override;
+      AirflowNetworkEquivalentDuct getAirflowNetworkEquivalentDuct(double length, double diameter);
+      boost::optional<AirflowNetworkEquivalentDuct> airflowNetworkEquivalentDuct() const;
 
-    bool addToNode(Node & node) override;
+      boost::optional<double> autosizedNominalCapacity() const;
 
-    AirflowNetworkEquivalentDuct getAirflowNetworkEquivalentDuct(double length, double diameter);
-    boost::optional<AirflowNetworkEquivalentDuct> airflowNetworkEquivalentDuct() const;
+      virtual void autosize() override;
 
-  boost::optional<double> autosizedNominalCapacity() const ;
+      virtual void applySizingValues() override;
 
-  virtual void autosize() override;
+      //@}
+     private:
+      REGISTER_LOGGER("openstudio.model.CoilHeatingGas");
 
-  virtual void applySizingValues() override;
+      // Optional getters for use by methods like children() so can remove() if the constructor fails.
+      // There are other ways for the public versions of these getters to fail--perhaps all required
+      // objects should be returned as boost::optionals
+      boost::optional<Schedule> optionalAvailabilitySchedule() const;
 
-    //@}
-  private:
-    REGISTER_LOGGER("openstudio.model.CoilHeatingGas");
+      boost::optional<ModelObject> availabilityScheduleAsModelObject() const;
 
-    // Optional getters for use by methods like children() so can remove() if the constructor fails.
-    // There are other ways for the public versions of these getters to fail--perhaps all required
-    // objects should be returned as boost::optionals
-    boost::optional<Schedule> optionalAvailabilitySchedule() const;
+      bool setAvailabilityScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
+    };
 
-    boost::optional<ModelObject> availabilityScheduleAsModelObject() const;
+  }  // namespace detail
 
-    bool setAvailabilityScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
-  };
+}  // namespace model
+}  // namespace openstudio
 
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_COILHEATINGGAS_IMPL_HPP
+#endif  // MODEL_COILHEATINGGAS_IMPL_HPP

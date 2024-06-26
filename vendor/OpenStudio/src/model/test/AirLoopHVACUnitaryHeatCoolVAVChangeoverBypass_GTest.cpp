@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -43,16 +43,21 @@
 #include "../Schedule_Impl.hpp"
 #include "../Node.hpp"
 #include "../Node_Impl.hpp"
+#include "../AirLoopHVAC.hpp"
+#include "../AirLoopHVACZoneMixer.hpp"
+#include "../AirLoopHVACReturnPlenum.hpp"
+#include "../AirLoopHVACReturnPlenum_Impl.hpp"
+#include "../ThermalZone.hpp"
 #include "../CurveBiquadratic.hpp"
 #include "../CurveBiquadratic_Impl.hpp"
 #include "../CurveQuadratic.hpp"
 #include "../CurveQuadratic_Impl.hpp"
+#include "../../utilities/core/Compare.hpp"
 
 using namespace openstudio;
 using namespace openstudio::model;
 
-CoilCoolingDXSingleSpeed makeCoolingCoil(Model & model)
-{
+CoilCoolingDXSingleSpeed makeCoolingCoil(Model& model) {
   CurveBiquadratic cooling_curve_1 = CurveBiquadratic(model);
   cooling_curve_1.setCoefficient1Constant(0.766956);
   cooling_curve_1.setCoefficient2x(0.0107756);
@@ -127,60 +132,56 @@ CoilCoolingDXSingleSpeed makeCoolingCoil(Model & model)
   return CoilCoolingDXSingleSpeed(model, schedule, cooling_curve_1, cooling_curve_2, cooling_curve_3, cooling_curve_4, cooling_curve_5);
 }
 
-TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Constructors)
-{
+TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Constructors) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  ASSERT_EXIT (
-  {
-    Model m;
-    Schedule s = m.alwaysOnDiscreteSchedule();
-    FanConstantVolume fan = FanConstantVolume(m,s);
-    CoilHeatingElectric heatingCoil = CoilHeatingElectric(m,s);
-    CoilCoolingDXSingleSpeed coolingCoil = makeCoolingCoil(m);
-    AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m,fan,coolingCoil,heatingCoil);
+  ASSERT_EXIT(
+    {
+      Model m;
+      Schedule s = m.alwaysOnDiscreteSchedule();
+      FanConstantVolume fan = FanConstantVolume(m, s);
+      CoilHeatingElectric heatingCoil = CoilHeatingElectric(m, s);
+      CoilCoolingDXSingleSpeed coolingCoil = makeCoolingCoil(m);
+      AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m, fan, coolingCoil, heatingCoil);
 
-    exit(0);
-  } ,
-    ::testing::ExitedWithCode(0), "" );
+      exit(0);
+    },
+    ::testing::ExitedWithCode(0), "");
 }
 
-TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_AddToNode)
-{
+TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_AddToNode) {
   Model m;
   Schedule s = m.alwaysOnDiscreteSchedule();
-  FanConstantVolume fan = FanConstantVolume(m,s);
-  CoilHeatingElectric heatingCoil = CoilHeatingElectric(m,s);
+  FanConstantVolume fan = FanConstantVolume(m, s);
+  CoilHeatingElectric heatingCoil = CoilHeatingElectric(m, s);
   CoilCoolingDXSingleSpeed coolingCoil = makeCoolingCoil(m);
-  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m,fan,coolingCoil,heatingCoil);
+  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m, fan, coolingCoil, heatingCoil);
 
   AirLoopHVAC airLoopHVAC(m);
   Node supplyOutletNode = airLoopHVAC.supplyOutletNode();
   ASSERT_TRUE(testObject.addToNode(supplyOutletNode));
 }
 
-TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Children)
-{
+TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Children) {
   Model m;
   Schedule s = m.alwaysOnDiscreteSchedule();
-  FanConstantVolume fan = FanConstantVolume(m,s);
-  CoilHeatingElectric heatingCoil = CoilHeatingElectric(m,s);
+  FanConstantVolume fan = FanConstantVolume(m, s);
+  CoilHeatingElectric heatingCoil = CoilHeatingElectric(m, s);
   CoilCoolingDXSingleSpeed coolingCoil = makeCoolingCoil(m);
-  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m,fan,coolingCoil,heatingCoil);
+  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m, fan, coolingCoil, heatingCoil);
 
-  ASSERT_EQ(heatingCoil,testObject.heatingCoil());
-  ASSERT_EQ(coolingCoil,testObject.coolingCoil());
-  ASSERT_EQ(fan,testObject.supplyAirFan());
+  ASSERT_EQ(heatingCoil, testObject.heatingCoil());
+  ASSERT_EQ(coolingCoil, testObject.coolingCoil());
+  ASSERT_EQ(fan, testObject.supplyAirFan());
 }
 
-TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Clone)
-{
+TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Clone) {
   Model m;
   Schedule s = m.alwaysOnDiscreteSchedule();
-  FanConstantVolume fan = FanConstantVolume(m,s);
-  CoilHeatingElectric heatingCoil = CoilHeatingElectric(m,s);
+  FanConstantVolume fan = FanConstantVolume(m, s);
+  CoilHeatingElectric heatingCoil = CoilHeatingElectric(m, s);
   CoilCoolingDXSingleSpeed coolingCoil = makeCoolingCoil(m);
-  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m,fan,coolingCoil,heatingCoil);
+  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass testObject = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m, fan, coolingCoil, heatingCoil);
 
   AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass clone = testObject.clone(m).cast<AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass>();
 
@@ -189,4 +190,79 @@ TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Clone)
   ASSERT_FALSE(clone.supplyAirFan().handle().isNull());
 }
 
+TEST_F(ModelFixture, AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_PlenumorMixer) {
+  Model m;
+  Schedule s = m.alwaysOnDiscreteSchedule();
+  FanConstantVolume fan = FanConstantVolume(m, s);
+  CoilHeatingElectric heatingCoil = CoilHeatingElectric(m, s);
+  CoilCoolingDXSingleSpeed coolingCoil = makeCoolingCoil(m);
 
+  unsigned n_nodes = m.getModelObjects<Node>().size();
+  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass unitary = AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(m, fan, coolingCoil, heatingCoil);
+  EXPECT_EQ(n_nodes + 1, m.getModelObjects<Node>().size());
+
+  // Test newly added numeric field too
+  EXPECT_EQ(0.0, unitary.minimumRuntimeBeforeOperatingModeChange());
+  // Minimum 0
+  EXPECT_FALSE(unitary.setMinimumRuntimeBeforeOperatingModeChange(-10.0));
+  EXPECT_TRUE(unitary.setMinimumRuntimeBeforeOperatingModeChange(0.25));
+  EXPECT_EQ(0.25, unitary.minimumRuntimeBeforeOperatingModeChange());
+
+  AirLoopHVAC a(m);
+  ThermalZone z(m);
+  ThermalZone plenumZone(m);
+  EXPECT_TRUE(a.addBranchForZone(z));
+  EXPECT_TRUE(z.setReturnPlenum(plenumZone));
+  AirLoopHVACZoneMixer mixer = a.zoneMixer();
+  EXPECT_EQ(1u, mixer.inletModelObjects().size());
+
+  auto modelObjects = a.demandComponents(z, mixer);
+  auto plenums = subsetCastVector<AirLoopHVACReturnPlenum>(modelObjects);
+  ASSERT_EQ(1u, plenums.size());
+  AirLoopHVACReturnPlenum plenum = plenums[0];
+  EXPECT_EQ(1u, plenum.inletModelObjects().size());
+  n_nodes = m.getModelObjects<Node>().size();
+  // 7 AirLoopHVAC nodes, 2 ZoneAirNodes, 1 Unitary Node for Plenum Or Mixer
+  EXPECT_EQ(10u, n_nodes);
+
+  EXPECT_FALSE(unitary.plenumorMixer());
+
+  // Shouldn't work until they are both on the same loop
+  EXPECT_FALSE(unitary.setPlenumorMixer(mixer));
+  EXPECT_FALSE(unitary.plenumorMixer());
+  EXPECT_EQ(1u, mixer.inletModelObjects().size());
+  EXPECT_EQ(1u, plenum.inletModelObjects().size());
+
+  EXPECT_FALSE(unitary.setPlenumorMixer(plenum));
+  EXPECT_FALSE(unitary.plenumorMixer());
+  EXPECT_EQ(1u, mixer.inletModelObjects().size());
+  EXPECT_EQ(1u, plenum.inletModelObjects().size());
+
+  Node supplyOutletNode = a.supplyOutletNode();
+  unitary.addToNode(supplyOutletNode);
+  n_nodes = m.getModelObjects<Node>().size();
+  EXPECT_EQ(10u, n_nodes);
+
+  EXPECT_TRUE(unitary.setPlenumorMixer(mixer));
+  EXPECT_EQ(2u, mixer.inletModelObjects().size());
+  EXPECT_EQ(1u, plenum.inletModelObjects().size());
+  ASSERT_TRUE(unitary.plenumorMixer());
+  EXPECT_EQ(mixer.handle(), unitary.plenumorMixer()->handle());
+
+  // Should disconnect it from the mixer first (remove that branch), then connect to plenum
+  EXPECT_TRUE(unitary.setPlenumorMixer(plenum));
+  EXPECT_EQ(1u, mixer.inletModelObjects().size());
+  EXPECT_EQ(2u, plenum.inletModelObjects().size());
+  ASSERT_TRUE(unitary.plenumorMixer());
+  EXPECT_EQ(plenum, unitary.plenumorMixer().get());
+
+  n_nodes = m.getModelObjects<Node>().size();
+  EXPECT_EQ(10u, n_nodes);
+
+  // Test remove
+  unitary.remove();
+  n_nodes = m.getModelObjects<Node>().size();
+  EXPECT_EQ(9u, n_nodes);  // Should remove the Unitary Node
+  EXPECT_EQ(1u, mixer.inletModelObjects().size());
+  EXPECT_EQ(1u, plenum.inletModelObjects().size());
+}

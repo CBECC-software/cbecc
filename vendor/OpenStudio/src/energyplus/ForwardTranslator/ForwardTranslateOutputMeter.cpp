@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,6 +37,7 @@
 #include <utilities/idd/Output_Meter_Cumulative_FieldEnums.hxx>
 #include <utilities/idd/Output_Meter_MeterFileOnly_FieldEnums.hxx>
 #include <utilities/idd/Output_Meter_Cumulative_MeterFileOnly_FieldEnums.hxx>
+#include "../../utilities/core/StringHelpers.hpp"
 #include "../../utilities/idd/IddEnums.hpp"
 #include <utilities/idd/IddEnums.hxx>
 
@@ -48,58 +49,55 @@ namespace openstudio {
 
 namespace energyplus {
 
-boost::optional<IdfObject> ForwardTranslator::translateOutputMeter( OutputMeter & modelObject )
-{
-  boost::optional<IdfObject> idfObject;
+  boost::optional<IdfObject> ForwardTranslator::translateOutputMeter(OutputMeter& modelObject) {
+    boost::optional<IdfObject> idfObject;
 
-  QString name = toQString(modelObject.name()).replace(QString("FuelOil_"), QString("FuelOil#"));
+    auto name = modelObject.name();
 
-  if (modelObject.meterFileOnly() && modelObject.cumulative()){
-    idfObject = IdfObject (openstudio::IddObjectType::Output_Meter_Cumulative_MeterFileOnly);
-    m_idfObjects.push_back(*idfObject);
+    if (modelObject.meterFileOnly() && modelObject.cumulative()) {
+      idfObject = IdfObject(openstudio::IddObjectType::Output_Meter_Cumulative_MeterFileOnly);
+      m_idfObjects.push_back(*idfObject);
 
-    idfObject->setString(Output_Meter_Cumulative_MeterFileOnlyFields::KeyName, toString(name));
+      idfObject->setString(Output_Meter_Cumulative_MeterFileOnlyFields::KeyName, name);
 
-    if (!modelObject.isReportingFrequencyDefaulted()){
-      idfObject->setString(Output_Meter_Cumulative_MeterFileOnlyFields::ReportingFrequency, modelObject.reportingFrequency());
+      if (!modelObject.isReportingFrequencyDefaulted()) {
+        idfObject->setString(Output_Meter_Cumulative_MeterFileOnlyFields::ReportingFrequency, modelObject.reportingFrequency());
+      }
+
+    } else if (modelObject.meterFileOnly()) {
+      idfObject = IdfObject(openstudio::IddObjectType::Output_Meter_MeterFileOnly);
+      m_idfObjects.push_back(*idfObject);
+
+      idfObject->setString(Output_Meter_MeterFileOnlyFields::KeyName, name);
+
+      if (!modelObject.isReportingFrequencyDefaulted()) {
+        idfObject->setString(Output_Meter_MeterFileOnlyFields::ReportingFrequency, modelObject.reportingFrequency());
+      }
+
+    } else if (modelObject.cumulative()) {
+      idfObject = IdfObject(openstudio::IddObjectType::Output_Meter_Cumulative);
+      m_idfObjects.push_back(*idfObject);
+
+      idfObject->setString(Output_Meter_CumulativeFields::KeyName, name);
+
+      if (!modelObject.isReportingFrequencyDefaulted()) {
+        idfObject->setString(Output_Meter_CumulativeFields::ReportingFrequency, modelObject.reportingFrequency());
+      }
+
+    } else {
+      idfObject = IdfObject(openstudio::IddObjectType::Output_Meter);
+      m_idfObjects.push_back(*idfObject);
+
+      idfObject->setString(Output_MeterFields::KeyName, name);
+
+      if (!modelObject.isReportingFrequencyDefaulted()) {
+        idfObject->setString(Output_MeterFields::ReportingFrequency, modelObject.reportingFrequency());
+      }
     }
 
-  }else if (modelObject.meterFileOnly()){
-    idfObject = IdfObject (openstudio::IddObjectType::Output_Meter_MeterFileOnly);
-    m_idfObjects.push_back(*idfObject);
-
-    idfObject->setString(Output_Meter_MeterFileOnlyFields::KeyName, toString(name));
-
-    if (!modelObject.isReportingFrequencyDefaulted()){
-      idfObject->setString(Output_Meter_MeterFileOnlyFields::ReportingFrequency, modelObject.reportingFrequency());
-    }
-
-  }else if (modelObject.cumulative()){
-    idfObject = IdfObject (openstudio::IddObjectType::Output_Meter_Cumulative);
-    m_idfObjects.push_back(*idfObject);
-
-    idfObject->setString(Output_Meter_CumulativeFields::KeyName, toString(name));
-
-    if (!modelObject.isReportingFrequencyDefaulted()){
-      idfObject->setString(Output_Meter_CumulativeFields::ReportingFrequency, modelObject.reportingFrequency());
-    }
-
-  }else{
-    idfObject = IdfObject (openstudio::IddObjectType::Output_Meter);
-    m_idfObjects.push_back(*idfObject);
-
-    idfObject->setString(Output_MeterFields::KeyName, toString(name));
-
-    if (!modelObject.isReportingFrequencyDefaulted()){
-      idfObject->setString(Output_MeterFields::ReportingFrequency, modelObject.reportingFrequency());
-    }
-
+    return idfObject;
   }
 
-  return idfObject;
-}
+}  // namespace energyplus
 
-} // energyplus
-
-} // openstudio
-
+}  // namespace openstudio

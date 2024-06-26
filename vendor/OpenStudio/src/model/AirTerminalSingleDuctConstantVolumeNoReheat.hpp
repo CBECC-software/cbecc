@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -39,85 +39,79 @@ namespace openstudio {
 
 namespace model {
 
-class Schedule;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-  class AirTerminalSingleDuctConstantVolumeNoReheat_Impl;
+    class AirTerminalSingleDuctConstantVolumeNoReheat_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** AirTerminalSingleDuctConstantVolumeNoReheat is an interface to the EnergyPlus IDD object
+  /** AirTerminalSingleDuctConstantVolumeNoReheat is an interface to the EnergyPlus IDD object
  *  named "AirTerminal:SingleDuct:ConstantVolume:NoReheat"
  *
  *  The purpose of this class is to simplify the construction and manipulation
  *  AirTerminal:SingleDuct:ConstantVolume:NoReheat objects in energyplus.
  */
-class MODEL_API AirTerminalSingleDuctConstantVolumeNoReheat : public StraightComponent {
+  class MODEL_API AirTerminalSingleDuctConstantVolumeNoReheat : public StraightComponent
+  {
 
- public:
-  /** @name Constructors and Destructors */
-  //@{
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /** Constructs a new AirTerminalSingleDuctConstantVolumeNoReheat object and places it inside the
+    /** Constructs a new AirTerminalSingleDuctConstantVolumeNoReheat object and places it inside the
    *  model.  The object is fully initialized with all companion objects. */
-  AirTerminalSingleDuctConstantVolumeNoReheat(const Model& model, Schedule & availabilitySchedule);
+    AirTerminalSingleDuctConstantVolumeNoReheat(const Model& model, Schedule& availabilitySchedule);
 
-  virtual ~AirTerminalSingleDuctConstantVolumeNoReheat() {}
+    virtual ~AirTerminalSingleDuctConstantVolumeNoReheat() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** Returns the Schedule referred to by the AvailabilityScheduleName field. **/
-  Schedule availabilitySchedule() const;
+    /** Returns the Schedule referred to by the AvailabilityScheduleName field. **/
+    Schedule availabilitySchedule() const;
 
-  /** Sets the Schedule referred to by the AvailabilityScheduleName field. **/
-  bool setAvailabilitySchedule(Schedule& schedule);
+    /** Sets the Schedule referred to by the AvailabilityScheduleName field. **/
+    bool setAvailabilitySchedule(Schedule& schedule);
 
-  boost::optional<double> maximumAirFlowRate() const;
+    boost::optional<double> maximumAirFlowRate() const;
 
-  OSOptionalQuantity getMaximumAirFlowRate(bool returnIP=false) const;
+    bool isMaximumAirFlowRateAutosized() const;
 
-  bool isMaximumAirFlowRateAutosized() const;
+    bool setMaximumAirFlowRate(double maximumAirFlowRate);
 
-  bool setMaximumAirFlowRate(double maximumAirFlowRate);
+    void autosizeMaximumAirFlowRate();
 
-  bool setMaximumAirFlowRate(const Quantity& maximumAirFlowRate);
+    boost::optional<double> autosizedMaximumAirFlowRate() const;
 
-  void autosizeMaximumAirFlowRate();
+    //@}
+   protected:
+    friend class Model;
+    friend class openstudio::IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
 
-  boost::optional<double> autosizedMaximumAirFlowRate() const ;
+    /// @cond
+    typedef detail::AirTerminalSingleDuctConstantVolumeNoReheat_Impl ImplType;
 
+    explicit AirTerminalSingleDuctConstantVolumeNoReheat(std::shared_ptr<detail::AirTerminalSingleDuctConstantVolumeNoReheat_Impl> impl);
 
+   private:
+    REGISTER_LOGGER("openstudio.model.AirTerminalSingleDuctConstantVolumeNoReheat");
+    /// @endcond
+  };
 
-  //@}
- protected:
-  friend class Model;
-  friend class openstudio::IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
+  typedef boost::optional<AirTerminalSingleDuctConstantVolumeNoReheat> OptionalAirTerminalSingleDuctConstantVolumeNoReheat;
 
-  /// @cond
-  typedef detail::AirTerminalSingleDuctConstantVolumeNoReheat_Impl ImplType;
+  typedef std::vector<AirTerminalSingleDuctConstantVolumeNoReheat> AirTerminalSingleDuctConstantVolumeNoReheatVector;
 
-  explicit AirTerminalSingleDuctConstantVolumeNoReheat(std::shared_ptr<detail::AirTerminalSingleDuctConstantVolumeNoReheat_Impl> impl);
+  // In E+ 9.0.0, ATU SingleDuctUncontrolled was renamed to SingleDuctConstantVolumeNoReheat
+  // To be more consistent with the naming convention of others ATU. We typedef for backwards compatibility
+  typedef AirTerminalSingleDuctConstantVolumeNoReheat AirTerminalSingleDuctUncontrolled;
 
- private:
-  REGISTER_LOGGER("openstudio.model.AirTerminalSingleDuctConstantVolumeNoReheat");
-  /// @endcond
-};
+}  // namespace model
 
-typedef boost::optional<AirTerminalSingleDuctConstantVolumeNoReheat> OptionalAirTerminalSingleDuctConstantVolumeNoReheat;
+}  // namespace openstudio
 
-typedef std::vector<AirTerminalSingleDuctConstantVolumeNoReheat> AirTerminalSingleDuctConstantVolumeNoReheatVector;
-
-// In E+ 9.0.0, ATU SingleDuctUncontrolled was renamed to SingleDuctConstantVolumeNoReheat
-// To be more consistent with the naming convention of others ATU. We typedef for backwards compatibility
-typedef AirTerminalSingleDuctConstantVolumeNoReheat AirTerminalSingleDuctUncontrolled;
-
-} // model
-
-} // openstudio
-
-#endif // MODEL_AIRTERMINALSINGLEDUCTCONSTANTVOLUMENOREHEAT_HPP
-
+#endif  // MODEL_AIRTERMINALSINGLEDUCTCONSTANTVOLUMENOREHEAT_HPP

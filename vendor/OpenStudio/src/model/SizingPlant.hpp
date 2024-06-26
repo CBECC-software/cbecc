@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,103 +35,83 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-class PlantLoop;
+  class PlantLoop;
 
-namespace detail {
+  namespace detail {
 
-  class SizingPlant_Impl;
+    class SizingPlant_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** SizingPlant is a ModelObject that wraps the OpenStudio IDD object 'OS:Sizing:Plant'. */
-class MODEL_API SizingPlant : public ModelObject {
-  public:
+  /** SizingPlant is a ModelObject that wraps the OpenStudio IDD object 'OS:Sizing:Plant'. */
+  class MODEL_API SizingPlant : public ModelObject
+  {
+   public:
+    explicit SizingPlant(const Model& model, const PlantLoop& plantLoop);
 
-  explicit SizingPlant(const Model& model, const PlantLoop & plantLoop);
+    virtual ~SizingPlant() {}
 
-  virtual ~SizingPlant() {}
+    static IddObjectType iddObjectType();
 
-  static IddObjectType iddObjectType();
+    static std::vector<std::string> loopTypeValues();
 
-  static std::vector<std::string> loopTypeValues();
+    static std::vector<std::string> sizingOptionValues();
 
-  static std::vector<std::string> sizingOptionValues();
+    static std::vector<std::string> coincidentSizingFactorModeValues();
 
-  static std::vector<std::string> coincidentSizingFactorModeValues();
+    PlantLoop plantLoop() const;
 
+    bool setPlantLoop(const PlantLoop& plantLoop);
 
-  PlantLoop plantLoop() const;
+    std::string loopType() const;
 
-  bool setPlantLoop(const PlantLoop& plantLoop);
+    bool setLoopType(const std::string& loopType);
 
+    double designLoopExitTemperature() const;
 
-  std::string loopType() const;
+    bool setDesignLoopExitTemperature(double designLoopExitTemperature);
 
-  bool setLoopType(std::string loopType);
+    double loopDesignTemperatureDifference() const;
 
+    bool setLoopDesignTemperatureDifference(double loopDesignTemperatureDifference);
 
-  double designLoopExitTemperature() const;
+    std::string sizingOption() const;
 
-  Quantity getDesignLoopExitTemperature(bool returnIP=false) const;
+    bool setSizingOption(const std::string& sizingOption);
 
-  bool setDesignLoopExitTemperature(double designLoopExitTemperature);
+    int zoneTimestepsinAveragingWindow() const;
 
-  bool setDesignLoopExitTemperature(const Quantity& designLoopExitTemperature);
+    bool setZoneTimestepsinAveragingWindow(int zoneTimestepsinAveragingWindow);
 
+    std::string coincidentSizingFactorMode() const;
 
-  double loopDesignTemperatureDifference() const;
+    bool setCoincidentSizingFactorMode(const std::string& coincidentSizingFactorMode);
 
-  Quantity getLoopDesignTemperatureDifference(bool returnIP=false) const;
+   protected:
+    /// @cond
+    typedef detail::SizingPlant_Impl ImplType;
 
-  bool setLoopDesignTemperatureDifference(double loopDesignTemperatureDifference);
+    explicit SizingPlant(std::shared_ptr<detail::SizingPlant_Impl> impl);
 
-  bool setLoopDesignTemperatureDifference(const Quantity& loopDesignTemperatureDifference);
+    friend class detail::SizingPlant_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
 
+   private:
+    REGISTER_LOGGER("openstudio.model.SizingPlant");
+  };
 
-  std::string sizingOption() const;
+  /** \relates SizingPlant*/
+  typedef boost::optional<SizingPlant> OptionalSizingPlant;
 
-  bool setSizingOption(std::string sizingOption);
+  /** \relates SizingPlant*/
+  typedef std::vector<SizingPlant> SizingPlantVector;
 
+}  // namespace model
+}  // namespace openstudio
 
-  int zoneTimestepsinAveragingWindow() const;
-
-  bool setZoneTimestepsinAveragingWindow(int zoneTimestepsinAveragingWindow);
-
-
-  std::string coincidentSizingFactorMode() const;
-
-  bool setCoincidentSizingFactorMode(std::string coincidentSizingFactorMode);
-
-  protected:
-
-  /// @cond
-  typedef detail::SizingPlant_Impl ImplType;
-
-  explicit SizingPlant(std::shared_ptr<detail::SizingPlant_Impl> impl);
-
-  friend class detail::SizingPlant_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
-
-  private:
-
-  REGISTER_LOGGER("openstudio.model.SizingPlant");
-};
-
-/** \relates SizingPlant*/
-typedef boost::optional<SizingPlant> OptionalSizingPlant;
-
-/** \relates SizingPlant*/
-typedef std::vector<SizingPlant> SizingPlantVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_SIZINGPLANT_HPP
+#endif  // MODEL_SIZINGPLANT_HPP

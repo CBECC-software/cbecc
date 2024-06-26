@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -42,60 +42,76 @@
 namespace openstudio {
 namespace model {
 
-/** ModelExtensibleGroup is a WorkspaceExtensibleGroup with additional methods added to support
+  class Schedule;
+
+  /** ModelExtensibleGroup is a WorkspaceExtensibleGroup with additional methods added to support
  *  extensible \link ModelObject ModelObjects\endlink. The ExtensibleGroup inheritance hierarchy
  *  roughly follows the IdfObject <- WorkspaceObject <- ModelObject <- etc. hierarchy, except that
  *  all concrete \link ModelObject ModelObjects \endlink with ExtensibleGroup derived classes
  *  derive directly from ModelExtensibleGroup--there are no extensions of ModelExtensibleGroup for
  *  intermediate abstract classes. */
-class MODEL_API ModelExtensibleGroup : public WorkspaceExtensibleGroup {
- public:
-  virtual ~ModelExtensibleGroup() {}
+  class MODEL_API ModelExtensibleGroup : public WorkspaceExtensibleGroup
+  {
+   public:
+    virtual ~ModelExtensibleGroup() {}
 
-  /** @name Template Methods */
-  //@{
+    /** @name Template Methods */
+    //@{
 
-  /** Get the ModelObject of type T pointed to from fieldIndex of this extensible group, if
+    /** Get the ModelObject of type T pointed to from fieldIndex of this extensible group, if
    *  possible. */
-  template <typename T>
-  boost::optional<T> getModelObjectTarget(unsigned fieldIndex) const {
-    if (!isValid(fieldIndex)) { return boost::none; }
-    return ModelObject(getImpl<detail::ModelObject_Impl>()).getModelObjectTarget<T>(mf_toIndex(fieldIndex));
-  }
+    template <typename T>
+    boost::optional<T> getModelObjectTarget(unsigned fieldIndex) const {
+      if (!isValid(fieldIndex)) {
+        return boost::none;
+      }
+      return ModelObject(getImpl<detail::ModelObject_Impl>()).getModelObjectTarget<T>(mf_toIndex(fieldIndex));
+    }
 
-  /** Get all the \link ModelObject ModelObjects \endlink of type T pointed to from this
+    /** Get all the \link ModelObject ModelObjects \endlink of type T pointed to from this
    *  extensible group. Return value will always be .empty() if this extensible group object is
    *  .empty(). */
-  template <typename T>
-  std::vector<T> getModelObjectTargets() const {
-    std::vector<T> result;
-    if (empty()) { return result; }
-    for (unsigned fieldIndex = 0, n = numFields(); fieldIndex < n; ++fieldIndex) {
-      boost::optional<T> oTarget = getModelObjectTarget<T>(fieldIndex);
-      if (oTarget) { result.push_back(*oTarget); }
+    template <typename T>
+    std::vector<T> getModelObjectTargets() const {
+      std::vector<T> result;
+      if (empty()) {
+        return result;
+      }
+      for (unsigned fieldIndex = 0, n = numFields(); fieldIndex < n; ++fieldIndex) {
+        boost::optional<T> oTarget = getModelObjectTarget<T>(fieldIndex);
+        if (oTarget) {
+          result.push_back(*oTarget);
+        }
+      }
+      return result;
     }
-    return result;
-  }
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::ModelObject_Impl ImplType;
+    /** Sets index to point to schedule if schedule's ScheduleTypeLimits are compatible with the
+   *  ScheduleType in the ScheduleTypeRegistry for (className,scheduleDisplayName), or if
+   *  schedule's ScheduleTypeLimits have not yet been set (in which case the ScheduleTypeRegistry
+   *  is used to retrieve or create an appropriate one).
+   *  Because ModelExtensibleGroup has no knowledge of its model,
+   *  you should ensure that schedule belongs to the right model in the first place */
+    bool setSchedule(unsigned index, const std::string& className, const std::string& scheduleDisplayName, Schedule& schedule);
 
-  friend class IdfExtensibleGroup;
+    //@}
+   protected:
+    /// @cond
+    typedef detail::ModelObject_Impl ImplType;
 
-  ModelExtensibleGroup(std::shared_ptr<detail::ModelObject_Impl> impl,unsigned index);
+    friend class IdfExtensibleGroup;
 
-  /// @endcond
- private:
+    ModelExtensibleGroup(std::shared_ptr<detail::ModelObject_Impl> impl, unsigned index);
 
-  /** Private default constructor. */
-  ModelExtensibleGroup();
+    /// @endcond
+   private:
+    /** Private default constructor. */
+    ModelExtensibleGroup();
 
-  REGISTER_LOGGER("openstudio.model.ModelExtensibleGroup");
-};
+    REGISTER_LOGGER("openstudio.model.ModelExtensibleGroup");
+  };
 
-} // model
-} // openstudio
+}  // namespace model
+}  // namespace openstudio
 
-#endif // MODEL_MODELEXTENSIBLEGROUP_HPPP
+#endif  // MODEL_MODELEXTENSIBLEGROUP_HPPP

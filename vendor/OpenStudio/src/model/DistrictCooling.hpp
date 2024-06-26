@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -34,102 +34,84 @@
 #include "StraightComponent.hpp"
 
 namespace openstudio {
-class Quantity;
-class OSOptionalQuantity;
 
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class DistrictCooling_Impl;
+    class DistrictCooling_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** DistrictCooling is a StraightComponent that wraps the OpenStudio IDD object 'OS:DistrictCooling'. */
+  /** DistrictCooling is a StraightComponent that wraps the OpenStudio IDD object 'OS:DistrictCooling'. */
 
-class MODEL_API DistrictCooling : public StraightComponent {
+  class MODEL_API DistrictCooling : public StraightComponent
+  {
 
- public:
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  /** @name Constructors and Destructors */
-  //@{
+    explicit DistrictCooling(const Model& model);
 
-  explicit DistrictCooling(const Model& model);
+    virtual ~DistrictCooling() {}
 
-  virtual ~DistrictCooling() {}
+    //@}
 
-  //@}
+    //@}
+    /** @name Static Methods */
+    //@{
 
-  //@}
-  /** @name Static Methods */
-  //@{
+    static IddObjectType iddObjectType();
 
-  static IddObjectType iddObjectType();
+    //@}
+    /** @name Getters */
+    //@{
 
-  //@}
-  /** @name Getters */
-  //@{
+    boost::optional<double> nominalCapacity() const;
 
-  boost::optional<double> nominalCapacity() const;
+    bool isNominalCapacityAutosized() const;
 
-  bool isNominalCapacityAutosized() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  //double nominalCapacity() const;
+    bool setNominalCapacity(double nominalCapacity);
 
-  //Quantity getNominalCapacity(bool returnIP=false) const;
+    void autosizeNominalCapacity();
 
-  //@}
-  /** @name Setters */
-  //@{
+    //@}
+    /** @name Other */
+    //@{
 
-  bool setNominalCapacity(double nominalCapacity);
+    //@}
 
-  void autosizeNominalCapacity();
+    boost::optional<double> autosizedNominalCapacity() const;
 
-  //bool setNominalCapacity(double nominalCapacity);
+   protected:
+    /// @cond
+    typedef detail::DistrictCooling_Impl ImplType;
 
-  //bool setNominalCapacity(const Quantity& nominalCapacity);
+    explicit DistrictCooling(std::shared_ptr<detail::DistrictCooling_Impl> impl);
 
-  //@}
-  /** @name Other */
-  //@{
+    friend class detail::DistrictCooling_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
 
-  //@}
+    /// @endcond
 
-  boost::optional<double> autosizedNominalCapacity() const ;
+   private:
+    REGISTER_LOGGER("openstudio.model.DistrictCooling");
+  };
 
+  /** \relates DistrictCooling*/
+  typedef boost::optional<DistrictCooling> OptionalDistrictCooling;
 
+  /** \relates DistrictCooling*/
+  typedef std::vector<DistrictCooling> DistrictCoolingVector;
 
- protected:
-  /// @cond
-  typedef detail::DistrictCooling_Impl ImplType;
+}  // namespace model
+}  // namespace openstudio
 
-  explicit DistrictCooling(std::shared_ptr<detail::DistrictCooling_Impl> impl);
-
-  friend class detail::DistrictCooling_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-
-  /// @endcond
-
- private:
-
-  REGISTER_LOGGER("openstudio.model.DistrictCooling");
-
-};
-
-
-/** \relates DistrictCooling*/
-typedef boost::optional<DistrictCooling> OptionalDistrictCooling;
-
-/** \relates DistrictCooling*/
-typedef std::vector<DistrictCooling> DistrictCoolingVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_DISTRICTCOOLING_HPP
-
-
-
+#endif  // MODEL_DISTRICTCOOLING_HPP

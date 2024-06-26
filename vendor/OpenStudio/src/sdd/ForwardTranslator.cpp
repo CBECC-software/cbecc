@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -121,13 +121,16 @@
 #include "../model/DesignDay.hpp"
 #include "../model/WeatherFileConditionType.hpp"
 #include "../model/WeatherFileDays.hpp"
-#include "../model/UtilityCost_Charge_Block.hpp"
-#include "../model/UtilityCost_Charge_Simple.hpp"
-#include "../model/UtilityCost_Computation.hpp"
-#include "../model/UtilityCost_Qualify.hpp"
-#include "../model/UtilityCost_Ratchet.hpp"
-#include "../model/UtilityCost_Tariff.hpp"
-#include "../model/UtilityCost_Variable.hpp"
+
+// TODO: once UtilityCost objects are wrapped
+// #include "../model/UtilityCost_Charge_Block.hpp"
+// #include "../model/UtilityCost_Charge_Simple.hpp"
+// #include "../model/UtilityCost_Computation.hpp"
+// #include "../model/UtilityCost_Qualify.hpp"
+// #include "../model/UtilityCost_Ratchet.hpp"
+// #include "../model/UtilityCost_Tariff.hpp"
+// #include "../model/UtilityCost_Variable.hpp"
+
 #include "../model/ProgramControl.hpp"
 #include "../model/RadianceParameters.hpp"
 #include "../model/ShadowCalculation.hpp"
@@ -154,37 +157,31 @@
 #include "../utilities/plot/ProgressBar.hpp"
 #include "../utilities/core/Assert.hpp"
 #include "../utilities/core/FilesystemHelpers.hpp"
+#include "../utilities/core/StringHelpers.hpp"
 
-#include <QDomDocument>
-#include <QDomElement>
-#include <QThread>
-
+#include <thread>
 #include <algorithm>
+
+#include <pugixml.hpp>
 
 namespace openstudio {
 namespace sdd {
 
-  ForwardTranslator::ForwardTranslator()
-    : m_autoHardSize(false),
-      m_autoEfficiency(false)
-  {
+  ForwardTranslator::ForwardTranslator() : m_autoHardSize(false), m_autoEfficiency(false) {
     m_logSink.setLogLevel(Warn);
     m_logSink.setChannelRegex(boost::regex("openstudio\\.sdd\\.ForwardTranslator"));
-    m_logSink.setThreadId(QThread::currentThread());
+    m_logSink.setThreadId(std::this_thread::get_id());
   }
 
-  ForwardTranslator::~ForwardTranslator()
-  {
-  }
+  ForwardTranslator::~ForwardTranslator() {}
 
-  bool ForwardTranslator::modelToSDD(const openstudio::model::Model& model, const openstudio::path& path, ProgressBar* progressBar)
-  {
+  bool ForwardTranslator::modelToSDD(const openstudio::model::Model& model, const openstudio::path& path, ProgressBar* progressBar) {
     m_progressBar = progressBar;
     m_translatedObjects.clear();
     m_ignoreTypes.clear();
     m_ignoreObjects.clear();
 
-    m_logSink.setThreadId(QThread::currentThread());
+    m_logSink.setThreadId(std::this_thread::get_id());
 
     m_logSink.resetStringStream();
 
@@ -193,23 +190,25 @@ namespace sdd {
     // remove unused resource objects
     modelCopy.purgeUnusedResourceObjects();
 
-    boost::optional<QDomDocument> doc = this->translateModel(modelCopy);
+    pugi::xml_document doc;
+
+    bool result = this->translateModel(modelCopy, doc);
     logUntranslatedObjects(modelCopy);
-    if (!doc){
+    if (!result) {
       return false;
     }
 
-    if (exists(path)){
+    if (exists(path)) {
       remove(path);
     }
 
-    if (!exists(path.parent_path())){
+    if (!exists(path.parent_path())) {
       create_directory(path.parent_path());
     }
 
     openstudio::filesystem::ofstream file(path, std::ios_base::binary);
-    if (file.is_open()){
-      openstudio::filesystem::write(file, doc->toString(2));
+    if (file.is_open()) {
+      doc.save(file, "  ");
       file.close();
       return true;
     }
@@ -217,12 +216,11 @@ namespace sdd {
     return false;
   }
 
-  std::vector<LogMessage> ForwardTranslator::warnings() const
-  {
+  std::vector<LogMessage> ForwardTranslator::warnings() const {
     std::vector<LogMessage> result;
 
-    for (LogMessage logMessage : m_logSink.logMessages()){
-      if (logMessage.logLevel() == Warn){
+    for (LogMessage logMessage : m_logSink.logMessages()) {
+      if (logMessage.logLevel() == Warn) {
         result.push_back(logMessage);
       }
     }
@@ -230,12 +228,11 @@ namespace sdd {
     return result;
   }
 
-  std::vector<LogMessage> ForwardTranslator::errors() const
-  {
+  std::vector<LogMessage> ForwardTranslator::errors() const {
     std::vector<LogMessage> result;
 
-    for (LogMessage logMessage : m_logSink.logMessages()){
-      if (logMessage.logLevel() > Warn){
+    for (LogMessage logMessage : m_logSink.logMessages()) {
+      if (logMessage.logLevel() > Warn) {
         result.push_back(logMessage);
       }
     }
@@ -243,52 +240,43 @@ namespace sdd {
     return result;
   }
 
-  QString ForwardTranslator::escapeName(const std::string& name)
-  {
-    return toQString(name);
+  std::string ForwardTranslator::escapeName(std::string name) {
+    /// JMT: I don't think this function does what its name implies
+    // TODO: this does nothing!
+    return name;
   }
 
-  boost::optional<QDomDocument> ForwardTranslator::translateModel(const openstudio::model::Model& model)
-  {
-    QDomDocument doc;
-    doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"utf-8\"");
-
-    QDomElement sddElement = doc.createElement("SDDXML");
-    sddElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-    sddElement.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
-    doc.appendChild(sddElement);
+  bool ForwardTranslator::translateModel(const openstudio::model::Model& model, pugi::xml_document& document) {
+    pugi::xml_node sddElement = document.append_child("SDDXML");
+    sddElement.append_attribute("xmlns:xsi") = "http://www.w3.org/2001/XMLSchema-instance";
+    sddElement.append_attribute("xmlns:xsd") = "http://www.w3.org/2001/XMLSchema";
 
     // set ruleset, where should this data come from?
-    QDomElement rulesetFilenameElement = doc.createElement("RulesetFilename");
-    sddElement.appendChild(rulesetFilenameElement);
-    rulesetFilenameElement.setAttribute("file", "CEC 2013 NonRes.bin"); // DLM: only allow one value for now
+    pugi::xml_node rulesetFilenameElement = sddElement.append_child("RulesetFilename");
+    rulesetFilenameElement.append_attribute("file") = "CEC 2013 NonRes.bin";  // DLM: only allow one value for now
 
     // set project, where should this data come from?
-    QDomElement projectElement = doc.createElement("Proj");
-    sddElement.appendChild(projectElement);
+    pugi::xml_node projectElement = sddElement.append_child("Proj");
 
     // DLM: what name to use here?
-    QDomElement projectNameElement = doc.createElement("Name");
-    projectElement.appendChild(projectNameElement);
-    projectNameElement.appendChild(doc.createTextNode("unknown"));
+    pugi::xml_node projectNameElement = projectElement.append_child("Name");
+    projectNameElement.text() = "unknown";
 
     // site data
     boost::optional<model::ClimateZones> climateZones = model.getOptionalUniqueModelObject<model::ClimateZones>();
-    if (climateZones){
+    if (climateZones) {
       // todo: check document year
       std::vector<model::ClimateZone> zones = climateZones->getClimateZones("CEC");
-      if (zones.size() > 0 && !zones[0].value().empty()){
-
-        bool isNumber;
-        QString value = toQString(zones[0].value());
-        value.toInt(&isNumber);
-        if (isNumber){
-          value = QString("ClimateZone") + value;
+      std::string value = zones[0].value();
+      if (zones.size() > 0 && !value.empty()) {
+        try {
+          int valueNum = boost::lexical_cast<int>(value);
+          value = "ClimateZone" + std::to_string(valueNum);
+        } catch (const boost::bad_lexical_cast&) {
         }
 
-        QDomElement projectClimateZoneElement = doc.createElement("CliZn");
-        projectElement.appendChild(projectClimateZoneElement);
-        projectClimateZoneElement.appendChild(doc.createTextNode(value));
+        pugi::xml_node projectClimateZoneElement = projectElement.append_child("CliZn");
+        projectClimateZoneElement.text() = value.c_str();
 
         m_translatedObjects[climateZones->handle()] = projectClimateZoneElement;
       }
@@ -297,27 +285,25 @@ namespace sdd {
     // set lat, lon, elev
     // DLM: do not translate forward,  Issue 242: Forward Translator - Remove Proj:Lat/Lon/Elevation translation
     /*
-    boost::optional<model::Site> site = model.getOptionalUniqueModelObject<model::Site>();
-    if (site){
-      double latitude = site->latitude();
-      QDomElement latElement = doc.createElement("Lat");
-      projectElement.appendChild(latElement);
-      latElement.appendChild( doc.createTextNode(QString::number(latitude)));
-
-      double longitude = site->longitude();
-      QDomElement longElement = doc.createElement("Long");
-      projectElement.appendChild(longElement);
-      longElement.appendChild( doc.createTextNode(QString::number(longitude)));
-
-      double elevationSI = site->elevation();
-      double elevationIP = elevationSI/0.3048;
-      QDomElement elevationElement = doc.createElement("Elevation");
-      projectElement.appendChild(elevationElement);
-      elevationElement.appendChild( doc.createTextNode(QString::number(elevationIP)));
-
-      m_translatedObjects[site.handle()] = latElement;
-    }
-    */
+ *    boost::optional<model::Site> site = model.getOptionalUniqueModelObject<model::Site>();
+ *
+ *    if (site){
+ *      double latitude = site->latitude();
+ *      pugi::xml_node latElement = projectElement.append_child("Lat");
+ *      latElement.text().set(latitude); // OR openstudio::string_conversions::number(latitude).c_str()
+ *
+ *      double longitude = site->longitude();
+ *      pugi::xml_node longElement = projectElement.append_child("Long");
+ *      longElement.text().set(longitude); // OR openstudio::string_conversions::number(longitude).c_str()
+ *
+ *      double elevationSI = site->elevation();
+ *      double elevationIP = elevationSI/0.3048;
+ *      pugi::xml_node elevationElement = projectElement.append_child("Elevation");
+ *      elevationElement.text().set(elevationIP); // OR openstudio::string_conversions::number(elevationIP).c_str()
+ *
+ *      m_translatedObjects[site->handle()] = latElement;
+ *    }
+ */
 
     // todo: write out epw file path
     // todo: write out ddy file and set path
@@ -335,21 +321,19 @@ namespace sdd {
     std::vector<model::Material> materials = model.getModelObjects<model::Material>();
     std::sort(materials.begin(), materials.end(), WorkspaceObjectNameLess());
 
-    if (m_progressBar){
+    if (m_progressBar) {
       m_progressBar->setWindowTitle(toString("Translating Materials"));
       m_progressBar->setMinimum(0);
       m_progressBar->setMaximum((int)materials.size());
       m_progressBar->setValue(0);
     }
 
-    for (const model::Material& material : materials){
+    // Given the old test, Mat is directly nested under Proj
+    for (const model::Material& material : materials) {
 
-      boost::optional<QDomElement> materialElement = translateMaterial(material, doc);
-      if (materialElement){
-        projectElement.appendChild(*materialElement);
-      }
+      translateMaterial(material, projectElement);
 
-      if (m_progressBar){
+      if (m_progressBar) {
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
     }
@@ -359,79 +343,70 @@ namespace sdd {
     std::vector<model::ConstructionBase> constructions = model.getModelObjects<model::ConstructionBase>();
     std::sort(constructions.begin(), constructions.end(), WorkspaceObjectNameLess());
 
-    if (m_progressBar){
+    if (m_progressBar) {
       m_progressBar->setWindowTitle(toString("Translating Constructions"));
       m_progressBar->setMinimum(0);
-      m_progressBar->setMaximum(3 * ((int)constructions.size())); // three loops below
+      m_progressBar->setMaximum(3 * ((int)constructions.size()));  // three loops below
       m_progressBar->setValue(0);
     }
 
     std::set<Handle> surfaceConstructions;
-    for (const model::Surface& surface : model.getConcreteModelObjects<model::Surface>()){
+    for (const model::Surface& surface : model.getConcreteModelObjects<model::Surface>()) {
       boost::optional<model::ConstructionBase> construction = surface.construction();
-      if (construction){
+      if (construction) {
         surfaceConstructions.insert(construction->handle());
       }
     }
 
     std::set<Handle> doorConstructions;
     std::set<Handle> fenestrationConstructions;
-    for (const model::SubSurface& subSurface : model.getConcreteModelObjects<model::SubSurface>()){
+    for (const model::SubSurface& subSurface : model.getConcreteModelObjects<model::SubSurface>()) {
       boost::optional<model::ConstructionBase> construction = subSurface.construction();
-      if (construction){
+      if (construction) {
         std::string subSurfaceType = subSurface.subSurfaceType();
-        if (istringEqual("Door", subSurfaceType) || istringEqual("OverheadDoor", subSurfaceType)){
+        if (istringEqual("Door", subSurfaceType) || istringEqual("OverheadDoor", subSurfaceType)) {
           doorConstructions.insert(construction->handle());
-        }else{
+        } else {
           fenestrationConstructions.insert(construction->handle());
         }
       }
     }
 
     // translate surface constructions
-    for (const model::ConstructionBase& constructionBase : constructions){
-      if (surfaceConstructions.find(constructionBase.handle()) == surfaceConstructions.end()){
+    for (const model::ConstructionBase& constructionBase : constructions) {
+      if (surfaceConstructions.find(constructionBase.handle()) == surfaceConstructions.end()) {
         continue;
       }
 
-      boost::optional<QDomElement> constructionElement = translateConstructionBase(constructionBase, doc);
-      if (constructionElement){
-        projectElement.appendChild(*constructionElement);
-      }
+      translateConstructionBase(constructionBase, projectElement);
 
-      if (m_progressBar){
+      if (m_progressBar) {
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
     }
 
     // translate door constructions
-    for (const model::ConstructionBase& constructionBase : constructions){
-      if (doorConstructions.find(constructionBase.handle()) == doorConstructions.end()){
+    for (const model::ConstructionBase& constructionBase : constructions) {
+      if (doorConstructions.find(constructionBase.handle()) == doorConstructions.end()) {
         continue;
       }
 
-      boost::optional<QDomElement> constructionElement = translateDoorConstruction(constructionBase, doc);
-      if (constructionElement){
-        projectElement.appendChild(*constructionElement);
-      }
+      translateDoorConstruction(constructionBase, projectElement);
 
-      if (m_progressBar){
+      if (m_progressBar) {
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
     }
 
     // translate fenestration constructions
-    for (const model::ConstructionBase& constructionBase : constructions){
-      if (fenestrationConstructions.find(constructionBase.handle()) == fenestrationConstructions.end()){
+    for (const model::ConstructionBase& constructionBase : constructions) {
+      if (fenestrationConstructions.find(constructionBase.handle()) == fenestrationConstructions.end()) {
         continue;
       }
 
-      boost::optional<QDomElement> constructionElement = translateFenestrationConstruction(constructionBase, doc);
-      if (constructionElement){
-        projectElement.appendChild(*constructionElement);
-      }
+      translateFenestrationConstruction(constructionBase, projectElement);
 
-      if (m_progressBar){
+      if (m_progressBar) {
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
     }
@@ -440,42 +415,36 @@ namespace sdd {
     std::vector<model::ShadingSurfaceGroup> shadingSurfaceGroups = model.getConcreteModelObjects<model::ShadingSurfaceGroup>();
     std::sort(shadingSurfaceGroups.begin(), shadingSurfaceGroups.end(), WorkspaceObjectNameLess());
 
-    if (m_progressBar){
+    if (m_progressBar) {
       m_progressBar->setWindowTitle(toString("Translating Site Shading"));
       m_progressBar->setMinimum(0);
       m_progressBar->setMaximum((int)shadingSurfaceGroups.size());
       m_progressBar->setValue(0);
     }
 
-    for (const model::ShadingSurfaceGroup& shadingSurfaceGroup : shadingSurfaceGroups){
-      if (istringEqual(shadingSurfaceGroup.shadingSurfaceType(), "Site")){
+    for (const model::ShadingSurfaceGroup& shadingSurfaceGroup : shadingSurfaceGroups) {
+      if (istringEqual(shadingSurfaceGroup.shadingSurfaceType(), "Site")) {
 
         Transformation transformation = shadingSurfaceGroup.siteTransformation();
 
-        for (const model::ShadingSurface& shadingSurface : shadingSurfaceGroup.shadingSurfaces()){
-          boost::optional<QDomElement> shadingSurfaceElement = translateShadingSurface(shadingSurface, transformation, doc);
-          if (shadingSurfaceElement){
-            projectElement.appendChild(*shadingSurfaceElement);
-          }
+        for (const model::ShadingSurface& shadingSurface : shadingSurfaceGroup.shadingSurfaces()) {
+          translateShadingSurface(shadingSurface, transformation, projectElement);
         }
       }
 
-      if (m_progressBar){
+      if (m_progressBar) {
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
     }
 
     // translate the building
     boost::optional<model::Building> building = model.getOptionalUniqueModelObject<model::Building>();
-    if (building){
-      boost::optional<QDomElement> buildingElement = translateBuilding(*building, doc);
-      if (buildingElement){
-        projectElement.appendChild(*buildingElement);
-      }
+    if (building) {
+      translateBuilding(*building, projectElement);
     }
 
     m_ignoreTypes.push_back(model::BoilerSteam::iddObjectType());
-    m_ignoreTypes.push_back(model::ClimateZones::iddObjectType()); // might not be translated but it is checked
+    m_ignoreTypes.push_back(model::ClimateZones::iddObjectType());  // might not be translated but it is checked
     m_ignoreTypes.push_back(model::CoilCoolingDXMultiSpeedStageData::iddObjectType());
     m_ignoreTypes.push_back(model::CoilHeatingGasMultiStageStageData::iddObjectType());
     m_ignoreTypes.push_back(model::ComponentCostAdjustments::iddObjectType());
@@ -542,7 +511,7 @@ namespace sdd {
     m_ignoreTypes.push_back(model::SetpointManagerMixedAir::iddObjectType());
     m_ignoreTypes.push_back(model::ShadowCalculation::iddObjectType());
     m_ignoreTypes.push_back(model::SimulationControl::iddObjectType());
-    m_ignoreTypes.push_back(model::Site::iddObjectType()); // might not be translated but it is checked
+    m_ignoreTypes.push_back(model::Site::iddObjectType());  // might not be translated but it is checked
     m_ignoreTypes.push_back(model::SiteGroundReflectance::iddObjectType());
     m_ignoreTypes.push_back(model::SiteGroundTemperatureBuildingSurface::iddObjectType());
     m_ignoreTypes.push_back(model::SiteWaterMainsTemperature::iddObjectType());
@@ -553,13 +522,6 @@ namespace sdd {
     m_ignoreTypes.push_back(model::TableMultiVariableLookup::iddObjectType());
     m_ignoreTypes.push_back(model::Timestep::iddObjectType());
     m_ignoreTypes.push_back(model::UtilityBill::iddObjectType());
-    m_ignoreTypes.push_back(model::UtilityCost_Charge_Block::iddObjectType());
-    m_ignoreTypes.push_back(model::UtilityCost_Charge_Simple::iddObjectType());
-    m_ignoreTypes.push_back(model::UtilityCost_Computation::iddObjectType());
-    m_ignoreTypes.push_back(model::UtilityCost_Qualify::iddObjectType());
-    m_ignoreTypes.push_back(model::UtilityCost_Ratchet::iddObjectType());
-    m_ignoreTypes.push_back(model::UtilityCost_Tariff::iddObjectType());
-    m_ignoreTypes.push_back(model::UtilityCost_Variable::iddObjectType());
     m_ignoreTypes.push_back(model::Version::iddObjectType());
     m_ignoreTypes.push_back(model::WeatherFile::iddObjectType());
     m_ignoreTypes.push_back(model::WeatherFileConditionType::iddObjectType());
@@ -570,25 +532,33 @@ namespace sdd {
     m_ignoreTypes.push_back(model::ZoneCapacitanceMultiplierResearchSpecial::iddObjectType());
     m_ignoreTypes.push_back(model::ZoneHVACEquipmentList::iddObjectType());
 
-    return doc;
+    // TODO: once UtilityCost objects are wrapped
+    //m_ignoreTypes.push_back(model::UtilityCost_Charge_Block::iddObjectType());
+    //m_ignoreTypes.push_back(model::UtilityCost_Charge_Simple::iddObjectType());
+    //m_ignoreTypes.push_back(model::UtilityCost_Computation::iddObjectType());
+    //m_ignoreTypes.push_back(model::UtilityCost_Qualify::iddObjectType());
+    //m_ignoreTypes.push_back(model::UtilityCost_Ratchet::iddObjectType());
+    //m_ignoreTypes.push_back(model::UtilityCost_Tariff::iddObjectType());
+    //m_ignoreTypes.push_back(model::UtilityCost_Variable::iddObjectType());
+
+    return true;
   }
 
-  void ForwardTranslator::logUntranslatedObjects(const model::Model& model)
-  {
+  void ForwardTranslator::logUntranslatedObjects(const model::Model& model) {
     auto allModelObjects = model.modelObjects();
-    for(const auto & mo : allModelObjects) {
+    for (const auto& mo : allModelObjects) {
       // If mo is not in m_translatedObjects
-      if(m_translatedObjects.find(mo.handle()) == m_translatedObjects.end()) {
+      if (m_translatedObjects.find(mo.handle()) == m_translatedObjects.end()) {
         // If mo.iddObjectType is not int the m_ignoreTypes list
-        if(std::find(m_ignoreTypes.begin(),m_ignoreTypes.end(),mo.iddObjectType()) == m_ignoreTypes.end()) {
+        if (std::find(m_ignoreTypes.begin(), m_ignoreTypes.end(), mo.iddObjectType()) == m_ignoreTypes.end()) {
           // If mo is not in the m_ignoreObjects list
-          if(std::find(m_ignoreObjects.begin(),m_ignoreObjects.end(),mo.handle()) == m_ignoreObjects.end()) {
-            LOG(Error,mo.briefDescription() << " was not translated.");
+          if (std::find(m_ignoreObjects.begin(), m_ignoreObjects.end(), mo.handle()) == m_ignoreObjects.end()) {
+            LOG(Error, mo.briefDescription() << " was not translated.");
           }
         }
       }
     }
   }
 
-} // sdd
-} // openstudio
+}  // namespace sdd
+}  // namespace openstudio

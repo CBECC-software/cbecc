@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,166 +32,98 @@
 
 #include "ModelAPI.hpp"
 #include "SpaceLoadDefinition_Impl.hpp"
-#include "attributes.hpp"
 
 namespace openstudio {
 namespace model {
 
-class LuminaireDefinition;
+  class LuminaireDefinition;
 
-namespace detail {
+  namespace detail {
 
-  /** LuminaireDefinition_Impl is a SpaceLoadDefinition_Impl that is the implementation class for LuminaireDefinition.*/
-  class MODEL_API LuminaireDefinition_Impl : public SpaceLoadDefinition_Impl {
+    /** LuminaireDefinition_Impl is a SpaceLoadDefinition_Impl that is the implementation class for LuminaireDefinition.*/
+    class MODEL_API LuminaireDefinition_Impl : public SpaceLoadDefinition_Impl
+    {
 
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
+      LuminaireDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      LuminaireDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    Q_PROPERTY(openstudio::Quantity lightingPower_SI
-               READ lightingPower_SI
-               WRITE setLightingPower);
-    Q_PROPERTY(openstudio::Quantity lightingPower_IP
-               READ lightingPower_IP
-               WRITE setLightingPower);
+      LuminaireDefinition_Impl(const LuminaireDefinition_Impl& other, Model_Impl* model, bool keepHandle);
 
+      virtual ~LuminaireDefinition_Impl() {}
 
+      //@}
 
-    Q_PROPERTY(openstudio::Quantity fractionRadiant_SI
-               READ fractionRadiant_SI
-               WRITE setFractionRadiant);
-    Q_PROPERTY(openstudio::Quantity fractionRadiant_IP
-               READ fractionRadiant_IP
-               WRITE setFractionRadiant);
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
+      virtual IddObjectType iddObjectType() const override;
 
+      /** @name Getters */
+      //@{
 
-    Q_PROPERTY(openstudio::Quantity fractionVisible_SI
-               READ fractionVisible_SI
-               WRITE setFractionVisible);
-    Q_PROPERTY(openstudio::Quantity fractionVisible_IP
-               READ fractionVisible_IP
-               WRITE setFractionVisible);
+      // TODO: Handle Non-Extensible IddField IES File Path.
 
+      double lightingPower() const;
+      bool isLightingPowerDefaulted() const;
 
+      double fractionRadiant() const;
+      bool isFractionRadiantDefaulted() const;
 
-    Q_PROPERTY(openstudio::Quantity returnAirFraction_SI
-               READ returnAirFraction_SI
-               WRITE setReturnAirFraction);
-    Q_PROPERTY(openstudio::Quantity returnAirFraction_IP
-               READ returnAirFraction_IP
-               WRITE setReturnAirFraction);
+      double fractionVisible() const;
+      bool isFractionVisibleDefaulted() const;
 
+      double returnAirFraction() const;
+      bool isReturnAirFractionDefaulted() const;
 
+      bool returnAirFractionCalculatedfromPlenumTemperature() const;
+      bool isReturnAirFractionCalculatedfromPlenumTemperatureDefaulted() const;
 
+      double returnAirFractionFunctionofPlenumTemperatureCoefficient1() const;
+      bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient1Defaulted() const;
 
+      double returnAirFractionFunctionofPlenumTemperatureCoefficient2() const;
+      bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient2Defaulted() const;
 
+      //@}
+      /** @name Setters */
+      //@{
 
+      // TODO: Handle Non-Extensible IddField IES File Path.
 
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+      bool setLightingPower(double lightingPower);
+      void resetLightingPower();
 
-    LuminaireDefinition_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      bool setFractionRadiant(double fractionRadiant);
+      void resetFractionRadiant();
 
-    LuminaireDefinition_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                             Model_Impl* model,
-                             bool keepHandle);
+      bool setFractionVisible(double fractionVisible);
+      void resetFractionVisible();
 
-    LuminaireDefinition_Impl(const LuminaireDefinition_Impl& other,
-                             Model_Impl* model,
-                             bool keepHandle);
+      bool setReturnAirFraction(double returnAirFraction);
+      void resetReturnAirFraction();
 
-    virtual ~LuminaireDefinition_Impl() {}
+      bool setReturnAirFractionCalculatedfromPlenumTemperature(bool returnAirFractionCalculatedfromPlenumTemperature);
+      void resetReturnAirFractionCalculatedfromPlenumTemperature();
 
-    //@}
+      bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient1(double returnAirFractionFunctionofPlenumTemperatureCoefficient1);
+      void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient1();
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient2(double returnAirFractionFunctionofPlenumTemperatureCoefficient2);
+      void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient2();
 
-    virtual IddObjectType iddObjectType() const override;
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.LuminaireDefinition");
+    };
 
-    // Attributes
+  }  // namespace detail
 
-    ATTRIBUTE_DEFINITION(0,1,0,lightingPower,LightingPower)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionRadiant,FractionRadiant)
-    ATTRIBUTE_DEFINITION(0,1,0,fractionVisible,FractionVisible)
-    ATTRIBUTE_DEFINITION(0,1,0,returnAirFraction,ReturnAirFraction)
+}  // namespace model
+}  // namespace openstudio
 
-    /** @name Getters */
-    //@{
-
-    // TODO: Handle Non-Extensible IddField IES File Path.
-
-    //double lightingPower() const;
-
-    //bool isLightingPowerDefaulted() const;
-
-    //double fractionRadiant() const;
-
-    //bool isFractionRadiantDefaulted() const;
-
-    //double fractionVisible() const;
-
-    //bool isFractionVisibleDefaulted() const;
-
-    //double returnAirFraction() const;
-
-    //bool isReturnAirFractionDefaulted() const;
-
-    bool returnAirFractionCalculatedfromPlenumTemperature() const;
-
-    bool isReturnAirFractionCalculatedfromPlenumTemperatureDefaulted() const;
-
-    double returnAirFractionFunctionofPlenumTemperatureCoefficient1() const;
-
-    bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient1Defaulted() const;
-
-    double returnAirFractionFunctionofPlenumTemperatureCoefficient2() const;
-
-    bool isReturnAirFractionFunctionofPlenumTemperatureCoefficient2Defaulted() const;
-
-    //@}
-    /** @name Setters */
-    //@{
-
-    // TODO: Handle Non-Extensible IddField IES File Path.
-
-    //bool setLightingPower(double lightingPower);
-
-    //void resetLightingPower();
-
-    //bool setFractionRadiant(double fractionRadiant);
-
-    //void resetFractionRadiant();
-
-    //bool setFractionVisible(double fractionVisible);
-
-    //void resetFractionVisible();
-
-    //bool setReturnAirFraction(double returnAirFraction);
-
-    //void resetReturnAirFraction();
-
-    bool setReturnAirFractionCalculatedfromPlenumTemperature(bool returnAirFractionCalculatedfromPlenumTemperature);
-
-    void resetReturnAirFractionCalculatedfromPlenumTemperature();
-
-    bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient1(double returnAirFractionFunctionofPlenumTemperatureCoefficient1);
-
-    void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient1();
-
-    bool setReturnAirFractionFunctionofPlenumTemperatureCoefficient2(double returnAirFractionFunctionofPlenumTemperatureCoefficient2);
-
-    void resetReturnAirFractionFunctionofPlenumTemperatureCoefficient2();
-
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.LuminaireDefinition");
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_LUMINAIREDEFINITION_IMPL_HPP
+#endif  // MODEL_LUMINAIREDEFINITION_IMPL_HPP

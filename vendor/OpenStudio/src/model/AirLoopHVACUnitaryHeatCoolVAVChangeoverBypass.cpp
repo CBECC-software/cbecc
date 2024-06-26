@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -31,8 +31,12 @@
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl.hpp"
 #include "Model.hpp"
 #include "Model_Impl.hpp"
+#include "Mixer.hpp"
+#include "Mixer_Impl.hpp"
 #include "Schedule.hpp"
 #include "Schedule_Impl.hpp"
+#include "Node.hpp"
+#include "Node_Impl.hpp"
 #include "ScheduleTypeLimits.hpp"
 #include "ScheduleTypeRegistry.hpp"
 #include <utilities/idd/IddFactory.hxx>
@@ -45,788 +49,923 @@
 namespace openstudio {
 namespace model {
 
-namespace detail {
-
-  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl(const IdfObject& idfObject,
-                                                                                                         Model_Impl* model,
-                                                                                                         bool keepHandle)
-    : StraightComponent_Impl(idfObject,model,keepHandle)
-  {
-    OS_ASSERT(idfObject.iddObject().type() == AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType());
-  }
-
-  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                                                                                         Model_Impl* model,
-                                                                                                         bool keepHandle)
-    : StraightComponent_Impl(other,model,keepHandle)
-  {
-    OS_ASSERT(other.iddObject().type() == AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType());
-  }
-
-  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl(const AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl& other,
-                                                                                                         Model_Impl* model,
-                                                                                                         bool keepHandle)
-    : StraightComponent_Impl(other,model,keepHandle)
-  {}
-
-  const std::vector<std::string>& AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outputVariableNames() const
-  {
-    static std::vector<std::string> result;
-    return result;
-  }
-
-  IddObjectType AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::iddObjectType() const {
-    return AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType();
-  }
-
-  std::vector<ScheduleTypeKey> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::getScheduleTypeKeys(const Schedule& schedule) const
-  {
-    std::vector<ScheduleTypeKey> result;
-    UnsignedVector fieldIndices = getSourceIndices(schedule.handle());
-    UnsignedVector::const_iterator b(fieldIndices.begin()), e(fieldIndices.end());
-    if (std::find(b,e,OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule) != e)
-    {
-      result.push_back(ScheduleTypeKey("AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass","Availability Schedule"));
-    }
-    if (std::find(b,e,OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule) != e)
-    {
-      result.push_back(ScheduleTypeKey("AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass","Outdoor Air Flow Rate Multiplier Schedule"));
-    }
-    if (std::find(b,e,OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule) != e)
-    {
-      result.push_back(ScheduleTypeKey("AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass","Supply Air Fan Operating Mode Schedule"));
-    }
-    return result;
-  }
-
-  boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::availabilitySchedule() const {
-    return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule);
-  }
-
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::systemAirFlowRateDuringCoolingOperation() const {
-    return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation,true);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isSystemAirFlowRateDuringCoolingOperationAutosized() const {
-    bool result = false;
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation, true);
-    if (value) {
-      result = openstudio::istringEqual(value.get(), "autosize");
-    }
-    return result;
-  }
-
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::systemAirFlowRateDuringHeatingOperation() const {
-    return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation,true);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isSystemAirFlowRateDuringHeatingOperationAutosized() const {
-    bool result = false;
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation, true);
-    if (value) {
-      result = openstudio::istringEqual(value.get(), "autosize");
-    }
-    return result;
-  }
-
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::systemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
-    return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded,true);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
-    bool result = false;
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded, true);
-    if (value) {
-      result = openstudio::istringEqual(value.get(), "autosize");
-    }
-    return result;
-  }
-
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateDuringCoolingOperation() const {
-    return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation,true);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isOutdoorAirFlowRateDuringCoolingOperationAutosized() const {
-    bool result = false;
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation, true);
-    if (value) {
-      result = openstudio::istringEqual(value.get(), "autosize");
-    }
-    return result;
-  }
-
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateDuringHeatingOperation() const {
-    return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation,true);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isOutdoorAirFlowRateDuringHeatingOperationAutosized() const {
-    bool result = false;
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation, true);
-    if (value) {
-      result = openstudio::istringEqual(value.get(), "autosize");
-    }
-    return result;
-  }
-
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
-    return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded,true);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
-    bool result = false;
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded, true);
-    if (value) {
-      result = openstudio::istringEqual(value.get(), "autosize");
-    }
-    return result;
-  }
-
-  boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateMultiplierSchedule() const {
-    return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule);
-  }
-
-  HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::supplyAirFan() const {
-    boost::optional<HVACComponent> value = optionalSupplyAirFan();
-    if (!value) {
-      LOG_AND_THROW(briefDescription() << " does not have an Supply Air Fan attached.");
-    }
-    return value.get();
-  }
-
-  std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::supplyAirFanPlacement() const {
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanPlacement,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::supplyAirFanOperatingModeSchedule() const {
-    return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule);
-  }
-
-  HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::coolingCoil() const {
-    boost::optional<HVACComponent> value = optionalCoolingCoil();
-    if (!value) {
-      LOG_AND_THROW(briefDescription() << " does not have an Cooling Coil attached.");
-    }
-    return value.get();
-  }
-
-  HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::heatingCoil() const {
-    boost::optional<HVACComponent> value = optionalHeatingCoil();
-    if (!value) {
-      LOG_AND_THROW(briefDescription() << " does not have an Heating Coil attached.");
-    }
-    return value.get();
-  }
-
-  std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::priorityControlMode() const {
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::PriorityControlMode,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::minimumOutletAirTemperatureDuringCoolingOperation() const {
-    boost::optional<double> value = getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MinimumOutletAirTemperatureDuringCoolingOperation,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::maximumOutletAirTemperatureDuringHeatingOperation() const {
-    boost::optional<double> value = getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MaximumOutletAirTemperatureDuringHeatingOperation,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::dehumidificationControlType() const {
-    boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::DehumidificationControlType,true);
-    OS_ASSERT(value);
-    return value.get();
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setAvailabilitySchedule(Schedule& schedule) {
-    bool result = setSchedule(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule,
-                              "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass",
-                              "Availability Schedule",
-                              schedule);
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::resetAvailabilitySchedule() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule, "");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSystemAirFlowRateDuringCoolingOperation(boost::optional<double> systemAirFlowRateDuringCoolingOperation) {
-    bool result(false);
-    if (systemAirFlowRateDuringCoolingOperation) {
-      result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation, systemAirFlowRateDuringCoolingOperation.get());
-    }
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeSystemAirFlowRateDuringCoolingOperation() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation, "autosize");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSystemAirFlowRateDuringHeatingOperation(boost::optional<double> systemAirFlowRateDuringHeatingOperation) {
-    bool result(false);
-    if (systemAirFlowRateDuringHeatingOperation) {
-      result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation, systemAirFlowRateDuringHeatingOperation.get());
-    }
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeSystemAirFlowRateDuringHeatingOperation() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation, "autosize");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(boost::optional<double> systemAirFlowRateWhenNoCoolingorHeatingisNeeded) {
-    bool result(false);
-    if (systemAirFlowRateWhenNoCoolingorHeatingisNeeded) {
-      result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded, systemAirFlowRateWhenNoCoolingorHeatingisNeeded.get());
-    }
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded, "autosize");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateDuringCoolingOperation(boost::optional<double> outdoorAirFlowRateDuringCoolingOperation) {
-    bool result(false);
-    if (outdoorAirFlowRateDuringCoolingOperation) {
-      result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation, outdoorAirFlowRateDuringCoolingOperation.get());
-    }
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeOutdoorAirFlowRateDuringCoolingOperation() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation, "autosize");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateDuringHeatingOperation(boost::optional<double> outdoorAirFlowRateDuringHeatingOperation) {
-    bool result(false);
-    if (outdoorAirFlowRateDuringHeatingOperation) {
-      result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation, outdoorAirFlowRateDuringHeatingOperation.get());
-    }
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeOutdoorAirFlowRateDuringHeatingOperation() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation, "autosize");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(boost::optional<double> outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded) {
-    bool result(false);
-    if (outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded) {
-      result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded, outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded.get());
-    }
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded, "autosize");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateMultiplierSchedule(Schedule& schedule) {
-    bool result = setSchedule(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule,
-                              "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass",
-                              "Outdoor Air Flow Rate Multiplier Schedule",
-                              schedule);
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::resetOutdoorAirFlowRateMultiplierSchedule() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule, "");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSupplyAirFan(const HVACComponent& fansCVandOnOff) {
-    bool result = setPointer(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFan, fansCVandOnOff.handle());
-    return result;
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSupplyAirFanPlacement(std::string supplyAirFanPlacement) {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanPlacement, supplyAirFanPlacement);
-    return result;
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSupplyAirFanOperatingModeSchedule(Schedule& schedule) {
-    bool result = setSchedule(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule,
-                              "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass",
-                              "Supply Air Fan Operating Mode Schedule",
-                              schedule);
-    return result;
-  }
-
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::resetSupplyAirFanOperatingModeSchedule() {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule, "");
-    OS_ASSERT(result);
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setCoolingCoil(const HVACComponent& coolingCoilsDXMultiModeOrSingleSpeed) {
-    bool result = setPointer(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::CoolingCoil, coolingCoilsDXMultiModeOrSingleSpeed.handle());
-    return result;
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setHeatingCoil(const HVACComponent& heatingCoilName) {
-    bool result = setPointer(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::HeatingCoil, heatingCoilName.handle());
-    return result;
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setPriorityControlMode(std::string priorityControlMode) {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::PriorityControlMode, priorityControlMode);
-    return result;
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setMinimumOutletAirTemperatureDuringCoolingOperation(double minimumOutletAirTemperatureDuringCoolingOperation) {
-    bool result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MinimumOutletAirTemperatureDuringCoolingOperation, minimumOutletAirTemperatureDuringCoolingOperation);
-    return result;
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setMaximumOutletAirTemperatureDuringHeatingOperation(double maximumOutletAirTemperatureDuringHeatingOperation) {
-    bool result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MaximumOutletAirTemperatureDuringHeatingOperation, maximumOutletAirTemperatureDuringHeatingOperation);
-    return result;
-  }
-
-  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setDehumidificationControlType(std::string dehumidificationControlType) {
-    bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::DehumidificationControlType, dehumidificationControlType);
-    return result;
-  }
-
-  boost::optional<HVACComponent> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::optionalSupplyAirFan() const {
-    return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFan);
-  }
-
-  boost::optional<HVACComponent> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::optionalCoolingCoil() const {
-    return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::CoolingCoil);
-  }
-
-  boost::optional<HVACComponent> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::optionalHeatingCoil() const {
-    return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::HeatingCoil);
-  }
-
-  unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::inletPort() const
-  {
-    return OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AirInletNode;
-  }
-
-  unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outletPort() const
-  {
-    return OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AirOutletNode;
-  }
-
-  ModelObject AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::clone(Model model) const
-  {
-    AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass unitaryClone = StraightComponent_Impl::clone(model).cast<AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass>();
-
-    HVACComponent supplyFanClone = this->supplyAirFan().clone(model).cast<HVACComponent>();
-    HVACComponent heatingCoilClone = this->heatingCoil().clone(model).cast<HVACComponent>();
-    HVACComponent coolingCoilClone = this->coolingCoil().clone(model).cast<HVACComponent>();
-
-    unitaryClone.setSupplyAirFan(supplyFanClone);
-    unitaryClone.setHeatingCoil(heatingCoilClone);
-    unitaryClone.setCoolingCoil(coolingCoilClone);
-
-    return unitaryClone;
-  }
-
-  std::vector<IdfObject> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::remove()
-  {
-    std::vector<IdfObject> result;
-
-    if ( boost::optional<HVACComponent> _supplyFan = this->supplyAirFan() ) {
-      std::vector<IdfObject> removedFans = _supplyFan->remove();
-      result.insert(result.end(), removedFans.begin(), removedFans.end());
+  namespace detail {
+
+    AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl(const IdfObject& idfObject,
+                                                                                                           Model_Impl* model, bool keepHandle)
+      : StraightComponent_Impl(idfObject, model, keepHandle) {
+      OS_ASSERT(idfObject.iddObject().type() == AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType());
     }
 
-    if (boost::optional<HVACComponent> _coolingCoil = this->coolingCoil()) {
-      if( boost::optional<PlantLoop> loop = _coolingCoil->plantLoop() )
-      {
-        loop->removeDemandBranchWithComponent(*_coolingCoil);
+    AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl(
+      const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle)
+      : StraightComponent_Impl(other, model, keepHandle) {
+      OS_ASSERT(other.iddObject().type() == AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType());
+    }
+
+    AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl(
+      const AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl& other, Model_Impl* model, bool keepHandle)
+      : StraightComponent_Impl(other, model, keepHandle) {}
+
+    const std::vector<std::string>& AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outputVariableNames() const {
+      static const std::vector<std::string> result;
+      return result;
+    }
+
+    IddObjectType AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::iddObjectType() const {
+      return AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType();
+    }
+
+    std::vector<ScheduleTypeKey> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::getScheduleTypeKeys(const Schedule& schedule) const {
+      std::vector<ScheduleTypeKey> result;
+      UnsignedVector fieldIndices = getSourceIndices(schedule.handle());
+      UnsignedVector::const_iterator b(fieldIndices.begin()), e(fieldIndices.end());
+      if (std::find(b, e, OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule) != e) {
+        result.push_back(ScheduleTypeKey("AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass", "Availability Schedule"));
       }
-      std::vector<IdfObject> removedCoolingCoils = _coolingCoil->remove();
-      result.insert(result.end(), removedCoolingCoils.begin(), removedCoolingCoils.end());
-    }
-
-    if (boost::optional<HVACComponent> _heatingCoil = this->heatingCoil()) {
-      if( boost::optional<PlantLoop> loop = _heatingCoil->plantLoop() )
-      {
-        loop->removeDemandBranchWithComponent(*_heatingCoil);
+      if (std::find(b, e, OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule) != e) {
+        result.push_back(ScheduleTypeKey("AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass", "Outdoor Air Flow Rate Multiplier Schedule"));
       }
-      std::vector<IdfObject> removedHeatingCoils = _heatingCoil->remove();
-      result.insert(result.end(), removedHeatingCoils.begin(), removedHeatingCoils.end());
+      if (std::find(b, e, OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule) != e) {
+        result.push_back(ScheduleTypeKey("AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass", "Supply Air Fan Operating Mode Schedule"));
+      }
+      return result;
     }
 
-    std::vector<IdfObject> removedUnitarySystem = StraightComponent_Impl::remove();
-    result.insert(result.end(), removedUnitarySystem.begin(), removedUnitarySystem.end());
-
-    return result;
-  }
-
-  std::vector<ModelObject> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::children() const
-  {
-    std::vector<ModelObject> result;
-
-    if( boost::optional<HVACComponent> supplyFan = this->supplyAirFan()) {
-      result.push_back( *supplyFan );
-    }
-    if( boost::optional<HVACComponent> coolingCoil = this->coolingCoil()) {
-      result.push_back( *coolingCoil );
-    }
-    if( boost::optional<HVACComponent> heatingCoil = this->heatingCoil()) {
-      result.push_back( *heatingCoil );
+    boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::availabilitySchedule() const {
+      return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule);
     }
 
-    return result;
-  }
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::systemAirFlowRateDuringCoolingOperation() const {
+      return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation, true);
+    }
 
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateDuringCoolingOperation() const {
-    return getAutosizedValue("maximum cooling air flow rate", "m3/s");
-  }
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isSystemAirFlowRateDuringCoolingOperationAutosized() const {
+      bool result = false;
+      boost::optional<std::string> value =
+        getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation, true);
+      if (value) {
+        result = openstudio::istringEqual(value.get(), "autosize");
+      }
+      return result;
+    }
 
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateDuringHeatingOperation() const {
-    return getAutosizedValue("maximum heating air flow rate", "m3/s");
-  }
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::systemAirFlowRateDuringHeatingOperation() const {
+      return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation, true);
+    }
 
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
-    return getAutosizedValue("maximum air flow rate when compressor/coil is off", "m3/s");
-  }
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isSystemAirFlowRateDuringHeatingOperationAutosized() const {
+      bool result = false;
+      boost::optional<std::string> value =
+        getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation, true);
+      if (value) {
+        result = openstudio::istringEqual(value.get(), "autosize");
+      }
+      return result;
+    }
 
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateDuringCoolingOperation() const {
-    return getAutosizedValue("maximum outside air flow rate in cooling", "m3/s");
-  }
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::systemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+      return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded, true);
+    }
 
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateDuringHeatingOperation() const {
-    return getAutosizedValue("maximum outdoor air flow rate in heating", "m3/s");
-  }
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
+      bool result = false;
+      boost::optional<std::string> value =
+        getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded, true);
+      if (value) {
+        result = openstudio::istringEqual(value.get(), "autosize");
+      }
+      return result;
+    }
 
-  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
-    return getAutosizedValue("maximum outdoor air flow rate when compressor is off", "m3/s");
-  }
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateDuringCoolingOperation() const {
+      return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation, true);
+    }
 
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosize() {
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isOutdoorAirFlowRateDuringCoolingOperationAutosized() const {
+      bool result = false;
+      boost::optional<std::string> value =
+        getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation, true);
+      if (value) {
+        result = openstudio::istringEqual(value.get(), "autosize");
+      }
+      return result;
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateDuringHeatingOperation() const {
+      return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation, true);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isOutdoorAirFlowRateDuringHeatingOperationAutosized() const {
+      bool result = false;
+      boost::optional<std::string> value =
+        getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation, true);
+      if (value) {
+        result = openstudio::istringEqual(value.get(), "autosize");
+      }
+      return result;
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+      return getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded, true);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
+      bool result = false;
+      boost::optional<std::string> value =
+        getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded, true);
+      if (value) {
+        result = openstudio::istringEqual(value.get(), "autosize");
+      }
+      return result;
+    }
+
+    boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outdoorAirFlowRateMultiplierSchedule() const {
+      return getObject<ModelObject>().getModelObjectTarget<Schedule>(
+        OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule);
+    }
+
+    HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::supplyAirFan() const {
+      boost::optional<HVACComponent> value = optionalSupplyAirFan();
+      if (!value) {
+        LOG_AND_THROW(briefDescription() << " does not have an Supply Air Fan attached.");
+      }
+      return value.get();
+    }
+
+    std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::supplyAirFanPlacement() const {
+      boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanPlacement, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::supplyAirFanOperatingModeSchedule() const {
+      return getObject<ModelObject>().getModelObjectTarget<Schedule>(
+        OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule);
+    }
+
+    HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::coolingCoil() const {
+      boost::optional<HVACComponent> value = optionalCoolingCoil();
+      if (!value) {
+        LOG_AND_THROW(briefDescription() << " does not have an Cooling Coil attached.");
+      }
+      return value.get();
+    }
+
+    HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::heatingCoil() const {
+      boost::optional<HVACComponent> value = optionalHeatingCoil();
+      if (!value) {
+        LOG_AND_THROW(briefDescription() << " does not have an Heating Coil attached.");
+      }
+      return value.get();
+    }
+
+    std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::priorityControlMode() const {
+      boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::PriorityControlMode, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::minimumOutletAirTemperatureDuringCoolingOperation() const {
+      boost::optional<double> value =
+        getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MinimumOutletAirTemperatureDuringCoolingOperation, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::maximumOutletAirTemperatureDuringHeatingOperation() const {
+      boost::optional<double> value =
+        getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MaximumOutletAirTemperatureDuringHeatingOperation, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::dehumidificationControlType() const {
+      boost::optional<std::string> value = getString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::DehumidificationControlType, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setAvailabilitySchedule(Schedule& schedule) {
+      bool result = setSchedule(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule,
+                                "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass", "Availability Schedule", schedule);
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::resetAvailabilitySchedule() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AvailabilitySchedule, "");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSystemAirFlowRateDuringCoolingOperation(
+      boost::optional<double> systemAirFlowRateDuringCoolingOperation) {
+      bool result(false);
+      if (systemAirFlowRateDuringCoolingOperation) {
+        result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation,
+                           systemAirFlowRateDuringCoolingOperation.get());
+      }
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeSystemAirFlowRateDuringCoolingOperation() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringCoolingOperation, "autosize");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSystemAirFlowRateDuringHeatingOperation(
+      boost::optional<double> systemAirFlowRateDuringHeatingOperation) {
+      bool result(false);
+      if (systemAirFlowRateDuringHeatingOperation) {
+        result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation,
+                           systemAirFlowRateDuringHeatingOperation.get());
+      }
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeSystemAirFlowRateDuringHeatingOperation() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateDuringHeatingOperation, "autosize");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(
+      boost::optional<double> systemAirFlowRateWhenNoCoolingorHeatingisNeeded) {
+      bool result(false);
+      if (systemAirFlowRateWhenNoCoolingorHeatingisNeeded) {
+        result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded,
+                           systemAirFlowRateWhenNoCoolingorHeatingisNeeded.get());
+      }
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SystemAirFlowRateWhenNoCoolingorHeatingisNeeded, "autosize");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateDuringCoolingOperation(
+      boost::optional<double> outdoorAirFlowRateDuringCoolingOperation) {
+      bool result(false);
+      if (outdoorAirFlowRateDuringCoolingOperation) {
+        result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation,
+                           outdoorAirFlowRateDuringCoolingOperation.get());
+      }
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeOutdoorAirFlowRateDuringCoolingOperation() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringCoolingOperation, "autosize");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateDuringHeatingOperation(
+      boost::optional<double> outdoorAirFlowRateDuringHeatingOperation) {
+      bool result(false);
+      if (outdoorAirFlowRateDuringHeatingOperation) {
+        result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation,
+                           outdoorAirFlowRateDuringHeatingOperation.get());
+      }
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeOutdoorAirFlowRateDuringHeatingOperation() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateDuringHeatingOperation, "autosize");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(
+      boost::optional<double> outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded) {
+      bool result(false);
+      if (outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded) {
+        result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded,
+                           outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded.get());
+      }
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded, "autosize");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setOutdoorAirFlowRateMultiplierSchedule(Schedule& schedule) {
+      bool result = setSchedule(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule,
+                                "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass", "Outdoor Air Flow Rate Multiplier Schedule", schedule);
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::resetOutdoorAirFlowRateMultiplierSchedule() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::OutdoorAirFlowRateMultiplierSchedule, "");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSupplyAirFan(const HVACComponent& fansCVandOnOff) {
+      bool result = setPointer(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFan, fansCVandOnOff.handle());
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSupplyAirFanPlacement(std::string supplyAirFanPlacement) {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanPlacement, supplyAirFanPlacement);
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setSupplyAirFanOperatingModeSchedule(Schedule& schedule) {
+      bool result = setSchedule(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule,
+                                "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass", "Supply Air Fan Operating Mode Schedule", schedule);
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::resetSupplyAirFanOperatingModeSchedule() {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanOperatingModeSchedule, "");
+      OS_ASSERT(result);
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setCoolingCoil(const HVACComponent& coolingCoilsDXMultiModeOrSingleSpeed) {
+      bool result = setPointer(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::CoolingCoil, coolingCoilsDXMultiModeOrSingleSpeed.handle());
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setHeatingCoil(const HVACComponent& heatingCoilName) {
+      bool result = setPointer(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::HeatingCoil, heatingCoilName.handle());
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setPriorityControlMode(std::string priorityControlMode) {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::PriorityControlMode, priorityControlMode);
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setMinimumOutletAirTemperatureDuringCoolingOperation(
+      double minimumOutletAirTemperatureDuringCoolingOperation) {
+      bool result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MinimumOutletAirTemperatureDuringCoolingOperation,
+                              minimumOutletAirTemperatureDuringCoolingOperation);
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setMaximumOutletAirTemperatureDuringHeatingOperation(
+      double maximumOutletAirTemperatureDuringHeatingOperation) {
+      bool result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MaximumOutletAirTemperatureDuringHeatingOperation,
+                              maximumOutletAirTemperatureDuringHeatingOperation);
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setDehumidificationControlType(std::string dehumidificationControlType) {
+      bool result = setString(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::DehumidificationControlType, dehumidificationControlType);
+      return result;
+    }
+
+    boost::optional<HVACComponent> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::optionalSupplyAirFan() const {
+      return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFan);
+    }
+
+    boost::optional<HVACComponent> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::optionalCoolingCoil() const {
+      return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::CoolingCoil);
+    }
+
+    boost::optional<HVACComponent> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::optionalHeatingCoil() const {
+      return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::HeatingCoil);
+    }
+
+    unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::inletPort() const {
+      return OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AirInletNode;
+    }
+
+    unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outletPort() const {
+      return OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AirOutletNode;
+    }
+
+    ModelObject AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::clone(Model model) const {
+      AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass unitaryClone =
+        StraightComponent_Impl::clone(model).cast<AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass>();
+
+      HVACComponent supplyFanClone = this->supplyAirFan().clone(model).cast<HVACComponent>();
+      HVACComponent heatingCoilClone = this->heatingCoil().clone(model).cast<HVACComponent>();
+      HVACComponent coolingCoilClone = this->coolingCoil().clone(model).cast<HVACComponent>();
+
+      unitaryClone.setSupplyAirFan(supplyFanClone);
+      unitaryClone.setHeatingCoil(heatingCoilClone);
+      unitaryClone.setCoolingCoil(coolingCoilClone);
+
+      // We need this because "connect" is first going to try to disconnect from anything
+      // currently attached.  At this point unitaryClone is left pointing (through a connection) to the old air node,
+      // (because of ModelObject::clone behavior) so connecting to the new node will remove the connection joining
+      // the original unitary and the original node.
+      unitaryClone.setString(this->plenumorMixerAirPort(), "");
+      // Create a node for the Plenum or Mixer Air
+      Node node(model);
+      model.connect(unitaryClone, this->plenumorMixerAirPort(), node, node.inletPort());
+
+      return unitaryClone;
+    }
+
+    std::vector<IdfObject> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::remove() {
+      std::vector<IdfObject> result;
+
+      if (boost::optional<HVACComponent> _supplyFan = this->supplyAirFan()) {
+        std::vector<IdfObject> removedFans = _supplyFan->remove();
+        result.insert(result.end(), removedFans.begin(), removedFans.end());
+      }
+
+      if (boost::optional<HVACComponent> _coolingCoil = this->coolingCoil()) {
+        if (boost::optional<PlantLoop> loop = _coolingCoil->plantLoop()) {
+          loop->removeDemandBranchWithComponent(*_coolingCoil);
+        }
+        std::vector<IdfObject> removedCoolingCoils = _coolingCoil->remove();
+        result.insert(result.end(), removedCoolingCoils.begin(), removedCoolingCoils.end());
+      }
+
+      if (boost::optional<HVACComponent> _heatingCoil = this->heatingCoil()) {
+        if (boost::optional<PlantLoop> loop = _heatingCoil->plantLoop()) {
+          loop->removeDemandBranchWithComponent(*_heatingCoil);
+        }
+        std::vector<IdfObject> removedHeatingCoils = _heatingCoil->remove();
+        result.insert(result.end(), removedHeatingCoils.begin(), removedHeatingCoils.end());
+      }
+
+      // Removes branch on Plenum corresponding to this object
+      resetPlenumorMixer();
+      // delete the node
+      Node mixerNode = plenumorMixerNode();
+      mixerNode.disconnect();
+      std::vector<IdfObject> removedNode = mixerNode.remove();
+      result.insert(result.end(), removedNode.begin(), removedNode.end());
+
+      std::vector<IdfObject> removedUnitarySystem = StraightComponent_Impl::remove();
+      result.insert(result.end(), removedUnitarySystem.begin(), removedUnitarySystem.end());
+
+      return result;
+    }
+
+    std::vector<ModelObject> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::children() const {
+      std::vector<ModelObject> result;
+
+      if (boost::optional<HVACComponent> supplyFan = this->supplyAirFan()) {
+        result.push_back(*supplyFan);
+      }
+      if (boost::optional<HVACComponent> coolingCoil = this->coolingCoil()) {
+        result.push_back(*coolingCoil);
+      }
+      if (boost::optional<HVACComponent> heatingCoil = this->heatingCoil()) {
+        result.push_back(*heatingCoil);
+      }
+
+      return result;
+    }
+
+    double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::minimumRuntimeBeforeOperatingModeChange() const {
+      boost::optional<double> value =
+        getDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MinimumRuntimeBeforeOperatingModeChange, true);
+      OS_ASSERT(value);
+      return value.get();
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setMinimumRuntimeBeforeOperatingModeChange(double runtime) {
+      bool result = setDouble(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::MinimumRuntimeBeforeOperatingModeChange, runtime);
+      return result;
+    }
+
+    unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::plenumorMixerAirPort() const {
+      return OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::PlenumorMixerInletNodeName;
+    }
+
+    Node AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::plenumorMixerNode() const {
+      return this->connectedObject(this->plenumorMixerAirPort())->cast<Node>();
+    }
+
+    boost::optional<Mixer> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::plenumorMixer() const {
+      boost::optional<Mixer> result;
+
+      if (boost::optional<ModelObject> _mo = plenumorMixerNode().outletModelObject()) {
+        result = _mo->optionalCast<Mixer>();
+        OS_ASSERT(result);
+      }
+
+      return result;
+    }
+
+    bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::setPlenumorMixer(const Mixer& returnPathComponent) {
+
+      if ((returnPathComponent.iddObjectType() != IddObjectType::OS_AirLoopHVAC_ZoneMixer)
+          && (returnPathComponent.iddObjectType() != IddObjectType::OS_AirLoopHVAC_ReturnPlenum)) {
+        LOG(Error, briefDescription() << " can only be connected to an AirLoopHVACZoneMixer or an AirLoopHVACReturnPlenum.");
+        return false;
+      }
+
+      bool result = false;
+
+      if (boost::optional<AirLoopHVAC> mixerLoop = returnPathComponent.airLoopHVAC()) {
+        if (boost::optional<AirLoopHVAC> thisLoop = this->airLoopHVAC()) {
+          if (mixerLoop == thisLoop) {
+            result = true;
+          }
+        }
+      }
+
+      if (result) {
+        // Reset any existing plenum or mixer
+        resetPlenumorMixer();
+        Node mixerNode = plenumorMixerNode();
+        this->model().connect(mixerNode, mixerNode.outletPort(), returnPathComponent, returnPathComponent.nextInletPort());
+      } else {
+        LOG(Warn, briefDescription() << " cannot be connected with a " << returnPathComponent.briefDescription()
+                                     << " unless they are both on the same AirLoopHVAC.")
+      }
+
+      return result;
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::resetPlenumorMixer() {
+      Node mixerNode = plenumorMixerNode();
+      if (boost::optional<Mixer> existingMixer = plenumorMixer()) {
+        existingMixer->removePortForBranch(existingMixer->branchIndexForInletModelObject(mixerNode));
+      }
+      this->model().disconnect(mixerNode, mixerNode.outletPort());
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateDuringCoolingOperation() const {
+      return getAutosizedValue("maximum cooling air flow rate", "m3/s");
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateDuringHeatingOperation() const {
+      return getAutosizedValue("maximum heating air flow rate", "m3/s");
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+      return getAutosizedValue("maximum air flow rate when compressor/coil is off", "m3/s");
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateDuringCoolingOperation() const {
+      return getAutosizedValue("maximum outside air flow rate in cooling", "m3/s");
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateDuringHeatingOperation() const {
+      return getAutosizedValue("maximum outdoor air flow rate in heating", "m3/s");
+    }
+
+    boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+      return getAutosizedValue("maximum outdoor air flow rate when compressor is off", "m3/s");
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosize() {
+      autosizeSystemAirFlowRateDuringCoolingOperation();
+      autosizeSystemAirFlowRateDuringHeatingOperation();
+      autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+      autosizeOutdoorAirFlowRateDuringCoolingOperation();
+      autosizeOutdoorAirFlowRateDuringHeatingOperation();
+      autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+    }
+
+    void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::applySizingValues() {
+      boost::optional<double> val;
+      val = autosizedSystemAirFlowRateDuringCoolingOperation();
+      if (val) {
+        setSystemAirFlowRateDuringCoolingOperation(val.get());
+      }
+
+      val = autosizedSystemAirFlowRateDuringHeatingOperation();
+      if (val) {
+        setSystemAirFlowRateDuringHeatingOperation(val.get());
+      }
+
+      val = autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+      if (val) {
+        setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(val.get());
+      }
+
+      val = autosizedOutdoorAirFlowRateDuringCoolingOperation();
+      if (val) {
+        setOutdoorAirFlowRateDuringCoolingOperation(val.get());
+      }
+
+      val = autosizedOutdoorAirFlowRateDuringHeatingOperation();
+      if (val) {
+        setOutdoorAirFlowRateDuringHeatingOperation(val.get());
+      }
+
+      val = autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+      if (val) {
+        setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(val.get());
+      }
+    }
+
+    std::vector<EMSActuatorNames> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::emsActuatorNames() const {
+      std::vector<EMSActuatorNames> actuators{
+        {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate"},
+        {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During Cooling Operation"},
+        {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During Heating Operation"},
+        {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During No Heating or Cooling Operation"},
+        {"Unitary HVAC", "Sensible Load Request"},
+        {"Unitary HVAC", "Moisture Load Request"}};
+      return actuators;
+    }
+
+    std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::emsInternalVariableNames() const {
+      std::vector<std::string> types{"Unitary HVAC Design Heating Capacity", "Unitary HVAC Design Cooling Capacity"};
+      return types;
+    }
+
+  }  // namespace detail
+
+  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(const Model& model, const HVACComponent& fan,
+                                                                                               const HVACComponent& coolingCoil,
+                                                                                               const HVACComponent& heatingCoil)
+    : StraightComponent(AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType(), model) {
+    OS_ASSERT(getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>());
+
+    bool ok;
+    ok = setCoolingCoil(coolingCoil);
+    if (!ok) {
+      LOG_AND_THROW("Unable to set cooling coil");
+    }
+    ok = setHeatingCoil(heatingCoil);
+    if (!ok) {
+      LOG_AND_THROW("Unable to set heating coil");
+    }
+    ok = setSupplyAirFan(fan);
+    if (!ok) {
+      LOG_AND_THROW("Unable to set fan");
+    }
+
     autosizeSystemAirFlowRateDuringCoolingOperation();
     autosizeSystemAirFlowRateDuringHeatingOperation();
     autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
     autosizeOutdoorAirFlowRateDuringCoolingOperation();
     autosizeOutdoorAirFlowRateDuringHeatingOperation();
     autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+    setSupplyAirFanPlacement("DrawThrough");
+    setPriorityControlMode("ZonePriority");
+    setMinimumOutletAirTemperatureDuringCoolingOperation(8.0);
+    setMaximumOutletAirTemperatureDuringHeatingOperation(50.0);
+    setDehumidificationControlType("None");
+    // This field is a bit weird, in the sense that if it's not present in the IDF it's 0, if it's present and blank it's 0.25
+    // In order to try to maintain historical behavior, default to 0
+    setMinimumRuntimeBeforeOperatingModeChange(0.0);
+
+    // Create a node for the Plenum or Mixer Air
+    Node node(model);
+    model.connect(*this, this->plenumorMixerAirPort(), node, node.inletPort());
   }
 
-  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::applySizingValues() {
-    boost::optional<double> val;
-    val = autosizedSystemAirFlowRateDuringCoolingOperation();
-    if (val) {
-      setSystemAirFlowRateDuringCoolingOperation(val.get());
-    }
-
-    val = autosizedSystemAirFlowRateDuringHeatingOperation();
-    if (val) {
-      setSystemAirFlowRateDuringHeatingOperation(val.get());
-    }
-
-    val = autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
-    if (val) {
-      setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(val.get());
-    }
-
-    val = autosizedOutdoorAirFlowRateDuringCoolingOperation();
-    if (val) {
-      setOutdoorAirFlowRateDuringCoolingOperation(val.get());
-    }
-
-    val = autosizedOutdoorAirFlowRateDuringHeatingOperation();
-    if (val) {
-      setOutdoorAirFlowRateDuringHeatingOperation(val.get());
-    }
-
-    val = autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
-    if (val) {
-      setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(val.get());
-    }
-
+  IddObjectType AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType() {
+    return IddObjectType(IddObjectType::OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypass);
   }
 
-  std::vector<EMSActuatorNames> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::emsActuatorNames() const {
-    std::vector<EMSActuatorNames> actuators{{"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate"},
-                                            {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During Cooling Operation"},
-                                            {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During Heating Operation"},
-                                            {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During No Heating or Cooling Operation"},
-                                            {"Unitary HVAC", "Sensible Load Request"},
-                                            {"Unitary HVAC", "Moisture Load Request"}};
-    return actuators;
+  std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFanPlacementValues() {
+    return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
+                          OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanPlacement);
   }
 
-  std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::emsInternalVariableNames() const {
-    std::vector<std::string> types{"Unitary HVAC Design Heating Capacity",
-                                   "Unitary HVAC Design Cooling Capacity"};
-    return types;
+  std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::priorityControlModeValues() {
+    return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
+                          OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::PriorityControlMode);
   }
 
-} // detail
-
-AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(const Model& model,
-  const HVACComponent& fan,
-  const HVACComponent& coolingCoil,
-  const HVACComponent& heatingCoil)
-  : StraightComponent(AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType(),model)
-{
-  OS_ASSERT(getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>());
-
-  bool ok;
-  ok = setCoolingCoil(coolingCoil);
-  if( ! ok ) {
-    LOG_AND_THROW("Unable to set cooling coil");
-  }
-  ok = setHeatingCoil(heatingCoil);
-  if( ! ok ) {
-    LOG_AND_THROW("Unable to set heating coil");
-  }
-  ok = setSupplyAirFan(fan);
-  if( ! ok ) {
-    LOG_AND_THROW("Unable to set fan");
+  std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::dehumidificationControlTypeValues() {
+    return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
+                          OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::DehumidificationControlType);
   }
 
-  autosizeSystemAirFlowRateDuringCoolingOperation();
-  autosizeSystemAirFlowRateDuringHeatingOperation();
-  autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
-  autosizeOutdoorAirFlowRateDuringCoolingOperation();
-  autosizeOutdoorAirFlowRateDuringHeatingOperation();
-  autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
-  setSupplyAirFanPlacement("DrawThrough");
-  setPriorityControlMode("ZonePriority");
-  setMinimumOutletAirTemperatureDuringCoolingOperation(8.0);
-  setMaximumOutletAirTemperatureDuringHeatingOperation(50.0);
-  setDehumidificationControlType("None");
-}
+  boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::availabilitySchedule() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->availabilitySchedule();
+  }
 
-IddObjectType AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType() {
-  return IddObjectType(IddObjectType::OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypass);
-}
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::systemAirFlowRateDuringCoolingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->systemAirFlowRateDuringCoolingOperation();
+  }
 
-std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFanPlacementValues() {
-  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
-                        OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::SupplyAirFanPlacement);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isSystemAirFlowRateDuringCoolingOperationAutosized() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isSystemAirFlowRateDuringCoolingOperationAutosized();
+  }
 
-std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::priorityControlModeValues() {
-  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
-                        OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::PriorityControlMode);
-}
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::systemAirFlowRateDuringHeatingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->systemAirFlowRateDuringHeatingOperation();
+  }
 
-std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::dehumidificationControlTypeValues() {
-  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
-                        OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::DehumidificationControlType);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isSystemAirFlowRateDuringHeatingOperationAutosized() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isSystemAirFlowRateDuringHeatingOperationAutosized();
+  }
 
-boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::availabilitySchedule() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->availabilitySchedule();
-}
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::systemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->systemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+  }
 
-boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::systemAirFlowRateDuringCoolingOperation() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->systemAirFlowRateDuringCoolingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isSystemAirFlowRateDuringCoolingOperationAutosized() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isSystemAirFlowRateDuringCoolingOperationAutosized();
-}
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateDuringCoolingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateDuringCoolingOperation();
+  }
 
-boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::systemAirFlowRateDuringHeatingOperation() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->systemAirFlowRateDuringHeatingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isOutdoorAirFlowRateDuringCoolingOperationAutosized() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isOutdoorAirFlowRateDuringCoolingOperationAutosized();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isSystemAirFlowRateDuringHeatingOperationAutosized() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isSystemAirFlowRateDuringHeatingOperationAutosized();
-}
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateDuringHeatingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateDuringHeatingOperation();
+  }
 
-boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::systemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->systemAirFlowRateWhenNoCoolingorHeatingisNeeded();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isOutdoorAirFlowRateDuringHeatingOperationAutosized() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isOutdoorAirFlowRateDuringHeatingOperationAutosized();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized();
-}
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+  }
 
-boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateDuringCoolingOperation() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateDuringCoolingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isOutdoorAirFlowRateDuringCoolingOperationAutosized() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isOutdoorAirFlowRateDuringCoolingOperationAutosized();
-}
+  boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateMultiplierSchedule() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateMultiplierSchedule();
+  }
 
-boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateDuringHeatingOperation() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateDuringHeatingOperation();
-}
+  HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFan() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->supplyAirFan();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isOutdoorAirFlowRateDuringHeatingOperationAutosized() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isOutdoorAirFlowRateDuringHeatingOperationAutosized();
-}
+  std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFanPlacement() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->supplyAirFanPlacement();
+  }
 
-boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
-}
+  boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFanOperatingModeSchedule() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->supplyAirFanOperatingModeSchedule();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized();
-}
+  HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::coolingCoil() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->coolingCoil();
+  }
 
-boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::outdoorAirFlowRateMultiplierSchedule() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->outdoorAirFlowRateMultiplierSchedule();
-}
+  HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::heatingCoil() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->heatingCoil();
+  }
 
-HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFan() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->supplyAirFan();
-}
+  std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::priorityControlMode() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->priorityControlMode();
+  }
 
-std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFanPlacement() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->supplyAirFanPlacement();
-}
+  double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::minimumOutletAirTemperatureDuringCoolingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->minimumOutletAirTemperatureDuringCoolingOperation();
+  }
 
-boost::optional<Schedule> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::supplyAirFanOperatingModeSchedule() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->supplyAirFanOperatingModeSchedule();
-}
+  double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::maximumOutletAirTemperatureDuringHeatingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->maximumOutletAirTemperatureDuringHeatingOperation();
+  }
 
-HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::coolingCoil() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->coolingCoil();
-}
+  std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::dehumidificationControlType() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->dehumidificationControlType();
+  }
 
-HVACComponent AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::heatingCoil() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->heatingCoil();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setAvailabilitySchedule(Schedule& schedule) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setAvailabilitySchedule(schedule);
+  }
 
-std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::priorityControlMode() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->priorityControlMode();
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::resetAvailabilitySchedule() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->resetAvailabilitySchedule();
+  }
 
-double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::minimumOutletAirTemperatureDuringCoolingOperation() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->minimumOutletAirTemperatureDuringCoolingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSystemAirFlowRateDuringCoolingOperation(double systemAirFlowRateDuringCoolingOperation) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSystemAirFlowRateDuringCoolingOperation(
+      systemAirFlowRateDuringCoolingOperation);
+  }
 
-double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::maximumOutletAirTemperatureDuringHeatingOperation() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->maximumOutletAirTemperatureDuringHeatingOperation();
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeSystemAirFlowRateDuringCoolingOperation() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeSystemAirFlowRateDuringCoolingOperation();
+  }
 
-std::string AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::dehumidificationControlType() const {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->dehumidificationControlType();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSystemAirFlowRateDuringHeatingOperation(double systemAirFlowRateDuringHeatingOperation) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSystemAirFlowRateDuringHeatingOperation(
+      systemAirFlowRateDuringHeatingOperation);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setAvailabilitySchedule(Schedule& schedule) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setAvailabilitySchedule(schedule);
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeSystemAirFlowRateDuringHeatingOperation() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeSystemAirFlowRateDuringHeatingOperation();
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::resetAvailabilitySchedule() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->resetAvailabilitySchedule();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(
+    double systemAirFlowRateWhenNoCoolingorHeatingisNeeded) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(
+      systemAirFlowRateWhenNoCoolingorHeatingisNeeded);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSystemAirFlowRateDuringCoolingOperation(double systemAirFlowRateDuringCoolingOperation) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSystemAirFlowRateDuringCoolingOperation(systemAirFlowRateDuringCoolingOperation);
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeSystemAirFlowRateDuringCoolingOperation() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeSystemAirFlowRateDuringCoolingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateDuringCoolingOperation(double outdoorAirFlowRateDuringCoolingOperation) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateDuringCoolingOperation(
+      outdoorAirFlowRateDuringCoolingOperation);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSystemAirFlowRateDuringHeatingOperation(double systemAirFlowRateDuringHeatingOperation) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSystemAirFlowRateDuringHeatingOperation(systemAirFlowRateDuringHeatingOperation);
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeOutdoorAirFlowRateDuringCoolingOperation() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeOutdoorAirFlowRateDuringCoolingOperation();
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeSystemAirFlowRateDuringHeatingOperation() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeSystemAirFlowRateDuringHeatingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateDuringHeatingOperation(double outdoorAirFlowRateDuringHeatingOperation) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateDuringHeatingOperation(
+      outdoorAirFlowRateDuringHeatingOperation);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(double systemAirFlowRateWhenNoCoolingorHeatingisNeeded) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(systemAirFlowRateWhenNoCoolingorHeatingisNeeded);
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeOutdoorAirFlowRateDuringHeatingOperation() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeOutdoorAirFlowRateDuringHeatingOperation();
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(
+    double outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(
+      outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateDuringCoolingOperation(double outdoorAirFlowRateDuringCoolingOperation) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateDuringCoolingOperation(outdoorAirFlowRateDuringCoolingOperation);
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeOutdoorAirFlowRateDuringCoolingOperation() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeOutdoorAirFlowRateDuringCoolingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateMultiplierSchedule(Schedule& outdoorAirFlowRateMultiplierSchedule) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateMultiplierSchedule(
+      outdoorAirFlowRateMultiplierSchedule);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateDuringHeatingOperation(double outdoorAirFlowRateDuringHeatingOperation) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateDuringHeatingOperation(outdoorAirFlowRateDuringHeatingOperation);
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::resetOutdoorAirFlowRateMultiplierSchedule() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->resetOutdoorAirFlowRateMultiplierSchedule();
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeOutdoorAirFlowRateDuringHeatingOperation() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeOutdoorAirFlowRateDuringHeatingOperation();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSupplyAirFan(const HVACComponent& fansCVandOnOff) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSupplyAirFan(fansCVandOnOff);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(double outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSupplyAirFanPlacement(std::string supplyAirFanPlacement) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSupplyAirFanPlacement(supplyAirFanPlacement);
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSupplyAirFanOperatingModeSchedule(Schedule& schedule) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSupplyAirFanOperatingModeSchedule(schedule);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setOutdoorAirFlowRateMultiplierSchedule(Schedule& outdoorAirFlowRateMultiplierSchedule) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setOutdoorAirFlowRateMultiplierSchedule(outdoorAirFlowRateMultiplierSchedule);
-}
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::resetSupplyAirFanOperatingModeSchedule() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->resetSupplyAirFanOperatingModeSchedule();
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::resetOutdoorAirFlowRateMultiplierSchedule() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->resetOutdoorAirFlowRateMultiplierSchedule();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setCoolingCoil(const HVACComponent& coolingCoilsDXMultiModeOrSingleSpeed) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setCoolingCoil(coolingCoilsDXMultiModeOrSingleSpeed);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSupplyAirFan(const HVACComponent& fansCVandOnOff) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSupplyAirFan(fansCVandOnOff);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setHeatingCoil(const HVACComponent& heatingCoilName) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setHeatingCoil(heatingCoilName);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSupplyAirFanPlacement(std::string supplyAirFanPlacement) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSupplyAirFanPlacement(supplyAirFanPlacement);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setPriorityControlMode(std::string priorityControlMode) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setPriorityControlMode(priorityControlMode);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setSupplyAirFanOperatingModeSchedule(Schedule& schedule) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setSupplyAirFanOperatingModeSchedule(schedule);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setMinimumOutletAirTemperatureDuringCoolingOperation(
+    double minimumOutletAirTemperatureDuringCoolingOperation) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setMinimumOutletAirTemperatureDuringCoolingOperation(
+      minimumOutletAirTemperatureDuringCoolingOperation);
+  }
 
-void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::resetSupplyAirFanOperatingModeSchedule() {
-  getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->resetSupplyAirFanOperatingModeSchedule();
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setMaximumOutletAirTemperatureDuringHeatingOperation(
+    double maximumOutletAirTemperatureDuringHeatingOperation) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setMaximumOutletAirTemperatureDuringHeatingOperation(
+      maximumOutletAirTemperatureDuringHeatingOperation);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setCoolingCoil(const HVACComponent& coolingCoilsDXMultiModeOrSingleSpeed) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setCoolingCoil(coolingCoilsDXMultiModeOrSingleSpeed);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setDehumidificationControlType(std::string dehumidificationControlType) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setDehumidificationControlType(dehumidificationControlType);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setHeatingCoil(const HVACComponent& heatingCoilName) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setHeatingCoil(heatingCoilName);
-}
+  double AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::minimumRuntimeBeforeOperatingModeChange() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->minimumRuntimeBeforeOperatingModeChange();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setPriorityControlMode(std::string priorityControlMode) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setPriorityControlMode(priorityControlMode);
-}
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setMinimumRuntimeBeforeOperatingModeChange(double runtime) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setMinimumRuntimeBeforeOperatingModeChange(runtime);
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setMinimumOutletAirTemperatureDuringCoolingOperation(double minimumOutletAirTemperatureDuringCoolingOperation) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setMinimumOutletAirTemperatureDuringCoolingOperation(minimumOutletAirTemperatureDuringCoolingOperation);
-}
+  unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::plenumorMixerAirPort() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->plenumorMixerAirPort();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setMaximumOutletAirTemperatureDuringHeatingOperation(double maximumOutletAirTemperatureDuringHeatingOperation) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setMaximumOutletAirTemperatureDuringHeatingOperation(maximumOutletAirTemperatureDuringHeatingOperation);
-}
+  Node AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::plenumorMixerNode() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->plenumorMixerNode();
+  }
 
-bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setDehumidificationControlType(std::string dehumidificationControlType) {
-  return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setDehumidificationControlType(dehumidificationControlType);
-}
+  boost::optional<Mixer> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::plenumorMixer() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->plenumorMixer();
+  }
 
-/// @cond
-AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(std::shared_ptr<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl> impl)
-  : StraightComponent(std::move(impl))
-{}
-/// @endcond
+  bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setPlenumorMixer(const Mixer& returnPathComponent) {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->setPlenumorMixer(returnPathComponent);
+  }
+
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::resetPlenumorMixer() {
+    getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->resetPlenumorMixer();
+  }
+
+  /// @cond
+  AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(
+    std::shared_ptr<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl> impl)
+    : StraightComponent(std::move(impl)) {}
+  /// @endcond
 
   boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizedSystemAirFlowRateDuringCoolingOperation() const {
     return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedSystemAirFlowRateDuringCoolingOperation();
@@ -852,6 +991,5 @@ AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChan
     return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
   }
 
-} // model
-} // openstudio
-
+}  // namespace model
+}  // namespace openstudio

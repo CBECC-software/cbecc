@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,87 +32,60 @@
 
 #include "ConstructionBase_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
-
 namespace openstudio {
 namespace model {
-namespace detail {
+  namespace detail {
 
-  class MODEL_API CFactorUndergroundWallConstruction_Impl : public ConstructionBase_Impl {
+    class MODEL_API CFactorUndergroundWallConstruction_Impl : public ConstructionBase_Impl
+    {
 
+     public:
+      // constructor
+      CFactorUndergroundWallConstruction_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      // construct from workspace
+      CFactorUndergroundWallConstruction_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
+      CFactorUndergroundWallConstruction_Impl(const CFactorUndergroundWallConstruction_Impl& other, Model_Impl* model, bool keepHandle);
 
+      // virtual destructor
+      virtual ~CFactorUndergroundWallConstruction_Impl() {}
 
-
-
-
-
-
-   public:
-
-    // constructor
-    CFactorUndergroundWallConstruction_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
-
-    // construct from workspace
-    CFactorUndergroundWallConstruction_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                            Model_Impl* model,
-                                            bool keepHandle);
-
-    CFactorUndergroundWallConstruction_Impl(const CFactorUndergroundWallConstruction_Impl& other,
-                                            Model_Impl* model,
-                                            bool keepHandle);
-
-    // virtual destructor
-    virtual ~CFactorUndergroundWallConstruction_Impl(){}
-
-    /** Get all output variables names that could be associated with this object. These variables
+      /** Get all output variables names that could be associated with this object. These variables
      *  may or may not be available for each simulation, need to check report variable dictionary
      *  to see if the variable is available. Each concrete class should override this method.*/
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    /** @name Queries */
-    //@{
+      /** @name Queries */
+      //@{
 
-    virtual bool isOpaque() const override;
+      virtual bool isOpaque() const override;
 
-    virtual bool isFenestration() const override;
+      virtual bool isFenestration() const override;
 
-    virtual bool isSolarDiffusing() const override;
+      virtual bool isSolarDiffusing() const override;
 
-    virtual bool isModelPartition() const override;
+      virtual bool isModelPartition() const override;
 
-    virtual int renderingColorIndex() const override;
+      virtual int renderingColorIndex() const override;
 
-    /// Returns cFactor.
-    virtual double cFactor() const;
-    virtual Quantity getCFactor(bool returnIP = false) const;
-    virtual bool setCFactor(double cFactor);
-    virtual bool setCFactor(const Quantity& cFactor);
+      /// Returns cFactor.
+      virtual double cFactor() const;
+      virtual bool setCFactor(double cFactor);
+      /// Returns height.
+      virtual double height() const;
+      virtual bool setHeight(double height);
 
-    /// Returns height.
-    virtual double height() const;
-    virtual Quantity getHeight(bool returnIP = false) const;
-    virtual bool setHeight(double height);
-    virtual bool setHeight(const Quantity& height);
+      //@}
 
-    //@}
+     private:
+      REGISTER_LOGGER("openstudio.model.CFactorUndergroundWallConstruction");
+    };
 
-  private:
-    openstudio::Quantity cFactor_SI() const;
-    openstudio::Quantity cFactor_IP() const;
+  }  // namespace detail
+}  // namespace model
+}  // namespace openstudio
 
-    openstudio::Quantity height_SI() const;
-    openstudio::Quantity height_IP() const;
-
-    REGISTER_LOGGER("openstudio.model.CFactorUndergroundWallConstruction");
-  };
-
-} // detail
-} // model
-} // openstudio
-
-#endif // MODEL_CFACTORUNDERGROUNDWALLCONSTRUCTION_IMPL_HPP
+#endif  // MODEL_CFACTORUNDERGROUNDWALLCONSTRUCTION_IMPL_HPP

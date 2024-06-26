@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,191 +33,134 @@
 #include "ModelAPI.hpp"
 #include "SetpointManager_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
-
 namespace openstudio {
 namespace model {
 
-class Node;
-class Schedule;
+  class Node;
+  class Schedule;
 
-namespace detail {
+  namespace detail {
 
-  /** SetpointManagerOutdoorAirReset_Impl is a SetpointManager_Impl that is the implementation class for SetpointManagerOutdoorAirReset.*/
-  class MODEL_API SetpointManagerOutdoorAirReset_Impl : public SetpointManager_Impl {
+    /** SetpointManagerOutdoorAirReset_Impl is a SetpointManager_Impl that is the implementation class for SetpointManagerOutdoorAirReset.*/
+    class MODEL_API SetpointManagerOutdoorAirReset_Impl : public SetpointManager_Impl
+    {
 
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    SetpointManagerOutdoorAirReset_Impl(const IdfObject& idfObject,
-                                        Model_Impl* model,
-                                        bool keepHandle);
+      SetpointManagerOutdoorAirReset_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    SetpointManagerOutdoorAirReset_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                        Model_Impl* model,
-                                        bool keepHandle);
+      SetpointManagerOutdoorAirReset_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    SetpointManagerOutdoorAirReset_Impl(const SetpointManagerOutdoorAirReset_Impl& other,
-                                        Model_Impl* model,
-                                        bool keepHandle);
+      SetpointManagerOutdoorAirReset_Impl(const SetpointManagerOutdoorAirReset_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~SetpointManagerOutdoorAirReset_Impl() {}
+      virtual ~SetpointManagerOutdoorAirReset_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
+      virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
 
-    // virtual bool addToNode(Node & node) override;
+      // virtual bool addToNode(Node & node) override;
 
-    virtual bool isAllowedOnPlantLoop() const override;
+      virtual bool isAllowedOnPlantLoop() const override;
 
-    //@}
-    /** @name Getters */
-    //@{
+      //@}
+      /** @name Getters */
+      //@{
 
-    virtual std::string controlVariable() const override;
+      virtual std::string controlVariable() const override;
 
-    bool isControlVariableDefaulted() const;
+      bool isControlVariableDefaulted() const;
 
-    double setpointatOutdoorLowTemperature() const;
+      double setpointatOutdoorLowTemperature() const;
 
-    Quantity getSetpointatOutdoorLowTemperature(bool returnIP=false) const;
+      double outdoorLowTemperature() const;
 
-    double outdoorLowTemperature() const;
+      double setpointatOutdoorHighTemperature() const;
 
-    Quantity getOutdoorLowTemperature(bool returnIP=false) const;
+      double outdoorHighTemperature() const;
 
-    double setpointatOutdoorHighTemperature() const;
+      virtual boost::optional<Node> setpointNode() const override;
 
-    Quantity getSetpointatOutdoorHighTemperature(bool returnIP=false) const;
+      boost::optional<Schedule> schedule() const;
 
-    double outdoorHighTemperature() const;
+      boost::optional<double> setpointatOutdoorLowTemperature2() const;
 
-    Quantity getOutdoorHighTemperature(bool returnIP=false) const;
+      boost::optional<double> outdoorLowTemperature2() const;
 
-    virtual boost::optional<Node> setpointNode() const override;
+      boost::optional<double> setpointatOutdoorHighTemperature2() const;
 
-    boost::optional<Schedule> schedule() const;
+      boost::optional<double> outdoorHighTemperature2() const;
 
-    boost::optional<double> setpointatOutdoorLowTemperature2() const;
+      //@}
+      /** @name Setters */
+      //@{
 
-    OSOptionalQuantity getSetpointatOutdoorLowTemperature2(bool returnIP=false) const;
+      virtual bool setControlVariable(const std::string& controlVariable) override;
 
-    boost::optional<double> outdoorLowTemperature2() const;
+      void resetControlVariable();
 
-    OSOptionalQuantity getOutdoorLowTemperature2(bool returnIP=false) const;
+      bool setSetpointatOutdoorLowTemperature(double setpointatOutdoorLowTemperature);
 
-    boost::optional<double> setpointatOutdoorHighTemperature2() const;
+      bool setOutdoorLowTemperature(double outdoorLowTemperature);
 
-    OSOptionalQuantity getSetpointatOutdoorHighTemperature2(bool returnIP=false) const;
+      bool setSetpointatOutdoorHighTemperature(double setpointatOutdoorHighTemperature);
 
-    boost::optional<double> outdoorHighTemperature2() const;
+      bool setOutdoorHighTemperature(double outdoorHighTemperature);
 
-    OSOptionalQuantity getOutdoorHighTemperature2(bool returnIP=false) const;
+      bool setSchedule(Schedule& schedule);
 
-    //@}
-    /** @name Setters */
-    //@{
+      void resetSchedule();
 
-    virtual bool setControlVariable(const std::string& controlVariable) override;
+      bool setSetpointatOutdoorLowTemperature2(boost::optional<double> setpointatOutdoorLowTemperature2);
 
-    void resetControlVariable();
+      void resetSetpointatOutdoorLowTemperature2();
 
-    bool setSetpointatOutdoorLowTemperature(double setpointatOutdoorLowTemperature);
+      bool setOutdoorLowTemperature2(boost::optional<double> outdoorLowTemperature2);
 
-    bool setSetpointatOutdoorLowTemperature(const Quantity& setpointatOutdoorLowTemperature);
+      void resetOutdoorLowTemperature2();
 
-    bool setOutdoorLowTemperature(double outdoorLowTemperature);
+      bool setSetpointatOutdoorHighTemperature2(boost::optional<double> setpointatOutdoorHighTemperature2);
 
-    bool setOutdoorLowTemperature(const Quantity& outdoorLowTemperature);
+      void resetSetpointatOutdoorHighTemperature2();
 
-    bool setSetpointatOutdoorHighTemperature(double setpointatOutdoorHighTemperature);
+      bool setOutdoorHighTemperature2(boost::optional<double> outdoorHighTemperature2);
 
-    bool setSetpointatOutdoorHighTemperature(const Quantity& setpointatOutdoorHighTemperature);
+      void resetOutdoorHighTemperature2();
 
-    bool setOutdoorHighTemperature(double outdoorHighTemperature);
+      //@}
+      /** @name Other */
+      //@{
 
-    bool setOutdoorHighTemperature(const Quantity& outdoorHighTemperature);
+      // bool addToNode(Node & node);
 
-    bool setSchedule(Schedule& schedule);
+      //@}
+     protected:
+     private:
+      virtual bool setSetpointNode(const Node& node) override;
 
-    void resetSchedule();
+      virtual void resetSetpointNode() override;
 
-    bool setSetpointatOutdoorLowTemperature2(boost::optional<double> setpointatOutdoorLowTemperature2);
+      REGISTER_LOGGER("openstudio.model.SetpointManagerOutdoorAirReset");
 
-    bool setSetpointatOutdoorLowTemperature2(const OSOptionalQuantity& setpointatOutdoorLowTemperature2);
+      std::vector<std::string> controlVariableValues() const;
+      boost::optional<ModelObject> setpointNodeAsModelObject() const;
+      boost::optional<ModelObject> scheduleAsModelObject() const;
 
-    void resetSetpointatOutdoorLowTemperature2();
+      bool setSetpointNodeAsModelObject(const boost::optional<ModelObject>& modelObject);
+      bool setScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
+    };
 
-    bool setOutdoorLowTemperature2(boost::optional<double> outdoorLowTemperature2);
+  }  // namespace detail
 
-    bool setOutdoorLowTemperature2(const OSOptionalQuantity& outdoorLowTemperature2);
+}  // namespace model
+}  // namespace openstudio
 
-    void resetOutdoorLowTemperature2();
-
-    bool setSetpointatOutdoorHighTemperature2(boost::optional<double> setpointatOutdoorHighTemperature2);
-
-    bool setSetpointatOutdoorHighTemperature2(const OSOptionalQuantity& setpointatOutdoorHighTemperature2);
-
-    void resetSetpointatOutdoorHighTemperature2();
-
-    bool setOutdoorHighTemperature2(boost::optional<double> outdoorHighTemperature2);
-
-    bool setOutdoorHighTemperature2(const OSOptionalQuantity& outdoorHighTemperature2);
-
-    void resetOutdoorHighTemperature2();
-
-    //@}
-    /** @name Other */
-    //@{
-
-    // bool addToNode(Node & node);
-
-    //@}
-   protected:
-   private:
-    virtual bool setSetpointNode(const Node& node) override;
-
-    virtual void resetSetpointNode() override;
-
-    REGISTER_LOGGER("openstudio.model.SetpointManagerOutdoorAirReset");
-
-    std::vector<std::string> controlVariableValues() const;
-    openstudio::Quantity setpointatOutdoorLowTemperature_SI() const;
-    openstudio::Quantity setpointatOutdoorLowTemperature_IP() const;
-    openstudio::Quantity outdoorLowTemperature_SI() const;
-    openstudio::Quantity outdoorLowTemperature_IP() const;
-    openstudio::Quantity setpointatOutdoorHighTemperature_SI() const;
-    openstudio::Quantity setpointatOutdoorHighTemperature_IP() const;
-    openstudio::Quantity outdoorHighTemperature_SI() const;
-    openstudio::Quantity outdoorHighTemperature_IP() const;
-    openstudio::OSOptionalQuantity setpointatOutdoorLowTemperature2_SI() const;
-    openstudio::OSOptionalQuantity setpointatOutdoorLowTemperature2_IP() const;
-    openstudio::OSOptionalQuantity outdoorLowTemperature2_SI() const;
-    openstudio::OSOptionalQuantity outdoorLowTemperature2_IP() const;
-    openstudio::OSOptionalQuantity setpointatOutdoorHighTemperature2_SI() const;
-    openstudio::OSOptionalQuantity setpointatOutdoorHighTemperature2_IP() const;
-    openstudio::OSOptionalQuantity outdoorHighTemperature2_SI() const;
-    openstudio::OSOptionalQuantity outdoorHighTemperature2_IP() const;
-
-    boost::optional<ModelObject> setpointNodeAsModelObject() const;
-    boost::optional<ModelObject> scheduleAsModelObject() const;
-
-    bool setSetpointNodeAsModelObject(const boost::optional<ModelObject>& modelObject);
-    bool setScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_SETPOINTMANAGEROUTDOORAIRRESET_IMPL_HPP
+#endif  // MODEL_SETPOINTMANAGEROUTDOORAIRRESET_IMPL_HPP

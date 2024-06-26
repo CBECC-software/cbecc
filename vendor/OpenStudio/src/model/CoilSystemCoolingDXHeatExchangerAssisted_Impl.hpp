@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,78 +36,86 @@
 namespace openstudio {
 namespace model {
 
-class AirToAirComponent;
+  class AirToAirComponent;
 
-namespace detail {
+  namespace detail {
 
-  /** CoilSystemCoolingDXHeatExchangerAssisted_Impl is a StraightComponent_Impl that is the implementation class for CoilSystemCoolingDXHeatExchangerAssisted.*/
-  class MODEL_API CoilSystemCoolingDXHeatExchangerAssisted_Impl : public StraightComponent_Impl {
-   public:
-    /** @name Constructors and Destructors */
-    //@{
+    /** CoilSystemCoolingDXHeatExchangerAssisted_Impl is a StraightComponent_Impl that is the implementation class for CoilSystemCoolingDXHeatExchangerAssisted.*/
+    class MODEL_API CoilSystemCoolingDXHeatExchangerAssisted_Impl : public StraightComponent_Impl
+    {
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    CoilSystemCoolingDXHeatExchangerAssisted_Impl(const IdfObject& idfObject,
-                                                  Model_Impl* model,
-                                                  bool keepHandle);
+      CoilSystemCoolingDXHeatExchangerAssisted_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    CoilSystemCoolingDXHeatExchangerAssisted_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                                  Model_Impl* model,
-                                                  bool keepHandle);
+      CoilSystemCoolingDXHeatExchangerAssisted_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    CoilSystemCoolingDXHeatExchangerAssisted_Impl(const CoilSystemCoolingDXHeatExchangerAssisted_Impl& other,
-                                                  Model_Impl* model,
-                                                  bool keepHandle);
+      CoilSystemCoolingDXHeatExchangerAssisted_Impl(const CoilSystemCoolingDXHeatExchangerAssisted_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~CoilSystemCoolingDXHeatExchangerAssisted_Impl() {}
+      virtual ~CoilSystemCoolingDXHeatExchangerAssisted_Impl() {}
 
-    //@}
-    /** @name Virtual Methods */
-    //@{
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual IddObjectType iddObjectType() const override;
 
-    //@}
-    /** @name Getters */
-    //@{
+      virtual unsigned inletPort() const override;
+      virtual unsigned outletPort() const override;
 
-    AirToAirComponent heatExchanger() const;
+      /**
+     * Note JM 2019-03-13: At this point in time
+     * CoilSystemCoolingDXHeatExchangerAssisted is **NOT** allowed on a Branch directly and should be placed inside one of the Unitary systems
+     * cf https://github.com/NREL/EnergyPlus/issues/7222
+     * This method returns false and does nothing as a result
+     */
+      virtual bool addToNode(Node& node) override;
 
-    StraightComponent coolingCoil() const;
+      // will return the coolingCoil and heatExchanger
+      virtual std::vector<ModelObject> children() const override;
 
-    //@}
-    /** @name Setters */
-    //@{
+      // Will also clone the coolingCoil and heatExchanger
+      virtual ModelObject clone(Model model) const override;
 
-    bool setHeatExchanger(const AirToAirComponent& heatExchanger);
+      virtual boost::optional<HVACComponent> containingHVACComponent() const override;
 
-    bool setCoolingCoil(const StraightComponent& coolingCoil);
+      virtual boost::optional<ZoneHVACComponent> containingZoneHVACComponent() const override;
 
-    //@}
-    /** @name Other */
-    //@{
+      //@}
+      /** @name Getters */
+      //@{
 
-    virtual unsigned inletPort() const override;
-    virtual unsigned outletPort() const override;
+      AirToAirComponent heatExchanger() const;
 
-    bool addToNode(Node & node) override;
-    std::vector<ModelObject> children() const override;
-    ModelObject clone(Model model) const override;
+      StraightComponent coolingCoil() const;
 
-    //@}
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.CoilSystemCoolingDXHeatExchangerAssisted");
+      //@}
+      /** @name Setters */
+      //@{
 
-    boost::optional<AirToAirComponent> optionalHeatExchanger() const;
-    boost::optional<StraightComponent> optionalCoolingCoil() const;
-  };
+      bool setHeatExchanger(const AirToAirComponent& heatExchanger);
 
-} // detail
+      bool setCoolingCoil(const StraightComponent& coolingCoil);
 
-} // model
-} // openstudio
+      //@}
+      /** @name Other */
+      //@{
 
-#endif // MODEL_COILSYSTEMCOOLINGDXHEATEXCHANGERASSISTED_IMPL_HPP
+      //@}
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.CoilSystemCoolingDXHeatExchangerAssisted");
 
+      boost::optional<AirToAirComponent> optionalHeatExchanger() const;
+      boost::optional<StraightComponent> optionalCoolingCoil() const;
+    };
+
+  }  // namespace detail
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_COILSYSTEMCOOLINGDXHEATEXCHANGERASSISTED_IMPL_HPP

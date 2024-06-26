@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -33,137 +33,95 @@
 #include "ModelAPI.hpp"
 #include "SpaceLoad_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSOptionalQuantity.hpp"
-
 namespace openstudio {
 namespace model {
 
-class Schedule;
-class SpaceInfiltrationEffectiveLeakageArea;
+  class Schedule;
+  class SpaceInfiltrationEffectiveLeakageArea;
 
-namespace detail {
+  namespace detail {
 
-  /** SpaceInfiltrationEffectiveLeakageArea_Impl is a SpaceLoad_Impl that is the implementation class for SpaceInfiltrationEffectiveLeakageArea.*/
-  class MODEL_API SpaceInfiltrationEffectiveLeakageArea_Impl : public SpaceLoad_Impl {
+    /** SpaceInfiltrationEffectiveLeakageArea_Impl is a SpaceLoad_Impl that is the implementation class for SpaceInfiltrationEffectiveLeakageArea.*/
+    class MODEL_API SpaceInfiltrationEffectiveLeakageArea_Impl : public SpaceLoad_Impl
+    {
 
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
+      SpaceInfiltrationEffectiveLeakageArea_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
+      SpaceInfiltrationEffectiveLeakageArea_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
+      SpaceInfiltrationEffectiveLeakageArea_Impl(const SpaceInfiltrationEffectiveLeakageArea_Impl& other, Model_Impl* model, bool keepHandle);
 
+      virtual ~SpaceInfiltrationEffectiveLeakageArea_Impl() {}
 
+      //@}
+      /** @name Virtual Methods */
+      //@{
 
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
+      virtual IddObjectType iddObjectType() const override;
 
+      virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
 
+      virtual bool hardSize() override;
 
+      virtual bool hardApplySchedules() override;
 
+      virtual bool isAbsolute() const override;
 
+      //@}
+      /** @name Getters */
+      //@{
 
-   public:
-    /** @name Constructors and Destructors */
-    //@{
-
-    SpaceInfiltrationEffectiveLeakageArea_Impl(const IdfObject& idfObject,
-                                               Model_Impl* model,
-                                               bool keepHandle);
-
-    SpaceInfiltrationEffectiveLeakageArea_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                               Model_Impl* model,
-                                               bool keepHandle);
-
-    SpaceInfiltrationEffectiveLeakageArea_Impl(const SpaceInfiltrationEffectiveLeakageArea_Impl& other,
-                                               Model_Impl* model,
-                                               bool keepHandle);
-
-    virtual ~SpaceInfiltrationEffectiveLeakageArea_Impl() {}
-
-    //@}
-    /** @name Virtual Methods */
-    //@{
-
-    virtual const std::vector<std::string>& outputVariableNames() const override;
-
-    virtual IddObjectType iddObjectType() const override;
-
-    virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
-
-    virtual bool hardSize() override;
-
-    virtual bool hardApplySchedules() override;
-
-    virtual bool isAbsolute() const override;
-
-    //@}
-    /** @name Getters */
-    //@{
-
-    /** Returns the (fractional) infiltration schedule.  If this object does not
+      /** Returns the (fractional) infiltration schedule.  If this object does not
      *  specify a schedule this function will search the hierarchy. */
-    boost::optional<Schedule> schedule() const;
+      boost::optional<Schedule> schedule() const;
 
-    /** Returns true if this object does not specify a schedule directly. */
-    bool isScheduleDefaulted() const;
+      /** Returns true if this object does not specify a schedule directly. */
+      bool isScheduleDefaulted() const;
 
-    double effectiveAirLeakageArea() const;
+      double effectiveAirLeakageArea() const;
 
-    Quantity getEffectiveAirLeakageArea(bool returnIP=false) const;
+      double stackCoefficient() const;
 
-    double stackCoefficient() const;
+      double windCoefficient() const;
 
-    Quantity getStackCoefficient(bool returnIP=false) const;
+      //@}
+      /** @name Setters */
+      //@{
 
-    double windCoefficient() const;
+      /** Sets the (fractional) Schedule. */
+      bool setSchedule(Schedule& schedule);
 
-    Quantity getWindCoefficient(bool returnIP=false) const;
+      /** Resets the (fractional) Schedule. */
+      void resetSchedule();
 
-    //@}
-    /** @name Setters */
-    //@{
+      bool setEffectiveAirLeakageArea(double effectiveAirLeakageArea);
 
-    /** Sets the (fractional) Schedule. */
-    bool setSchedule(Schedule& schedule);
+      bool setStackCoefficient(double stackCoefficient);
 
-    /** Resets the (fractional) Schedule. */
-    void resetSchedule();
+      bool setWindCoefficient(double windCoefficient);
 
-    bool setEffectiveAirLeakageArea(double effectiveAirLeakageArea);
+      //@}
+     protected:
+      // index of the space name
+      virtual int spaceIndex() const override;
 
-    bool setEffectiveAirLeakageArea(const Quantity& effectiveAirLeakageArea);
+     private:
+      REGISTER_LOGGER("openstudio.model.SpaceInfiltrationEffectiveLeakageArea");
 
-    bool setStackCoefficient(double stackCoefficient);
+      boost::optional<ModelObject> scheduleAsModelObject() const;
 
-    bool setStackCoefficient(const Quantity& stackCoefficient);
+      bool setScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
+    };
 
-    bool setWindCoefficient(double windCoefficient);
+  }  // namespace detail
 
-    bool setWindCoefficient(const Quantity& windCoefficient);
+}  // namespace model
+}  // namespace openstudio
 
-    //@}
-   protected:
-
-    // index of the space name
-    virtual int spaceIndex() const override;
-
-   private:
-    REGISTER_LOGGER("openstudio.model.SpaceInfiltrationEffectiveLeakageArea");
-
-    openstudio::Quantity effectiveAirLeakageArea_SI() const;
-    openstudio::Quantity effectiveAirLeakageArea_IP() const;
-    openstudio::Quantity stackCoefficient_SI() const;
-    openstudio::Quantity stackCoefficient_IP() const;
-    openstudio::Quantity windCoefficient_SI() const;
-    openstudio::Quantity windCoefficient_IP() const;
-
-    boost::optional<ModelObject> scheduleAsModelObject() const;
-
-    bool setScheduleAsModelObject(const boost::optional<ModelObject>& modelObject);
-  };
-
-} // detail
-
-} // model
-} // openstudio
-
-#endif // MODEL_SPACEINFILTRATIONEFFECTIVELEAKAGEAREA_IMPL_HPP
-
+#endif  // MODEL_SPACEINFILTRATIONEFFECTIVELEAKAGEAREA_IMPL_HPP

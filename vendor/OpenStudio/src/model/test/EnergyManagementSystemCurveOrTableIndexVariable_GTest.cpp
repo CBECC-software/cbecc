@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -43,8 +43,7 @@
 using namespace openstudio;
 using namespace openstudio::model;
 
-TEST_F(ModelFixture, EMS_CurveOrTableIndexVariable)
-{
+TEST_F(ModelFixture, EMS_CurveOrTableIndexVariable) {
   Model model;
 
   // Create a curve
@@ -53,5 +52,5 @@ TEST_F(ModelFixture, EMS_CurveOrTableIndexVariable)
   EnergyManagementSystemCurveOrTableIndexVariable emsCurve(model, c1);
   //emsCurve.setCurveorTableObject(c1);
   EXPECT_EQ(c1.handle(), emsCurve.curveOrTableObject().handle());
-  model.save(toPath("./EMS_curvetest.osm"), true);
+  // model.save(toPath("./EMS_curvetest.osm"), true);
 }

@@ -1,7 +1,6 @@
 set(target_name openstudio_model)
 
 set(${target_name}_src
-
   mainpage.hpp
   ModelAPI.hpp
   Model.hpp
@@ -21,10 +20,6 @@ set(${target_name}_src
   GenericModelObject.hpp
   GenericModelObject_Impl.hpp
   GenericModelObject.cpp
-  AccessPolicyStore.hpp
-  AccessPolicyStore.cpp
-#  Relationship.hpp
-#  Relationship.cpp
   ScheduleTypeRegistry.hpp
   ScheduleTypeRegistry.cpp
   ModelObjectList.hpp
@@ -293,6 +288,18 @@ set(${target_name}_src
   CoilCoolingCooledBeam.hpp
   CoilCoolingCooledBeam_Impl.hpp
   CoilCoolingCooledBeam.cpp
+  CoilCoolingDX.hpp
+  CoilCoolingDX_Impl.hpp
+  CoilCoolingDX.cpp
+  CoilCoolingDXCurveFitPerformance.hpp
+  CoilCoolingDXCurveFitPerformance_Impl.hpp
+  CoilCoolingDXCurveFitPerformance.cpp
+  CoilCoolingDXCurveFitOperatingMode.hpp
+  CoilCoolingDXCurveFitOperatingMode_Impl.hpp
+  CoilCoolingDXCurveFitOperatingMode.cpp
+  CoilCoolingDXCurveFitSpeed.hpp
+  CoilCoolingDXCurveFitSpeed_Impl.hpp
+  CoilCoolingDXCurveFitSpeed.cpp
   CoilCoolingDXMultiSpeed.hpp
   CoilCoolingDXMultiSpeed_Impl.hpp
   CoilCoolingDXMultiSpeed.cpp
@@ -434,6 +441,9 @@ set(${target_name}_src
   Construction.hpp
   Construction_Impl.hpp
   Construction.cpp
+  ConstructionAirBoundary.hpp
+  ConstructionAirBoundary_Impl.hpp
+  ConstructionAirBoundary.cpp
   ConstructionBase.hpp
   ConstructionBase_Impl.hpp
   ConstructionBase.cpp
@@ -722,6 +732,9 @@ set(${target_name}_src
   FanOnOff.hpp
   FanOnOff_Impl.hpp
   FanOnOff.cpp
+  FanSystemModel.hpp
+  FanSystemModel_Impl.hpp
+  FanSystemModel.cpp
   FanVariableVolume.hpp
   FanVariableVolume_Impl.hpp
   FanVariableVolume.cpp
@@ -955,9 +968,21 @@ set(${target_name}_src
   OpaqueMaterial.hpp
   OpaqueMaterial_Impl.hpp
   OpaqueMaterial.cpp
+  OutputControlFiles.hpp
+  OutputControlFiles_Impl.hpp
+  OutputControlFiles.cpp
   OutputControlReportingTolerances.hpp
   OutputControlReportingTolerances_Impl.hpp
   OutputControlReportingTolerances.cpp
+  OutputDebuggingData.hpp
+  OutputDebuggingData_Impl.hpp
+  OutputDebuggingData.cpp
+  OutputJSON.hpp
+  OutputJSON_Impl.hpp
+  OutputJSON.cpp
+  OutputDiagnostics.hpp
+  OutputDiagnostics_Impl.hpp
+  OutputDiagnostics.cpp
   OutputEnergyManagementSystem.cpp
   OutputEnergyManagementSystem.hpp
   OutputEnergyManagementSystem_Impl.hpp
@@ -967,6 +992,9 @@ set(${target_name}_src
   OutputVariable.hpp
   OutputVariable_Impl.hpp
   OutputVariable.cpp
+  OutputTableSummaryReports.hpp
+  OutputTableSummaryReports_Impl.hpp
+  OutputTableSummaryReports.cpp
   OutsideSurfaceConvectionAlgorithm.hpp
   OutsideSurfaceConvectionAlgorithm_Impl.hpp
   OutsideSurfaceConvectionAlgorithm.cpp
@@ -979,6 +1007,9 @@ set(${target_name}_src
   PeopleDefinition.hpp
   PeopleDefinition_Impl.hpp
   PeopleDefinition.cpp
+  PerformancePrecisionTradeoffs.hpp
+  PerformancePrecisionTradeoffs_Impl.hpp
+  PerformancePrecisionTradeoffs.cpp
   PhotovoltaicPerformance.hpp
   PhotovoltaicPerformance_Impl.hpp
   PhotovoltaicPerformance.cpp
@@ -1384,6 +1415,9 @@ set(${target_name}_src
   Surface.hpp
   Surface_Impl.hpp
   Surface.cpp
+  SurfaceControlMovableInsulation.hpp
+  SurfaceControlMovableInsulation_Impl.hpp
+  SurfaceControlMovableInsulation.cpp
   SurfacePropertyConvectionCoefficients.cpp
   SurfacePropertyConvectionCoefficients.hpp
   SurfacePropertyConvectionCoefficients_Impl.hpp
@@ -1399,6 +1433,9 @@ set(${target_name}_src
   SurfacePropertyOtherSideConditionsModel.cpp
   SurfacePropertyOtherSideConditionsModel.hpp
   SurfacePropertyOtherSideConditionsModel_Impl.hpp
+  SwimmingPoolIndoor.cpp
+  SwimmingPoolIndoor.hpp
+  SwimmingPoolIndoor_Impl.hpp
   TableMultiVariableLookup.hpp
   TableMultiVariableLookup_Impl.hpp
   TableMultiVariableLookup.cpp
@@ -1441,27 +1478,30 @@ set(${target_name}_src
   UtilityBill.hpp
   UtilityBill_Impl.hpp
   UtilityBill.cpp
-  UtilityCost_Charge_Block.hpp
-  UtilityCost_Charge_Block_Impl.hpp
-  UtilityCost_Charge_Block.cpp
-  UtilityCost_Charge_Simple.hpp
-  UtilityCost_Charge_Simple_Impl.hpp
-  UtilityCost_Charge_Simple.cpp
-  UtilityCost_Computation.hpp
-  UtilityCost_Computation_Impl.hpp
-  UtilityCost_Computation.cpp
-  UtilityCost_Qualify.hpp
-  UtilityCost_Qualify_Impl.hpp
-  UtilityCost_Qualify.cpp
-  UtilityCost_Ratchet.hpp
-  UtilityCost_Ratchet_Impl.hpp
-  UtilityCost_Ratchet.cpp
-  UtilityCost_Tariff.hpp
-  UtilityCost_Tariff_Impl.hpp
-  UtilityCost_Tariff.cpp
-  UtilityCost_Variable.hpp
-  UtilityCost_Variable_Impl.hpp
-  UtilityCost_Variable.cpp
+
+  # TODO: once UtilityCost objects are wrapped
+  # UtilityCost_Charge_Block.hpp
+  # UtilityCost_Charge_Block_Impl.hpp
+  # UtilityCost_Charge_Block.cpp
+  # UtilityCost_Charge_Simple.hpp
+  # UtilityCost_Charge_Simple_Impl.hpp
+  # UtilityCost_Charge_Simple.cpp
+  # UtilityCost_Computation.hpp
+  # UtilityCost_Computation_Impl.hpp
+  # UtilityCost_Computation.cpp
+  # UtilityCost_Qualify.hpp
+  # UtilityCost_Qualify_Impl.hpp
+  # UtilityCost_Qualify.cpp
+  # UtilityCost_Ratchet.hpp
+  # UtilityCost_Ratchet_Impl.hpp
+  # UtilityCost_Ratchet.cpp
+  # UtilityCost_Tariff.hpp
+  # UtilityCost_Tariff_Impl.hpp
+  # UtilityCost_Tariff.cpp
+  # UtilityCost_Variable.hpp
+  # UtilityCost_Variable_Impl.hpp
+  # UtilityCost_Variable.cpp
+
   WaterHeaterMixed.hpp
   WaterHeaterMixed_Impl.hpp
   WaterHeaterMixed.cpp
@@ -1585,9 +1625,15 @@ set(${target_name}_src
   ZoneMixing.hpp
   ZoneMixing_Impl.hpp
   ZoneMixing.cpp
+  ZonePropertyUserViewFactorsBySurfaceName.hpp
+  ZonePropertyUserViewFactorsBySurfaceName_Impl.hpp
+  ZonePropertyUserViewFactorsBySurfaceName.cpp
   ZoneVentilationDesignFlowRate.hpp
   ZoneVentilationDesignFlowRate_Impl.hpp
   ZoneVentilationDesignFlowRate.cpp
+  ZoneVentilationWindandStackOpenArea.hpp
+  ZoneVentilationWindandStackOpenArea_Impl.hpp
+  ZoneVentilationWindandStackOpenArea.cpp
 )
 
 set(${target_name}_swig_src
@@ -1607,47 +1653,52 @@ set(${target_name}_swig_src
   ModelZoneHVAC.i
 )
 
-qt5_wrap_cpp_minimally(${target_name}_moc_src ${${target_name}_moc})
+# Embed resource files
+# Glob all files inside model/Resources
+file(GLOB_RECURSE embedded_files "${CMAKE_CURRENT_SOURCE_DIR}/Resources/**/*.*")
 
-set(${target_name}_qrc
-  Model.qrc
-)
+# Exclude rb scripts (helpers to generate JSON files)
+list(FILTER embedded_files EXCLUDE REGEX ".*\.rb")
 
-# generate rules for building source files from the resources
-# DLM: TODO, replace with embed_files
-qt5_add_resources(${target_name}_qrcs ${${target_name}_qrc})
+# We compute a relative path, so that they end up in :/Resources/
+foreach( _FILE ${embedded_files} )
+  file(RELATIVE_PATH LOCATION "${CMAKE_CURRENT_SOURCE_DIR}" ${_FILE})
+  list(APPEND E_FILES ${_FILE})
+  list(APPEND E_PATHS ${LOCATION})
+endforeach()
+# message("E_FILES: ${E_FILES}")
+# message("E_PATHS: ${E_PATHS}")
 
+include("${PROJECT_SOURCE_DIR}/embedded/EmbedFiles.cmake")
+# EMBEDDED_OUTPUT stores the lsit of cxx files that we need to link later
+embed_files("${E_FILES}" "${E_PATHS}" EMBEDDED_OUTPUT openstudiomodel)
+# message("EMBEDDED_OUTPUT: ${EMBEDDED_OUTPUT}")
+
+# set up groups of source files for Visual Studio
+source_group(embedded FILES ${EMBEDDED_OUTPUT})
 
 set(${target_name}_depends
-  openstudio_utilities
+  ${openstudio_utilities_depends}
 )
-
-add_library(${target_name} ${${target_name}_src} ${${target_name}_moc_src} ${${target_name}_qrcs})
-target_link_libraries(${target_name} "${${target_name}_depends}")
-AddPCH(${target_name})
-
-set(${target_name}_static_depends
-  openstudio_utilities_static
-)
-
-add_library(${target_name}_static ${${target_name}_src} ${${target_name}_moc_src} ${${target_name}_qrcs})
-
-target_link_libraries(${target_name}_static "${${target_name}_static_depends}")
-
-# No need to install static lib
-#if(NOT APPLE)
-#  install(TARGETS ${target_name}
-#    RUNTIME DESTINATION bin
-#    LIBRARY DESTINATION lib
-#  )
-#endif()
+set(${target_name}_depends ${${target_name}_depends} PARENT_SCOPE)
 
 
-# Compiler and system specific options
-if(UNIX OR MINGW)
-  # treat warnings as errors
-  #set_target_properties("${target_name}" PROPERTIES "COMPILE_FLAGS" "-Werror")
+add_library(${target_name} OBJECT ${${target_name}_src} ${EMBEDDED_OUTPUT})
+
+target_link_libraries(${target_name} PUBLIC ${${target_name}_depends})
+target_compile_definitions(${target_name} PRIVATE openstudio_model_EXPORTS SHARED_OS_LIBS)
+target_include_directories(${target_name} PUBLIC ${PROJECT_BINARY_DIR})
+add_dependencies(${target_name} GenerateIddFactoryRun)
+
+
+if(BUILD_SHARED_LIBS)
+  install(TARGETS ${target_name}
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+  )
 endif()
+
 
 set(${target_name}_test_src
   test/AdditionalProperties_GTest.cpp
@@ -1701,7 +1752,6 @@ set(${target_name}_test_src
   test/AvailabilityManagerScheduled_GTest.cpp
   test/AvailabilityManagerScheduledOn_GTest.cpp
   test/AvailabilityManagerScheduledOff_GTest.cpp
-
   test/Blind_GTest.cpp
   test/BoilerHotWater_GTest.cpp
   test/BoilerSteam_GTest.cpp
@@ -1716,6 +1766,10 @@ set(${target_name}_test_src
   test/ChillerHeaterPerformanceElectricEIR_GTest.cpp
   test/ClimateZones_GTest.cpp
   test/CoilCoolingCooledBeam_GTest.cpp
+  test/CoilCoolingDX_GTest.cpp
+  test/CoilCoolingDXCurveFitPerformance_GTest.cpp
+  test/CoilCoolingDXCurveFitOperatingMode_GTest.cpp
+  test/CoilCoolingDXCurveFitSpeed_GTest.cpp
   test/CoilCoolingDXSingleSpeed_GTest.cpp
   test/CoilCoolingDXMultiSpeed_GTest.cpp
   test/CoilCoolingDXTwoSpeed_GTest.cpp
@@ -1755,12 +1809,34 @@ set(${target_name}_test_src
   test/Component_GTest.cpp
   test/Connection_GTest.cpp
   test/Construction_GTest.cpp
+  test/ConstructionAirBoundary_GTest.cpp
   test/ConstructionWithInternalSource_GTest.cpp
   test/ControllerOutdoorAir_GTest.cpp
   test/ControllerMechanicalVentilation_GTest.cpp
   test/ControllerWaterCoil_GTest.cpp
   test/CoolingTowerSingleSpeed_GTest.cpp
   test/CoolingTowerTwoSpeed_GTest.cpp
+
+  # n == 1
+  test/CurveCubic_GTest.cpp
+  test/CurveDoubleExponentialDecay_GTest.cpp
+  test/CurveExponent_GTest.cpp
+  test/CurveExponentialDecay_GTest.cpp
+  test/CurveExponentialSkewNormal_GTest.cpp
+  test/CurveLinear_GTest.cpp
+  test/CurveQuadratic_GTest.cpp
+  test/CurveQuartic_GTest.cpp
+  test/CurveRectangularHyperbola1_GTest.cpp
+  test/CurveRectangularHyperbola2_GTest.cpp
+  test/CurveSigmoid_GTest.cpp
+  # n == 2
+  test/CurveBicubic_GTest.cpp
+  test/CurveBiquadratic_GTest.cpp
+  test/CurveFanPressureRise_GTest.cpp
+  test/CurveQuadraticLinear_GTest.cpp
+  # n == 3
+  test/CurveTriquadratic_GTest.cpp
+
   test/DaylightingControl_GTest.cpp
   test/DaylightingDeviceShelf_GTest.cpp
   test/DaylightRedirectionDevice_GTest.cpp
@@ -1819,6 +1895,7 @@ set(${target_name}_test_src
   test/FanConstantVolume_GTest.cpp
   test/FanZoneExhaust_GTest.cpp
   test/FanOnOff_GTest.cpp
+  test/FanSystemModel_GTest.cpp
   test/FenestrationMaterial_GTest.cpp
   test/FloorplanJSForwardTranslator_GTest.cpp
   test/FluidCoolerSingleSpeed_GTest.cpp
@@ -1858,6 +1935,7 @@ set(${target_name}_test_src
   test/InternalMass_GTest.cpp
 ##  test/LoadProfilePlant_GTest.cpp
   test/LifeCycleCostParameters_GTest.cpp
+  test/LifeCycleCostUsePriceEscalation_GTest.cpp
   test/LightingDesignDay_GTest.cpp
   test/LightingSimulationControl_GTest.cpp
   test/LightingSimulationZone_GTest.cpp
@@ -1880,13 +1958,19 @@ set(${target_name}_test_src
   test/PortList_GTest.cpp
   test/OpaqueMaterial_GTest.cpp
   test/OtherEquipment_GTest.cpp
+  test/OutputControlFiles_GTest.cpp
   test/OutputControlReportingTolerances_GTest.cpp
+  test/OutputDebuggingData_GTest.cpp
+  test/OutputJSON_GTest.cpp
+  test/OutputDiagnostics_GTest.cpp
   test/OutputEnergyManagementSystem_GTest.cpp
   test/OutputMeter_GTest.cpp
   test/OutputVariable_GTest.cpp
+  test/OutputTableSummaryReports_GTest.cpp
   test/ParentObject_GTest.cpp
   test/People_GTest.cpp
   test/PeopleDefinition_GTest.cpp
+  test/PerformancePrecisionTradeoffs_GTest.cpp
   test/PhotovoltaicPerformanceEquivalentOneDiode_GTest.cpp
   test/PhotovoltaicPerformanceSimple_GTest.cpp
   test/PipeAdiabatic_GTest.cpp
@@ -1962,13 +2046,16 @@ set(${target_name}_test_src
   test/ShadingControl_GTest.cpp
   test/ShadingSurfaceGroup_GTest.cpp
   test/ShadingSurface_GTest.cpp
+  test/ShadowCalculation_GTest.cpp
   test/SimpleGlazing_GTest.cpp
   test/SimulationControl_GTest.cpp
   test/Site_GTest.cpp
+  test/SiteGroundReflectance_GTest.cpp
   test/SiteGroundTemperatureDeep_GTest.cpp
   test/SiteGroundTemperatureFCfactorMethod_GTest.cpp
   test/SiteGroundTemperatureShallow_GTest.cpp
   test/SiteGroundTemperatureBuildingSurface_GTest.cpp
+  test/SiteWaterMainsTemperature_GTest.cpp
   test/SizingPlant_GTest.cpp
   test/SizingSystem_GTest.cpp
   test/SizingZone_GTest.cpp
@@ -1984,10 +2071,13 @@ set(${target_name}_test_src
   test/SteamEquipment_GTest.cpp
   test/SubSurface_GTest.cpp
   test/Surface_GTest.cpp
+  test/SurfaceControlMovableInsulation_GTest.cpp
   test/SurfacePropertyConvectionCoefficients_GTest.cpp
   test/SurfacePropertyConvectionCoefficientsMultipleSurface_GTest.cpp
   test/SurfacePropertyConvectionCoefficients_GTest.cpp
+  test/SurfacePropertyOtherSideCoefficients_GTest.cpp
   test/SurfacePropertyExposedFoundationPerimeter_GTest.cpp
+  test/SwimmingPoolIndoor_GTest.cpp
   test/TableMultiVariableLookup_GTest.cpp
   test/ThermalZone_GTest.cpp
   test/ThermalStorageIceDetailed_GTest.cpp
@@ -1999,6 +2089,7 @@ set(${target_name}_test_src
   test/UtilityBill_GTest.cpp
   test/WaterHeaterMixed_GTest.cpp
   test/WaterHeaterHeatPump_GTest.cpp
+  test/WaterHeaterHeatPumpWrappedCondenser_GTest.cpp
   test/WaterHeaterStratified_GTest.cpp
   test/WaterUseConnections_GTest.cpp
   test/WaterUseEquipment_GTest.cpp
@@ -2015,6 +2106,7 @@ set(${target_name}_test_src
   test/ZoneHVACDehumidifierDX_GTest.cpp
   test/ZoneHVACEnergyRecoveryVentilator_GTest.cpp
   test/ZoneHVACEnergyRecoveryVentilatorController_GTest.cpp
+  test/ZoneHVACEquipmentList_GTest.cpp
   test/ZoneHVACFourPipeFanCoil_GTest.cpp
   test/ZoneHVACHighTemperatureRadiant_GTest.cpp
   test/ZoneHVACLowTemperatureRadiantElectric_GTest.cpp
@@ -2022,21 +2114,28 @@ set(${target_name}_test_src
   test/ZoneHVACLowTempRadiantVarFlow_GTest.cpp
   test/ZoneHVACPackagedTerminalHeatPump_GTest.cpp
   test/ZoneHVACPackagedTerminalAirConditioner_GTest.cpp
+  test/ZoneHVACTerminalUnitVariableRefrigerantFlow_GTest.cpp
   test/ZoneHVACUnitHeater_GTest.cpp
   test/ZoneHVACUnitVentilator_GTest.cpp
   test/ZoneHVACWaterToAirHeatPump_GTest.cpp
   test/ZoneHVACIdealLoadsAirSystem_GTest.cpp
   test/ZoneMixing_GTest.cpp
+  test/ZonePropertyUserViewFactorsBySurfaceName_GTest.cpp
   test/ZoneVentilationDesignFlowRate_GTest.cpp
+  test/ZoneVentilationWindandStackOpenArea_GTest.cpp
+
+  test/UniqueModelObject_GTest.cpp
 )
 
 set(${target_name}_test_depends
-  ${${target_name}_depends}
+  openstudiolib
 )
 
-CREATE_TEST_TARGETS(${target_name} "${${target_name}_test_src}" "${${target_name}_test_depends}")
 CREATE_SRC_GROUPS("${${target_name}_test_src}")
+
 if(BUILD_TESTING)
+
+  CREATE_TEST_TARGETS(${target_name} "${${target_name}_test_src}" "${${target_name}_test_depends}")
 
   add_dependencies("${target_name}_tests"
     openstudio_model_resources
@@ -2050,15 +2149,16 @@ if(BUILD_TESTING)
   endif()
 endif()
 
-set(swig_target_name ${target_name}_static)
+set(swig_target_name ${target_name})
 
+# Dependency tree: All the SWIG targets depends on the minimum required dependency
 MAKE_SWIG_TARGET(OpenStudioModelCore model "${CMAKE_CURRENT_SOURCE_DIR}/ModelCore.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioUtilities)
 list(APPEND OpenStudioModelSwigs OpenStudioModelCore)
 
 MAKE_SWIG_TARGET(OpenStudioModelSimulation model "${CMAKE_CURRENT_SOURCE_DIR}/ModelSimulation.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelCore)
 list(APPEND OpenStudioModelSwigs OpenStudioModelSimulation)
 
-MAKE_SWIG_TARGET(OpenStudioModelResources model "${CMAKE_CURRENT_SOURCE_DIR}/ModelResources.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelSimulation)
+MAKE_SWIG_TARGET(OpenStudioModelResources model "${CMAKE_CURRENT_SOURCE_DIR}/ModelResources.i"   "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelSimulation)
 list(APPEND OpenStudioModelSwigs OpenStudioModelResources)
 
 MAKE_SWIG_TARGET(OpenStudioModelGeometry model "${CMAKE_CURRENT_SOURCE_DIR}/ModelGeometry.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelResources)
@@ -2070,22 +2170,28 @@ list(APPEND OpenStudioModelSwigs OpenStudioModelHVAC)
 MAKE_SWIG_TARGET(OpenStudioModelZoneHVAC model "${CMAKE_CURRENT_SOURCE_DIR}/ModelZoneHVAC.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelHVAC)
 list(APPEND OpenStudioModelSwigs OpenStudioModelZoneHVAC)
 
+# Note: really ModelHVAC.i is enough right now, but it's only a matter of time before we actually enable AvailabilityManagers for ZoneHVACComponents (TODO: will need OpenStudioModelZoneHVAC)
 MAKE_SWIG_TARGET(OpenStudioModelAvailabilityManager model "${CMAKE_CURRENT_SOURCE_DIR}/ModelAvailabilityManager.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelHVAC)
 list(APPEND OpenStudioModelSwigs OpenStudioModelAvailabilityManager)
 
+# Minimum: ModelHVAC.i because PlantLoop::plantEquipmentOperationHeatingLoad (+ setters, + cooling version)
 MAKE_SWIG_TARGET(OpenStudioModelPlantEquipmentOperationScheme model "${CMAKE_CURRENT_SOURCE_DIR}/ModelPlantEquipmentOperationScheme.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelHVAC)
 list(APPEND OpenStudioModelSwigs OpenStudioModelPlantEquipmentOperationScheme)
 
-MAKE_SWIG_TARGET(OpenStudioModelStraightComponent model "${CMAKE_CURRENT_SOURCE_DIR}/ModelStraightComponent.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelHVAC)
+# Minimum: OpenStudioModelZoneHVAC.i
+MAKE_SWIG_TARGET(OpenStudioModelStraightComponent model "${CMAKE_CURRENT_SOURCE_DIR}/ModelStraightComponent.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelZoneHVAC)
 list(APPEND OpenStudioModelSwigs OpenStudioModelStraightComponent)
 
-MAKE_SWIG_TARGET(OpenStudioModelAirflow model "${CMAKE_CURRENT_SOURCE_DIR}/ModelAirflow.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelHVAC)
+# Minimum: needs ModelStraightComponent.i because of Fans
+MAKE_SWIG_TARGET(OpenStudioModelAirflow model "${CMAKE_CURRENT_SOURCE_DIR}/ModelAirflow.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelStraightComponent)
 list(APPEND OpenStudioModelSwigs OpenStudioModelAirflow)
 
-MAKE_SWIG_TARGET(OpenStudioModelRefrigeration model "${CMAKE_CURRENT_SOURCE_DIR}/ModelRefrigeration.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelZoneHVAC)
+# Mininum: ModelStraightComponent because RefrigerationCondenserWaterCooled is a StraightComponent
+MAKE_SWIG_TARGET(OpenStudioModelRefrigeration model "${CMAKE_CURRENT_SOURCE_DIR}/ModelRefrigeration.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelStraightComponent)
 list(APPEND OpenStudioModelSwigs OpenStudioModelRefrigeration)
 
-MAKE_SWIG_TARGET(OpenStudioModelGenerators model "${CMAKE_CURRENT_SOURCE_DIR}/ModelGenerators.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelHVAC)
+# Minimum: needs ModelStraightComponent.i because of SolarCollectorFlatPlatePhotovoltaicThermal::generatorPhotovoltaic(+setter)
+MAKE_SWIG_TARGET(OpenStudioModelGenerators model "${CMAKE_CURRENT_SOURCE_DIR}/ModelGenerators.i" "${${target_name}_swig_src}" ${swig_target_name} OpenStudioModelStraightComponent)
 list(APPEND OpenStudioModelSwigs OpenStudioModelGenerators)
 
 MAKE_SWIG_TARGET(OpenStudioModel model "${CMAKE_CURRENT_SOURCE_DIR}/Model.i" "${${target_name}_swig_src}" ${swig_target_name} "${OpenStudioModelSwigs}")

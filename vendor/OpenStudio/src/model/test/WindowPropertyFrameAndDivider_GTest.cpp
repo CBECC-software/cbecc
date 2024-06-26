@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -44,8 +44,7 @@ using namespace openstudio;
 using namespace openstudio::model;
 using std::string;
 
-TEST_F(ModelFixture, WindowPropertyFrameAndDivider)
-{
+TEST_F(ModelFixture, WindowPropertyFrameAndDivider) {
   Model model;
 
   WindowPropertyFrameAndDivider frameAndDivider(model);
@@ -67,8 +66,7 @@ TEST_F(ModelFixture, WindowPropertyFrameAndDivider)
   EXPECT_FALSE(subSurface.windowPropertyFrameAndDivider());
 }
 
-TEST_F(ModelFixture, WindowPropertyFrameAndDivider_Name)
-{
+TEST_F(ModelFixture, WindowPropertyFrameAndDivider_Name) {
   Model model;
 
   WindowPropertyFrameAndDivider frameAndDivider1(model);

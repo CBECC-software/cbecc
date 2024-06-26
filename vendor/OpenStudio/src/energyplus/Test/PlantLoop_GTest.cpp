@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -67,7 +67,7 @@ using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
 
-Model createModelWithDummyPlantLoop(){
+Model createModelWithDummyPlantLoop() {
 
   // Generate the example Model
   Model m = openstudio::model::exampleModel();
@@ -85,7 +85,6 @@ Model createModelWithDummyPlantLoop(){
   pump.setName("Plant Loop Supply Pump");
 
   return m;
-
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslator_PlantLoop_AvailabilityManagers_None) {
@@ -104,9 +103,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_PlantLoop_AvailabilityManagers_None)
   WorkspaceObjectVector idfObjs(w.getObjectsByType(IddObjectType::AvailabilityManagerAssignmentList));
   ASSERT_EQ(0u, idfObjs.size());
 
-  m.save(toPath("./PlantLoop_AVM_None.osm"), true);
-  w.save(toPath("./PlantLoop_AVM_None.idf"), true);
-
+  // m.save(toPath("./PlantLoop_AVM_None.osm"), true);
+  // w.save(toPath("./PlantLoop_AVM_None.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslator_PlantLoop_AvailabilityManagers_ScheduledOn) {
@@ -133,11 +131,9 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_PlantLoop_AvailabilityManagers_Sched
   IdfExtensibleGroup eg = idf_avm.extensibleGroups()[0];
   ASSERT_EQ("AvailabilityManager:ScheduledOn", eg.getString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerObjectType).get());
 
-  m.save(toPath("./PlantLoop_AVM_ScheduledOn.osm"), true);
-  w.save(toPath("./PlantLoop_AVM_ScheduledOn.idf"), true);
-
+  // m.save(toPath("./PlantLoop_AVM_ScheduledOn.osm"), true);
+  // w.save(toPath("./PlantLoop_AVM_ScheduledOn.idf"), true);
 }
-
 
 TEST_F(EnergyPlusFixture, ForwardTranslator_PlantLoop_AvailabilityManagers_ScheduledOnOff) {
 
@@ -171,9 +167,6 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_PlantLoop_AvailabilityManagers_Sched
   eg = idf_avm.extensibleGroups()[1];
   ASSERT_EQ("AvailabilityManager:ScheduledOff", eg.getString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerObjectType).get());
 
-  m.save(toPath("./PlantLoop_AVM_ScheduledOnOff.osm"), true);
-  w.save(toPath("./PlantLoop_AVM_ScheduledOnOff.idf"), true);
-
+  // m.save(toPath("./PlantLoop_AVM_ScheduledOnOff.osm"), true);
+  // w.save(toPath("./PlantLoop_AVM_ScheduledOnOff.idf"), true);
 }
-
-

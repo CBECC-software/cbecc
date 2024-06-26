@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -77,7 +77,6 @@ using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
 
-
 TEST_F(EnergyPlusFixture, ForwardTranslator_PlantComponentUserDefined) {
 
   // Generate the example Model
@@ -103,7 +102,7 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_PlantComponentUserDefined) {
   //pcud.setMainModelProgramCallingManager(mainPCM);
   boost::optional<EnergyManagementSystemProgramCallingManager> initPCM = pcud.plantInitializationProgramCallingManager();
   boost::optional<EnergyManagementSystemProgramCallingManager> simPCM = pcud.plantSimulationProgramCallingManager();
-  
+
   pcud.setAmbientZone(tz);
 
   EnergyManagementSystemActuator dvfrActuator = pcud.designVolumeFlowRateActuator().get();
@@ -133,7 +132,7 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_PlantComponentUserDefined) {
   WorkspaceObject object = w.getObjectsByType(IddObjectType::PlantComponent_UserDefined)[0];
   WorkspaceObjectVector actuators = w.getObjectsByType(IddObjectType::EnergyManagementSystem_Actuator);
   EXPECT_EQ(8u, actuators.size());
-  for (const auto & actuator : actuators) {
+  for (const auto& actuator : actuators) {
     EXPECT_EQ("best plant component", actuator.getString(EnergyManagementSystem_ActuatorFields::ActuatedComponentUniqueName, false).get());
     EXPECT_EQ("Plant Connection 1", actuator.getString(EnergyManagementSystem_ActuatorFields::ActuatedComponentType, false).get());
   }
@@ -143,15 +142,16 @@ TEST_F(EnergyPlusFixture, ForwardTranslator_PlantComponentUserDefined) {
   ASSERT_TRUE(object.getString(PlantComponent_UserDefinedFields::MainModelProgramCallingManagerName, false));
   //EXPECT_EQ(mainPCM.nameString(), object.getString(PlantComponent_UserDefinedFields::MainModelProgramCallingManagerName, false).get());
   ASSERT_TRUE(object.getString(PlantComponent_UserDefinedFields::PlantConnection1InitializationProgramCallingManagerName, false));
-  EXPECT_EQ(initPCM.get().nameString(), object.getString(PlantComponent_UserDefinedFields::PlantConnection1InitializationProgramCallingManagerName, false).get());
+  EXPECT_EQ(initPCM.get().nameString(),
+            object.getString(PlantComponent_UserDefinedFields::PlantConnection1InitializationProgramCallingManagerName, false).get());
   ASSERT_TRUE(object.getString(PlantComponent_UserDefinedFields::PlantConnection1SimulationProgramCallingManagerName, false));
-  EXPECT_EQ(simPCM.get().nameString(), object.getString(PlantComponent_UserDefinedFields::PlantConnection1SimulationProgramCallingManagerName, false).get());
+  EXPECT_EQ(simPCM.get().nameString(),
+            object.getString(PlantComponent_UserDefinedFields::PlantConnection1SimulationProgramCallingManagerName, false).get());
   ASSERT_TRUE(object.getString(PlantComponent_UserDefinedFields::PlantConnection1InletNodeName, false));
   EXPECT_EQ(inname, object.getString(PlantComponent_UserDefinedFields::PlantConnection1InletNodeName, false).get());
   ASSERT_TRUE(object.getString(PlantComponent_UserDefinedFields::PlantConnection1OutletNodeName, false));
   EXPECT_EQ(outname, object.getString(PlantComponent_UserDefinedFields::PlantConnection1OutletNodeName, false).get());
 
-  m.save(toPath("./PlantComponentUserDefined.osm"), true);
-  w.save(toPath("./PlantComponentUserDefined.idf"), true);
-
+  // m.save(toPath("./PlantComponentUserDefined.osm"), true);
+  // w.save(toPath("./PlantComponentUserDefined.idf"), true);
 }

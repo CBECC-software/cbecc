@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -52,8 +52,7 @@ using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
 
-TEST_F(EnergyPlusFixture,ForwardTranslator_DaylightingControl_NoZone)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_DaylightingControl_NoZone) {
   Model model;
   ThermalZone thermalZone(model);
   Space space(model);
@@ -67,8 +66,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslator_DaylightingControl_NoZone)
   EXPECT_EQ(0u, workspace.getObjectsByType(IddObjectType::Daylighting_Controls).size());
 }
 
-TEST_F(EnergyPlusFixture,ForwardTranslator_DaylightingControl_OneControl)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_DaylightingControl_OneControl) {
   Model model;
   ThermalZone thermalZone(model);
   Space space(model);
@@ -84,8 +82,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslator_DaylightingControl_OneControl)
   EXPECT_EQ(1u, workspace.getObjectsByType(IddObjectType::Daylighting_Controls).size());
 }
 
-TEST_F(EnergyPlusFixture,ForwardTranslator_DaylightingControl_TwoControl)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_DaylightingControl_TwoControl) {
   Model model;
   ThermalZone thermalZone(model);
   Space space(model);
@@ -102,4 +99,28 @@ TEST_F(EnergyPlusFixture,ForwardTranslator_DaylightingControl_TwoControl)
   Workspace workspace = forwardTranslator.translateModel(model);
 
   EXPECT_EQ(1u, workspace.getObjectsByType(IddObjectType::Daylighting_Controls).size());
+}
+
+TEST_F(EnergyPlusFixture, ForwardTranslator_DaylightingControl_3216) {
+  Model model;
+
+  ThermalZone thermalZone(model);
+  Space space(model);
+  space.setThermalZone(thermalZone);
+
+  DaylightingControl daylightingControl(model);
+  daylightingControl.setThetaRotationAroundYAxis(90.0);
+  daylightingControl.setPhiRotationAroundZAxis(180.0);
+
+  EXPECT_TRUE(thermalZone.setPrimaryDaylightingControl(daylightingControl));
+
+  ForwardTranslator ft;
+  Workspace w = ft.translateModel(model);
+
+  WorkspaceObjectVector idfObjs = w.getObjectsByType(IddObjectType::Daylighting_Controls);
+  ASSERT_EQ(1u, idfObjs.size());
+  WorkspaceObject idf_d(idfObjs[0]);
+
+  EXPECT_EQ(daylightingControl.phiRotationAroundZAxis(),
+            idf_d.getDouble(Daylighting_ControlsFields::GlareCalculationAzimuthAngleofViewDirectionClockwisefromZoneyAxis).get());
 }

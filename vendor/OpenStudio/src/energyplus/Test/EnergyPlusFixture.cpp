@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -29,8 +29,6 @@
 
 #include "EnergyPlusFixture.hpp"
 
-
-
 #include <resources.hxx>
 
 using openstudio::FileLogSink;
@@ -40,25 +38,25 @@ void EnergyPlusFixture::SetUp() {}
 
 void EnergyPlusFixture::TearDown() {}
 
-void EnergyPlusFixture::SetUpTestCase() {
+void EnergyPlusFixture::SetUpTestSuite() {
   // set up logging
   logFile = FileLogSink(toPath("./EnergyPlusFixture.log"));
   logFile->setLogLevel(Trace);
   openstudio::Logger::instance().standardOutLogger().disable();
 
   // initialize component paths
-  openstudio::path basePath = resourcesPath()/openstudio::toPath("energyplus/Components/");
+  openstudio::path basePath = resourcesPath() / openstudio::toPath("energyplus/Components/");
   // idfComponents consists of .first = path to directory, .second = component type
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_roof_1"),"roof"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_roof_2"),"roof"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_roof_3"),"roof"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_roof_4"),"roof"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_roof_5"),"roof"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_designday_1"),"designday"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_designday_2"),"designday"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_designday_3"),"designday"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_designday_4"),"designday"));
-  idfComponents.push_back(std::pair<openstudio::path,std::string>(basePath/openstudio::toPath("idf_designday_5"),"designday"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_roof_1"), "roof"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_roof_2"), "roof"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_roof_3"), "roof"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_roof_4"), "roof"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_roof_5"), "roof"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_designday_1"), "designday"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_designday_2"), "designday"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_designday_3"), "designday"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_designday_4"), "designday"));
+  idfComponents.push_back(std::pair<openstudio::path, std::string>(basePath / openstudio::toPath("idf_designday_5"), "designday"));
 
   // delete translated components
   for (const ComponentDirectoryAndType& idfComponent : idfComponents) {
@@ -66,21 +64,21 @@ void EnergyPlusFixture::SetUpTestCase() {
     for (openstudio::filesystem::directory_iterator it(idfComponent.first), itEnd; it != itEnd; ++it) {
       if (openstudio::filesystem::is_regular_file(it->status())) {
         std::string ext = openstudio::toString(openstudio::filesystem::extension(*it));
-        if (ext == ".osc") { openstudio::filesystem::remove(it->path()); }
+        if (ext == ".osc") {
+          openstudio::filesystem::remove(it->path());
+        }
         if ((ext == ".xml") && (openstudio::toString(it->path().filename()) == "oscomponent")) {
           openstudio::filesystem::remove(it->path());
         }
       }
-    } // for iterator over directory
-  } // foreach component
-
+    }  // for iterator over directory
+  }    // foreach component
 }
 
-void EnergyPlusFixture::TearDownTestCase() {
+void EnergyPlusFixture::TearDownTestSuite() {
   logFile->disable();
 }
 
 // static variables
 boost::optional<openstudio::FileLogSink> EnergyPlusFixture::logFile;
-std::vector< std::pair< openstudio::path, std::string> > EnergyPlusFixture::idfComponents;
-
+std::vector<std::pair<openstudio::path, std::string>> EnergyPlusFixture::idfComponents;

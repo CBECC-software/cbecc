@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -42,36 +42,33 @@ void ModelFixture::SetUp() {}
 
 void ModelFixture::TearDown() {}
 
-void ModelFixture::SetUpTestCase() {
+void ModelFixture::SetUpTestSuite() {
   // set up logging
   logFile = FileLogSink(toPath("./ModelTestFixture.log"));
   logFile->setLogLevel(Debug);
   Logger::instance().standardOutLogger().disable();
 
   // create resources folder for scratch files
-  openstudio::filesystem::create_directory(resourcesPath()/toPath("model"));
+  openstudio::filesystem::create_directory(resourcesPath() / toPath("model"));
 }
 
-void ModelFixture::TearDownTestCase()
-{
+void ModelFixture::TearDownTestSuite() {
   logFile->disable();
 }
 
-void ModelFixture::testBooleanIddField(const openstudio::IddField& iddField,
-                                       const boost::optional<std::string>& defaultValue)
-{
+void ModelFixture::testBooleanIddField(const openstudio::IddField& iddField, const boost::optional<std::string>& defaultValue) {
   EXPECT_TRUE(iddField.properties().type == openstudio::IddFieldType::ChoiceType);
   openstudio::IddKeyVector keys = iddField.keys();
-  EXPECT_EQ(2u,keys.size());
+  EXPECT_EQ(2u, keys.size());
   openstudio::NameFinder<openstudio::IddKey> finder("Yes");
-  openstudio::IddKeyVector::const_iterator it = std::find_if(keys.begin(),keys.end(),finder);
+  openstudio::IddKeyVector::const_iterator it = std::find_if(keys.begin(), keys.end(), finder);
   EXPECT_FALSE(it == keys.end());
   finder = openstudio::NameFinder<openstudio::IddKey>("No");
-  it = std::find_if(keys.begin(),keys.end(),finder);
+  it = std::find_if(keys.begin(), keys.end(), finder);
   EXPECT_FALSE(it == keys.end());
   if (defaultValue) {
     ASSERT_TRUE(iddField.properties().stringDefault);
-    EXPECT_EQ(*defaultValue,iddField.properties().stringDefault.get());
+    EXPECT_EQ(*defaultValue, iddField.properties().stringDefault.get());
   }
 }
 

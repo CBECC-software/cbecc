@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -32,8 +32,6 @@
 
 #include "ParentObject_Impl.hpp"
 
-#include "../utilities/units/Quantity.hpp"
-
 namespace openstudio {
 
 class Point3d;
@@ -41,225 +39,224 @@ class Transformation;
 
 namespace model {
 
-class Facility;
-class OutputMeter;
-class ShadingSurfaceGroup;
-class Surface;
-class Space;
-class SpaceType;
-class DefaultConstructionSet;
-class DefaultScheduleSet;
-class ThermalZone;
-class Building;
+  class Facility;
+  class OutputMeter;
+  class BuildingStory;
+  class ShadingSurfaceGroup;
+  class Surface;
+  class Space;
+  class SpaceType;
+  class DefaultConstructionSet;
+  class DefaultScheduleSet;
+  class DefaultScheduleType;
+  class ThermalZone;
+  class Building;
 
-namespace detail {
+  namespace detail {
 
-  /** Building_Impl is a ParentObject_Impl that is the implementation class for Building.*/
-  class MODEL_API Building_Impl : public ParentObject_Impl {
+    /** Building_Impl is a ParentObject_Impl that is the implementation class for Building.*/
+    class MODEL_API Building_Impl : public ParentObject_Impl
+    {
 
-  public:
-    /** @name Constructors and Destructors */
-    //@{
+     public:
+      /** @name Constructors and Destructors */
+      //@{
 
-    Building_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
+      Building_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    Building_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                  Model_Impl* model,
-                  bool keepHandle);
+      Building_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle);
 
-    Building_Impl(const Building_Impl& other,
-                  Model_Impl* model,
-                  bool keepHandle);
+      Building_Impl(const Building_Impl& other, Model_Impl* model, bool keepHandle);
 
-    virtual ~Building_Impl() {}
+      virtual ~Building_Impl() {}
 
-    //@}
+      //@}
 
-    virtual boost::optional<ParentObject> parent() const override;
+      virtual boost::optional<ParentObject> parent() const override;
 
-    virtual std::vector<ModelObject> children() const override;
+      virtual std::vector<IdfObject> remove() override;
 
-    virtual ModelObject clone(Model model) const override;
+      virtual std::vector<ModelObject> children() const override;
 
-    virtual bool setParent(ParentObject& newParent) override;
+      virtual ModelObject clone(Model model) const override;
 
-    virtual std::vector<IddObjectType> allowableChildTypes() const override;
+      virtual bool setParent(ParentObject& newParent) override;
 
-    virtual const std::vector<std::string>& outputVariableNames() const override;
+      virtual std::vector<IddObjectType> allowableChildTypes() const override;
 
-    virtual IddObjectType iddObjectType() const override;
+      virtual const std::vector<std::string>& outputVariableNames() const override;
 
-    /** @name Getters */
-    //@{
+      virtual IddObjectType iddObjectType() const override;
 
-    double northAxis() const;
-    bool isNorthAxisDefaulted() const;
+      /** @name Getters */
+      //@{
 
-    boost::optional<double> nominalFloortoFloorHeight() const;
+      double northAxis() const;
+      bool isNorthAxisDefaulted() const;
 
-    boost::optional<int> standardsNumberOfStories() const;
+      boost::optional<double> nominalFloortoFloorHeight() const;
 
-    boost::optional<int> standardsNumberOfAboveGroundStories() const;
+      boost::optional<int> standardsNumberOfStories() const;
 
-    boost::optional<int> standardsNumberOfLivingUnits() const;
+      boost::optional<int> standardsNumberOfAboveGroundStories() const;
 
-    boost::optional<double> nominalFloortoCeilingHeight() const;
+      boost::optional<int> standardsNumberOfLivingUnits() const;
 
-    boost::optional<std::string> standardsTemplate() const;
-    std::vector<std::string> suggestedStandardsTemplates() const;
+      boost::optional<double> nominalFloortoCeilingHeight() const;
 
-    boost::optional<std::string> standardsBuildingType() const;
-    std::vector<std::string> suggestedStandardsBuildingTypes() const;
+      boost::optional<std::string> standardsTemplate() const;
+      std::vector<std::string> suggestedStandardsTemplates() const;
 
-    bool relocatable() const;
-    bool isRelocatableDefaulted() const;
+      boost::optional<std::string> standardsBuildingType() const;
+      std::vector<std::string> suggestedStandardsBuildingTypes() const;
 
-    //@}
-    /** @name Setters */
-    //@{
+      bool relocatable() const;
+      bool isRelocatableDefaulted() const;
 
-    bool setNorthAxis(double northAxis);
+      boost::optional<Schedule> getDefaultSchedule(const DefaultScheduleType& defaultScheduleType) const;
 
-    void resetNorthAxis();
+      //@}
+      /** @name Setters */
+      //@{
 
-    bool setNominalFloortoFloorHeight(double nominalFloortoFloorHeight);
+      bool setNorthAxis(double northAxis);
 
-    void resetNominalFloortoFloorHeight();
+      void resetNorthAxis();
 
-    bool setStandardsNumberOfStories(int value);
-    void resetStandardsNumberOfStories();
+      bool setNominalFloortoFloorHeight(double nominalFloortoFloorHeight);
 
-    bool setStandardsNumberOfAboveGroundStories(int value);
-    void resetStandardsNumberOfAboveGroundStories();
+      void resetNominalFloortoFloorHeight();
 
-    bool setStandardsNumberOfLivingUnits(int value);
-    void resetStandardsNumberOfLivingUnits();
+      bool setStandardsNumberOfStories(int value);
+      void resetStandardsNumberOfStories();
 
-    bool setNominalFloortoCeilingHeight(double nominalFloortoCeilingHeight);
-    void resetNominalFloortoCeilingHeight();
+      bool setStandardsNumberOfAboveGroundStories(int value);
+      void resetStandardsNumberOfAboveGroundStories();
 
-    bool setStandardsTemplate(const std::string& standardsTemplate);
-    void resetStandardsTemplate();
+      bool setStandardsNumberOfLivingUnits(int value);
+      void resetStandardsNumberOfLivingUnits();
 
-    bool setStandardsBuildingType(const std::string& standardsBuildingType);
-    void resetStandardsBuildingType();
+      bool setNominalFloortoCeilingHeight(double nominalFloortoCeilingHeight);
+      void resetNominalFloortoCeilingHeight();
 
-    bool setRelocatable(bool isRelocatable);
-    void resetRelocatable();
+      bool setStandardsTemplate(const std::string& standardsTemplate);
+      void resetStandardsTemplate();
 
-    //@}
+      bool setStandardsBuildingType(const std::string& standardsBuildingType);
+      void resetStandardsBuildingType();
 
-    boost::optional<SpaceType> spaceType() const;
+      bool setRelocatable(bool isRelocatable);
+      void resetRelocatable();
 
-    bool setSpaceType(const SpaceType& spaceType);
+      //@}
 
-    void resetSpaceType();
+      boost::optional<SpaceType> spaceType() const;
 
-    boost::optional<DefaultConstructionSet> defaultConstructionSet() const;
+      bool setSpaceType(const SpaceType& spaceType);
 
-    bool setDefaultConstructionSet(const DefaultConstructionSet& defaultConstructionSet);
+      void resetSpaceType();
 
-    void resetDefaultConstructionSet();
+      boost::optional<DefaultConstructionSet> defaultConstructionSet() const;
 
-    boost::optional<DefaultScheduleSet> defaultScheduleSet() const;
+      bool setDefaultConstructionSet(const DefaultConstructionSet& defaultConstructionSet);
 
-    bool setDefaultScheduleSet(const DefaultScheduleSet& defaultScheduleSet);
+      void resetDefaultConstructionSet();
 
-    void resetDefaultScheduleSet();
+      boost::optional<DefaultScheduleSet> defaultScheduleSet() const;
 
-    std::vector<OutputMeter> meters() const;
+      bool setDefaultScheduleSet(const DefaultScheduleSet& defaultScheduleSet);
 
-    boost::optional<Facility> facility() const;
+      void resetDefaultScheduleSet();
 
-    std::vector<Space> spaces() const;
+      std::vector<OutputMeter> meters() const;
 
-    std::vector<ShadingSurfaceGroup> shadingSurfaceGroups() const;
+      std::vector<BuildingStory> buildingStories() const;
 
-    std::vector<ThermalZone> thermalZones() const;
+      boost::optional<Facility> facility() const;
 
-    std::vector<Surface> exteriorWalls() const;
+      std::vector<Space> spaces() const;
 
-    std::vector<Surface> roofs() const;
+      std::vector<ShadingSurfaceGroup> shadingSurfaceGroups() const;
 
-    double floorArea() const;
+      std::vector<ThermalZone> thermalZones() const;
 
-    boost::optional<double> conditionedFloorArea() const;
+      std::vector<Surface> exteriorWalls() const;
 
-    double exteriorSurfaceArea() const;
+      std::vector<Surface> roofs() const;
 
-    double exteriorWallArea() const;
+      double floorArea() const;
 
-    double airVolume() const;
+      boost::optional<double> conditionedFloorArea() const;
 
-    double numberOfPeople() const;
+      double exteriorSurfaceArea() const;
 
-    double peoplePerFloorArea() const;
+      double exteriorWallArea() const;
 
-    double floorAreaPerPerson() const;
+      double airVolume() const;
 
-    double lightingPower() const;
+      double numberOfPeople() const;
 
-    double lightingPowerPerFloorArea() const;
+      double peoplePerFloorArea() const;
 
-    double lightingPowerPerPerson() const;
+      double floorAreaPerPerson() const;
 
-    double electricEquipmentPower() const;
+      double lightingPower() const;
 
-    double electricEquipmentPowerPerFloorArea() const;
+      double lightingPowerPerFloorArea() const;
 
-    double electricEquipmentPowerPerPerson() const;
+      double lightingPowerPerPerson() const;
 
-    double gasEquipmentPower() const;
+      double electricEquipmentPower() const;
 
-    double gasEquipmentPowerPerFloorArea() const;
+      double electricEquipmentPowerPerFloorArea() const;
 
-    double gasEquipmentPowerPerPerson() const;
+      double electricEquipmentPowerPerPerson() const;
 
-    double infiltrationDesignFlowRate() const;
+      double gasEquipmentPower() const;
 
-    double infiltrationDesignFlowPerSpaceFloorArea() const;
+      double gasEquipmentPowerPerFloorArea() const;
 
-    double infiltrationDesignFlowPerExteriorSurfaceArea() const;
+      double gasEquipmentPowerPerPerson() const;
 
-    double infiltrationDesignFlowPerExteriorWallArea() const;
+      double infiltrationDesignFlowRate() const;
 
-    double infiltrationDesignAirChangesPerHour() const;
+      double infiltrationDesignFlowPerSpaceFloorArea() const;
 
-    Transformation transformation() const;
+      double infiltrationDesignFlowPerExteriorSurfaceArea() const;
 
-    std::vector<std::vector<Point3d> > generateSkylightPattern(double skylightToProjectedFloorRatio, double desiredWidth, double desiredHeight) const;
+      double infiltrationDesignFlowPerExteriorWallArea() const;
 
-   protected:
-   private:
-    REGISTER_LOGGER("openstudio.model.Building");
+      double infiltrationDesignAirChangesPerHour() const;
 
-    openstudio::Quantity northAxis_SI() const;
-    openstudio::Quantity northAxis_IP() const;
-    bool setNorthAxis(const Quantity& northAxis);
+      Transformation transformation() const;
 
-    openstudio::Quantity nominalFloortoFloorHeight_SI() const;
-    openstudio::Quantity nominalFloortoFloorHeight_IP() const;
-    bool setNominalFloortoFloorHeight(const Quantity& nominalFloortoFloorHeight);
+      std::vector<std::vector<Point3d>> generateSkylightPattern(double skylightToProjectedFloorRatio, double desiredWidth,
+                                                                double desiredHeight) const;
 
-    boost::optional<ModelObject> spaceTypeAsModelObject() const;
-    boost::optional<ModelObject> defaultConstructionSetAsModelObject() const;
-    boost::optional<ModelObject> defaultScheduleSetAsModelObject() const;
-    std::vector<ModelObject> metersAsModelObjects() const;
-    boost::optional<ModelObject> facilityAsModelObject() const;
-    std::vector<ModelObject> spacesAsModelObjects() const;
-    std::vector<ModelObject> shadingSurfaceGroupsAsModelObjects() const;
-    std::vector<ModelObject> thermalZonesAsModelObjects() const;
-    std::vector<ModelObject> exteriorWallsAsModelObjects() const;
-    std::vector<ModelObject> roofsAsModelObjects() const;
+     protected:
+     private:
+      REGISTER_LOGGER("openstudio.model.Building");
 
-    bool setSpaceTypeAsModelObject(const boost::optional<ModelObject>& modelObject);
-    bool setDefaultConstructionSetAsModelObject(const boost::optional<ModelObject>& modelObject);
-    bool setDefaultScheduleSetAsModelObject(const boost::optional<ModelObject>& modelObject);
-  };
+      boost::optional<ModelObject> spaceTypeAsModelObject() const;
+      boost::optional<ModelObject> defaultConstructionSetAsModelObject() const;
+      boost::optional<ModelObject> defaultScheduleSetAsModelObject() const;
+      std::vector<ModelObject> metersAsModelObjects() const;
+      std::vector<ModelObject> buildingStoriesAsModelObjects() const;
+      boost::optional<ModelObject> facilityAsModelObject() const;
+      std::vector<ModelObject> spacesAsModelObjects() const;
+      std::vector<ModelObject> shadingSurfaceGroupsAsModelObjects() const;
+      std::vector<ModelObject> thermalZonesAsModelObjects() const;
+      std::vector<ModelObject> exteriorWallsAsModelObjects() const;
+      std::vector<ModelObject> roofsAsModelObjects() const;
 
-} // detail
+      bool setSpaceTypeAsModelObject(const boost::optional<ModelObject>& modelObject);
+      bool setDefaultConstructionSetAsModelObject(const boost::optional<ModelObject>& modelObject);
+      bool setDefaultScheduleSetAsModelObject(const boost::optional<ModelObject>& modelObject);
+    };
 
-} // model
-} // openstudio
+  }  // namespace detail
 
-#endif // MODEL_BUILDING_IMPL_HPP
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_BUILDING_IMPL_HPP

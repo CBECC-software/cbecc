@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -50,7 +50,6 @@
 #include "../../utilities/idf/IdfObject.hpp"
 #include "../../utilities/idf/IdfExtensibleGroup.hpp"
 
-
 #include <utilities/idd/ThermostatSetpoint_DualSetpoint_FieldEnums.hxx>
 #include <utilities/idd/ThermostatSetpoint_SingleHeating_FieldEnums.hxx>
 #include <utilities/idd/ThermostatSetpoint_SingleCooling_FieldEnums.hxx>
@@ -68,8 +67,7 @@ using namespace openstudio;
 /** Case when you defined both a heating and cooling schedule for the thermostat.
  * Should end up as a ThermostatSetpoint:DualSetpoint in the IDF
  **/
-TEST_F(EnergyPlusFixture,ForwardTranslator_Thermostat_Two_Schedules)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_Thermostat_Two_Schedules) {
   Model m;
 
   Point3dVector points;
@@ -112,27 +110,29 @@ TEST_F(EnergyPlusFixture,ForwardTranslator_Thermostat_Two_Schedules)
 
   IdfObject idf_tstat = workspace.getObjectsByType(IddObjectType::ThermostatSetpoint_DualSetpoint)[0];
 
-  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_DualSetpointFields::HeatingSetpointTemperatureScheduleName).get(),
-            heat_sch.name());
-  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_DualSetpointFields::CoolingSetpointTemperatureScheduleName).get(),
-            cool_sch.name());
+  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_DualSetpointFields::HeatingSetpointTemperatureScheduleName).get(), heat_sch.name());
+  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_DualSetpointFields::CoolingSetpointTemperatureScheduleName).get(), cool_sch.name());
 
   IdfObject idf_zone_control = workspace.getObjectsByType(IddObjectType::ZoneControl_Thermostat)[0];
-  ASSERT_EQ(1u, idf_zone_control.extensibleGroups().size());
-  IdfExtensibleGroup eg = idf_zone_control.extensibleGroups()[0];
-  ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlObjectType).get(),
-            idf_tstat.iddObject().name());
-  ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlName).get(),
-            idf_tstat.name().get());
+  // TODO: JM 2019-09-04 switch back to an extensible object once/if https://github.com/NREL/EnergyPlus/issues/7484 is addressed and the
+  // 'Temperature Difference Between Cutout And Setpoint' field is moved before the extensible fields
+  /*
+   *ASSERT_EQ(1u, idf_zone_control.extensibleGroups().size());
+   *IdfExtensibleGroup eg = idf_zone_control.extensibleGroups()[0];
+   *ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlObjectType).get(),
+   *          idf_tstat.iddObject().name());
+   *ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlName).get(),
+   *          idf_tstat.name().get());
+   */
 
+  ASSERT_EQ(idf_zone_control.getString(ZoneControl_ThermostatFields::Control1ObjectType).get(), idf_tstat.iddObject().name());
+  ASSERT_EQ(idf_zone_control.getString(ZoneControl_ThermostatFields::Control1Name).get(), idf_tstat.name().get());
 }
-
 
 /** Case where you defined only a heating schedule for the thermostat.
  * Should end up as a ThermostatSetpoint:SingleHeating in the IDF
  **/
-TEST_F(EnergyPlusFixture,ForwardTranslator_Thermostat_Heat_Only)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_Thermostat_Heat_Only) {
   Model m;
 
   Point3dVector points;
@@ -171,25 +171,28 @@ TEST_F(EnergyPlusFixture,ForwardTranslator_Thermostat_Heat_Only)
 
   IdfObject idf_tstat = workspace.getObjectsByType(IddObjectType::ThermostatSetpoint_SingleHeating)[0];
 
-  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_SingleHeatingFields::SetpointTemperatureScheduleName).get(),
-            heat_sch.name());
+  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_SingleHeatingFields::SetpointTemperatureScheduleName).get(), heat_sch.name());
 
   IdfObject idf_zone_control = workspace.getObjectsByType(IddObjectType::ZoneControl_Thermostat)[0];
-  ASSERT_EQ(1u, idf_zone_control.extensibleGroups().size());
-  IdfExtensibleGroup eg = idf_zone_control.extensibleGroups()[0];
-  ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlObjectType).get(),
-            idf_tstat.iddObject().name() );
-  ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlName).get(),
-            idf_tstat.name().get() );
+  // TODO: JM 2019-09-04 switch back to an extensible object once/if https://github.com/NREL/EnergyPlus/issues/7484 is addressed and the
+  // 'Temperature Difference Between Cutout And Setpoint' field is moved before the extensible fields
+  /*
+   *ASSERT_EQ(1u, idf_zone_control.extensibleGroups().size());
+   *IdfExtensibleGroup eg = idf_zone_control.extensibleGroups()[0];
+   *ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlObjectType).get(),
+   *          idf_tstat.iddObject().name());
+   *ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlName).get(),
+   *          idf_tstat.name().get());
+   */
 
+  ASSERT_EQ(idf_zone_control.getString(ZoneControl_ThermostatFields::Control1ObjectType).get(), idf_tstat.iddObject().name());
+  ASSERT_EQ(idf_zone_control.getString(ZoneControl_ThermostatFields::Control1Name).get(), idf_tstat.name().get());
 }
-
 
 /** Case where you defined only a cooling schedule for the thermostat.
  * Should end up as a ThermostatSetpoint:SingleCooling in the IDF
  **/
-TEST_F(EnergyPlusFixture,ForwardTranslator_Thermostat_Cool_Only)
-{
+TEST_F(EnergyPlusFixture, ForwardTranslator_Thermostat_Cool_Only) {
   Model m;
 
   Point3dVector points;
@@ -228,15 +231,20 @@ TEST_F(EnergyPlusFixture,ForwardTranslator_Thermostat_Cool_Only)
 
   IdfObject idf_tstat = workspace.getObjectsByType(IddObjectType::ThermostatSetpoint_SingleCooling)[0];
 
-  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_SingleCoolingFields::SetpointTemperatureScheduleName).get(),
-            cool_sch.name());
+  ASSERT_EQ(idf_tstat.getString(ThermostatSetpoint_SingleCoolingFields::SetpointTemperatureScheduleName).get(), cool_sch.name());
 
   IdfObject idf_zone_control = workspace.getObjectsByType(IddObjectType::ZoneControl_Thermostat)[0];
-  ASSERT_EQ(1u, idf_zone_control.extensibleGroups().size());
+  // TODO: JM 2019-09-04 switch back to an extensible object once/if https://github.com/NREL/EnergyPlus/issues/7484 is addressed and the
+  // 'Temperature Difference Between Cutout And Setpoint' field is moved before the extensible fields
+  /*
+   *ASSERT_EQ(1u, idf_zone_control.extensibleGroups().size());
+   *IdfExtensibleGroup eg = idf_zone_control.extensibleGroups()[0];
+   *ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlObjectType).get(),
+   *          idf_tstat.iddObject().name());
+   *ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlName).get(),
+   *          idf_tstat.name().get());
+   */
 
-  IdfExtensibleGroup eg = idf_zone_control.extensibleGroups()[0];
-  ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlObjectType).get(),
-            idf_tstat.iddObject().name() );
-  ASSERT_EQ(eg.getString(ZoneControl_ThermostatExtensibleFields::ControlName).get(),
-            idf_tstat.name().get() );
+  ASSERT_EQ(idf_zone_control.getString(ZoneControl_ThermostatFields::Control1ObjectType).get(), idf_tstat.iddObject().name());
+  ASSERT_EQ(idf_zone_control.getString(ZoneControl_ThermostatFields::Control1Name).get(), idf_tstat.name().get());
 }

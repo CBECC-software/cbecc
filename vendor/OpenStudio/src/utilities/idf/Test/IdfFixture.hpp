@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -41,7 +41,8 @@
 #include "../../core/Logger.hpp"
 #include "../../core/FileLogSink.hpp"
 
-class IdfFixture : public ::testing::Test {
+class IdfFixture : public ::testing::Test
+{
  protected:
   // initialize for each test
   virtual void SetUp() override;
@@ -50,10 +51,10 @@ class IdfFixture : public ::testing::Test {
   virtual void TearDown() override;
 
   // initialize static members
-  static void SetUpTestCase();
+  static void SetUpTestSuite();
 
   // tear down static members
-  static void TearDownTestCase();
+  static void TearDownTestSuite();
 
   // set up logging
   REGISTER_LOGGER("IdfFixture");
@@ -68,4 +69,4 @@ class IdfFixture : public ::testing::Test {
   virtual ~IdfFixture() {}
 };
 
-#endif // UTILITIES_IDF_TEST_IDFFIXTURE_HPP
+#endif  // UTILITIES_IDF_TEST_IDFFIXTURE_HPP

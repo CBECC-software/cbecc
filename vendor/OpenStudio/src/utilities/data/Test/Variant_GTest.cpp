@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -34,9 +34,7 @@
 
 using namespace openstudio;
 
-
-TEST_F(DataFixture, Variant)
-{
+TEST_F(DataFixture, Variant) {
   Variant boolVariant(true);
   Variant intVariant(1);
   Variant doubleVariant(1.0);
@@ -52,19 +50,19 @@ TEST_F(DataFixture, Variant)
   EXPECT_EQ(1.0, doubleVariant.valueAsDouble());
   EXPECT_EQ("1", stringVariant.valueAsString());
 
-  EXPECT_THROW(boolVariant.valueAsInteger(), boost::bad_get);
-  EXPECT_THROW(boolVariant.valueAsDouble(), boost::bad_get);
-  EXPECT_THROW(boolVariant.valueAsString(), boost::bad_get);
+  EXPECT_THROW(boolVariant.valueAsInteger(), openstudio::Exception);
+  EXPECT_THROW(boolVariant.valueAsDouble(), openstudio::Exception);
+  EXPECT_THROW(boolVariant.valueAsString(), openstudio::Exception);
 
-  EXPECT_THROW(intVariant.valueAsBoolean(), boost::bad_get);
-  //EXPECT_THROW(intVariant.valueAsDouble(), boost::bad_get); // DLM: allowed this since double values in OSW might appear to be ints
-  EXPECT_THROW(intVariant.valueAsString(), boost::bad_get);
+  EXPECT_THROW(intVariant.valueAsBoolean(), openstudio::Exception);
+  //EXPECT_THROW(intVariant.valueAsDouble(), openstudio::Exception); // DLM: allowed this since double values in OSW might appear to be ints
+  EXPECT_THROW(intVariant.valueAsString(), openstudio::Exception);
 
-  EXPECT_THROW(doubleVariant.valueAsBoolean(), boost::bad_get);
-  EXPECT_THROW(doubleVariant.valueAsInteger(), boost::bad_get);
-  EXPECT_THROW(doubleVariant.valueAsString(), boost::bad_get);
+  EXPECT_THROW(doubleVariant.valueAsBoolean(), openstudio::Exception);
+  EXPECT_THROW(doubleVariant.valueAsInteger(), openstudio::Exception);
+  EXPECT_THROW(doubleVariant.valueAsString(), openstudio::Exception);
 
-  EXPECT_THROW(stringVariant.valueAsBoolean(), boost::bad_get);
-  EXPECT_THROW(stringVariant.valueAsInteger(), boost::bad_get);
-  EXPECT_THROW(stringVariant.valueAsDouble(), boost::bad_get);
+  EXPECT_THROW(stringVariant.valueAsBoolean(), openstudio::Exception);
+  EXPECT_THROW(stringVariant.valueAsInteger(), openstudio::Exception);
+  EXPECT_THROW(stringVariant.valueAsDouble(), openstudio::Exception);
 }

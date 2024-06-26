@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,175 +35,97 @@
 
 #include "../utilities/idf/ValidityReport.hpp"
 
-#include "../utilities/units/Unit.hpp"
-#include "../utilities/units/Quantity.hpp"
-#include "../utilities/units/OSQuantityVector.hpp"
-#include "../utilities/units/QuantityConverter.hpp"
-#include "../utilities/units/ScaleFactory.hpp"
-
 #include "../utilities/core/Assert.hpp"
 
 namespace openstudio {
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  // constructor
-  ScheduleBase_Impl::ScheduleBase_Impl(const IdfObject& idfObject,
-                                       Model_Impl* model,
-                                       bool keepHandle)
-    : ResourceObject_Impl(idfObject, model, keepHandle)
-  {}
+    // constructor
+    ScheduleBase_Impl::ScheduleBase_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
+      : ResourceObject_Impl(idfObject, model, keepHandle) {}
 
-  ScheduleBase_Impl::ScheduleBase_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
-                                       Model_Impl* model,
-                                       bool keepHandle)
-    : ResourceObject_Impl(other, model,keepHandle)
-  {}
+    ScheduleBase_Impl::ScheduleBase_Impl(const openstudio::detail::WorkspaceObject_Impl& other, Model_Impl* model, bool keepHandle)
+      : ResourceObject_Impl(other, model, keepHandle) {}
 
-  ScheduleBase_Impl::ScheduleBase_Impl(const ScheduleBase_Impl& other,
-                                       Model_Impl* model,
-                                       bool keepHandles)
-    : ResourceObject_Impl(other, model,keepHandles)
-  {}
+    ScheduleBase_Impl::ScheduleBase_Impl(const ScheduleBase_Impl& other, Model_Impl* model, bool keepHandles)
+      : ResourceObject_Impl(other, model, keepHandles) {}
 
-  OSQuantityVector ScheduleBase_Impl::getValues(bool returnIP) const {
-    OSQuantityVector result;
-    if (OptionalScheduleTypeLimits scheduleTypeLimits = this->scheduleTypeLimits()) {
-      if (OptionalUnit siUnits = ScheduleTypeLimits::units(scheduleTypeLimits->unitType(),false)) {
-        result = OSQuantityVector(*siUnits,values());
-        if (returnIP) {
-          OptionalUnit ipUnits = ScheduleTypeLimits::units(scheduleTypeLimits->unitType(),returnIP);
-          OS_ASSERT(ipUnits);
-          if (ipUnits.get() != siUnits.get()) {
-            result = convert(result,*ipUnits);
+    bool ScheduleBase_Impl::okToResetScheduleTypeLimits() const {
+      // can only reset if not used by object with keys
+      for (const ModelObject& user : getObject<ScheduleBase>().getModelObjectSources<ModelObject>()) {
+        if (!user.optionalCast<ScheduleBase>()) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    bool ScheduleBase_Impl::valuesAreWithinBounds() const {
+      if (OptionalScheduleTypeLimits scheduleTypeLimits = this->scheduleTypeLimits()) {
+        OptionalDouble minBound = scheduleTypeLimits->lowerLimitValue();
+        OptionalDouble maxBound = scheduleTypeLimits->upperLimitValue();
+        if (minBound || maxBound) {
+          for (double value : values()) {
+            if (minBound && (value < *minBound)) {
+              return false;
+            }
+            if (maxBound && (value > *maxBound)) {
+              return false;
+            }
           }
         }
       }
+      return true;
     }
-    return result;
-  }
 
-  boost::optional<Quantity> ScheduleBase_Impl::toQuantity(double value, bool returnIP) const {
-    OptionalQuantity result;
-    if (OptionalScheduleTypeLimits scheduleTypeLimits = this->scheduleTypeLimits()) {
-      if (OptionalUnit siUnits = ScheduleTypeLimits::units(scheduleTypeLimits->unitType(),false)) {
-        result = Quantity(value,*siUnits);
-        if (returnIP) {
-          OptionalUnit ipUnits = ScheduleTypeLimits::units(scheduleTypeLimits->unitType(),returnIP);
-          OS_ASSERT(ipUnits);
-          if (ipUnits.get() != siUnits.get()) {
-            result = convert(*result,*ipUnits);
-          }
-        }
-      }
-    }
-    return result;
-  }
-
-  boost::optional<double> ScheduleBase_Impl::toDouble(const Quantity& quantity) const {
-    OptionalDouble result;
-    OptionalQuantity working(quantity);
-    if (OptionalScheduleTypeLimits scheduleTypeLimits = this->scheduleTypeLimits()) {
-      if (OptionalUnit siUnits = ScheduleTypeLimits::units(scheduleTypeLimits->unitType(),false)) {
-        if (siUnits) {
-          if (working->units() == *siUnits) {
-            working->setScale(siUnits->scale().exponent);
-          }
-          else {
-            working = convert(*working,*siUnits);
-          }
-          if (working) {
-            result = working->value();
-          }
-        }
-      }
-    }
-    return result;
-  }
-
-  bool ScheduleBase_Impl::okToResetScheduleTypeLimits() const {
-    // can only reset if not used by object with keys
-    for (const ModelObject& user : getObject<ScheduleBase>().getModelObjectSources<ModelObject>()) {
-      if (!user.optionalCast<ScheduleBase>()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool ScheduleBase_Impl::valuesAreWithinBounds() const {
-    if (OptionalScheduleTypeLimits scheduleTypeLimits = this->scheduleTypeLimits()) {
-      OptionalDouble minBound = scheduleTypeLimits->lowerLimitValue();
-      OptionalDouble maxBound = scheduleTypeLimits->upperLimitValue();
-      if (minBound || maxBound) {
-        for (double value : values()) {
-          if (minBound && (value < *minBound)) {
-            return false;
-          }
-          if (maxBound && (value > *maxBound)) {
-            return false;
-          }
-        }
-      }
-    }
-    return true;
-  }
-
-  boost::optional<ModelObject> ScheduleBase_Impl::scheduleTypeLimitsAsModelObject() const {
-    OptionalModelObject result;
-    OptionalScheduleTypeLimits intermediate = scheduleTypeLimits();
-    if (intermediate) {
-      result = *intermediate;
-    }
-    return result;
-  }
-
-  bool ScheduleBase_Impl::setScheduleTypeLimitsAsModelObject(const boost::optional<ModelObject>& modelObject) {
-    if (modelObject) {
-      OptionalScheduleTypeLimits intermediate = modelObject->optionalCast<ScheduleTypeLimits>();
+    boost::optional<ModelObject> ScheduleBase_Impl::scheduleTypeLimitsAsModelObject() const {
+      OptionalModelObject result;
+      OptionalScheduleTypeLimits intermediate = scheduleTypeLimits();
       if (intermediate) {
-        return setScheduleTypeLimits(*intermediate);
+        result = *intermediate;
       }
-      else {
-        return false;
+      return result;
+    }
+
+    bool ScheduleBase_Impl::setScheduleTypeLimitsAsModelObject(const boost::optional<ModelObject>& modelObject) {
+      if (modelObject) {
+        OptionalScheduleTypeLimits intermediate = modelObject->optionalCast<ScheduleTypeLimits>();
+        if (intermediate) {
+          return setScheduleTypeLimits(*intermediate);
+        } else {
+          return false;
+        }
+      } else {
+        resetScheduleTypeLimits();
       }
+      return true;
     }
-    else {
-      resetScheduleTypeLimits();
-    }
-    return true;
+
+  }  // namespace detail
+
+  boost::optional<ScheduleTypeLimits> ScheduleBase::scheduleTypeLimits() const {
+    return getImpl<detail::ScheduleBase_Impl>()->scheduleTypeLimits();
   }
 
-} // detail
+  bool ScheduleBase::setScheduleTypeLimits(const ScheduleTypeLimits& scheduleTypeLimits) {
+    return getImpl<detail::ScheduleBase_Impl>()->setScheduleTypeLimits(scheduleTypeLimits);
+  }
 
-boost::optional<ScheduleTypeLimits> ScheduleBase::scheduleTypeLimits() const {
-  return getImpl<detail::ScheduleBase_Impl>()->scheduleTypeLimits();
-}
+  bool ScheduleBase::resetScheduleTypeLimits() {
+    return getImpl<detail::ScheduleBase_Impl>()->resetScheduleTypeLimits();
+  }
 
-bool ScheduleBase::setScheduleTypeLimits(const ScheduleTypeLimits& scheduleTypeLimits) {
-  return getImpl<detail::ScheduleBase_Impl>()->setScheduleTypeLimits(scheduleTypeLimits);
-}
+  void ScheduleBase::ensureNoLeapDays() {
+    getImpl<detail::ScheduleBase_Impl>()->ensureNoLeapDays();
+  }
 
-bool ScheduleBase::resetScheduleTypeLimits() {
-  return getImpl<detail::ScheduleBase_Impl>()->resetScheduleTypeLimits();
-}
+  /// @cond
+  ScheduleBase::ScheduleBase(std::shared_ptr<detail::ScheduleBase_Impl> impl) : ResourceObject(std::move(impl)) {}
 
-void ScheduleBase::ensureNoLeapDays()
-{
-  getImpl<detail::ScheduleBase_Impl>()->ensureNoLeapDays();
-}
+  ScheduleBase::ScheduleBase(IddObjectType type, const Model& model) : ResourceObject(type, model) {}
+  /// @endcond
 
-/// @cond
-ScheduleBase::ScheduleBase(std::shared_ptr<detail::ScheduleBase_Impl> impl)
-  : ResourceObject(std::move(impl))
-{}
-
-ScheduleBase::ScheduleBase(IddObjectType type, const Model &model)
-  : ResourceObject(type,model)
-{}
-/// @endcond
-
-} // model
-} // openstudio
-
+}  // namespace model
+}  // namespace openstudio

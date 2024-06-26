@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -112,8 +112,6 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <QThread>
-
 #include <resources.hxx>
 
 #include <sstream>
@@ -124,8 +122,7 @@ using namespace openstudio::energyplus;
 using namespace openstudio::model;
 using namespace openstudio;
 
-
-TEST_F(EnergyPlusFixture,ForwardTranslatorFuelCell) {
+TEST_F(EnergyPlusFixture, ForwardTranslatorFuelCell) {
 
   Model model;
 
@@ -145,7 +142,6 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorFuelCell) {
   EXPECT_EQ(-0.0001619, curveQ.coefficient2x());
   EXPECT_EQ(2.26e-008, curveQ.coefficient3xPOW2());
   EXPECT_EQ("Annex42", fCPM.efficiencyCurveMode());
-
 
   // check default Airsupply
   GeneratorFuelCellAirSupply fAS = fuelcell.airSupply();
@@ -195,8 +191,8 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorFuelCell) {
   //expect site water mains
   EXPECT_EQ(1u, workspace.getObjectsByType(IddObjectType::Site_WaterMainsTemperature).size());
 
-  model.save(toPath("./fuelcell.osm"), true);
-  workspace.save(toPath("./fuelcell.idf"), true);
+  // model.save(toPath("./fuelcell.osm"), true);
+  // workspace.save(toPath("./fuelcell.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslatorFuelCell2) {
@@ -239,9 +235,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorFuelCell2) {
   // Expect stack cooler since it is linked to a FuelCell
   EXPECT_EQ(1u, workspace.getObjectsByType(IddObjectType::Generator_FuelCell_StackCooler).size());
 
-
-  model.save(toPath("./fuelcell2.osm"), true);
-  workspace.save(toPath("./fuelcell2.idf"), true);
+  // model.save(toPath("./fuelcell2.osm"), true);
+  // workspace.save(toPath("./fuelcell2.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslatorFuelCell3) {
@@ -290,10 +285,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorFuelCell3) {
   // Here we didn't, so we don't expect a Stack Cooler
   EXPECT_EQ(0u, workspace.getObjectsByType(IddObjectType::Generator_FuelCell_StackCooler).size());
 
-
-
-  model.save(toPath("./fuelcell3.osm"), true);
-  workspace.save(toPath("./fuelcell3.idf"), true);
+  // model.save(toPath("./fuelcell3.osm"), true);
+  // workspace.save(toPath("./fuelcell3.idf"), true);
 }
 
 TEST_F(EnergyPlusFixture, ForwardTranslatorFuelCell4) {
@@ -341,7 +334,6 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorFuelCell4) {
   //no water mains expected
   EXPECT_EQ(0u, workspace.getObjectsByType(IddObjectType::Site_WaterMainsTemperature).size());
 
-
-  model.save(toPath("./fuelcell4.osm"), true);
-  workspace.save(toPath("./fuelcell4.idf"), true);
+  // model.save(toPath("./fuelcell4.osm"), true);
+  // workspace.save(toPath("./fuelcell4.idf"), true);
 }

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,186 +37,205 @@ namespace openstudio {
 
 namespace model {
 
-class Schedule;
+  class Schedule;
+  class Mixer;
 
-namespace detail {
+  namespace detail {
 
-  class AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl;
+    class AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass is a StraightComponent that wraps the OpenStudio IDD object 'OS:AirLoopHVAC:UnitaryHeatCool:VAVChangeoverBypass'. */
-class MODEL_API AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass : public StraightComponent {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass is a StraightComponent that wraps the OpenStudio IDD object 'OS:AirLoopHVAC:UnitaryHeatCool:VAVChangeoverBypass'. */
+  class MODEL_API AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass : public StraightComponent
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(const Model& model, const HVACComponent& fan, const HVACComponent& coolingCoil, const HVACComponent& heatingCoil);
+    explicit AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(const Model& model, const HVACComponent& fan, const HVACComponent& coolingCoil,
+                                                           const HVACComponent& heatingCoil);
 
-  virtual ~AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass() {}
+    virtual ~AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  static std::vector<std::string> supplyAirFanPlacementValues();
+    static std::vector<std::string> supplyAirFanPlacementValues();
 
-  static std::vector<std::string> priorityControlModeValues();
+    static std::vector<std::string> priorityControlModeValues();
 
-  static std::vector<std::string> dehumidificationControlTypeValues();
+    static std::vector<std::string> dehumidificationControlTypeValues();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  boost::optional<Schedule> availabilitySchedule() const;
+    boost::optional<Schedule> availabilitySchedule() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate" **/
-  boost::optional<double> systemAirFlowRateDuringCoolingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Supply Air Flow Rate" **/
+    boost::optional<double> systemAirFlowRateDuringCoolingOperation() const;
 
-  bool isSystemAirFlowRateDuringCoolingOperationAutosized() const;
+    bool isSystemAirFlowRateDuringCoolingOperationAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate" **/
-  boost::optional<double> systemAirFlowRateDuringHeatingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Supply Air Flow Rate" **/
+    boost::optional<double> systemAirFlowRateDuringHeatingOperation() const;
 
-  bool isSystemAirFlowRateDuringHeatingOperationAutosized() const;
+    bool isSystemAirFlowRateDuringHeatingOperationAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate" **/
-  boost::optional<double> systemAirFlowRateWhenNoCoolingorHeatingisNeeded() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Supply Air Flow Rate" **/
+    boost::optional<double> systemAirFlowRateWhenNoCoolingorHeatingisNeeded() const;
 
-  bool isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const;
+    bool isSystemAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Outdoor Air Flow Rate" **/
-  boost::optional<double> outdoorAirFlowRateDuringCoolingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Cooling Outdoor Air Flow Rate" **/
+    boost::optional<double> outdoorAirFlowRateDuringCoolingOperation() const;
 
-  bool isOutdoorAirFlowRateDuringCoolingOperationAutosized() const;
+    bool isOutdoorAirFlowRateDuringCoolingOperationAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Outdoor Air Flow Rate" **/
-  boost::optional<double> outdoorAirFlowRateDuringHeatingOperation() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Heating Outdoor Air Flow Rate" **/
+    boost::optional<double> outdoorAirFlowRateDuringHeatingOperation() const;
 
-  bool isOutdoorAirFlowRateDuringHeatingOperationAutosized() const;
+    bool isOutdoorAirFlowRateDuringHeatingOperationAutosized() const;
 
-  /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Outdoor Air Flow Rate" **/
-  boost::optional<double> outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const;
+    /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "No Load Outdoor Air Flow Rate" **/
+    boost::optional<double> outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const;
 
-  bool isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const;
+    bool isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized() const;
 
-  boost::optional<Schedule> outdoorAirFlowRateMultiplierSchedule() const;
+    boost::optional<Schedule> outdoorAirFlowRateMultiplierSchedule() const;
 
-  HVACComponent supplyAirFan() const;
+    HVACComponent supplyAirFan() const;
 
-  std::string supplyAirFanPlacement() const;
+    std::string supplyAirFanPlacement() const;
 
-  boost::optional<Schedule> supplyAirFanOperatingModeSchedule() const;
+    boost::optional<Schedule> supplyAirFanOperatingModeSchedule() const;
 
-  HVACComponent coolingCoil() const;
+    HVACComponent coolingCoil() const;
 
-  HVACComponent heatingCoil() const;
+    HVACComponent heatingCoil() const;
 
-  std::string priorityControlMode() const;
+    std::string priorityControlMode() const;
 
-  double minimumOutletAirTemperatureDuringCoolingOperation() const;
+    double minimumOutletAirTemperatureDuringCoolingOperation() const;
 
-  double maximumOutletAirTemperatureDuringHeatingOperation() const;
+    double maximumOutletAirTemperatureDuringHeatingOperation() const;
 
-  std::string dehumidificationControlType() const;
+    std::string dehumidificationControlType() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    double minimumRuntimeBeforeOperatingModeChange() const;
 
-  bool setAvailabilitySchedule(Schedule& schedule);
+    unsigned plenumorMixerAirPort() const;
 
-  void resetAvailabilitySchedule();
+    /** This Node always exists for connecting "Plenum or Mixer Inlet Node", it will be translated only if actually connected to an
+   * AirLoopHVAC:ReturnPlenum or an AirLoopHVAC:ZoneMixer */
+    Node plenumorMixerNode() const;
 
-  bool setSystemAirFlowRateDuringCoolingOperation(double systemAirFlowRateDuringCoolingOperation);
+    /** Convenience method to get the optional linked Mixer object (AirLoopHVAC:ReturnPlenum or AirLoopHVAC:ZoneMixer) */
+    boost::optional<Mixer> plenumorMixer() const;
 
-  void autosizeSystemAirFlowRateDuringCoolingOperation();
+    //@}
+    /** @name Setters */
+    //@{
 
-  bool setSystemAirFlowRateDuringHeatingOperation(double systemAirFlowRateDuringHeatingOperation);
+    bool setAvailabilitySchedule(Schedule& schedule);
 
-  void autosizeSystemAirFlowRateDuringHeatingOperation();
+    void resetAvailabilitySchedule();
 
-  bool setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(double systemAirFlowRateWhenNoCoolingorHeatingisNeeded);
+    bool setSystemAirFlowRateDuringCoolingOperation(double systemAirFlowRateDuringCoolingOperation);
 
-  void autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+    void autosizeSystemAirFlowRateDuringCoolingOperation();
 
-  bool setOutdoorAirFlowRateDuringCoolingOperation(double outdoorAirFlowRateDuringCoolingOperation);
+    bool setSystemAirFlowRateDuringHeatingOperation(double systemAirFlowRateDuringHeatingOperation);
 
-  void autosizeOutdoorAirFlowRateDuringCoolingOperation();
+    void autosizeSystemAirFlowRateDuringHeatingOperation();
 
-  bool setOutdoorAirFlowRateDuringHeatingOperation(double outdoorAirFlowRateDuringHeatingOperation);
+    bool setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(double systemAirFlowRateWhenNoCoolingorHeatingisNeeded);
 
-  void autosizeOutdoorAirFlowRateDuringHeatingOperation();
+    void autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
 
-  bool setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(double outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded);
+    bool setOutdoorAirFlowRateDuringCoolingOperation(double outdoorAirFlowRateDuringCoolingOperation);
 
-  void autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+    void autosizeOutdoorAirFlowRateDuringCoolingOperation();
 
-  bool setOutdoorAirFlowRateMultiplierSchedule(Schedule& outdoorAirFlowRateMultiplierSchedule);
+    bool setOutdoorAirFlowRateDuringHeatingOperation(double outdoorAirFlowRateDuringHeatingOperation);
 
-  void resetOutdoorAirFlowRateMultiplierSchedule();
+    void autosizeOutdoorAirFlowRateDuringHeatingOperation();
 
-  bool setSupplyAirFan(const HVACComponent& fansCVandOnOff);
+    bool setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(double outdoorAirFlowRateWhenNoCoolingorHeatingisNeeded);
 
-  bool setSupplyAirFanPlacement(std::string supplyAirFanPlacement);
+    void autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
 
-  bool setSupplyAirFanOperatingModeSchedule(Schedule& schedule);
+    bool setOutdoorAirFlowRateMultiplierSchedule(Schedule& outdoorAirFlowRateMultiplierSchedule);
 
-  void resetSupplyAirFanOperatingModeSchedule();
+    void resetOutdoorAirFlowRateMultiplierSchedule();
 
-  bool setCoolingCoil(const HVACComponent& coolingCoilsDXMultiModeOrSingleSpeed);
+    bool setSupplyAirFan(const HVACComponent& fansCVandOnOff);
 
-  bool setHeatingCoil(const HVACComponent& heatingCoilName);
+    bool setSupplyAirFanPlacement(std::string supplyAirFanPlacement);
 
-  bool setPriorityControlMode(std::string priorityControlMode);
+    bool setSupplyAirFanOperatingModeSchedule(Schedule& schedule);
 
-  bool setMinimumOutletAirTemperatureDuringCoolingOperation(double minimumOutletAirTemperatureDuringCoolingOperation);
+    void resetSupplyAirFanOperatingModeSchedule();
 
-  bool setMaximumOutletAirTemperatureDuringHeatingOperation(double maximumOutletAirTemperatureDuringHeatingOperation);
+    bool setCoolingCoil(const HVACComponent& coolingCoilsDXMultiModeOrSingleSpeed);
 
-  bool setDehumidificationControlType(std::string dehumidificationControlType);
+    bool setHeatingCoil(const HVACComponent& heatingCoilName);
 
-  boost::optional<double> autosizedSystemAirFlowRateDuringCoolingOperation() const ;
+    bool setPriorityControlMode(std::string priorityControlMode);
 
-  boost::optional<double> autosizedSystemAirFlowRateDuringHeatingOperation() const ;
+    bool setMinimumOutletAirTemperatureDuringCoolingOperation(double minimumOutletAirTemperatureDuringCoolingOperation);
 
-  boost::optional<double> autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() const ;
+    bool setMaximumOutletAirTemperatureDuringHeatingOperation(double maximumOutletAirTemperatureDuringHeatingOperation);
 
-  boost::optional<double> autosizedOutdoorAirFlowRateDuringCoolingOperation() const ;
+    bool setDehumidificationControlType(std::string dehumidificationControlType);
 
-  boost::optional<double> autosizedOutdoorAirFlowRateDuringHeatingOperation() const ;
+    bool setMinimumRuntimeBeforeOperatingModeChange(double runtime);
 
-  boost::optional<double> autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const ;
+    /** Connect the bypass air duct to an AirLoopHVAC:ReturnPlenum or an AirLoopHVAC:ZoneMixer that must
+   * be on the same AirLoopHVAC as this Unitary System */
+    bool setPlenumorMixer(const Mixer& returnPathComponent);
 
+    void resetPlenumorMixer();
 
+    boost::optional<double> autosizedSystemAirFlowRateDuringCoolingOperation() const;
 
-  //@}
-  /** @name Other */
-  //@{
-  //@}
- protected:
-  /// @cond
-  typedef detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl ImplType;
+    boost::optional<double> autosizedSystemAirFlowRateDuringHeatingOperation() const;
 
-  explicit AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(std::shared_ptr<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl> impl);
+    boost::optional<double> autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() const;
 
-  friend class detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass");
-};
+    boost::optional<double> autosizedOutdoorAirFlowRateDuringCoolingOperation() const;
 
-/** \relates AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass*/
-typedef boost::optional<AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass> OptionalAirLoopHVACUnitaryHeatCoolVAVChangeoverBypass;
+    boost::optional<double> autosizedOutdoorAirFlowRateDuringHeatingOperation() const;
 
-/** \relates AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass*/
-typedef std::vector<AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypassVector;
+    boost::optional<double> autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const;
 
-} // model
-} // openstudio
+    //@}
+    /** @name Other */
+    //@{
+    //@}
+   protected:
+    /// @cond
+    typedef detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl ImplType;
 
-#endif // MODEL_AIRLOOPHVACUNITARYHEATCOOLVAVCHANGEOVERBYPASS_HPP
+    explicit AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(std::shared_ptr<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl> impl);
 
+    friend class detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass");
+  };
+
+  /** \relates AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass*/
+  typedef boost::optional<AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass> OptionalAirLoopHVACUnitaryHeatCoolVAVChangeoverBypass;
+
+  /** \relates AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass*/
+  typedef std::vector<AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypassVector;
+
+}  // namespace model
+}  // namespace openstudio
+
+#endif  // MODEL_AIRLOOPHVACUNITARYHEATCOOLVAVCHANGEOVERBYPASS_HPP

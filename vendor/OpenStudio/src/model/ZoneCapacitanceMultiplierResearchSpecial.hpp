@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -35,102 +35,87 @@
 
 namespace openstudio {
 
-class Quantity;
-class OSOptionalQuantity;
-
 namespace model {
 
-namespace detail {
+  namespace detail {
 
-  class ZoneCapacitanceMultiplierResearchSpecial_Impl;
+    class ZoneCapacitanceMultiplierResearchSpecial_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** ZoneCapacitanceMultiplierResearchSpecial is a ModelObject that wraps the OpenStudio IDD object 'OS:ZoneCapacitanceMultiplier:ResearchSpecial'. */
-class MODEL_API ZoneCapacitanceMultiplierResearchSpecial : public ModelObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** ZoneCapacitanceMultiplierResearchSpecial is a ModelObject that wraps the OpenStudio IDD object 'OS:ZoneCapacitanceMultiplier:ResearchSpecial'. */
+  class MODEL_API ZoneCapacitanceMultiplierResearchSpecial : public ModelObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  virtual ~ZoneCapacitanceMultiplierResearchSpecial() {}
+    virtual ~ZoneCapacitanceMultiplierResearchSpecial() {}
 
-  //@}
+    //@}
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  /** @name Getters */
-  //@{
+    /** @name Getters */
+    //@{
 
-  double temperatureCapacityMultiplier() const;
+    double temperatureCapacityMultiplier() const;
 
-  Quantity getTemperatureCapacityMultiplier(bool returnIP=false) const;
+    bool isTemperatureCapacityMultiplierDefaulted() const;
 
-  bool isTemperatureCapacityMultiplierDefaulted() const;
+    double humidityCapacityMultiplier() const;
 
-  double humidityCapacityMultiplier() const;
+    bool isHumidityCapacityMultiplierDefaulted() const;
 
-  Quantity getHumidityCapacityMultiplier(bool returnIP=false) const;
+    double carbonDioxideCapacityMultiplier() const;
 
-  bool isHumidityCapacityMultiplierDefaulted() const;
+    bool isCarbonDioxideCapacityMultiplierDefaulted() const;
 
-  double carbonDioxideCapacityMultiplier() const;
+    //@}
+    /** @name Setters */
+    //@{
 
-  Quantity getCarbonDioxideCapacityMultiplier(bool returnIP=false) const;
+    bool setTemperatureCapacityMultiplier(double temperatureCapacityMultiplier);
 
-  bool isCarbonDioxideCapacityMultiplierDefaulted() const;
+    void resetTemperatureCapacityMultiplier();
 
-  //@}
-  /** @name Setters */
-  //@{
+    bool setHumidityCapacityMultiplier(double humidityCapacityMultiplier);
 
-  bool setTemperatureCapacityMultiplier(double temperatureCapacityMultiplier);
+    void resetHumidityCapacityMultiplier();
 
-  bool setTemperatureCapacityMultiplier(const Quantity& temperatureCapacityMultiplier);
+    bool setCarbonDioxideCapacityMultiplier(double carbonDioxideCapacityMultiplier);
 
-  void resetTemperatureCapacityMultiplier();
+    void resetCarbonDioxideCapacityMultiplier();
 
-  bool setHumidityCapacityMultiplier(double humidityCapacityMultiplier);
+    //@}
+    /** @name Other */
+    //@{
 
-  bool setHumidityCapacityMultiplier(const Quantity& humidityCapacityMultiplier);
+    //@}
+   protected:
+    /// @cond
+    typedef detail::ZoneCapacitanceMultiplierResearchSpecial_Impl ImplType;
 
-  void resetHumidityCapacityMultiplier();
+    explicit ZoneCapacitanceMultiplierResearchSpecial(std::shared_ptr<detail::ZoneCapacitanceMultiplierResearchSpecial_Impl> impl);
 
-  bool setCarbonDioxideCapacityMultiplier(double carbonDioxideCapacityMultiplier);
+    friend class detail::ZoneCapacitanceMultiplierResearchSpecial_Impl;
+    friend class Model;
+    friend class IdfObject;
+    friend class openstudio::detail::IdfObject_Impl;
+    explicit ZoneCapacitanceMultiplierResearchSpecial(Model& model);
 
-  bool setCarbonDioxideCapacityMultiplier(const Quantity& carbonDioxideCapacityMultiplier);
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.ZoneCapacitanceMultiplierResearchSpecial");
+  };
 
-  void resetCarbonDioxideCapacityMultiplier();
+  /** \relates ZoneCapacitanceMultiplierResearchSpecial*/
+  typedef boost::optional<ZoneCapacitanceMultiplierResearchSpecial> OptionalZoneCapacitanceMultiplierResearchSpecial;
 
-  //@}
-  /** @name Other */
-  //@{
+  /** \relates ZoneCapacitanceMultiplierResearchSpecial*/
+  typedef std::vector<ZoneCapacitanceMultiplierResearchSpecial> ZoneCapacitanceMultiplierResearchSpecialVector;
 
-  //@}
- protected:
-  /// @cond
-  typedef detail::ZoneCapacitanceMultiplierResearchSpecial_Impl ImplType;
+}  // namespace model
+}  // namespace openstudio
 
-  explicit ZoneCapacitanceMultiplierResearchSpecial(std::shared_ptr<detail::ZoneCapacitanceMultiplierResearchSpecial_Impl> impl);
-
-  friend class detail::ZoneCapacitanceMultiplierResearchSpecial_Impl;
-  friend class Model;
-  friend class IdfObject;
-  friend class openstudio::detail::IdfObject_Impl;
-  explicit ZoneCapacitanceMultiplierResearchSpecial(Model& model);
-
-  /// @endcond
- private:
-  REGISTER_LOGGER("openstudio.model.ZoneCapacitanceMultiplierResearchSpecial");
-};
-
-/** \relates ZoneCapacitanceMultiplierResearchSpecial*/
-typedef boost::optional<ZoneCapacitanceMultiplierResearchSpecial> OptionalZoneCapacitanceMultiplierResearchSpecial;
-
-/** \relates ZoneCapacitanceMultiplierResearchSpecial*/
-typedef std::vector<ZoneCapacitanceMultiplierResearchSpecial> ZoneCapacitanceMultiplierResearchSpecialVector;
-
-} // model
-} // openstudio
-
-#endif // MODEL_ZONECAPACITANCEMULTIPLIERRESEARCHSPECIAL_HPP
-
+#endif  // MODEL_ZONECAPACITANCEMULTIPLIERRESEARCHSPECIAL_HPP

@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -37,26 +37,32 @@
 
 namespace openstudio {
 
-  class UTILITIES_API System{
-  public:
+class UTILITIES_API System
+{
+ public:
+  /// Returns the time that the system has been idle
+  static boost::optional<Time> systemIdleTime();
 
-    /// Returns the time that the system has been idle
-    static boost::optional<Time> systemIdleTime();
+  /// Sleep for number of milliseconds
+  static void msleep(int msecs);
 
-    /// Sleep for number of milliseconds
-    static void msleep(int msecs);
+  /// Returns the number of processors on this computer
+  static unsigned numberOfProcessors();
 
-    /// Returns the number of processors on this computer
-    static unsigned numberOfProcessors();
+  /// \note not using string_view because we need null terminated strings
+  static boost::optional<std::string> getenv(const std::string& name) noexcept;
 
-    /// Utility for testing exception handling within the system
-    static void testExceptions1();
-    static void testExceptions2();
-    static void testExceptions3();
-    static void testExceptions4();
-    static void testExceptions5();
-  };
+  /// \note not using string_view because we need null terminated strings
+  static void setenv(const std::string& name, const std::string& value);
 
-} // openstudio
+  /// Utility for testing exception handling within the system
+  static void testExceptions1();
+  static void testExceptions2();
+  static void testExceptions3();
+  static void testExceptions4();
+  static void testExceptions5();
+};
 
-#endif // UTILITIES_CORE_SYSTEM_HPP
+}  // namespace openstudio
+
+#endif  // UTILITIES_CORE_SYSTEM_HPP

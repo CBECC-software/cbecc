@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -36,127 +36,131 @@
 namespace openstudio {
 namespace model {
 
-class PlanarSurface;
-class ConstructionBase;
-class DefaultSubSurfaceConstructions;
-class DefaultSurfaceConstructions;
+  class PlanarSurface;
+  class ConstructionBase;
+  class DefaultSubSurfaceConstructions;
+  class DefaultSurfaceConstructions;
 
-namespace detail {
+  namespace detail {
 
-  class DefaultConstructionSet_Impl;
+    class DefaultConstructionSet_Impl;
 
-} // detail
+  }  // namespace detail
 
-/** DefaultConstructionSet is a ResourceObject that wraps the OpenStudio IDD object 'OS_DefaultConstructionSet'. */
-class MODEL_API DefaultConstructionSet : public ResourceObject {
- public:
-  /** @name Constructors and Destructors */
-  //@{
+  /** DefaultConstructionSet is a ResourceObject that wraps the OpenStudio IDD object 'OS_DefaultConstructionSet'. */
+  class MODEL_API DefaultConstructionSet : public ResourceObject
+  {
+   public:
+    /** @name Constructors and Destructors */
+    //@{
 
-  explicit DefaultConstructionSet(const Model& model);
+    explicit DefaultConstructionSet(const Model& model);
 
-  virtual ~DefaultConstructionSet() {}
+    virtual ~DefaultConstructionSet() {}
 
-  //@}
-  /** @name Static Methods */
-  //@{
+    //@}
+    /** @name Static Methods */
+    //@{
 
-  static IddObjectType iddObjectType();
+    static IddObjectType iddObjectType();
 
-  //@}
-  /** @name Getters */
-  //@{
+    //@}
+    /** @name Getters */
+    //@{
 
-  boost::optional<DefaultSurfaceConstructions> defaultExteriorSurfaceConstructions() const;
+    boost::optional<DefaultSurfaceConstructions> defaultExteriorSurfaceConstructions() const;
 
-  boost::optional<DefaultSurfaceConstructions> defaultInteriorSurfaceConstructions() const;
+    boost::optional<DefaultSurfaceConstructions> defaultInteriorSurfaceConstructions() const;
 
-  boost::optional<DefaultSurfaceConstructions> defaultGroundContactSurfaceConstructions() const;
+    boost::optional<DefaultSurfaceConstructions> defaultGroundContactSurfaceConstructions() const;
 
-  boost::optional<DefaultSubSurfaceConstructions> defaultExteriorSubSurfaceConstructions() const;
+    boost::optional<DefaultSubSurfaceConstructions> defaultExteriorSubSurfaceConstructions() const;
 
-  boost::optional<DefaultSubSurfaceConstructions> defaultInteriorSubSurfaceConstructions() const;
+    boost::optional<DefaultSubSurfaceConstructions> defaultInteriorSubSurfaceConstructions() const;
 
-  boost::optional<ConstructionBase> interiorPartitionConstruction() const;
+    boost::optional<ConstructionBase> interiorPartitionConstruction() const;
 
-  boost::optional<ConstructionBase> spaceShadingConstruction() const;
+    boost::optional<ConstructionBase> spaceShadingConstruction() const;
 
-  boost::optional<ConstructionBase> buildingShadingConstruction() const;
+    boost::optional<ConstructionBase> buildingShadingConstruction() const;
 
-  boost::optional<ConstructionBase> siteShadingConstruction() const;
+    boost::optional<ConstructionBase> siteShadingConstruction() const;
 
-  //@}
-  /** @name Setters */
-  //@{
+    boost::optional<ConstructionBase> adiabaticSurfaceConstruction() const;
 
-  bool setDefaultExteriorSurfaceConstructions(const DefaultSurfaceConstructions& defaultSurfaceConstructions);
+    //@}
+    /** @name Setters */
+    //@{
 
-  void resetDefaultExteriorSurfaceConstructions();
+    bool setDefaultExteriorSurfaceConstructions(const DefaultSurfaceConstructions& defaultSurfaceConstructions);
 
-  bool setDefaultInteriorSurfaceConstructions(const DefaultSurfaceConstructions& defaultSurfaceConstructions);
+    void resetDefaultExteriorSurfaceConstructions();
 
-  void resetDefaultInteriorSurfaceConstructions();
+    bool setDefaultInteriorSurfaceConstructions(const DefaultSurfaceConstructions& defaultSurfaceConstructions);
 
-  bool setDefaultGroundContactSurfaceConstructions(const DefaultSurfaceConstructions& defaultSurfaceConstructions);
+    void resetDefaultInteriorSurfaceConstructions();
 
-  void resetDefaultGroundContactSurfaceConstructions();
+    bool setDefaultGroundContactSurfaceConstructions(const DefaultSurfaceConstructions& defaultSurfaceConstructions);
 
-  bool setDefaultExteriorSubSurfaceConstructions(const DefaultSubSurfaceConstructions& defaultSubSurfaceConstructions);
+    void resetDefaultGroundContactSurfaceConstructions();
 
-  void resetDefaultExteriorSubSurfaceConstructions();
+    bool setDefaultExteriorSubSurfaceConstructions(const DefaultSubSurfaceConstructions& defaultSubSurfaceConstructions);
 
-  bool setDefaultInteriorSubSurfaceConstructions(const DefaultSubSurfaceConstructions& defaultSubSurfaceConstructions);
+    void resetDefaultExteriorSubSurfaceConstructions();
 
-  void resetDefaultInteriorSubSurfaceConstructions();
+    bool setDefaultInteriorSubSurfaceConstructions(const DefaultSubSurfaceConstructions& defaultSubSurfaceConstructions);
 
-  bool setInteriorPartitionConstruction(const ConstructionBase& construction);
+    void resetDefaultInteriorSubSurfaceConstructions();
 
-  void resetInteriorPartitionConstruction();
+    bool setInteriorPartitionConstruction(const ConstructionBase& construction);
 
-  bool setSpaceShadingConstruction(const ConstructionBase& construction);
+    void resetInteriorPartitionConstruction();
 
-  void resetSpaceShadingConstruction();
+    bool setSpaceShadingConstruction(const ConstructionBase& construction);
 
-  bool setBuildingShadingConstruction(const ConstructionBase& construction);
+    void resetSpaceShadingConstruction();
 
-  void resetBuildingShadingConstruction();
+    bool setBuildingShadingConstruction(const ConstructionBase& construction);
 
-  bool setSiteShadingConstruction(const ConstructionBase& construction);
+    void resetBuildingShadingConstruction();
 
-  void resetSiteShadingConstruction();
+    bool setSiteShadingConstruction(const ConstructionBase& construction);
 
-  //@}
+    void resetSiteShadingConstruction();
 
-  /// Returns the default construction for this planar surface if available.
-  boost::optional<ConstructionBase> getDefaultConstruction(const PlanarSurface& planarSurface) const;
+    bool setAdiabaticSurfaceConstruction(const ConstructionBase& construction);
 
-  /// Merge this object with other one, keep fields from this object if set otherwise set to value from other.
-  void merge(const DefaultConstructionSet& other);
+    void resetAdiabaticSurfaceConstruction();
 
- protected:
+    //@}
 
-  /// @cond
-  typedef detail::DefaultConstructionSet_Impl ImplType;
+    /// Returns the default construction for this planar surface if available.
+    boost::optional<ConstructionBase> getDefaultConstruction(const PlanarSurface& planarSurface) const;
 
-  friend class Model;
-  friend class openstudio::IdfObject;
+    /// Merge this object with other one, keep fields from this object if set otherwise set to value from other.
+    void merge(const DefaultConstructionSet& other);
 
-  explicit DefaultConstructionSet(std::shared_ptr<detail::DefaultConstructionSet_Impl> impl);
+   protected:
+    /// @cond
+    typedef detail::DefaultConstructionSet_Impl ImplType;
 
-  /// @endcond
- private:
+    friend class Model;
+    friend class openstudio::IdfObject;
 
-  REGISTER_LOGGER("openstudio.model.DefaultConstructionSet");
-};
+    explicit DefaultConstructionSet(std::shared_ptr<detail::DefaultConstructionSet_Impl> impl);
 
-/** \relates DefaultConstructionSet*/
-typedef boost::optional<DefaultConstructionSet> OptionalDefaultConstructionSet;
+    /// @endcond
+   private:
+    REGISTER_LOGGER("openstudio.model.DefaultConstructionSet");
+  };
 
-/** \relates DefaultConstructionSet*/
-typedef std::vector<DefaultConstructionSet> DefaultConstructionSetVector;
+  /** \relates DefaultConstructionSet*/
+  typedef boost::optional<DefaultConstructionSet> OptionalDefaultConstructionSet;
 
-} // model
-} // openstudio
+  /** \relates DefaultConstructionSet*/
+  typedef std::vector<DefaultConstructionSet> DefaultConstructionSetVector;
 
-#endif // MODEL_DEFAULTCONSTRUCTIONSET_HPP
+}  // namespace model
+}  // namespace openstudio
 
+#endif  // MODEL_DEFAULTCONSTRUCTIONSET_HPP

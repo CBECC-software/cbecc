@@ -1,5 +1,5 @@
 /***********************************************************************************************************************
-*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*  OpenStudio(R), Copyright (c) 2008-2020, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 *  following conditions are met:
@@ -44,9 +44,6 @@
 #include "../SurfacePropertyConvectionCoefficients_Impl.hpp"
 #include "../ScheduleConstant.hpp"
 #include "../ScheduleConstant_Impl.hpp"
-
-#include "../../utilities/units/Quantity.hpp"
-#include "../../utilities/units/Unit.hpp"
 
 using namespace openstudio;
 using namespace openstudio::model;
@@ -109,7 +106,8 @@ TEST_F(ModelFixture, SurfacePropertyConvectionCoefficients) {
   ASSERT_EQ(typeValues1.size(), 43);
   ASSERT_NE(std::find(typeValues1.begin(), typeValues1.end(), "Value"), typeValues1.end()) << "'Value' not in list";
   ASSERT_NE(std::find(typeValues1.begin(), typeValues1.end(), "ASHRAEVerticalWall"), typeValues1.end()) << "'ASHRAEVerticalWall' not in list";
-  ASSERT_NE(std::find(typeValues1.begin(), typeValues1.end(), "BeausoleilMorrisonMixedStableFloor"), typeValues1.end()) << "'BeausoleilMorrisonMixedStableFloor' not in list";
+  ASSERT_NE(std::find(typeValues1.begin(), typeValues1.end(), "BeausoleilMorrisonMixedStableFloor"), typeValues1.end())
+    << "'BeausoleilMorrisonMixedStableFloor' not in list";
   ASSERT_NE(std::find(typeValues1.begin(), typeValues1.end(), "ClearRoof"), typeValues1.end()) << "'ClearRoof' not in list";
 
   std::vector<std::string> locationValues2(cc.convectionCoefficient2LocationValues());
@@ -179,7 +177,7 @@ TEST_F(ModelFixture, SurfacePropertyConvectionCoefficients) {
   ASSERT_TRUE(cc.setConvectionCoefficient1(1.0));
   coef = cc.convectionCoefficient1();
   ASSERT_TRUE(coef);
-  ASSERT_FLOAT_EQ(*coef, 1.0);
+  ASSERT_DOUBLE_EQ(*coef, 1.0);
   cc.resetConvectionCoefficient1();
   coef = cc.convectionCoefficient1();
   ASSERT_FALSE(coef);
@@ -189,7 +187,7 @@ TEST_F(ModelFixture, SurfacePropertyConvectionCoefficients) {
   ASSERT_TRUE(cc.setConvectionCoefficient2(2.0));
   coef = cc.convectionCoefficient2();
   ASSERT_TRUE(coef);
-  ASSERT_FLOAT_EQ(*coef, 2.0);
+  ASSERT_DOUBLE_EQ(*coef, 2.0);
   cc.resetConvectionCoefficient2();
   coef = cc.convectionCoefficient2();
   ASSERT_FALSE(coef);
@@ -220,5 +218,4 @@ TEST_F(ModelFixture, SurfacePropertyConvectionCoefficients) {
   boost::optional<SurfacePropertyConvectionCoefficients> cc3(surface.surfacePropertyConvectionCoefficients());
   ASSERT_TRUE(cc3);
   ASSERT_EQ(cc3.get().handle(), cc2.handle());
-
 }
