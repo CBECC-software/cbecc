@@ -213,7 +213,7 @@ public:
    bool StatusRequiresWrite( BEMProperty* pProp, bool bWritePrimaryDefaultData=false );		// SAC 6/10/15 - CBECC issue 1061
    bool MustWriteProperty(   BEMObject* pObj, BEMProperty* pProp, int iProp, bool bWritePrimaryDefaultData=false );  // SAC 1/22/02 - final argument POSITION pos -> int iProp		// SAC 6/10/15 - CBECC issue 1061
    bool UseParenArrayFormat( BEMObject* pObj, BEMProperty* pProp, int iProp );  // SAC 1/22/02 - final argument POSITION pos -> int iProp
-   void PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet=TRUE );		// SAC 6/8/19
+   void PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, QString& sRefObjCSEComment, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet=TRUE );		// SAC 6/8/19  // added sRefObjCSEComment - SAC 04/17/24
    void WriteProperties( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false,		// SAC 6/8/15 - CBECC issue 1061
    								bool bSkipWritingComponentName=false, int iIndentSpcs=0, 	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
                            bool bWriteOnlyCSEExpressionProperties=false );    // workaround for CSE object COPY bug requiring re-write of expressions - SAC 05/19/21
@@ -2014,6 +2014,7 @@ void CProjectFile::WriteCritDefComment( const char* szComment )
 //   BEMObject*   pObj  : object who's property is being converted to a character string
 //   BEMProperty* pProp : property who's value is being converted to a character string
 //   QString&     sData : QString to populate with character string
+//   QString&     sRefObjCSEComment : CSE comment associated w/ referenced object
 //   
 // Return Value -------------------------------------------------------------
 //   None
@@ -2041,7 +2042,7 @@ void FloatToString_NoExpNotation( QString& string, double fNum )
 }
 
 static char szNone[] = "- none -";
-void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet /*=TRUE*/ )
+void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, QString& sRefObjCSEComment, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet /*=TRUE*/ )
 {
    // get the data type of this property
    int iDataType = pProp->getType()->getPropType();
@@ -2097,8 +2098,15 @@ void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QStrin
    {  // object
       BEMObject* pRefObj = pProp->getObj();
       if (pRefObj != NULL)
-         // if object pointer valid, enclose referenced object in double quotes
+      {  // if object pointer valid, enclose referenced object in double quotes
          sData = QString( "\"%1\"" ).arg( pRefObj->getName() );
+         if (m_iFileType == BEMFT_CSE)       // enable writing of comments for any CSE objects via 'reserved' BEM property CSEComment - SAC 04/17/24
+         {  long lDBID_CSEComment = (pRefObj->getClass() == NULL ?  0 : BEMPX_GetDatabaseID( "CSEComment", pRefObj->getClass()->get1BEMClassIdx() ));
+            int iRefObjIdx        = (pRefObj->getClass() == NULL ? -1 : BEMPX_GetObjectIndex( pRefObj->getClass(), pRefObj, iBEMProcIdx ));
+                                          assert( (lDBID_CSEComment < 1 || iRefObjIdx >= 0) );
+            if (lDBID_CSEComment > 0 && iRefObjIdx >= 0)
+               BEMPX_GetString( lDBID_CSEComment, sRefObjCSEComment, FALSE, 0, -1, iRefObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );
+      }  }
       else if (StatusRequiresWrite( pProp ))
          // if object pointer NOT valid but we must output this property, then output "- none -"
          sData = QString( "\"%1\"" ).arg( szNone );
@@ -2157,7 +2165,7 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
    QString sPropType = pProp->getType()->getShortName();
 	if (pProp && m_iFileType == BEMFT_CSE && sPropType.right(2).compare("_x") == 0)  // SAC 1/3/13
 		sPropType = sPropType.left( sPropType.length()-2 );
-   QString sData;
+   QString sData, sRefObjCSEComment;
    //BOOL bDataAlreadyWritten = FALSE;
    int iCount = 1;
 	bool bIsCSECommandProperty = ( m_iFileType == BEMFT_CSE && CSE_IsCommandProperty( sPropType ) );  // SAC 1/3/13
@@ -2170,10 +2178,10 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
       if ( StatusRequiresWrite( pProp, bWritePrimaryDefaultData ) )
       {
          // convert property value to string
-         PropertyToString( pObj, pProp, sData, iBEMProcIdx );
+         PropertyToString( pObj, pProp, sData, sRefObjCSEComment, iBEMProcIdx );
 			if (sData.length() > 0 && m_bIsUserInputMode && pProp->getType()->getPropType() == BEMP_Sym &&
 				 sData.indexOf("(null)") == 1 && !m_bReportInvalidEnums)	// SAC 6/8/19
-	         PropertyToString( pObj, pProp, sData, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
+	         PropertyToString( pObj, pProp, sData, sRefObjCSEComment, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
 
          // if property string not zero length, then write it
          if (sData.length() > 0 && (!m_bIsUserInputMode || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
@@ -2248,6 +2256,7 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
    }
 
    // loop over all properties in array   
+   QString sRefObjCSEComment;
    while ( (iCount < pProp->getType()->getNumValues()) && (iProp < (int) pObj->getPropertiesSize()) )
    {
       pProp = pObj->getProperty(iProp);
@@ -2258,10 +2267,10 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
 
       QString sData;
       // convert this property's value to a string
-      PropertyToString( pObj, pProp, sData, iBEMProcIdx );
+      PropertyToString( pObj, pProp, sData, sRefObjCSEComment, iBEMProcIdx );
 		if (sData.length() > 0 && m_bIsUserInputMode && pProp->getType()->getPropType() == BEMP_Sym &&
 			 sData.indexOf("(null)") == 1 && !m_bReportInvalidEnums)	// SAC 6/8/19
-         PropertyToString( pObj, pProp, sData, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
+         PropertyToString( pObj, pProp, sData, sRefObjCSEComment, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
 
       // if property string not zero length, then write it
       if (sData.length() > 0 && (!m_bIsUserInputMode || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
@@ -2300,7 +2309,7 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
 		{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
 										pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
 			if (!pProp->getType()->getUnitsLabel().isEmpty() || bWrtDescrip)
-				WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), pProp->getType()->getUnitsLabel(), 40, 4 );
+				WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), (!sRefObjCSEComment.isEmpty() ? sRefObjCSEComment : pProp->getType()->getUnitsLabel()), 40, 4 );
 		}
       m_file.NewLine();
    }
@@ -2401,6 +2410,15 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 	   {  m_file.WriteToken( sObjType.toLocal8Bit().constData(), sObjType.length() );
 			// write object name to file
 	   	m_file.WriteQuotedString( pObj->getName().toLocal8Bit().constData(), pObj->getName().length() );
+
+         if (m_iFileType == BEMFT_CSE)       // enable writing of comments for any CSE objects via 'reserved' BEM property - SAC 04/17/24
+         {  long lDBID_CSEComment = ((pObj == NULL || pObj->getClass() == NULL) ?  0 : BEMPX_GetDatabaseID( "CSEComment", pObj->getClass()->get1BEMClassIdx() ));
+            int iObjIdx           = ((pObj == NULL || pObj->getClass() == NULL) ? -1 : BEMPX_GetObjectIndex( pObj->getClass(), pObj, iBEMProcIdx ));
+            QString sCSEComment;									assert( (lDBID_CSEComment < 1 || iObjIdx >= 0) );
+            if (lDBID_CSEComment > 0 && iObjIdx >= 0 &&
+                BEMPX_GetString( lDBID_CSEComment, sCSEComment, FALSE, 0, -1, iObjIdx, BEMO_User, NULL, 0, iBEMProcIdx ) && !sCSEComment.isEmpty())
+               WriteComment( sCSEComment, "", 40, 4 );
+         }
 		}
 	   m_file.NewLine();
 	}
@@ -2467,11 +2485,11 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	      // if pProp IS NOT array, just write it out
    	      if (pProp->getType()->getNumValues() == 1)
    	      {
-   	         QString sData;
-   	         PropertyToString( pObj, pProp, sData, iBEMProcIdx );
+   	         QString sData, sRefObjCSEComment;
+   	         PropertyToString( pObj, pProp, sData, sRefObjCSEComment, iBEMProcIdx );
 					if (sData.length() > 0 && m_bIsUserInputMode && pProp->getType()->getPropType() == BEMP_Sym &&
 						 sData.indexOf("(null)") == 1 && !m_bReportInvalidEnums)	// SAC 6/8/19
-	         		PropertyToString( pObj, pProp, sData, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
+	         		PropertyToString( pObj, pProp, sData, sRefObjCSEComment, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
 
    	         if (sData.length() > 0 && (!m_bIsUserInputMode || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// prevent writing enums = "(null)"
    	         {
@@ -2522,7 +2540,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 						{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
 														pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
 							if (!pProp->getType()->getUnitsLabel().isEmpty() || bWrtDescrip)
-								WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), pProp->getType()->getUnitsLabel(), 40, 4 );
+								WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), (!sRefObjCSEComment.isEmpty() ? sRefObjCSEComment : pProp->getType()->getUnitsLabel()), 40, 4 );
 						}
 
    	            m_file.NewLine();
@@ -2557,15 +2575,15 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	   				//m_file.WriteToken( "   ", 3 );
    	         		m_file.WriteToken( sPropType.toLocal8Bit().constData(), sPropType.length() );
    	         		m_file.WriteToken( " = ", 3 );
-   	         		QString sData;
-   	         		PropertyToString( pObj, pProp, sData, iBEMProcIdx );
+   	         		QString sData, sRefObjCSEComment;
+   	         		PropertyToString( pObj, pProp, sData, sRefObjCSEComment, iBEMProcIdx );
    	         		if (sData.length() > 0)
    	         		{  m_file.WriteToken( sData.toLocal8Bit().constData(), sData.length() );
                   		if (m_iPropertyCommentOption == 1)     // added echo of comment when desired - SAC 09/02/22 (Res tic #1338)
                   		{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
                   										pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
                   			if (!pProp->getType()->getUnitsLabel().isEmpty() || bWrtDescrip)
-                  				WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), pProp->getType()->getUnitsLabel(), 40, 4 );
+                  				WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), (!sRefObjCSEComment.isEmpty() ? sRefObjCSEComment : pProp->getType()->getUnitsLabel()), 40, 4 );
                   		}
    	         		   m_file.NewLine();
    	         		}

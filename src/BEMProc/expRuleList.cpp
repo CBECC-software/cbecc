@@ -1878,7 +1878,7 @@ bool Rule::ParseLeft( QFile& errorFile )
 /////////////////////////////////////////////////////////////////////////////
 // SAC 6/17/10 - added code to write detailed BEMProc upon FIRST occurrence of an error
 #ifdef _DEBUG
-static BOOL sBEMPgErrorEnsizeered = FALSE;
+static BOOL sBEMPgErrorEncountered = FALSE;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1919,8 +1919,8 @@ bool Rule::Eval( ExpEvalStruct* pEval, BOOL bTagDataAsUserDefined, BOOL bPerform
 
 // SAC 6/17/10 - added code to write detailed BEMProc upon FIRST occurrence of an error
 #ifdef _DEBUG
-   if (!sBEMPgErrorEnsizeered && expError.code != EXP_None)
-   {  sBEMPgErrorEnsizeered = TRUE;
+   if (!sBEMPgErrorEncountered && expError.code != EXP_None)
+   {  sBEMPgErrorEncountered = TRUE;
       BEMPX_WriteProjectFile( "first BEMProc rule eval error.ibd-detail", BEMFM_DETAIL /*FALSE /*bIsInputMode*/, FALSE /*bUseLogFileName*/,
                                                                  FALSE /*bWriteAllProperties*/, TRUE /*bSupressAllMessageBoxes*/ );
    }

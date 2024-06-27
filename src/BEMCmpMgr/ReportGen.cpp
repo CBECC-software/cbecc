@@ -1506,7 +1506,7 @@ int CMX_RateDownload( const char* pszRateType, int iErrorRetVal, const char* psz
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, long iSecurityKeyIndex, const char* pszPrivateKey,
                               const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
                               char* pszErrorMsg, int iErrorMsgLen, /*(long iCUACReportID,*/ int iCUAC_BEMProcIdx,     // SAC 08/30/23
-                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )      // SAC 08/31/23
+                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/, const char* pszHardwiredRatePathFile /*=NULL*/ )      // SAC 08/31/23  // SAC 03/12/24
 {  int iRetVal = 0;
    bool bAbort = false;
    QString sErrMsg;
@@ -1514,7 +1514,7 @@ int CMX_RateDownload( const char* pszRateType, int iErrorRetVal, const char* psz
                               bStoreBEMDetails, bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, iSecurityKeyIndex, pszPrivateKey,
                               pszProxyAddress, pszProxyCredentials, pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
                               /*char* pszErrorMsg, int iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*(long iCUACReportID,*/ iCUAC_BEMProcIdx,     // SAC 08/30/23
-                              iConnectTimeoutSecs /*=10*/, iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ );
+                              iConnectTimeoutSecs /*=10*/, iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/, pszHardwiredRatePathFile );
    if (iRetVal != 0 && pszErrorMsg && iErrorMsgLen > 0)
    {  if (sErrMsg.isEmpty())
          _snprintf( pszErrorMsg, iErrorMsgLen, "CMX_RateDownload() failure, returning %d.", iRetVal );
@@ -1528,7 +1528,7 @@ void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtil
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, long iSecurityKeyIndex, const char* pszPrivateKey,
                               const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
                               /*char* pszErrorMsg, int iErrorMsgLen,*/ bool& bAbort, int& iRetVal, QString& sErrMsg, /*(long iCUACReportID,*/ int iCUAC_BEMProcIdx,     // SAC 08/30/23
-                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ )      // SAC 08/31/23
+                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/, const char* pszHardwiredRatePathFile /*=NULL*/ )      // SAC 08/31/23  // SAC 03/12/24
 {
 // temporary
 //bVerbose = true;
@@ -1611,7 +1611,20 @@ void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtil
 		iRetVal = iErrorRetVal;
 	}
 
-   if (iRetVal == 0)
+   // if pszHardwiredRatePathFile specified - copy that file into the expected rate path/file - SAC 03/12/24
+   bool bRateFileCopied = false;
+   if (iRetVal == 0 && pszHardwiredRatePathFile && strlen( pszHardwiredRatePathFile ) > 0)
+   {  if (!FileExists( pszHardwiredRatePathFile ))
+         BEMPX_WriteLogFile( QString("CUAC_RateDownload():  Hardwired %1 rate file not found: %2").arg( sRateType, pszHardwiredRatePathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+      else
+      {  CopyFile( pszHardwiredRatePathFile, sOutPathFile.toLocal8Bit().constData(), FALSE );
+         if (FileExists( pszHardwiredRatePathFile ))
+            bRateFileCopied = true;
+         else
+            BEMPX_WriteLogFile( QString("CUAC_RateDownload():  Error encountered copying/using %1 rate file: %2").arg( sRateType, pszHardwiredRatePathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   }  }
+
+   if (iRetVal == 0 && !bRateFileCopied)
    {
 	   try
 	   {

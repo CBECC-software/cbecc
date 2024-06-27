@@ -1963,6 +1963,18 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
             int iReadWriteTimeoutSecs   = ReadProgInt( "options", "RptGenReadWriteTimeout", 480 /*default*/ );
             int iLogCUACBillCalcDetails = ReadProgInt( "options", "LogCUACBillCalcDetails",  -1 /*default*/ );    // SAC 09/21/23
 
+            CString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
+            sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", FALSE );
+            sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", FALSE );
+            if (!sCUACElecTariffFile.IsEmpty() && !FileExists( sCUACElecTariffFile ))
+               sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", TRUE );
+            if (!sCUACGasTariffFile.IsEmpty() && !FileExists( sCUACGasTariffFile ))
+               sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", TRUE );
+            if (!sCUACElecTariffFile.IsEmpty() && !FileExists( sCUACElecTariffFile ))
+               sCUACElecTariffFile.Empty();
+            if (!sCUACGasTariffFile.IsEmpty() && !FileExists( sCUACGasTariffFile ))
+               sCUACGasTariffFile.Empty();
+
             char pszCUACErrMsg[1024] = "\0";
             CString sCurrentProjFile, sCurrentProjPath, sModelFileOnly;
          	m_bPerformingAnalysis = TRUE;
@@ -2001,7 +2013,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                                      (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress), 
                                      (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials), 
                                      (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType), 
-                                     pszCUACErrMsg, 1024, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iConnectTimeoutSecs, iReadWriteTimeoutSecs );
+                                     pszCUACErrMsg, 1024, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iConnectTimeoutSecs, iReadWriteTimeoutSecs,
+                                     (sCUACElecTariffFile.IsEmpty()     ? NULL : (const char*) sCUACElecTariffFile) );     // SAC 03/12/24
                      //											94 : Error downloading CUAC electric tariff schedule
                   if (iCUACRetVal > 0)
                   {  if (strlen( pszCUACErrMsg ) > 0)
@@ -2017,7 +2030,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                                      (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress), 
                                      (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials), 
                                      (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType), 
-                                     pszCUACErrMsg, 1024, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iConnectTimeoutSecs, iReadWriteTimeoutSecs );
+                                     pszCUACErrMsg, 1024, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iConnectTimeoutSecs, iReadWriteTimeoutSecs,
+                                     (sCUACGasTariffFile.IsEmpty()      ? NULL : (const char*) sCUACGasTariffFile) );      // SAC 03/12/24
                      //											95 : Error downloading CUAC gas tariff schedule
                   if (iCUACRetVal > 0)
                   {  if (strlen( pszCUACErrMsg ) > 0)
@@ -2075,7 +2089,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          else
          {  std::vector<std::string> vsProjects;
             std::vector<int> viProjectIDs;
-            int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( qsAccessPathFile.toLatin1().constData(), vsProjects, viProjectIDs );
+            bool bLogCUACToolMiner = (ReadProgInt( "options", "LogCUACToolMiner", 0 ) > 0 ? true : false);     // SAC 04/11/24
+            int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( qsAccessPathFile.toLatin1().constData(), vsProjects, viProjectIDs, bLogCUACToolMiner );
             if (iGetCUACProjListRetVal != 0 || vsProjects.size() < 1 || vsProjects.size() != viProjectIDs.size())
                BEMMessageBox( QString( "Error encountered loading CUAC project list from Access database / code: %1 / %2 projects / %3 project IDs / file:  %4" ).arg( QString::number(iGetCUACProjListRetVal), QString::number(vsProjects.size()), QString::number(viProjectIDs.size()), qsAccessPathFile ), "CUAC Project List Load Error" );
             else
@@ -3687,6 +3702,21 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       {  sOptTemp.Format( "CUACReportID,%d,", iBatchCUACReportID );
          sOptionsCSVString += sOptTemp;
       }
+      CString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
+      sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", FALSE );
+      sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", FALSE );
+      if (!sCUACElecTariffFile.IsEmpty() && !FileExists( sCUACElecTariffFile ))
+         sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", TRUE );
+      if (!sCUACGasTariffFile.IsEmpty() && !FileExists( sCUACGasTariffFile ))
+         sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", TRUE );
+      if (!sCUACElecTariffFile.IsEmpty() && FileExists( sCUACElecTariffFile ))
+      {  sOptTemp.Format( "CUACElecTariffFile,\"%s\",", sCUACElecTariffFile );
+         sOptionsCSVString += sOptTemp;
+      }
+      if (!sCUACGasTariffFile.IsEmpty() && FileExists( sCUACGasTariffFile ))
+      {  sOptTemp.Format( "CUACGasTariffFile,\"%s\",", sCUACGasTariffFile );
+         sOptionsCSVString += sOptTemp;
+      }
 
 	// Add loop to check/add rule-based reporting options based on the enumerations currently available in the ruleset data model
 		long lDBID_Proj_RuleReportType = BEMPX_GetDatabaseID( "RuleReportType", BEMPX_GetDBComponentID( "Proj" ) );					ASSERT( lDBID_Proj_RuleReportType > 0 );
@@ -3828,6 +3858,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       int iEnableMixedFuelCompare = ReadProgInt( sOptsSec, "EnableMixedFuelCompare", 0 /*default*/ );	// SAC 12/28/21 (MxdFuel) 
 		if (iEnableMixedFuelCompare > 0)
 		{	sOptTemp.Format( "EnableMixedFuelCompare,%d,", iEnableMixedFuelCompare );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iIncludePeakCooling = ReadProgInt( sOptsSec, "IncludePeakCooling", -1 /*default*/ );	// SAC 03/18/24 (2025)
+		if (iIncludePeakCooling >= 0)
+		{	sOptTemp.Format( "IncludePeakCooling,%d,", iIncludePeakCooling );
 			sOptionsCSVString += sOptTemp;
 		}
       int lSimulateCentralDHWBranches = ReadProgInt( sOptsSec, "SimulateCentralDHWBranches", 1 /*default*/ );	// SAC 10/30/19		// SAC 11/6/19 - default 0->1
@@ -4614,9 +4649,10 @@ void CMainFrame::OldCUACImport()		// SAC 09/18/23
             {
                std::string sErrMsg;
                int iCUACPortRetVal=0;
+               bool bLogCUACToolMiner = (ReadProgInt( "options", "LogCUACToolMiner", 0 ) > 0 ? true : false);     // SAC 04/11/24
                if (TRUE)
                {  CWaitCursor wait;
-                  iCUACPortRetVal = CMX_PortOldCUACToCBECC( (const char*) sOldCUACAccessDBFile, lOldCUACProjID, (const char*) sProjName, sErrMsg );
+                  iCUACPortRetVal = CMX_PortOldCUACToCBECC( (const char*) sOldCUACAccessDBFile, lOldCUACProjID, (const char*) sProjName, sErrMsg, bLogCUACToolMiner );
 
                   if (iCUACPortRetVal == 0)
                   {  pDoc->SetModifiedFlag( TRUE );

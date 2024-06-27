@@ -917,7 +917,11 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 - added
 		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
 	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
+      long iIncludePeakCooling = ReadProgInt( "options", "IncludePeakCooling", -1 /*default*/ ),  lDBID_Proj_IncludePeakCooling = BEMPX_GetDatabaseID( "Proj:IncludePeakCooling" );      // SAC 03/18/24 (2025)
+		if (iIncludePeakCooling >= 0 && lDBID_Proj_IncludePeakCooling > 0)
+         BEMPX_SetBEMData( lDBID_Proj_IncludePeakCooling, BEMP_Int, (void*) &iIncludePeakCooling );
 #endif
+
 #ifdef UI_CANRES      // EnableResearchMode for CBECC-22 - SAC 02/25/22
 		long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) );	
       if (lDBID_Proj_EnableResearchMode > 0)

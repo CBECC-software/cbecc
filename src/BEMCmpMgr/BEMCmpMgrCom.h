@@ -125,15 +125,16 @@ int  BEMCMPMGR_API __cdecl CMX_RateDownload( const char* pszRateType, int iError
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, long iSecurityKeyIndex, const char* pszPrivateKey,
                               const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
                               char* pszErrorMsg, int iErrorMsgLen, /*(long iCUACReportID,*/ int iCUAC_BEMProcIdx,     // SAC 08/30/23
-                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/ );      // SAC 08/31/23
+                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/, const char* pszHardwiredRatePathFile=NULL );      // SAC 08/31/23  // SAC 03/12/24
 
-int  BEMCMPMGR_API __cdecl CMX_GetCUACDBProjectList(  std::string sCUACPathFilename, std::vector<std::string>& vsProjects, std::vector<int>& viProjectIDs );
+int  BEMCMPMGR_API __cdecl CMX_GetCUACDBProjectList(  std::string sCUACPathFilename, std::vector<std::string>& vsProjects,
+                                                      std::vector<int>& viProjectIDs, bool bLogCUACToolMiner=false );         // bLogCUACToolMiner - SAC 04/11/24
 
 int  BEMCMPMGR_API __cdecl CMX_PortOldCUACToCBECC(    std::string sCUACPathFilename, long projectID, std::string sProjectName,      // SAC 09/15/23
-                                                      std::string& sErrMsg );
+                                                      std::string& sErrMsg, bool bLogCUACToolMiner=false );       // bLogCUACToolMiner - SAC 04/11/24
 // testing...
 int  BEMCMPMGR_API __cdecl CMX_ExportCUACDBProjectTables( std::string sCUACPathFilename, std::string sOutputPath,
-                                          const std::string& sProject_name );  //, const std::vector<std::string>& sTable_names)
+                                          const std::string& sProject_name, bool bLogCUACToolMiner=false );  //, const std::vector<std::string>& sTable_names)  // bLogCUACToolMiner - SAC 04/11/24
 //int  BEMCMPMGR_API __cdecl CMX_ExportCUACDBSummaryTable( std::string sCUACPathFilename, std::string sOutputPath,
 //                                          const std::string& sProject_name, bool bIsElec );
 

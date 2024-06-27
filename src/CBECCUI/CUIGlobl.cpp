@@ -2713,9 +2713,9 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_ResConsAssm)        {  iTabCtrlWd = 670;    iTabCtrlHt = 640;   }   // Ht 610->640 - SAC 12/31/22 (DPHWall)
 	else if (iBDBClass == eiBDBCID_ResWinType)     	   {	iTabCtrlWd = 600;		iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_ResZn)     	      {  iTabCtrlWd = 750;    iTabCtrlHt = 450;   }
-	else if (iBDBClass == eiBDBCID_DwellUnitType)     	{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }
+	else if (iBDBClass == eiBDBCID_DwellUnitType)     	{  iTabCtrlWd = 940;    iTabCtrlHt = 670;   }   // wd 820->940 - SAC 04/17/24
 	else if (iBDBClass == eiBDBCID_DwellUnit)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 450;   }
-	else if (iBDBClass == eiBDBCID_ResOtherZn)     	   {  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }	// SAC 9/3/19 - MFamProto
+	else if (iBDBClass == eiBDBCID_ResOtherZn)     	   {  iTabCtrlWd = 1010;   iTabCtrlHt = 670;   }	// SAC 9/3/19 - MFamProto  // wd 820->1010 (from Spc) - SAC 04/01/24
 	else if (iBDBClass == eiBDBCID_ResAttic)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
 //	else if (iBDBClass == eiBDBCID_ResGarage)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
 	else if (iBDBClass == eiBDBCID_ResCrawlSpc)        {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }

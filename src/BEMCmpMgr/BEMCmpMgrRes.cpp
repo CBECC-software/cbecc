@@ -301,6 +301,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bReportGenVerbose	  		= (GetCSVOptionValue( "ReportGenVerbose"      ,   0,  saCSVOptions ) > 0);		// SAC 3/20/20
 	bool bCSE_DHWonly	  				= (GetCSVOptionValue( "CSE_DHWonly"           ,   0,  saCSVOptions ) > 0);		// SAC 7/7/20
    long lShuffleSFamDHW          =  GetCSVOptionValue( "ShuffleSFamDHW",          -1,  saCSVOptions );		// SAC 05/13/21
+   long lIncludePeakCooling      =  GetCSVOptionValue( "IncludePeakCooling",      -1,  saCSVOptions );		// SAC 03/18/24 (2025)
 
 	int  iRptGenConnectTimeout		=	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
 	int  iRptGenReadWriteTimeout	=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , CECRptGenDefaultReadWriteTimeoutSecs,  saCSVOptions );		// SAC 11/02/22
@@ -1212,6 +1213,13 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			lvPropSetLData.push_back( lEnableMixedFuelCompare );		dvPropSetFData.push_back( -1 );		svPropSetSData.push_back( "" );
 		}
 		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableMixedFuelCompare" ), lEnableMixedFuelCompare, 0 );
+
+      // toggle inclusion of PeakCooling in compliance result calc/reporting - SAC 03/18/24
+      long lDBID_Proj_IncludePeakCooling = BEMPX_GetDatabaseID( "Proj:IncludePeakCooling" );
+      if (lDBID_Proj_IncludePeakCooling > 0)
+      {  if (lIncludePeakCooling >= 0)
+            BEMPX_SetBEMData( lDBID_Proj_IncludePeakCooling, BEMP_Int, (void*) &lIncludePeakCooling );
+      }
 
 	   // SAC 10/30/19 - 
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lSimulateCentralDHWBranches == 0)		// SAC 11/6/19 - default 0->1

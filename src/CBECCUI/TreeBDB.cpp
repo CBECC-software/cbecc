@@ -404,13 +404,13 @@ static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_B
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
 static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #elif UI_PROGYEAR2022 || UI_PROGYEAR2025  	// SAC 6/19/19   // SAC 10/23/22
-static int  siNumArchComps = 54;      // was: 28;  before CBECC_Res integration - SAC 04/27/21   // SAC 07/26/22 (CUAC)
+static int  siNumArchComps = 53;      // was: 28;  before CBECC_Res integration - SAC 04/27/21   // SAC 07/26/22 (CUAC)
 static int  siNumArchFolders = 14;    // was: 10;  before CBECC_Res integration - SAC 04/27/21
 static int  siaMode0[]  = { 2, siNumArchComps-siNumArchFolders, siNumArchComps };
 static int* siapMode0[] = { &eiBDBCID_ResProj, /*&eiBDBCID_CUAC,*/ &eiBDBCID_Building, &eiBDBCID_Story, 
    // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
    &eiBDBCID_ResZnGrp, 
-                            &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
+                            &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, // &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
 									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
 									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/

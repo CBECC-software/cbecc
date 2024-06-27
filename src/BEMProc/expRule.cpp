@@ -385,7 +385,7 @@ inline void XAddnArg()
 // Inline Function:  ExpSetErr()
 //
 // Purpose ------------------------------------------------------------------
-//   Sets errors ensizeered by external functions to the structure which
+//   Sets errors encountered by external functions to the structure which
 //   tracks all expression parsing and evaluation errors.
 //   
 // Arguments ----------------------------------------------------------------
@@ -718,17 +718,17 @@ bool LocalSetBEMProcData( ExpEvalStruct* pEval, BOOL bTagDataAsUserDefined, BOOL
    if (expError.code != EXP_None)
    {
       QString sMsg = expError.string;
-      sMsg += " evaluating";
+      sMsg += " - evaluating";      // added '-' for better error msg separation - SAC 03/09/24
       QString sRunAbbrev;
       BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
       if (!sRunAbbrev.isEmpty())
       {  sMsg += " run ";
-         sMsg += sRunAbbrev;
+         sMsg += sRunAbbrev;  sMsg += ",";
       }
       sMsg += " rule: ";
       sMsg += pEval->sRuleID;
       BEMPX_WriteLogFile( sMsg );
-		if (!ErrorFree( expError ))  // SAC 8/2/12 - keep track of number of errors ensizeered during evaluation of rules
+		if (!ErrorFree( expError ))  // SAC 8/2/12 - keep track of number of errors encountered during evaluation of rules
 		//	ruleSet.AddErrorMessage( sMsg );
 		{  int iLocObjClass = BEMPX_GetClassID( pEval->lLocDBID );		// SAC 4/23/13 - expanded error logging to include other details
 	      BEMObject* pLocObj  = BEMPX_GetObjectByClass( iLocObjClass, iError, pEval->iLocObjIdx, pEval->eLocObjType );
@@ -779,7 +779,7 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       }
       else
       {  QString sMsg;
-			sMsg = QString( "Rule evaluated to '%1' and error was ensizeered resetting BEMProc value for rule: %2" ).arg( (bSetObjToNone ? "NONE" : "UNDEFINED"), pEval->sRuleID );
+			sMsg = QString( "Rule evaluated to '%1' and error was encountered resetting BEMProc value for rule: %2" ).arg( (bSetObjToNone ? "NONE" : "UNDEFINED"), pEval->sRuleID );   // fix misspelling in error msg - SAC 02/05/24
          BEMPX_WriteLogFile( sMsg );
 			if (ruleSet.getLogMsgCallbackFunc())
 				ruleSet.getLogMsgCallbackFunc()( logMsgERROR, (const char*) sMsg.toLocal8Bit().constData(), NULL );
@@ -858,12 +858,12 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
             // sMsg += " evaluating rule: ";
 			// SAC 5/1/13 - replace 'bogus' w/ 'ERROR' in error messages (plus track this as an error in the ruleset object)
          //   QString sMsg = "Bogus Expression Return Value evaluating rule: ";
-            QString sMsg = "ERROR:  Invalid expression return value evaluating";
+            QString sMsg = "ERROR:  Invalid expression return value - evaluating";     // added '-' for better error msg separation - SAC 03/09/24
             QString sRunAbbrev;
             BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
             if (!sRunAbbrev.isEmpty())
             {  sMsg += " run ";
-               sMsg += sRunAbbrev;
+               sMsg += sRunAbbrev;  sMsg += ",";
             }
             sMsg += " rule: ";
             sMsg += pEval->sRuleID;
@@ -953,7 +953,7 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
 			ruleSet.getLogMsgCallbackFunc()( ((iSetRet < 0 && strlen( pszSetBEMData_ErrMsg ) > 0) ? logMsgERROR : logMsgMESSAGE), (const char*) sDebug.toLocal8Bit().constData(), NULL );
    }
 	else if (iSetRet < 0 && strlen( pszSetBEMData_ErrMsg ) > 0)  // SAC 4/10/13 - error message logging
-	{	// write log entry if error ensizeered (even if not in verbose mode)
+	{	// write log entry if error encountered (even if not in verbose mode)
       BEMObject* pObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lLocDBID ), iError, pEval->iLocObjIdx, pEval->eLocObjType );
       if (pObj && !pObj->getName().isEmpty())
       	sDebug2 = QString( "  on '%1'" ).arg( pObj->getName() );
@@ -962,7 +962,7 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       QString sRunAbbrev;
       BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
       if (!sRunAbbrev.isEmpty())
-         sRunAbbrev = " run " + sRunAbbrev;
+         sRunAbbrev = " run " + sRunAbbrev + ",";
       sDebug = QString( "Error setting rule data:  %1  -- evaluating%2 rule: %3%4" ).arg( pszSetBEMData_ErrMsg, sRunAbbrev, pEval->sRuleID, sDebug2 );
       BEMPX_WriteLogFile( sDebug );
 		if (ruleSet.getLogMsgCallbackFunc())
@@ -984,12 +984,12 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       {  // error evaluating rulelist
          QString sMsg = "Compliance Rulelist '";
          sMsg += pEval->sRulelistToEvaluate;
-         sMsg += "' Not Found evaluating";
+         sMsg += "' Not Found - evaluating";    // added '-' for better error msg separation - SAC 03/09/24
          QString sRunAbbrev;
          BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), sRunAbbrev );    // SAC 08/22/21
          if (!sRunAbbrev.isEmpty())
          {  sMsg += " run ";
-            sMsg += sRunAbbrev;
+            sMsg += sRunAbbrev;  sMsg += ",";
          }
          sMsg += " rule: ";
          sMsg += pEval->sRuleID;
@@ -9125,9 +9125,11 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
    // Pop all (Comp:Param & other) nodes off stack and store in Long Array
 	long long lMDBID;
    long plParams[40];
-	ExpNode* pOrigNodes[40];		int iNumOrigNodes = nArgs;		assert( nArgs < 41 );
+	ExpNode* pOrigNodes[40];		int arg, iNumOrigNodes = nArgs;		assert( nArgs < 41 );
 	int i0Model = -1, iNumConsecStringArgs = 0;
-   for ( int arg = nArgs; arg > 0; arg-- )
+   for (arg==0; arg<40; arg++)
+      pOrigNodes[arg] = NULL;
+   for ( arg = nArgs; arg > 0; arg-- )
    {
       ExpNode* pThisNode = ExpxStackPop( stack );
 		if (bArgumentConditionExpected && bCondArgsNext && !bArgCondLeftParsed)
@@ -9246,7 +9248,24 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       	ExpxNodeDelete( pThisNode );
    }
 
-      //	QString sDbgLog;
+      	//QString sDbgLog;
+         //if (bStoreUniqueList)
+         //{  sDbgLog = QString( "   iNumOrigNodes %1 / nArgs %2 / i0FirstFormatStrArgIdx %3" ).arg( QString::number( iNumOrigNodes ), QString::number( nArgs ), QString::number( i0FirstFormatStrArgIdx ) );
+         //   BEMPX_WriteLogFile( sDbgLog );
+         //   for ( arg = 0; arg < iNumOrigNodes; arg++ )
+         //   {                    if (pOrigNodes[arg] == NULL)
+         //                        	sDbgLog = QString( "   unique list arg %1: NULL" ).arg( QString::number( arg ) );   
+         //                        else if (pOrigNodes[arg]->type == EXP_Invalid)
+         //                        	sDbgLog = QString( "   unique list arg %1: invalid BEM data" ).arg( QString::number( arg ) );
+         //                        else if (pOrigNodes[arg]->type == EXP_Value)
+         //                        	sDbgLog = QString( "   unique list arg %1: value %2" ).arg( QString::number( arg ), QString::number( pOrigNodes[arg]->fValue ) );
+         //                        else if (pOrigNodes[arg]->type == EXP_String)
+         //                        	sDbgLog = QString( "   unique list arg %1: string '%2'" ).arg( QString::number( arg ), (char*) pOrigNodes[arg]->pValue );
+         //                        else
+         //                        	sDbgLog = QString( "   unique list arg %1: unknown node status" ).arg( QString::number( arg ) );
+         //                        BEMPX_WriteLogFile( sDbgLog );
+         //}  }
+
 	BOOL bReturnUNDEFINED = FALSE;  // SAC 4/19/13
    if (!bAbort)
    {
@@ -9758,17 +9777,23 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 									ExpNode tempNode;
 									ExpNode_init( &tempNode );
 									long lDBID, iThisModel = i0Model;
-									lMDBID = (long long) plParams[ nArgs-1 ]+iArr;
+                           int iUniqueCheckArg = i0FirstFormatStrArgIdx + 3;
+                           if (i0FirstFormatStrArgIdx > 0 && iUniqueCheckArg < iNumOrigNodes &&       // fix bug where unique list w/ If condition not working properly - SAC 04/22/24
+                               pOrigNodes[iUniqueCheckArg] && pOrigNodes[iUniqueCheckArg]->type == EXP_Value)
+                              lMDBID = (long long) pOrigNodes[iUniqueCheckArg]->fValue;
+                           else
+   									lMDBID = (long long) plParams[ nArgs-1 ]+iArr;
 									GetBEMProcDataToNode( &tempNode, lMDBID, iObjIdx, eObjType, error, pEval->bGetEnumString/*ruleSet.IsDataModel() bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
 
+                                 //QString /*sDbgLog,*/ sDbgUniqDBID;  BEMPX_DBIDToDBCompParamString( BEMPX_MDBIDtoDBID( lMDBID ), sDbgUniqDBID );
                                  //if (tempNode.type == EXP_Invalid)
-                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > invalid BEM data" ).arg( QString::number( iObjIdx ) );
+                                 //	sDbgLog = QString( "   checking for uniqueness of %1 > iObjIdx %2 > invalid BEM data" ).arg( sDbgUniqDBID, QString::number( iObjIdx ) );
                                  //else if (tempNode.type == EXP_Value)
-                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > value %2" ).arg( QString::number( iObjIdx ), QString::number( tempNode.fValue ) );
+                                 //	sDbgLog = QString( "   checking for uniqueness of %1 > iObjIdx %2 > value %3" ).arg( sDbgUniqDBID, QString::number( iObjIdx ), QString::number( tempNode.fValue ) );
                                  //else if (tempNode.type == EXP_String)
-                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > string '%2'" ).arg( QString::number( iObjIdx ), (char*) tempNode.pValue );
+                                 //	sDbgLog = QString( "   checking for uniqueness of %1 > iObjIdx %2 > string '%3'" ).arg( sDbgUniqDBID, QString::number( iObjIdx ), (char*) tempNode.pValue );
                                  //else
-                                 //	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > unknown node status" ).arg( QString::number( iObjIdx ) );
+                                 //	sDbgLog = QString( "   checking for uniqueness of %1 > iObjIdx %2 > unknown node status" ).arg( sDbgUniqDBID, QString::number( iObjIdx ) );
                                  //BEMPX_WriteLogFile( sDbgLog );
 
 									if (tempNode.type == EXP_Invalid)
@@ -10038,7 +10063,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
    }
 
 	if (bStoreArgsForProcessing)	// delete original expression nodes if kept around during processing
-	{	for (int arg = iNumOrigNodes; arg > 0; arg--)
+	{	for (arg = iNumOrigNodes; arg > 0; arg--)
 			ExpxNodeDelete( pOrigNodes[arg-1] );
 	}
 

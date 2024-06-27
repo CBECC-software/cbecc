@@ -154,12 +154,14 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    BEMPX_RefreshLogFile();
    if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)
    {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - errors encountered evaluating CUAC_SetupGen1ElecRate rules" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
       return;
    }
    bRateEvalSuccessful = CMX_EvaluateRuleset( "CUAC_SetupGen1GasRate" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );   //, &saPreAnalChkWarningMsgs );
    BEMPX_RefreshLogFile();
    if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)
    {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - errors encountered evaluating CUAC_SetupGen1GasRate rules" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
       return;
    }
 
@@ -187,10 +189,9 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
       return;
    }
 
-//   double daZero[8760];
-//   for (iHr=0; iHr<8760; iHr++)
-//      daZero[iHr] = 0.0;
-
+   double daZero[8760];    // restored to prevent CSV writing error when no Gas meter present in model - SAC 02/28/24
+   for (iHr=0; iHr<8760; iHr++)
+      daZero[iHr] = 0.0;
 
    if (bOldCUAC)
    {  // add setting of CUAC:RunDateFmt when processing OldCUAC projects - SAC 01/10/24
@@ -385,6 +386,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    BEMPX_RefreshLogFile();
    if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)
    {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - errors encountered evaluating CUAC_SetupResults rules" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
       return;
    }
 
@@ -1552,6 +1554,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    BEMPX_RefreshLogFile();
    if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)
    {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - errors encountered evaluating CUAC_FinalCalcs rules" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
       return;
    }
 
@@ -1576,6 +1579,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
             BEMPX_RefreshLogFile();
             if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)
             {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - errors encountered evaluating CUAC_WriteInputOutputCSV rules" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                return;
             }
             else if (!bOldCUAC)
@@ -1604,7 +1608,10 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                                  if (baHaveFuelEnduseHrlyResults[iFuel][iCEUIdx])
                                  {  int iInitMtrIdx = iaInitToRptsEnduseMap[iCEUIdx];
                                     pdHrlyUse[iHrlyUsePtrIdx] = NULL;
-                                    BEMPX_GetHourlyResultArrayPtr( &pdHrlyUse[iHrlyUsePtrIdx++], NULL, 0, "Proposed", pszCUACMeters[iFuel][iMtr], pszInitialCUACEnduses[iInitMtrIdx], iCUAC_BEMProcIdx );
+                                    BEMPX_GetHourlyResultArrayPtr( &pdHrlyUse[iHrlyUsePtrIdx], NULL, 0, "Proposed", pszCUACMeters[iFuel][iMtr], pszInitialCUACEnduses[iInitMtrIdx], iCUAC_BEMProcIdx );
+                                    if (pdHrlyUse[iHrlyUsePtrIdx] == NULL)
+                                       pdHrlyUse[iHrlyUsePtrIdx] = &daZero[0];      // to prevent CSV writing error when no Gas meter present in model - SAC 02/28/24
+                                    iHrlyUsePtrIdx++;
                                  }
                         }  assert( iHrlyUsePtrIdx == (iNumRptgMtrs * 16) );
 
@@ -1708,7 +1715,9 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    CMX_EvaluateRuleset( "CUAC_DeleteCPRRates" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );   //, &saPreAnalChkWarningMsgs );
 
    if (!sErrMsg.isEmpty() && iRetVal == 0)      // SAC 09/29/23
-      iRetVal = 96;  // Error calculating CUAC utility bill(s)
+   {  iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - %1" ).arg( sErrMsg ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   }
 }
 
 
@@ -1906,13 +1915,23 @@ int CUAC_WriteCSVSummary( QFile& csvFile, const char* pszProjectPathFileName, co
 ////////////////////////////////////////////////////////////////////////////////
 // CUACToolMiner integration -
 
-int CMX_GetCUACDBProjectList( std::string sCUACPathFilename, std::vector<std::string>& vsProjects, std::vector<int>& viProjectIDs )
+int CMX_GetCUACDBProjectList( std::string sCUACPathFilename, std::vector<std::string>& vsProjects,
+                              std::vector<int>& viProjectIDs, bool bLogCUACToolMiner )
 {
    //auto res = getProjectList( "C:/CUAC/CUACTool-Rev2-0-0.accdb", vsProjects);
 
    //auto res = getProjectList( sCUACPathFilename, vsProjects);
 
-   CUACToolMiner db;    // revised to return both Project strings AND IDs - SAC 09/18/23
+   std::string sCUACLogPathFilename;      // debug logging - SAC 04/11/24
+   if (bLogCUACToolMiner)
+   {  sCUACLogPathFilename = sCUACPathFilename;
+      size_t iLastDot = sCUACLogPathFilename.find_last_of('.');
+      if (iLastDot > 0)
+         sCUACLogPathFilename.resize(iLastDot);
+      sCUACLogPathFilename += "-log.txt";
+   }
+
+   CUACToolMiner db(sCUACLogPathFilename);    // revised to return both Project strings AND IDs - SAC 09/18/23
    int res = db.open_connection(sCUACPathFilename);
    if (res == CUACToolMiner::no_error)
    {
@@ -1933,9 +1952,18 @@ int CMX_GetCUACDBProjectList( std::string sCUACPathFilename, std::vector<std::st
 }
 
 int CMX_ExportCUACDBProjectTables( std::string sCUACPathFilename, std::string sOutputPath,
-                        const std::string& sProject_name )  //, const std::vector<std::string>& sTable_names)
+                        const std::string& sProject_name, bool bLogCUACToolMiner )  //, const std::vector<std::string>& sTable_names)
 {
-   CUACToolMiner db;    // revised to return both Project strings AND IDs - SAC 09/18/23
+   std::string sCUACLogPathFilename;      // debug logging - SAC 04/11/24
+   if (bLogCUACToolMiner)
+   {  sCUACLogPathFilename = sCUACPathFilename;
+      size_t iLastDot = sCUACLogPathFilename.find_last_of('.');
+      if (iLastDot > 0)
+         sCUACLogPathFilename.resize(iLastDot);
+      sCUACLogPathFilename += "-log.txt";
+   }
+
+   CUACToolMiner db(sCUACLogPathFilename);    // revised to return both Project strings AND IDs - SAC 09/18/23
    int res = db.open_connection(sCUACPathFilename);
    if (res == CUACToolMiner::no_error)
    {
@@ -2128,7 +2156,7 @@ std::string CUACToolMinerErrorMsg( int err )    // SAC 09/15/23
 //    23 : error creating OldCUAC object
 //    24 : error creating OldCUACApt object
 int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::string sProjectName,     // SAC 09/15/23
-                              std::string& sErrMsg )
+                              std::string& sErrMsg, bool bLogCUACToolMiner )
 {  int iRetVal = 0;
    const std::vector<std::string> tables_to_export(
       {"tProjects", "tVersion", "tInputApt", "tInputCECPV", "tVNM"});
@@ -2159,7 +2187,16 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
          sErrMsg = "Error creating OldCUAC object";
    }  }
 
-   CUACToolMiner db;
+   std::string sCUACLogPathFilename;      // debug logging - SAC 04/11/24
+   if (bLogCUACToolMiner)
+   {  sCUACLogPathFilename = sCUACPathFilename;
+      size_t iLastDot = sCUACLogPathFilename.find_last_of('.');
+      if (iLastDot > 0)
+         sCUACLogPathFilename.resize(iLastDot);
+      sCUACLogPathFilename += "-log.txt";
+   }
+
+   CUACToolMiner db(sCUACLogPathFilename);
    iRetVal = db.open_connection(sCUACPathFilename);
    if (iRetVal == 0)
    {  // Get project ID

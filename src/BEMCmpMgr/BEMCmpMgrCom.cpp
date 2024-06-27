@@ -2398,6 +2398,7 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 //											94 : Error downloading CUAC electric tariff schedule
 //											95 : Error downloading CUAC gas tariff schedule
 //											96 : Error calculating CUAC utility bill(s)
+//											97	: Error evaluating SetupMFamInteriorSurfaces rules
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2559,6 +2560,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
    //if (iCUACReportID > 0)  // test
    //   BEMMessageBox( QString::asprintf( "CUACReportID %ld", iCUACReportID ) );
    long iLogCUACBillCalcDetails = GetCSVOptionValue( "LogCUACBillCalcDetails", -1, saCSVOptions );		// value < 0: use bVerbose / > 0: log details / else don't - SAC 09/21/23 (CUAC)
+	QString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
+	GetCSVOptionString( "CUACElecTariffFile", sCUACElecTariffFile, saCSVOptions );
+	GetCSVOptionString( "CUACGasTariffFile" , sCUACGasTariffFile , saCSVOptions );
 
    long iCustomMeterOption = GetCSVOptionValue( "CustomMeterOption", -1, saCSVOptions );		// value > 0 => custom sim metering that invalidates compliance analysis - SAC 11/02/23
 
@@ -3535,6 +3539,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 	}
 
+   // Make changes to address MFam dwelling/common interior surfaces - SAC 01/31/24
+	if (!bAbort && !BEMPX_AbortRuleEvaluation())
+	{	long lIntSurfModelMthd=0;
+		if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:IntSurfModelMthd" ), lIntSurfModelMthd ) && lIntSurfModelMthd > 0)
+		{  int iSetupMFamIntSurfsRetVal = LocalEvaluateRuleset( sErrMsg, 97, "SetupMFamInteriorSurfaces", bVerbose, pCompRuleDebugInfo );  
+                           //											97	: Error evaluating SetupMFamInteriorSurfaces rules
+         if (iSetupMFamIntSurfsRetVal > 0)
+            iRetVal = iSetupMFamIntSurfsRetVal;
+   }  }
+
    // Generate PolyLp objects based on 2D geometry inputs (for applicable projects)
 	int iCID_PolyLp = (!bAbort && !BEMPX_AbortRuleEvaluation()) ? BEMPX_GetDBComponentID( "PolyLp" ) : -1;
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())
@@ -4070,7 +4084,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
                                (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout );
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
+                               (sCUACElecTariffFile.isEmpty()     ? NULL : (const char*) sCUACElecTariffFile.toLocal8Bit().constData()) );
                //											94 : Error downloading CUAC electric tariff schedule
             if (iRetVal > 0)
 				   ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 94 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
@@ -4083,7 +4098,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
                                (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout );
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
+                               (sCUACGasTariffFile.isEmpty()      ? NULL : (const char*) sCUACGasTariffFile.toLocal8Bit().constData()) );
                //											95 : Error downloading CUAC gas tariff schedule
             if (iRetVal > 0)
 				   ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 95 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
@@ -6215,6 +6231,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                         //                  bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile, iCUACReportID, iCustomMeterOption );
             for (auto& dnldRateFile : svUtilRatesToDelete)     // delete downloaded rate file(s) - SAC 09/27/23
                DeleteFile( dnldRateFile.c_str() );
+         }
+         if (iRetVal > 0)
+         {  if (sErrMsg.isEmpty())
+            {  if (iErrorMsgLen > 0 && pszErrorMsg)
+                  sErrMsg = pszErrorMsg;
+               else
+                  sErrMsg = QString( "Error: Unable to calculate CUAC utility bills and/or generate reports/output." );
+            }
+            ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 96 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+            //											96 : Error calculating CUAC utility bill(s)
       }  }
 
 	// AnalysisAction - End / AfterAnalPostProc processing   - SAC 11/17/20
