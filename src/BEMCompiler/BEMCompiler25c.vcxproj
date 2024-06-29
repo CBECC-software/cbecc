@@ -77,16 +77,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\bin\Release_VC12\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\bin\BEMCompiler_VC12\25c\x86\Release\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\bin\Release_VC142\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\bin\BEMCompiler_VC142\25c\x86\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">BEMCompiler25c</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">BEMCompiler25c</TargetName>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</IgnoreImportLibrary>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IgnoreImportLibrary>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\bin\Debug_VC12\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\bin\BEMCompiler_VC12\25c\x86\Debug\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\bin\Debug_VC142\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\bin\BEMCompiler_VC142\25c\x86\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">BEMCompiler25c</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">BEMCompiler25c</TargetName>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IgnoreImportLibrary>
@@ -286,7 +286,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BEMCompiler.cpp" />
-    <ClCompile Include="moc_BEMCompiler19c.cpp" />
+    <ClCompile Include="moc_BEMCompiler25c.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BEMCompiler.rc" />

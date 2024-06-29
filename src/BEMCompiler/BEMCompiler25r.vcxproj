@@ -193,6 +193,12 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>..\..\vendor\Qt_5.15.0\bin\moc.exe BEMCompiler.h -o moc_BEMCompiler25r.cpp</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>generate moc_ source for Q_OBJECT</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -285,6 +291,12 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>..\..\vendor\Qt_5.15.0\bin\moc.exe BEMCompiler.h -o moc_BEMCompiler25r.cpp</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>generate moc_ source for Q_OBJECT</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ResourceCompile Include="BEMCompiler.rc" />

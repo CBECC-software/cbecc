@@ -286,7 +286,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BEMCompiler.cpp" />
-    <ClCompile Include="moc_BEMCompiler19c.cpp" />
+    <ClCompile Include="moc_BEMCompiler22c.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BEMCompiler.rc" />

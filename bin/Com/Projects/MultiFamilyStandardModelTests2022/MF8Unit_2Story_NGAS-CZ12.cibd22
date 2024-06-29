@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "MF8 Restructure Prototype"  
    BldgEngyModelVersion = 17
    CreateDate = 1603224267
-   ModDate = 1705885452
-   RunDate = 1705885453
+   ModDate = 1714771638
+   RunDate = 1714771639
    GasType = "NaturalGas"
    CliZn = "ClimateZone12"
    ZipCode = 95814
@@ -24,7 +24,7 @@ Proj   "MF8 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
+   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
    ..
@@ -1097,10 +1097,10 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    PVBattResultsValid = 1
    PropPV_Total = 24552.1
    PropPV_Export = 11810.7
-   PropPV_PctExport = 48.1046
+   PropPV_PctExport = 48.1047
    StdPV_Total = 24532
    StdPV_Export = 11793.3
-   StdPV_PctExport = 48.0729
+   StdPV_PctExport = 48.073
    ..
 
 ResConsAssm   "Exterior Wall Cons"  
@@ -2010,7 +2010,6 @@ ResWtrHtr   "HeatpumpZ1"
    TankOutside = 0
    ASHPTSrcOutside = 1
    EnergyFactor = 0.59
-   TankVolume = 50
    NonStdTankVolume = 275
    IntInsulRVal = 0
    ExtInsulRVal = 0
@@ -2048,7 +2047,6 @@ ResWtrHtr   "HeatpumpZ2"
    TankZone = "Zone2"
    ASHPTSrcOutside = 1
    EnergyFactor = 0.59
-   TankVolume = 50
    NonStdTankVolume = 275
    IntInsulRVal = 0
    ExtInsulRVal = 0

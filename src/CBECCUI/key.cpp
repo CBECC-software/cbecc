@@ -34,53 +34,11 @@
 #include "stdafx.h"
 #include "CUIGlobl.h"
 
+CString esSecurityKey = "MIIBOwIBAAJBAL5lFmZz1I2ZbDFId15RL3dyHnn2AIKW5LMy6Zh/Qq4Qwa+CBhHZ";
 
-#ifdef UI_CANRES
- #ifdef  UI_PROGYEAR2025
-  CString esSecurityKey = "599@3d9@AA8@A7(2;5IeRqJJy)NJ=Ovq87Pb6;wA94>aesl))?4rNqK9pyLL2f;.";	// reusing 2019/22 for now...
- #elif  UI_PROGYEAR2022
-  CString esSecurityKey = "599@3d9@AA8@A7(2;5IeRqJJy)NJ=Ovq87Pb6;wA94>aesl))?4rNqK9pyLL2f;.";	// reusing 2019 for now...
- #elif  UI_PROGYEAR2019
-  CString esSecurityKey = "599@3d9@AA8@A7(2;5IeRqJJy)NJ=Ovq87Pb6;wA94>aesl))?4rNqK9pyLL2f;.";	// 2019.1.0
- #elif  UI_PROGYEAR2016
-  CString esSecurityKey = "599@319@AA8@A7ay:jg0Ii2R@;ay+<Q86Ntvuu/1Snp,b0zs9f).Ka0fg/m.,L;J";
- #else
-  CString esSecurityKey = "599@319@AA8@A6vfow>Nq0jd,hQtx7@nP0::n?g3Wu2jdK9wpOjg=q<<8suO/I)S";
- #endif
-#elif  UI_CARES
- #ifdef  UI_PROGYEAR2025
-  CString esSecurityKey = "599@3d9@AA8@A8m89Q96=o*7z//ibKp:I3<-il+qdNjIpJf.q>03svMw@8(-1n;+";	// reusing 2019/22 for now...
- #elif  UI_PROGYEAR2022
-  CString esSecurityKey = "599@3d9@AA8@A8m89Q96=o*7z//ibKp:I3<-il+qdNjIpJf.q>03svMw@8(-1n;+";	// reusing 2019 for now...
- #elif  UI_PROGYEAR2019
-  CString esSecurityKey = "599@3d9@AA8@A8m89Q96=o*7z//ibKp:I3<-il+qdNjIpJf.q>03svMw@8(-1n;+";	// 2019.1.0
- #elif  UI_PROGYEAR2016
-  //CString esSecurityKey = "599@3d9@AA8@A6S?gvztikhLub8q7qkm(M+rr/0xQwRxO9rfz;djO/)LmS/P/@s7";	// 2016.3.0
-  CString esSecurityKey = "599@3d9@AA8@A6/br69,brb65evk,dq-(f7O0g8c,@Jx:y@+x9n3y9ySk4n7ckOe";	// 2016.3.1
- #else
-  CString esSecurityKey = "599@319@AA8@A6vfow>Nq0jd,hQtx7@nP0::n?g3Wu2jdK9wpOjg=q<<8suO/I)S";
- #endif
-#else
-CString esSecurityKey = "599@3d9@AA8@A6Mo<n(aQ9P(y><9wQM06Owb:mmPA97+M65bL(sS1jN1dzW?@s:(";
-#endif
-
-
-// ASCII codes:
-//   39- 47 : '-/  ->   91- 84
-//   48- 57 : 0-9  ->   83- 72
-//   58- 64 : :-@  ->   73- 66
-//   65- 91 : A-[  ->   65- 39
-//       92 : \    -> never translate from or to    
-//   93- 96 : ]-`  ->  126-121
-//   97-122 : a-z  ->  120- 95
-//  123-126 : {-~  ->   94- 91
-void TweakString( char* lpBuf, int length )  // consistent w/ BEMCmpMgr: CM_CharSwap()
-{  for (int i = 0; i < length; i++)
-	{	if      (lpBuf[i]>=39 && lpBuf[i]<=91)
-			      lpBuf[i] = 130 -lpBuf[i];
-		else if (lpBuf[i]>=93 && lpBuf[i]<=126)
-			      lpBuf[i] = 219 -lpBuf[i];
-		else     lpBuf[i] =      lpBuf[i];
-	}
+void TweakString( char* /*lpBuf*/, int /*length*/ )
+{  AfxMessageBox( "Tweak" );
 }
+
+
 

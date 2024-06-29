@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "070012-HotSml-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1466465847
-   ModDate = 1705888777
-   RunDate = 1705888778
+   ModDate = 1714768367
+   RunDate = 1714768368
    EffMetric = "SEER2/EER2/HSPF2"
    ZipCode = 95814
    HVACAutoSizing = 0
@@ -16,7 +16,7 @@ Proj   "070012-HotSml-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
+   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
    ProjFileName = "070012-HotSml-CECStd19.cibd"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
@@ -1019,6 +1019,7 @@ Spc   "ElevatorCoreFlr1"
    ThrmlZnRef = "CorridorFlr1 Thermal Zone"
    Vol = 1782
    SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 32"  
@@ -1381,6 +1382,7 @@ Spc   "FrontLoungeFlr1"
    SpcFuncDefaultsRef = "Hotel Function"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyGas"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 47"  
@@ -1617,6 +1619,7 @@ Spc   "FrontOfficeFlr1"
    SpcFuncDefaultsRef = "Office"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 57"  
@@ -1999,6 +2002,7 @@ Spc   "GuestRoom101"
    Vol = 3861.28
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom101 gstrm"
    ..
 
@@ -2147,6 +2151,7 @@ Spc   "GuestRoom102"
    Vol = 3861.28
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom102 gstrm"
    ..
 
@@ -2271,6 +2276,7 @@ Spc   "GuestRoom103"
    Vol = 3861.28
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom103 gstrm"
    ..
 
@@ -2395,6 +2401,7 @@ Spc   "GuestRoom104"
    Vol = 3861
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom104 gstrm"
    ..
 
@@ -2543,6 +2550,7 @@ Spc   "GuestRoom105"
    Vol = 3861
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom105 gstrm"
    ..
 
@@ -2644,6 +2652,7 @@ Spc   "LaundryRoomFlr1"
    SpcFuncDefaultsRef = "Laundry"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyGas"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 99"  
@@ -2787,6 +2796,7 @@ Spc   "MechanicalRoomFlr1"
    SpcFunc = "Electrical, Mechanical, Telephone Rooms"
    IntLPDReg = 0
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 105"  
@@ -2885,6 +2895,7 @@ Spc   "MeetingRoomFlr1"
    SpcFuncDefaultsRef = "Hotel Function"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyGas"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 109"  
@@ -3906,6 +3917,7 @@ Spc   "ElevatorCoreFlr2"
    Vol = 1458
    SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
    IsResCommon = 1
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 150"  
@@ -4225,6 +4237,7 @@ Spc   "GuestRoom201"
    Vol = 3159.23
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom201 gstrm"
    ..
 
@@ -4374,6 +4387,7 @@ Spc   "GuestRoom202_205"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom202_205 gstrm"
    ..
 
@@ -4569,6 +4583,7 @@ Spc   "GuestRoom206_208"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 3
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom206_208 gstrm"
    ..
 
@@ -4797,6 +4812,7 @@ Spc   "GuestRoom209_212"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom209_212 gstrm"
    ..
 
@@ -5063,6 +5079,7 @@ Spc   "GuestRoom213"
    Vol = 3159.23
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom213 gstrm"
    ..
 
@@ -5188,6 +5205,7 @@ Spc   "GuestRoom214"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom214 gstrm"
    ..
 
@@ -5338,6 +5356,7 @@ Spc   "GuestRoom215_218"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom215_218 gstrm"
    ..
 
@@ -5580,6 +5599,7 @@ Spc   "GuestRoom219"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom219 gstrm"
    ..
 
@@ -5682,6 +5702,7 @@ Spc   "GuestRoom220_223"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom220_223 gstrm"
    ..
 
@@ -5900,6 +5921,7 @@ Spc   "GuestRoom224"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom224 gstrm"
    ..
 
@@ -6809,6 +6831,7 @@ Spc   "ElevatorCoreFlr3"
    Vol = 1458
    SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
    IsResCommon = 1
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 267"  
@@ -7128,6 +7151,7 @@ Spc   "GuestRoom301"
    Vol = 3159.23
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom301 gstrm"
    ..
 
@@ -7277,6 +7301,7 @@ Spc   "GuestRoom302_305"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom302_305 gstrm"
    ..
 
@@ -7472,6 +7497,7 @@ Spc   "GuestRoom306_308"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 3
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom306_308 gstrm"
    ..
 
@@ -7644,6 +7670,7 @@ Spc   "GuestRoom309_312"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom309_312 gstrm"
    ..
 
@@ -7838,6 +7865,7 @@ Spc   "GuestRoom313"
    Vol = 3159.23
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom313 gstrm"
    ..
 
@@ -7963,6 +7991,7 @@ Spc   "GuestRoom314"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom314 gstrm"
    ..
 
@@ -8113,6 +8142,7 @@ Spc   "GuestRoom315_318"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom315_318 gstrm"
    ..
 
@@ -8307,6 +8337,7 @@ Spc   "GuestRoom319"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom319 gstrm"
    ..
 
@@ -8409,6 +8440,7 @@ Spc   "GuestRoom320_323"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom320_323 gstrm"
    ..
 
@@ -8603,6 +8635,7 @@ Spc   "GuestRoom324"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom324 gstrm"
    ..
 
@@ -9551,6 +9584,7 @@ Spc   "ElevatorCoreFlr4"
    Vol = 1458
    SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
    IsResCommon = 1
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 377"  
@@ -9939,6 +9973,7 @@ Spc   "GuestRoom401"
    Vol = 3159.23
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom401 gstrm"
    ..
 
@@ -10111,6 +10146,7 @@ Spc   "GuestRoom402_405"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom402_405 gstrm"
    ..
 
@@ -10329,6 +10365,7 @@ Spc   "GuestRoom406_408"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 3
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom406_408 gstrm"
    ..
 
@@ -10524,6 +10561,7 @@ Spc   "GuestRoom409_412"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom409_412 gstrm"
    ..
 
@@ -10741,6 +10779,7 @@ Spc   "GuestRoom413"
    Vol = 3159.23
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom413 gstrm"
    ..
 
@@ -10889,6 +10928,7 @@ Spc   "GuestRoom414"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom414 gstrm"
    ..
 
@@ -11062,6 +11102,7 @@ Spc   "GuestRoom415_418"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom415_418 gstrm"
    ..
 
@@ -11279,6 +11320,7 @@ Spc   "GuestRoom419"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom419 gstrm"
    ..
 
@@ -11404,6 +11446,7 @@ Spc   "GuestRoom420_423"
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
    HotelMotelGuestRmCnt = 4
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom420_423 gstrm"
    ..
 
@@ -11621,6 +11664,7 @@ Spc   "GuestRoom424"
    Vol = 3159
    SpcFuncDefaultsRef = "Hotel Guest Room"
    ResDHWSysRef = "GuestRm DHW Sys"
+   OccSensorCtrl = 1
    GuestRmResSpcDHWFeaturesRef = "GuestRoom424 gstrm"
    ..
 
@@ -14178,24 +14222,24 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse5[23] = "0.00"
    Enduse6[1] = "Domestic Hot Water"
    Enduse6[2] = "0.6"
-   Enduse6[3] = "542.2"
-   Enduse6[4] = "45.71"
+   Enduse6[3] = "539.5"
+   Enduse6[4] = "45.49"
    Enduse6[5] = "3.7"
-   Enduse6[6] = "552.1"
-   Enduse6[7] = "48.52"
-   Enduse6[8] = "2.81"
+   Enduse6[6] = "550.2"
+   Enduse6[7] = "48.37"
+   Enduse6[8] = "2.88"
    Enduse6[9] = "0.0"
    Enduse6[10] = "0.4"
-   Enduse6[11] = "11.17"
-   Enduse6[12] = "11.57"
-   Enduse6[13] = "0.40"
+   Enduse6[11] = "11.12"
+   Enduse6[12] = "11.53"
+   Enduse6[13] = "0.41"
    Enduse6[17] = "0.04"
-   Enduse6[18] = "31.71"
-   Enduse6[19] = "31.75"
+   Enduse6[18] = "31.55"
+   Enduse6[19] = "31.59"
    Enduse6[20] = "0.53"
-   Enduse6[21] = "32.29"
-   Enduse6[22] = "32.82"
-   Enduse6[23] = "1.07"
+   Enduse6[21] = "32.17"
+   Enduse6[22] = "32.70"
+   Enduse6[23] = "1.11"
    Enduse7[1] = "Indoor Lighting"
    Enduse7[2] = "36.6"
    Enduse7[3] = "--"
@@ -14216,24 +14260,24 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
    Enduse8[2] = "78.4"
-   Enduse8[3] = "875.3"
-   Enduse8[4] = "146.25"
+   Enduse8[3] = "872.6"
+   Enduse8[4] = "146.03"
    Enduse8[5] = "81.5"
-   Enduse8[6] = "885.4"
-   Enduse8[7] = "149.08"
-   Enduse8[8] = "2.83"
+   Enduse8[6] = "883.5"
+   Enduse8[7] = "148.93"
+   Enduse8[8] = "2.90"
    Enduse8[9] = "12.0"
    Enduse8[10] = "12.4"
-   Enduse8[11] = "23.15"
-   Enduse8[12] = "23.55"
-   Enduse8[13] = "0.40"
+   Enduse8[11] = "23.10"
+   Enduse8[12] = "23.51"
+   Enduse8[13] = "0.41"
    Enduse8[17] = "13.47"
-   Enduse8[18] = "51.19"
-   Enduse8[19] = "64.66"
+   Enduse8[18] = "51.03"
+   Enduse8[19] = "64.50"
    Enduse8[20] = "13.96"
-   Enduse8[21] = "51.78"
-   Enduse8[22] = "65.74"
-   Enduse8[23] = "1.08"
+   Enduse8[21] = "51.66"
+   Enduse8[22] = "65.62"
+   Enduse8[23] = "1.12"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "132.1"
    Enduse9[3] = "6.9"
@@ -14338,44 +14382,44 @@ EUseSummary   "Res Pol 15% RetAdd CH4Leak 20yr"
    Enduse14[23] = "0.00"
    Enduse15[1] = "TOTAL"
    Enduse15[2] = "257.9"
-   Enduse15[3] = "882.2"
-   Enduse15[4] = "265.02"
+   Enduse15[3] = "879.5"
+   Enduse15[4] = "264.80"
    Enduse15[5] = "261.0"
-   Enduse15[6] = "892.3"
-   Enduse15[7] = "267.85"
-   Enduse15[8] = "2.83"
+   Enduse15[6] = "890.4"
+   Enduse15[7] = "267.70"
+   Enduse15[8] = "2.90"
    Enduse15[9] = "34.9"
    Enduse15[10] = "35.2"
-   Enduse15[11] = "34.17"
-   Enduse15[12] = "34.57"
-   Enduse15[13] = "0.40"
+   Enduse15[11] = "34.12"
+   Enduse15[12] = "34.53"
+   Enduse15[13] = "0.41"
    Enduse15[17] = "41.97"
-   Enduse15[18] = "51.59"
-   Enduse15[19] = "93.56"
+   Enduse15[18] = "51.43"
+   Enduse15[19] = "93.40"
    Enduse15[20] = "42.46"
-   Enduse15[21] = "52.18"
-   Enduse15[22] = "94.64"
-   Enduse15[23] = "1.08"
+   Enduse15[21] = "52.06"
+   Enduse15[22] = "94.52"
+   Enduse15[23] = "1.12"
    Enduse16[1] = "Efficiency Compliance"
    Enduse16[2] = "113.6"
-   Enduse16[3] = "875.3"
-   Enduse16[4] = "162.37"
+   Enduse16[3] = "872.6"
+   Enduse16[4] = "162.15"
    Enduse16[5] = "116.7"
-   Enduse16[6] = "885.4"
-   Enduse16[7] = "165.20"
-   Enduse16[8] = "2.83"
+   Enduse16[6] = "883.5"
+   Enduse16[7] = "165.05"
+   Enduse16[8] = "2.90"
    Enduse16[9] = "12.1"
    Enduse16[10] = "12.5"
-   Enduse16[11] = "23.58"
-   Enduse16[12] = "23.98"
-   Enduse16[13] = "0.40"
+   Enduse16[11] = "23.53"
+   Enduse16[12] = "23.94"
+   Enduse16[13] = "0.41"
    Enduse16[17] = "14.60"
-   Enduse16[18] = "51.19"
-   Enduse16[19] = "65.79"
+   Enduse16[18] = "51.03"
+   Enduse16[19] = "65.63"
    Enduse16[20] = "15.09"
-   Enduse16[21] = "51.78"
-   Enduse16[22] = "66.87"
-   Enduse16[23] = "1.08"
+   Enduse16[21] = "51.66"
+   Enduse16[22] = "66.75"
+   Enduse16[23] = "1.12"
    ZoneUMLHsLoaded = ( 0, 1 )
    ZoneUMLHs = ( 
                  "clg: 0  htg: 0  'CorridorFlr1 Thermal Zone'
@@ -14515,23 +14559,23 @@ clg: 0  htg: 14  'GuestRoom424 Thermal Zone'" )
    AnalysisValid = 0
    HideCompSmrySrc = 0
    HideCompSmryTot = 0
-   PctSavingsTDV = 1.05656
-   PctSavingsEffTDV = 1.71308
-   PctSavingsCmpTDV = 1.89831
+   PctSavingsTDV = 1.0833
+   PctSavingsEffTDV = 1.75704
+   PctSavingsCmpTDV = 1.94722
    PctSavTDVLbl = "1.1"
-   PctSavEffTDVLbl = "1.7"
+   PctSavEffTDVLbl = "1.8"
    PctSavCmpTDVLbl = "1.9"
-   PctSavingsSrc = 1.15707
-   PctSavingsEffSrc = 1.66806
-   PctSavingsCmpSrc = 1.69851
+   PctSavingsSrc = 1.18737
+   PctSavingsEffSrc = 1.71261
+   PctSavingsCmpSrc = 1.74394
    PctSavSrcLbl = "1.2"
    PctSavEffSrcLbl = "1.7"
    PctSavCmpSrcLbl = "1.7"
    MarginkW = 0.3
    PVBattResultsValid = 1
    PropDHWNames_SSF[1] = "DHW Solar System 1"
-   PropDHW_SSF[1] = 0.353
-   StdDHW_SSF = 0.341
+   PropDHW_SSF[1] = 0.355
+   StdDHW_SSF = 0.342
    DHW_SSF_Summary = ( "DHW SSF:", "0.35", "0.34" )
    PropPV_Total = 35186.9
    PropPV_Export = 0
@@ -14539,8 +14583,8 @@ clg: 0  htg: 14  'GuestRoom424 Thermal Zone'" )
    StdPV_Total = 35186.9
    StdPV_Export = 0
    StdPV_PctExport = 0
-   NRCCPRFPayldTransID = "730fa201-fa35-46d9-a4fd-578126e9e7e8"
-   NRCCPRFPayldProcDate = "2024-01-21T17:59:00"
+   NRCCPRFPayldTransID = "a9d0882c-2d79-48c0-9c56-46e3b4b8df23"
+   NRCCPRFPayldProcDate = "2024-05-03T13:32:10"
    ..
 
 ResDHWSys   "GuestRm DHW Sys"  

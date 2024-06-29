@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "050012-RetlMed-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414952024
-   ModDate = 1705888526
-   RunDate = 1705888527
+   ModDate = 1714767996
+   RunDate = 1714767997
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -13,7 +13,7 @@ Proj   "050012-RetlMed-CECStd22"
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
+   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -147,6 +147,7 @@ Spc   "Back_Space"
    Vol = 81782
    SpcFuncDefaultsRef = "Retail Back_Space"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 1"  
@@ -313,6 +314,7 @@ Spc   "Core_Retail"
    Vol = 344549
    SpcFuncDefaultsRef = "Retail Sales"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 8"  
@@ -1340,6 +1342,7 @@ Spc   "Front_Entry"
    SpcFuncDefaultsRef = "Retail Main Entry"
    Skylit100PctControlled = 0
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 38"  
@@ -1507,6 +1510,7 @@ Spc   "Front_Retail"
    Vol = 32466.1
    SpcFuncDefaultsRef = "Retail Sales"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 45"  
@@ -1649,6 +1653,7 @@ Spc   "Point_Of_Sale"
    Vol = 32466.1
    SpcFuncDefaultsRef = "Retail Sales"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 51"  
@@ -2398,12 +2403,12 @@ clg: 0  htg: 0  'Point_Of_Sale Thermal Zone'" )
    PVBattResultsValid = 1
    PropPV_Total = 95985.6
    PropPV_Export = 1813.29
-   PropPV_PctExport = 1.88912
+   PropPV_PctExport = 1.88913
    StdPV_Total = 95985.6
    StdPV_Export = 1815.51
    StdPV_PctExport = 1.89144
-   NRCCPRFPayldTransID = "a326e7fd-7509-4d88-9df8-3d1007acd4c4"
-   NRCCPRFPayldProcDate = "2024-01-21T17:55:14"
+   NRCCPRFPayldTransID = "e6eb7ffc-edc5-4a17-89e6-a8687abee25b"
+   NRCCPRFPayldProcDate = "2024-05-03T13:26:24"
    ..
 
 

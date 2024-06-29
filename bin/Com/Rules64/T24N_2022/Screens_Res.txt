@@ -377,7 +377,7 @@
 ;      BDBase            Page                                               
 ;      Component          ID   Module(s)   Caption                          
 ;----------------------------------------------------------------
- TAB, "DwellUnitType",   401,      15,    "   Dwelling Unit Type Data   "
+ TAB, "DwellUnitType",   401,      15,    "  Dwelling Unit Type Data  "
 
    ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    ;       BDBase                  Ctrl                                                 | Control Label                                              | Units Label         | Editable        | Display      Erase X | 
@@ -499,7 +499,7 @@
 ;      BDBase            Page                                               
 ;      Component          ID   Module(s)   Caption                          
 ;----------------------------------------------------------------
- TAB, "DwellUnitType",   402,      15,    "   Indoor Air Quality Vent   "
+ TAB, "DwellUnitType",   402,      15,    "  Indoor Air Quality Vent  "
 
    ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    ;       BDBase                  Ctrl                                                 | Control Label                                              | Units Label         | Editable        | Display      Erase X | 
@@ -577,7 +577,7 @@
 ;      BDBase            Page                                               
 ;      Component          ID   Module(s)   Caption                          
 ;----------------------------------------------------------------
- TAB, "DwellUnitType",   403,      15,    "   Additional HVAC Equip. Assignments   "
+ TAB, "DwellUnitType",   403,      15,    "  Add'l HVAC Equip. Assignments  "
 
    ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    ;       BDBase                  Ctrl                                                 | Control Label                                              | Units Label         | Editable        | Display      Erase X | 
@@ -706,7 +706,7 @@
 ;      BDBase            Page                                               
 ;      Component          ID   Module(s)   Caption                          
 ;----------------------------------------------------------------
- TAB, "DwellUnitType",   404,      15,    "   Additional DHW System Details   "
+ TAB, "DwellUnitType",   404,      15,    "  Add'l DHW System Details  "
 
    ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    ;       BDBase                  Ctrl                                                 | Control Label                                              | Units Label         | Editable        | Display      Erase X | 
@@ -773,6 +773,44 @@
 ;    CTRL, "DHWSolFracMon[10]",    30116, TDCT_Edit,   595, 600,  25,  50, 11, FNT_STD, "Oct:",                                    TA_LEFT,   -35, 4,     0, TA_LEFT, 1, 0,  None,       HtEqpUsedAsDHWHtr > 0 And DHWSolFracType = 2,    -37,  0,  ""
 ;    CTRL, "DHWSolFracMon[11]",    30117, TDCT_Edit,   705, 570,  25,  50, 11, FNT_STD, "Nov:",                                    TA_LEFT,   -35, 4,     0, TA_LEFT, 1, 0,  None,       HtEqpUsedAsDHWHtr > 0 And DHWSolFracType = 2,    -37,  0,  ""             
 ;    CTRL, "DHWSolFracMon[12]",    30118, TDCT_Edit,   705, 600,  25,  50, 11, FNT_STD, "Dec:",                                    TA_LEFT,   -35, 4,     0, TA_LEFT, 1, 0,  None,       HtEqpUsedAsDHWHtr > 0 And DHWSolFracType = 2,    -37,  0,  ""
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+;----------------------------------------------------------------
+;      BDBase            Page                                               
+;      Component          ID   Module(s)   Caption                          
+;----------------------------------------------------------------
+ TAB, "DwellUnitType",   405,      15,    "  Acceptance Certificates  "
+
+   ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   ;       BDBase                  Ctrl                                                 | Control Label                                              | Units Label         | Editable        | Display      Erase X | 
+   ;       Parameter                ID   Ctrl Type     X    Y    Ht   Wd   Val  Font    | Label                                   Justif.     DX  DY | Disp  Just    DX DY | Condition       | Condition    Lft Rgt | Status Bar Msg
+   ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	 CTRL, "Active",                4100, TDCT_Combo,  260,  10, 350, 200, 25, FNT_STD, "Currently Active Dwelling Unit Type:",    TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected DwellUnitType"
+	 CTRL, "",                      4101, TDCT_Line,    10,  45, 805,  45, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+	 CTRL, "Description",           4102, TDCT_Label,  480,  14,  19, 325,  0, FNT_STD, "",                                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,   0,  ""
+
+   CTRL, "",                     3030, TDCT_Line,    10, 140, 740, 140, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                     3311, TDCT_Label,   20, 150,  20,   0,  0, FNT_STD, "Check Acceptance Certificates that are required for this system. ",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  None,  0,  0,  ""
+   CTRL, "NRCAMch02A",           3312, TDCT_Check,   20, 180,  22, 380,  0, FNT_STD, "NRCA-MCH-02-A Outdoor Air",                 TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch03A",           3313, TDCT_Check,   20, 200,  22, 380,  0, FNT_STD, "NRCA-MCH-03-A Constant Volume, Single Zone, Unitary", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0, None      None,       0,  0,  ""
+   CTRL, "",                     3314, TDCT_Label,   20, 221,  20,   0,  0, FNT_STD, "     (Packaged and Split) AC and Heat Pump Systems (Use for JA5 thermostats. When EMCS, use MCH-11)", TA_LEFT, 0, 0, 0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
+   CTRL, "NRCAMch04H",           3315, TDCT_Check,   20, 240,  22, 380,  0, FNT_STD, "NRCA-MCH-04-A Air Distribution Duct Leakage", TA_LEFT,  0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch05A",           3316, TDCT_Check,   20, 260,  22, 380,  0, FNT_STD, "NRCA-MCH-05-A Economizer Controls",         TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch06A",           3317, TDCT_Check,   20, 280,  22, 380,  0, FNT_STD, "NRCA-MCH-06-A DCV",                         TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch07A",           3318, TDCT_Check,   20, 300,  22, 380,  0, FNT_STD, "NRCA-MCH-07-A Supply Fan Variable Flow Controls", TA_LEFT, 0, 4,  0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch11A",           3321, TDCT_Check,   20, 320,  22, 800,  0, FNT_STD, "NRCA-MCH-11-A Auto. Demand Shed Controls (Use for EMCS. When JA5 thermostat, use MCH-03)",  TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch12A",           3322, TDCT_Check,   20, 340,  22, 380,  0, FNT_STD, "NRCA-MCH-12-A FDD for DX Packaged Units",   TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch13A",           3323, TDCT_Check,   20, 360,  22, 380,  0, FNT_STD, "NRCA-MCH-13-A Auto. FDD for AHUs and Zone Terminal Units", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0, None, None,      0,  0,  ""
+   CTRL, "NRCAMch14A",           3324, TDCT_Check,   20, 380,  22, 380,  0, FNT_STD, "NRCA-MCH-14-A Dist. Energy Storage DX AC Systems", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch16A",           3326, TDCT_Check,   20, 400,  22, 380,  0, FNT_STD, "NRCA-MCH-16-A Supply Air Temp. Reset Controls", TA_LEFT, 0, 4,    0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch18A",           3328, TDCT_Check,   20, 420,  22, 380,  0, FNT_STD, "NRCA-MCH-18-A Energy Management Controls System",                        TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch19A",           3329, TDCT_Check,   20, 440,  22, 380,  0, FNT_STD, "NRCA-MCH-19-A - Occupancy Sensor Controls", TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""   
+   CTRL, "NRCAMch20H",           3330, TDCT_Check,   20, 460,  22, 800,  0, FNT_STD, "NRCA-MCH-20-H - Multifamily Ventilation (Use for individual dwelling unit ventilation systems)", TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""   
+   CTRL, "NRCAMch21A",           3331, TDCT_Check,   20, 480,  22, 380,  0, FNT_STD, "NRCA-MCH-21-A - Multifamily Envelope", TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""   
+   CTRL, "NRCAMch22A",           3332, TDCT_Check,   20, 500,  22, 380,  0, FNT_STD, "NRCA-MCH-22-A - System Duct Leakage",       TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""   
+   CTRL, "NRCAMch23A",           3333, TDCT_Check,   20, 520,  22, 800,  0, FNT_STD, "NRCA-MCH-23-A - HRV-ERV Verification (Use for central ventilation systems, Use MCH-20 for individual dwelling unit ventilation systems",      TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""   
+
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1239,8 +1277,8 @@
 
     CTRL, "MinIAQCFMLbl",          4514, TDCT_Label,   20, 199,  18, 500,  0, FNT_STD, "",                                     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
 
-	 CTRL, "WasherZoneRef",         4516, TDCT_Combo,  140, 230, 300, 170, 12, FNT_STD, "Washer Zone:",                         TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       HaveWasher > 0.5,   0,  0,  "Zone that contains the clothes washer for this DwellingUnit"
-	 CTRL, "DryerZoneRef",          4517, TDCT_Combo,  140, 260, 300, 170, 12, FNT_STD, "Dryer Zone:",                          TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       HaveDryer  > 0.5,   0,  0,  "Zone that contains the clothes dryer for this DwellingUnit"
+	 CTRL, "WasherZoneRef",         4516, TDCT_Combo,  140, 230, 300, 220, 12, FNT_STD, "Washer Zone:",                         TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       HaveWasher > 0.5,   0,  0,  "Zone that contains the clothes washer for this DwellingUnit"
+	 CTRL, "DryerZoneRef",          4517, TDCT_Combo,  140, 260, 300, 220, 12, FNT_STD, "Dryer Zone:",                          TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       HaveDryer  > 0.5,   0,  0,  "Zone that contains the clothes dryer for this DwellingUnit"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1617,6 +1655,8 @@
 	 CTRL, "WinVentHtDiff[2]",   3097, TDCT_Edit,   125, 370,  25,  55, 11, FNT_STD, "2:",                                         TA_RIGHT,   -5, 4,     1, TA_LEFT, 4, 4,  None,       ResProj:BypassRuleLimits > 0,                      -30,  20,  "Difference from default win vent ht for second lowest window vents in the zone"
 	 CTRL, "WinVentHtDiff[3]",   3098, TDCT_Edit,   220, 370,  25,  55, 11, FNT_STD, "3:",                                         TA_RIGHT,   -5, 4,     1, TA_LEFT, 4, 4,  None,       ResProj:BypassRuleLimits > 0 And NumStories > 2,   -30,  20,  "Difference from default win vent ht for third story windows in the zone"
 
+	 CTRL, "NumDwellingUnits",   3110, TDCT_Edit,   580,  12,  25,  50,  0, FNT_STD, "# dwellings:",                               TA_RIGHT,   -5, 4,     0, TA_LEFT, 0, 0,  Mult = -9,  None,                        0,  0,  "number of dwellings in this zone (excluding zone group multiplier)"
+
 ;	SAC 12/4/13 - mods for E+A+A
 ;	mjb	10/6/14 - mods for Additions needing existing HVAC
 	 CTRL, "HVACSysStatus",      3015, TDCT_Combo,  435, 150, 300,  80, 12, FNT_STD, "HVAC Sys Status:",                       	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,  Type < 10 And ResProj:RunScope = 2,   0,  0,  ""
@@ -1669,64 +1709,92 @@
 ;----------------------------------------------------------------
  TAB, "ResOtherZn",    306,      15,    "  OtherZone Data  "
 
-   ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   ;       BDBase               Ctrl                                               | Control Label                                                  | Units Label         | Editable  | Display     Erase X | 
-   ;       Parameter             ID   Ctrl Type     X    Y    Ht   Wd Val   Font   | Label                                        Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
-   ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	 CTRL, "Active",             3000, TDCT_Combo,  240,  10, 350, 220, 25, FNT_STD, "Currently Active OtherZone:",                TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected zone"
-	 CTRL, "",                   3001, TDCT_Line,    10,  45, 805,  45, -1, FNT_STD, "",                                           TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-                                                                                                                             
-	 CTRL, "Name",               3002, TDCT_Edit,    70,  60,  25, 220, 99, FNT_STD, "Name:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Name of this zone"
-	 CTRL, "Status",             3104, TDCT_Combo,  390,  60, 300,  75, 12, FNT_STD, "Zone Status:",                    	          TA_LEFT,   -85, 4,     0, TA_LEFT, 0, 0,  None,       ResProj:RunScope != 1,       0,  0,  ""
-	 CTRL, "Type",               3003, TDCT_Combo,   70,  90, 100, 125, 12, FNT_STD, "Type:",                                      TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Type of zone"
-      CTRL, "CondType",         3012, TDCT_Combo,  200,  90,  75,  90, 12, FNT_STD, "",                                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  Type < 10,       0,  0,  "Conditioned space is either directly conditioned or indirectly conditioned. (See §100.1[b] for full definition.)"
-	 CTRL, "SpcFunc",            3004, TDCT_Combo,  130, 120, 500, 340, 12, FNT_STD, "Space Function:",                            TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The area category occupancy type from Nonresidential Appendix 5.4A"
+   ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   ;       BDBase                     Ctrl                                               | Control Label                                        | Units Label         | Editable       | Display          Erase X |
+   ;       Parameter                   ID   Ctrl Type     X    Y    Ht   Wd Val   Font   | Label                              Justif.    DX  DY | Disp     Just DX DY | Condition      | Condition        Lft Rgt | Status Bar Msg
+   ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   CTRL, "Active",                   1001, TDCT_Combo,  180,  10, 580, 250, 25, FNT_STD, "Currently Active OtherZone:",      TA_RIGHT,   -8, 4,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  "The name of the currently selected zone"
+   CTRL, "Mult",                     1002  TDCT_Edit,   540,  10, 25,   70,  1, FNT_STD, "Multiplier:",                      TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  Type = -1,       None,              0,  0,  ""
+   CTRL, "",                         1003, TDCT_Line,    10,  45, 610,  45, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "",                         1004, TDCT_Line,   613,  15, 613,  43, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
 
-	 CTRL, "Mult",               3079, TDCT_Edit,   130, 160,  25,  75, 11, FNT_STD, "Zone Group Mult:",                           TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  Mult = -9,  Proj:EnableResearchMode > 0,       0,  0,  "Zone group (floor) multiplier"      ; SAC 04/30/23 (tic #3392)
-	 CTRL, "Area",               3005, TDCT_Edit,   130, 190,  25,  75, 11, FNT_STD, "Floor Area:",                                TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Floor area of zone measured to outside stud face of exterior walls and centerline if walls between zones"    
-	 CTRL, "NumStories",         3006, TDCT_Edit,   130, 220,  25,  75,  0, FNT_STD, "Stories:",                                   TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Number of stories in this zone"
-	 CTRL, "CeilingHeight",      3007, TDCT_Edit,   130, 250,  25,  75, 11, FNT_STD, "Ceiling Height:",                            TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Average ceiling height"                                                                                      
-	 CTRL, "FloorHeight",        3008, TDCT_Edit,   130, 280,  25,  75, 11, FNT_STD, "Floor to Floor:",                            TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Average ceiling height"                                                                                      
-	 CTRL, "Bottom",             3009, TDCT_Edit,   130, 310,  25,  75, 11, FNT_STD, "Bottom:",                                    TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Height of the top of the lowest floor in this zone / used for Airnet"                                        
-	 CTRL, "WinHeadHeight",      3010, TDCT_Edit,   130, 340,  25,  75, 11, FNT_STD, "Win Head Height:",                           TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Head height of the highest windows in the zone"
-    CTRL, "Perim",              3204, TDCT_Edit,   130, 370,  25,  75, 11, FNT_STD, "Perimeter",                                  TA_LEFT,  -110, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  "Perimeter of this zone. Required input if tailored method lighting input isused"
+   CTRL, "Name",                     1005, TDCT_Edit,   160,  60,  25, 250, 99, FNT_STD, "Zone Name:",                       TA_LEFT,  -140, 4,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  "The name or description used to identify the zone."
+   CTRL, "Type",                     1006, TDCT_Combo,  160,  90, 100, 135, 25, FNT_STD, "Conditioning Type:",               TA_LEFT,  -140, 4,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  "Type of zone"
+   CTRL, "CondType",                 1007, TDCT_Combo,  300,  90, 100, 110, 25, FNT_STD, "",                                 TA_LEFT,     0, 0,   0,  TA_LEFT,  0, 0,  None,            Type < 10,         0,  0,  "Conditioned space is either directly conditioned or indirectly conditioned. (See §100.1[b] for full definition.)"
 
-    CTRL, "PVBattSizeBldgType",            4021, TDCT_Combo, 445, 160, 300, 200, 25, FNT_STD, "PV/Batt Req Bldg Type:",           TA_LEFT,  -145, 4,     0, TA_LEFT, 0, 0,  None,       ShowPVBattSizeBldgType > 0,             -147,  0,  ""   ; SAC 01/16/23
-    CTRL, "BattReq_PartOfLargeTenantArea", 4020, TDCT_Check, 300, 190,  25, 210,  2, FNT_STD, "Part of >5,000 ft2 Tenant Area",   TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,       ShowBattReq_PartOfLargeTenantArea > 0,     0,  0,  ""   ; SAC 01/12/23
+   CTRL, "",                         1101, TDCT_Button, 160, 150,  25, 250,3067,FNT_STD, "Create and Assign Com AirSys",     TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1 And HVACSysStatus = 3 And ServedByAirSys = 0,   0,  0,  "Create AirSys equipment network and assign to this ResOtherZn"  ; SAC 05/17/22
+   CTRL, "",                         1102, TDCT_Label,   20, 180,  16,  98,  0, FNT_STD, "HVAC System:",                     TA_LEFT,     0, 0,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1,  0,  0,  ""
+   CTRL, "ozHVACSystem",             1103, TDCT_Combo,  160, 180, 200, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1 And HVACSysStatus = 3,                          0,  0,  "New HVAC system serving this zone"
+   CTRL, "ozHVACSystem",             1104, TDCT_Button, 385, 180,  25,  25,999, FNT_STD, "...",                              TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1 And HVACSysStatus = 3,                          0,  0,  "Access data describing HVAC system serving this zone"
+   CTRL, "AltHVACSystem",            1105, TDCT_Combo,  160, 180, 200, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 2,  0,  0,  "Altered HVAC system serving this zone"
+   CTRL, "AltHVACSystem",            1106, TDCT_Button, 385, 180,  25,  25,999, FNT_STD, "...",                              TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 2,  0,  0,  "Access data describing HVAC system serving this zone"
+   CTRL, "exHVACSystem",             1107, TDCT_Combo,  160, 180, 200, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 1,  0,  0,  "Existing HVAC system serving this zone"
+   CTRL, "exHVACSystem",             1108, TDCT_Button, 385, 180,  25,  25,999, FNT_STD, "...",                              TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,  Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 1,  0,  0,  "Access data describing HVAC system serving this zone"
+   CTRL, "AirSysCnt",                1109, TDCT_Edit,   160, 210,  25,  25, 25, FNT_STD, "AirSys Count:",                    TA_LEFT,  -140, 4,   0,  TA_LEFT,  4, 4,  None,  Type < 10 And CondType = 1 And ServedByAirSys = 1,   -62,   0,  ""   
 
-    ; revisions integrating HVACSysStatus & DHWSysStatus for EAA analysis - SAC 06/25/23 (tic #3479)
-	 CTRL, "HVACSysStatus",      3015, TDCT_Combo,  435, 220, 300,  80, 12, FNT_STD, "HVAC Sys Status:",                       	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1,  -122,  0,  "Status (new/altered/existing) of assigned HVAC system"
-    CTRL, "",                   2911, TDCT_Label,  375, 254,  16,  98,  0, FNT_STD, "HVAC System:",                               TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1,    0,  0,  ""
-    CTRL, "",                   2033, TDCT_Button, 530, 220,  22, 260,3067,FNT_STD, "Create and Assign Com AirSys",               TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And HVACSysStatus = 3 And ServedByAirSys = 0,    0,  0,  "Create AirSys equipment network and assign to this ResOtherZn"  ; SAC 05/17/22
-    CTRL, "ozHVACSystem",       3011, TDCT_Combo,  475, 250, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And HVACSysStatus = 3,    0,  0,  "New HVAC system serving this zone"
-    CTRL, "ozHVACSystem",       3111, TDCT_Button, 690, 250,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And HVACSysStatus = 3,    0,  0,  "Access data describing HVAC system serving this zone"
-    CTRL, "AltHVACSystem",      3211, TDCT_Combo,  475, 250, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 2,    0,  0,  "Altered HVAC system serving this zone"
-    CTRL, "AltHVACSystem",      3311, TDCT_Button, 690, 250,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 2,    0,  0,  "Access data describing HVAC system serving this zone"
-    CTRL, "exHVACSystem",       3411, TDCT_Combo,  475, 250, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 1,    0,  0,  "Existing HVAC system serving this zone"
-    CTRL, "exHVACSystem",       3511, TDCT_Button, 690, 250,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       Type < 10 And CondType = 1 And Proj:ResCompOpt > 1 And HVACSysStatus = 1,    0,  0,  "Access data describing HVAC system serving this zone"
+   CTRL, "NumStories",               1201, TDCT_Edit,   540,  60,  25,  70,  1, FNT_STD, "Stories:",                         TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  None,            None,              0,  0,  "Number of stories in this zone"
+   CTRL, "CeilingHeight",            1202, TDCT_Edit,   540,  90,  25,  70,  1, FNT_STD, "Flr-to-Clg Ht:",                   TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  None,            None,              0,  0,  "Average ceiling height"
+   CTRL, "FloorHeight",              1203, TDCT_Edit,   540, 120,  25,  70,  1, FNT_STD, "Flr-to-Flr Ht:",                   TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  None,            None,              0,  0,  "Average ceiling height"
+   CTRL, "Area",                     1204, TDCT_Edit,   540, 150,  25,  70,  1, FNT_STD, "Floor Area:",                      TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  None,            None,              0,  0,  "Floor area of zone measured to outside stud face of exterior walls and centerline if walls between zones"
+   CTRL, "Perim",                    1205, TDCT_Edit,   540, 180,  25,  70,  1, FNT_STD, "Perimeter:",                       TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  None,            None,              0,  0,  "Perimeter of this zone"
+   CTRL, "Bottom",                   1206, TDCT_Edit,   540, 210,  25,  70,  1, FNT_STD, "Bottom:",                          TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  None,            None,              0,  0,  "Height of the top of the lowest floor in this zone / used for Airnet"
+   CTRL, "WinHeadHeight",            1207, TDCT_Edit,   540, 240,  25,  70,  1, FNT_STD, "Win Head Ht:",                     TA_LEFT,   -85, 4,   1,  TA_LEFT,  4, 4,  None,            None,              0,  0,  "Head height of the highest windows in the zone"
+                                                                                                                                                                                                                
+   CTRL, "PVBattSizeBldgType",            1301, TDCT_Combo, 805,  60, 300, 175, 25, FNT_STD, "PV/Batt Req Bldg Type:",       TA_LEFT,  -145, 4,   0,  TA_LEFT,  0, 0,  None,  ShowPVBattSizeBldgType > 0,           -147,  0,  ""   ; SAC 01/16/23
+   CTRL, "BattReq_PartOfLargeTenantArea", 1302, TDCT_Check, 660,  90,  25, 210,  2, FNT_STD, "Part of >5,000 ft2 Tenant Area", TA_LEFT,   0, 4,   0,  TA_LEFT,  0, 0,  None,  ShowBattReq_PartOfLargeTenantArea > 0,   0,  0,  ""   ; SAC 01/12/23
 
-	 CTRL, "DHWSysStatus",       3115, TDCT_Combo,  435, 280, 300,  80, 12, FNT_STD, "DHW Sys Status:",                        	 TA_LEFT,  -120, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1,  -122,  0,  "Status (new/altered/existing) of assigned DHW system"
-    CTRL, "",                   2913, TDCT_Label,  375, 314,  16,  98,  0, FNT_STD, "DHW System:",                                TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0,     0,  0,  ""
-    CTRL, "ozDHWSys",           3013, TDCT_Combo,  475, 310, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And DHWSysStatus = 3,     0,  0,  "New DHW system serving this zone"        ; added disp cond of HasDHWUse - SAC 02/20/23 (tic #3418)
-    CTRL, "ozDHWSys",           3113, TDCT_Button, 690, 310,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And DHWSysStatus = 3,     0,  0,  "Access DHW system by the zone"
-    CTRL, "AltDHWSys",          3213, TDCT_Combo,  475, 310, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 2,    0,  0,  "Altered DHW system serving this zone"     ; SAC 06/25/23 (tic #3479)
-    CTRL, "AltDHWSys",          3313, TDCT_Button, 690, 310,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 2,    0,  0,  "Access data describing DHW system serving this zone"
-    CTRL, "exDHWSys",           3413, TDCT_Combo,  475, 310, 200, 210, 25, FNT_STD, "",                                           TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 1,    0,  0,  "Existing DHW system serving this zone"
-    CTRL, "exDHWSys",           3513, TDCT_Button, 690, 310,  22,  22,999, FNT_STD, "...",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 1,    0,  0,  "Access data describing DHW system serving this zone"
+   CTRL, "",                         1301, TDCT_Label,  660, 160,  20,   0,  0, FNT_STD, "Zone Status",                      TA_LEFT,     0, 0,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "",                         1302, TDCT_Line,   750, 168, 990, 168, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "Status",                   1303, TDCT_Combo,  740, 180, 300,  80, 25, FNT_STD, "Zone:",                            TA_LEFT,   -70, 4,   0,  TA_LEFT,  0, 0,  ResProj:RunScope != 1,  None,       0,  0,  ""
+;   CTRL, "LtgStatus",                1304, TDCT_Combo,  740, 210, 300,  80, 25, FNT_STD, "Lighting:",                        TA_LEFT,   -70, 4,   0,  TA_LEFT,  0, 0,  IntLtgSysChildren < 0.5, IntLtgSysChildren < 0.5,  0,  0,  ""
+;   CTRL, "SpcOverallLumStatus",      1305, TDCT_Edit,   740, 210,  25,  80, 25, FNT_STD, "Lighting*:",                       TA_LEFT,   -70, 4,   0,  TA_LEFT,  0, 0,  Type = -1,               IntLtgSysChildren > 0.5,  0,  0,  ""
+   CTRL, "HVACSysStatus",            1306, TDCT_Combo,  905, 180, 300,  70, 25, FNT_STD, "HVAC:",                            TA_LEFT,   -55, 4,   0,  TA_LEFT,  0, 0,  Proj:ResCompOpt > 1,  Type < 10 And CondType = 1,  -122,  0,  "Status (new/altered/existing) of assigned HVAC system"
+   CTRL, "DHWSysStatus",             1307, TDCT_Combo,  905, 210, 300,  70, 25, FNT_STD, "DHW:",                             TA_LEFT,   -55, 4,   0,  TA_LEFT,  0, 0,  Proj:ResCompOpt > 1,  ShowDHWSysAssignment > 0,    -122,  0,  "Status (new/altered/existing) of assigned DHW system"
 
-    CTRL, "DryerFuel",          3014, TDCT_Combo,  475, 340, 300, 100, 25, FNT_STD, "Dryer Fuel:",                                TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       LaundryArea > 0.5,   -105,  0,  "Fuel used for clothes dryer"  
+   CTRL, "",                         2001, TDCT_Line,    10, 291, 990, 291, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "SpcFunc",                  2002, TDCT_Combo,  130, 310, 360, 320, 12, FNT_STD, "Space Function:",                  TA_LEFT,  -100, 4,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "VentSpcFunc",              2003, TDCT_Combo,  130, 340, 300, 320, 25, FNT_STD, "Vent. Function:",                  TA_LEFT,  -100, 4,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "DryerFuel",                2004, TDCT_Combo,  540, 310, 300,  90, 25, FNT_STD, "Dryer Fuel:",                      TA_LEFT,   -80, 4,   0,  TA_LEFT,  0, 0,  None,            LaundryArea > 0.5, -60, 0, "Fuel used for clothes dryer"  
+   CTRL, "DsgnOcc",                  2005, TDCT_Check,  460, 340,  25, 150,  2, FNT_STD, "Designed Occupancy",               TA_LEFT,     0, 4,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""                
+   CTRL, "OccDens",                  2006, TDCT_Edit,   110, 370,  25,  50,  2, FNT_STD, "Occupancy:",                       TA_LEFT,   -80, 4,   1,  TA_LEFT,  4, 4,  Type = -1,       None,              0,  0,  ""
+   CTRL, "OccFrac",                  2007, TDCT_Edit,   305, 370,  25,  40,  2, FNT_STD, "x Fraction",                       TA_LEFT,   -60, 4,   0,  TA_LEFT,  4, 4,  Type = -1,       None,              0,  0,  ""
+   CTRL, "OccDensSim",               2008, TDCT_Edit,   360, 370,  25,  50,  2, FNT_STD, "=",                                TA_LEFT,   -12, 4,   1,  TA_LEFT,  4, 4,  Type = -1,       None,              0,  0,  ""
+   CTRL, "OccNumSim",                2009, TDCT_Edit,   635, 370,  25,  50,  1, FNT_STD, "Total Occupants:",                 TA_LEFT,  -100, 4,   1,  TA_LEFT,  4, 4,  Type = -1,       DsgnOcc = 0,       0,  0,  ""
+   CTRL, "DsgnOccNum",               2010, TDCT_Edit,   635, 370,  25,  50,  1, FNT_STD, "Total Occupants:",                 TA_LEFT,  -100, 4,   1,  TA_LEFT,  4, 4,  None,            DsgnOcc > 0,       0,  0,  ""
+
+   CTRL, "",                         3001, TDCT_Line,    10, 400, 990, 400, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "",                         3002, TDCT_Label,   30, 410,  16,  98,  0, FNT_STD, "DHW System:",                      TA_LEFT,     0, 0,   0,  TA_LEFT,  0, 0,  None,  ShowDHWSysAssignment > 0,    0,  0,  ""
+   CTRL, "ozDHWSys",                 3013, TDCT_Combo,  160, 410, 200, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,   0,  TA_LEFT,  0, 0,  None,  ShowDHWSysAssignment > 0 And DHWSysStatus = 3,                            0,  0,  "New DHW system serving this zone"        ; added disp cond of HasDHWUse - SAC 02/20/23 (tic #3418)
+   CTRL, "ozDHWSys",                 3113, TDCT_Button, 385, 410,  22,  22,999, FNT_STD, "...",                              TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,  ShowDHWSysAssignment > 0 And DHWSysStatus = 3,                            0,  0,  "Access DHW system by the zone"
+   CTRL, "AltDHWSys",                3213, TDCT_Combo,  160, 410, 200, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,   0,  TA_LEFT,  0, 0,  None,  ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 2,    0,  0,  "Altered DHW system serving this zone"     ; SAC 06/25/23 (tic #3479)
+   CTRL, "AltDHWSys",                3313, TDCT_Button, 385, 410,  22,  22,999, FNT_STD, "...",                              TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,  ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 2,    0,  0,  "Access data describing DHW system serving this zone"
+   CTRL, "exDHWSys",                 3413, TDCT_Combo,  160, 410, 200, 220, 25, FNT_STD, "",                                 TA_LEFT,    -1, 4,   0,  TA_LEFT,  0, 0,  None,  ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 1,    0,  0,  "Existing DHW system serving this zone"
+   CTRL, "exDHWSys",                 3513, TDCT_Button, 385, 410,  22,  22,999, FNT_STD, "...",                              TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,  ShowDHWSysAssignment > 0 And Proj:ResCompOpt > 1 And DHWSysStatus = 1,    0,  0,  "Access data describing DHW system serving this zone"
+
+   CTRL, "",                         4001, TDCT_Line,    10, 450, 990, 450, -1, FNT_STD, "",                                 TA_CENTER,   0, 0,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "IntLtgSpecMthd",           4002, TDCT_Combo,  160, 460, 300, 170, 25, FNT_STD, "Ltg. Specification:",              TA_LEFT,  -120, 4,   0,  TA_LEFT,  0, 0,  None,            None,              0,  0,  ""
+   CTRL, "IntLPDReg",                4003, TDCT_Edit,   160, 490,  25,  70,  2, FNT_STD, "Lighting:",                        TA_LEFT,  -120, 4,   1,  TA_LEFT,  4, 4,  None,      LPDUIDispToggle = 0,     0,  0,  ""
+   CTRL, "IntLPDRegSim",             4004, TDCT_Edit,   160, 490,  25,  70,  2, FNT_STD, "Lighting:*",                       TA_LEFT,  -120, 4,   1,  TA_LEFT,  4, 4,  Type < 0,  LPDUIDispToggle = 1,     0,  0,  ""
+
+;   CTRL, "IntLtgRegHtGnSpcFrac",     4005, TDCT_Edit,   360, 490,  25,  70,  2, FNT_STD, "Fraction to Space:",               TA_LEFT,   0, -18,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle < 0.5,  0,  0,  ""
+;   CTRL, "IntLtgRegHtGnSpcFracSim",  4006, TDCT_Edit,   360, 490,  25,  70,  2, FNT_STD, "Fraction to Space:",               TA_LEFT,   0, -18,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,  0,  0,  ""
+;   CTRL, "IntLtgRegHtGnRadFrac",     4007, TDCT_Edit,   500, 490,  25,  70,  2, FNT_STD, "Radiant Fraction:",                TA_LEFT,   0, -18,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle < 0.5,  0,  0,  ""
+;   CTRL, "IntLtgRegHtGnRadFracSim",  4008, TDCT_Edit,   500, 490,  25,  70,  2, FNT_STD, "Radiant Fraction:",                TA_LEFT,   0, -18,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,  0,  0,  ""
+
+;   CTRL, "IntLPDNonReg",             4009, TDCT_Edit,   160, 520,  25,  70,  2, FNT_STD, "NonReg. Lighting:",                TA_LEFT,  -120, 4,   1,  TA_LEFT,  4, 4,  LPDUIDispToggle < 0.5,  LPDUIDispToggle < 0.5,  0,  0,  ""
+;   CTRL, "IntLPDNonRegSim",          4010, TDCT_Edit,   160, 520,  25,  70,  2, FNT_STD, "NonReg. Lighting:",                TA_LEFT,  -120, 4,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,  0,  0,  ""
+
+;   CTRL, "IntLtgNonRegHtGnSpcFrac",   4011,TDCT_Edit,   360, 520,  25,  70,  2, FNT_STD, "",                                 TA_LEFT,   0,  -1,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle < 0.5,  0,  0,  ""
+;   CTRL, "IntLtgNonRegHtGnSpcFracSim",4012,TDCT_Edit,   360, 520,  25,  70,  2, FNT_STD, "",                                 TA_LEFT,   0,  -1,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,  0,  0,  ""
+;   CTRL, "IntLtgNonRegHtGnRadFrac",   4013,TDCT_Edit,   500, 520,  25,  70,  2, FNT_STD, "",                                 TA_LEFT,   0,  -1,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle < 0.5,  0,  0,  ""
+;   CTRL, "IntLtgNonRegHtGnRadFracSim",4014,TDCT_Edit,   500, 520,  25,  70,  2, FNT_STD, "",                                 TA_LEFT,   0,  -1,   1,  TA_LEFT,  4, 4,  Proj:AnalysisType = 99, LPDUIDispToggle > 0.5,  0,  0,  ""
+
+   CTRL, "RecptPwrDens",             4101, TDCT_Edit,   160, 520,  25,  70,  2, FNT_STD, "Plug Loads:",                      TA_LEFT,  -120, 4,   1,  TA_LEFT,  4, 4,  Type < 0,        None,              0,  0,  ""
+
+   CTRL, "SimInEnergyPlus",          5001, TDCT_Check,   40, 645,  22, 180,  0, FNT_STD, "Simulate in EnergyPlus",           TA_LEFT,     0, 0,   0,  TA_LEFT,  0, 0,  None,  ResProj:IsMultiFamily > 0 And Proj:EnableResearchMode > 0,  0,  0,  ""
 
    ; SAC 10/01/20 (tic #1247)
-	 CTRL, "AirFlowMeter",       3100, TDCT_Combo,  475, 370, 200,  80, 25, FNT_STD, "Air Flow Meter:",                            TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,  ResProj:CSERpt_Infiltration > 0,    -105,  0,  "This zone's air flow meter (for reporting)"
-
-   ; JP  03/15/22 (tic #3366)
-    CTRL, "",                   3205, TDCT_Label,   20, 430,  25,   0,  0, FNT_STD, "Lighting",                                   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-    CTRL, "",                   3206, TDCT_Line,    85, 438, 290, 438, -1, FNT_STD, "",                                           TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-	 CTRL, "IntLtgSpecMthd",     3201, TDCT_Combo,  130, 460,  75, 160, 25, FNT_STD, "Specification:",                             TA_LEFT,  -100, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The method for selecting baseline lighting for this zone"
-    CTRL, "IntLPDReg",          3202, TDCT_Edit,   130, 490,  25,  75, 11, FNT_STD, "Power Density:",                             TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,       LPDUIDispToggle = 0,       0,  0,  "Total regulated connected lighting power density for all interior lighting systems in a Space, including the loads for lamps and ballasts."
-    CTRL, "IntLPDRegSim",       3203, TDCT_Edit,   130, 490,  25,  75, 11, FNT_STD, "Power Density:",                             TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  Type < 0,   LPDUIDispToggle = 1,       0,  0,  "Total regulated connected lighting power density for all interior lighting systems in a Space, including the loads for lamps and ballasts."
-
-    CTRL, "SimInEnergyPlus",    3200, TDCT_Check,   20, 600,  22, 180,  0, FNT_STD, "Simulate in EnergyPlus",                     TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  ResProj:IsMultiFamily > 0 And Proj:EnableResearchMode > 0,  0,  0,  ""
+   CTRL, "AirFlowMeter",             6001, TDCT_Combo,  160, 610, 200,  80, 25, FNT_STD, "Air Flow Meter:",                  TA_LEFT,  -100, 4,   0,  TA_LEFT,  0, 0,  None,  ResProj:CSERpt_Infiltration > 0,    -105,  0,  "This zone's air flow meter (for reporting)"
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1740,7 +1808,7 @@
    ;       BDBase               Ctrl                                               | Control Label                                                  | Units Label         | Editable  | Display     Erase X | 
    ;       Parameter             ID   Ctrl Type     X    Y    Ht   Wd Val   Font   | Label                                        Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
    ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	 CTRL, "Active",             3000, TDCT_Combo,  240,  10, 350, 220, 25, FNT_STD, "Currently Active OtherZone:",                TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected zone"
+	 CTRL, "Active",             3000, TDCT_Combo,  180,  10, 580, 250, 25, FNT_STD, "Currently Active OtherZone:",                TA_RIGHT,   -8, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "The name of the currently selected zone"
 	 CTRL, "",                   3001, TDCT_Line,    10,  45, 805,  45, -1, FNT_STD, "",                                           TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                              
 	 CTRL, "VentSpcFunc",        3003, TDCT_Combo,  195,  60, 350, 300, 12, FNT_STD, "Ventilation Space Function:",                TA_LEFT,  -175, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Ventialtion category - options depend on the selected SpaceFunction (SpcFunc)"
@@ -1815,6 +1883,51 @@
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+;----------------------------------------------------------------
+;      BDBase      Page
+;      Component    ID   Module(s)   Caption
+;----------------------------------------------------------------
+TAB, "ResOtherZn",  308,      15,    "  Process Loads  "
+
+  ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ;       BDBase                     Ctrl                                                | Control Label                                        |   Units Label        | Editable            | Display     Erase X |
+  ;       Parameter                   ID   Ctrl Type     X    Y    Ht  Wd Val   Font     | Label                              Justif.    DX  DY |    Disp Just   DX DY | Condition           | Condition   Lft Rgt | Status Bar Msg
+  ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   CTRL, "Active",                   3100, TDCT_Combo,  180,  10, 580, 250, 25, FNT_STD, "Currently Active OtherZone:",      TA_RIGHT,    -8, 4,     0, TA_LEFT, 0, 0,  None,                   None,       0,  0,  "The name of the currently selected space"
+   CTRL, "",                         3101, TDCT_Line,    10,  45, 999,  45, -1, FNT_STD, "",                                 TA_CENTER,    0, 0,     0, TA_LEFT, 0, 0,  None,                   None,       0,  0,  ""
+                                                                                                                                                                                                                                                
+   CTRL, "",                          103, TDCT_Label,   30,  50,  20,   0,  0, FNT_STD, "-- Some fields on this page are defaulted based on Function Defaults selection on main Zone Data tab --",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+                                                                                                                                                                                                                                                
+   CTRL, "",                          104, TDCT_Label,   30, 150,  20,   0,  0, FNT_STD, "Process and Other Electric Use",    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                          105, TDCT_Line,   220, 158, 990, 158, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+                                                                                                                                                                                                                                                
+   CTRL, "ProcElecPwrDens",          3032, TDCT_Edit,   160, 180,  25,  70,  2, FNT_STD, "Process Electric:",                 TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecSchRef",           3033, TDCT_Combo,  740, 180, 300, 220, 25, FNT_STD, "Schedule Name*",                    TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecRadFrac",          3034, TDCT_Edit,   360, 180,  25,  70,  2, FNT_STD, "Radiant Frac.",                     TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecLatFrac",          3035, TDCT_Edit,   460, 180,  25,  70,  2, FNT_STD, "Latent Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcElecLostFrac",         3036, TDCT_Edit,   560, 180,  25,  70,  2, FNT_STD, "Lost Frac.",                        TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                         
+   CTRL, "ElevCnt",                  3040, TDCT_Edit,   160, 240,  25,  70,  2, FNT_STD, "Elevator Count:",                 TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ElevSchRef",               3041, TDCT_Combo,  740, 240, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "ElevLostFrac",             3042, TDCT_Edit,   560, 240,  25,  70,  2, FNT_STD, "Lost Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "EscalCnt",                 3043, TDCT_Edit,   160, 270,  25,  70,  2, FNT_STD, "Escalator Count:",                TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "EscalSchRef",              3044, TDCT_Combo,  740, 270, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1,   4,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "EscalLostFrac",            3045, TDCT_Edit,   560, 270,  25,  70,  2, FNT_STD, "",                               TA_RIGHT,   -4,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+                                                                                                                                                                                                                                                
+   CTRL, "",                          107, TDCT_Label,   30, 310,  20,   0,  0, FNT_STD, "Natural Gas Use",                 TA_LEFT,    0,   0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                          108, TDCT_Line,   135, 318, 990, 318, -1, FNT_STD, "",                              TA_CENTER,    0,   0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+                                                                                                                                                                                                                                                
+   CTRL, "GasEqpPwrDens",            3025, TDCT_Edit,   160, 340,  25,  70,  2, FNT_STD, "Gas Equipment**:",                TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "GasEqpSchRef",             3026, TDCT_Combo,  740, 340, 300, 220, 25, FNT_STD, "Schedule Name*",                  TA_LEFT,   -1, -18,     0, TA_LEFT, 0, 0,  Proj:AnalysisType = 3,       None,       0,  0,  ""
+   CTRL, "",                         3027, TDCT_Label,   30, 400,  20,   0,  0, FNT_DATATYPE, "**Gas equipment power density is the annual average value and other power density inputs are the peak values but does not include laundry equipment load",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+                                                                                                                                                                                                                                                
+   CTRL, "ProcGasPwrDens",           3050, TDCT_Edit,   160, 370,  25,  70,  2, FNT_STD, "Process Gas:",                    TA_LEFT, -120,   4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasSchRef",            3051, TDCT_Combo,  740, 370, 300, 220, 25, FNT_STD, "",                                TA_LEFT,   -1,   4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasRadFrac",           3052, TDCT_Edit,   360, 370,  25,  70,  2, FNT_STD, "Radiant Frac.",                   TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasLatFrac",           3053, TDCT_Edit,   460, 370,  25,  70,  2, FNT_STD, "Latent Frac",                     TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+   CTRL, "ProcGasLostFrac",          3054, TDCT_Edit,   560, 370,  25,  70,  2, FNT_STD, "Lost Frac.",                      TA_LEFT,   -1, -18,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------
 ;      BDBase        Page                                               
@@ -2978,23 +3091,23 @@
    CTRL, "",                     3300, TDCT_Line,    10,  45, 740,  45, -1, FNT_STD, "",                                    TA_CENTER,  0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
                                                                                                                                                                                                                                                 
    CTRL, "Name",                 3303, TDCT_Edit,   110,  60,  25, 270, 99, FNT_STD, "Name:",                               TA_LEFT,  -90, 4,     0, TA_LEFT, 0, 0,  Type = 99,  None, 0,  0,  ""
-   CTRL, "Type",                 3304, TDCT_Edit,   110,  90,  25, 100, 12, FNT_STD, "Type:",                               TA_LEFT,  -90, 4,     0, TA_LEFT, 0, 0,  Type = 99,  None, 0,  0,  ""
+   CTRL, "Type",                 3304, TDCT_Edit,   110,  90,  25, 270, 12, FNT_STD, "Type:",                               TA_LEFT,  -90, 4,     0, TA_LEFT, 0, 0,  Type = 99,  None, 0,  0,  ""
                                                                                                                             
    CTRL, "",                     3030, TDCT_Line,    10, 140, 740, 140, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "",                     3311, TDCT_Label,   20, 150,  20,   0,  0, FNT_STD, "Check Acceptance Certificates that are required for this system. ",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  None,  0,  0,  ""
    CTRL, "NRCAMch02A",           3312, TDCT_Check,   20, 180,  22, 380,  0, FNT_STD, "NRCA-MCH-02-A Outdoor Air",                 TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch03A",           3313, TDCT_Check,   20, 200,  22, 380,  0, FNT_STD, "NRCA-MCH-03-A Constant Volume, Single Zone, Unitary", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0, None      None,       0,  0,  ""
-   CTRL, "",                     3314, TDCT_Label,   20, 219,  20,   0,  0, FNT_STD, "    (Packaged and Split) AC and Heat Pump Systems", TA_LEFT, 0, 0, 0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
-   CTRL, "NRCAMch04H",           3315, TDCT_Check,   20, 240,  22, 380,  0, FNT_STD, "NRCA-MCH-04-H Air Distribution Duct Leakage", TA_LEFT,  0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "",                     3314, TDCT_Label,   20, 222,  20,   0,  0, FNT_STD, "    (Packaged and Split) AC and Heat Pump Systems (Use for JA5 thermostats. When EMCS, use MCH-11)", TA_LEFT, 0, 0, 0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
+   CTRL, "NRCAMch04H",           3315, TDCT_Check,   20, 240,  22, 380,  0, FNT_STD, "NRCA-MCH-04-A Air Distribution Duct Leakage", TA_LEFT,  0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch05A",           3316, TDCT_Check,   20, 260,  22, 380,  0, FNT_STD, "NRCA-MCH-05-A Economizer Controls",         TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch06A",           3317, TDCT_Check,   20, 280,  22, 380,  0, FNT_STD, "NRCA-MCH-06-A DCV",                         TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch07A",           3318, TDCT_Check,   20, 300,  22, 380,  0, FNT_STD, "NRCA-MCH-07-A Supply Fan Variable Flow Controls", TA_LEFT, 0, 4,  0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "NRCAMch11A",           3321, TDCT_Check,   20, 320,  22, 380,  0, FNT_STD, "NRCA-MCH-11-A Auto. Demand Shed Controls",  TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch11A",           3321, TDCT_Check,   20, 320,  22, 800,  0, FNT_STD, "NRCA-MCH-11-A Auto. Demand Shed Controls (Use for EMCS. When JA5 thermostat, use MCH-03)",  TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch12A",           3322, TDCT_Check,   20, 340,  22, 380,  0, FNT_STD, "NRCA-MCH-12-A FDD for DX Packaged Units",   TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch13A",           3323, TDCT_Check,   20, 360,  22, 380,  0, FNT_STD, "NRCA-MCH-13-A Auto. FDD for AHUs and Zone Terminal Units", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0, None, None,      0,  0,  ""
    CTRL, "NRCAMch14A",           3324, TDCT_Check,   20, 380,  22, 380,  0, FNT_STD, "NRCA-MCH-14-A Dist. Energy Storage DX AC Systems", TA_LEFT, 0, 4, 0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch16A",           3326, TDCT_Check,   20, 400,  22, 380,  0, FNT_STD, "NRCA-MCH-16-A Supply Air Temp. Reset Controls", TA_LEFT, 0, 4,    0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-   CTRL, "NRCAMch18A",           3328, TDCT_Check,   20, 420,  22, 380,  0, FNT_STD, "NRCA-MCH-18-A ECMS",                        TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+   CTRL, "NRCAMch18A",           3328, TDCT_Check,   20, 420,  22, 380,  0, FNT_STD, "NRCA-MCH-18-A Energy Management Controls System",                        TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch19A",           3329, TDCT_Check,   20, 440,  22, 380,  0, FNT_STD, "NRCA-MCH-19-A - Occupancy Sensor Controls", TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""   
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -4090,13 +4203,13 @@
    CTRL, "CHPWHCompTypeLbl",         30262, TDCT_Label,   40, 159,  18, 174, -1, FNT_STD, "",                                   TA_LEFT,     0, 0,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0,      0,  0,  ""     ; SAC 6/1/20
    CTRL, "CHPWHCompType",            30251, TDCT_Combo,  215, 155, 480, 350, 25, FNT_STD, "",                                   TA_LEFT,    -1, 4,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip >= 2,     0,  0,  "Central HPWH/compressor type"   ; SAC 1/3/20 (tic #862)
    CTRL, "CHPWHComModel",            30290, TDCT_Combo,  215, 155, 480, 350, 25, FNT_STD, "",                                   TA_LEFT,    -1, 4,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip = 1 And CHPWHIntegPkgType = 2,   0,  0,  "Central HPWH commercial product"   ; SAC 02/18/21 (tic #1260)
-   CTRL, "CHPWHNEEABrand",           30252, TDCT_Combo,  215, 155, 350, 115, 25, FNT_STD, "",                                   TA_LEFT,    -1, 4,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip = 1 And CHPWHIntegPkgType = 1,   0,  0,  "Brand of NEEA heat pump water heater"   ; SAC 6/1/20
-   CTRL, "CHPWHNEEAModel",           30253, TDCT_Combo,  340, 155, 350, 225, 25, FNT_STD, "",                                   TA_LEFT,    -1, 4,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip = 1 And CHPWHIntegPkgType = 1 And CHPWHNEEABrand > 1,   0,  0,  "Model of NEEA heat pump water heater" 
+   CTRL, "CHPWHNEEABrand",           30252, TDCT_Combo,  215, 155, 500, 115, 25, FNT_STD, "",                                   TA_LEFT,    -1, 4,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip = 1 And CHPWHIntegPkgType = 1,   0,  0,  "Brand of NEEA heat pump water heater"   ; SAC 6/1/20
+   CTRL, "CHPWHNEEAModel",           30253, TDCT_Combo,  340, 155, 500, 225, 25, FNT_STD, "",                                   TA_LEFT,    -1, 4,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip = 1 And CHPWHIntegPkgType = 1 And CHPWHNEEABrand > 1,   0,  0,  "Model of NEEA heat pump water heater" 
    CTRL, "CHPWHNumCompLbl",          30254, TDCT_Label,   40, 189,  18, 134, -1, FNT_STD, "",                                   TA_LEFT,     0, 0,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0,      0,  0,  ""      
    CTRL, "CHPWHNumComp",             30255, TDCT_Edit,   180, 185,  25,  50,  0, FNT_STD, "",                                   TA_LEFT,     0, 4,  0, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0 And Proj:EnableResearchMode < 0.5,   0,  0,  "Number of central HPWH heaters/compressors"
    CTRL, "CHPWHNumCompFlt",          30256, TDCT_Edit,   180, 185,  25,  50, 11, FNT_STD, "",                                   TA_LEFT,     0, 4,  0, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0 And Proj:EnableResearchMode > 0.5,   0,  0,  "Number of central HPWH heaters/compressors"
    CTRL, "CHPWHTankSetpt",           30257, TDCT_Edit,   180, 215,  25,  50, 11, FNT_STD, "Tank Setpoint:",                     TA_LEFT,  -140, 4,  1, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0 And CHPWHTankSetptEdit > 0,       -142, 30,  "Central HPWH storage tank setpoint temperature"
-   CTRL, "CHPWHTankRVal",            30261, TDCT_Edit,   180, 245,  25,  50, 11, FNT_STD, "Tank R-Value:",                      TA_LEFT,  -140, 4,  1, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip >= 2,   -142, 80,  "Central HPWH storage tank insulation R-value"
+   CTRL, "CHPWHTankRVal",            30261, TDCT_Edit,   180, 245,  25,  50, 11, FNT_STD, "Overall Tank R-Value:",              TA_LEFT,  -140, 4,  1, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip >= 2,   -142, 80,  "Central HPWH storage tank overall (exterior + interior) insulation R-value"  ; update label & tooltip msg - SAC 03/18/24
 
    CTRL, "CHPWHTotTankVol",          30258, TDCT_Edit,   390, 185,  25,  50, 11, FNT_STD, "Total Tank Vol:",                    TA_LEFT,   -95, 4,  1, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip >= 2,    -97, 30,  "Total primary tank volume (across all tanks)"  ; SAC 5/27/20
    CTRL, "",		                   30259, TDCT_Label,  475, 189,  18, 110, -1, FNT_STD, "(across all tanks)",                 TA_LEFT,     0, 0,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip >= 2 And CHPWHTankCount > 1,      0,  0,  ""      
@@ -4122,7 +4235,7 @@
    CTRL, "CHPWHLoopTankCompCntLbl",  30281, TDCT_Label,   60, 459,  18, 134, -1, FNT_STD, "",                                   TA_LEFT,     0, 0,  0, TA_LEFT, 0, 0,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0 And CHPWHLoopTankConfig > 0 And CHPWHLoopTankTypeVal > 0,    0,  0,  ""      
    CTRL, "CHPWHLoopTankCompCnt",     30274, TDCT_Edit,   200, 455,  25,  50,  0, FNT_STD, "",                                   TA_LEFT,    -1, 4,  0, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0 And CHPWHLoopTankConfig > 0 And CHPWHLoopTankTypeVal > 0,    0,  0,  "Number of central HPWH heaters/compressors"
    CTRL, "CHPWHLoopTankSetpt",       30275, TDCT_Edit,   200, 485,  25,  50, 11, FNT_STD, "Tank Setpoint:",                     TA_LEFT,  -140, 4,  1, TA_LEFT, 4, 4,  None,   CentralDHWTypeVal = 2 And CHPWHSysDescrip > 0 And CHPWHLoopTankConfig > 0 And CHPWHLoopTankTypeVal > 0 And CHPWHTankSetptEdit > 0,  -142, 30,  "Central HPWH secondary tank setpoint temperature"
-   CTRL, "CHPWHLoopTankRVal",        30279, TDCT_Edit,   200, 515,  25,  50, 11, FNT_STD, "Tank R-Value:",                      TA_LEFT,  -140, 4,  1, TA_LEFT, 4, 4,  None,   CHPWHLoopTankShowDtls > 0,  -142, 80,  "Central HPWH loop tank insulation R-value"
+   CTRL, "CHPWHLoopTankRVal",        30279, TDCT_Edit,   200, 515,  25,  50, 11, FNT_STD, "Overall Tank R-Value:",              TA_LEFT,  -140, 4,  1, TA_LEFT, 4, 4,  None,   CHPWHLoopTankShowDtls > 0,  -142, 80,  "Central HPWH loop tank overall (exterior + interior) insulation R-value"
 
    CTRL, "CHPWHLoopTankVol",         30276, TDCT_Edit,   410, 455,  25,  50, 11, FNT_STD, "Total Tank Vol:",                    TA_LEFT,   -95, 4,  1, TA_LEFT, 4, 4,  None,   CHPWHLoopTankShowDtls > 0,   -97, 35,  "Total secondary tank volume (across all tanks)"  ; SAC 5/27/20
    CTRL, "",		                   30277, TDCT_Label,  495, 459,  18,  80, -1, FNT_STD, "(all tanks)",                        TA_LEFT,     0, 0,  0, TA_LEFT, 0, 0,  None,   CHPWHLoopTankShowDtls > 0 And CHPWHLoopTankTankCnt > 1,      0,  0,  ""      
@@ -4301,7 +4414,7 @@
                                                                                                                             
    CTRL, "",                     3030, TDCT_Line,    10, 140, 890, 140, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "",                     3311, TDCT_Label,   20, 150,  20,   0,  0, FNT_STD, "Check Acceptance Certificates that are required for this system. ",   TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,  None,  0,  0,  ""
-   CTRL, "NRCAMch08A",           3318, TDCT_Check,   20, 180,  22, 350,  0, FNT_STD, "NRCA-MCH-08-A  Valve Leakage",               TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+;   CTRL, "NRCAMch08A",           3318, TDCT_Check,   20, 180,  22, 350,  0, FNT_STD, "NRCA-MCH-08-A  Valve Leakage",               TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch09A",           3319, TDCT_Check,   20, 200,  22, 350,  0, FNT_STD, "NRCA-MCH-09-A  Supply Water Temp. Reset",    TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch10A",           3320, TDCT_Check,   20, 220,  22, 350,  0, FNT_STD, "NRCA-MCH-10-A  Hyd. Variable Flow Control",  TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch11A",           3321, TDCT_Check,   20, 240,  22, 350,  0, FNT_STD, "NRCA-MCH-11-A  Auto. Demand Shed Controls",  TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""

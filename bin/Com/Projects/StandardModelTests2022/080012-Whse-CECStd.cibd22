@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "080012-Whse-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1415238845
-   ModDate = 1705888824
-   RunDate = 1705888825
+   ModDate = 1714768418
+   RunDate = 1714768419
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -14,7 +14,7 @@ Proj   "080012-Whse-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
+   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
    CompReportPDF = 1
    ..
 
@@ -174,6 +174,7 @@ Spc   "Spc_Office"
    Vol = 35694.8
    SpcFuncDefaultsRef = "Office Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 1"  
@@ -461,6 +462,7 @@ Spc   "Spc_FineStorage"
    ThrmlZnRef = "Zn_FineStorage"
    SpcFuncDefaultsRef = "Warehouse Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 13"  
@@ -1430,6 +1432,7 @@ Spc   "Spc_BulkStorage"
    Vol = 965859
    SpcFuncDefaultsRef = "Warehouse Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 PolyLp   "PolyLoop 165"  
@@ -5252,8 +5255,8 @@ clg: 0  htg: 0  'Zn_BulkStorage'" )
    StdPV_Total = 46537.4
    StdPV_Export = 6994.3
    StdPV_PctExport = 15.0294
-   NRCCPRFPayldTransID = "cabaa5d1-1f48-4a63-8736-12ea4068924d"
-   NRCCPRFPayldProcDate = "2024-01-21T18:00:14"
+   NRCCPRFPayldTransID = "75bdf05e-39e1-4106-a9be-002c8660ee47"
+   NRCCPRFPayldProcDate = "2024-05-03T13:33:27"
    ..
 
 

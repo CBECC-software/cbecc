@@ -46,9 +46,6 @@
 #include "stdafx.h"
 #include "expCrypFile.h"
 #include "memLkRpt.h"
-#include "BEMProc_FileIO.h"
-#include "BEMProc.h"
-#include "expTextIO.h"
 
 
 static const int MAX_CRYPTOFILE_BUFSIZE = 1024;
@@ -122,11 +119,7 @@ CryptoFile::CryptoFile(const char* pszFileName) : QFile(pszFileName)
 /////////////////////////////////////////////////////////////////////////////
 UINT CryptoFile::Read( void* lpBuf, UINT nCount )
 {
-   unsigned char* temp = (unsigned char*)lpBuf;
    UINT nRead = (UINT) QIODevice::read( (char*) lpBuf, nCount );
-
-   for ( UINT i = 0; i < nCount; i++ )
-      temp[ i ] = temp[ i ] >> 3 | temp[ i ] << 5;
 
    m_lByteCount += nCount;
 
@@ -136,7 +129,7 @@ UINT CryptoFile::Read( void* lpBuf, UINT nCount )
 void ExpCryptDecode( char* lpBuf, int length )
 {
    for (int i = 0; i < length; i++)
-      lpBuf[i] = lpBuf[i] >> 3 | lpBuf[i] << 5;
+      lpBuf[i] = lpBuf[i];
 }
 
 
@@ -171,11 +164,7 @@ void CryptoFile::Write( const void* lpBuf, UINT nCount )
                    nCount - start : MAX_CRYPTOFILE_BUFSIZE;
 
       for ( UINT i = 0; i < end; i++ )
-      {
-         // Simply swap bits around in each byte.
-         unsigned char temp3 = temp[ i ] >> 5 | temp[ i ] << 3;
-         buffer[ i ] = temp3;
-      }
+         buffer[ i ] = temp[ i ];
       // write encrypted bytes to the file
       QFile::write( (const char*) buffer, end );
       m_lByteCount += end;
@@ -186,7 +175,7 @@ void CryptoFile::Write( const void* lpBuf, UINT nCount )
 void ExpCryptEncode( char* lpBuf, int length )
 {
    for (int i = 0; i < length; i++)
-      lpBuf[i] = lpBuf[i] >> 5 | lpBuf[i] << 3;
+      lpBuf[i] = lpBuf[i];
 }
 
 

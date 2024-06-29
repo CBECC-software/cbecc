@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "030012S-OffMed-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1416416094
-   ModDate = 1705888343
-   RunDate = 1705888344
+   ModDate = 1714767780
+   RunDate = 1714767781
    GeometryInpType = "Simplified"
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
@@ -15,7 +15,7 @@ Proj   "030012S-OffMed-CECStd22"
    DefaultDayltgCtrls = 1
    AnalysisType = "Title24Compliance"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.0 SP2 (1335)"
+   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -150,6 +150,7 @@ Spc   "Core_bottom"
    Area = 10586.7
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 UndgrFlr   "Core_bot_ZN_5_Floor"  
@@ -189,6 +190,7 @@ Spc   "Perimeter_bot_ZN_1"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 UndgrFlr   "Perimeter_bot_ZN_1_Floor"  
@@ -226,6 +228,7 @@ Spc   "Perimeter_bot_ZN_2"
    Area = 1412.9
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 UndgrFlr   "Perimeter_bot_ZN_2_Floor"  
@@ -258,6 +261,7 @@ Spc   "Perimeter_bot_ZN_3"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 UndgrFlr   "Perimeter_bot_ZN_3_Floor"  
@@ -289,6 +293,7 @@ Spc   "Perimeter_bot_ZN_4"
    Area = 1412.8
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 UndgrFlr   "Perimeter_bot_ZN_4_Floor"  
@@ -313,6 +318,7 @@ Spc   "FirstFloor_Plenum"
    CondgType = "Plenum"
    ThrmlZnRef = "FirstFloor_Plenum Thermal Zone"
    Area = 17875.9
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Core_bot_ZN_5_Ceiling Reversed"  
@@ -381,6 +387,7 @@ Spc   "Core_mid"
    Area = 10586.7
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Core_mid_ZN_5_Floor"  
@@ -420,6 +427,7 @@ Spc   "Perimeter_mid_ZN_1"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_mid_ZN_1_Floor"  
@@ -459,6 +467,7 @@ Spc   "Perimeter_mid_ZN_2"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_mid_ZN_2_Floor"  
@@ -492,6 +501,7 @@ Spc   "Perimeter_mid_ZN_3"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_mid_ZN_3_Floor"  
@@ -525,6 +535,7 @@ Spc   "Perimeter_mid_ZN_4"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_mid_ZN_4_Floor"  
@@ -550,6 +561,7 @@ Spc   "MidFloor_Plenum"
    CondgType = "Plenum"
    ThrmlZnRef = "MidFloor_Plenum Thermal Zone"
    Area = 17875.9
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Core_mid_ZN_5_Ceiling Reversed"  
@@ -618,6 +630,7 @@ Spc   "Core_top"
    Area = 10586.7
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Core_top_ZN_5_Floor"  
@@ -656,6 +669,7 @@ Spc   "Perimeter_top_ZN_1"
    Area = 2231.76
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_top_ZN_1_Floor"  
@@ -695,6 +709,7 @@ Spc   "Perimeter_top_ZN_2"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_top_ZN_2_Floor"  
@@ -728,6 +743,7 @@ Spc   "Perimeter_top_ZN_3"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_top_ZN_3_Floor"  
@@ -761,6 +777,7 @@ Spc   "Perimeter_top_ZN_4"
    SpcFuncDefaultsRef = "Office Mod Defaults"
    SecSide100PctControlled = 1
    SHWFluidSegRef = "SHWSupplyElec"
+   OccSensorCtrl = 1
    ..
 
 IntFlr   "Perimeter_top_ZN_4_Floor"  
@@ -786,6 +803,7 @@ Spc   "TopFloor_Plenum"
    CondgType = "Plenum"
    ThrmlZnRef = "TopFloor_Plenum Thermal Zone"
    Area = 17875.9
+   OccSensorCtrl = 1
    ..
 
 Roof   "Building_Roof"  
@@ -1847,8 +1865,8 @@ clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'" )
    StdPV_Total = 262496
    StdPV_Export = 46807.7
    StdPV_PctExport = 17.8318
-   NRCCPRFPayldTransID = "07219fde-8678-4296-8f7e-cb6eb0e57097"
-   NRCCPRFPayldProcDate = "2024-01-21T17:52:09"
+   NRCCPRFPayldTransID = "1fd26eb9-f88d-4670-9c39-7db302319e5d"
+   NRCCPRFPayldProcDate = "2024-05-03T13:22:47"
    ..
 
 BatchRuns   "BatchRuns"  
