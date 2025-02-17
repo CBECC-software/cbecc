@@ -633,6 +633,8 @@ extern long elDBID_Proj_DDWeatherFile;
 extern long elDBID_Proj_AnnualWeatherFile; 
 extern long elDBID_Proj_ExcptDsgnModelFile; 
 
+extern long elDBID_CUAC_ResultsCSVToCombineDir;    // SAC 10/25/24
+
 extern long elDBID_PolyLp_Area;			// SAC 5/29/14 
 extern long elDBID_CartesianPt_Coord;	// SAC 5/29/14 
 
@@ -753,6 +755,7 @@ extern int eiBDBCID_ResClVentFan;
 #endif   // UI_CANRES
 
 #ifdef UI_CARES
+extern int eiBDBCID_CUAC;           // SAC 05/28/24 (CUAC, tic #1378)
 extern int eiBDBCID_RESNETBldg;		// SAC 9/27/20
 extern int eiBDBCID_DwellUnitType;	// SAC 6/18/14
 extern int eiBDBCID_DwellUnit;
@@ -813,6 +816,7 @@ extern long elDBID_Proj_ElecMETER;			// SAC 6/19/12
 extern long elDBID_Proj_NatGasMETER;		// SAC 6/19/12
 extern long elDBID_Proj_OtherFuelMETER;	// SAC 6/19/12
 extern long elDBID_Proj_RHERSEnabled;		// SAC 9/28/20
+extern long elDBID_CUAC_ResultsCSVToCombineDir;    // SAC 10/25/24
 //extern long elDBID_Site_WeatherFile;
 	// SAC 12/9/13 - added several Zone properties to enhance tree display to confirm to E+A+A assignments
 extern long elDBID_Zone_HVACSysStatus;			//	BEMP_Sym,   0,                            3008, "Status of HVAC System - New, Altered or Existing"                                      

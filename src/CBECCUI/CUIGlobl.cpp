@@ -70,6 +70,7 @@
 #include <stdio.h>
 #include <io.h>
 #include "Shlwapi.h"
+#include <tchar.h>      // SAC 06/08/24
 
 #include <QtWidgets/qapplication.h>
 #include <QtGui/QBrush>
@@ -1180,7 +1181,10 @@ BOOL FileExists( QString& qsFileName )
 
 BOOL FileExists( const char* pszFileName )
 {
-	return (PathFileExists( (LPCTSTR) pszFileName ) != FALSE);
+   //return (PathFileExists( (LPCTSTR) pszFileName ) != FALSE);
+   // replaced above w/ following due to exception thrown and stackoverflow guidance - SAC 06/08/24
+	LPCTSTR lpPath = TEXT(pszFileName);
+   return (PathFileExists( lpPath ) != FALSE);
 //   BOOL retVal = FALSE;
 //   if (pszFileName && strlen(pszFileName) > 0)
 //   {
@@ -1196,23 +1200,27 @@ BOOL FileExists( const char* pszFileName )
 
 BOOL DirectoryExists( const char* pszDirName )
 {
-   CString sDirName = pszDirName;
-   int len = sDirName.GetLength();
-   if (len > 0)
-   {
-      if (sDirName[len-1] != '\\')
-         sDirName += '\\';
-      sDirName += '.';
-
-      struct _finddata_t c_file;
-      long hFile = _findfirst( sDirName, &c_file );
-      if (hFile != -1)
-      {
-         _findclose( hFile );
-         return TRUE;
-      }
-   }
-   return FALSE;
+   DWORD dwAttrib = GetFileAttributes(pszDirName);
+   return (dwAttrib != INVALID_FILE_ATTRIBUTES && 
+          (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+   // try replacing below w/ above to avoid exception fault - SAC 06/08/24
+   // CString sDirName = pszDirName;
+   // int len = sDirName.GetLength();
+   // if (len > 0)
+   // {
+   //    if (sDirName[len-1] != '\\')
+   //       sDirName += '\\';
+   //    sDirName += '.';
+   // 
+   //    struct _finddata_t c_file;
+   //    long hFile = _findfirst( sDirName, &c_file );
+   //    if (hFile != -1)
+   //    {
+   //       _findclose( hFile );
+   //       return TRUE;
+   //    }
+   // }
+   // return FALSE;
 }
 
 void CreateAndChangeDirectory( const char* pszDirName, BOOL bRemoveDir /*=FALSE*/ )  // SAC 2/12/07 - added argument to facilitate directory deletion
@@ -2066,29 +2074,34 @@ static BOOL LoadRulesetList( CString& sINIRulesetFile )
             bChangedDrive = TRUE;
          }
 
-         long hFile = _findfirst( sFileFilter, &c_file );
-         if (hFile != -1)
-         {
-            QString sRulesetID, sRulesetVer;
-            CString sRulePath = ReadProgString( "paths", "RulesetPath", "", TRUE );
-            do
+         try      // add new try/catch - SAC 06/10/24
+         {  intptr_t hFile = _findfirst( sFileFilter, &c_file );     // switched from long - SAC 06/10/24
+            if (hFile != -1L)
             {
-               if (!bINIRulesetFileFound && sINIRulesetFile.CompareNoCase( c_file.name ) == 0)
-                  bINIRulesetFileFound = TRUE;
-
-               sRulesetFile = sRulePath + c_file.name;
-               if (CMX_ReadRulesetID( sRulesetFile, sRulesetID, sRulesetVer ) &&
-               	 (sCompatRulesetVerKey.IsEmpty() || sRulesetVer.indexOf( (const char*) sCompatRulesetVerKey ) >= 0))	// SAC 3/3/20
+               QString sRulesetID, sRulesetVer;
+               CString sRulePath = ReadProgString( "paths", "RulesetPath", "", TRUE );
+               do
                {
-//                  ssaRulesetSymString[eiNumRulesetsAvailable++].Format( "%s, %s (%s)", sRulesetID, sRulesetVer, c_file.name );
-                  ssaRulesetSymString[ eiNumRulesetsAvailable  ].Format( "%s (%s)", sRulesetVer.toLatin1().constData(), c_file.name );
-// SAC 2/1/99 - added to track all valid ruleset filenames
-                  ssaRulesetFileString[eiNumRulesetsAvailable++] = c_file.name;
-               }
+                  if (!bINIRulesetFileFound && sINIRulesetFile.CompareNoCase( c_file.name ) == 0)
+                     bINIRulesetFileFound = TRUE;
 
-            } while ( eiNumRulesetsAvailable < MAX_RULESETS_IN_DIRECTORY &&
-                      _findnext( hFile, &c_file ) == 0 );
-            _findclose( hFile );
+                  sRulesetFile = sRulePath + c_file.name;
+                  if (CMX_ReadRulesetID( sRulesetFile, sRulesetID, sRulesetVer ) &&
+                  	 (sCompatRulesetVerKey.IsEmpty() || sRulesetVer.indexOf( (const char*) sCompatRulesetVerKey ) >= 0))	// SAC 3/3/20
+                  {
+//                     ssaRulesetSymString[eiNumRulesetsAvailable++].Format( "%s, %s (%s)", sRulesetID, sRulesetVer, c_file.name );
+                     ssaRulesetSymString[ eiNumRulesetsAvailable  ].Format( "%s (%s)", sRulesetVer.toLatin1().constData(), c_file.name );
+// SAC 2/1/99 - added to track all valid ruleset filenames
+                     ssaRulesetFileString[eiNumRulesetsAvailable++] = c_file.name;
+                  }
+
+               } while ( eiNumRulesetsAvailable < MAX_RULESETS_IN_DIRECTORY &&
+                         _findnext( hFile, &c_file ) == 0 );
+               _findclose( hFile );
+            }
+         }
+         catch( ... )
+         {	AfxMessageBox( "Unknown exception thrown from CUIGlobl LoadRulesetList()." );
          }
       }
       CATCH(CException, e)
@@ -2574,6 +2587,7 @@ long elDBID_Proj_WeatherStation = 0;
 long elDBID_Proj_DDWeatherFile = 0;     
 long elDBID_Proj_AnnualWeatherFile = 0; 
 long elDBID_Proj_ExcptDsgnModelFile = 0; 
+long elDBID_CUAC_ResultsCSVToCombineDir = 0;    // SAC 10/25/24
 long elDBID_PolyLp_Area = 0;
 long elDBID_CartesianPt_Coord = 0;
 long elDBID_Spc_ResSpcDHWFeaturesRef = 0;		// SAC 1/23/19
@@ -2737,7 +2751,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_ResHVACSys)			{	iTabCtrlWd = 900;		iTabCtrlHt = 540;   }   // wd 750->900 - SAC 10/10/22
 	else if (iBDBClass == eiBDBCID_ResHtgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }      // SAC 08/18/21
 	else if (iBDBClass == eiBDBCID_ResClgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
-	else if (iBDBClass == eiBDBCID_ResHtPumpSys)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21
+	else if (iBDBClass == eiBDBCID_ResHtPumpSys)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 690;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21   // Ht 660->690 - SAC 07/21/24 (VCHP3)
 	else if (iBDBClass == eiBDBCID_ResCentralHtgClgSys) { iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 12/31/21 (MFam)
 	else if (iBDBClass == eiBDBCID_ResDistSys)	   	{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
 	else if (iBDBClass == eiBDBCID_ResFanSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
@@ -2816,6 +2830,7 @@ void GetObjectConversionInfo( int iBEMClassFrom, int iBEMClassTo, int& iDlgID, i
 #endif   // UI_CANRES
 
 #ifdef UI_CARES
+int eiBDBCID_CUAC = 0;        // SAC 05/28/24 (CUAC, tic #1378)
 int eiBDBCID_RESNETBldg = 0;		// SAC 9/27/20
 int eiBDBCID_DwellUnitType = 0;	// SAC 6/18/14
 int eiBDBCID_DwellUnit     = 0;
@@ -2876,6 +2891,7 @@ long elDBID_Proj_ElecMETER = 0;			// SAC 6/19/12
 long elDBID_Proj_NatGasMETER = 0;		// SAC 6/19/12
 long elDBID_Proj_OtherFuelMETER = 0;	// SAC 6/19/12
 long elDBID_Proj_RHERSEnabled = 0;		// SAC 9/28/20
+long elDBID_CUAC_ResultsCSVToCombineDir = 0;    // SAC 10/25/24
 //extern long elDBID_Site_WeatherFile;
 	// SAC 12/9/13 - added several Zone properties to enhance tree display to confirm to E+A+A assignments
 long elDBID_Zone_HVACSysStatus = 0;			//	BEMP_Sym,   0,                            3008, "Status of HVAC System - New, Altered or Existing"                                      
@@ -2979,7 +2995,8 @@ long elDBID_BatchRuns_RunSetDescrip = 0;
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
-	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 960;    iTabCtrlHt = 460;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890   - SAC 11/9/19 wd: 890->960   - SAC 4/24/20 ht: 400->460
+	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 960;    iTabCtrlHt = 560;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890   - SAC 11/9/19 wd: 890->960   - SAC 4/24/20 ht: 400->460  - SAC 05/28/24 (CUAC, tic #1378) ht: 460->560
+	else if (iBDBClass == eiBDBCID_CUAC)            	{  iTabCtrlWd = 960;    iTabCtrlHt = 460;   }	// SAC 05/28/24 (CUAC, tic #1378)
 	else if (iBDBClass == eiBDBCID_EUseSummary)			{  if (elRulesetCodeYear >= 2022)
 																			{	iTabCtrlWd = 1080;    iTabCtrlHt = 570;		}		// SAC 6/12/19 - accommodate additional columns in 2022 results   // SAC 12/02/20 - Ht 520->570
 																			else
@@ -2999,14 +3016,14 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_Win    )				{	iTabCtrlWd = 650;		iTabCtrlHt = 610;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_WindowType)			{	iTabCtrlWd = 600;		iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_Door   )	   		{  iTabCtrlWd = 550;    iTabCtrlHt = 360;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 300;   }
-	else if (iBDBClass == eiBDBCID_Cons   )	   		{  iTabCtrlWd = 670;    iTabCtrlHt = 640;   }   // Ht 610->640 - SAC 10/30/22 (DPHWall)
+	else if (iBDBClass == eiBDBCID_Cons   )	   		{  iTabCtrlWd = 670;    iTabCtrlHt = 665;   }   // Ht 610->640 - SAC 10/30/22 (DPHWall)  // Ht 640->665 - SAC 12/03/24 (tic #1309)
 	else if (iBDBClass == eiBDBCID_PVArrayGeom )			{  iTabCtrlWd = 350;    iTabCtrlHt = 250;   }	// SAC 3/2/17
 	else if (iBDBClass == eiBDBCID_Shade  )				{  iTabCtrlWd = 350;    iTabCtrlHt = 250;   }	// SAC 2/22/17
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd = 730;    iTabCtrlHt = 535;   }	// SAC 2/21/17
 	else if (iBDBClass == eiBDBCID_HVACSys)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
-	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21
-	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
+	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 690;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21   // Ht 660->690 - SAC 07/21/24 (VCHP3)
+	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;   // ht 510->540 - SAC 12/15/24 (Res-2025)
 	else if (iBDBClass == eiBDBCID_IAQFan)	   			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
 	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20
 	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 480;   }	// SAC 1/12/20 (Res tic #1013)  - SAC 6/11/20 (tic #1210)
@@ -3302,6 +3319,8 @@ void InitBEMDBIDs()
 	elDBID_Proj_AnnualWeatherFile  = BEMPX_GetDatabaseID( "AnnualWeatherFile",  eiBDBCID_Project ); 
 	elDBID_Proj_ExcptDsgnModelFile = BEMPX_GetDatabaseID( "ExcptDsgnModelFile", eiBDBCID_Project ); 
 
+   elDBID_CUAC_ResultsCSVToCombineDir = BEMPX_GetDatabaseID( "ResultsCSVToCombineDir", eiBDBCID_CUAC );  // SAC 10/25/24
+
 	elDBID_PolyLp_Area            = BEMPX_GetDatabaseID( "Area",  eiBDBCID_PolyLp );			// SAC 5/29/14 
 	elDBID_CartesianPt_Coord      = BEMPX_GetDatabaseID( "Coord", eiBDBCID_CartesianPt );	// SAC 5/29/14 
 
@@ -3419,6 +3438,7 @@ void InitBEMDBIDs()
 	elDBID_Proj_StdsVersion = BEMPX_GetDatabaseID( "StandardsVersion", eiBDBCID_Proj );;	// SAC 8/15/14
 	elDBID_Proj_AnalysisVersion = BEMPX_GetDatabaseID( "AnalysisVersion", eiBDBCID_Proj );    // SAC 05/30/22
 
+   eiBDBCID_CUAC           = BEMPX_GetDBComponentID( "CUAC" );		      // SAC 05/28/24 (CUAC, tic #1378)
    eiBDBCID_RESNETBldg    = BEMPX_GetDBComponentID( "RESNETBldg" );		// SAC 9/27/20
    eiBDBCID_DwellUnitType = BEMPX_GetDBComponentID( "DwellUnitType" );	// SAC 6/18/14
    eiBDBCID_DwellUnit     = BEMPX_GetDBComponentID( "DwellUnit" );
@@ -3483,6 +3503,8 @@ void InitBEMDBIDs()
    elDBID_Proj_RHERSEnabled    = BEMPX_GetDatabaseID( "RHERSEnabled",	 eiBDBCID_Proj );    // SAC 9/28/20
    if (elDBID_Proj_RHERSEnabled < BEM_COMP_MULT)
 		eiBDBCID_RESNETBldg = 0;
+
+   elDBID_CUAC_ResultsCSVToCombineDir = BEMPX_GetDatabaseID( "ResultsCSVToCombineDir", eiBDBCID_CUAC );  // SAC 10/25/24
 
 //   elDBID_SURFACE_sfType   = BEMPX_GetDatabaseID( "sfType",     eiBDBCID_SURFACE );
 

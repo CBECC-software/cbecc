@@ -2255,8 +2255,28 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
       iColStart += 2;
    }
 
+   long iValsPerRow = -1;     // enable tailored array writing w/ fixed elements/row and row labels (comments) - SAC 05/17/24 (res tic #1379)
+   std::vector<QString> svRowLabels;
+   QString sPropTypeTemp = sPropType + QString( "PerRow" );
+   long lDBID_Temp = BEMPX_GetDatabaseID( sPropTypeTemp, pObj->getClass()->get1BEMClassIdx() );
+   int iObjIdx = BEMPX_GetObjectIndex( pObj->getClass(), pObj );
+   if (lDBID_Temp > 0 && BEMPX_GetInteger( lDBID_Temp, iValsPerRow, -1, -1, iObjIdx ) && iValsPerRow > 0)
+   {  sPropTypeTemp = sPropType + QString( "Labels" );
+      lDBID_Temp = BEMPX_GetDatabaseID( sPropTypeTemp, pObj->getClass()->get1BEMClassIdx() );
+      if (lDBID_Temp > 0)
+      {  int iErr, iArrSize;
+         BEMPropertyType* pRowLabelsPropType = BEMPX_GetPropertyTypeFromDBID( lDBID_Temp, iErr );
+         iArrSize = (pRowLabelsPropType ? pRowLabelsPropType->getNumValues() : 0);
+         QString qsLabel;
+         for (int i=0; i<iArrSize; i++)
+         {  if (!BEMPX_GetString( lDBID_Temp+i, qsLabel, FALSE, 0, -1, iObjIdx ))
+               qsLabel = "";
+            svRowLabels.push_back( qsLabel );
+   }  }  }
+
    // loop over all properties in array   
    QString sRefObjCSEComment;
+   int iRowLabelIdx = 0;
    while ( (iCount < pProp->getType()->getNumValues()) && (iProp < (int) pObj->getPropertiesSize()) )
    {
       pProp = pObj->getProperty(iProp);
@@ -2278,12 +2298,22 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
          // separate this value from the previous one
          if ( sLine.length() > 0 )
             sLine += ", ";
+
+         bool bWriteToNextLine = (iValsPerRow > 0 && iCount > 0 && iCount % iValsPerRow == 0);      // SAC 05/17/24 (res tic #1379)
          // if this value will fit on the line, then add it to the output string
-         if ((sData.length() + sLine.length() + iColStart + 4) < MAX_COLUMN)
+         if (!bWriteToNextLine && (sData.length() + sLine.length() + iColStart + 4) < MAX_COLUMN)
             sLine += sData;
          else
          {  // this value won't fit on the same line, so write the current line and add this data to the next line
             m_file.WriteToken( sLine.toLocal8Bit().constData(), sLine.length() );
+
+            if (bWriteToNextLine && svRowLabels.size() > iRowLabelIdx)        // SAC 05/17/24 (res tic #1379)
+            {  QString qsLbl = svRowLabels[iRowLabelIdx];
+               if (!qsLbl.isEmpty())
+                  WriteComment( qsLbl, "", 40, 4 );
+               iRowLabelIdx++;
+            }
+
             m_file.NewLine();
             
             m_file.WriteToken( " ", iColStart );
@@ -2303,13 +2333,21 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
    // write final line of data to file
    m_file.WriteToken( sLine.toLocal8Bit().constData(), sLine.length() );
 
+   QString sFinalRowLabel;
+   if (iValsPerRow > 0 && svRowLabels.size() > iRowLabelIdx)        // SAC 05/17/24 (res tic #1379)
+      sFinalRowLabel = svRowLabels[iRowLabelIdx];
+
    if (m_iFileType == BEMFT_CSE)    // SAC 05/21/22
    {  // m_file.WriteToken( ";", 1 );   - removed - not sure why it is here?? - SAC 09/02/22
-		if (m_iPropertyCommentOption == 1)
+		if (m_iPropertyCommentOption == 1 || !sFinalRowLabel.isEmpty())
 		{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
 										pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
-			if (!pProp->getType()->getUnitsLabel().isEmpty() || bWrtDescrip)
-				WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), (!sRefObjCSEComment.isEmpty() ? sRefObjCSEComment : pProp->getType()->getUnitsLabel()), 40, 4 );
+         if (!sFinalRowLabel.isEmpty() && bWrtDescrip)      // SAC 05/17/24 (res tic #1379)
+            sFinalRowLabel += " / ";
+         if (bWrtDescrip)
+            sFinalRowLabel += pProp->getType()->getDescription();
+			if (!pProp->getType()->getUnitsLabel().isEmpty() || !sFinalRowLabel.isEmpty())
+				WriteComment( sFinalRowLabel, (!sRefObjCSEComment.isEmpty() ? sRefObjCSEComment : pProp->getType()->getUnitsLabel()), 40, 4 );
 		}
       m_file.NewLine();
    }
@@ -3745,7 +3783,8 @@ bool BEMPX_WriteLogFile( const char* output, const char* psNewLogFileName, bool 
       	   ok = logFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append );						assert( ok );
       	}
 			if (ok)
-			{	fileOpenLog.setPermissions( QFile::ReadOther | QFile::WriteOwner );
+			{	//fileOpenLog.setPermissions( QFile::ReadOther | QFile::WriteOwner );
+            logFile.setPermissions( QFile::ReadOther | QFile::WriteOwner );   // replaced above w/ this (bug fix?) - SAC 01/19/25
 				pLogFile = &logFile;
 			}
 		}
@@ -6581,15 +6620,36 @@ BEMObject* LoadComponentFromJsonObject( QJsonObject& obj, int& iRetVal, QString*
                            if (psMsg)
                               *psMsg = QString( "error: %1 JSON bool element inconsistent w/ type of BEM property (expecting integer)" ).arg( qsJSONPropName );
                      }  }
-                     else if (qjVal.isString() && (pPropType->getPropType() == BEMP_Str || pPropType->getPropType() == BEMP_Sym))
+                     // revised to enable string data to set Int or Flt properties - SAC 09/05/24
+                     else if (qjVal.isString() && (pPropType->getPropType() == BEMP_Str || pPropType->getPropType() == BEMP_Sym ||
+                                                   pPropType->getPropType() == BEMP_Int || pPropType->getPropType() == BEMP_Flt))
                      {  QString qsVal = qjVal.toString();
-                        int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_QStr, (void*) &qsVal, BEMO_User, iNewObjIdx,
-                                               BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
-                        if (iSetBEMObj < 0)
-                        {  iRetVal = -20;
-                           if (psMsg)
-                              *psMsg = QString( "error: setting string '%1' to %2:%3" ).arg( qsVal, pBEMClass->getShortName(), pPropType->getShortName() );
-                        }
+                        if (pPropType->getPropType() == BEMP_Int)
+                        {  long lTemp = atol( qsVal.toLocal8Bit().constData() );
+                           int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lTemp, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                           if (iSetBEMObj < 0)
+                           {  iRetVal = -20;
+                              if (psMsg)
+                                 *psMsg = QString( "error: setting string '%1' to integer %2:%3" ).arg( qsVal, pBEMClass->getShortName(), pPropType->getShortName() );
+                        }  }
+                        else if (pPropType->getPropType() == BEMP_Flt)
+                        {  double dTemp = atof( qsVal.toLocal8Bit().constData() );
+                           int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Flt, (void*) &dTemp, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                           if (iSetBEMObj < 0)
+                           {  iRetVal = -20;
+                              if (psMsg)
+                                 *psMsg = QString( "error: setting string '%1' to float %2:%3" ).arg( qsVal, pBEMClass->getShortName(), pPropType->getShortName() );
+                        }  }
+                        else 
+                        {  int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_QStr, (void*) &qsVal, BEMO_User, iNewObjIdx,
+                                                  BEMS_UserDefined /*BEM_PropertyStatus*/, BEMO_User, TRUE /*bPerformResets*/, iBEMProcIdx );
+                           if (iSetBEMObj < 0)
+                           {  iRetVal = -20;
+                              if (psMsg)
+                                 *psMsg = QString( "error: setting string '%1' to %2:%3" ).arg( qsVal, pBEMClass->getShortName(), pPropType->getShortName() );
+                        }  }
                      }
                      else if (qjVal.isDouble() && (pPropType->getPropType() == BEMP_Int || pPropType->getPropType() == BEMP_Flt))
                      {  if (pPropType->getPropType() == BEMP_Int)

@@ -1043,6 +1043,28 @@ BEMTableCell* RuleSet::getTableCell( int iTableID, int iRetColID, vector<string>
    return pRetCell;
 }
 
+// added to support 2D interpolation via look-up tables - SAC 08/22/24 (VCHP3)
+bool RuleSet::getTable2DInterpolatedValue( int iTableID, double& dInterpResult, vector<string>& saIndepNames, vector<string>& saIndepStrings,
+											vector<double>& faIndepValues, vector<bool>& baIndepNumeric, string& sErrMsg, BOOL bVerboseOutput /*=FALSE*/ )
+{	bool bRetVal = false;
+   // return NULL right off the bat if the list does not contain as many table as tableID argument requires
+   if ( iTableID > (int) m_tables.size() || iTableID < 1 )
+	{	assert( FALSE );
+		if (iTableID > (int) m_tables.size())
+			sErrMsg = boost::str( boost::format( "Table not found (table ID %d exceeds max %d)" ) % iTableID % m_tables.size() );
+		else if (iTableID < 1)
+			sErrMsg = boost::str( boost::format( "Table not found (table ID %d must be > 0)" ) % iTableID );
+      return bRetVal;
+	}
+
+	BEMTable* table = m_tables.at(iTableID-1);					assert( table );
+   // perform interpolation using specified table
+   if ( table )
+		bRetVal = table->get2DInterpolatedValue( dInterpResult, saIndepNames, saIndepStrings, faIndepValues, baIndepNumeric, sErrMsg, bVerboseOutput );
+
+   return bRetVal;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 int RuleSet::getTableDimension( int tableID, BOOL bParams /*=TRUE*/ )

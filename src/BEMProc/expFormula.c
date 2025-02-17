@@ -547,6 +547,8 @@ static FuncTable functable[] =
    {                "#MNAI",       EXP_BEMPFunc, BF_MinAcrsIf,     VAR_ARGS },  /* SAC 04/26/23 - added */
    { "CopyComp",                   EXP_BEMPFunc, BF_CopyComp,      VAR_ARGS },  /* SAC 11/29/23 */
    {                "#CPC",        EXP_BEMPFunc, BF_CopyComp,      VAR_ARGS },  /* SAC 11/29/23 */
+   { "OrderAssignments",           EXP_BEMPFunc, BF_OrderAssigns,  2 },         /* SAC 01/13/25 - added (CUAC) */
+   {                "#OA",         EXP_BEMPFunc, BF_OrderAssigns,  2 },         /* SAC 01/13/25 - added */
    { NULL,                         0,            0,                0 }
 };
 

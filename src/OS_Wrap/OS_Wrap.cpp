@@ -1977,6 +1977,9 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 						forwardTranslator.setKeepRunControlSpecialDays(true);
 						forwardTranslator.setIPTabularOutput(true);
 						forwardTranslator.setExcludeLCCObjects(true);
+#ifdef OS_NOSPC  // mods to prevent creation of OS/EPlus Spaces - SAC 09/17/24
+                  forwardTranslator.setExcludeSpaceTranslation( true );
+#endif 
 						openstudio::Workspace workspace = forwardTranslator.translateModel( *model[iRun] );
 
 						if (bOutputDiagnostics)		// SAC 4/2/15
@@ -2689,6 +2692,9 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 						forwardTranslator.setKeepRunControlSpecialDays(true);
 						forwardTranslator.setIPTabularOutput(true);
 						forwardTranslator.setExcludeLCCObjects(true);
+#ifdef OS_NOSPC  // mods to prevent creation of OS/EPlus Spaces - SAC 09/17/24
+                  forwardTranslator.setExcludeSpaceTranslation( true );
+#endif 
 						openstudio::Workspace workspace = forwardTranslator.translateModel( *model[iRun] );
 
 						if (bOutputDiagnostics)		// SAC 4/2/15

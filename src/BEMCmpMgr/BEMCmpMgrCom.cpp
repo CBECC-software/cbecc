@@ -1929,13 +1929,14 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 									CSERunMgr cseRunMgr(	sCSEexe, sAnnualWeatherFile, sModelPathOnly, sModelFileOnly, sProcessingPath, bFullComplianceAnalysis,
 												            false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, lAnalysisType, iRulesetCodeYear, 0 /*lDesignRatingRunID*/, bVerbose,
 												            bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, pCompRuleDebugInfo, pszUIVersionString,
-												            0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);		// SAC 11/7/16 - added sim report/error option arguments, disabled until/unless wanted for Com analysis
+												            0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/, 0 /*lStdMixedFuelRunReqd*/, 0 /*lPrelimPropRunReqd*/,		// SAC 11/7/16 - added sim report/error option arguments, disabled until/unless wanted for Com analysis
+                                                0 /*lPropFlexRunReqd*/, (int) iaCSESimRunIdx.size() /*iNumRuns*/ );     // add spcification of iNumRuns - SAC 06/08/24
 									   //			dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 									int iRunType[     10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 									int iRunSimRunIdx[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 									//int iCSESimRetVal = 0;    - removed to fix problem where CSE errors not propogating into overall analysis errors - SAC 05/18/22
-                           int iCSR, iNumCSERuns = 0;
+                           int iCSR, iNumCSERuns = 0, iNumSubstCSEResultsFiles = 0;
                            for (iCSR=0; (iCSR < (int) iaCSESimRunIdx.size() && iRetVal /*iCSESimRetVal*/ == 0); iCSR++)
                            {
                               iSR = iaCSESimRunIdx[iCSR];
@@ -2004,6 +2005,12 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
                                                                (( iCodeType == CT_T24N && posSimInfo[iSR]->iRunIdx == 1) ? CRM_StdMixedFuel : CRM_Prop)));     // zb => CRM_StdMixedFuel - SAC 05/13/22
               									iRunSimRunIdx[iNumCSERuns] = iSR;
 
+                                       // mechanism to bypass simulation by supplying CSE results file(s) specified in Proj data - SAC 01/21/25
+                                       long lDBID_SubstituteCSEResultsPathFile = BEMPX_GetDatabaseID( "Proj:SubstituteCSEResultsPathFile" );
+                                       QString sSubstituteCSEResultsPathFile;
+                                       bool bHaveSubstCSEResultsPathFile = ( lDBID_SubstituteCSEResultsPathFile > 0 &&
+                                                                             BEMPX_GetString( lDBID_SubstituteCSEResultsPathFile+posSimInfo[iSR]->iRunIdx, sSubstituteCSEResultsPathFile, FALSE, 0, -1, -1, BEMO_User, NULL, 0, posSimInfo[iSR]->iBEMProcIdx ) && !sSubstituteCSEResultsPathFile.isEmpty() );
+
 									            //	siNumProgressRuns = 1;
 									            //	int iRunIdx = 0;
 									            //	for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
@@ -2015,8 +2022,11 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
                                              //BEMPX_WriteLogFile( QString( "   debugging, pre-cseRunMgr.SetupRun_NonRes() - lAnalysisType = %1 / RunType = %2" ).arg( QString::number( lAnalysisType ), QString::number( iRunType[0] ) ), NULL, FALSE, TRUE, FALSE );
 														iRetVal /*iCSESimRetVal*/ = cseRunMgr.SetupRun_NonRes( iNumCSERuns/*iRunIdx*/, iRunType[iNumCSERuns/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
 																													posSimInfo[iSR]->pszLongRunID, posSimInfo[iSR]->pszRunID, &sCSEVersion,
-																													posSimInfo[iSR]->iBEMProcIdx, (lNumPVArraysChk > 0 && !bEnablePVBattSim), bPerformFullCSESim );  // SAC 4/3/19 - added new arg to cause removal of PVArray & Battery objects   // SAC 10/26/21 (MFam)
+																													posSimInfo[iSR]->iBEMProcIdx, (lNumPVArraysChk > 0 && !bEnablePVBattSim), bPerformFullCSESim, iCUACReportID,    // SAC 4/3/19 - added new arg to cause removal of PVArray & Battery objects   // SAC 10/26/21 (MFam)  // SAC 12/13/24 (CUAC)
+                                                                                       (bHaveSubstCSEResultsPathFile ? sSubstituteCSEResultsPathFile.toLocal8Bit().constData() : NULL) );   // SAC 01/21/25
                                           iNumCSERuns++;
+                                          if (bHaveSubstCSEResultsPathFile)
+                                             iNumSubstCSEResultsFiles++;
                                              // debugging PV-solar
                                              //	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), back from cseRunMgr.SetupRun_NonRes() - returned %1: %2" ).arg( QString::number( iRetVal /*iCSESimRetVal*/ ), sErrMsg ), NULL, FALSE, TRUE, FALSE );
 									            //					dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
@@ -2024,7 +2034,7 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
                                     }
                            } // end of:  for (int iCSR=0; (iCSER <...
 
-                           if (iNumCSERuns > 0 && iRetVal /*iCSESimRetVal*/ == 0)    // execute CSE simulations in parallel - SAC 11/18/21
+                           if ((iNumCSERuns - iNumSubstCSEResultsFiles) > 0 && iRetVal /*iCSESimRetVal*/ == 0)    // execute CSE simulations in parallel - SAC 11/18/21
                            {
 				                                 //	if (iRetVal == 0)
 				                                 //	{
@@ -2073,13 +2083,14 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 									            //	const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
 														const QString& sRunAbbrev = cseRun.GetRunAbbrev();
 														long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
+                                          BOOL bUsingSubstResults = cseRun.GetUsingSubstituteResults();     // SAC 01/21/25
 													//	BOOL bLastRun = cseRun.GetLastRun();
 									            //	BOOL bIsStdDesign = cseRun.GetIsStdDesign();
 									            //	BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
 								
 														if (iRetVal == 0)  // && iCSESimRetVal == 0)
 														{
-															int iCSERetVal = cseRun.GetExitCode();
+															int iCSERetVal = (bUsingSubstResults ? 0 : cseRun.GetExitCode());
 															if (bVerbose || ebLogAnalysisMsgs)    // SAC 1/31/13    // SAC 10/22/21
 																BEMPX_WriteLogFile( QString::asprintf( "      %s simulation returned %d (%s, Run# %ld)", qsCSEName.toLocal8Bit().constData(), iCSERetVal, sRunAbbrev.toLocal8Bit().constData(), lRunNumber ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 															BEMPX_RefreshLogFile();	// SAC 5/19/14
@@ -2498,6 +2509,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	int  iRptGenConnectTimeout		   =	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
 	int  iRptGenReadWriteTimeout		=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , CECRptGenDefaultReadWriteTimeoutSecs,  saCSVOptions );		// SAC 11/02/22
 
+	int  iDownloadVerbose         	=	 GetCSVOptionValue( "DownloadVerbose"            ,  -1,  saCSVOptions );		// SAC 09/03/24
+
 	long plExportHourlyResults[4]		={	                                                     0                      ,		// SAC 8/21/14
 													                                                     0                      ,		// SAC 8/21/14
 													 GetCSVOptionValue( "ExportHourlyResults_ap"     ,   0,  saCSVOptions )     ,		// SAC 8/21/14
@@ -2563,6 +2576,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	QString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
 	GetCSVOptionString( "CUACElecTariffFile", sCUACElecTariffFile, saCSVOptions );
 	GetCSVOptionString( "CUACGasTariffFile" , sCUACGasTariffFile , saCSVOptions );
+   QString sCUACInvalidMsg;      // SAC 01/02/25
 
    long iCustomMeterOption = GetCSVOptionValue( "CustomMeterOption", -1, saCSVOptions );		// value > 0 => custom sim metering that invalidates compliance analysis - SAC 11/02/23
 
@@ -2637,6 +2651,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				 ssEXEPath[ssEXEPath.length()-1] != '\\')
 				ssEXEPath += '/';  // ensure trailing slash
 	}	}
+   else
+      StoreEXEPath();      // restore original EXE path retrieval for when no sq_app - SAC 01/19/25
 //#endif
 
 	QString sBEMBasePathFile	= pszBEMBasePathFile;
@@ -2913,6 +2929,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 	int iPrevRuleErrs = 0;
 	bool bExpectValidResults = true;
+   long lRuleRepoRev = 0;     // SAC 12/18/24
 	if (bLoadModelFile && !bAbort)
 	{
 		if (!sBEMBasePathFile.isEmpty())
@@ -3184,7 +3201,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												!pbBypassOpenStudio[8] && !pbBypassOpenStudio[9] && iAnalysisThruStep >= 7);
 			}
 
-		// SAC 11/19/15 - added logic to extract code year out of ruleset label
+         // be able to identify RuleRepoRev - initially to distinguish use of CSE19 vs. CSE(.exe) - SAC 12/18/24
+         if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RuleRepoRev" ), lRuleRepoRev ))
+            lRuleRepoRev = 0;
+
+		   // SAC 11/19/15 - added logic to extract code year out of ruleset label
 			if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))	// SAC 10/2/14 - RESET iCodeType based on newly loaded ruleset
 			{	int iCdYrIdx = sLoadedRuleSetID.indexOf( " 20" ) + 1;		// SAC 4/25/16 - revised logic to process S901G '-2010' code year properly
 				if (iCdYrIdx < 1)
@@ -3353,8 +3374,31 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (!sDevOptsNotDefaulted.isEmpty())
 		{	QString sDevOptsNotDefaultedMsg = "Warning:  The following developer options must be defaulted (not specified by the user) in order to perform a valid compliance analysis:" + sDevOptsNotDefaulted;
 			BEMPX_WriteLogFile( sDevOptsNotDefaultedMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         if (iCUACReportID > 0)
+            sCUACInvalidMsg = "Developer options specified";      // SAC 01/02/25
 		}
 	}
+
+   // Update sSimWeatherPath to account for research mode substitution - SAC 08/27/24
+   if (!bAbort && !BEMPX_AbortRuleEvaluation() && !sSimWeatherPath.isEmpty())
+   {  QString sSimWeatherPathSub, sWthrPathSub;
+      long lERM, lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) ),
+                 lDBID_Proj_WeatherPathSub     = BEMPX_GetDatabaseID( "WeatherPathSub",     BEMPX_GetDBComponentID( "Proj" ) );
+      if (lDBID_Proj_EnableResearchMode > 0 && lDBID_Proj_WeatherPathSub > 0 &&
+          BEMPX_GetInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ) && lERM > 0 &&
+          BEMPX_GetString(  lDBID_Proj_WeatherPathSub, sWthrPathSub ) && !sWthrPathSub.isEmpty())
+      {  // replace right-most portion of sSimWeatherPath with sWthrPathSub, and confirm that it is a valid path
+         int iPathLenMinusLastPart = sSimWeatherPath.lastIndexOf( '\\', sSimWeatherPath.length()-2 );
+         if (iPathLenMinusLastPart > 0)
+         {  QString sTempSimWeatherPath = sSimWeatherPath.left( iPathLenMinusLastPart+1 );
+            sTempSimWeatherPath += sWthrPathSub;
+            sTempSimWeatherPath += '\\';
+                  // BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - iPathLenMinusLastPart: %d / sSimWeatherPath:  %s / sTempSimWeatherPath:  %s", iPathLenMinusLastPart, sSimWeatherPath.toLocal8Bit().constData(), sTempSimWeatherPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            if (DirectoryExists( sTempSimWeatherPath ))
+            {        BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Replacing weather file path:  %s  -->>  %s", sSimWeatherPath.toLocal8Bit().constData(), sTempSimWeatherPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               sSimWeatherPath = sTempSimWeatherPath;
+      }  }  }
+   }
 
 	QString sCSEEXEPath			= sCompMgrDLLPath + "CSE\\";		// SAC 5/24/16
 	QString sCSEWeatherPath		= sSimWeatherPath;
@@ -3425,7 +3469,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case 28 :	sFHPathFile = sCompMgrDLLPath + "BEMProc19c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 					case 29 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap19.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 					case 30 :	sFHPathFile = sCSEEXEPath + "cse19d.exe";	             				break;	// SAC 5/24/16
-					case 31 :	sFHPathFile = sCSEEXEPath + "cse19.exe";			       				break;
+					case 31 :	if (lRuleRepoRev >= 8681)     // SAC 12/18/24
+                                 sFHPathFile = sCSEEXEPath + "cse.exe";
+                           else  sFHPathFile = sCSEEXEPath + "cse19.exe";	       				break;
 					case 32 :	sFHPathFile = sCSEEXEPath + sCSE_DHWUseIncFile;	     					break;     
 					default :			assert( FALSE );                                      		break;
 				}
@@ -3487,6 +3533,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "FileHashID"     , iCID_Proj ), iError );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "FileHashToCheck", iCID_Proj ), iError );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "FileHashStatus" , iCID_Proj ), iError );
+         if (iNumFileHashErrs > 0 && iCUACReportID > 0 && sCUACInvalidMsg.isEmpty())
+            sCUACInvalidMsg = QString::asprintf( "%d file hash check(s) failed", iNumFileHashErrs );      // SAC 01/02/25
 		}
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 	}
@@ -3742,8 +3790,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 80 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 	}	}
 	BEMXMLWriter xmlNRCCPRFFile( ((!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && iCUACReportID < 1) ? sNRCCXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_NRCCXML );
-
-
 
 
 	// SAC 9/9/18 - store certain path and filenames to BEMBase for reference during analysis (ported from Res analysis)
@@ -4085,7 +4131,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
                                /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
-                               (sCUACElecTariffFile.isEmpty()     ? NULL : (const char*) sCUACElecTariffFile.toLocal8Bit().constData()) );
+                               (sCUACElecTariffFile.isEmpty()     ? NULL : (const char*) sCUACElecTariffFile.toLocal8Bit().constData()), iDownloadVerbose );
                //											94 : Error downloading CUAC electric tariff schedule
             if (iRetVal > 0)
 				   ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 94 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
@@ -4099,7 +4145,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
                                /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
-                               (sCUACGasTariffFile.isEmpty()      ? NULL : (const char*) sCUACGasTariffFile.toLocal8Bit().constData()) );
+                               (sCUACGasTariffFile.isEmpty()      ? NULL : (const char*) sCUACGasTariffFile.toLocal8Bit().constData()), iDownloadVerbose );
                //											95 : Error downloading CUAC gas tariff schedule
             if (iRetVal > 0)
 				   ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 95 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
@@ -4524,23 +4570,30 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										//from Larry:
 										//(1)    5 dwelling unit spaces are using defaulted information in the Dwelling Unit Data Tabs.  Press Abort and enter design dwelling unit information to receive a compliant report.
 #ifdef CM_QTGUI
-					// display report issues dialog
-					if (sq_app)
-						sq_app->beep();
-					QMessageBox msgBox;
-					msgBox.setWindowTitle( qsPreAnalChkDlgCaption );
-					msgBox.setIcon( QMessageBox::Warning ); 
-					msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
-					msgBox.setText( qsPreAnalChkDlgBody );
-					msgBox.setDetailedText( qsPreAnalChkDlgDetails );
-					msgBox.setStandardButtons( QMessageBox::Ok );
-					if (iNumPreAnalChkErrs < 1)
-						msgBox.addButton( QMessageBox::Abort );
-					msgBox.setDefaultButton( QMessageBox::Ok );
-					if (iAnalysisDialogTimeout > 0)
-						msgBox.button(QMessageBox::Ok)->animateClick(iAnalysisDialogTimeout*1000);		// SAC 1/31/20 - set 10 sec timer, at which time 'OK' is automatically registered/clicked (CEC/LF request)
-					showDetailsInQMessageBox(msgBox, 770, 300);		// routine to OPEN Details (to start with) + resize text box (to larger size)
-					bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
+               if (bDisplayProgress)      // SAC 01/19/25
+					{  // display report issues dialog
+					   if (sq_app)
+					   	sq_app->beep();
+					   QMessageBox msgBox;
+					   msgBox.setWindowTitle( qsPreAnalChkDlgCaption );
+					   msgBox.setIcon( QMessageBox::Warning ); 
+					   msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
+					   msgBox.setText( qsPreAnalChkDlgBody );
+					   msgBox.setDetailedText( qsPreAnalChkDlgDetails );
+					   msgBox.setStandardButtons( QMessageBox::Ok );
+					   if (iNumPreAnalChkErrs < 1)
+					   	msgBox.addButton( QMessageBox::Abort );
+					   msgBox.setDefaultButton( QMessageBox::Ok );
+					   if (iAnalysisDialogTimeout > 0)
+					   	msgBox.button(QMessageBox::Ok)->animateClick(iAnalysisDialogTimeout*1000);		// SAC 1/31/20 - set 10 sec timer, at which time 'OK' is automatically registered/clicked (CEC/LF request)
+					   showDetailsInQMessageBox(msgBox, 770, 300);		// routine to OPEN Details (to start with) + resize text box (to larger size)
+					   bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
+               }
+               else
+               {  bRptIssueAbort = false;
+                  BEMPX_WriteLogFile( QString("%1 - %2").arg( qsPreAnalChkDlgCaption, qsPreAnalChkDlgBody ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  BEMPX_WriteLogFile( qsPreAnalChkDlgDetails, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               }
 #endif
 				}
 
@@ -5132,7 +5185,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Bypassing CSE simulation as well (due to OpenStudio bypass) for %s model", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						}
 					}
-					else
+					// else   - replaced 'else' w/ logic to ensure sim of Prop models even when Std models not simulated - SAC 12/17/24
+               else
+// TO DO - finish this fix - needs to NOT toggle back ON secondary run in pair - SAC 12/18/24
+               //if ( bCallOpenStudio ||
+               //     (iCodeType == CT_T24N && bParallelSimulations &&
+               //      (iRun == 1 || iRun == 3) && bModelToBeSimulated[iRun-1]) )
 					{			if (bVerbose)
 									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Calling PerfSim_E+ for %s model", sRunID.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						if (!bSimulateModel)
@@ -5959,24 +6017,30 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	//	qstrUMLHWarningDetails = "Zone(s) exceeding UMLH limits:\n  'Wing1_Side1_Zn' cooling 186 > 150 and heating 198 > 150\n  'Wing1_Side2_Zn' cooling 246 > 150\n"
 																	//									"  'Common_Lobby_Zn' heating 201 > 150\n  'Common_Corridor_Zn' cooling 153 > 150\n";
 																	if (bPromptUserUMLHWarning && !osRunInfo[iR].IsStdRun())	// SAC 11/11/19 - never prompt for Std model violations
-																	{	if (sq_app)		// added - SAC 7/1/20
-																			sq_app->beep();
-																		QString qstrUMLHWarningMsg = cstrUMLHWarningMsg;
-																		QString qstrUMLHWarningDetails = cstrUMLHWarningDetails;
-																		QString qstrUMLHDlgCaption = cstrUMLHDlgCaption;
-																		qstrUMLHDlgCaption = QString( "%1 Model Unmet Load Hours" ).arg( osRunInfo[iR].LongRunID() );
-																		QMessageBox msgBox;
-																		msgBox.setWindowTitle( qstrUMLHDlgCaption );
-																		msgBox.setIcon( QMessageBox::Warning ); 
-																		msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
-																		msgBox.setText( qstrUMLHWarningMsg );
-																		msgBox.setDetailedText( qstrUMLHWarningDetails );
-																		msgBox.setStandardButtons( QMessageBox::Ok );  // needed for timeout to function
-																		msgBox.setDefaultButton( QMessageBox::Ok );
-																		if (iAnalysisDialogTimeout > 0)
-																			msgBox.button(QMessageBox::Ok)->animateClick(iAnalysisDialogTimeout*1000);		// SAC 7/1/20 - apply dialog timeout here (Com tic #2680)
-																		msgBox.exec();
-																	}
+																	{
+                                                      if (bDisplayProgress)      // SAC 01/19/25
+                                                      {  if (sq_app)		// added - SAC 7/1/20
+																		   	sq_app->beep();
+																		   QString qstrUMLHWarningMsg = cstrUMLHWarningMsg;
+																		   QString qstrUMLHWarningDetails = cstrUMLHWarningDetails;
+																		   QString qstrUMLHDlgCaption = cstrUMLHDlgCaption;
+																		   qstrUMLHDlgCaption = QString( "%1 Model Unmet Load Hours" ).arg( osRunInfo[iR].LongRunID() );
+																		   QMessageBox msgBox;
+																		   msgBox.setWindowTitle( qstrUMLHDlgCaption );
+																		   msgBox.setIcon( QMessageBox::Warning ); 
+																		   msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
+																		   msgBox.setText( qstrUMLHWarningMsg );
+																		   msgBox.setDetailedText( qstrUMLHWarningDetails );
+																		   msgBox.setStandardButtons( QMessageBox::Ok );  // needed for timeout to function
+																		   msgBox.setDefaultButton( QMessageBox::Ok );
+																		   if (iAnalysisDialogTimeout > 0)
+																		   	msgBox.button(QMessageBox::Ok)->animateClick(iAnalysisDialogTimeout*1000);		// SAC 7/1/20 - apply dialog timeout here (Com tic #2680)
+																		   msgBox.exec();
+                                                      }
+                                                      else
+                                                      {  BEMPX_WriteLogFile( QString("%1 - %2").arg( cstrUMLHDlgCaption, cstrUMLHWarningMsg ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                                         BEMPX_WriteLogFile( cstrUMLHWarningDetails, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+																	}  }
 #endif
 																}
 															}
@@ -6210,19 +6274,65 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
       // perform CUAC analysis/calcs - SAC 09/09/22
       if (iRetVal == 0 && iCUACReportID > 0)
       {
+         if (sCUACInvalidMsg.isEmpty())      // SAC 01/02/25
+         {  if (iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear)
+               sCUACInvalidMsg = QString::asprintf( "Inconsistent software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
+				else if (bBypassInputChecks)
+               sCUACInvalidMsg = "Input checks bypassed";
+				else if (bBypassUMLHChecks)
+               sCUACInvalidMsg = "Unmet load hour checks bypassed";
+				else if (bBypassPreAnalysisCheckRules)
+               sCUACInvalidMsg = "Pre-analysis check rules bypassed";
+				else if (bBypassCheckSimRules)
+               sCUACInvalidMsg = "Simulation check rules bypassed";
+				else if (bBypassCheckCodeRules)
+               sCUACInvalidMsg = "Energy code checking rules bypassed";
+				else if (lQuickAnalysis > 0)
+               sCUACInvalidMsg = "QuickAnalysis option activated";
+				else if (bIgnoreFileReadErrors)
+               sCUACInvalidMsg = "File read errors ignored";
+				else if (bBypassValidFileChecks)
+               sCUACInvalidMsg = "File validity checks bypassed";
+				else if (!sExcptDsgnModelFile.isEmpty())
+               sCUACInvalidMsg = "Alternative proposed simulation IDF file specified";
+				else if (!sCSEIncludeFileDBID.isEmpty())
+               sCUACInvalidMsg = "User specification of CSE include file(s)";
+				else if (lNumSpaceWithDefaultedDwellingUnitArea > 0)
+               sCUACInvalidMsg = "# dwelling unit areas not specified";
+				else if (iNumFileOpenDefaultingRounds != 3)
+               sCUACInvalidMsg = "Number of model defaulting rounds overridden";
+				else if (bSimulateCSEOnly)
+               sCUACInvalidMsg = "Option to skip past EPlus simulations specified";
+				else if (lNumUserSpecMats > 0)
+               sCUACInvalidMsg = "Construction Mats defined by user-specified properties";
+            else if (lEnableResearchMode > 0)
+               sCUACInvalidMsg = "EnableResearchMode activated";
+            else if (lNumAutosizedResHtPumps > 0)
+               sCUACInvalidMsg = "Autosized Residential HtPumps";
+            else if (lNumResVCHP2HtPumps > 0)
+               sCUACInvalidMsg = "VCHP2 Residential HtPumps";
+            else if (lCSESimSpeedOption > 0)
+               sCUACInvalidMsg = "CSE simulation mode not set to 0:Compliance";
+            else if (iCustomMeterOption > 0)
+               sCUACInvalidMsg = "CustomMeterOption specified";
+         }
+
          long lBatchRateIdx=0;
          BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:BatchRateIdx" ), lBatchRateIdx );
          if (lBatchRateIdx > 0)
             CUAC_AnalysisProcessing_BatchRates( sProcessingPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMDetails, bSilent, bVerbose,
-                                     bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx, iLogCUACBillCalcDetails,
+                                     bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx, 0 /*com*/, iLogCUACBillCalcDetails,
                                      iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
                                      (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
                                      (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                      (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-                                     iRptGenConnectTimeout, iRptGenReadWriteTimeout );
+                                     iRptGenConnectTimeout, iRptGenReadWriteTimeout, iDownloadVerbose, 
+                                     (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()) );   // SAC 01/02/25
          else
          {  CUAC_AnalysisProcessing( sProcessingPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMDetails, bSilent, bVerbose,
-                                     bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx, iLogCUACBillCalcDetails );
+                                     bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx, 0 /*com*/,
+                                     iLogCUACBillCalcDetails, iDownloadVerbose, true /*bWritePDF*/, true /*bWriteCSV*/, 0 /*iBatchRunIdx*/,
+                                     (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()) );   // SAC 01/02/25
                         //   CSERunLoop( iSimRunIdx, posSimInfo, pqsCSESimStatusMsg, bStoreHourlyResults, sProcessingPath, sModelPathOnly, sModelFileOnly, bSecureT24NRptGenActivated,
                         //                  bPerformFullCSESim, bBypassRecircDHW, lNumPVArraysChk, bEnablePVBattSim, pszUIVersionString,
                         //                  sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,
@@ -6718,11 +6828,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 
 // SAC 1/23/14 - added code to setup FINAL result log message (including analysis duration stats)
-	QString sAnalResLogMsg, sAnalTimeStats;
+	QString sAnalResLogMsg, sAnalTimeStats, sCUACResultsSummary;
+   if (iCUACReportID > 0)     // SAC 01/02/25
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ResultsSummary" ), sCUACResultsSummary );     // SAC 01/02/25
 	if (bAbort)
 		sAnalResLogMsg = "Analysis aborted";
 	else if (iRetVal != 0 || sXMLResultsFileName.isEmpty() || !FileExists( sXMLResultsFileName.toLocal8Bit().constData() ))
 		sAnalResLogMsg = "Analysis errant";
+   else if (!sCUACResultsSummary.isEmpty())
+      sAnalResLogMsg = sCUACResultsSummary;     // SAC 01/02/25
 	else if (iAnalysisThruStep < 8 ||
 					pbBypassOpenStudio[0] || pbBypassOpenStudio[1] || pbBypassOpenStudio[2] || pbBypassOpenStudio[3] ) // ||
 			//		pbBypassSimulation[0] || pbBypassSimulation[1] || pbBypassSimulation[2] || pbBypassSimulation[3] )
@@ -7609,12 +7723,13 @@ int path_len( std::string& str )
 	return std::max( iPathLen, iPathLen2 );
 }
 
+// restored use of bDisplayProgress argument (to enable CBECC-CLI batch analysis) - SAC 02/13/25
 int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 														const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
 														const char* /*pszLogPathFile*/, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
-														char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool /*bDisplayProgress=false*/, HWND hWnd /*=NULL*/, bool bOLDRules /*=false*/,
+														char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND hWnd /*=NULL*/, bool bOLDRules /*=false*/,
 														int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/, char* pszResultMsg /*=NULL*/, int iResultMsgLen /*=0*/,    // SAC 1/10/17   // SAC 12/3/17
-                                          const char* pszProxyOptionsCSV /*=NULL*/ )    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
+                                          const char* pszProxyOptionsCSV /*=NULL*/, bool bSilent /*=false*/ )    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
 {
 	int iRetVal = 0;
 	si1ProgressRunNum = 1;
@@ -7645,7 +7760,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 	std::string sOverwriteProjFileMsg = boost::str( boost::format( "The batch processing log file '%s' is opened in another application.  This file must be closed in that "
 												"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 												"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sBatchLogPathFile.c_str() );
-	if (!OKToWriteOrDeleteFile( sBatchLogPathFile.c_str(), sOverwriteProjFileMsg.c_str() ))
+	if (!OKToWriteOrDeleteFile( sBatchLogPathFile.c_str(), sOverwriteProjFileMsg.c_str(), bSilent ))
 	{	if (pszErrorMsg && iErrorMsgLen > 0)
 			sprintf_s( pszErrorMsg, iErrorMsgLen, "Unable to write to batch processing log file:  %s", sBatchLogPathFile.c_str() );
 									return -11;
@@ -7714,7 +7829,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						sOverwriteResultsFileMsg = boost::str( boost::format( "The CSV file '%s' is opened in another application.  This file must be closed in that "
 																	"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 																	"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sBatchResultsFN );
-						if (!OKToWriteOrDeleteFile( sBatchResultsFN.c_str(), sOverwriteResultsFileMsg.c_str() ))
+						if (!OKToWriteOrDeleteFile( sBatchResultsFN.c_str(), sOverwriteResultsFileMsg.c_str(), bSilent ))
 						{			iMode = -3;
 									sErrMsg = boost::str( boost::format( "Error:  Unable to write to batch results file specified in record %d:  '%s'" )
 																						% iBatchRecNum % sBatchResultsFN.c_str() );
@@ -7834,7 +7949,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							sOverwriteProjFileMsg.append( "' is opened in another application.  This file must be closed in that "
 																		"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 																		"(once the file is closed), or \n'Abort' to abort the batch processing." );
-							if (!OKToWriteOrDeleteFile( sRecProjOutFN.c_str(), sOverwriteProjFileMsg.c_str() ))
+							if (!OKToWriteOrDeleteFile( sRecProjOutFN.c_str(), sOverwriteProjFileMsg.c_str(), bSilent ))
 							{		iMode = -6;
 									sErrMsg = boost::str( boost::format( "Error:  Unable to write to project output/save file specified in record %d:  '%s'" )
 																						% iBatchRecNum % sRecProjOutFN.c_str() );
@@ -8106,15 +8221,18 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 												pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, sProcessingPath.c_str(), sProjPathFile.c_str(),
 												sBatchLogPathFile.c_str() /* ??? use overall batch OR individual Project Log File ??? */,
 												pszUIVersionString, true /*bLoadModelFile*/, saOptionCSV[iRun].c_str(), pszRuleErr, 1024,
-												true /*bDisplayProgress*/, hWnd, pszResultsRecord, 3200, iSecurityKeyIndex, pszSecurityKey );   // SAC 1/10/17
+												/*true*/ bDisplayProgress, hWnd, pszResultsRecord, 3200, iSecurityKeyIndex, pszSecurityKey );   // SAC 1/10/17
 				if (iAnalRetVal == 33)
 				{	// User aborted individual run, so ask if they want to abort ALL remaining runs
 									sErrMsg = boost::str( boost::format( "User aborted batch run %d (record %d)..." ) % (iRun+1) % iaBatchRecNums[iRun] );
 					if (iRun < (iRunsToPerform - 1))
-					{	sLogMsg = boost::str( boost::format( "Batch run %d (record %d) aborted.\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
-						if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
-							bAbort = true;
-					}
+					{	if (bSilent)      // SAC 02/13/25
+                     bAbort = true;
+                  else
+                  {  sLogMsg = boost::str( boost::format( "Batch run %d (record %d) aborted.\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
+						   if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
+							   bAbort = true;
+					}  }
 				}
 				else if (iAnalRetVal > 0)
 				{	// some error occurred - should be documented already
@@ -8155,13 +8273,16 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 					}	}
                long iCUACReportID = GetCSVOptionValue( "CUACReportID", 0, saCSVOptions );    // value > 0 => doing CUAC analysis & reporting - SAC 12/11/23 (CUAC)
 
-				// SAC 11/4/19 - moved summary results CSV record writing to HERE FROM BELOW to enable export of multiple records (results sets) per run
-					if (!OKToWriteOrDeleteFile( sBatchResultsFN.c_str(), sOverwriteResultsFileMsg.c_str() ))
+				   // SAC 11/4/19 - moved summary results CSV record writing to HERE FROM BELOW to enable export of multiple records (results sets) per run
+					if (!OKToWriteOrDeleteFile( sBatchResultsFN.c_str(), sOverwriteResultsFileMsg.c_str(), bSilent ))
 					{	if (iRun < (iRunsToPerform - 1))
-						{	sLogMsg = boost::str( boost::format( "Batch run %d (record %d) aborted.\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
-							if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
-								bAbort = true;
-						}
+						{	if (bSilent)
+                        bAbort = true;
+                     else 
+                     {  sLogMsg = boost::str( boost::format( "Batch run %d (record %d) aborted.\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
+							   if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
+								   bAbort = true;
+						}  }
 					}
 					else
 					{	bool bWriteHdrs = (!FileExists( sBatchResultsFN.c_str() ));
@@ -8185,7 +8306,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
                            csvFile.write( ",,,,Elapsed,Electric,,,Gas,,,Unit Type Weighted Average Allowances ($),,,,,Num Units,,,Number,\n" );
                            csvFile.write( "Start Date & Time,Filename (saved to),Run Title,Weather Station,Time,Utility,Territory,Tariff,Utility,Territory,Tariff,Electric,Gas,Water,Trash,Total,Total,,Unit Type,of Units,\n" );
                         }
-                        int iCSVRetVal = CUAC_WriteCSVSummary( csvFile, sProjPathFile.c_str(), pszSimWeatherPath );
+                        int iCSVRetVal = CUAC_WriteCSVSummary( csvFile, sProjPathFile.c_str(), pszSimWeatherPath, 0 /*MFam*/ );
                      }
                      else
                      {
@@ -8254,7 +8375,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						sOverwriteResultsCustomMeterFileMsg = boost::str( boost::format( "The CSV file '%s' is opened in another application.  This file must be closed in that "
 																	"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 																	"(once the file is closed), or \n'Abort' to skip storage of custom meter results." ) % sBatchCustomMeterResultsFN );
-						if (!OKToWriteOrDeleteFile( sBatchCustomMeterResultsFN.c_str(), sOverwriteResultsCustomMeterFileMsg.c_str() ))
+						if (!OKToWriteOrDeleteFile( sBatchCustomMeterResultsFN.c_str(), sOverwriteResultsCustomMeterFileMsg.c_str(), bSilent ))
 							bSkipCustomMeterStorage = true;
                }
                if (lCustomMeterOption > 0 && !bSkipCustomMeterStorage && iCUACReportID < 1)
@@ -8393,14 +8514,17 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 								{	std::string sOverwriteSDDXMLMsg = boost::str( boost::format( "The simulation SDD XML file '%s' is opened in another application.  This file must be closed in that "
 																				"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 																				"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sFileToWrite.c_str() );
-									if (!OKToWriteOrDeleteFile( sFileToWrite.c_str(), sOverwriteSDDXMLMsg.c_str() ))
-									{	sLogMsg = boost::str( boost::format( "Unable to overwrite simulation SDD XML file (run %d, record %d).\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
-										if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
-											bAbort = true;
-										else
-										{	sLogMsg = boost::str( boost::format( "User chose not to overwrite simulation SDD XML file (run %d, record %d):  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % sFileToWrite.c_str() );
-											BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+									if (!OKToWriteOrDeleteFile( sFileToWrite.c_str(), sOverwriteSDDXMLMsg.c_str(), bSilent ))
+									{	if (bSilent)
+                                 bAbort = true;
+                              else 
+                              {  sLogMsg = boost::str( boost::format( "Unable to overwrite simulation SDD XML file (run %d, record %d).\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
+										   if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
+											   bAbort = true;
+										   else
+										   {	sLogMsg = boost::str( boost::format( "User chose not to overwrite simulation SDD XML file (run %d, record %d):  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % sFileToWrite.c_str() );
+											   BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                              }  }
 									}
 									else if (!CopyFile( sSimSDDXMLSrc.c_str(), sFileToWrite.c_str(), FALSE ))
 									{	// DON'T ABORT ANALYSIS - simply report copy issue to log file
@@ -8450,14 +8574,17 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 								{	std::string sOverwriteCSEMsg = boost::str( boost::format( "The CSE file '%s' is opened in another application.  This file must be closed in that "
 																				"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 																				"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sFileToWrite.c_str() );
-									if (!OKToWriteOrDeleteFile( sFileToWrite.c_str(), sOverwriteCSEMsg.c_str() ))
-									{	sLogMsg = boost::str( boost::format( "Unable to overwrite CSE file (run %d, record %d).\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
-										if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
-											bAbort = true;
-										else
-										{	sLogMsg = boost::str( boost::format( "User chose not to overwrite CSE file (run %d, record %d):  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % sFileToWrite.c_str() );
-											BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
+									if (!OKToWriteOrDeleteFile( sFileToWrite.c_str(), sOverwriteCSEMsg.c_str(), bSilent ))
+									{	if (bSilent)
+                                 bAbort = true;
+                              else 
+                              {  sLogMsg = boost::str( boost::format( "Unable to overwrite CSE file (run %d, record %d).\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
+										   if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
+											   bAbort = true;
+										   else
+										   {	sLogMsg = boost::str( boost::format( "User chose not to overwrite CSE file (run %d, record %d):  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % sFileToWrite.c_str() );
+											   BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										}  }
 									}
 									else if (!CopyFile( sCSESrc.c_str(), sFileToWrite.c_str(), FALSE ))
 									{	// DON'T ABORT ANALYSIS - simply report copy issue to log file
@@ -9102,7 +9229,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 							daMtrEUResData[iMtr][iEU] = &daMtrTotResData[iMtr][0];
 						}
                   else
-                  {  if (iEUO[iEUOM][iEU] < 0 || !bEchoNResData)
+                  {  if (iEUO[iEUOM][iEU] < 0)  // removed: || !bEchoNResData) - to ensure EPlus ResCentral HVAC results get incorporated into Res hourly results - SAC 12/05/24 (gh support #83)
    							daMtrEUData[iMtr][iEU] = &daZero[0];   // EUs not to be reported - SAC 9/15/19
    						else if (BEMPX_GetHourlyResultArrayPtr( &daMtrEUData[iMtr][iEU], NULL, 0, pszModelName, pszaEPlusFuelNames[iMtr],
    	 																esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sEnduseName, iBEMProcIdx ) == 0 && daMtrEUData[iMtr][iEU] != NULL)
@@ -9118,9 +9245,16 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    							daMtrEUResData[iMtr][iEU] = &daZero[0];  
    						else if (BEMPX_GetHourlyResultArrayPtr( &daMtrEUResData[iMtr][iEU], NULL, 0, pszModelName, pszaEPlusFuelNames[iMtr],
    	 																esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sResEnduseName, iBEMProcIdx ) == 0 && daMtrEUResData[iMtr][iEU] != NULL)
-   						{	// OK - do nothing
+   						{	// res hourly results OK
+                        if (!bEchoNResData && daMtrEUData[iMtr][iEU] != &daZero[0] &&     // if NOT echoing NRes data but we HAVE NRes hourly results (presumably from ResCentral HVAC), then sum those into the Res results - SAC 12/05/24 (gh support #83)
+                            iEUO[iEUOM][iEU] != IDX_T24_NRES_EU_PV && iEUO[iEUOM][iEU] != IDX_T24_NRES_EU_BT)     // ignore PV & Batt here since they are duplicates of what is already retrieved for Res
+                           for (iYrHr=0; iYrHr<8760; iYrHr++)
+                              daMtrEUResData[iMtr][iEU][iYrHr] += daMtrEUData[iMtr][iEU][iYrHr];
    						}
-   						else
+   						else if (!bEchoNResData && daMtrEUData[iMtr][iEU] != &daZero[0] &&     // if no Res data And NOT echoing NRes data but we HAVE NRes hourly results (presumably from ResCentral HVAC), then use those as Res results - SAC 12/05/24 (gh support #83)
+                              iEUO[iEUOM][iEU] != IDX_T24_NRES_EU_PV && iEUO[iEUOM][iEU] != IDX_T24_NRES_EU_BT)     // ignore PV & Batt here since they are duplicates of what is already retrieved for Res
+                        daMtrEUResData[iMtr][iEU] = daMtrEUData[iMtr][iEU];
+                     else 
    							daMtrEUResData[iMtr][iEU] = &daZero[0];   // this combination of meter & enduse does not have results, so assign 8760 of zeroes
                }  }
 					// sum indiviudal enduse results into the CompTot & Tot enduses - SAC 2/1/17
@@ -9361,16 +9495,16 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    							for (iHr=1; iHr<25; iHr++)
    							{  iLocTmMo = iMo;  iLocTmDa = iDa;
                            if ( iDST_StMo < 0 || iMo < iDST_StMo || iMo > iDST_EndMo ||      // local time labeling - SAC 11/11/22
-                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 3))) ||
-                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  3))) )
+                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 2))) ||
+                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  2))) )
                               iLocTmHr = iHr;   // local time = Std time
-                           else if (iHr > 1)    // DST shifting mid-day
-                              iLocTmHr = iHr-1;
-                           else if (iDa > 1)    // DST shifting to prior day
-                           {  iLocTmDa = iDa-1;  iLocTmHr = 24;   
+                           else if (iHr < 24)   // DST shifting mid-day       // DST shift FIX (from subtracting to adding hr) - SAC 05/10/24
+                              iLocTmHr = iHr+1;
+                           else if (iDa < iNumDaysInMonth[iMo-1])    // DST shifting to following day
+                           {  iLocTmDa = iDa+1;  iLocTmHr = 1;   
                            }
-                           else                 // DST shifting to prior month
-                           {  iLocTmMo = iMo-1;  iLocTmDa = iNumDaysInMonth[iMo-2];  iLocTmHr = 24;   
+                           else                 // DST shifting to following month
+                           {  iLocTmMo = iMo+1;  iLocTmDa = 1;  iLocTmHr = 1;   
                            }
                            iYrHr++;
    				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"      // revised DST format to exclude trailing ':00' - SAC 11/12/22
@@ -9394,16 +9528,16 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    							for (iHr=1; iHr<25; iHr++)
    							{	iLocTmMo = iMo;  iLocTmDa = iDa;
                            if ( iDST_StMo < 0 || iMo < iDST_StMo || iMo > iDST_EndMo ||      // local time labeling - SAC 11/11/22
-                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 3))) ||
-                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  3))) )
+                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 2))) ||
+                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  2))) )
                               iLocTmHr = iHr;   // local time = Std time
-                           else if (iHr > 1)    // DST shifting mid-day
-                              iLocTmHr = iHr-1;
-                           else if (iDa > 1)    // DST shifting to prior day
-                           {  iLocTmDa = iDa-1;  iLocTmHr = 24;   
+                           else if (iHr < 24)   // DST shifting mid-day       // DST shift FIX (from subtracting to adding hr) - SAC 05/10/24
+                              iLocTmHr = iHr+1;
+                           else if (iDa < iNumDaysInMonth[iMo-1])    // DST shifting to following day
+                           {  iLocTmDa = iDa+1;  iLocTmHr = 1;   
                            }
-                           else                 // DST shifting to prior month
-                           {  iLocTmMo = iMo-1;  iLocTmDa = iNumDaysInMonth[iMo-2];  iLocTmHr = 24;   
+                           else                 // DST shifting to following month
+                           {  iLocTmMo = iMo+1;  iLocTmDa = 1;  iLocTmHr = 1;   
                            }
                            iYrHr++;
    				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
@@ -9427,16 +9561,16 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
    							for (iHr=1; iHr<25; iHr++)
    							{	iLocTmMo = iMo;  iLocTmDa = iDa;
                            if ( iDST_StMo < 0 || iMo < iDST_StMo || iMo > iDST_EndMo ||      // local time labeling - SAC 11/11/22
-                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 3))) ||
-                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  3))) )
+                                (iMo == iDST_StMo  && (iDa < iDST_StDa  || (iDa == iDST_StDa  && iHr <= 2))) ||
+                                (iMo == iDST_EndMo && (iDa > iDST_EndDa || (iDa == iDST_EndDa && iHr >  2))) )
                               iLocTmHr = iHr;   // local time = Std time
-                           else if (iHr > 1)    // DST shifting mid-day
-                              iLocTmHr = iHr-1;
-                           else if (iDa > 1)    // DST shifting to prior day
-                           {  iLocTmDa = iDa-1;  iLocTmHr = 24;   
+                           else if (iHr < 24)   // DST shifting mid-day       // DST shift FIX (from subtracting to adding hr) - SAC 05/10/24
+                              iLocTmHr = iHr+1;
+                           else if (iDa < iNumDaysInMonth[iMo-1])    // DST shifting to following day
+                           {  iLocTmDa = iDa+1;  iLocTmHr = 1;   
                            }
-                           else                 // DST shifting to prior month
-                           {  iLocTmMo = iMo-1;  iLocTmDa = iNumDaysInMonth[iMo-2];  iLocTmHr = 24;   
+                           else                 // DST shifting to following month
+                           {  iLocTmMo = iMo+1;  iLocTmDa = 1;  iLocTmHr = 1;   
                            }
                            iYrHr++;
    				            fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"

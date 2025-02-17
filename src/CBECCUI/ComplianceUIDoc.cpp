@@ -807,7 +807,8 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 		AfxMessageBox( eszPostRulesetSwitch );  //, "Ruleset Switch Completed" );
    else if (pMainWnd)
    {  // check for this being a CUAC_OldAccessDB project, and if so, open up the main CUAC dialog - SAC 09/19/23
-#ifdef UI_CANRES
+//#ifdef UI_CANRES      // switched to either Com or Res - SAC 06/14/24 (res tic #1378)
+#if defined(UI_CARES) || defined(UI_CANRES)
       long lCUAC_OldAccessDB=0;
 		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" ), lCUAC_OldAccessDB );
       if (lCUAC_OldAccessDB > 0)

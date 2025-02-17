@@ -1441,7 +1441,7 @@ bool BEMDaylitArea::InitSideDaylitAreas( double dParentZ )
 					{	m_polyOrigDaylitInSpc[1] = p;
 						m_dFinalArea[1] = boost::geometry::area(p);
 					}
-				}	assert( iNumSecPolys <= 1 );
+				}	// assert( iNumSecPolys <= 1 );  - removed assert - unusual, but not necessarily an error - SAC 06/08/24
 		//	// AND ALSO try opposing secondary daylit area --
 		//		boost::geometry::clear( polyTempSec );
 		//		//boost::geometry::append(  polyTempSec, boost::tuples::make_tuple(  dSecX3,  dSecY3 ));

@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "MF8 Restructure Prototype"  
    BldgEngyModelVersion = 17
    CreateDate = 1603224267
-   ModDate = 1714771611
-   RunDate = 1714771612
+   ModDate = 1738186525
+   RunDate = 1738186526
    GasType = "NaturalGas"
    CliZn = "ClimateZone12"
    ZipCode = 95814
@@ -24,7 +24,7 @@ Proj   "MF8 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
+   SoftwareVersion = "CBECC 2022.3.2 (1369)"
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
    ..
@@ -862,8 +862,8 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse5[4] = "0.50"
    Enduse5[5] = "0.1"
    Enduse5[6] = "--"
-   Enduse5[7] = "0.49"
-   Enduse5[8] = "-0.01"
+   Enduse5[7] = "0.50"
+   Enduse5[8] = "--"
    Enduse5[9] = "0.0"
    Enduse5[10] = "0.0"
    Enduse5[11] = "0.07"
@@ -912,8 +912,8 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse8[4] = "-6.00"
    Enduse8[5] = "-11.5"
    Enduse8[6] = "0.0"
-   Enduse8[7] = "-5.91"
-   Enduse8[8] = "0.09"
+   Enduse8[7] = "-5.90"
+   Enduse8[8] = "0.10"
    Enduse8[9] = "2.2"
    Enduse8[10] = "2.2"
    Enduse8[11] = "2.90"
@@ -1030,8 +1030,8 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse15[4] = "97.50"
    Enduse15[5] = "15.8"
    Enduse15[6] = "0.0"
-   Enduse15[7] = "97.59"
-   Enduse15[8] = "0.09"
+   Enduse15[7] = "97.60"
+   Enduse15[8] = "0.10"
    Enduse15[9] = "5.4"
    Enduse15[10] = "5.4"
    Enduse15[11] = "12.17"
@@ -1048,8 +1048,8 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse16[4] = "59.38"
    Enduse16[5] = "13.0"
    Enduse16[6] = "0.0"
-   Enduse16[7] = "59.42"
-   Enduse16[8] = "0.04"
+   Enduse16[7] = "59.43"
+   Enduse16[8] = "0.05"
    Enduse16[9] = "2.3"
    Enduse16[10] = "2.3"
    Enduse16[11] = "4.65"
@@ -1072,8 +1072,8 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    AnalysisValid = 0
    HideCompSmrySrc = 0
    HideCompSmryTot = 0
-   PctSavingsTDV = 0.0922226
-   PctSavingsEffTDV = 0.0673174
+   PctSavingsTDV = 0.102459
+   PctSavingsEffTDV = 0.0841326
    PctSavingsCmpTDV = 0
    PctSavTDVLbl = "0.1"
    PctSavEffTDVLbl = "0.1"
@@ -1090,8 +1090,8 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    PropPV_Export = 9744.89
    PropPV_PctExport = 39.6906
    StdPV_Total = 24532
-   StdPV_Export = 9735.3
-   StdPV_PctExport = 39.684
+   StdPV_Export = 9735.28
+   StdPV_PctExport = 39.6839
    ..
 
 ResConsAssm   "Exterior Wall Cons"  

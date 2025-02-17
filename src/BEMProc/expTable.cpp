@@ -357,6 +357,275 @@ BEMTableCell* BEMTable::LookupCell( int iRetColID, vector<string>& saIndepNames,
 	return pRetCell;
 }
 
+
+bool BEMTable::get2DInterpolatedValue( double& dInterpResult, vector<string>& saIndepNames, vector<string>& saIndepStrings,      // added to support 2D interpolation via look-up tables - SAC 08/22/24 (VCHP3)
+											vector<double>& faIndepValues, vector<bool>& baIndepNumeric, string& sErrMsg, BOOL bVerboseOutput ) 
+{	bool bRetVal = false;
+   int iIndep, i0Col, iRow, i0Cols[] = {-1,-1}, i0Rows[] = {-1,-1};
+   double dDeltaColFrac=0.0, dDeltaRowFrac=0.0;
+	vector<bool> iaIndepsChecked;   // array of bools indicating whether or not each independent (lookup argument) value was checked for matches either via row- or column-specified independents
+	for (iIndep=0; iIndep < (int) saIndepNames.size(); iIndep++)
+		iaIndepsChecked.push_back( false );
+
+	int iTotNumCols = (int) m_columnTitles.size();
+	bool bLookupValid = false;  // SAC 9/5/13 - new variable designed to ensure that at least SOME independent checking found matches
+	// FIRST select the COLUMN by evaluating independents defined in the rows immediately below the top column titles
+   // IGNORE First Col when doing interpolation
+	string sColTtl = (iTotNumCols > 1 ? m_columnTitles[1] : "");
+	int i0SelCol = (m_rowTitles.size() > 0 ? -1 : 0);
+	for (i0Col=1; (i0SelCol < 0 && i0Col < iTotNumCols); i0Col++)
+		//if (i0Col==0 || boost::iequals( m_columnTitles[i0Col], sColTtl ))
+		{	bool bColMatch = true;
+			for (iRow=0; (i0Col > 0 && bColMatch && iRow < (int) m_rowTitles.size()); iRow++)
+			{	bool bFoundIndep = false;
+				for (iIndep=0; (!bFoundIndep && iIndep < (int) saIndepNames.size()); iIndep++)
+					if (boost::iequals( m_rowTitles[iRow], saIndepNames[iIndep] ))
+					{	bFoundIndep = true;
+						iaIndepsChecked[iIndep] = true;
+						BEMTableCell* pRowIndepCellGrp = (BEMTableCell*) m_rowIndepCells[iRow];				assert( pRowIndepCellGrp );
+						if (pRowIndepCellGrp)
+						{	BEMTableCell* pRowIndepCell = &pRowIndepCellGrp[i0Col-1];							assert( pRowIndepCell );
+							if (pRowIndepCell)
+							{	if (pRowIndepCell->isWildCard() || pRowIndepCell->isMissing())
+								{	// automatic match
+									bLookupValid = true; 
+                           i0Cols[0] = i0Cols[1] = i0Col;
+								}
+								else if (pRowIndepCell->isFloat() && baIndepNumeric[iIndep])
+								{	bColMatch = pRowIndepCell->isMatch( faIndepValues[iIndep] );
+									if (bColMatch)
+									{	bLookupValid = true; 
+                              i0Cols[0] = i0Cols[1] = i0Col;
+                           }
+                           else if (pRowIndepCell->getValue() > -999 && pRowIndepCell->getValue() > faIndepValues[iIndep])
+                           {  BEMTableCell* pRowPrevIndepCell = (i0Col > 1 ? &pRowIndepCellGrp[i0Col-2] : NULL);
+                              if (pRowPrevIndepCell && pRowPrevIndepCell->getValue() < -998)
+         							{	bLookupValid = true; 
+                                 i0Cols[0] = i0Cols[1] = i0Col;  // prev row -999, so hardwire to this row
+                              }
+                              else
+                              {  if (i0Col > 1)
+                                 {  i0Cols[0] = i0Col-1;
+                                    dDeltaColFrac = 1.0 - ((pRowIndepCell->getValue() - faIndepValues[iIndep]) /
+                                                           (pRowIndepCell->getValue() - pRowPrevIndepCell->getValue()));
+                                 }
+                                 else
+                                    i0Cols[0] = 0;
+                                 i0Cols[1] = i0Col;
+                              }
+								}  }
+								else if (pRowIndepCell->isString() && !baIndepNumeric[iIndep])
+								{	bColMatch = pRowIndepCell->isMatch( saIndepStrings[iIndep] );
+									if (bColMatch)
+									{	bLookupValid = true; 
+                              i0Cols[0] = i0Cols[1] = i0Col;
+								}  }
+								else
+								{	// incompatible row conditions vs. lookup arguments
+									assert( FALSE );
+									if (baIndepNumeric[iIndep])
+										sErrMsg = boost::str( boost::format( "Incompatible table row (%s %s) and lookup (numeric %g) data" ) % m_rowTitles[iRow] % pRowIndepCell->cellTypeDescription() % faIndepValues[iIndep] );
+									else
+										sErrMsg = boost::str( boost::format( "Incompatible table row (%s %s) and lookup (string '%s') data" ) % m_rowTitles[iRow] % pRowIndepCell->cellTypeDescription() % saIndepStrings[iIndep] );
+									bColMatch = false;
+								}
+							}
+						}
+					}
+#ifdef _DEBUG
+            if (!bFoundIndep && iRow == (int) m_rowTitles.size()-1)    // switched from assert to error logging - SAC 10/20/22
+            {  QString qsDbgMsg = QString( "expTable BEMTable::get2DInterpolatedValue() error on %1:  i0Row %2, indep(s): " ).arg( m_name, QString::number(iRow) );
+   				for (iIndep=0; iIndep < (int) saIndepNames.size(); iIndep++)
+               {  if (iIndep > 0)
+                     qsDbgMsg += ", ";
+                  qsDbgMsg += saIndepNames[iIndep].c_str();
+               }
+               BEMPX_WriteLogFile( qsDbgMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            }
+#endif
+			}
+			if (i0Cols[0] >= 0)        //bColMatch)
+				i0SelCol = i0Cols[0];   //i0Col;
+		}
+	assert( i0SelCol >= 0 );
+
+	// NOW that we have a column selected, search for the ROW to return data from
+	// (looking only at rows to the LEFT of the row selected for return)
+	bool bErrorEncountered = false;  // SAC 9/5/13
+	if (i0SelCol >= 0)
+	{	// first develop mapping of independents to table columns
+		vector<int> iaIndepColIdx;
+		for (iIndep=0; iIndep < (int) saIndepNames.size(); iIndep++)
+		{	iaIndepColIdx.push_back( -1 );
+			// SAC 9/5/13 - modified code to search ALL columns for independents to return - allowing for return of data to LEFT of independent column(s)
+			for (i0Col=0; i0Col < iTotNumCols; i0Col++)
+				if (boost::iequals( m_columnTitles[i0Col], saIndepNames[iIndep] ))	// this will causing checking of indep w/ only the FIRST column matching the indep name when selecting the row of data to return
+				{	iaIndepColIdx[iIndep] = i0Col;
+					break;
+				}
+			// check to make sure each independent has a valid column index - SAC 9/5/13
+			// NOT A VALID CHECK - because this error gets triggered when independents are resolved via records listed @ top of table differentiating colums w/ same title
+			if (!iaIndepsChecked[iIndep] && iaIndepColIdx[iIndep] < 0)
+			{	sErrMsg = boost::str( boost::format( "No table column (or header row) found to be consistent with independent '%s'" ) % saIndepNames[iIndep] );
+				bErrorEncountered = true;
+				break;
+			}
+		}
+
+	   for (iRow = 0; (!bErrorEncountered && i0Rows[0] < 0 && iRow < (int) m_data.size()); iRow++)
+		{	bool bRowMatches = true;
+			for (iIndep=0; (!bErrorEncountered && bRowMatches && iIndep < (int) iaIndepColIdx.size()); iIndep++) 
+				if (iaIndepColIdx[iIndep] >= 0)
+				{	BEMTableCell* pRowIndepCell = &((BEMTableCell*) m_data[iRow])[ iaIndepColIdx[iIndep] ];				assert( pRowIndepCell );
+					if (pRowIndepCell)
+					{	if (pRowIndepCell->isWildCard() || pRowIndepCell->isMissing())
+						{	// automatic match
+							bLookupValid = true;
+                     i0Rows[0] = i0Rows[1] = iRow;
+						}
+						else if (pRowIndepCell->isFloat() && baIndepNumeric[iIndep])
+						{	bRowMatches = pRowIndepCell->isMatch( faIndepValues[iIndep] );
+							if (bRowMatches)
+							{	bLookupValid = true; 
+                        i0Rows[0] = i0Rows[1] = iRow;
+                     }
+                     else if (iRow == ((int) m_data.size() - 1) && pRowIndepCell->getValue() > -999 && pRowIndepCell->getValue() < faIndepValues[iIndep])
+							{	bLookupValid = true; 
+                        i0Rows[0] = i0Rows[1] = iRow;
+                     }
+                     else if (pRowIndepCell->getValue() > -999 && pRowIndepCell->getValue() > faIndepValues[iIndep])
+                     {  if (iRow > 0 && (&((BEMTableCell*) m_data[iRow-1])[ iaIndepColIdx[iIndep] ])->getValue() < -998)
+   							{	bLookupValid = true; 
+                           i0Rows[0] = i0Rows[1] = iRow;  // prev row -999, so hardwire to this row
+                        }
+                        else
+                        {  if (iRow > 0)
+                           {  i0Rows[0] = iRow-1;
+                              double dPrevRowVal = (&((BEMTableCell*) m_data[iRow-1])[ iaIndepColIdx[iIndep] ])->getValue();
+                              //dDeltaRowFrac = 1.0 - ((pRowIndepCell->getValue() - faIndepValues[iIndep]) /
+                              //                       (pRowIndepCell->getValue() - dPrevRowVal));
+                              dDeltaRowFrac = ((faIndepValues[iIndep]     - dPrevRowVal) /
+                                               (pRowIndepCell->getValue() - dPrevRowVal));
+                           }
+                           else
+                              i0Rows[0] = 0;
+                           i0Rows[1] = iRow;
+                        }
+						}  }
+						else if (pRowIndepCell->isString() && !baIndepNumeric[iIndep])
+						{	bRowMatches = pRowIndepCell->isMatch( saIndepStrings[iIndep] );
+							if (bRowMatches)
+							{	bLookupValid = true; 
+                        i0Rows[0] = i0Rows[1] = iRow;
+						}  }
+						else
+						{	bErrorEncountered = true;
+							// one more attempt to match - table cell characterized as numeric being matched to string - SAC 1/14/20
+							if (!baIndepNumeric[iIndep] && pRowIndepCell->isFloat() && pRowIndepCell->getCondition() == BEMC_Equal)
+							{	double indepVal = strtod( saIndepStrings[iIndep].c_str(), NULL );
+								bRowMatches = pRowIndepCell->isMatch( indepVal );
+								if (bRowMatches)
+								{	bLookupValid = true;
+                           i0Rows[0] = i0Rows[1] = iRow;
+                        }
+								bErrorEncountered = false;	// DON'T throww error here, because a subsequent table row may include a String in this table column - SAC 1/14/20
+							}
+							if (bErrorEncountered)
+							{	// incompatible row conditions vs. lookup arguments
+								if (sErrMsg.length() < 1)
+								{	if (baIndepNumeric[iIndep])
+										sErrMsg = boost::str( boost::format( "Incompatible table (row %d, col %d, %s %s) and lookup (numeric %g) data" ) % (iRow+1) % (iaIndepColIdx[iIndep]+1) % pRowIndepCell->cellTypeDescription() % pRowIndepCell->getStringRegardlessOfType() % faIndepValues[iIndep] );
+									else
+										sErrMsg = boost::str( boost::format( "Incompatible table (row %d, col %d, %s %s) and lookup (string '%s') data" ) % (iRow+1) % (iaIndepColIdx[iIndep]+1) % pRowIndepCell->cellTypeDescription() % pRowIndepCell->getStringRegardlessOfType() % saIndepStrings[iIndep] );
+								}
+								bRowMatches = false;
+							}
+						}
+					}
+				}
+			//assert( bRowMatches );
+
+//			if (bRowMatches && bLookupValid)
+//			{	// FOUND MATCHING ROW
+//				pRetCell = &((BEMTableCell*) m_data[iRow])[ i0SelCol ];
+//				switch (pRetCell->getCellType())
+//				{	case BEMTCT_Error     :	{	//string sCellStr = pRetCell->getString();		assert( sCellStr.length() > 0 );
+//														//sErrMsg = GetErrorMessage( sCellStr );
+//														sErrMsg = GetErrorMessage( pRetCell->getMessageID() );
+//													}	break;
+//				   case BEMTCT_Warning   :	{	//string sCellStr = pRetCell->getString();		assert( sCellStr.length() > 0 );
+//														//sErrMsg = GetWarningMessage( sCellStr );
+//														sErrMsg = GetWarningMessage( pRetCell->getMessageID() );
+//													}	break;
+//				}
+//			}
+
+		}
+
+//		if (pRetCell == NULL && sErrMsg.length() < 1)
+//			sErrMsg = "Table row match not found";
+	}
+	else if (sErrMsg.length() < 1)
+		sErrMsg = "Table column match not found";
+
+   string sVerboseInfo, sVerboseIndep;
+   if (bVerboseOutput)
+   {  sVerboseInfo = boost::str( boost::format( "   BEMTable %s get2DInterpolatedValue for " ) % m_name.toLocal8Bit().constData()  );
+      for (iIndep=0; iIndep < (int) saIndepNames.size(); iIndep++)
+      {  if (baIndepNumeric[iIndep])
+            sVerboseInfo += boost::str( boost::format( "%s = %g / " ) % saIndepNames[iIndep] % faIndepValues[iIndep] );
+         else
+            sVerboseInfo += boost::str( boost::format( "%s = %s / " ) % saIndepNames[iIndep] % saIndepStrings[iIndep] );
+      }
+      if (sErrMsg.length() > 0)
+         sVerboseInfo += boost::str( boost::format( "  Error: %s" ) % sErrMsg );
+   }
+
+   if (sErrMsg.length() < 1 && i0Cols[0] >= 0 && i0Cols[1] >= 0 && i0Rows[0] >= 0 && i0Rows[1] >= 0)     // interpolation of result to return - SAC 08/24/24 (VCHP3)
+   {  dInterpResult = -999.0;
+      BEMTableCell* pReturnCell[2];
+      if (i0Cols[0] == i0Cols[1] && i0Rows[0] == i0Rows[1])
+      {  pReturnCell[0] = &((BEMTableCell*) m_data[i0Rows[0]])[i0Cols[0]];				   assert( pReturnCell[0] ); 
+         if (pReturnCell[0])
+         {  dInterpResult = pReturnCell[0]->getValue();
+            if (bVerboseOutput)
+               sVerboseInfo += boost::str( boost::format( " Row %d, Col %d, return %g" ) % i0Rows[0] % i0Cols[0] % dInterpResult );
+         }
+         else if (bVerboseOutput)
+            sVerboseInfo += boost::str( boost::format( " Row %d, Col %d / Error retrieving cell" ) % i0Rows[0] % i0Cols[0] );
+      }
+      else
+      {  pReturnCell[0] = &((BEMTableCell*) m_data[i0Rows[0]])[i0Cols[0]];				   assert( pReturnCell[0] ); 
+         pReturnCell[1] = &((BEMTableCell*) m_data[i0Rows[0]])[i0Cols[1]];				   assert( pReturnCell[1] ); 
+         if (pReturnCell[0] == NULL || pReturnCell[1] == NULL)
+         {  if (bVerboseOutput)
+               sVerboseInfo += boost::str( boost::format( " Row %d, Cols %d & %d / Error retrieving cell(s)" ) % i0Rows[0] % i0Cols[0] % i0Cols[1] );
+         }
+         else
+         {  double dRow1Vals[2] = { pReturnCell[0]->getValue(), pReturnCell[1]->getValue() };
+            pReturnCell[0] = &((BEMTableCell*) m_data[i0Rows[1]])[i0Cols[0]];				   assert( pReturnCell[0] ); 
+            pReturnCell[1] = &((BEMTableCell*) m_data[i0Rows[1]])[i0Cols[1]];				   assert( pReturnCell[1] ); 
+            if (pReturnCell[0] == NULL || pReturnCell[1] == NULL)
+            {  if (bVerboseOutput)
+                  sVerboseInfo += boost::str( boost::format( " Row %d, Cols %d & %d / Error retrieving cell(s)" ) % i0Rows[1] % i0Cols[0] % i0Cols[1] );
+            }
+            else
+            {  double dRow2Vals[2] = { pReturnCell[0]->getValue(), pReturnCell[1]->getValue() };
+               double dColVals[2] = {  dRow1Vals[0] + (i0Cols[0] == i0Cols[1] ? 0.0 : (dDeltaColFrac * (dRow1Vals[1] - dRow1Vals[0]))),
+                                       dRow2Vals[0] + (i0Cols[0] == i0Cols[1] ? 0.0 : (dDeltaColFrac * (dRow2Vals[1] - dRow2Vals[0]))) };
+               dInterpResult = dColVals[0] + (i0Rows[0] == i0Rows[1] ? 0.0 : (dDeltaRowFrac * (dColVals[1] - dColVals[0])));
+               if (bVerboseOutput)
+                  sVerboseInfo += boost::str( boost::format( " Rows %d & %d, Cols %d & %d, Row vals %g & %g, return %g" ) % i0Rows[0] % i0Rows[1] % i0Cols[0] % i0Cols[1] % dColVals[0] % dColVals[1] % dInterpResult );
+      }  }  }
+      bRetVal = (dInterpResult != -999.0);
+   }
+   if (bVerboseOutput)
+      BEMPX_WriteLogFile( sVerboseInfo.c_str() );
+
+   return bRetVal;
+}
+
+
 std::string	BEMTable::GetErrorMessage(   string& sErrorLabel )
 {	assert( sErrorLabel.length() > 0 );
 	for (int i=0; i < (int) m_errorLabels.size(); i++)
@@ -478,11 +747,11 @@ bool BEMTable::Read( QFile& errorFile )
 ////            else
 ////               THROW_LAST();
 //         }
-					catch (std::exception &e)
-					{	std::cout << "unexpected exception " << e.what() << '\n';
-					}
+					//catch (std::exception &e)    - removed since doesn't impact table data - SAC 10/20/24
+					//{	std::cout << "unexpected exception " << e.what() << '\n';
+					//}
 					catch (...)
-					{	std::cout << "unexpected exception\n";
+					{	// std::cout << "unexpected exception\n";
 					}
       }
 //      catch( BEMTextioException& err )

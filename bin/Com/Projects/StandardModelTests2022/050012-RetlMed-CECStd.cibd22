@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "050012-RetlMed-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414952024
-   ModDate = 1714767996
-   RunDate = 1714767997
+   ModDate = 1738189838
+   RunDate = 1738189839
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -13,7 +13,7 @@ Proj   "050012-RetlMed-CECStd22"
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
+   SoftwareVersion = "CBECC 2022.3.2 (1369)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -2095,10 +2095,10 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "19.0"
    Enduse1[3] = "--"
-   Enduse1[4] = "23.06"
+   Enduse1[4] = "23.07"
    Enduse1[5] = "19.0"
    Enduse1[6] = "--"
-   Enduse1[7] = "23.06"
+   Enduse1[7] = "23.07"
    Enduse1[8] = "--"
    Enduse1[9] = "7.3"
    Enduse1[10] = "7.3"
@@ -2213,10 +2213,10 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse8[1] = "Total Compliance"
    Enduse8[2] = "47.1"
    Enduse8[3] = "0.0"
-   Enduse8[4] = "105.29"
+   Enduse8[4] = "105.30"
    Enduse8[5] = "47.1"
    Enduse8[6] = "0.0"
-   Enduse8[7] = "105.29"
+   Enduse8[7] = "105.30"
    Enduse8[8] = "--"
    Enduse8[9] = "17.6"
    Enduse8[10] = "17.6"
@@ -2331,10 +2331,10 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse15[1] = "TOTAL"
    Enduse15[2] = "125.1"
    Enduse15[3] = "0.0"
-   Enduse15[4] = "185.92"
+   Enduse15[4] = "185.93"
    Enduse15[5] = "125.1"
    Enduse15[6] = "0.0"
-   Enduse15[7] = "185.92"
+   Enduse15[7] = "185.93"
    Enduse15[8] = "--"
    Enduse15[9] = "21.3"
    Enduse15[10] = "21.3"
@@ -2349,10 +2349,10 @@ EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"
    Enduse16[1] = "Efficiency Compliance"
    Enduse16[2] = "142.7"
    Enduse16[3] = "0.0"
-   Enduse16[4] = "183.05"
+   Enduse16[4] = "183.06"
    Enduse16[5] = "142.7"
    Enduse16[6] = "0.0"
-   Enduse16[7] = "183.05"
+   Enduse16[7] = "183.06"
    Enduse16[8] = "--"
    Enduse16[9] = "18.0"
    Enduse16[10] = "18.0"
@@ -2376,8 +2376,8 @@ clg: 0  htg: 0  'Core_Retail Thermal Zone'
 clg: 0  htg: 0  'Front_Entry Thermal Zone'
 clg: 0  htg: 0  'Front_Retail Thermal Zone'
 clg: 0  htg: 0  'Point_Of_Sale Thermal Zone'" )
-   SimSummary[1] = "CSE Successful, E+ Successful (130 warnings)"
-   SimSummary[3] = "CSE Successful, E+ Successful (130 warnings)"
+   SimSummary[1] = "CSE Successful, E+ Successful (122 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (122 warnings)"
    PassFail = "PASS"
    MetricPassFail[1] = "Pass"
    MetricPassFail[2] = "Pass"
@@ -2402,13 +2402,13 @@ clg: 0  htg: 0  'Point_Of_Sale Thermal Zone'" )
    MarginkW = 0
    PVBattResultsValid = 1
    PropPV_Total = 95985.6
-   PropPV_Export = 1813.29
-   PropPV_PctExport = 1.88913
+   PropPV_Export = 1813.28
+   PropPV_PctExport = 1.88912
    StdPV_Total = 95985.6
    StdPV_Export = 1815.51
    StdPV_PctExport = 1.89144
-   NRCCPRFPayldTransID = "e6eb7ffc-edc5-4a17-89e6-a8687abee25b"
-   NRCCPRFPayldProcDate = "2024-05-03T13:26:24"
+   NRCCPRFPayldTransID = "1bb608c6-918d-4589-af4d-83ddc4b41b5d"
+   NRCCPRFPayldProcDate = "2025-01-29T14:30:25"
    ..
 
 

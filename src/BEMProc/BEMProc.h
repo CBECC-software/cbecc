@@ -305,6 +305,8 @@ void BEMPROC_API __cdecl BEMPX_CloseBEMProc( bool bShuttingDown=true, bool bClos
 
 bool BEMPROC_API __cdecl BEMPX_SecureExecutable();
 
+bool BEMPROC_API __cdecl BEMPX_SetAllowWindowsUIFlag( bool bFlagVal );     // returns PRIOR AllowWindowsUI setting - SAC 10/21/24
+
 int  BEMPROC_API __cdecl BEMPX_CheckDataModelBin( const char* pszBinFileName );	// 0-OK, >0-error
 BOOL BEMPROC_API __cdecl BEMPX_LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,		// was: BEMPX_InitBEMProc()
 																const char* psInitLogFileName = NULL );
@@ -764,7 +766,7 @@ UINT   BEMPROC_API __cdecl BEMPX_GetTopicHelpID( long lDBID );
 int    BEMPROC_API __cdecl BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx=-1, int iWhatToPlot=1,  // SAC 11/27/13
 															int iDayltMethod=1 );  // SAC 7/29/18
 
-int    BEMPROC_API __cdecl BEMPX_GeneratePDF( const char* pszPDFPathFile, const char* pszRptGraphicsPath, int iPDFID, int iBEMProcIdx=-1 );    // SAC 10/27/22 (CUAC)
+int    BEMPROC_API __cdecl BEMPX_GeneratePDF( const char* pszPDFPathFile, const char* pszRptGraphicsPath, int iPDFID, int iBEMProcIdx=-1, int iDataModel=0 );    // SAC 10/27/22 (CUAC)
 
 /////////////////////////////////////////////////////////////////////////////
 // AnalysisAction

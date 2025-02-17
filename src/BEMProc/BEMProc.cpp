@@ -94,6 +94,18 @@ bool BEMPX_SecureExecutable()
 	return (qsTest.compare(test)!=0);
 }
 
+
+/////////////////////////////////////////////////////////////////////////////
+// added to prevent any sort of windows dialog/UI during command line/batch/CLI processing - SAC 10/21/24
+bool ebAllowWindowsUI = true;
+
+bool BEMPX_SetAllowWindowsUIFlag( bool bFlagVal )     // returns PRIOR AllowWindowsUI setting - SAC 10/21/24
+{  bool bRetVal = ebAllowWindowsUI;
+   ebAllowWindowsUI = bFlagVal;
+   return bRetVal;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // 
 /////////////////////////////////////////////////////////////////////////////
@@ -5934,7 +5946,11 @@ UINT GetDefaultMsgBoxButton( UINT nAllBtns, UINT nDefault )
 
 int BEMMessageBox(const TCHAR* msg, const TCHAR* caption /*=NULL*/, UINT nIcon /*=0*/, UINT nType /*=1024*/, UINT nDefault /*=0*/, const TCHAR* details /*=NULL*/ )
 {	int iRetVal = -1;
+   bool bLocalAllowWindowsUI = ebAllowWindowsUI;   // SAC 10/21/24
+
 #ifdef BEM_QTGUI
+   if (bLocalAllowWindowsUI)
+   {
 		QApplication* pqApp = NULL;
 		if (QCoreApplication::instance() == NULL)
 		{	int argc = 0;
@@ -5966,13 +5982,39 @@ int BEMMessageBox(const TCHAR* msg, const TCHAR* caption /*=NULL*/, UINT nIcon /
 
 		if (pqApp)
 			delete pqApp;
+   }
+#else
+   bLocalAllowWindowsUI = false;
 #endif
+
+   if (!bLocalAllowWindowsUI)   // SAC 10/21/24
+   {  QString qsLog, qsLogFN = BEMPX_GetLogFilename( false /*bCSVLog*/ );
+      if (caption && strlen( caption ) > 0)
+      {  qsLog = caption;     qsLog += " -- ";
+      }
+      if (msg && strlen( msg ) > 0)
+         qsLog += msg;
+      if (details && strlen( details ) > 0)
+      {  qsLog += "\n";       qsLog += details;
+      }
+
+      if (qsLogFN.isEmpty())
+      {  std::cout << qsLog.toLocal8Bit().constData() << '\n';
+      }
+      else
+         BEMPX_WriteLogFile( qsLog );
+   }
+
 	return iRetVal;
 }
 
 int BEMMessageBox( QString msg, QString caption /*=""*/, UINT nIcon /*=0*/, UINT nType /*=1024*/, UINT nDefault /*=0*/, QString details /*=""*/ )
 {	int iRetVal = -1;
+   bool bLocalAllowWindowsUI = ebAllowWindowsUI;   // SAC 10/21/24
+
 #ifdef BEM_QTGUI
+   if (bLocalAllowWindowsUI)
+   {
 		QApplication* pqApp = NULL;
 		if (QCoreApplication::instance() == NULL)
 		{	int argc = 0;
@@ -6002,7 +6044,29 @@ int BEMMessageBox( QString msg, QString caption /*=""*/, UINT nIcon /*=0*/, UINT
 
 		if (pqApp)
 			delete pqApp;
+   }
+#else
+   bLocalAllowWindowsUI = false;
 #endif
+
+   if (!bLocalAllowWindowsUI)   // SAC 10/21/24
+   {  QString qsLog, qsLogFN = BEMPX_GetLogFilename( false /*bCSVLog*/ );
+      if (!caption.isEmpty())
+      {  qsLog = caption;     qsLog += " -- ";
+      }
+      if (!msg.isEmpty())
+         qsLog += msg;
+      if (!details.isEmpty())
+      {  qsLog += "\n";       qsLog += details;
+      }
+
+      if (qsLogFN.isEmpty())
+      {  std::cout << qsLog.toLocal8Bit().constData() << '\n';
+      }
+      else
+         BEMPX_WriteLogFile( qsLog );
+   }
+
 	return iRetVal;
 }
 

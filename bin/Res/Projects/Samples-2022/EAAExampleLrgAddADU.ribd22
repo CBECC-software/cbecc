@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "EAA Example 3 w/ ADU & Addition"  
    BEMVersion = 12
-   SoftwareVersion = "CBECC-Res 2022.3.1 RC (1342)"
+   SoftwareVersion = "CBECC-Res 2022.3.2 (1368)"
    SoftwareVersionDetail = "CBECC-Res 2022.3.1 RC (1342)"
    CreateDate = 1556216792
-   ModDate = 1714754745
+   ModDate = 1738260346
    RunDate = 1474307407
    ProjFileName = "EAAExample3LrgAddADU.ribd22"
    RunTitle = "Gar Convert to ADU & Master Suite"
@@ -18,6 +18,7 @@ Proj   "EAA Example 3 w/ ADU & Addition"
    ComplianceReportXML = 1
    CommunitySolarProject = "- select CS project -"
    InCmntySlrProjTerritory = 0
+   SMUDSlrSharesReserved = 0
    PVCompCredit = 0
    PVWInputs = "Simplified"
    PVSizeOption = "Use Specified Sizes"
@@ -1471,7 +1472,7 @@ Attic   "Addtn Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220301
+   ResultsAnalysisVer = 220303
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -1520,27 +1521,27 @@ EUseSummary   "EUSummary"
    Title3[30] = "Margin (kg)"
    Enduse1[1] = "Space Heating"
    Enduse1[2] = "1,178"
-   Enduse1[3] = "521.4"
-   Enduse1[4] = "65.55"
+   Enduse1[3] = "521.3"
+   Enduse1[4] = "65.54"
    Enduse1[5] = "1,109"
    Enduse1[6] = "491.2"
-   Enduse1[7] = "61.80"
+   Enduse1[7] = "61.79"
    Enduse1[8] = "-3.75"
    Enduse1[10] = "0.45"
    Enduse1[11] = "0.42"
    Enduse1[23] = "280"
-   Enduse1[24] = "3,049"
-   Enduse1[25] = "3,329"
+   Enduse1[24] = "3,048"
+   Enduse1[25] = "3,328"
    Enduse1[27] = "264"
    Enduse1[28] = "2,872"
-   Enduse1[29] = "3,137"
+   Enduse1[29] = "3,136"
    Enduse1[30] = "-192"
    Enduse2[1] = "Space Cooling"
    Enduse2[2] = "3,736"
    Enduse2[4] = "77.17"
-   Enduse2[5] = "4,106"
-   Enduse2[7] = "82.06"
-   Enduse2[8] = "4.89"
+   Enduse2[5] = "4,107"
+   Enduse2[7] = "82.07"
+   Enduse2[8] = "4.90"
    Enduse2[10] = "0.43"
    Enduse2[11] = "0.43"
    Enduse2[23] = "484"
@@ -1645,36 +1646,36 @@ EUseSummary   "EUSummary"
    Enduse10[1] = "TOTAL"
    Enduse10[2] = "10,196"
    Enduse10[3] = "844.1"
-   Enduse10[4] = "217.65"
+   Enduse10[4] = "217.64"
    Enduse10[5] = "10,498"
-   Enduse10[6] = "958.4"
+   Enduse10[6] = "958.3"
    Enduse10[7] = "233.35"
-   Enduse10[8] = "15.70"
+   Enduse10[8] = "15.71"
    Enduse10[10] = "1.58"
    Enduse10[11] = "1.56"
    Enduse10[23] = "1,632"
-   Enduse10[24] = "4,937"
-   Enduse10[25] = "6,568"
+   Enduse10[24] = "4,936"
+   Enduse10[25] = "6,567"
    Enduse10[27] = "1,659"
    Enduse10[28] = "5,604"
-   Enduse10[29] = "7,264"
+   Enduse10[29] = "7,263"
    Enduse10[30] = "696"
    Enduse11[1] = "Compliance Total"
-   Enduse11[2] = "5,498"
+   Enduse11[2] = "5,499"
    Enduse11[3] = "772.5"
-   Enduse11[4] = "172.51"
+   Enduse11[4] = "172.50"
    Enduse11[5] = "5,800"
-   Enduse11[6] = "886.8"
+   Enduse11[6] = "886.7"
    Enduse11[7] = "188.21"
-   Enduse11[8] = "15.70"
+   Enduse11[8] = "15.71"
    Enduse11[10] = "0.94"
    Enduse11[11] = "0.92"
    Enduse11[23] = "854"
-   Enduse11[24] = "4,518"
-   Enduse11[25] = "5,371"
+   Enduse11[24] = "4,517"
+   Enduse11[25] = "5,370"
    Enduse11[27] = "881"
    Enduse11[28] = "5,185"
-   Enduse11[29] = "6,067"
+   Enduse11[29] = "6,066"
    Enduse11[30] = "696"
    Enduse13[1] = "Photovoltaics"
    Enduse13[4] = "0.00"
@@ -1709,14 +1710,14 @@ EUseSummary   "EUSummary"
    SummaryCol2[2] = "Total"
    SummaryCol2[3] = "(kTDV/ft²-yr)"
    SummaryCol2[4] = "188.21"
-   SummaryCol2[5] = "172.51"
+   SummaryCol2[5] = "172.50"
    SummaryCol3[1] = "Compliance"
    SummaryCol3[2] = "Margin"
    SummaryCol3[3] = "(kTDV/ft²-yr)"
-   SummaryCol3[5] = "15.70"
+   SummaryCol3[5] = "15.71"
    MarginkW[1] = -0.02
-   MarginkWh = 302
-   MarginTherms = 114.24
+   MarginkWh = 302.2
+   MarginTherms = 114.25
    PctSavingskW = -1.3
    PctSavingskWh = 2.9
    PctSavingsTherms = 11.9
@@ -1729,8 +1730,8 @@ EUseSummary   "EUSummary"
    PctSavTDVLbl = "6.7"
    PctSavCmpTDVLbl = "8.3"
    PctSavSrcLbl = "9.4"
-   PropElecDemand[1] = 1.57571
-   StdElecDemand = 1.55503
+   PropElecDemand[1] = 1.5757
+   StdElecDemand = 1.555
    StdDesignPVSize = 0
    PropPV_Total = 0
    PropPV_Export = 0
@@ -1744,18 +1745,18 @@ EUseSummary   "EUSummary"
    CO2TotalUnitLabel = "kg"
    MeetsTier1 = 0
    MeetsTier2 = 0
-   PropElecCarbon[1] = 1.63241
-   PropFuelCarbon[1] = 4.93611
-   PropFinalCarbon[1] = 6.56852
-   PropExclExpCarbon[1] = 6.56852
+   PropElecCarbon[1] = 1.63242
+   PropFuelCarbon[1] = 4.9356
+   PropFinalCarbon[1] = 6.56801
+   PropExclExpCarbon[1] = 6.56801
    PropExportCarbon[1] = 0
    PropSelfConsCarbon[1] = 0
-   PropNoSolFlxCarbon[1] = 6.56852
-   StdFinalCarbon = 7.2637
-   StdExclExpCarbon = 7.2637
+   PropNoSolFlxCarbon[1] = 6.56801
+   StdFinalCarbon = 7.26327
+   StdExclExpCarbon = 7.26327
    StdExportCarbon = 0
    StdSelfConsCarbon = 0
-   StdNoSolFlxCarbon = 7.2637
+   StdNoSolFlxCarbon = 7.26327
    HideCompSummary = 1
    HideEDRs = 1
    HideC02Emissions = 0
@@ -1853,6 +1854,7 @@ Cons   "Asphalt Shingle Roof-user"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 1
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1886,6 +1888,7 @@ Cons   "Asphalt Shingle Roof"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1919,6 +1922,7 @@ Cons   "Ceiling R11"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1950,6 +1954,7 @@ Cons   "Wall R0"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1982,6 +1987,7 @@ Cons   "Raised Crawl R0"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2014,6 +2020,7 @@ Cons   "Interior R0"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2046,6 +2053,7 @@ Cons   "R-38 Ceiling"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2077,6 +2085,7 @@ Cons   "R-19 + R5"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2109,6 +2118,7 @@ Cons   "Asphalt High performance"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 1
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2142,6 +2152,7 @@ Cons   "Asphalt RB"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 1
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2174,6 +2185,7 @@ Cons   "R-15 Wall"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2206,6 +2218,7 @@ Cons   "R-19"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2238,6 +2251,7 @@ Cons   "R-19 Raised"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2270,6 +2284,7 @@ Cons   "R-38 Cathedral"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2302,6 +2317,7 @@ Cons   "R-21"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2810,6 +2826,7 @@ HVACCool   "Ex Cooling"
 HVACHtPump   "Minisplit HP"  
    Type = "DuctlessMiniSplitHeatPump - Ductless mini-split heat pump"
    EffMetric = "HSPF/SEER/EER"
+   Speeds = "n/a"
    HSPF = 8.2
    HSPF2 = 7.5
    Cap47 = 36000
@@ -2832,6 +2849,7 @@ HVACDist   "Ducts"
    Status = "Existing"
    IsVerified = 0
    DefaultSystem = 0
+   InUnventedInsulAttic = 0
    DuctLeakage = "Existing (not specified)"
    DuctLeakageVal = 5
    exDuctLeakageVal = 10
@@ -2929,6 +2947,7 @@ DHWHeater   "Tankless 0.82"
    HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
+   JA13UICompliance = 0
    HPWHComModel = "n/a"
    ASHPType = "- select HPWH type -"
    EnergyFactor = 0.81
@@ -2951,6 +2970,7 @@ DHWHeater   "Gas Storage"
    HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
+   JA13UICompliance = 0
    HPWHComModel = "n/a"
    ASHPType = "- select HPWH type -"
    EnergyFactor = 0.73
@@ -2970,6 +2990,7 @@ DHWHeater   "Tankless UEF"
    HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
+   JA13UICompliance = 0
    HPWHComModel = "n/a"
    EnergyFactor = 0.81
    TankVolume = 0

@@ -130,6 +130,8 @@ public:
 	BOOL GetIsHERS() const { return RunIsHERS(m_iRunType); }
 	void SetCSE_DHWonly(BOOL bCSE_DHWonly) { m_bCSE_DHWonly = bCSE_DHWonly; }		// SAC 7/7/20
 	BOOL GetCSE_DHWonly() const { return m_bCSE_DHWonly; }
+	void SetUsingSubstituteResults(BOOL bUsingSubstResults) { m_bUsingSubstituteResults = bUsingSubstResults; }  // SAC 01/21/25
+	BOOL GetUsingSubstituteResults() const { return m_bUsingSubstituteResults; }
 	void SetExitCode(int iExitCode) { m_iExitCode = iExitCode; }
 	int GetExitCode() const { return m_iExitCode; }
 	void SetExecStream(class exec_stream_t* pES) { m_pES = pES; }
@@ -147,6 +149,7 @@ private:
 	BOOL m_bLastRun;
 	BOOL m_bIsStdDesign;
 	BOOL m_bCSE_DHWonly;		// SAC 7/7/20
+	BOOL m_bUsingSubstituteResults;  // SAC 01/21/25
 	int m_iExitCode;
 	class exec_stream_t* m_pES;
 };		// class CSERun
@@ -169,7 +172,8 @@ public:
 	int SetupRunFinish(  int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
 	int SetupRun_NonRes( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL,
-								int iBEMProcIdx=-1, bool bRemovePVBatt=false, bool bPerformFullCSESim=false );
+								int iBEMProcIdx=-1, bool bRemovePVBatt=false, bool bPerformFullCSESim=false, int iCUACReportID=0,   // iCUACReportID - SAC 12/13/24
+                        const char* pszSubstituteOutFile=NULL );     // SAC 01/21/25
 	bool T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 									QString& sErrorMsg, int iModelType=0 );	// SAC 12/13/18 (HPWHSIZE)
 	bool T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID,

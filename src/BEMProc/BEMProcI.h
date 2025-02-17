@@ -36,6 +36,9 @@
 #include "expCrypFile.h"
 #include "BEMPropertyType.h"
 
+// added to prevent any sort of windows dialog/UI during command line/batch/CLI processing - SAC 10/21/24
+extern bool ebAllowWindowsUI;
+
 // Function to resolve all object references following project or library data read
 extern int  BEMP_ResolveAllReferences( BEM_ObjType eObjType=BEMO_User, QFile* pErrorFile=NULL,
 													BOOL bPostErrors=TRUE, int iBEMProcIdx=-1,

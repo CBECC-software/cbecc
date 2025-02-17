@@ -717,8 +717,8 @@ int CMainFrame::AddFileListToMenu( CMenu* pPopupMenu, CString sFileListPath )  /
 	CString sFN, sMenuItem, sFileFilter = sFileListPath + CString("*.*");
 	struct _finddata_t c_file;
 	try
-	{	long hFile = _findfirst( sFileFilter, &c_file );
-		if (hFile != -1)
+	{	intptr_t hFile = _findfirst( sFileFilter, &c_file );        // switched from long - SAC 06/10/24
+		if (hFile != -1L)
 		{	do
 			{	sFN = c_file.name;
 				if (sFN.Compare(".") && sFN.Compare("..") && sFN.GetLength() > 3)
@@ -1286,7 +1286,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 			}
 		}
 		else if ( (wAction >= 3051 && wAction <= 3058) ||
-					 (wAction >= 3074 && wAction <= 3079) )
+					 (wAction >= 3074 && wAction <= 3079) ||
+					 (wAction >= 3100 && wAction <= 3120) )
 		{
 			CString sBrowsePath, sFileDescrip, sFileExt, sInitString;
 			long lDBID_File = 0;
@@ -1372,6 +1373,19 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				sFileExt	    = _T("csv");
 				lDBID_File	 = BEMPX_GetDatabaseID( "Proj:ReplaceRuleTableFile[1]" ) + (wAction - 3075);		ASSERT( lDBID_File > 0 );
 			}
+			else if (wAction == 3100)                          // CUAC:ComparisonOutputFile - SAC 10/23/24 (tic #1386)
+			{	bOpenDlg = FALSE;
+            sBrowsePath = esProjectsPath;
+				sFileDescrip = _T("Combined CUAC Results Output file (*.csv)|*.csv||");
+				sFileExt	    = _T("csv");
+				lDBID_File	 = BEMPX_GetDatabaseID( "CUAC:CombinedResultsFile" );		ASSERT( lDBID_File > 0 );
+			}
+			else if (wAction >= 3101 && wAction <= 3120)		   // CUAC:ComparisonOutputFile - SAC 10/23/24 (tic #1386)
+			{	sBrowsePath = esProjectsPath;
+				sFileDescrip = _T("Detailed CUAC Results file (*.csv)|*.csv||");
+				sFileExt	    = _T("csv");
+				lDBID_File	 = BEMPX_GetDatabaseID( "CUAC:ResultsCSVToCombine[1]" ) + (wAction - 3101);		ASSERT( lDBID_File > 0 );
+			}
 
 			if (lDBID_File <= 0 || !DirectoryExists( sBrowsePath ))
 			{  ASSERT( FALSE );
@@ -1406,13 +1420,74 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 						lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}
 		}
-		else if (wAction >= 3060 && wAction <= 3063)
+      else if (wAction == 3097)     // CUAC - clear combination CSVs - SAC 10/25/24
+      {
+         CMX_EvaluateRuleset( "Clear_CUAC_ResultsCombining", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+                              NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+                              0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+         CMX_EvaluateRuleset( "Default_CUAC_ResultsCombining", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+                              NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+                              0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+      }
+      else if (wAction == 3098)     // CUAC - process of Combining multiple results sets into one
+      {
+         bool bStoreBEMDetails = (ReadProgInt( "options", "StoreBEMDetails"  , 0) > 0);
+         bool bVerbose         = (ReadProgInt( "options", "LogRuleEvaluation", 0) > 0);
+         char pszOutputMsg[2048];
+                  int iCUACDataModelID = -1;
+#ifdef UI_CARES
+                  iCUACDataModelID = 1;
+#elif UI_CANRES
+                  iCUACDataModelID = 0;
+#endif  // UI_CARES or UI_CANRES
+
+         int iCombineRetVal = CUAC_CombineReports( bStoreBEMDetails, false /*bSilent*/, bVerbose, pszOutputMsg, 2048,
+                                                   (const char*) esBEMBasePath, -1 /*iCUAC_BEMProcIdx*/, iCUACDataModelID );   // iDataModel: 0-CBECC / 1-SFam Res
+
+         // Clean-up of report combo data HERE or inside combining routine (before return) ?? */
+
+         UINT uiIconID = (iCombineRetVal < 0 ? 3 /*error*/ : 1 /*info*/);   // or 0 => none?
+         QString qsCap = "CUAC Report Combining";
+         if (iCombineRetVal < 0)
+            qsCap = QString( "%1 Errors Combining CUAC Reports" ).arg( QString::number( (-1 * iCombineRetVal) ) );
+         else if (iCombineRetVal > 0)
+            qsCap = QString( "%1 CUAC Reports Combined" ).arg( QString::number( iCombineRetVal ) );
+         BEMMessageBox( pszOutputMsg, qsCap, uiIconID );
+         lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
+      }
+      else if (wAction == 3121)     // ResZone - Custom Thermostat options - SAC 11/09/24
+      {	int iDlgHt = 320, iDlgWd = 650;  
+      	int iDlgClassID = -1;
+#ifdef UI_CARES
+                  iDlgClassID = eiBDBCID_Zone;
+#elif UI_CANRES
+                  iDlgClassID = eiBDBCID_ResZn;
+#endif  // UI_CARES or UI_CANRES
+         if (iDlgClassID > 0)
+         {  CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Zone Thermostat Options" /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+            dlgProj.DoModal();
+      }  }
+		else if ((wAction >= 3060 && wAction <= 3063) || wAction == 3099)
 		{
 			QString qsInitPath;
 			CString sDlgCaption;
 			long lDBID_Path = 0;
 			UINT uiBrowseFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
-			if (wAction == 3060)
+         if (wAction == 3099)       // CUAC - combination input path - SAC 10/25/24
+			{	lDBID_Path = BEMPX_GetDatabaseID( "CUAC:ResultsCSVToCombineDir" );
+				uiBrowseFlags = uiBrowseFlags | BIF_NONEWFOLDERBUTTON;
+				sDlgCaption = "CUAC Report Combination Input Selection";
+			}
+			else if (wAction == 3060)
 			{	lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:ProjDirectory" );
 				uiBrowseFlags = uiBrowseFlags | BIF_NONEWFOLDERBUTTON;
 				sDlgCaption = "Batch Project Directory Selection";
@@ -1499,7 +1574,10 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 						{	if (pDoc)
 								pDoc->SetModifiedFlag();
 							lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
-							BatchUIDefaulting();
+                     if (wAction == 3099)       // CUAC Report Combining
+   							CUACReportCombiningUIDefaulting();
+                     else
+   							BatchUIDefaulting();
 					}	}
 			}	}
 		}
@@ -1947,7 +2025,10 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
    									iActiveObjIdx_ResOtherZn /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ ) ? 1 : 0);
          }
 		}
-		else if (wAction == 3068)		// button to initiate CUAC analysis and/or reporting - SAC 08/19/22 (CUAC)
+
+#endif  // UI_CARES or UI_CANRES
+
+		else if (wAction == 3068)		// button to initiate CUAC analysis and/or reporting - SAC 08/19/22 (CUAC)  // moved OUTSIDE Com/Res-specific - SAC 05/30/24
       {	long lCUAC_OldAccessDB=0; 
 			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" ), lCUAC_OldAccessDB );
          if (lCUAC_OldAccessDB > 0)
@@ -1962,6 +2043,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
             int iConnectTimeoutSecs     = ReadProgInt( "options", "RptGenConnectTimeout",    10 /*default*/ ); 
             int iReadWriteTimeoutSecs   = ReadProgInt( "options", "RptGenReadWriteTimeout", 480 /*default*/ );
             int iLogCUACBillCalcDetails = ReadProgInt( "options", "LogCUACBillCalcDetails",  -1 /*default*/ );    // SAC 09/21/23
+            int iDownloadVerbose        = ReadProgInt( "options", "DownloadVerbose",         -1 /*default*/ );    // SAC 09/03/24
 
             CString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
             sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", FALSE );
@@ -2014,7 +2096,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                                      (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials), 
                                      (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType), 
                                      pszCUACErrMsg, 1024, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iConnectTimeoutSecs, iReadWriteTimeoutSecs,
-                                     (sCUACElecTariffFile.IsEmpty()     ? NULL : (const char*) sCUACElecTariffFile) );     // SAC 03/12/24
+                                     (sCUACElecTariffFile.IsEmpty()     ? NULL : (const char*) sCUACElecTariffFile), iDownloadVerbose );     // SAC 03/12/24
                      //											94 : Error downloading CUAC electric tariff schedule
                   if (iCUACRetVal > 0)
                   {  if (strlen( pszCUACErrMsg ) > 0)
@@ -2031,7 +2113,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                                      (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials), 
                                      (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType), 
                                      pszCUACErrMsg, 1024, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iConnectTimeoutSecs, iReadWriteTimeoutSecs,
-                                     (sCUACGasTariffFile.IsEmpty()      ? NULL : (const char*) sCUACGasTariffFile) );      // SAC 03/12/24
+                                     (sCUACGasTariffFile.IsEmpty()      ? NULL : (const char*) sCUACGasTariffFile), iDownloadVerbose );      // SAC 03/12/24
                      //											95 : Error downloading CUAC gas tariff schedule
                   if (iCUACRetVal > 0)
                   {  if (strlen( pszCUACErrMsg ) > 0)
@@ -2041,18 +2123,25 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                }  }
 
                if (iCUACRetVal == 0)
-               {  if (bDoingBatch)
+               {  int iCUACDataModelID = -1;
+#ifdef UI_CARES
+                  iCUACDataModelID = 1;
+#elif UI_CANRES
+                  iCUACDataModelID = 0;
+#endif  // UI_CARES or UI_CANRES
+                  if (bDoingBatch)
                      CUAC_AnalysisProcessing_BatchRates( (const char*) sCurrentProjPath, (const char*) sCurrentProjPath, (const char*) sModelFileOnly, (const char*) esBEMBasePath,
                                  elRulesetCodeYear, bStoreBEMDetails, bSilent, bCUACVerbose, bEnableResearchMode, NULL /*pCompRuleDebugInfo*/, NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/,
-                                 bCUACAbort, iCUACRetVal, qsCUACErrMsg, lCUAC_RptOption, iCUAC_BEMProcIdx, iLogCUACBillCalcDetails, 1 /*SecKeyIndex*/, esSecurityKey,
+                                 bCUACAbort, iCUACRetVal, qsCUACErrMsg, lCUAC_RptOption, iCUAC_BEMProcIdx, iCUACDataModelID, iLogCUACBillCalcDetails, 1 /*SecKeyIndex*/, esSecurityKey,
                                  (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress), 
                                  (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials), 
                                  (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType), 
-                                 iConnectTimeoutSecs, iReadWriteTimeoutSecs );
+                                 iConnectTimeoutSecs, iReadWriteTimeoutSecs, iDownloadVerbose, NULL );
                   else
                      CUAC_AnalysisProcessing( (const char*) sCurrentProjPath, (const char*) sCurrentProjPath, (const char*) sModelFileOnly, (const char*) esBEMBasePath,
                                  elRulesetCodeYear, bStoreBEMDetails, bSilent, bCUACVerbose, bEnableResearchMode, NULL /*pCompRuleDebugInfo*/,
-                                 NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bCUACAbort, iCUACRetVal, qsCUACErrMsg, lCUAC_RptOption, iCUAC_BEMProcIdx, iLogCUACBillCalcDetails );
+                                 NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bCUACAbort, iCUACRetVal, qsCUACErrMsg, lCUAC_RptOption, iCUAC_BEMProcIdx, iCUACDataModelID,
+                                 iLogCUACBillCalcDetails, iDownloadVerbose );
                }
 
                if (!bDoingBatch && lElecTariffGen > 1)
@@ -2079,6 +2168,30 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          else
             lRetVal = 2;   // should cause dialog to close plus initiation of analysis
       }
+      else if (wAction == 3069)     // dialog to collect individual CUAC report CSV files to be combined into 1 - SAC 10/22/24 (tic #1386)
+      {	int iDlgHt = 750, iDlgWd = 800;  
+      	int iDlgClassID = eiBDBCID_CUAC;
+         BOOL bCUACObjectOK = (eiBDBCID_CUAC > 0);
+         if (bCUACObjectOK && BEMPX_GetNumObjects( eiBDBCID_CUAC ) < 1)
+            bCUACObjectOK = (BEMPX_CreateObject( eiBDBCID_CUAC ) != NULL);
+			//CString sDialogCaption;
+			//GetDialogCaption( iDlgClassID, sDialogCaption );
+         if (!bCUACObjectOK)
+            BEMMessageBox( "Error: Unable to create CUAC object." );
+         else
+         {  CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           "Default_CUAC_ResultsCombining" /*esDataModRulelist*/ /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Combining CUAC Reports" /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+            dlgProj.DoModal();
+      }  }
+      // moved following 2 else if statements OUT from under CANRES-only - SAC 06/11/24 (res tic #1378)
 		else if (wAction == 3073)		// load OldCUAC:OldProjectList - SAC 7/28/20
 		{	QString qsAccessPathFile;
          BEMPX_GetString(  BEMPX_GetDatabaseID( "OldCUAC:OriginalAccessDBFile" ), qsAccessPathFile );
@@ -2125,9 +2238,9 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          }  }
 		}
       else if (wAction >= 3080 && wAction <= 3084)    // CUAC details subordinate dialogs - SAC 11/21/22 (CUAC)
-      {  int iDlgHt = 260, iDlgWd = 400;
+      {  int iDlgHt = 260, iDlgWd = 400;     
          if (wAction == 3083)    // SAC 12/08/22
-         {  iDlgHt = 580;   iDlgWd = 750;
+         {  iDlgHt = 610;   iDlgWd = 930;    // Ht+30 & Wd+180 to support Battery allocation - SAC 11/12/24 (tic #3641)
          }
          //GetDialogTabDimensions( eiBDBCID_CUAC, iDlgWd, iDlgHt );
          // adjustments consistent w/ those made for tabbed dialogs in BEMProcUI - SAC 08/18/22 (CUAC)
@@ -2149,9 +2262,6 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgCUAC.DoModal();
       }
-
-#endif  // UI_CARES or UI_CANRES
-
    }
    return lRetVal;
 }
@@ -3378,6 +3488,10 @@ long CMainFrame::DataModified(long lDBID, int iObjIdx /*=-1*/)
 	{	BatchUIDefaulting();		// SAC 11/10/17
 		lRetVal = 1;		// need to return > 0 to cause batch dialog refresh - SAC 5/16/18
 	}
+   else if (lDBID == elDBID_CUAC_ResultsCSVToCombineDir)    // SAC 10/25/24
+	{	CUACReportCombiningUIDefaulting();	
+		lRetVal = 1;		// return > 0 to cause dialog refresh
+	}
 	else if (lDBID > 0 && BEMPX_GetClassID( lDBID ) > 0)	// SAC 4/11/18
 		BEMPX_IncrementModsSinceModelDefaulted();
 
@@ -3648,6 +3762,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
                                                 {  "ReportGenNRCCPRFXML"         ,  "ReportGenNRCCPRFXML"         ,    1   },  // SAC 04/10/21  // switched default to 1 - SAC 08/31/22
                                                 {  "LogAnalysisProgress"         ,  "LogAnalysisProgress"         ,   -1   },  // SAC 01/14/22 (MFam)
                                                 {  "LogCUACBillCalcDetails"      ,  "LogCUACBillCalcDetails"      ,   -1   },  // SAC 09/21/23 (CUAC)
+                                                {  "DownloadVerbose"             ,  "DownloadVerbose"             ,   -1   },  // SAC 09/03/24
                                                 {  "AllowProposedPVBattery"      ,  "AllowProposedPVBattery"      ,   -1   },  // SAC 10/25/23
                                                 {  "AllowStandardPV"             ,  "AllowStandardPV"             ,   -1   },  // SAC 10/25/23
                                                 {  "AllowStandardBattery"        ,  "AllowStandardBattery"        ,   -1   },  // SAC 10/25/23
@@ -3690,33 +3805,6 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "EnableResearchMode,%d,", iEnableResearchMode );
 			sOptionsCSVString += sOptTemp;
 		}
-
-      int iBatchCUACReportID = ReadProgInt( sOptsSec, "BatchCUACReportID", 0 /*default*/ );     // SAC 12/11/23
-      if (m_bPerformingCUACAnalysis)      // SAC 08/19/22 (CUAC)
-      {  long lCUAC_RptOption=0, lDBID_CUAC_RptOption = BEMPX_GetDatabaseID( "CUAC:RptOption" );	
-         if (lDBID_CUAC_RptOption > 0 && BEMPX_SetDataInteger( lDBID_CUAC_RptOption, lCUAC_RptOption ) && lCUAC_RptOption > 0)
-         {	sOptTemp.Format( "CUACReportID,%d,", lCUAC_RptOption );
-            sOptionsCSVString += sOptTemp;
-      }  }
-      else if (bBatchMode && iBatchCUACReportID > 0)    // SAC 12/11/23    // only when bBatchMode - SAC 12/22/23
-      {  sOptTemp.Format( "CUACReportID,%d,", iBatchCUACReportID );
-         sOptionsCSVString += sOptTemp;
-      }
-      CString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
-      sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", FALSE );
-      sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", FALSE );
-      if (!sCUACElecTariffFile.IsEmpty() && !FileExists( sCUACElecTariffFile ))
-         sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", TRUE );
-      if (!sCUACGasTariffFile.IsEmpty() && !FileExists( sCUACGasTariffFile ))
-         sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", TRUE );
-      if (!sCUACElecTariffFile.IsEmpty() && FileExists( sCUACElecTariffFile ))
-      {  sOptTemp.Format( "CUACElecTariffFile,\"%s\",", sCUACElecTariffFile );
-         sOptionsCSVString += sOptTemp;
-      }
-      if (!sCUACGasTariffFile.IsEmpty() && FileExists( sCUACGasTariffFile ))
-      {  sOptTemp.Format( "CUACGasTariffFile,\"%s\",", sCUACGasTariffFile );
-         sOptionsCSVString += sOptTemp;
-      }
 
 	// Add loop to check/add rule-based reporting options based on the enumerations currently available in the ruleset data model
 		long lDBID_Proj_RuleReportType = BEMPX_GetDatabaseID( "RuleReportType", BEMPX_GetDBComponentID( "Proj" ) );					ASSERT( lDBID_Proj_RuleReportType > 0 );
@@ -3956,8 +4044,46 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "CSE_DHWonly,%d,", iCSE_DHWonly );
 			sOptionsCSVString += sOptTemp;
 		}
+      int iLogCUACBillCalcDetails = ReadProgInt( sOptsSec, "LogCUACBillCalcDetails", -1 /*default*/ );	// SAC 05/30/24 (tic #1378)
+		if (iLogCUACBillCalcDetails >= 0)
+		{	sOptTemp.Format( "LogCUACBillCalcDetails,%d,", iLogCUACBillCalcDetails );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iDownloadVerbose = ReadProgInt( sOptsSec, "DownloadVerbose", -1 /*default*/ );	// SAC 09/03/24
+		if (iDownloadVerbose >= 0)
+		{	sOptTemp.Format( "DownloadVerbose,%d,", iDownloadVerbose );
+			sOptionsCSVString += sOptTemp;
+		}
 
 #endif
+
+      // moved CUAC stuff outside separate Com/Res sections - SAC 05/30/24 (res tic #1378)
+      int iBatchCUACReportID = ReadProgInt( sOptsSec, "BatchCUACReportID", 0 /*default*/ );     // SAC 12/11/23
+      if (m_bPerformingCUACAnalysis)      // SAC 08/19/22 (CUAC)
+      {  long lCUAC_RptOption=0, lDBID_CUAC_RptOption = BEMPX_GetDatabaseID( "CUAC:RptOption" );	
+         if (lDBID_CUAC_RptOption > 0 && BEMPX_SetDataInteger( lDBID_CUAC_RptOption, lCUAC_RptOption ) && lCUAC_RptOption > 0)
+          {	sOptTemp.Format( "CUACReportID,%d,", lCUAC_RptOption );
+            sOptionsCSVString += sOptTemp;
+      }  }
+      else if (bBatchMode && iBatchCUACReportID > 0)    // SAC 12/11/23    // only when bBatchMode - SAC 12/22/23
+      {  sOptTemp.Format( "CUACReportID,%d,", iBatchCUACReportID );
+         sOptionsCSVString += sOptTemp;
+      }
+      CString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
+      sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", FALSE );
+      sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", FALSE );
+      if (!sCUACElecTariffFile.IsEmpty() && !FileExists( sCUACElecTariffFile ))
+         sCUACElecTariffFile = ReadProgString( "options", "CUACElecTariffFile", "", TRUE );
+      if (!sCUACGasTariffFile.IsEmpty() && !FileExists( sCUACGasTariffFile ))
+         sCUACGasTariffFile  = ReadProgString( "options", "CUACGasTariffFile",  "", TRUE );
+      if (!sCUACElecTariffFile.IsEmpty() && FileExists( sCUACElecTariffFile ))
+      {  sOptTemp.Format( "CUACElecTariffFile,\"%s\",", sCUACElecTariffFile );
+         sOptionsCSVString += sOptTemp;
+      }
+      if (!sCUACGasTariffFile.IsEmpty() && FileExists( sCUACGasTariffFile ))
+      {  sOptTemp.Format( "CUACGasTariffFile,\"%s\",", sCUACGasTariffFile );
+         sOptionsCSVString += sOptTemp;
+      }
 
 	return bRetVal;
 }
@@ -4590,6 +4716,30 @@ void CMainFrame::CommunitySolarOptOut()		// SAC 03/28/23
 
 /////////////////////////////////////////////////////////////////////////////
 
+void CMainFrame::CUACReportCombiningUIDefaulting()	   // SAC 10/25/24
+{
+   long lIncludeSubdirs = 0;     int iSV, iErr, iNumCSVFiles = 0;
+   QString qsFileSearchDir = BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ResultsCSVToCombineDir" ), iSV, iErr );
+	QStringList filters;
+	filters << "*.csv";
+	QDirIterator it( qsFileSearchDir, filters, QDir::Files, (lIncludeSubdirs ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags) );
+	QString qsFile;
+	while (it.hasNext() && iNumCSVFiles < 20)
+	{	qsFile = it.next();
+      if (!qsFile.isEmpty())
+      {
+         if (iNumCSVFiles < 1)
+            CMX_EvaluateRuleset( "Clear_CUAC_ResultsCombining", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+                                 NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+                                 0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ResultsCSVToCombine" )+iNumCSVFiles, BEMP_QStr, (void*) &qsFile );
+   		iNumCSVFiles++;
+   }  }
+   CMX_EvaluateRuleset( "Default_CUAC_ResultsCombining", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+                        NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+                        0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+}
+
 void CMainFrame::OnUpdateToolsOldCUACImport(CCmdUI* pCmdUI)		// SAC 09/18/23
 {
    pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
@@ -4609,7 +4759,8 @@ void CMainFrame::OnToolsOldCUACImport()		// SAC 09/18/23
 
 void CMainFrame::OldCUACImport()		// SAC 09/18/23
 {
-#ifdef UI_CANRES
+//#ifdef UI_CANRES
+#if defined(UI_CARES) || defined(UI_CANRES)
    CDocument* pDoc = GetActiveDocument();	
    if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
         ((CComplianceUIDoc*) pDoc)->GetPathName().IsEmpty() )
@@ -4704,7 +4855,8 @@ void CMainFrame::OldCUACImport()		// SAC 09/18/23
 
 void CMainFrame::OnUpdateDisplayCUACDialog(CCmdUI* pCmdUI)		// SAC 09/18/23
 {
-#ifdef UI_CANRES
+//#ifdef UI_CANRES
+#if defined(UI_CARES) || defined(UI_CANRES)
    int iNumCUACObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "CUAC" ) );
    pCmdUI->Enable( (eInterfaceMode == IM_INPUT && iNumCUACObjs > 0) );     // prevent CUAC dialog access when none exist - SAC 09/25/23
 #else
@@ -4715,11 +4867,20 @@ void CMainFrame::OnUpdateDisplayCUACDialog(CCmdUI* pCmdUI)		// SAC 09/18/23
 void CMainFrame::OnDisplayCUACDialog()		// SAC 09/18/23
 {
 #ifdef UI_CANRES
+   int iZoneCID = BEMPX_GetDBComponentID( "ResZn" );
+#elif UI_CARES
+   int iZoneCID = BEMPX_GetDBComponentID( "Zone" );      // enable for Res - SAC 06/11/24 (tic #1378)
+#else
+   int iZoneCID = -1;
+#endif
+
+//#ifdef UI_CANRES
+#if defined(UI_CARES) || defined(UI_CANRES)
    int iCID_CUAC    = BEMPX_GetDBComponentID( "CUAC" );        assert( iCID_CUAC > 0 );
    if (iCID_CUAC > 0 && BEMPX_GetNumObjects( iCID_CUAC ) > 0)
    {
 		int iTabCtrlWd = 1030, iTabCtrlHt = 665;
-      bool bExitProgramFollowing = (BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResZn" ) ) < 1);
+      bool bExitProgramFollowing = (BEMPX_GetNumObjects( iZoneCID ) < 1);
       CString sFinishButtonText = (bExitProgramFollowing ? "&Exit" : "&Done");
 		CWnd* pWnd = this;  // GetFocus();    // currently focus control invalid before CUAC dialog is closed - SAC 10/13/23
 		//CWnd* pWnd = GetTopLevelParent();
@@ -7279,7 +7440,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 //	   	bContinue = FALSE;
 //	}
 
-	if (bContinue && BEMPX_GetUIActiveFlag() && 
+	if (bContinue && BEMPX_GetUIActiveFlag() && !m_bPerformingCUACAnalysis &&
 		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ))   // lEnergyCodeYearNum == 2019 &&  - removed to enable TDR confirmation in 2016 analysis - SAC 2/7/18
 	{	// revisions to enable more ruleset-driven confirmation dialog settings - SAC 6/11/20 (CommunitySolar)
 		bool bShowConfirmAnalOptsDlg = false;
@@ -7429,7 +7590,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 			pszAnalOpts = (const char*) sOptionsCSVString;
 
 					EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
-		int iSimResult = CMX_PerformAnalysisCB_CECRes(	NULL /*pszBEMBasePathFile*/, NULL /*pszRulesetPath*/,	sCSEPath /*pszCSEEXEPath*/, sCSEPath /*pszCSEWeatherPath*/,
+		int iSimResult = CMX_PerformAnalysisCB_CECRes(	esBEMBasePath /*pszBEMBasePathFile*/, NULL /*pszRulesetPath*/,	sCSEPath /*pszCSEEXEPath*/, sCSEPath /*pszCSEWeatherPath*/,    // added esBEMBasePath - SAC 06/03/24 (CUAC)
 																	sT24DHWPath /*pszDHWDLLPath*/, NULL /*pszDHWWeatherPath*/,
 																	sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/, NULL /*pszLogPathFile*/,
 																	sUIVersionString, false /*bLoadModelFile*/, pszAnalOpts, pszAnalysisErr, 2056, true /*bDisplayProgress*/,
@@ -7440,229 +7601,233 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 
 		RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 
-	// Populate string w/ summary results of analysis
-		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
-		{
-			long lEnergyCodeYear;
-			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYear );
-// SAC 2/5/19 - removed unique CSV results headers & format specific to C02 emissions (C02 design ratings out and emissions reported in all (2019+) runs) (tic #1053)
-//			long lCalcCO2DesignRatings;		// SAC 1/30/18 - alternate headers & data for run containing CO2 design ratings vs. not
-//			BOOL bHaveCDRs = (lEnergyCodeYear >= 2019 && BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ) && lCalcCO2DesignRatings > 0);
-			const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
-			int iAllOrientationsResultsCSV = ReadProgInt( "options", "AllOrientationsResultsCSV", 1 /*default*/ );
-			int iMaxCSVOrient = (lAllOrientations > 0 && (iAllOrientationsResultsCSV > 0) ? 4 : 0);
-//CString sDbgCSVMsg;    sDbgCSVMsg.Format( "About to populate/write CSV results - AllOrients = %ld, INI AllOrientationsResultsCSV = %d, iMaxCSVOrient = %d", lAllOrientations, iAllOrientationsResultsCSV, iMaxCSVOrient );   AfxMessageBox( sDbgCSVMsg );
-			for (int iO=0; iO<=iMaxCSVOrient; iO++)
-			{	// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
-				// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
-				// SAC 12/12/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
-				// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - rec lengths now 1944,3776 & 2904 chars
-				// SAC 9/30/18 - 17->18 INSERTED 10 new columns labeled 'Reference Design Rating Model TDV (before fuel multiplier adjustment)' @ col IF - rec lengths now 2024, 3870 & 3045 chars
-				// SAC 10/1/18 - 18->19 Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
-				// SAC 2/5/19 - 19->20 Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
-				// SAC 6/20/19 - 20->21 added columns documenting EDR1 (source energy TDV) to facilitate 2022 code research
-				// SAC 1/29/20 - 21->22 inserted columns documenting Proposed and Std design model DHWSolarSys SSF (calced by CSE) (only 1st Prop solar sys) into cols EA-EB
-				// SAC 6/18/20 - 22->23 inserted 19 columns for RESNET/HERS analysis results in cols LS-MK (prior to CAHP/CMFNH)
-				// SAC 03/16/21 - 23->24 inserted 8 columns for HVAC system count & capacities in cols JZ-KG (prior to CO2 emissions by enduse)
-            // SAC 07/20/21 - 24->25 inserted 2 columns for Std design auto-sized central HPWH capacity & tank volume @ col KH (prior to CO2 emissions by enduse) (tic #1275)
-            // SAC 08/08/23 - 25->26 inserted 2 'Peak Cool' (kWh) columns @ end of list of Proposed Elec enduses (col AC) & same for Std (col CI) (2025)
-				CString sDfltResFN = "AnalysisResults-v26.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
-				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						26 /*iResFormatVer*/, sOriginalFileName );
-				if (iCSVResVal == 0)
-				{
-#define ResSmryColLblLen1  2048
+	   CString sCSERptPathFile, sCSEErrPathFile;
+	   BOOL bSimResultsDisplayed = FALSE;
+      if (!m_bPerformingCUACAnalysis)   // write to CSV summary and display results dialog only if NOT doing CUAC analysis - SAC 05/30/24 (res tic #1378)
+      {
+	      // Populate string w/ summary results of analysis
+		   if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
+		   {
+		   	long lEnergyCodeYear;
+		   	BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYear );
+            // SAC 2/5/19 - removed unique CSV results headers & format specific to C02 emissions (C02 design ratings out and emissions reported in all (2019+) runs) (tic #1053)
+            //			long lCalcCO2DesignRatings;		// SAC 1/30/18 - alternate headers & data for run containing CO2 design ratings vs. not
+            //			BOOL bHaveCDRs = (lEnergyCodeYear >= 2019 && BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ) && lCalcCO2DesignRatings > 0);
+		   	const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
+		   	int iAllOrientationsResultsCSV = ReadProgInt( "options", "AllOrientationsResultsCSV", 1 /*default*/ );
+		   	int iMaxCSVOrient = (lAllOrientations > 0 && (iAllOrientationsResultsCSV > 0) ? 4 : 0);
+                        //CString sDbgCSVMsg;    sDbgCSVMsg.Format( "About to populate/write CSV results - AllOrients = %ld, INI AllOrientationsResultsCSV = %d, iMaxCSVOrient = %d", lAllOrientations, iAllOrientationsResultsCSV, iMaxCSVOrient );   AfxMessageBox( sDbgCSVMsg );
+		   	for (int iO=0; iO<=iMaxCSVOrient; iO++)
+		   	{	// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
+		   		// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
+		   		// SAC 12/12/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
+		   		// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - rec lengths now 1944,3776 & 2904 chars
+		   		// SAC 9/30/18 - 17->18 INSERTED 10 new columns labeled 'Reference Design Rating Model TDV (before fuel multiplier adjustment)' @ col IF - rec lengths now 2024, 3870 & 3045 chars
+		   		// SAC 10/1/18 - 18->19 Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
+		   		// SAC 2/5/19 - 19->20 Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
+		   		// SAC 6/20/19 - 20->21 added columns documenting EDR1 (source energy TDV) to facilitate 2022 code research
+		   		// SAC 1/29/20 - 21->22 inserted columns documenting Proposed and Std design model DHWSolarSys SSF (calced by CSE) (only 1st Prop solar sys) into cols EA-EB
+		   		// SAC 6/18/20 - 22->23 inserted 19 columns for RESNET/HERS analysis results in cols LS-MK (prior to CAHP/CMFNH)
+		   		// SAC 03/16/21 - 23->24 inserted 8 columns for HVAC system count & capacities in cols JZ-KG (prior to CO2 emissions by enduse)
+               // SAC 07/20/21 - 24->25 inserted 2 columns for Std design auto-sized central HPWH capacity & tank volume @ col KH (prior to CO2 emissions by enduse) (tic #1275)
+               // SAC 08/08/23 - 25->26 inserted 2 'Peak Cool' (kWh) columns @ end of list of Proposed Elec enduses (col AC) & same for Std (col CI) (2025)
+               // SAC 08/06/24 - appended 4 cols: PV Exports / Prop & Std / kWh/yr & % - request from CEC (26->27)
+		   		CString sDfltResFN = "AnalysisResults-v27.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
+		   		int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
+		   																				27 /*iResFormatVer*/, sOriginalFileName );
+		   		if (iCSVResVal == 0)
+		   		{
+#define ResSmryColLblLen1  2176
 #define ResSmryColLblLen2  4096
 #define ResSmryColLblLen3  3328
-					char pszCSVColLabel1[ResSmryColLblLen1], pszCSVColLabel2[ResSmryColLblLen2], pszCSVColLabel3[ResSmryColLblLen3];
-					VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 2048, pszCSVColLabel2, 4096, pszCSVColLabel3, 3328 ) == 0 );	// SAC 5/10/15
-					const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
-					CString sCSVResultSummary = pszCSVResultSummary;
-					// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
-					QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
+		   			char pszCSVColLabel1[ResSmryColLblLen1], pszCSVColLabel2[ResSmryColLblLen2], pszCSVColLabel3[ResSmryColLblLen3];
+		   			VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, ResSmryColLblLen1, pszCSVColLabel2, ResSmryColLblLen2, pszCSVColLabel3, ResSmryColLblLen3 ) == 0 );	// SAC 5/10/15
+		   			const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
+		   			CString sCSVResultSummary = pszCSVResultSummary;
+		   			// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
+		   			QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
 
-               QString qsFullRecord, qsSubst;      // string substitutions to support rule-defined complaince metric labels - SAC 01/31/23
-               if (lEnergyCodeYear >= 2025 && BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsSubst ) && !qsSubst.isEmpty())
-               {  qsFullRecord = QString( pszCSVColLabel1 ).arg( qsSubst, qsSubst, qsSubst, qsSubst, qsSubst, qsSubst );
-                  strncpy_s( pszCSVColLabel1, qsFullRecord.toLocal8Bit().constData(), ResSmryColLblLen1 );    pszCSVColLabel1[ResSmryColLblLen1-1] = '\0'; 
-                  qsFullRecord = QString( pszCSVColLabel2 ).arg( qsSubst, qsSubst, qsSubst, qsSubst );
-                  strncpy_s( pszCSVColLabel2, qsFullRecord.toLocal8Bit().constData(), ResSmryColLblLen2 );    pszCSVColLabel2[ResSmryColLblLen2-1] = '\0'; 
-               }
+                  QString qsFullRecord, qsSubst;      // string substitutions to support rule-defined complaince metric labels - SAC 01/31/23
+                  if (lEnergyCodeYear >= 2025 && BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsSubst ) && !qsSubst.isEmpty())
+                  {  qsFullRecord = QString( pszCSVColLabel1 ).arg( qsSubst, qsSubst, qsSubst, qsSubst, qsSubst, qsSubst );
+                     strncpy_s( pszCSVColLabel1, qsFullRecord.toLocal8Bit().constData(), ResSmryColLblLen1 );    pszCSVColLabel1[ResSmryColLblLen1-1] = '\0'; 
+                     qsFullRecord = QString( pszCSVColLabel2 ).arg( qsSubst, qsSubst, qsSubst, qsSubst );
+                     strncpy_s( pszCSVColLabel2, qsFullRecord.toLocal8Bit().constData(), ResSmryColLblLen2 );    pszCSVColLabel2[ResSmryColLblLen2-1] = '\0'; 
+                  }
 
-					if (!sCSVLogFN.IsEmpty())
-					{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
-						             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-										 "(once the file is closed), or \n'Cancel' to abort the %s.", "CSV results log", sCSVLogFN, "writing of results to the file" );
-						if (OKToWriteOrDeleteFile( sCSVLogFN, sMsg, (!BEMPX_GetUIActiveFlag()) ))
-							VERIFY( BEMPX_WriteLogFile( sCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
-																	false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
-					}
-					CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sDfltResFN, TRUE /*bGetPath*/ );
-               // revise call to AppendToTextFile() to handle primary compliance metric label substitutions - SAC 01/30/23
-					VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels, false, FALSE, 0 ) );  // subst already made above - was: (lEnergyCodeYear >= 2025 ? 1 : 0) ) );
-				}
-				else
-				{	CString sErrResultMsg;		ASSERT( FALSE );
-					sErrResultMsg.Format( "Error encountered retrieving results summary data.  CMX_PopulateCSVResultSummary_CECRes() returned %d.", iCSVResVal );
-					if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
-						AfxMessageBox( sErrResultMsg );
-					else
-						VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
-			}	}
-		}
+		   			if (!sCSVLogFN.IsEmpty())
+		   			{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
+		   				             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+		   								 "(once the file is closed), or \n'Cancel' to abort the %s.", "CSV results log", sCSVLogFN, "writing of results to the file" );
+		   				if (OKToWriteOrDeleteFile( sCSVLogFN, sMsg, (!BEMPX_GetUIActiveFlag()) ))
+		   					VERIFY( BEMPX_WriteLogFile( sCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
+		   															false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
+		   			}
+		   			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sDfltResFN, TRUE /*bGetPath*/ );
+                  // revise call to AppendToTextFile() to handle primary compliance metric label substitutions - SAC 01/30/23
+		   			VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels, false, FALSE, 0 ) );  // subst already made above - was: (lEnergyCodeYear >= 2025 ? 1 : 0) ) );
+		   		}
+		   		else
+		   		{	CString sErrResultMsg;		ASSERT( FALSE );
+		   			sErrResultMsg.Format( "Error encountered retrieving results summary data.  CMX_PopulateCSVResultSummary_CECRes() returned %d.", iCSVResVal );
+		   			if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
+		   				AfxMessageBox( sErrResultMsg );
+		   			else
+		   				VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
+		   	}	}
+		   }
 
-	// check for existence of CSE sim output for possible access by user
-		CString sCSERptPathFile, sCSEErrPathFile;
-		if (bPerformSimulations && BEMPX_GetUIActiveFlag())
-		{	long lCSERpt_HaveReports, lEnableResearchMode, lEnableRptIncFile;
-			QString qsReportIncludeFile;
-			sCSERptPathFile = sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') );
-			sCSEErrPathFile = sCSERptPathFile;
-			sCSERptPathFile += " - CSE Reports.txt";
-			if (!FileExists( sCSERptPathFile ))
-				sCSERptPathFile.Empty();
-			else if ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSERpt_HaveReports" ), lCSERpt_HaveReports ) && lCSERpt_HaveReports > 0) ||
-						 ( ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), lEnableResearchMode ) && lEnableResearchMode > 0) ||
-						     (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableRptIncFile"   ), lEnableRptIncFile   ) && lEnableRptIncFile   > 0) ) &&
-						 	(BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" ), qsReportIncludeFile ) && !qsReportIncludeFile.isEmpty()) ) )
-			{	}	// User SHOULD be prompted to review CSE Reports output
-			else
-				sCSERptPathFile.Empty();	// don't prompt user to review Reports if 
+   	   // check for existence of CSE sim output for possible access by user
+		   if (bPerformSimulations && BEMPX_GetUIActiveFlag())
+		   {	long lCSERpt_HaveReports, lEnableResearchMode, lEnableRptIncFile;
+		   	QString qsReportIncludeFile;
+		   	sCSERptPathFile = sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') );
+		   	sCSEErrPathFile = sCSERptPathFile;
+		   	sCSERptPathFile += " - CSE Reports.txt";
+		   	if (!FileExists( sCSERptPathFile ))
+		   		sCSERptPathFile.Empty();
+		   	else if ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSERpt_HaveReports" ), lCSERpt_HaveReports ) && lCSERpt_HaveReports > 0) ||
+		   				 ( ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), lEnableResearchMode ) && lEnableResearchMode > 0) ||
+		   				     (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableRptIncFile"   ), lEnableRptIncFile   ) && lEnableRptIncFile   > 0) ) &&
+		   				 	(BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" ), qsReportIncludeFile ) && !qsReportIncludeFile.isEmpty()) ) )
+		   	{	}	// User SHOULD be prompted to review CSE Reports output
+		   	else
+		   		sCSERptPathFile.Empty();	// don't prompt user to review Reports if 
 
-			sCSEErrPathFile += " - CSE Errors.txt";
-			if (!FileExists( sCSEErrPathFile ))
-				sCSEErrPathFile.Empty();
-		}
+		   	sCSEErrPathFile += " - CSE Errors.txt";
+		   	if (!FileExists( sCSEErrPathFile ))
+		   		sCSEErrPathFile.Empty();
+		   }
 
-	// Prompt user to view generated PDF compliance report (if analysis successful & PDF written)
-		if (iSimResult == 0 && bPerformSimulations)
-		{	long lCompRptPDFWritten=0;
-			if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompRptPDFWritten" ), lCompRptPDFWritten ) && lCompRptPDFWritten > 0 &&
-					BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent report review prompt when GUI deactivated
-			{
-			// SAC 11/8/16 - revisions to accommodate review of compliance report(s) OR CSE output
-				CString sPTDMsg, sBtnFile[3], sBtnLabel[3];
-				int iNumViewBtns=0;
+   	   // Prompt user to view generated PDF compliance report (if analysis successful & PDF written)
+		   if (iSimResult == 0 && bPerformSimulations)
+		   {	long lCompRptPDFWritten=0;
+		   	if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompRptPDFWritten" ), lCompRptPDFWritten ) && lCompRptPDFWritten > 0 &&
+		   			BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent report review prompt when GUI deactivated
+		   	{
+		   	// SAC 11/8/16 - revisions to accommodate review of compliance report(s) OR CSE output
+		   		CString sPTDMsg, sBtnFile[3], sBtnLabel[3];
+		   		int iNumViewBtns=0;
 
-			//	CString sDefaultResFNWord = "AnalysisResults";		// SAC 11/21/18 - enable new CBECC-Res CF1R XML schema-based reporting
-			//	if (lEnergyCodeYearNum >= 2019 && ReadProgInt( "options", "WriteCF1RXML", 1 /*default*/ ) > 0)
-			//		sDefaultResFNWord = "CF1RPRF01E";
-			// SAC 1/25/19 - mods to enable INI to determine which PDF report to prompt user for
-				CString sPDFRptFN, sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYearNum >= 2019 ? "CF1RPRF01E" : "AnalysisResults") );
-				sPDFRptFN.Format( "%s - %s-BEES.pdf", sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') ), sDefaultResFNWord );
-				if (!FileExists( sPDFRptFN ))
-				{	// see if OTHER report is available, and if so, prompt user to view that one
-					CString sPDFRptFN2, sDefaultResFNWord2 = (sDefaultResFNWord.CompareNoCase("CF1RPRF01E") ? "CF1RPRF01E" : "AnalysisResults");
-					sPDFRptFN2.Format( "%s - %s-BEES.pdf", sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') ), sDefaultResFNWord2 );
-					if (FileExists( sPDFRptFN2 ))
-					{	sPDFRptFN = sPDFRptFN2;		sDefaultResFNWord = sDefaultResFNWord2;
-				}	}
-				if (!FileExists( sPDFRptFN ))
-				{	// report to log  that PDF was expected but not found...
-					sMsg.Format( "PDF compliance report not found:  %s", sPDFRptFN );
-					VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
-				}
-				else
-				{	sPTDMsg.Format( "%s PDF compliance report successfully generated during analysis.", sDefaultResFNWord );
-					sBtnFile[iNumViewBtns] = sPDFRptFN;   sBtnLabel[iNumViewBtns++] = "Compliance Report";
-				}
-				if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
-				{	if (!sPTDMsg.IsEmpty())
-						sPTDMsg += "\n\n";
-					sPTDMsg += "CSE simulation report and error outputs are available for review.";
-				}
-				else if (!sCSERptPathFile.IsEmpty())
-				{	if (!sPTDMsg.IsEmpty())
-						sPTDMsg += "\n\n";
-					sPTDMsg += "CSE simulation report output is available for review.";
-				}
-				else if (!sCSEErrPathFile.IsEmpty())
-				{	if (!sPTDMsg.IsEmpty())
-						sPTDMsg += "\n\n";
-					sPTDMsg += "CSE simulation error output is available for review.";
-				}
-				if (!sCSERptPathFile.IsEmpty())
-				{	sBtnFile[iNumViewBtns] = sCSERptPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Reports";
-				}
-				if (!sCSEErrPathFile.IsEmpty())
-				{	sBtnFile[iNumViewBtns] = sCSEErrPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Errors";
-				}
+		   	//	CString sDefaultResFNWord = "AnalysisResults";		// SAC 11/21/18 - enable new CBECC-Res CF1R XML schema-based reporting
+		   	//	if (lEnergyCodeYearNum >= 2019 && ReadProgInt( "options", "WriteCF1RXML", 1 /*default*/ ) > 0)
+		   	//		sDefaultResFNWord = "CF1RPRF01E";
+		   	// SAC 1/25/19 - mods to enable INI to determine which PDF report to prompt user for
+		   		CString sPDFRptFN, sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYearNum >= 2019 ? "CF1RPRF01E" : "AnalysisResults") );
+		   		sPDFRptFN.Format( "%s - %s-BEES.pdf", sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') ), sDefaultResFNWord );
+		   		if (!FileExists( sPDFRptFN ))
+		   		{	// see if OTHER report is available, and if so, prompt user to view that one
+		   			CString sPDFRptFN2, sDefaultResFNWord2 = (sDefaultResFNWord.CompareNoCase("CF1RPRF01E") ? "CF1RPRF01E" : "AnalysisResults");
+		   			sPDFRptFN2.Format( "%s - %s-BEES.pdf", sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') ), sDefaultResFNWord2 );
+		   			if (FileExists( sPDFRptFN2 ))
+		   			{	sPDFRptFN = sPDFRptFN2;		sDefaultResFNWord = sDefaultResFNWord2;
+		   		}	}
+		   		if (!FileExists( sPDFRptFN ))
+		   		{	// report to log  that PDF was expected but not found...
+		   			sMsg.Format( "PDF compliance report not found:  %s", sPDFRptFN );
+		   			VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
+		   		}
+		   		else
+		   		{	sPTDMsg.Format( "%s PDF compliance report successfully generated during analysis.", sDefaultResFNWord );
+		   			sBtnFile[iNumViewBtns] = sPDFRptFN;   sBtnLabel[iNumViewBtns++] = "Compliance Report";
+		   		}
+		   		if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
+		   		{	if (!sPTDMsg.IsEmpty())
+		   				sPTDMsg += "\n\n";
+		   			sPTDMsg += "CSE simulation report and error outputs are available for review.";
+		   		}
+		   		else if (!sCSERptPathFile.IsEmpty())
+		   		{	if (!sPTDMsg.IsEmpty())
+		   				sPTDMsg += "\n\n";
+		   			sPTDMsg += "CSE simulation report output is available for review.";
+		   		}
+		   		else if (!sCSEErrPathFile.IsEmpty())
+		   		{	if (!sPTDMsg.IsEmpty())
+		   				sPTDMsg += "\n\n";
+		   			sPTDMsg += "CSE simulation error output is available for review.";
+		   		}
+		   		if (!sCSERptPathFile.IsEmpty())
+		   		{	sBtnFile[iNumViewBtns] = sCSERptPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Reports";
+		   		}
+		   		if (!sCSEErrPathFile.IsEmpty())
+		   		{	sBtnFile[iNumViewBtns] = sCSEErrPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Errors";
+		   		}
 
-				if (!sPTDMsg.IsEmpty())
-				{	// prompt user to view PDF report (and/or other files)
-			//		//if (BEMMessageBox( "PDF compliance report successfully generated.\n\nWould you like to view the report?", "Compliance Report", MB_YESNO ) == IDYES)
-			//		if (BEMMessageBox( "PDF compliance report successfully generated.\n\nWould you like to view the report?", "Compliance Report", (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::Yes)
-			//		{	OpenFileViaShellExecute( sPDFRptFN, "Compliance Report" /*FileDescrip*/ );
-			//			//	int idx = sPDFRptFN.ReverseFind('/');
-			//			//	CString sPDFPath = (idx > 0 ? sPDFRptFN.Left( idx ) : "");
-			//			//	HINSTANCE hinstShellExec = ShellExecute( GetSafeHwnd(), "open", sPDFRptFN, NULL, sPDFPath, SW_SHOWNORMAL );		hinstShellExec;
-			//		}
-					// prompt user to view one or more PDF report(s) (or other files)
-					PromptToDisplayPDFs( "Analysis Output", sPTDMsg, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], sBtnFile[2], sBtnLabel[2], "All Files" );
-				}
-			}
-		// SAC 11/17/16 - prompt user of CSE Reports access if they specified report output and they are present
-			else if (BEMPX_GetUIActiveFlag())
-			{
-				CString sPTDMsg, sBtnFile[2], sBtnLabel[2];
-				int iNumViewBtns=0;
+		   		if (!sPTDMsg.IsEmpty())
+		   		{	// prompt user to view PDF report (and/or other files)
+		   	//		//if (BEMMessageBox( "PDF compliance report successfully generated.\n\nWould you like to view the report?", "Compliance Report", MB_YESNO ) == IDYES)
+		   	//		if (BEMMessageBox( "PDF compliance report successfully generated.\n\nWould you like to view the report?", "Compliance Report", (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::Yes)
+		   	//		{	OpenFileViaShellExecute( sPDFRptFN, "Compliance Report" /*FileDescrip*/ );
+		   	//			//	int idx = sPDFRptFN.ReverseFind('/');
+		   	//			//	CString sPDFPath = (idx > 0 ? sPDFRptFN.Left( idx ) : "");
+		   	//			//	HINSTANCE hinstShellExec = ShellExecute( GetSafeHwnd(), "open", sPDFRptFN, NULL, sPDFPath, SW_SHOWNORMAL );		hinstShellExec;
+		   	//		}
+		   			// prompt user to view one or more PDF report(s) (or other files)
+		   			PromptToDisplayPDFs( "Analysis Output", sPTDMsg, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], sBtnFile[2], sBtnLabel[2], "All Files" );
+		   		}
+		   	}
+		      // SAC 11/17/16 - prompt user of CSE Reports access if they specified report output and they are present
+		   	else if (BEMPX_GetUIActiveFlag())
+		   	{
+		   		CString sPTDMsg, sBtnFile[2], sBtnLabel[2];
+		   		int iNumViewBtns=0;
 
-				if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
-					sPTDMsg += "CSE simulation report and error outputs are available for review.";
-				else if (!sCSERptPathFile.IsEmpty())
-					sPTDMsg += "CSE simulation report output is available for review.";
-				else if (!sCSEErrPathFile.IsEmpty())
-					sPTDMsg += "CSE simulation error output is available for review.";
+		   		if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
+		   			sPTDMsg += "CSE simulation report and error outputs are available for review.";
+		   		else if (!sCSERptPathFile.IsEmpty())
+		   			sPTDMsg += "CSE simulation report output is available for review.";
+		   		else if (!sCSEErrPathFile.IsEmpty())
+		   			sPTDMsg += "CSE simulation error output is available for review.";
 
-				if (!sCSERptPathFile.IsEmpty())
-				{	sBtnFile[iNumViewBtns] = sCSERptPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Reports";
-				}
-				if (!sCSEErrPathFile.IsEmpty())
-				{	sBtnFile[iNumViewBtns] = sCSEErrPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Errors";
-				}
+		   		if (!sCSERptPathFile.IsEmpty())
+		   		{	sBtnFile[iNumViewBtns] = sCSERptPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Reports";
+		   		}
+		   		if (!sCSEErrPathFile.IsEmpty())
+		   		{	sBtnFile[iNumViewBtns] = sCSEErrPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Errors";
+		   		}
 
-				if (!sPTDMsg.IsEmpty())
-					PromptToDisplayPDFs( "Analysis Output", sPTDMsg, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], "", "", "All Files" );
-			}
-		}
+		   		if (!sPTDMsg.IsEmpty())
+		   			PromptToDisplayPDFs( "Analysis Output", sPTDMsg, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], "", "", "All Files" );
+		   	}
+		   }
 
-	// SAC 5/16/12 - added reporting of analysis results
-		BOOL bSimResultsDisplayed = FALSE;
-		if (bPerformSimulations)
-		{	//int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
-			if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && eiBDBCID_EUseSummary > 0 && BEMPX_GetNumObjects( eiBDBCID_EUseSummary ))
-			{	bSimResultsDisplayed = TRUE;
-				if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary object is ALWAYS the active obejct as dialog presented
-					BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
-		      int iMaxTabs = 99;  // SAC 4/11/19 - enable C02 Details acces regardless of INI option - was:  (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
-				CString sDialogCaption;
-				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
-				int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
+	      // SAC 5/16/12 - added reporting of analysis results
+		   if (bPerformSimulations)
+		   {	//int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
+		   	if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && eiBDBCID_EUseSummary > 0 && BEMPX_GetNumObjects( eiBDBCID_EUseSummary ))
+		   	{	bSimResultsDisplayed = TRUE;
+		   		if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary object is ALWAYS the active obejct as dialog presented
+		   			BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
+		         int iMaxTabs = 99;  // SAC 4/11/19 - enable C02 Details acces regardless of INI option - was:  (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
+		   		CString sDialogCaption;
+		   		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
+		   		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
 
-				int iResultsScreenUIMode = 0;		// SAC 4/11/19 - reduced results display for EAA (and non-EDR) analysis (tic #1082)
-				long lRunScope=0, lIsAddAlone=0;
-				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
-					 ( lRunScope == 2 ||    // add or alter
-					  (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) )   // addition alone
-					iResultsScreenUIMode = 1;
+		   		int iResultsScreenUIMode = 0;		// SAC 4/11/19 - reduced results display for EAA (and non-EDR) analysis (tic #1082)
+		   		long lRunScope=0, lIsAddAlone=0;
+		   		if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
+		   			 ( lRunScope == 2 ||    // add or alter
+		   			  (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) )   // addition alone
+		   			iResultsScreenUIMode = 1;
 
-				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
-				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
-					iMaxTabs = lNumUIDialogTabs;
+		   		long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+		   		if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+		   			iMaxTabs = lNumUIDialogTabs;
 
-				CWnd* pWnd = GetFocus();
-				CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*uiMode*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-				                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
-				                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
-										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
-										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
-				if (BEMPX_GetUIActiveFlag())
-					td.DoModal();
-			}
-		}
+		   		CWnd* pWnd = GetFocus();
+		   		CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*uiMode*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
+		   		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
+		   		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
+		   								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
+		   								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
+		   								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+		   		if (BEMPX_GetUIActiveFlag())
+		   			td.DoModal();
+		   	}
+		   }
+      }  // if NOT doing CUAC analysis - SAC 05/30/24
 
-		if (iSimResult != 0 || (bPerformSimulations && !bSimResultsDisplayed))
+		if (iSimResult != 0 || (bPerformSimulations && !bSimResultsDisplayed && !m_bPerformingCUACAnalysis))     // SAC 06/03/24 (res tic #1378)
 		{	CString sErrResultMsg;
 			if (iSimResult == BEMAnal_CECRes_UserAbortedAnalysis || iSimResult == BEMAnal_CECRes_AbortViaCallback)		// unique return value indicating user aborted analysis -OR- callback return value caused abort
 				sErrResultMsg.Format( "Analysis aborted by user (code %d).", iSimResult );
@@ -7750,9 +7915,12 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 				else
 					VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
 		}	}
+      // CUAC post-analysis prompt(s) - SAC 05/30/24 (res tic #1378)
+      else if (iSimResult < 1 && m_bPerformingCUACAnalysis) 
+         CUACPostAnalysisPrompt( sOriginalFileName );    // SAC 09/19/23
 
 	// ONLY RESTORE project data if analysis failed
-		if (iSimResult != 0)
+		if (iSimResult != 0 || m_bPerformingCUACAnalysis)   // OR if performing CUAC analysis
 		   ((CComplianceUIDoc*) pDoc)->OpenTheFile( sOriginalFileName, TRUE /*bWriteToLog*/, FALSE /*bRestore*/, NULL /*pszNewRuleFile*/,
             													-1 /*lRulesetSymVal*/, FALSE /*bNormalRulesetUpdates*/ );	// SAC 11/17/15
 		else
@@ -7844,7 +8012,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 
 		RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 
-      if (!m_bPerformingCUACAnalysis)   // write to CSV summary and diaplay result sdialog only if NOT doing CUAC analysis
+      if (!m_bPerformingCUACAnalysis)   // write to CSV summary and diaplay results dialog only if NOT doing CUAC analysis
       {
    	   // Populate string w/ summary results of analysis  - SAC 5/19/14 - added similar to -Res
    		if (iSimResult == 0 && bPerformSimulations && strlen( pszCSVResultSummary ) > 0)
@@ -7999,7 +8167,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 
    				int iMaxTabs = 0;
    				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
-   				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+               long lDBID_NumUIDialogTabs = BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary );  // load DBID first to avoid assert - SAC 06/09/24
+   				if (lDBID_NumUIDialogTabs > 0 && BEMPX_SetDataInteger( lDBID_NumUIDialogTabs, lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
    					iMaxTabs = lNumUIDialogTabs;
    				else
    					iMaxTabs = 99;
@@ -8101,7 +8270,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 				VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
 		}
       // CUAC post-analysis prompt(s)
-      else if (iSimResult < 1 && m_bPerformingCUACAnalysis)   // write to CSV summary and diaplay result sdialog only if NOT doing CUAC analysis
+      else if (iSimResult < 1 && m_bPerformingCUACAnalysis)   // write to CSV summary and display results dialog only if NOT doing CUAC analysis
          CUACPostAnalysisPrompt( sOriginalFileName );    // SAC 09/19/23
 
 	// SAC 6/3/13 - added code to initiate re-load of original project data (following prompt if in debug mode of verbose analysis is selected)
@@ -8155,9 +8324,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 		}
    }
 
-
 #endif
-
 
    }
 	m_bPerformingAnalysis = FALSE;
@@ -8363,6 +8530,16 @@ void CMainFrame::CUACPostAnalysisPrompt( CString sOriginalFileName )   // SAC 09
 	}
 	else
 	{	sPTDMsg = "CUAC analysis completed successfully.";
+   	QString sCUACResultsSummary;
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ResultsSummary" ), sCUACResultsSummary );     // SAC 01/02/25
+      if (!sCUACResultsSummary.isEmpty())
+      {  sPTDMsg += "\n";   sPTDMsg += sCUACResultsSummary.toLocal8Bit().constData();
+      }
+   	QString sCUACAnalysisInvalidMsg;
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:AnalysisInvalidMsg" ), sCUACAnalysisInvalidMsg );     // SAC 01/03/25
+      if (!sCUACAnalysisInvalidMsg.isEmpty())
+      {  sPTDMsg += "\n   Invalid - ";   sPTDMsg += sCUACAnalysisInvalidMsg.toLocal8Bit().constData();
+      }
 		sBtnFile[iNumViewBtns] = sIODetailsCSVFN;   sBtnLabel[iNumViewBtns++] = "Input/Results Details";
 	}
    if (bHaveSubmitPDF && bHaveDetailsPDF)
@@ -8548,7 +8725,8 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 			iResultsScreenUIMode = 1;
 
 		long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
-		if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+      long lDBID_NumUIDialogTabs = BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary );  // load DBID first to avoid assert - SAC 06/09/24
+		if (lDBID_NumUIDialogTabs > 0 && BEMPX_SetDataInteger( lDBID_NumUIDialogTabs, lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
 			iMaxTabs = lNumUIDialogTabs;
 
 		CWnd* pWnd = GetFocus();
@@ -8585,7 +8763,8 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 
 				int iMaxTabs = 0;
 				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
-				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+            long lDBID_NumUIDialogTabs = BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary );  // load DBID first to avoid assert - SAC 06/09/24
+				if (lDBID_NumUIDialogTabs > 0 && BEMPX_SetDataInteger( lDBID_NumUIDialogTabs, lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
 					iMaxTabs = lNumUIDialogTabs;
 				else
 					iMaxTabs = 99;
@@ -8854,7 +9033,12 @@ bool CMainFrame::CUACAnalysisAvailable()		// SAC 01/20/23
    QString qsUserMsg;
    if (lCUACUIFlag <= 11)
    {  switch (lCUACUIFlag)
-      {  case  -1 :  qsUserMsg = "This project is not (yet) setup to perform CUAC analysis. Make sure that the 'Includes Residential Dwelling Units' is selected on the main Project dialog tab and that all necessary CUAC inputs are specified in the 'CUAC' tab.";  break;
+      {
+#ifdef UI_CANRES
+         case  -1 :  qsUserMsg = "This project is not (yet) setup to perform CUAC analysis. Make sure that the 'Includes Residential Dwelling Units' is selected on the main Project dialog tab and that all necessary CUAC inputs are specified in the 'CUAC' tab.";  break;
+#else
+         case  -1 :  qsUserMsg = "This project is not (yet) setup to perform CUAC analysis. Make sure that all necessary CUAC inputs are specified in the 'CUAC' tab.";  break;
+#endif
          case   0 :  qsUserMsg = "California Utility Allowance Calculator (CUAC) features only available for Multifamily Residential projects. Make sure that the 'Includes Residential Dwelling Units' is selected on the main Project dialog tab and that all necessary CUAC inputs are specified in the 'CUAC' tab.";  break;
          case   1 :  qsUserMsg = "Select the 'Enable CUAC Reporting' checkbox in the 'CUAC' tab of the Project data tabbed dialog to activate California Utility Allowance Calculator (CUAC) features";  break;
          default  :  qsUserMsg = "There is invalid or missing CUAC data in this project. Make sure that all necessary data is entered in the 'CUAC' tab of the Project data tabbed dialog.";  break;
@@ -8912,7 +9096,7 @@ bool CMainFrame::ViewCUACOuput( const char* pszOutPathFileProp, long lDBID_CUAC_
 void CMainFrame::OnUpdateToolsViewCUACSubmittalReport(CCmdUI* pCmdUI)		// CUAC - SAC 01/20/23
 {
 #ifdef UI_CARES
-   pCmdUI->Enable( FALSE );
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
 #elif UI_CANRES
    pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
 #else
@@ -8929,7 +9113,7 @@ void CMainFrame::OnToolsViewCUACSubmittalReport()		// SAC 01/20/23
 void CMainFrame::OnUpdateToolsViewCUACDetailsReport(CCmdUI* pCmdUI)		// SAC 01/20/23
 {
 #ifdef UI_CARES
-   pCmdUI->Enable( FALSE );
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
 #elif UI_CANRES
    pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
 #else
@@ -8946,7 +9130,7 @@ void CMainFrame::OnToolsViewCUACDetailsReport()		// SAC 01/20/23
 void CMainFrame::OnUpdateToolsViewCUACDetailsCSV(CCmdUI* pCmdUI)		// SAC 01/20/23
 {
 #ifdef UI_CARES
-   pCmdUI->Enable( FALSE );
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
 #elif UI_CANRES
    pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
 #else

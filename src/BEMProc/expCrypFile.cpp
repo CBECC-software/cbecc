@@ -46,6 +46,9 @@
 #include "stdafx.h"
 #include "expCrypFile.h"
 #include "memLkRpt.h"
+#include "BEMProc_FileIO.h"
+#include "BEMProc.h"
+#include "expTextIO.h"
 
 
 static const int MAX_CRYPTOFILE_BUFSIZE = 1024;

@@ -330,6 +330,9 @@ BEGIN
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
         MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
         MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
+        MENUITEM "View CUAC Submittal Report",  IDM_TOOLS_VIEWCUACSUBRPT
+        MENUITEM "View CUAC Details Report",    IDM_TOOLS_VIEWCUACDETRPT
+        MENUITEM "View CUAC Details CSV",       IDM_TOOLS_VIEWCUACDETCSV
         MENUITEM "&Check Building Database",    IDM_CHECKDBASE
         MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
 //        MENUITEM SEPARATOR
@@ -422,6 +425,11 @@ BEGIN
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
         MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
         MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
+        MENUITEM "View CUAC Submittal Report",  IDM_TOOLS_VIEWCUACSUBRPT
+        MENUITEM "View CUAC Details Report",    IDM_TOOLS_VIEWCUACDETRPT
+        MENUITEM "View CUAC Details CSV",       IDM_TOOLS_VIEWCUACDETCSV
+        MENUITEM "CUAC Dialog",                 IDM_DISPLAYCUACDLG
+        MENUITEM "Process JSON Utility Rate Files", IDM_TOOLS_CSVRATETABLES
         MENUITEM "&Check Building Database",    IDM_CHECKDBASE
         MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
 //        MENUITEM SEPARATOR
@@ -726,24 +734,26 @@ END
 //    CONTROL         "Start with a &Blank Project",IDC_START_BLANK,"Button",
 //                    BS_AUTORADIOBUTTON,12,88,100,8
 //END
-IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 296, 98
+IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 296, 114
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CBECC-Res 2022 Startup Options"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,126,75,35,16
-    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,170,75,76,16
-    PUSHBUTTON      "E&xit",IDCANCEL,254,75,35,16
+    DEFPUSHBUTTON   "OK",IDOK,126,91,35,16
+    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,170,91,76,16
+    PUSHBUTTON      "E&xit",IDCANCEL,254,91,35,16
     CONTROL         "Open &Recent Project:",IDC_START_RECENT,"Button",
                     BS_AUTORADIOBUTTON,12,9,125,8
     COMBOBOX        IDC_START_FILELIST,36,20,231,116,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "&Select an Existing Project to Open",IDC_START_EXISTING,
                     "Button",BS_AUTORADIOBUTTON,12,40,125,8
+    CONTROL         "&Import old Access DB CUAC Project",IDC_START_OLDCUAC,
+                    "Button",BS_AUTORADIOBUTTON,12,56,150,8
     CONTROL         "Perform Batch &Processing",IDC_START_BATCH,"Button",
-                    BS_AUTORADIOBUTTON,12,56,100,8
-    CONTROL         "Start with a &Blank Project",IDC_START_BLANK,"Button",
                     BS_AUTORADIOBUTTON,12,72,100,8
+    CONTROL         "Start with a &Blank Project",IDC_START_BLANK,"Button",
+                    BS_AUTORADIOBUTTON,12,88,100,8
 END
 
 
@@ -754,8 +764,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2022,3010,0,1343		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2022,3010,0,1343	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
+ FILEVERSION 2022,3020,0,1369		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2022,3020,0,1369	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -773,15 +783,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (residential 2022)\0"
-            VALUE "FileVersion", "2022.3.1 (1343)\0"
+            VALUE "FileVersion", "2022.3.2 (1369)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2024, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-Res22.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (residential 2022)\0"
-            VALUE "ProductVersion", "2022.3.1\0"
-            VALUE "SpecialBuild", "build 1343\0"
+            VALUE "ProductVersion", "2022.3.2\0"
+            VALUE "SpecialBuild", "build 1369\0"
         END
     END
     BLOCK "VarFileInfo"

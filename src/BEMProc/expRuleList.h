@@ -773,6 +773,9 @@ public:
 	int	getTableColumnName( int tableID, int columnID, string& sColumnName );
 	BEMTableCell* getTableCell(   int iTableID, int iRetColID, vector<string>& saIndepNames, vector<string>& saIndepStrings,
 											vector<double>& faIndepValues, vector<bool>& baIndepNumeric, string& sErrMsg, BOOL bVerboseOutput=FALSE );
+   // added to support 2D interpolation via look-up tables - SAC 08/22/24 (VCHP3)
+   bool  getTable2DInterpolatedValue( int iTableID, double& dInterpResult, vector<string>& saIndepNames, vector<string>& saIndepStrings,
+											vector<double>& faIndepValues, vector<bool>& baIndepNumeric, string& sErrMsg, BOOL bVerboseOutput=FALSE );
 	bool  addTable( const char* name, const char* fileName, int nParams, int nCols, QFile& errorFile );
 	bool  addTable( const char* name, const char* fileName, BEMTextIO& file, QFile& errorFile );
 	bool  addTable( const char* fileName, QFile& errorFile );

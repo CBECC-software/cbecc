@@ -730,6 +730,12 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" )+iResSet, sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
 			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResTDVMultTableName" )+iResSet, sResTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
 
+         long lDBID_DemRespHPWHTDVSavMult = BEMPX_GetDatabaseID( "ResProj:DemRespHPWHTDVSavMult" );   double dDemRespHPWHTDVSavMult = 1.0;      // SAC 12/22/24
+         if (lDBID_DemRespHPWHTDVSavMult > 0)
+         {  if (!BEMPX_GetFloat( lDBID_DemRespHPWHTDVSavMult, dDemRespHPWHTDVSavMult, 1.0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ))
+               dDemRespHPWHTDVSavMult = 1.0;
+         }
+
 			QString sHrlyElecDemMultTblCol, sResHrlyElecDemMultTblCol;	// SAC 10/8/16 - enable specification of hourly elec demand mult table:column via ruleset var
 			if (osRunInfo.m_qaData.m_iNumQuickAnalysisPeriods < 1)	// SAC 10/11/16 - prevent demand calcs/storage when performing QuickAnalysis
 			{	BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ElecDemMultTableName" )+iResSet, sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
@@ -879,6 +885,8 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 						esEUMap_CECNonRes[iEUIdx].daResSupply[2] = 0.0;
 				}	}
 			}
+
+         double *daHrlyNEMFactors=NULL, *daHrlyNResTDVFactors=NULL, *daHrlyResTDVFactors=NULL, *daHrlyElecUse=NULL, *daHrlyPVBatt_FracPV=NULL;     // NEM3 - SAC 07/17/24 (tic #3624)
 			for (iFl=0; iFl < OSF_NumFuels; iFl++)
 			{
                            if (bHrlyDebugLogging)      // DEBUGGING - SAC 06/02/22
@@ -939,11 +947,15 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                      else 
 							{  dTDVSum       = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK    ? pdBEMHrlyRes    : dHrlyRes), sTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );   // (bHrlyDebugLogging && iEUIdx == 8)
                         if (!sResTDVMultTableName.isEmpty())
-							      dResTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes), sResTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+							   {  dResTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes), sResTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
                                           //if (bHrlyDebugLogging && iEUIdx == 8)      // DEBUGGING - Receptacle - SAC 12/08/23 (PRM)
                                           //   BEMPX_WriteLogFile( QString( "         ProcessNonresSimulationResults() Receptacle - bBEMHrlyResPtrOK %1 | sTDVMultTableName %2 | iTableCol %3 | dTDVSum %4" ).arg( (bBEMHrlyResPtrOK ? "yes" : "no"), sTDVMultTableName, QString::number( iTableCol ), QString::number( dTDVSum ) ) );
+                           if (iEUIdx == IDX_T24_NRES_EU_DHW)
+                              dResTDVSum *= dDemRespHPWHTDVSavMult;     // SAC 12/22/24
+                        }
                         dTDVSum += dResTDVSum;
                      }
+
                            //BEMPX_WriteLogFile( QString( "         iTableCol %1 - dTDVSum %2" ).arg( QString::number( iTableCol ), QString::number( dTDVSum ) ) );
 							if (sSrcEnergyTableName.length() > 1)
                      {  if (iEUIdx == IDX_T24_NRES_EU_PV || iEUIdx == IDX_T24_NRES_EU_BT)    // for PV &/or Batt - apply weighted Src multipliers - SAC 12/09/21
@@ -1193,6 +1205,168 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 						}	}  }
 					}
             }	// end of  while (esEUMap_CECNonRes[++iEUIdx]...
+
+            // NEM3 adjustments to elec export TDV/LSC - SAC 07/16/24 (tic #3624)
+            if (iFl == 0)  // elec
+            {  //double *daHrlyNEMFactors=NULL, *daHrlyNResTDVFactors=NULL, *daHrlyResTDVFactors=NULL, *daHrlyElecUse=NULL, *daHrlyPVBatt_FracPV=NULL;
+               double dTotNEMElecUse = 0.0;
+               long lDBID_Proj_HrlyNEMTableName = BEMPX_GetDatabaseID( "Proj:HrlyNEMTableName"  );
+               long lDBID_Proj_HrlyNEMTableCol  = BEMPX_GetDatabaseID( "Proj:HrlyNEMTableCol"  );
+               long lDBID_Proj_NEMGrossUpFactor = BEMPX_GetDatabaseID( "Proj:NEMGrossUpFactor"  );
+               long lDBID_Proj_CommunitySolarProjID = BEMPX_GetDatabaseID( "Proj:CommunitySolarProjID"  );
+               QString qsHrlyNEMTableName;  long lHrlyNEMTableCol=0, lCommunitySolarProjID=0;  double dNEMGrossUpFactor=0.0;  int hr;
+               if (lDBID_Proj_HrlyNEMTableName > 0)
+                  BEMPX_GetString(  lDBID_Proj_HrlyNEMTableName, qsHrlyNEMTableName, FALSE, 0, -1,  0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+               if (lDBID_Proj_HrlyNEMTableCol > 0)
+                  BEMPX_GetInteger( lDBID_Proj_HrlyNEMTableCol , lHrlyNEMTableCol,          0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+               if (lDBID_Proj_NEMGrossUpFactor > 0)
+                  BEMPX_GetFloat(   lDBID_Proj_NEMGrossUpFactor, dNEMGrossUpFactor,         0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+               if (lDBID_Proj_CommunitySolarProjID > 0)
+                  BEMPX_GetInteger( lDBID_Proj_CommunitySolarProjID, lCommunitySolarProjID, 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+               bool bHaveHrlyNEMTbl = (qsHrlyNEMTableName.length() > 0 && qsHrlyNEMTableName.compare( "none", Qt::CaseInsensitive ) != 0 && lHrlyNEMTableCol > 0 && lCommunitySolarProjID < 1);
+               //double *pdHrlyNResElec_Tot=NULL, *pdHrlyResElec_Tot=NULL, *pdHrlyPV=NULL, *pdHrlyBatt=NULL; 
+               double *pdHrlyPV=NULL;    // SAC 07/17/24 (tic #3624)
+                                                if (bHrlyDebugLogging)      // DEBUGGING
+                                                   BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - NEM table name '%1', col %2, gross-up %3, ComSolarProj %4" ).arg( qsHrlyNEMTableName, QString::number( lHrlyNEMTableCol ), QString::number( dNEMGrossUpFactor ), QString::number( lCommunitySolarProjID ) ) );
+               if (bHaveHrlyNEMTbl)
+               {  daHrlyNEMFactors = (double*) malloc( sizeof(double) * 8760 );
+                  if (daHrlyNEMFactors)
+                     if (BEMPX_GetTableColumn( &daHrlyNEMFactors[0], 8760, qsHrlyNEMTableName.toLocal8Bit().constData(), lHrlyNEMTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+                     {  free( daHrlyNEMFactors );
+                        daHrlyNEMFactors = NULL;
+                        bHaveHrlyNEMTbl = false;
+                                                if (bHrlyDebugLogging)      // DEBUGGING
+                                                   BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - Error retrieving NEM table '%1' col %2" ).arg( qsHrlyNEMTableName, QString::number( lHrlyNEMTableCol ) ) );
+                     }
+                  int iTDVTableCol = ((0 /*elec*/ * 16) + lCliZnNum + 1);
+                  if (fNonResAreaRatio >= 0.001)
+                  {  daHrlyNResTDVFactors = (double*) malloc( sizeof(double) * 8760 );
+                     if (daHrlyNResTDVFactors)
+                        if (BEMPX_GetTableColumn( &daHrlyNResTDVFactors[0], 8760, sTDVMultTableName.toLocal8Bit().constData(), iTDVTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+                        {  free( daHrlyNResTDVFactors );
+                           daHrlyNResTDVFactors = NULL;
+                           bHaveHrlyNEMTbl = false;
+                                                if (bHrlyDebugLogging)      // DEBUGGING
+                                                   BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - Error retrieving NonRes LSC table '%1' col %2" ).arg( sTDVMultTableName, QString::number( iTDVTableCol ) ) );
+                  }     }
+                  if (fResAreaRatio >= 0.001)
+                  {  daHrlyResTDVFactors = (double*) malloc( sizeof(double) * 8760 );
+                     if (daHrlyResTDVFactors)
+                        if (BEMPX_GetTableColumn( &daHrlyResTDVFactors[0], 8760, sResTDVMultTableName.toLocal8Bit().constData(), iTDVTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+                        {  free( daHrlyResTDVFactors );
+                           daHrlyResTDVFactors = NULL;
+                           bHaveHrlyNEMTbl = false;
+                                                if (bHrlyDebugLogging)      // DEBUGGING
+                                                   BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - Error retrieving Res LSC table '%1' col %2" ).arg( sResTDVMultTableName, QString::number( iTDVTableCol ) ) );
+                  }     }
+               }
+
+               if (bHaveHrlyNEMTbl)
+               {  daHrlyElecUse       = (double*) malloc( sizeof(double) * 8760 );     // SAC 07/17/24 (tic #3624)
+                  daHrlyPVBatt_FracPV = (double*) malloc( sizeof(double) * 8760 );
+                  if (daHrlyElecUse == NULL || daHrlyPVBatt_FracPV == NULL)
+                  {  bHaveHrlyNEMTbl = false;
+                                                if (bHrlyDebugLogging)      // DEBUGGING
+                                                   BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - Error allocating NEM3 hourly elec use and/or PVBatt_FracPV array(s)" ) );
+                  }
+                  else
+                  {  for (hr=0; hr<8760; hr++)
+                     {  daHrlyElecUse[hr] = 0.0;
+                        daHrlyPVBatt_FracPV[hr] = 1.0;  // how NEM export LSC adjustment is applied to PV vs. Batt
+                     }
+                     iEUIdx = -1;
+                     while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
+                     {  if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_EffTot && iEUIdx != IDX_T24_NRES_EU_Total)
+                        {  if (fBldgNonResFlrArea > 0)   // sum in NonRes elec use
+                           {  double* pdBEMHrlyRes = NULL;
+                              int iBEMHrlyResPtrRV = BEMPX_GetHourlyResultArrayPtr( &pdBEMHrlyRes, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName,    osRunInfo.BEMProcIdx() );
+                              if (pdBEMHrlyRes == NULL || iBEMHrlyResPtrRV != 0)
+                              {                    if (bHrlyDebugLogging)      // DEBUGGING
+                                                      BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - NEM3 - no hrly elec use for %1 NonRes %2" ).arg( osRunInfo.LongRunID(), esEUMap_CECNonRes[iEUIdx].sEnduseName ) );
+                              }
+                              else
+                              {  for (hr=0; hr<8760; hr++)
+                                    daHrlyElecUse[hr] += pdBEMHrlyRes[hr]; 
+                                                //   if (pdBEMHrlyRes[8] != 0.0   ) // && bHrlyDebugLogging)      // DEBUGGING
+                                                //      BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - summing hr 8 elec use %1 kWh NonRes %2" ).arg( QString::number( pdBEMHrlyRes[8] ), esEUMap_CECNonRes[iEUIdx].sResEnduseName ) );
+                                 if (iEUIdx == IDX_T24_NRES_EU_PV)
+                                    pdHrlyPV = pdBEMHrlyRes;
+                                 else if (iEUIdx == IDX_T24_NRES_EU_BT)
+                                    for (hr=0; hr<8760; hr++)
+                                    {  if (pdBEMHrlyRes[hr] >= 0.0)
+                                       {}    // no Batt exports, so leave all to PV
+                                       else if (pdHrlyPV == NULL || pdHrlyPV[hr] >= 0.0)
+                                          daHrlyPVBatt_FracPV[hr] = 0.0;  // all adjustment to Batt
+                                       else 
+                                          daHrlyPVBatt_FracPV[hr] = pdHrlyPV[hr] / (pdHrlyPV[hr] + pdBEMHrlyRes[hr]);   // frac of NEM adj that applies to PV
+                           }  }     }
+                           if (fBldgResFlrArea > 0 && iEUIdx != IDX_T24_NRES_EU_PV && iEUIdx != IDX_T24_NRES_EU_BT)   // sum in Res elec use
+                           {  double* pdBEMHrlyRes = NULL;
+                              int iBEMHrlyResPtrRV = BEMPX_GetHourlyResultArrayPtr( &pdBEMHrlyRes, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sResEnduseName, osRunInfo.BEMProcIdx() );
+                              if (pdBEMHrlyRes == NULL || iBEMHrlyResPtrRV != 0)
+                              {
+                                                   if (bHrlyDebugLogging)      // DEBUGGING
+                                                      BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - NEM3 - no hrly elec use for %1 Res %2" ).arg( osRunInfo.LongRunID(), esEUMap_CECNonRes[iEUIdx].sResEnduseName ) );
+                              }
+                              else
+                              {  for (hr=0; hr<8760; hr++)
+                                    daHrlyElecUse[hr] += pdBEMHrlyRes[hr]; 
+                                                //   if (pdBEMHrlyRes[8] != 0.0   ) // && bHrlyDebugLogging)      // DEBUGGING
+                                                //      BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - summing hr 8 elec use %1 kWh Res %2" ).arg( QString::number( pdBEMHrlyRes[8] ), esEUMap_CECNonRes[iEUIdx].sResEnduseName ) );
+                     }  }  }  }
+                     for (hr=0; hr<8760; hr++)
+                        dTotNEMElecUse += daHrlyElecUse[hr]; 
+                                          if (bHrlyDebugLogging)      // DEBUGGING
+                                             BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - NEM3 - tot bldg (nonres+res+pv+batt) elec use %1" ).arg( QString::number( dTotNEMElecUse ) ) );
+               }  }
+
+               // // store pointers to hourly elec use/generation arrays for later TDV adjustment via NEM factors - SAC 07/17/24 (tic #3624)
+               // if (bHaveHrlyNEMTbl && iFl == 0)
+               // {  if (iEUIdx == IDX_T24_NRES_EU_PV && bBEMHrlyResPtrOK)
+               //       pdHrlyPV = pdBEMHrlyRes;
+               //    else if (iEUIdx == IDX_T24_NRES_EU_BT && bBEMHrlyResPtrOK)
+               //       pdHrlyBatt = pdBEMHrlyRes;
+               //    else if (iEUIdx == IDX_T24_NRES_EU_Total)
+               //    {  BEMPX_GetHourlyResultArrayPtr(    &pdHrlyNResElec_Tot, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName,    osRunInfo.BEMProcIdx() );
+               //       if (fBldgResFlrArea > 0)
+               //          BEMPX_GetHourlyResultArrayPtr( &pdHrlyResElec_Tot , NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sResEnduseName, osRunInfo.BEMProcIdx() );
+               // }  }
+               //                            if (bHaveHrlyNEMTbl && iFl == 0 && iEUIdx == IDX_T24_NRES_EU_Total   ) // && bHrlyDebugLogging)      // DEBUGGING
+               //                               BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - NEM - PV %1 / pdHrlyPV %2 / pdHrlyNResElec_Tot %3 / pdHrlyResElec_Tot %4" ).arg( QString::number( esEUMap_CECNonRes[IDX_T24_NRES_EU_PV].daEnduseTotal[iFl] ), (pdHrlyPV ? "OK" : "missing"), (pdHrlyNResElec_Tot ? "OK" : "missing"), (pdHrlyResElec_Tot ? "OK" : "missing") ) );
+               // perform NEM adjustments on PV, Battery & Total (& CompTot) enduse TDV results - SAC 07/17/24 (tic #3624)
+               if (bHaveHrlyNEMTbl && dTotNEMElecUse != 0.0)
+               {  double dAnnDeltaPVBattTDV=0.0, dHrNEMAdj=0.0, dHrTDVFactor, dOriginalNegTDV, dDeltaPVBattTDV;
+                  for (int hr=0; hr<8760; hr++)
+                     if (daHrlyElecUse[hr] < -0.01)
+                     {        // {  dHrExport = -1.0 * ((pdHrlyNResElec_Tot ? pdHrlyNResElec_Tot[hr] : 0.0) +
+                              //                        (pdHrlyResElec_Tot  ? pdHrlyResElec_Tot[ hr] : 0.0) + pdHrlyPV[hr] +
+                              //                        (pdHrlyBatt ? pdHrlyBatt[hr] : 0.0));
+                              //    if (dHrExport > 0.0)
+                        dHrTDVFactor = (fNonResAreaRatio * (daHrlyNResTDVFactors ? daHrlyNResTDVFactors[hr] : 0.0)) +
+                                       (fResAreaRatio    * (daHrlyResTDVFactors  ? daHrlyResTDVFactors[ hr] : 0.0));       assert( dHrTDVFactor > 0 );
+                        // Adjusted export compensation = Hourly export * (106.6% * NEM3.0 cost factor – 6.6% * LSC factor)
+                        dHrNEMAdj = daHrlyElecUse[hr] * ( ( (1.0+dNEMGrossUpFactor) * daHrlyNEMFactors[hr] ) -
+                                                          (      dNEMGrossUpFactor  * dHrTDVFactor         ) );
+                        // adjustment to already-calced PV+Batt TDV = (-original TDV for this hour) - dHrNEMAdj
+                        dOriginalNegTDV = daHrlyElecUse[hr] * dHrTDVFactor;
+                        dDeltaPVBattTDV = dHrNEMAdj - dOriginalNegTDV;           assert( dDeltaPVBattTDV >= 0.0 );
+                                          if (dDeltaPVBattTDV < 0.0 && bHrlyDebugLogging)      // DEBUGGING
+                                             BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - NEM LSC Export INCREASE - hr %1 NEM LSC %2 / export %3 / orig export LSC %4 / NEMFactor %5 / LSCFactor %6 / GrossUp %7" ).arg( QString::number( hr ), QString::number( dHrNEMAdj ), QString::number( -daHrlyElecUse[hr] ), QString::number( dOriginalNegTDV ), QString::number( daHrlyNEMFactors[hr] ), QString::number( dHrTDVFactor ), QString::number( dNEMGrossUpFactor ) ) );
+                        // apply changes to TDV results
+                        esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daTDVTotal[0] += (dDeltaPVBattTDV / fTotBldgFlrArea);
+                        esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daTDVTotal[0] += (dDeltaPVBattTDV / fTotBldgFlrArea);
+                        if (daHrlyPVBatt_FracPV[hr] > 0.0)
+                           esEUMap_CECNonRes[IDX_T24_NRES_EU_PV].daTDVTotal[0] += ((dDeltaPVBattTDV / fTotBldgFlrArea) *        daHrlyPVBatt_FracPV[hr]);
+                        if (daHrlyPVBatt_FracPV[hr] < 1.0)
+                           esEUMap_CECNonRes[IDX_T24_NRES_EU_BT].daTDVTotal[0] += ((dDeltaPVBattTDV / fTotBldgFlrArea) * (1.0 - daHrlyPVBatt_FracPV[hr]));
+                                          if (bHrlyDebugLogging)      // DEBUGGING
+                                             BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - hr %1 NEM LSC %2 / export %3 / orig export TDV %4 / NEMFactor %5 / LSCFactor %6 / GrossUp %7" ).arg( QString::number( hr ), QString::number( dHrNEMAdj ), QString::number( -daHrlyElecUse[hr] ), QString::number( dOriginalNegTDV ), QString::number( daHrlyNEMFactors[hr] ), QString::number( dHrTDVFactor ), QString::number( dNEMGrossUpFactor ) ) );
+                        dAnnDeltaPVBattTDV += (dDeltaPVBattTDV / fTotBldgFlrArea);
+                     }
+                                          if (dAnnDeltaPVBattTDV != 0.0 && bHrlyDebugLogging)      // DEBUGGING
+                                             BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - Annual NEM elec sale LSC adjustment: %1 ($/ft2-yr)" ).arg( QString::number( dAnnDeltaPVBattTDV ) ) );
+               }
+            }  // end of if (iFl == 0) -- doing NEM3 adjustments
 
             // ADJUST Proposed model PV, CompTot & Total EnergyUse properties to account for Community Solar - SAC 06/03/22
             if (iFl==0 && osRunInfo.CodeType() == CT_T24N && osRunInfo.IsStdRun() && dCmntySlr_PVSize > 0.1)
@@ -1453,6 +1627,17 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 					}
 				}	// end of  while (esEUMap_CECNonRes[++iEUIdx]...
 			}	// end of  for (iFl...
+
+         if (daHrlyNEMFactors)      // SAC 07/16/24 (tic #3624)
+            free( daHrlyNEMFactors );
+         if (daHrlyNResTDVFactors)
+            free( daHrlyNResTDVFactors );
+         if (daHrlyResTDVFactors)
+            free( daHrlyResTDVFactors );
+         if (daHrlyElecUse)
+            free( daHrlyElecUse );
+         if (daHrlyPVBatt_FracPV)
+            free( daHrlyPVBatt_FracPV );
 
 			// now go BACK through enduses storing total kBTU/ft2-yr sums
 			QString sPassFail;
@@ -3418,9 +3603,9 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
             }  }
 
             // Modelkit processing:  ID = 1 => HybridCooling  - SAC 06/22/22
-            long lModelkitProcessingID = 0;
-				if (lSimRetVal == 0 && FileExists( qsIDFPathFile ) &&
-                BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ModelkitProcessingID" ), lModelkitProcessingID, 0, -1, 0, BEMO_User, osRunInfo[iSI].BEMProcIdx() ) &&
+            long lModelkitProcessingID = 0, lDBID_ModelkitProcessingID = BEMPX_GetDatabaseID( "Proj:ModelkitProcessingID" );   // load DBID first to avoid assert - SAC 06/09/24
+				if (lSimRetVal == 0 && FileExists( qsIDFPathFile ) && lDBID_ModelkitProcessingID > 0 &&
+                BEMPX_GetInteger( lDBID_ModelkitProcessingID, lModelkitProcessingID, 0, -1, 0, BEMO_User, osRunInfo[iSI].BEMProcIdx() ) &&
                 lModelkitProcessingID > 0)
             {
                         //bVerbose = TRUE;

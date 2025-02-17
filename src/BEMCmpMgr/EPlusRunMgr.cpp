@@ -498,7 +498,7 @@ bool EPlusRunMgr::ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirst
 {
 	assert( pES);
 	std::string sOut;
-	if (m_bAbortingSims || sqt_progress->wasCanceled())
+	if (m_bAbortingSims || (sqt_progress && sqt_progress->wasCanceled()))      // check for sqt_progress != NULL - SAC 01/19/25
 	{	m_bAbortingSims = true;
 		pES->kill(255);
 	}

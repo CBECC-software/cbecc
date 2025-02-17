@@ -286,6 +286,7 @@ static QString FuncName( int iFuncID )
 		case  BF_MaxAcrsIf      :  return "MaxAcrossIf";          
 		case  BF_MinAcrsIf      :  return "MinAcrossIf";          
 		case  BF_CopyComp       :  return "CopyComp";          
+		case  BF_OrderAssigns   :  return "OrderAssignments";  
 
 		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
 	}
@@ -2278,6 +2279,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
          break;
 
       case BF_SetNextArr   : // added SetNextArrayElement() - 1 argument = string or numeric result to be set to first empty array element of local property - SAC 04/24/23 (Com tic #3392)
+      case BF_OrderAssigns : // added OrderAssignments() - 2 arguments: first name of local assignment array property, second the Obj:Prop of the numeric value used to define assignment order - SAC 01/13/25 (CUAC)
          break;
 
       case BF_Format      :
@@ -6556,6 +6558,159 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpxStackPush( stack, pNode );
                            break; }
 
+      case BF_OrderAssigns : // added OrderAssignments() - 2 arguments: first name of loacl assignment array property, second the Obj:Prop of the numeric value used to define assignment order - SAC 01/13/25 (CUAC)
+                        {  ExpNode* pNode = ExpxStackPop( stack );
+                                       //       CPR_NetExcessCreditCost:Action = OrderAssignments( Tiers, CPR_Tier:TierNumber ) 
+                           long lDBID_SortVal = 0;
+                           int iCID_SortObj = 0, iNumSwaps = -1;
+                           if (pNode == NULL)
+                              ExpSetErr( error, EXP_RuleProc, "Invalid or missing OrderAssignments() 2nd argument - Object:Property of sort parameter" );
+                           else
+                           {  if (pNode->type != EXP_String || pNode->pValue == NULL)
+                                 ExpSetErr( error, EXP_RuleProc, "Invalid type or empty OrderAssignments() 2nd argument - Object:Property of sort parameter" );
+                              else
+                              {  lDBID_SortVal = BEMPX_GetDatabaseID( (char*) pNode->pValue );     assert( lDBID_SortVal > 0 );
+                                 if (lDBID_SortVal < BEM_COMP_MULT)
+                                    ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 2nd argument - cannot translate Object:Property of sort parameter to database ID" );
+                                 else
+                                 {  iCID_SortObj = BEMPX_GetClassID( lDBID_SortVal );              assert( iCID_SortObj > 0 );
+                                    if (iCID_SortObj < 1)
+                                       ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 2nd argument - cannot translate Object:Property of sort parameter to object class ID" );
+                                    else
+                                    {  ExpNode* pNode1 = ExpxStackPop( stack );
+                                       if (pNode1 == NULL)
+                                          ExpSetErr( error, EXP_RuleProc, "Invalid or missing OrderAssignments() 1st argument - object assignment property name" );
+                                       else
+                                       {  if (pNode1->type != EXP_String || pNode1->pValue == NULL)
+                                             ExpSetErr( error, EXP_RuleProc, "Invalid type or empty OrderAssignments() 1st argument - object assignment property" );
+                                          else
+                                          {  int iAssignCID=0, iAssignObjIdx = -1;
+                                             long lDBID_AssignObjArr = BEMPX_GetDatabaseID( (char*) pNode1->pValue, BEMPX_GetClassID( pEval->lLocDBID ) );
+                                             if ( lDBID_AssignObjArr > BEM_COMP_MULT)
+                                             {  iAssignCID = BEMPX_GetClassID( pEval->lLocDBID );
+                                                iAssignObjIdx = pEval->iLocObjIdx;
+                                             }
+                                             else if (pEval->lPrimDBID > BEM_COMP_MULT)
+                                             {  lDBID_AssignObjArr = BEMPX_GetDatabaseID( (char*) pNode1->pValue, BEMPX_GetClassID( pEval->lPrimDBID ) );
+                                                if (lDBID_AssignObjArr > BEM_COMP_MULT)
+                                                {  iAssignCID = BEMPX_GetClassID( pEval->lPrimDBID );
+                                                   iAssignObjIdx = pEval->iPrimObjIdx;
+                                                }
+                                                else if (pEval->iPrimPar1Class > 0)
+                                                {  lDBID_AssignObjArr = BEMPX_GetDatabaseID( (char*) pNode1->pValue, pEval->iPrimPar1Class );
+                                                   if (lDBID_AssignObjArr > BEM_COMP_MULT)
+                                                   {  iAssignCID = pEval->iPrimPar1Class;
+                                                      iAssignObjIdx = pEval->iPrimParObjIdx;
+                                                   }
+                                                   else if (pEval->iPrimPar2Class > 0)
+                                                   {  lDBID_AssignObjArr = BEMPX_GetDatabaseID( (char*) pNode1->pValue, pEval->iPrimPar2Class );
+                                                      if (lDBID_AssignObjArr > BEM_COMP_MULT)
+                                                      {  iAssignCID = pEval->iPrimPar2Class;
+                                                         iAssignObjIdx = pEval->iPrimPar2ObjIdx;
+                                                      }
+                                                      else if (pEval->iPrimPar3Class > 0)
+                                                      {  lDBID_AssignObjArr = BEMPX_GetDatabaseID( (char*) pNode1->pValue, pEval->iPrimPar3Class );
+                                                         if (lDBID_AssignObjArr > BEM_COMP_MULT)
+                                                         {  iAssignCID = pEval->iPrimPar3Class;
+                                                            iAssignObjIdx = pEval->iPrimPar3ObjIdx;
+                                             }  }  }  }  }
+                                             if (lDBID_AssignObjArr < BEM_COMP_MULT || iAssignObjIdx < 0)
+                                                ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 1st argument - cannot translate  assignment property name to object referencing database ID and object index" );
+                                             else
+                                             {  int iErr, iSpecVal;
+                                                BEMPropertyType* pAssignPropType  = BEMPX_GetPropertyTypeFromDBID( lDBID_AssignObjArr, iErr );
+                                                BEMPropertyType* pSortValPropType = BEMPX_GetPropertyTypeFromDBID( lDBID_SortVal, iErr );
+                                                if (pAssignPropType == NULL)
+                                                   ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 1st argument - error retrieving BEMPropertyType" );
+                                                else if (pAssignPropType->getPropType() != BEMP_Obj)
+                                                   ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 1st argument - not an object assignment property" );
+                                                else if (pAssignPropType->getNumValues() < 2)
+                                                   ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 1st argument - not an array of multiple object assignments" );
+                                                if (pSortValPropType == NULL)
+                                                   ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 2nd argument - error retrieving BEMPropertyType" );
+                                                else if (pSortValPropType->getPropType() != BEMP_Int && pSortValPropType->getPropType() != BEMP_Flt)
+                                                   ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() 2nd argument - not a numeric (integer or float) sort value property type" );
+                                                else if (pAssignPropType->getObj1ClassIdx(0) != BEMPX_GetClassID( lDBID_SortVal ))
+                                                   ExpSetErr( error, EXP_RuleProc, "Invalid OrderAssignments() arguments - assignment object type (1st arg) inconsistent w/ object type of sort value property (2nd arg)" );
+                                                else
+                                                {  int iArraySize = pAssignPropType->getNumValues();
+                                                   int iNumSwapsThisRound=1;   long lThisVal, lNextVal;   double dThisVal, dNextVal;
+                                                   BEMObject *pThisArrObj, *pNextArrObj;
+                                                   if (iNumSwaps < 0)
+                                                      iNumSwaps = 0;
+                                                   while (iNumSwapsThisRound > 0)
+                                                   {  iNumSwapsThisRound = 0;
+                                                      for (int idx=0; idx < (iArraySize-1); idx++)
+                                                      {  bool bSwapTheseTwo = false;
+                                                         if (BEMPX_GetObject( lDBID_AssignObjArr + idx  , pThisArrObj, -1, iAssignObjIdx ) && pThisArrObj &&
+                                                             BEMPX_GetObject( lDBID_AssignObjArr + idx+1, pNextArrObj, -1, iAssignObjIdx ) && pNextArrObj)
+                                                         {  int iThisObjIdx = BEMPX_GetObjectIndex( pThisArrObj->getClass(), pThisArrObj );
+                                                            int iNextObjIdx = BEMPX_GetObjectIndex( pNextArrObj->getClass(), pNextArrObj );
+                                                            if (pSortValPropType->getPropType() == BEMP_Int)
+                                                               bSwapTheseTwo = ( BEMPX_GetInteger( lDBID_SortVal, lThisVal, -1, -1, iThisObjIdx ) &&
+                                                                                 BEMPX_GetInteger( lDBID_SortVal, lNextVal, -1, -1, iNextObjIdx ) &&
+                                                                                 lNextVal < lThisVal );
+                                                            else if (pSortValPropType->getPropType() == BEMP_Flt)
+                                                               bSwapTheseTwo = ( BEMPX_GetFloat( lDBID_SortVal, dThisVal, -1, -1, iThisObjIdx ) &&
+                                                                                 BEMPX_GetFloat( lDBID_SortVal, dNextVal, -1, -1, iNextObjIdx ) &&
+                                                                                 dNextVal < dThisVal );
+                                                            if (bSwapTheseTwo)
+                                                            {  iNumSwapsThisRound++;   iNumSwaps++;
+
+                                                                     QString sMainObjName, sThisObjName, sNextObjName;
+                                                                     sMainObjName = BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iAssignCID   ), iSpecVal, iErr, iAssignObjIdx );
+                                                                     sThisObjName = BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iCID_SortObj ), iSpecVal, iErr, iThisObjIdx );
+                                                                     sNextObjName = BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iCID_SortObj ), iSpecVal, iErr, iNextObjIdx );
+                                                                     BEMPX_WriteLogFile( QString( "   swapping '%1' assignments of [%2] (%3) and [%4] (%5)" ).arg( sMainObjName, QString::number(idx+1), sThisObjName, QString::number(idx+2), sNextObjName ) );
+
+                                                               BEMPX_SetBEMData( lDBID_AssignObjArr + idx  , BEMP_Obj, (void*) pNextArrObj, BEMO_User, iAssignObjIdx );
+                                                               BEMPX_SetBEMData( lDBID_AssignObjArr + idx+1, BEMP_Obj, (void*) pThisArrObj, BEMO_User, iAssignObjIdx );
+                                                      }  }  }
+                                                   }
+                                          }  }  }
+                                          ExpxNodeDelete( pNode1 );
+                                       }
+                              }  }  }
+                              if (pNode->type == EXP_String && pNode->pValue != NULL)
+                                 free( pNode->pValue );
+                           }
+
+                           if (pNode == NULL)
+                              pNode = ExpNode_new();
+                           pNode->type   = (iNumSwaps < 0 ? EXP_Invalid : EXP_Value);
+                           pNode->fValue =  iNumSwaps;
+
+                           // QString qsOAMsg = "   OrderAssignments( ";
+                           // if (pNode)
+                           // {  if (pNode->type == EXP_String && pNode->pValue != NULL)
+                           //       qsOAMsg += QString( "'%1'" ).arg( (char*) pNode->pValue );
+                           //    else if (pNode->type == EXP_Value)
+                           //       qsOAMsg += QString( "#%1" ).arg( QString::number( pNode->fValue ) );
+                           //    else 
+                           //       qsOAMsg += QString( "arg type: %1" ).arg( QString::number( pNode->type ) );
+                           //    ExpxNodeDelete( pNode );
+                           // }
+                           // pNode = ExpxStackPop( stack );
+                           // qsOAMsg += ", ";
+                           // if (pNode)
+                           // {  if (pNode->type == EXP_String && pNode->pValue != NULL)
+                           //       qsOAMsg += QString( "'%1'" ).arg( (char*) pNode->pValue );
+                           //    else if (pNode->type == EXP_Value)
+                           //       qsOAMsg += QString( "#%1" ).arg( QString::number( pNode->fValue ) );
+                           //    else 
+                           //       qsOAMsg += QString( "arg type: %1" ).arg( QString::number( pNode->type ) );
+                           // }
+                           // qsOAMsg += " )";
+                           //    	BEMPX_WriteLogFile( qsOAMsg );
+                           // if (pNode->type == EXP_String && pNode->pValue != NULL)
+                           //    free( pNode->pValue );
+                           // pNode->type = EXP_Invalid;
+                           // pNode->fValue = 0;
+
+                           // Push argument node back onto the stack to serve as return value
+                           ExpxStackPush( stack, pNode );
+                           break; }
+
       case BF_YrMoDa2Date :   // long YrMoDaToSerial( int iYr, int iMo, int iDa );  
       case BF_YrMoDa2DOW  :   // int YrMoDaToDayOfWeek( int iYr, int iMo, int iDa );
 								{	ExpNode* pNode=NULL;
@@ -9127,7 +9282,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
    long plParams[40];
 	ExpNode* pOrigNodes[40];		int arg, iNumOrigNodes = nArgs;		assert( nArgs < 41 );
 	int i0Model = -1, iNumConsecStringArgs = 0;
-   for (arg==0; arg<40; arg++)
+   for (arg=0; arg<40; arg++)
       pOrigNodes[arg] = NULL;
    for ( arg = nArgs; arg > 0; arg-- )
    {
@@ -10921,66 +11076,89 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 	   pNode->type = EXP_Invalid;
 		pNode->fValue = 0.;
 		BEMTableCell* pRetCell = NULL;
+      bool b2DInterpolationFailed = false, b2DInterpolationSuccess = false;
 		if (sErrMsg.length() < 1 && bStoreArguments)
-		{	pRetCell = ruleSet.getTableCell( i1TblIdx, i1ColIdx, saIndepNames, saIndepStrings,
-														faIndepValues, baIndepNumeric, sErrMsg, pEval->bVerboseOutput );
-			if (pRetCell)
-			{	switch (pRetCell->getCellType())
-				{	case BEMTCT_Float     :		pNode->type = EXP_Value;
-														pNode->fValue = pRetCell->getValue();
-														break;
-				   case BEMTCT_String    : {	string strRet = pRetCell->getString();
-														if (boost::iequals( strRet, "NA" ) || boost::iequals( strRet, "N/A" ))
-														{	pNode->type = EXP_Value;
-															pNode->fValue = -99996;  // => UNDEFINED
-														}
-														else
-														{	pNode->type = EXP_String;
+		{  string sChkColName;     // add logic to support 2D interpolation via look-up tables - SAC 08/22/24 (VCHP3)
+         ruleSet.getTableColumnName( i1TblIdx, i1ColIdx, sChkColName );
+
+         string sFirstColName;
+         ruleSet.getTableColumnName( i1TblIdx, 1, sFirstColName );
+         bool bIs2DInterpTable = (sFirstColName.length() > 0 && sFirstColName == "2DInterpolate");
+
+         if (sChkColName == "2DInterpolate")
+         {  double dInterpResult = -999.0;
+            if (ruleSet.getTable2DInterpolatedValue( i1TblIdx, dInterpResult, saIndepNames, saIndepStrings,
+                                                     faIndepValues, baIndepNumeric, sErrMsg, pEval->bVerboseOutput ))
+            {  pNode->type = EXP_Value;
+               pNode->fValue = dInterpResult;
+               b2DInterpolationSuccess = true;
+            }
+            else
+               b2DInterpolationFailed = true;
+         }
+         else
+         {  pRetCell = ruleSet.getTableCell( i1TblIdx, i1ColIdx, saIndepNames, saIndepStrings,
+                                             faIndepValues, baIndepNumeric, sErrMsg, pEval->bVerboseOutput );
+   			if (pRetCell)
+   			{	switch (pRetCell->getCellType())
+   				{	case BEMTCT_Float     :		pNode->type = EXP_Value;
+   														pNode->fValue = pRetCell->getValue();
+   														break;
+   				   case BEMTCT_String    : {	string strRet = pRetCell->getString();
+   														if (boost::iequals( strRet, "NA" ) || boost::iequals( strRet, "N/A" ))
+   														{	pNode->type = EXP_Value;
+   															pNode->fValue = -99996;  // => UNDEFINED
+   														}
+   														else
+   														{	pNode->type = EXP_String;
 #pragma warning(disable : 4996)		// SAC 9/9/16
-   														pNode->pValue = malloc( strRet.length() + 1 );
-   														strcpy( (char*) pNode->pValue, strRet.c_str() );
+      														pNode->pValue = malloc( strRet.length() + 1 );
+      														strcpy( (char*) pNode->pValue, strRet.c_str() );
 #pragma warning(default : 4996)
-														}
-													}	break;
-				   case BEMTCT_Error     :	{	if (sErrMsg.length() < 1)
-															sErrMsg = "Table lookup failed.";
-														//if (pssaErrorMsgs)
-                        						//   pssaErrorMsgs->push_back( sErrMsg.c_str() );
-                        						//else
-                        						//   ExpSetErr( error, EXP_RuleProc, QString("Error:  ") + QString(sErrMsg.c_str()) );
-													}	break;
-				   case BEMTCT_Warning   : {	pNode->type = EXP_Value;  // set return value to UNDEFINED rather than retaining an invalid return value
-														pNode->fValue = -99996;  // => UNDEFINED
-														if (sErrMsg.length() < 1)
-															sWarnMsg = "Table lookup warning encountered.";
-														else
-															sWarnMsg = sErrMsg;
-														sErrMsg.clear();
-                        						//if (pssaWarningMsgs)
-                        						//   pssaWarningMsgs->push_back( sErrMsg.c_str() );
-                        						//else
-                        						//   ExpSetErr( error, EXP_RuleWarn, QString("Warning:  ") + QString(sErrMsg.c_str()) );
-													}	break;
-				   case BEMTCT_WildCard  :
-				   case BEMTCT_Missing   :  
-				   case BEMTCT_Undefined :  // do nothing for these
-														pNode->type = EXP_Value;
-														pNode->fValue = -99996;  // => UNDEFINED
-														break;
-				}
-			}
+   														}
+   													}	break;
+   				   case BEMTCT_Error     :	{	if (sErrMsg.length() < 1)
+   															sErrMsg = "Table lookup failed.";
+   														//if (pssaErrorMsgs)
+                           						//   pssaErrorMsgs->push_back( sErrMsg.c_str() );
+                           						//else
+                           						//   ExpSetErr( error, EXP_RuleProc, QString("Error:  ") + QString(sErrMsg.c_str()) );
+   													}	break;
+   				   case BEMTCT_Warning   : {	pNode->type = EXP_Value;  // set return value to UNDEFINED rather than retaining an invalid return value
+   														pNode->fValue = -99996;  // => UNDEFINED
+   														if (sErrMsg.length() < 1)
+   															sWarnMsg = "Table lookup warning encountered.";
+   														else
+   															sWarnMsg = sErrMsg;
+   														sErrMsg.clear();
+                           						//if (pssaWarningMsgs)
+                           						//   pssaWarningMsgs->push_back( sErrMsg.c_str() );
+                           						//else
+                           						//   ExpSetErr( error, EXP_RuleWarn, QString("Warning:  ") + QString(sErrMsg.c_str()) );
+   													}	break;
+   				   case BEMTCT_WildCard  :
+   				   case BEMTCT_Missing   :  
+   				   case BEMTCT_Undefined :  // do nothing for these
+   														pNode->type = EXP_Value;
+   														pNode->fValue = -99996;  // => UNDEFINED
+   														break;
+   				}
+         }  }
 		}
 
-		if (pRetCell == NULL && sErrMsg.length() < 1)
+      if (b2DInterpolationFailed && sErrMsg.length() < 1)
+			sErrMsg = "Table interpolation failed.";
+		else if (pRetCell == NULL && !b2DInterpolationFailed && !b2DInterpolationSuccess && sErrMsg.length() < 1)
 			sErrMsg = "Table lookup failed (cell not found).";
 
 		if (sErrMsg.length() > 0 || sWarnMsg.length() > 0)
 		{	bool bWarnOnly = (sWarnMsg.length() > 0 && sErrMsg.length() < 1);
          QString sTblName;
 			string sColName;
+         string sTableFailure = (b2DInterpolationFailed ? "interpolation" : "look-up");
 	      ruleSet.getTableName( i1TblIdx, sTblName );
 	      ruleSet.getTableColumnName( i1TblIdx, i1ColIdx, sColName );
-			string sFullErrMsg = boost::str( boost::format( "Table look-up failed: %s:%s( " ) % sTblName.toLocal8Bit().constData() % sColName );
+			string sFullErrMsg = boost::str( boost::format( "Table %s failed: %s:%s( " ) % sTableFailure % sTblName.toLocal8Bit().constData() % sColName );
          for (arg=0; arg < (int) saIndepNames.size(); arg++)
 			{	if (arg > 0)
 					sFullErrMsg += ", ";

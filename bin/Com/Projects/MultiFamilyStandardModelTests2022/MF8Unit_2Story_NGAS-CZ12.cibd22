@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "MF8 Restructure Prototype"  
    BldgEngyModelVersion = 17
    CreateDate = 1603224267
-   ModDate = 1714771638
-   RunDate = 1714771639
+   ModDate = 1738186544
+   RunDate = 1738186545
    GasType = "NaturalGas"
    CliZn = "ClimateZone12"
    ZipCode = 95814
@@ -24,7 +24,7 @@ Proj   "MF8 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
+   SoftwareVersion = "CBECC 2022.3.2 (1369)"
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
    ..

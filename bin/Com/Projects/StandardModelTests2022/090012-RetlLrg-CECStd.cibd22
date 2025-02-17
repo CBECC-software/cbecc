@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "090012-RetlLrg-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1414704334
-   ModDate = 1714768497
-   RunDate = 1714768498
+   ModDate = 1738190241
+   RunDate = 1738190242
    ZipCode = 95814
    WeatherStation = "SACRAMENTO EXECUTIVE"
    HVACAutoSizing = 0
@@ -16,7 +16,7 @@ Proj   "090012-RetlLrg-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
+   SoftwareVersion = "CBECC 2022.3.2 (1369)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -9255,8 +9255,8 @@ clg: 0  htg: 1  'Side_Storage_2 Zone'" )
    StdPV_Total = 915528
    StdPV_Export = 23986.5
    StdPV_PctExport = 2.61996
-   NRCCPRFPayldTransID = "05325a67-ea81-4e5f-b518-73e2100698ef"
-   NRCCPRFPayldProcDate = "2024-05-03T13:34:39"
+   NRCCPRFPayldTransID = "ef93a124-1b25-4e41-8bba-d5e035f65b1f"
+   NRCCPRFPayldProcDate = "2025-01-29T14:37:04"
    ..
 
 

@@ -54,7 +54,7 @@ int  BEMCMPMGR_API __cdecl CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBa
 														const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV=NULL,
 														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL, bool bOLDRules=false,
 														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL, char* pszResultMsg=NULL, int iResultMsgLen=0, 		// SAC 1/10/17   // SAC 12/3/17
-                                          const char* pszProxyOptionsCSV=NULL );    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
+                                          const char* pszProxyOptionsCSV=NULL, bool bSilent=false );    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21  // bSilent - SAC 02/13/25
 
 //	int  BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECNonRes_OLD(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 //													const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath,
@@ -109,34 +109,6 @@ int  BEMCMPMGR_API __cdecl CMX_ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, 
                         LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, bool bVerboseOutput=false,
                         char* pszReturnStr=NULL, int iReturnStrLength=0 );
 
-
-void  BEMCMPMGR_API __cdecl CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
-                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, char* pszErrorMsg, int iErrorMsgLen,
-                              bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx, int iBillCalcDetails=-1,
-                              bool bWritePDF=true, bool bWriteCSV=true, int iBatchRunIdx=0 );
-
-void  BEMCMPMGR_API __cdecl CUAC_AnalysisProcessing_BatchRates( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
-                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, char* pszErrorMsg, int iErrorMsgLen,
-                              bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx, int iBillCalcDetails /*=-1*/,
-                              int iSecurityKeyIndex, const char* pszSecurityKey, const char* pszProxyServerAddress, const char* pszProxyServerCredentials,
-                              const char* pszProxyServerType, int iRptGenConnectTimeout, int iRptGenReadWriteTimeout );
-
-int  BEMCMPMGR_API __cdecl CMX_RateDownload( const char* pszRateType, int iErrorRetVal, const char* pszUtilRateRefPropType, const char* pszProcessingPath, /*QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,*/
-                              bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, long iSecurityKeyIndex, const char* pszPrivateKey,
-                              const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,      // pass NULLs for no proxy - SAC 08/31/23 
-                              char* pszErrorMsg, int iErrorMsgLen, /*(long iCUACReportID,*/ int iCUAC_BEMProcIdx,     // SAC 08/30/23
-                              int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/, const char* pszHardwiredRatePathFile=NULL );      // SAC 08/31/23  // SAC 03/12/24
-
-int  BEMCMPMGR_API __cdecl CMX_GetCUACDBProjectList(  std::string sCUACPathFilename, std::vector<std::string>& vsProjects,
-                                                      std::vector<int>& viProjectIDs, bool bLogCUACToolMiner=false );         // bLogCUACToolMiner - SAC 04/11/24
-
-int  BEMCMPMGR_API __cdecl CMX_PortOldCUACToCBECC(    std::string sCUACPathFilename, long projectID, std::string sProjectName,      // SAC 09/15/23
-                                                      std::string& sErrMsg, bool bLogCUACToolMiner=false );       // bLogCUACToolMiner - SAC 04/11/24
-// testing...
-int  BEMCMPMGR_API __cdecl CMX_ExportCUACDBProjectTables( std::string sCUACPathFilename, std::string sOutputPath,
-                                          const std::string& sProject_name, bool bLogCUACToolMiner=false );  //, const std::vector<std::string>& sTable_names)  // bLogCUACToolMiner - SAC 04/11/24
-//int  BEMCMPMGR_API __cdecl CMX_ExportCUACDBSummaryTable( std::string sCUACPathFilename, std::string sOutputPath,
-//                                          const std::string& sProject_name, bool bIsElec );
 
 #ifdef __cplusplus
 }

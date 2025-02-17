@@ -3,8 +3,8 @@ RulesetFilename   "T24N_2022.bin"
 Proj   "080012-Whse-CECStd22"  
    BldgEngyModelVersion = 17
    CreateDate = 1415238845
-   ModDate = 1714768418
-   RunDate = 1714768419
+   ModDate = 1738190164
+   RunDate = 1738190165
    ZipCode = 95814
    ExcptCondNoClgSys = "No"
    ExcptCondRtdCap = "No"
@@ -14,7 +14,7 @@ Proj   "080012-Whse-CECStd22"
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2022.3.1 RC (1343)"
+   SoftwareVersion = "CBECC 2022.3.2 (1369)"
    CompReportPDF = 1
    ..
 
@@ -5255,8 +5255,8 @@ clg: 0  htg: 0  'Zn_BulkStorage'" )
    StdPV_Total = 46537.4
    StdPV_Export = 6994.3
    StdPV_PctExport = 15.0294
-   NRCCPRFPayldTransID = "75bdf05e-39e1-4106-a9be-002c8660ee47"
-   NRCCPRFPayldProcDate = "2024-05-03T13:33:27"
+   NRCCPRFPayldTransID = "aa7e08bf-c513-406d-8a99-0555eaa174c5"
+   NRCCPRFPayldProcDate = "2025-01-29T14:35:52"
    ..
 
 

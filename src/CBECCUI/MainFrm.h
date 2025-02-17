@@ -579,6 +579,7 @@ protected:
 	int  AddFileListToMenu( CMenu* pPopupMenu, CString sFileListPath );
 	void OnUpdateFileList( CCmdUI* pCmdUI, int i1FileListID );
 	void OnFileList( int i1FileListID );
+	void CUACReportCombiningUIDefaulting();	   // SAC 10/25/24
 	void BatchProcessing( bool bOLDRules=false );		// SAC 4/2/14
 	BOOL BatchUIDefaulting();		// SAC 11/10/17
 	BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile  );		// SAC 11/10/17

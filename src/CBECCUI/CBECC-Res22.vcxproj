@@ -196,6 +196,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <StackReserveSize>8388608</StackReserveSize>
     </Link>
     <PreBuildEvent>
       <Command>..\..\vendor\qt_5.15.0\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog22r.cpp</Command>
@@ -316,6 +317,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <StackReserveSize>8388608</StackReserveSize>
     </Link>
     <PreBuildEvent>
       <Command>..\..\vendor\qt_5.15.0\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog22r.cpp</Command>

@@ -92,7 +92,8 @@ CSERun::CSERun() :
 	m_bIsStdDesign( FALSE),
 	m_iExitCode( 0),
 	m_pES( NULL),
-	m_bCSE_DHWonly( FALSE)	// SAC 7/7/20
+	m_bCSE_DHWonly( FALSE),	// SAC 7/7/20
+	m_bUsingSubstituteResults( FALSE)   // SAC 01/21/25
 {
 	m_sTDVFName.clear();		// SAC 4/16/17
 }
@@ -2673,9 +2674,15 @@ static int LocStringInArray( QStringList& saStrs, QString& sStr )
 }
 /////////////////////////////////////////////////////////////////////////////
 
+#define  NumCUACDwellingMeters   7
+static const char* pszCUACElecMeters[NumCUACDwellingMeters]  = { "Elec_0bedrm", "Elec_1bedrm", "Elec_2bedrm", "Elec_3bedrm", "Elec_4bedrm", "Elec_5bedrm", "Elec_6bedrm" };
+#define  NumInitialCUACEnduses  14
+static const char* pszInitialCUACEnduses[NumInitialCUACEnduses]  = { "Cooling", "Heating", "DHW", "Ventilation", "HVAC Other", "Plug Loads", "Lighting", "Refrigerator", "Dishwasher", "Dryer", "Washer", "Cooking", "Photovoltaics", "Battery" };
+
 int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
 											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/,
-											bool bRemovePVBatt /*=false*/, bool bPerformFullCSESim /*=false*/ )
+											bool bRemovePVBatt /*=false*/, bool bPerformFullCSESim /*=false*/, int iCUACReportID /*=0*/,       // iCUACReportID - SAC 12/13/24
+                                 const char* pszSubstituteOutFile /*=NULL*/ )     // SAC 01/21/25
 {
 	int iRetVal = 0;
 	QString sLogMsg;
@@ -2688,8 +2695,8 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 	CSERun* pCSERun = new CSERun;
 	m_vCSERun.push_back( pCSERun);
 	QString sMsg;
-	m_iNumRuns = 1;		// SAC 5/24/16 - not running parallel DHW simulations for non-res (for now)
-	BOOL bLastRun = (iRunIdx == (m_iNumRuns-1));						assert( bLastRun );	// remove if/when we do parallel runs in -Com...
+	//m_iNumRuns = 1;		// SAC 5/24/16 - not running parallel DHW simulations for non-res (for now)   // removed - now set by constructor in NRes - SAC 06/08/24
+	BOOL bLastRun = (iRunIdx == (m_iNumRuns-1));						// assert( bLastRun );	// remove if/when we do parallel runs in -Com...
 	BOOL bIsStdDesign = (CRM_IsStdDesign( iRunType ));
 	pCSERun->SetRunType( iRunType);
 	pCSERun->SetLastRun( bLastRun);
@@ -2876,6 +2883,21 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 				else if (FileExists( sOutFiles[i].toLocal8Bit().constData() ))
 					DeleteFile( sOutFiles[i].toLocal8Bit().constData() );
 			}
+
+         if (pszSubstituteOutFile && strlen( pszSubstituteOutFile ) > 0)      // SAC 01/21/25
+         {  int iNumSubstFiles = 0;
+            QString qsSubstPathFile = QString( "%1.csv" ).arg( pszSubstituteOutFile );
+            if (FileExists( qsSubstPathFile ) && CopyFile( qsSubstPathFile.toLocal8Bit().constData(), sOutFiles[CSERun::OutFileCSV].toLocal8Bit().constData(), FALSE ))
+               iNumSubstFiles++;
+            qsSubstPathFile = QString( "%1.rep" ).arg( pszSubstituteOutFile );
+            if (FileExists( qsSubstPathFile ) && CopyFile( qsSubstPathFile.toLocal8Bit().constData(), sOutFiles[CSERun::OutFileREP].toLocal8Bit().constData(), FALSE ))
+               iNumSubstFiles++;
+            qsSubstPathFile = QString( "%1.err" ).arg( pszSubstituteOutFile );
+            if (FileExists( qsSubstPathFile ) && CopyFile( qsSubstPathFile.toLocal8Bit().constData(), sOutFiles[CSERun::OutFileERR].toLocal8Bit().constData(), FALSE ))
+               iNumSubstFiles++;
+            if (iNumSubstFiles > 0)
+               pCSERun->SetUsingSubstituteResults( TRUE );
+         }
 		}
 
 		QString sRptIncFile, sProcRptIncFile, sZoneIncFile, sProcZoneIncFile;		QVector<QString> saZoneIncFiles, saProcZoneIncFiles, saZoneNameIncFiles;
@@ -3178,23 +3200,44 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			BEMObject* pCSE_ElecUseImpFile = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "Proj:CSE_ElecUseIMPORTFILE" ), iSpecialVal, iError );
 		 	if (pCSE_ElecUseImpFile && pCSE_ElecUseImpFile->getClass())
 		 	{	int iCSE_ElecUseImpFileObjIdx = BEMPX_GetObjectIndex( pCSE_ElecUseImpFile->getClass(), pCSE_ElecUseImpFile );		assert( iCSE_ElecUseImpFileObjIdx >= 0 );
-				double* pdHrlyElecUse[ NUM_T24_NRES_EndUses * 2 ];    // added retrieval of 'Res' enduses - SAC 01/24/22 (MFam)
+				double* pdHrlyElecUse[ (NUM_T24_NRES_EndUses*2) + (NumCUACDwellingMeters*NumInitialCUACEnduses) ];    // added retrieval of 'Res' enduses - SAC 01/24/22 (MFam)
+            int iNumHrlyPtrs =     (NUM_T24_NRES_EndUses*2) + (NumCUACDwellingMeters*NumInitialCUACEnduses)  ;
 				int iNumHrlyElecUsePtrs = 0, iHrlyElecUsePtrRV, iEU;
-				for (iEU=0; iEU < (NUM_T24_NRES_EndUses*2); iEU++)
+				for (iEU=0; iEU < iNumHrlyPtrs; iEU++)
                pdHrlyElecUse[iEU] = NULL;
 				for (iEU=0; iEU < NUM_T24_NRES_EndUses; iEU++)
 				{	if (iEU != IDX_T24_NRES_EU_CompTot && iEU != IDX_T24_NRES_EU_Total && iEU != IDX_T24_NRES_EU_EffTot)
 					{	iHrlyElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyElecUse[iNumHrlyElecUsePtrs], NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
 																							esEUMap_CECNonRes[iEU].sEnduseName, iBEMProcIdx );
+                           //// debugging CUAC
+                           //if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
+                           //      BEMPX_WriteLogFile( QString( "   write csv - get hrly result ptr SUCCESS for run %1, meter %2, enduse %3" ).arg( sRunID, pszaEPlusFuelNames[0], esEUMap_CECNonRes[iEU].sEnduseName ), NULL, FALSE, TRUE, FALSE );
+                           //else  BEMPX_WriteLogFile( QString( "   write csv - get hrly result ptr FAILED  for run %1, meter %2, enduse %3" ).arg( sRunID, pszaEPlusFuelNames[0], esEUMap_CECNonRes[iEU].sEnduseName ), NULL, FALSE, TRUE, FALSE );
 						if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
 							iNumHrlyElecUsePtrs++;
                   if (esEUMap_CECNonRes[iEU].sEnduseName && esEUMap_CECNonRes[iEU].sResEnduseName &&     // take into account previsouly stored RES enduse data as well - SAC 01/24/22 (MFam)
                       strcmp( esEUMap_CECNonRes[iEU].sEnduseName, esEUMap_CECNonRes[iEU].sResEnduseName ) != 0)
                   {  iHrlyElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyElecUse[iNumHrlyElecUsePtrs], NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
-																							esEUMap_CECNonRes[iEU].sResEnduseName, iBEMProcIdx );
+												   											esEUMap_CECNonRes[iEU].sResEnduseName, iBEMProcIdx );
+                           //if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
+                           //      BEMPX_WriteLogFile( QString( "   write csv - get hrly result ptr SUCCESS for run %1, meter %2, enduse %3" ).arg( sRunID, pszaEPlusFuelNames[0], esEUMap_CECNonRes[iEU].sResEnduseName ), NULL, FALSE, TRUE, FALSE );
+                           //else  BEMPX_WriteLogFile( QString( "   write csv - get hrly result ptr FAILED  for run %1, meter %2, enduse %3" ).arg( sRunID, pszaEPlusFuelNames[0], esEUMap_CECNonRes[iEU].sResEnduseName ), NULL, FALSE, TRUE, FALSE );
 						   if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
 							   iNumHrlyElecUsePtrs++;
-				}	}  }
+                  }
+				}	}
+            // also check and sum CUAC elec meters - SAC 12/13/24
+            if (iCUACReportID > 0)
+   			{  for (iEU=0; iEU < NumInitialCUACEnduses; iEU++)
+                  for (int iCUACMtr=0; iCUACMtr < NumCUACDwellingMeters; iCUACMtr++)
+                  {  iHrlyElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyElecUse[iNumHrlyElecUsePtrs], NULL, 0, pszRunID, pszCUACElecMeters[iCUACMtr],
+							      															pszInitialCUACEnduses[iEU], iBEMProcIdx );
+                           //if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
+                           //      BEMPX_WriteLogFile( QString( "   write csv - get hrly result ptr SUCCESS for run %1, meter %2, enduse %3" ).arg( sRunID, pszCUACElecMeters[iCUACMtr], pszInitialCUACEnduses[iEU] ), NULL, FALSE, TRUE, FALSE );
+                           //else  BEMPX_WriteLogFile( QString( "   write csv - get hrly result ptr FAILED  for run %1, meter %2, enduse %3" ).arg( sRunID, pszCUACElecMeters[iCUACMtr], pszInitialCUACEnduses[iEU] ), NULL, FALSE, TRUE, FALSE );
+					      if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
+						      iNumHrlyElecUsePtrs++;
+				}	   }
 
 		//		double* pdHrlyTotElecUse = NULL;
 		//		int iHrlyTotElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyTotElecUse, NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
@@ -3457,9 +3500,10 @@ void CSERunMgr::DoRuns()
 	CSERun* pCSERun = NULL;
 	for(size_t iRun = 0; iRun < m_vCSERun.size(); ++iRun)
 	{	pCSERun = m_vCSERun[iRun];
-		StartRun( *pCSERun);
-		m_vCSEActiveRun.push_back( pCSERun);
-	}
+      if (pCSERun && !pCSERun->GetUsingSubstituteResults())    // SAC 01/21/25
+		{  StartRun( *pCSERun);
+		   m_vCSEActiveRun.push_back( pCSERun);
+	}  }
 	MonitorRuns();
 }		// CSERunMgr::DoRuns
 

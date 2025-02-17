@@ -1802,6 +1802,21 @@ BOOL BEMPX_CompileDataModel(	const char* sBEMFileName, const char* sEnumsFileNam
 
 				if (psClassPropMsg)
             	psClassPropMsg->append( QString( "\n   %1 - %2 - %3" ).arg( QString::number( i+1 ), 3 ).arg( QString::number( pClass->getNumProps() ), 3 ).arg( pClass->getLongName() ) );
+
+            // added reporting of DUPLICATE properties (short name only, case insensitive) - SAC 05/13/24 (res tic #1379)
+            int iFirstProp = pClass->getFirstPropID();
+            int iLastProp  = pClass->getNumProps() + iFirstProp - 1;
+            int i0PT = 0, i0PT2=0;
+            for (i0PT = iFirstProp; i0PT <= iLastProp; i0PT++)
+            {  BEMPropertyType* pPT = eBEMProc.getPropertyType( i0PT );
+               if (pPT)
+               {  QString sPT1Name = pPT->getShortName();
+                  for (i0PT2 = i0PT+1; i0PT2 <= iLastProp; i0PT2++)
+                  {  BEMPropertyType* pPT2 = eBEMProc.getPropertyType( i0PT2 );
+                     if (pPT2 && pPT2->getShortName().compare( sPT1Name, Qt::CaseInsensitive )==0)
+                        psClassPropMsg->append( QString( "\n         duplicate prop: #%1 %2 & #%3 %4" ).arg( 
+                           QString::number( i0PT-iFirstProp+1 ), sPT1Name, QString::number( i0PT2-iFirstProp+1 ), pPT2->getShortName() ) );
+            }  }  }
          }
       }
 
@@ -1847,7 +1862,7 @@ BOOL BEMPX_CompileDataModel(	const char* sBEMFileName, const char* sEnumsFileNam
       bRetVal = WriteCompiledBEMProc( strBEMBinFileName.toLocal8Bit().constData(), aSymLists );
 
 //		if (bReportBEMStats)
-//	      BEMMessageBox( sClassPropMsg, "Data Model Class Summary", 1 /*info*/ );
+//	      BEMMessageBox( *psClassPropMsg, "Data Model Class Summary", 1 /*info*/ );
    }
 
 //   // clear out all static arrays

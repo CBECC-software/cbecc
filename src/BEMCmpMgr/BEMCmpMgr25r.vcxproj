@@ -115,14 +115,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WIN32;_WIN64;_DEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;YYDEBUG;CODEYEAR2025;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include;..\..\vendor\CUACToolMiner;..\..\vendor\courierr;..\..\vendor\fmt;..\..\vendor\nanodbc</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;..\..\bin\vendor\openssl-1.1.1h\lib-x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;crypt32.lib;libcrypto.lib;libssl.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5Widgetsd.lib;..\..\bin\Debug_VC142x64\BEMProc25r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;..\..\bin\vendor\openssl-1.1.1h\lib-x64\Debug;..\..\bin\vendor\CUACToolMiner\x64\dbg</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;crypt32.lib;libcrypto.lib;libssl.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5Widgetsd.lib;..\..\bin\Debug_VC142x64\BEMProc25r.lib;fmtd.lib;nanodbc.lib;CUACToolMiner.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <PreBuildEvent>
@@ -166,7 +166,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WIN32;_WIN64;NDEBUG;_WINDOWS;_USRDLL;BEMCMPMGR_EXPORTS;BEMCMPMGRRES;CECRPTGEN;CM_QTGUI;CODEYEAR2025;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_74_0;..\..\vendor\Qt_5.15.0\include;..\..\vendor\openssl-1.1.1h\include;..\..\vendor\CUACToolMiner;..\..\vendor\courierr;..\..\vendor\fmt;..\..\vendor\nanodbc</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -174,8 +174,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;crypt32.lib;libcrypto.lib;libssl.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5Widgets.lib;..\..\bin\Release_VC142x64\BEMProc25r.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;..\..\bin\vendor\openssl-1.1.1h\lib-x64\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;version.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;crypt32.lib;libcrypto.lib;libssl.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5Widgets.lib;..\..\bin\Release_VC142x64\BEMProc25r.lib;fmt.lib;nanodbc.lib;CUACToolMiner.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;..\..\bin\vendor\openssl-1.1.1h\lib-x64\Release;..\..\bin\vendor\CUACToolMiner\x64\rel</AdditionalLibraryDirectories>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <PreBuildEvent>
@@ -194,6 +194,7 @@
     <ClInclude Include="BEMCmpMgrRes.h" />
     <ClInclude Include="bemcm_I.h" />
     <ClInclude Include="CSERunMgr.h" />
+    <ClInclude Include="CUAC_Analysis.h" />
     <ClInclude Include="exec-stream.h" />
     <ClInclude Include="Qt_FileDownloader.h" />
     <ClInclude Include="stdafx.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="BEMCmpMgrSecure.cpp" />
     <ClCompile Include="bemcm_LoadModel.cpp" />
     <ClCompile Include="CSERunMgr.cpp" />
+    <ClCompile Include="CUAC_Analysis.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>

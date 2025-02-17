@@ -57,6 +57,7 @@ static char THIS_FILE[] = __FILE__;
 #include "memLkRpt.h"
 #include "zip.h"			// SAC 9/29/20
 #include "BEMCmpMgrProgress.h"   // SAC 06/20/22
+#include "CUAC_Analysis.h"       // SAC 05/30/24 (tic #1378)
 
 #define CSE_MULTI_RUN
 
@@ -235,7 +236,7 @@ const char pcCharsNotAllowedInObjNames_CECRes[] = { '"', NULL };	// SAC 8/20/14
 int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 												const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 												const char* pszProcessingPath, const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString,
-												bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/, char* /*pszErrorMsg=NULL*/, int /*iErrorMsgLen=0*/,
+												bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/, char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/,
 												bool bDisplayProgress /*=false*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/,		// SAC 1/10/17
 												PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )
 {	int iRetVal = 0, iRV2=0;
@@ -306,6 +307,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	int  iRptGenConnectTimeout		=	 GetCSVOptionValue( "RptGenConnectTimeout"       ,  10,  saCSVOptions );		// SAC 11/02/22
 	int  iRptGenReadWriteTimeout	=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , CECRptGenDefaultReadWriteTimeoutSecs,  saCSVOptions );		// SAC 11/02/22
 
+	int  iDownloadVerbose      	=	 GetCSVOptionValue( "DownloadVerbose"            , -1,  saCSVOptions );		// SAC 09/03/24
+
 	bool bCSEIncludeFileUsed = false;	// SAC 12/23/14
 	bool bClassifyEditableDefaultsAsUserData = (GetCSVOptionValue( "ClassifyEditableDefaultsAsUserData", 0, saCSVOptions ) > 0);	// SAC 4/1/20
 	QString sAltWeatherPath;		// SAC 6/4/20
@@ -329,9 +332,20 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
    ebLogAnalysisMsgs = true;
 #endif
 
+	int iCID_Proj = 0;
 	QString sBatchAnalysisType;
 	GetCSVOptionString( "BatchAnalysisType", sBatchAnalysisType, saCSVOptions );	// SAC 2/17/20
 	bool bBatchAnalysisType_LoadAndSave = (!sBatchAnalysisType.compare( "LoadAndSave", Qt::CaseInsensitive ));
+
+   long iCUACReportID = GetCSVOptionValue( "CUACReportID", 0, saCSVOptions );		// value > 0 => doing CUAC analysis & reporting - SAC 05/30/24 (CUAC)
+   int iCUAC_BEMProcIdx = -1;
+   //if (iCUACReportID > 0)  // test
+   //   BEMMessageBox( QString::asprintf( "CUACReportID %ld", iCUACReportID ) );
+   long iLogCUACBillCalcDetails = GetCSVOptionValue( "LogCUACBillCalcDetails", -1, saCSVOptions );		// value < 0: use bVerbose / > 0: log details / else don't
+	QString sCUACElecTariffFile, sCUACGasTariffFile;      // SAC 03/12/24
+	GetCSVOptionString( "CUACElecTariffFile", sCUACElecTariffFile, saCSVOptions );
+	GetCSVOptionString( "CUACGasTariffFile" , sCUACGasTariffFile , saCSVOptions );
+   QString sCUACInvalidMsg;      // SAC 01/02/25
 
 	char pszFullPath[_MAX_PATH];	// SAC 2/10/14
 	//sLogMsg = QString( "   ProcessingPath = %1 || ModelPathFile = %1" ).arg( pszProcessingPath, pszModelPathFile );	BEMPX_WriteLogFile( sLogMsg );
@@ -482,6 +496,23 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	RelativeToCompletePath_IfNeeded( sModelPathFile   );
 	RelativeToCompletePath_IfNeeded( sLogPathFile     );
 
+   QString qsBEMBaseDir;      // SAC 05/30/24 (CUAC)
+   QString qsBEMBaseExtension = sBEMBasePathFile.right(4);
+   if (!qsBEMBaseExtension.isEmpty() && qsBEMBaseExtension.compare(".bin", Qt::CaseInsensitive))
+   {  // have sBEMBasePathFile but NOT a .bin filename - use only for qsBEMBaseDir
+      qsBEMBaseDir = sBEMBasePathFile;
+      if (qsBEMBaseDir.right(1).compare('/') && qsBEMBaseDir.right(1).compare('\\'))
+         qsBEMBaseDir += '\\';  // add trailing backslash
+      sBEMBasePathFile.clear();
+      pszBEMBasePathFile = NULL;
+   }
+   else if (FileExists( sBEMBasePathFile ))
+   {  // use path of sBEMBasePathFile to set qsBEMBaseDir
+      int iLastSlash = std::max( sBEMBasePathFile.lastIndexOf('\\'), sBEMBasePathFile.lastIndexOf('/') );
+      qsBEMBaseDir = sBEMBasePathFile.left( iLastSlash+1 );
+   }
+   // else - qsBEMBaseDir left blank which may cause CUAC PDF report gen issue in finding CEC logo JPG
+
 	QString sModelPathOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.left(                            sModelPathFile.lastIndexOf('\\') + 1 ) : "");
 	QString sModelFileOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.right( sModelPathFile.length() - sModelPathFile.lastIndexOf('\\') - 1 ) : "");
 
@@ -621,6 +652,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	long lPropFlexRunReqd = 0;  // SAC 8/3/17
 	bool bDHWCalcMethodUserSpecified = false;
 	bool bWeatherFileHashOK = true;
+   long lRuleRepoRev = 0;     // SAC 12/18/24
 	int iRulesetCodeYear = 0;
 	QString sCodeYear2Digit = "xx";		// SAC 5/17/19
 	QString sResTemp1, sResTemp2, sResTemp3;	// SAC 2/7/17
@@ -655,6 +687,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		BEMXMLWriter xmlResultsFile( ((ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty()) ? sXMLResultsFileName.toLocal8Bit().constData() : NULL), -1, -1, bWritePrevBEMNames );
 		bool bFirstModelCopyCreated = false;
 
+   	iCID_Proj = BEMPX_GetDBComponentID( "Proj" );
 		if (ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty() && FileExists( sCF1RXMLFileName ))	// SAC 3/5/18
 		{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 	   	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
@@ -723,8 +756,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
             // ??? evaluate FileOpen rulelist to address backward compatibility issues ???
 
 			   // duplicate settings (& status) as done for live/UI models to ensure User model is complete & consistent w/ live/UI use following File-Open - SAC 3/31/20
-				long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) );			assert( lDBID_Proj_EnableResearchMode > 0 );
-				long lDBID_Proj_AnalysisType       = BEMPX_GetDatabaseID( "AnalysisType"      , BEMPX_GetDBComponentID( "Proj" ) );			assert( lDBID_Proj_AnalysisType       > 0 );
+				long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", iCID_Proj );			assert( lDBID_Proj_EnableResearchMode > 0 );
+				long lDBID_Proj_AnalysisType       = BEMPX_GetDatabaseID( "AnalysisType"      , iCID_Proj );			assert( lDBID_Proj_AnalysisType       > 0 );
 				if (lDBID_Proj_EnableResearchMode > 0 && lDBID_Proj_AnalysisType > 0)
 				{	long lERM, lAT;
 					if (!BEMPX_GetInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ))
@@ -738,7 +771,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
 				}
 
-      		long lDBID_Proj_EnableMixedFuelCompare = BEMPX_GetDatabaseID( "EnableMixedFuelCompare", BEMPX_GetDBComponentID( "Proj" ) );      // SAC 12/28/21 (MxdFuel)
+      		long lDBID_Proj_EnableMixedFuelCompare = BEMPX_GetDatabaseID( "EnableMixedFuelCompare", iCID_Proj );      // SAC 12/28/21 (MxdFuel)
       		if (lDBID_Proj_EnableMixedFuelCompare > 0)
       		{	long lEMFC;  int iBEMErr;
       			if (!BEMPX_GetInteger( lDBID_Proj_EnableMixedFuelCompare, lEMFC, -1 ))
@@ -811,7 +844,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							pBatchInp = (void*) &fBatchInp;
 					}
 					if (pBatchInp)
-					{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( sBatchProps[iBIdx].c_str(), BEMPX_GetDBComponentID( "Proj" ) ), iBatchDT, pBatchInp );
+					{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( sBatchProps[iBIdx].c_str(), iCID_Proj ), iBatchDT, pBatchInp );
 						iNumBatchInpsStored++;
 					}
 				}				assert( iNumBatchInpsStored < 1 || bStoreResultsToModelInput );	// if not, then these batch inputs will NOT get stored back into user model RIBD
@@ -993,6 +1026,19 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					return BEMAnal_CECRes_BatchLoadAndSaveOnly;
 		}
 
+      // storage of CUACReportID to enable ruleset access of CUAC analysis indicator - SAC 05/30/24
+   	if (ResRetVal_ContinueProcessing( iRetVal ) && iCUACReportID > 0)
+      {  long lDBID_CUACReportID = BEMPX_GetDatabaseID( "CUACReportID", iCID_Proj );
+         if (lDBID_CUACReportID > 0)
+      	   BEMPX_SetBEMData( lDBID_CUACReportID, BEMP_Int, (void*) &iCUACReportID, BEMO_User, 0, BEMS_ProgDefault ); 
+      }
+
+      // be able to identify RuleRepoRev - initially to distinguish use of CSE19 vs. CSE(.exe) - SAC 12/18/24
+      if (ResRetVal_ContinueProcessing( iRetVal ))
+      {  if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RuleRepoRev" ), lRuleRepoRev ))      // SAC 12/18/24
+            lRuleRepoRev = 0;
+      }
+
 	   // initiate ruleset table replacements (if specified in input) - SAC 12/14/20
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lEnableResearchMode > 0 && BEMPX_GetDatabaseID( "ReplaceRuleTableString", 1 /*eiBDBCID_Proj*/ ) > 0)
 			ReplaceRulesetTables( sModelPathOnly );
@@ -1043,7 +1089,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				lRHERSEnabled = 0;
 		}
 		bWriteRNXML = (lRHERSEnabled > 0);
-		if (ResRetVal_ContinueProcessing( iRetVal ) && bWriteRNXML && !sRNXMLFileName.isEmpty() && FileExists( sRNXMLFileName ))	// SAC 5/20/20
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bWriteRNXML && !sRNXMLFileName.isEmpty() && FileExists( sRNXMLFileName ) && iCUACReportID < 1)	// SAC 5/20/20
 		{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 	   	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 							 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "RESNET report XML", sRNXMLFileName.toLocal8Bit().constData(), "analysis" );
@@ -1057,7 +1103,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			{	sErrorMsg = "ERROR:  Primary RESNET-XML object type 'rnxRatings' not defined in database";
 				iRetVal = BEMAnal_CECRes_RNXMLCompIDError;		// Main RESNET-XML object type invalid
 		}	}
-		BEMXMLWriter xmlRESNETFile( ((ResRetVal_ContinueProcessing( iRetVal ) && bWriteRNXML && !sRNXMLFileName.isEmpty()) ? sRNXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_RNXML, bWritePrevBEMNames );
+		BEMXMLWriter xmlRESNETFile( ((ResRetVal_ContinueProcessing( iRetVal ) && bWriteRNXML && !sRNXMLFileName.isEmpty() && iCUACReportID < 1) ? sRNXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_RNXML, bWritePrevBEMNames );
 
 	   // Setup CSE executable filename based on setting from ruleset - SAC 12/4/17
 		if (ResRetVal_ContinueProcessing( iRetVal ))
@@ -1080,8 +1126,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		int iError;
 		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	if (bBypassValidFileChecks)
-				BEMPX_WriteLogFile( "  PerfAnal_CECRes - Bypassing file validity checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/,
+			{  BEMPX_WriteLogFile( "  PerfAnal_CECRes - Bypassing file validity checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/,
 												TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            if (iCUACReportID > 0)
+               sCUACInvalidMsg = "File validity checks bypassed";
+         }
 			else
 			{	QString sFHPathFile, sFHErrMsg; 
 				int iNumFileHashErrs = 0;
@@ -1102,8 +1151,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						case 111 :	sFHPathFile = ssEXEPath + "Qt5Network.dll";       break;
 						case 112 :	sFHPathFile = ssEXEPath + "Qt5Widgets.dll";       break;
 						case 113 :	sFHPathFile = ssEXEPath + "Qt5Xml.dll";           break;
-						case 114 :  sFHPathFile = sCSEEXEPath+"cse19.exe";            bRequiredForCodeYear = (iDLLCodeYear >= 2019);		break;	// SAC 12/4/17
-						case 115 :  sFHPathFile = sCSEEXEPath+"cse.exe";              bRequiredForCodeYear = (iDLLCodeYear <= 2016);		break;
+						case 114 :  sFHPathFile = sCSEEXEPath+"cse19.exe";            bRequiredForCodeYear = (iDLLCodeYear == 2019 || (iDLLCodeYear == 2022 && lRuleRepoRev <= 2511));		break;	// SAC 12/4/17  // limit to only 2019 & 2022 thru rev2511 - SAC 12/18/24
+						case 115 :  sFHPathFile = sCSEEXEPath+"cse.exe";              bRequiredForCodeYear = (iDLLCodeYear <= 2016 || (iDLLCodeYear >= 2022 && lRuleRepoRev  > 2511));		break;   // revert back to CSE.exe starting 2022 rev2512 - SAC 12/18/24
 						case 116 :	sFHPathFile = ssEXEPath + "BEMCmpMgr19r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 						case 117 :	sFHPathFile = ssEXEPath + "BEMProc19r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 						case 118 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
@@ -1162,6 +1211,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				{	sLogMsg = QString( "    %1 file hash check(s) failed on executable and/or analysis support files (analysis continuing w/ report signature disabled)" ).arg( QString::number(iNumFileHashErrs) );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
+            if (iCUACReportID > 0 && iNumFileHashErrs > 0 && sCUACInvalidMsg.isEmpty())      // SAC 01/02/25
+               sCUACInvalidMsg = QString( "%1 file hash check(s) failed" ).arg( QString::number(iNumFileHashErrs) );
+
 				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:FileHashID"      ), iError );
 				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:FileHashToCheck" ), iError );
 				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:FileHashStatus"  ), iError );
@@ -1370,13 +1422,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		lPrelimPropRunReqd = 0;  // SAC 12/29/17
 		long lStdDesignBaseID = 0;  	// SAC 3/27/15
 		double fPctDoneFollowingFinalSim=0;		// SAC 5/5/17
+      std::vector<std::string> svUtilRatesToDelete;      // SAC 05/30/24 (CUAC)
 		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{
 			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), lAnalysisType    );  // 0-Research / 12-Proposed Only / 13-Proposed and Standard
 			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations" ), lAllOrientations );  // 0/1 (boolean)
 
 		   // SAC 3/27/15 - parameters used to setup design rating and/or standard design runs
-			if (lAnalysisType > 0)
+			if (lAnalysisType > 0 && iCUACReportID < 1)
 			{	long lAllowDR, lDRCalcs;
 				if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PrelimPropRunReqd" ), lPrelimPropRunReqd ) || lPrelimPropRunReqd < 1)  // SAC 12/29/17
 					lPrelimPropRunReqd = 0;
@@ -1407,7 +1460,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		   // further defaulting/setup of ComplianceReport* booleans
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:CompRptPDFWritten" ), iError );   //, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:CompRptXMLWritten" ), iError );   //, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
-			if (lAnalysisType < 13)   // was: != 13) - SAC 12/29/21 (MxdFuel)
+			if (lAnalysisType < 13 || iCUACReportID > 0)   // was: != 13) - SAC 12/29/21 (MxdFuel)
 			{	bComplianceReportPDF = false;
 				bComplianceReportXML = false;
 			}
@@ -1509,20 +1562,24 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			//long lTime = (long) time.GetTime();
 			QDateTime current = QDateTime::currentDateTime();
 			long lTime = (long) current.toTime_t();	// seconds since 1970-Jan-01 / valid as long int until 2038-Jan-19 / switching to uint extends valid date range to 2106-Feb-07
-			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunDate" ), BEMP_Int, (void*) &lTime );
+			long lDBID_RunDate = BEMPX_GetDatabaseID( "RunDate", iCID_Proj );
+			BEMPX_SetBEMData( lDBID_RunDate, BEMP_Int, (void*) &lTime );
 					lvPropSetDBID.push_back( BEMPX_GetDatabaseID( "Proj:RunDate" ) );		ivPropSetDataType.push_back( BEMP_Int );		ivPropSetStatus.push_back( BEMS_UserDefined );	// SAC 3/30/20
 					lvPropSetLData.push_back( lTime );		dvPropSetFData.push_back( -1 );		svPropSetSData.push_back( "" );
 		   // add formatted RunDate string -> RunDateFmt property
 			QString sRunDateFmt;
-			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunDate" ), sRunDateFmt, FALSE, -1 /*iPrecision*/ );
+			BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -1 /*iPrecision*/ );
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunDateFmt" ), BEMP_QStr, (void*) &sRunDateFmt );
 					lvPropSetDBID.push_back( BEMPX_GetDatabaseID( "Proj:RunDateFmt" ) );		ivPropSetDataType.push_back( BEMP_QStr );		ivPropSetStatus.push_back( BEMS_UserDefined );
 					lvPropSetLData.push_back( -1 );		dvPropSetFData.push_back( -1 );		svPropSetSData.push_back( sRunDateFmt );
-			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunDate" ), sRunDateFmt, FALSE, -3 /*iPrecision*/ );	// SAC 5/16/18 - added new '-3' format to handle output as ISO (xsd:datetime) string
+			BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -3 /*iPrecision*/ );	// SAC 5/16/18 - added new '-3' format to handle output as ISO (xsd:datetime) string
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunDateISO" ), BEMP_QStr, (void*) &sRunDateFmt );
 					lvPropSetDBID.push_back( BEMPX_GetDatabaseID( "Proj:RunDateISO" ) );		ivPropSetDataType.push_back( BEMP_QStr );		ivPropSetStatus.push_back( BEMS_UserDefined );
 					lvPropSetLData.push_back( -1 );		dvPropSetFData.push_back( -1 );		svPropSetSData.push_back( sRunDateFmt );
-		}
+         if (iCUACReportID > 0)
+         {  BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -4 /*iPrecision*/ );      // new format: "M/d/yyyy h:m:s ap" - SAC 05/31/24 (CUAC)
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:RunDateFmt" ), BEMP_QStr, (void*) &sRunDateFmt ); 
+      }  }
 
 	   // Retrieve report info designed to export summaries of each building model during analysis  - SAC 6/10/13
 		QString sAnalysisReport;
@@ -1681,6 +1738,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						{	bSendRptSignature	= false;
 							if (lBypassRuleLimits < 1)	// SAC 4/22/19 - only log error if BypassRuleLimits NOT activated
 								iRetVal = BEMAnal_CECRes_DHWUseHashChkFail;		//		206	// DHW use/profile file hash failed consistency check
+                     if (iCUACReportID > 0 && sCUACInvalidMsg.isEmpty())      // SAC 01/02/25
+                        sCUACInvalidMsg = "File hash check failed on DHW use include file";
 							if (bLogEachFileHashError)
 							{	if (iFHRetVal > 0)
 									sLogMsg = QString( "Error evaluating file hash checking rules (analysis continuing w/ report signature disabled) - for file:  %1" ).arg( sDHWUseIncFile );
@@ -1777,6 +1836,95 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 		if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 			iRetVal = BEMAnal_CECRes_RuleProcAbort;
+
+      if (iRetVal == 0 && iCUACReportID > 0)    // SAC 05/30/24 (CUAC)
+      {  bool bG2ElecRateLoaded=false, bG2GasRateLoaded=false, bAbort=false;
+
+            // -----------------
+            // ---- Testing ----
+               // int iCID_CPR_UtilityRate = BEMPX_GetDBComponentID( "CPR_UtilityRate" );       assert( iCID_CPR_UtilityRate > 0 );
+               // QString sG2ElecRateFile, sG2GasRateFile, sG2RateName, qsReadJSONErrMsg;
+               // BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:TestG2ElecRateFile" ), sG2ElecRateFile );
+               // BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:TestG2GasRateFile"  ), sG2GasRateFile  );
+               // if (iCID_CPR_UtilityRate > 0 && (!sG2ElecRateFile.isEmpty() || !sG2GasRateFile.isEmpty()))
+               // {
+			      // 																	sDbgFileName = sProcessPath + sModelFileOnly + QString(" - PreG2RateImport.ibd-Detail");
+   		      // 																	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+               //    if (!sG2ElecRateFile.isEmpty())
+               //    {  sG2RateName = QString( "G2ElecRate %1" ).arg( QString::number( BEMPX_GetNumObjects( iCID_CPR_UtilityRate, BEMO_User, iCUAC_BEMProcIdx ) + 1 ) );
+               //       int iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( sG2ElecRateFile.toLatin1().constData(), "CPR_UtilityRate", sG2RateName.toLatin1().constData(), -1, &qsReadJSONErrMsg, "PathFileLoadedFrom" );
+               //       if (iReadJSONRetVal >= 0)
+               //       {  int iJSONRateError;
+               //          BEMObject* pUtilRateObj = BEMPX_GetObjectByClass( iCID_CPR_UtilityRate, iJSONRateError, iReadJSONRetVal );
+               //          if (pUtilRateObj)
+               //          {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CPR_ElecUtilityRateRef" ), BEMP_Obj, (void*) pUtilRateObj );
+               //             BEMPX_WriteLogFile( QString("   G2 elec rate parse successful:  rate '%1' / file: %2").arg( pUtilRateObj->getName(), sG2ElecRateFile ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+               //             bG2ElecRateLoaded = true;
+               //          }
+               //          else
+               //             BEMPX_WriteLogFile( QString("   G2 elec rate parse successful but error posting rate to BEMBase:  file: %1").arg( sG2ElecRateFile ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+               //       }
+               //       else
+               //          BEMPX_WriteLogFile( QString("   G2 elec rate parse error:  code %1: %2 / file: %3").arg( QString::number( iReadJSONRetVal ), qsReadJSONErrMsg, sG2ElecRateFile ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+               //    }
+               //    if (!sG2GasRateFile.isEmpty())
+               //    {  sG2RateName = QString( "G2GasRate %1" ).arg( QString::number( BEMPX_GetNumObjects( iCID_CPR_UtilityRate, BEMO_User, iCUAC_BEMProcIdx ) + 1 ) );
+               //       int iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( sG2GasRateFile.toLatin1().constData(), "CPR_UtilityRate", sG2RateName.toLatin1().constData(), -1, &qsReadJSONErrMsg, "PathFileLoadedFrom" );
+               //       if (iReadJSONRetVal >= 0)
+               //       {  int iJSONRateError;
+               //          BEMObject* pUtilRateObj = BEMPX_GetObjectByClass( iCID_CPR_UtilityRate, iJSONRateError, iReadJSONRetVal );
+               //          if (pUtilRateObj)
+               //          {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CPR_GasUtilityRateRef" ), BEMP_Obj, (void*) pUtilRateObj );
+               //             BEMPX_WriteLogFile( QString("   G2 gas rate parse successful:  rate '%1' / file: %2").arg( pUtilRateObj->getName(), sG2GasRateFile ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+               //             bG2GasRateLoaded = true;
+               //          }
+               //          else
+               //             BEMPX_WriteLogFile( QString("   G2 gas rate parse successful but error posting rate to BEMBase:  file: %1").arg( sG2GasRateFile ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+               //       }
+               //       else
+               //          BEMPX_WriteLogFile( QString("   G2 gas rate parse error:  code %1: %2 / file: %3").arg( QString::number( iReadJSONRetVal ), qsReadJSONErrMsg, sG2GasRateFile ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+               //    }
+               //    // default CPR utility rate objects
+               //    CMX_EvaluateRuleset( "CUAC_DefaultGen2Rates", bVerbose, /*bTagDataAsUserDefined*/ TRUE, bVerbose, NULL, NULL, NULL, /*epInpRuleDebugInfo*/ NULL ); 
+			      // 																	sDbgFileName = sProcessPath + sModelFileOnly + QString(" - PostG2RateImport.ibd-Detail");
+   		      // 																	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+               // }
+            // ---- Testing ----   END OF
+            // -----------------
+
+         long lElecTariffGen=0, lGasTariffGen=0;
+         if (!bG2ElecRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lElecTariffGen ) && lElecTariffGen > 1)
+         {  CUAC_RateDownload( "Electric", 94, "CUAC:CPR_ElecUtilityRateRef", sProcessPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMProcDetails, bSilent, bVerbose,
+                               (lEnableResearchMode > 0), pCompRuleDebugInfo, iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
+                               (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
+                               (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
+                               (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrorMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
+                               (sCUACElecTariffFile.isEmpty()     ? NULL : (const char*) sCUACElecTariffFile.toLocal8Bit().constData()), iDownloadVerbose );
+               //											94 : Error downloading CUAC electric tariff schedule
+            if (iRetVal > 0)
+            {  sErrorMsg = "Error downloading CUAC electric tariff schedule: " + sErrorMsg;
+				   iRetVal = BEMAnal_CECRes_DwnldTariffElec;
+            }  // ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 94 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            else if (!bStoreBEMProcDetails) // iAnalysisStorage < 3)
+               svUtilRatesToDelete.push_back( ((std::string) sProcessPath.toLocal8Bit().constData()) + ((std::string) "er.json") );
+         }
+         if (iRetVal == 0 && !bAbort && !bG2GasRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lGasTariffGen  ) && lGasTariffGen > 1)
+         {  CUAC_RateDownload( "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sProcessPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMProcDetails, bSilent, bVerbose,
+                               (lEnableResearchMode > 0), pCompRuleDebugInfo, iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
+                               (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
+                               (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
+                               (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrorMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
+                               (sCUACGasTariffFile.isEmpty()      ? NULL : (const char*) sCUACGasTariffFile.toLocal8Bit().constData()), iDownloadVerbose );
+               //											95 : Error downloading CUAC gas tariff schedule
+            if (iRetVal > 0)
+				{  sErrorMsg = "Error downloading CUAC gas tariff schedule: " + sErrorMsg;
+				   iRetVal = BEMAnal_CECRes_DwnldTariffGas;
+            }  // ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 95 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            else if (!bStoreBEMProcDetails) // iAnalysisStorage < 3)
+               svUtilRatesToDelete.push_back( ((std::string) sProcessPath.toLocal8Bit().constData()) + ((std::string) "gr.json") );
+      }  }
 
 		long lProjRunScope = 1;		// 1 => "Newly Constructed" / 2 => "Addition and/or Alteration"		// SAC 12/2/13
 		if (ResRetVal_ContinueProcessing( iRetVal ))
@@ -1891,7 +2039,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			{	iBEMPIdx[iRunType[iNumRuns-(lAllOrientations>0?4:1)]]  = (bFirstModelCopyCreated ? 1 : 0);		// to keep track of BEMProcIdx of main Proposed model
 				iFirstPropModelRunType = iRunType[iNumRuns-(lAllOrientations>0?4:1)];		assert( bFirstModelCopyCreated );
 		}	}
-		if (lAnalysisType >= 13 && lNumPrelimStdRuns < 1)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting    // was: == 13) - SAC 12/29/21 (MxdFuel)
+		if (lAnalysisType >= 13 && lNumPrelimStdRuns < 1 && iCUACReportID < 1)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting    // was: == 13) - SAC 12/29/21 (MxdFuel)
 		{	iRunIdxFinalCF1R = iNumRuns;		// SAC 4/15/20
 			pszRunAbbrev[iNumRuns] = pszRunAbbrev_s;		iRunType[iNumRuns++] = CRM_StdDesign;
          if (lNumStdRuns > 1)
@@ -2091,6 +2239,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							{	sErrorMsg = QString( "ERROR:  %1 simulation returned %2 (%3, Run# %4)" ).arg( qsCSEName, QString::number(iCSERetVal), sRunAbbrev, QString::number(lRunNumber) );
 								iRetVal = BEMAnal_CECRes_CSESimError;
 							}
+                     if (iCUACReportID > 0 && sCUACInvalidMsg.isEmpty())      // SAC 01/02/25
+                        sCUACInvalidMsg = QString( "%1 simulation returned %2 (%3, Run# %4 error)" ).arg( qsCSEName, QString::number(iCSERetVal), sRunAbbrev, QString::number(lRunNumber) );
 						}
 						if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 							iRetVal = BEMAnal_CECRes_RuleProcAbort;
@@ -2367,10 +2517,6 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 									iRetVal = iRV2;
 						}	}
 
-
-
-
-
 					}
 				}
 			}
@@ -2449,7 +2595,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				BOOL bWriteRESNETModelToAnalResXML = (iRunType[iRunIdx] == CRM_HERSRtd || iRunType[iRunIdx] == CRM_HERSRef || iRunType[iRunIdx] == CRM_HERSIdxRef);		// SAC 6/19/20
 
 #ifdef _DEBUG
-BEMPX_WriteLogFile( QString( "    checking BEFORE logic to call ... CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) @~line 2270" ).arg( sRunAbbrev, QString::number(iBEMPIdx[iRunType[iRunIdx-1]]), QString::number(iBEMPIdx[iRunType[iRunIdx]]) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // SAC 01/24/21
+if (iRunIdx > 0)  BEMPX_WriteLogFile( QString( "    checking BEFORE logic to call ... CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) @~line 2270" ).arg( sRunAbbrev, QString::number(iBEMPIdx[iRunType[iRunIdx-1]]), QString::number(iBEMPIdx[iRunType[iRunIdx]]) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // SAC 01/24/21
 #endif
 				if (iRunIdx > iNumPrelimRuns ||
 					 (iNumPrelimRuns > 0 && iRunIdx == iNumPrelimRuns && iLastRunIdxOfExistingBEMProc >= 0 &&
@@ -2521,6 +2667,8 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 						{	sErrorMsg = QString( "ERROR:  %1 simulation returned %2 (%3, Run# %4)" ).arg( qsCSEName, QString::number(iCSERetVal), sRunAbbrev, QString::number(lRunNumber) );
 							iRetVal = BEMAnal_CECRes_CSESimError;
 						}
+                  if (iCUACReportID > 0 && sCUACInvalidMsg.isEmpty())      // SAC 01/02/25
+                     sCUACInvalidMsg = QString( "%1 simulation returned %2 (%3, Run# %4 error)" ).arg( qsCSEName, QString::number(iCSERetVal), sRunAbbrev, QString::number(lRunNumber) );
 					}
 					if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 						iRetVal = BEMAnal_CECRes_RuleProcAbort;
@@ -2894,6 +3042,8 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 						{	sErrorMsg = QString( "ERROR:  %1 simulation returned %2 (%3, Run# %4)" ).arg( qsCSEName, QString::number(iCSERetVal), sRunAbbrev, QString::number(lRunNumber) );
 							iRetVal = BEMAnal_CECRes_CSESimError;
 						}
+                  if (iCUACReportID > 0 && sCUACInvalidMsg.isEmpty())      // SAC 01/02/25
+                     sCUACInvalidMsg = QString( "%1 simulation returned %2 (%3, Run# %4 error)" ).arg( qsCSEName, QString::number(iCSERetVal), sRunAbbrev, QString::number(lRunNumber) );
 					}
 					if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 						iRetVal = BEMAnal_CECRes_RuleProcAbort;
@@ -3051,6 +3201,88 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
 						dTimeToWriteModelAndHrlyCSVs += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
+            // CUAC bill calcs & report gen
+				if (ResRetVal_ContinueProcessing( iRetVal ) && iCUACReportID > 0)    // SAC 05/31/24 (CUAC)
+            {  long lBatchRateIdx=0;   bool bAbort=false;
+               BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:BatchRateIdx" ), lBatchRateIdx );
+               if (sCUACInvalidMsg.isEmpty())      // SAC 01/02/25
+               {	if (iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear)
+      					sCUACInvalidMsg = QString( "Software library year (%1) and ruleset code year (%2) inconsistency" ).arg( 
+      													QString::number(iDLLCodeYear), QString::number(iRulesetCodeYear) );
+      				else if (!bInitHourlyResults)	
+      					sCUACInvalidMsg = "Analysis option InitHourlyResults disabled"     ;
+      				else if (!bPerformDupObjNameCheck)
+      					sCUACInvalidMsg = "Analysis option PerformDupObjNameCheck disabled"    ;
+      	         else if (!bPerformRangeChecks)
+      					sCUACInvalidMsg = "Analysis option PerformRangeChecks disabled"    ;
+      	         else if (!bPerformSimulations)
+      					sCUACInvalidMsg = "Analysis option PerformSimulations disabled"    ;
+      	         else if (bBypassCSE)				
+      					sCUACInvalidMsg = "Analysis option BypassCSE enabled"              ;
+      	         else if (bIgnoreFileReadErrors)
+      					sCUACInvalidMsg = "Analysis option IgnoreFileReadErrors enabled"   ;
+      				else if (lBypassRuleLimits > 0)
+      					sCUACInvalidMsg = "Analysis option BypassRuleLimits enabled";
+      				else if (lEnableResearchMode > 0)
+      					sCUACInvalidMsg = "Analysis option EnableResearchMode enabled";
+      				else if (lEnableHPAutosize > 0)	
+      					sCUACInvalidMsg = "Analysis option EnableHPAutosize enabled";
+       				else if (iSimSpeedOption > 0)	
+      					sCUACInvalidMsg = "SimSpeedOption not set to 'Compliance'";
+       				else if (bCSEIncludeFileUsed)	
+      					sCUACInvalidMsg = "Proj:ReportIncludeFile specified in the project data";
+      				else if (!bWeatherFileHashOK)
+      					sCUACInvalidMsg = "Weather file hash failing consistency check";
+                  else if (!sShuffleSFamDHWMsg_Invalid.isEmpty())
+      					sCUACInvalidMsg = sShuffleSFamDHWMsg_Invalid; 
+      				else if (lEnableMixedFuelCompare > 0)	
+      					sCUACInvalidMsg = "Analysis option EnableMixedFuelCompare enabled";
+      				else if (iRetVal >= BEMAnal_CECRes_MinErrorWithResults)
+      				{	switch (iRetVal)
+      					{	//case  BEMAnal_CECRes_ModelRptError			:	sCUACInvalidMsg = "error generating model report";		break;
+      						case  BEMAnal_CECRes_EvalChkFileHashError	:  sCUACInvalidMsg = "Error(s) evaluating CheckFileHash rules";		break;
+      						case  BEMAnal_CECRes_WthrHashChkFail		:  sCUACInvalidMsg = "Weather file hash failing consistency check";		break;
+      						//case  BEMAnal_CECRes_InputSaveFailed		:  sCUACInvalidMsg = "inability to save project inputs (including results) following analysis";		break;
+      						case  BEMAnal_CECRes_DHWUseHashChkFail		:  sCUACInvalidMsg = "DHW use/profile file hash failing consistency check";		break;
+      						default  :	sCUACInvalidMsg = QString( "Error encountered during analysis (%1 >= BEMAnal_CECRes_MinErrorWithResults)" ).arg( QString::number(iRetVal) );		break;
+      					}
+     				}  }
+
+               if (lBatchRateIdx > 0)
+                  CUAC_AnalysisProcessing_BatchRates( sProcessPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMProcDetails, bSilent, bVerbose,
+                                           (lEnableResearchMode > 0), pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrorMsg, iCUACReportID, iCUAC_BEMProcIdx, 1 /*res*/, iLogCUACBillCalcDetails,
+                                           iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
+                                           (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
+                                           (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
+                                           (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
+                                           iRptGenConnectTimeout, iRptGenReadWriteTimeout, iDownloadVerbose, 
+                                           (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()) );   // SAC 01/02/25 );
+               else
+               {  CUAC_AnalysisProcessing( sProcessPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMProcDetails, bSilent, bVerbose,
+                                           (lEnableResearchMode > 0), pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrorMsg, iCUACReportID, iCUAC_BEMProcIdx, 1 /*res*/,
+                                           iLogCUACBillCalcDetails, iDownloadVerbose, true /*bWritePDF*/, true /*bWriteCSV*/, 0 /*iBatchRunIdx*/, 
+                                           (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()) );   // SAC 01/02/25 );
+                              //   CSERunLoop( iSimRunIdx, posSimInfo, pqsCSESimStatusMsg, bStoreHourlyResults, sProcessingPath, sModelPathOnly, sModelFileOnly, bSecureT24NRptGenActivated,
+                              //                  bPerformFullCSESim, bBypassRecircDHW, lNumPVArraysChk, bEnablePVBattSim, pszUIVersionString,
+                              //                  sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,
+                              //                  iCodeType, iRulesetCodeYear, lAnalysisType, iDontAbortOnErrorsThruStep, iAnalStep, bProposedOnly, bStoreBEMDetails,
+                              //                  bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, sCSEIncludeFileDBID, sCSEVersion, pszErrorMsg, iErrorMsgLen,
+                              //                  bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile, iCUACReportID, iCustomMeterOption );
+                  for (auto& dnldRateFile : svUtilRatesToDelete)     // delete downloaded rate file(s) - SAC 09/27/23
+                     DeleteFile( dnldRateFile.c_str() );
+               }
+               if (iRetVal > 0)
+               {  if (sErrorMsg.isEmpty())
+                  {  if (iErrorMsgLen > 0 && pszErrorMsg)
+                        sErrorMsg = pszErrorMsg;
+                     else
+                        sErrorMsg = QString( "Error: Unable to calculate CUAC utility bills and/or generate reports/output." );
+                  }
+                  iRetVal = BEMAnal_CECRes_CalCutilityBill;
+                  //ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 96 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+                  //											96 : Error calculating CUAC utility bill(s)
+            }  }
+
 				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{
 					// Simulation clean-up + write final (detailed) XML file of inputs & results
@@ -3076,7 +3308,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 					}	}
 					// revised to specify the iRunIdxDesignRtg run to process the CF1RPRF01E_Final rules (not just the last run) - SAC 4/12/20
 					//if (iRunIdx == (iNumRuns-1) && ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty() && lAnalysisType > 0)		// SAC 3/5/18 - CF1RPRF01E Final results storage
-					if (iRunIdx == iRunIdxFinalCF1R && ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty() && lAnalysisType > 0)		// SAC 3/5/18 - CF1RPRF01E Final results storage  // SAC 4/15/20 - revise to use Std design for EAA runs
+					if (iRunIdx == iRunIdxFinalCF1R && ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty() && lAnalysisType > 0 && iCUACReportID < 1)		// SAC 3/5/18 - CF1RPRF01E Final results storage  // SAC 4/15/20 - revise to use Std design for EAA runs
 					{	iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_CF1RXMLFinalError, "CF1RPRF01E_Final",	bVerbose, pCompRuleDebugInfo );
 						if (iRV2 > 0)
 							iRetVal = iRV2;
@@ -3157,7 +3389,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 
       long lDBID_PctSavCmpMetricLbl = (iRulesetCodeYear < 2025 ? BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpTDVLbl" ) : BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpSLCCLbl" ));
 		// SAC 2/7/17 - moved some results code up here to enable Pass/Fail result to impact bSendRptSignature (tic #803)
-		bHaveResult = (	iRetVal != BEMAnal_CECRes_RuleProcAbort && ResRetVal_ContinueProcessing( iRetVal ) &&
+		bHaveResult = (	iRetVal != BEMAnal_CECRes_RuleProcAbort && ResRetVal_ContinueProcessing( iRetVal ) && iCUACReportID < 1 &&
 								!sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName.toLocal8Bit().constData() ) &&
 								bFullComplianceAnalysis && bPerformSimulations && !bBypassCSE && !bBypassDHW &&
 								BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PassFail"        ), sResTemp1, TRUE, 0, -1, 0 )  &&
@@ -3168,7 +3400,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 	   // ----------
 	   // COMPLIANCE REPORT GENERATION   - SAC 8/14/13
 		bAnalysisPriorToRptGenOK = (ResRetVal_ContinueProcessing( iRetVal ));
-		if (ResRetVal_ContinueProcessing( iRetVal ) && (bComplianceReportPDF || bComplianceReportXML))
+		if (ResRetVal_ContinueProcessing( iRetVal ) && (bComplianceReportPDF || bComplianceReportXML) && iCUACReportID < 1)
       {  QString sBypassCompRptMsg;    // SAC 12/01/22
          BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:BypassCompRptMsg" ), sBypassCompRptMsg );
          if (!sBypassCompRptMsg.isEmpty())
@@ -3176,7 +3408,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
             bComplianceReportPDF = bComplianceReportXML = false;
       }  }
-		if (ResRetVal_ContinueProcessing( iRetVal ) && (bComplianceReportPDF || bComplianceReportXML))
+		if (ResRetVal_ContinueProcessing( iRetVal ) && (bComplianceReportPDF || bComplianceReportXML) && iCUACReportID < 1)
 		{
 			QString sCACertPath;
 			GetDLLPath( sCACertPath );
@@ -3596,11 +3828,15 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 	sbAllowCallbackAbort = bStoreAllowCallbackAbort;	// SAC 4/5/15
 
    // SAC 1/12/15 - added code to setup FINAL result log message (including analysis duration stats)
-	QString sAnalResLogMsg, sAnalTimeStats, sResTemp4;
+	QString sAnalResLogMsg, sAnalTimeStats, sResTemp4, sCUACResultsSummary;
+   if (iCUACReportID > 0)     // SAC 01/02/25
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ResultsSummary" ), sCUACResultsSummary );
 	if (iRetVal == BEMAnal_CECRes_RuleProcAbort)
 		sAnalResLogMsg = "Analysis aborted";
 	else if (!bAnalysisPriorToRptGenOK /*iRetVal != 0*/ || sXMLResultsFileName.isEmpty() || !FileExists( sXMLResultsFileName.toLocal8Bit().constData() ))	// added logic to prevent "errant" report if only error occurred during/after report generation
 		sAnalResLogMsg = "Analysis errant";
+   else if (!sCUACResultsSummary.isEmpty())
+      sAnalResLogMsg = sCUACResultsSummary;     // SAC 01/02/25
 	else if (!bFullComplianceAnalysis || !bPerformSimulations || bBypassCSE || bBypassDHW)
 		sAnalResLogMsg = "Analysis incomplete";
 	else if (!bHaveResult)
@@ -3708,7 +3944,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 //											10 : Error retrieving Proj:ClimateZone and/or Proj:NumDwellingUnits (for format versions >= 10)
 //
 // SAC 8/6/13 - added pszRunOrientation argument to facilitate return of orientation-specific results (when performing All Orientation analysis)
-#define  CSVFmtVer_CECRes  26		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
+#define  CSVFmtVer_CECRes  27		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
 											// SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13  - SAC 10/6/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
 											// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - est. max rec length now 3072 chars
 											// SAC 9/30/18 - 17->18 INSERTED 10 new columns labeled 'Reference Design Rating Model TDV (before fuel multiplier adjustment)' @ col IF
@@ -3720,6 +3956,7 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
                      				// SAC 03/16/21 - 23->24 inserted 8 columns for HVAC system count & capacities in cols JZ-KG (prior to CO2 emissions by enduse)
                                  // SAC 07/20/21 - 24->25 inserted 2 columns for Std design auto-sized central HPWH capacity & tank volume @ col KH (prior to CO2 emissions by enduse) (tic #1275)
                                  // SAC 08/08/23 - 25->26 inserted 2 'Peak Cool' (kWh) columns @ end of list of Proposed Elec enduses (col AC) & same for Std (col CI) (2025)
+                                 // SAC 08/06/24 - 26->27 appended 4 cols: PV Exports / Prop & Std / kWh/yr & % - request from CEC
 int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation /*=NULL*/,
 														int iResultsFormatVersion /*=-1*/, const char* pszProjectPathFileName /*=NULL*/ )
 {	int iRetVal = 0;
@@ -4833,6 +5070,17 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
    					sAutoszdStdCHPWHInfo = QString::asprintf(	"%g,%g,", dStdCHPWHCap, dStdCHPWHVol );
             }
 
+				QString sPVExportPropStdData = ",,,,";	// 4
+				if (iResultsFormatVersion >= 27)	// appended 4 cols: PV Exports / Prop & Std / kWh/yr & % - request from CEC - SAC 08/06/24
+            {  double dPropStdPVExports[4] = {0.0,0.0,0.0,0.0};
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "EUseSummary:PropPV_Export"    )+iOrientIdx, dPropStdPVExports[0],  0, BEMP_Flt, iEUseSummaryObjIdx );
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "EUseSummary:PropPV_PctExport" )+iOrientIdx, dPropStdPVExports[1],  0, BEMP_Flt, iEUseSummaryObjIdx );
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "EUseSummary:StdPV_Export"     )+iOrientIdx, dPropStdPVExports[2],  0, BEMP_Flt, iEUseSummaryObjIdx );
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "EUseSummary:StdPV_PctExport"  )+iOrientIdx, dPropStdPVExports[3],  0, BEMP_Flt, iEUseSummaryObjIdx );
+               if (dPropStdPVExports[0] > 0 || dPropStdPVExports[2] > 0)
+   					sPVExportPropStdData = QString::asprintf(	"%g,%g,%g,%g,", dPropStdPVExports[0], dPropStdPVExports[1], dPropStdPVExports[2], dPropStdPVExports[3] );
+            }
+
 				QString sRHERS = ",,,,,,,,,,,,,,,,,,,";	// 19						// SAC 6/18/20 (RESNET)
 				if (lRHERS > 0)
 					sRHERS = QString::asprintf( "%ld,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",  // 19 doubles
@@ -4840,7 +5088,17 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 										dEC_x_LA, dIADSave, dnMEUL_Htg, dnMEUL_Clg, dnMEUL_Dhw, dTnML, dTRL, dIAFrh, dREUL_LA );
 
 			// concatenate individual strings into complete CSV record
-				if (iResultsFormatVersion >= 25)		// incl. columns providing Std design auto-sized central HPWH capacity & tank volume @ col KH - SAC 07/20/21 (tic #1275)
+				if (iResultsFormatVersion >= 27)		// appended 4 cols: PV Exports / Prop & Std / kWh/yr & % @ cols NN-NQ - SAC 08/06/24
+					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(),
+										sPropSrc.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), sStdSrc.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(),
+										sVersionFields.toLocal8Bit().constData(), sDemSav.toLocal8Bit().constData(), sCalcedSSF.toLocal8Bit().constData(), sDRtgEnergyTDV.toLocal8Bit().constData(), sDRtgRefTDVUnadj.toLocal8Bit().constData(),
+										sDRtgRefSrc.toLocal8Bit().constData(), sDRtgDemand.toLocal8Bit().constData(), sDRtg_Prop.toLocal8Bit().constData(), sDRtg_Std.toLocal8Bit().constData(), sDRtg_Src.toLocal8Bit().constData(), 
+										sCmpTDVbyFuel_Prop.toLocal8Bit().constData(), sCmpTDVbyFuel_Std.toLocal8Bit().constData(), sCmpTDVbyFuel_DRProp.toLocal8Bit().constData(), sCmpTDVbyFuel_DRRef.toLocal8Bit().constData(),
+										sCmpSrcbyFuel_Prop.toLocal8Bit().constData(), sCmpSrcbyFuel_Std.toLocal8Bit().constData(), sCmpSrcbyFuel_DRProp.toLocal8Bit().constData(), sCmpSrcbyFuel_DRRef.toLocal8Bit().constData(),
+										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sStdMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData(),
+										sGridHarmCred.toLocal8Bit().constData(), sHVACInfo.toLocal8Bit().constData(), sAutoszdStdCHPWHInfo.toLocal8Bit().constData(), /*sStdPVResults.toLocal8Bit().constData(),*/ 
+										sPropCO2.toLocal8Bit().constData(), sStdCO2.toLocal8Bit().constData(), sDRtgCO2.toLocal8Bit().constData(), sRHERS.toLocal8Bit().constData(), sCAHP.toLocal8Bit().constData(), sPVExportPropStdData.toLocal8Bit().constData() );
+				else if (iResultsFormatVersion >= 25)		// incl. columns providing Std design auto-sized central HPWH capacity & tank volume @ col KH - SAC 07/20/21 (tic #1275)
 					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(),
 										sPropSrc.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), sStdSrc.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(),
 										sVersionFields.toLocal8Bit().constData(), sDemSav.toLocal8Bit().constData(), sCalcedSSF.toLocal8Bit().constData(), sDRtgEnergyTDV.toLocal8Bit().constData(), sDRtgRefTDVUnadj.toLocal8Bit().constData(),
@@ -5689,6 +5947,7 @@ int ExportCSVHourlyResultsComparison( const char* pszHourlyResultsPathFile, cons
 // SAC 03/16/21 - inserted 8 columns for HVAC system count & capacities in cols JZ-KG (prior to CO2 emissions by enduse) (23->24)
 // SAC 07/20/21 - inserted 2 columns for Std design auto-sized central HPWH capacity & tank volume @ col KH (prior to CO2 emissions by enduse) (24->25) (tic #1275)
 // SAC 08/08/23 - inserted 2 'Peak Cool' (kWh) columns @ end of list of Proposed Elec enduses (col AC) & same for Std (col CI) (25->26) (2025)
+// SAC 08/06/24 - appended 4 cols: PV Exports / Prop & Std / kWh/yr & % - request from CEC (26->27)
 static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,,,,,Proposed Model Site Electric Use,,,,,,,,,,,,,,,Proposed Model Site Fuel Use,,,,,,Proposed Model TDV,,,,,,"
                               ",,,,,,,,Proposed Model Source Energy (EDR1),,,,,,,,,,,,Proposed Model Electric Demand,,,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,,"
                               ",,,,Standard Model Site Fuel Use,,,,,Standard Model TDV,,,,,,,,,,,Standard Model Source Energy (EDR1),,,,,,,,,,Standard Model Electric Dem"
@@ -5703,7 +5962,7 @@ static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,,,,,Proposed Model S
                               "ons,,,Self Utilization Credit,,HVAC Systems,,HVAC Total Capacities (kBtuh),,,,,,Autosized Std Central HPWH,,Proposed Model Site Electric C"
                               "O2 Emissions,,,,,,,,,,,,,Proposed Model Site Fuel CO2 Emissions,,,,,Standard Model Site Electric CO2 Emissions,,,,,,,,,,Standard Model Sit"
                               "e Fuel CO2 Emissions,,,,Reference Design Rating Model Site Electric CO2 Emissions,,,,,,,,,Reference Design Rating Model Site Fuel CO2 Emis"
-                              "sions,,,,RESNET HERS Analysis Results,,,,,,,,,,,,,,,,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,\n";  // ~2023 chars
+                              "sions,,,,RESNET HERS Analysis Results,,,,,,,,,,,,,,,,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,,PV Exports,,,\n";  // ~2037 chars
 static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,TDV Margin,EDR Efficiency,EDR Total,EDR,EDR1 (source energy),,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,"
                               "Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,PeakCool,Spc Heat,Wtr Heat,Flexibility,Appl & Coo"
                               "k,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TO"
@@ -5731,7 +5990,7 @@ static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,TDV Margin
                               "_Clg,nMEUL_Dhw,TnML,TRL,IAFrh,REUL_LA,EDR Bonus Points,CAHP Delta EDR,Cash Bonus Total,2019 Zone Ready Kicker,2019 Zone Kicker,High Perfor"
                               "mance Fenestration Kicker,High Performance Attic Kicker,High Performance Wall Kicker,Whole House Fans Kicker,Balanced IAQ Kicker,DOE Zero "
                               "Energy Kicker,Drain Water Heat Recovery Kicker,Design Charrette Kicker,ENERGYStar Laundry Recycling Kicker,CAHP Base Incentive,CAHP Total "
-                              "Incentive\n";  // ~3735 chars
+                              "Incentive,Proposed Design,,Standard Design,\n";  // ~3788 chars
 static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2),Analysis Type,Fail,(kTDV/ft2-yr),Margin,Margin,Total,Margin,Total,(kWh),(kWh),(kWh),(kW"
                               "h),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(kTDV/ft2-yr),(kTDV/f"
                               "t2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV"
@@ -5755,7 +6014,7 @@ static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2)
                               "ooling,Heating,Cooling,Heating,Cooling,(kW),(gal),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg"
                               "),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),,"
                               "(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(frac),(MBtu/yr),(MBtu/yr),(MBtu/yr),,"
-                              ",,(MBtu/yr),(int),(int),($),($),($),($),($),($),($),($),($),($),($),($),($),($)\n";  // ~3253 chars
+                              ",,(MBtu/yr),(int),(int),($),($),($),($),($),($),($),($),($),($),($),($),($),($),(kWh/yr),(%),(kWh/yr),(%)\n";  // ~3064 chars
 
 static char szCECResCSV1_Sub[]	=	",,,,Number of,Conditioned,,,,,,,,,Proposed Model Site Electric Use,,,,,,,,,,,,,,,Proposed Model Site Fuel Use,,,,,,Proposed Model %1,,,,,,"      // SAC 12/01/22  // SAC 01/27/23
                               ",,,,,,,,Proposed Model Source Energy (EDR1),,,,,,,,,,,,Proposed Model Electric Demand,,,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,,"
@@ -5771,7 +6030,7 @@ static char szCECResCSV1_Sub[]	=	",,,,Number of,Conditioned,,,,,,,,,Proposed Mod
                               "ons,,,Self Utilization Credit,,HVAC Systems,,HVAC Total Capacities (kBtuh),,,,,,Autosized Std Central HPWH,,Proposed Model Site Electric C"
                               "O2 Emissions,,,,,,,,,,,,,Proposed Model Site Fuel CO2 Emissions,,,,,Standard Model Site Electric CO2 Emissions,,,,,,,,,,Standard Model Sit"
                               "e Fuel CO2 Emissions,,,,Reference Design Rating Model Site Electric CO2 Emissions,,,,,,,,,Reference Design Rating Model Site Fuel CO2 Emis"
-                              "sions,,,,RESNET HERS Analysis Results,,,,,,,,,,,,,,,,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,\n";  // ~2026 chars
+                              "sions,,,,RESNET HERS Analysis Results,,,,,,,,,,,,,,,,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,,PV Exports,,,\n";  // ~2037 chars
 static char szCECResCSV2_Sub[]	=	",Project,,Climate,Dwelling,Area,,Pass /,%1 Margin,EDR Efficiency,EDR Total,EDR,EDR1 (source energy),,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,"
                               "Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,PeakCool,Spc Heat,Wtr Heat,Flexibility,Appl & Coo"
                               "k,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TO"
@@ -5799,7 +6058,7 @@ static char szCECResCSV2_Sub[]	=	",Project,,Climate,Dwelling,Area,,Pass /,%1 Mar
                               "_Clg,nMEUL_Dhw,TnML,TRL,IAFrh,REUL_LA,EDR Bonus Points,CAHP Delta EDR,Cash Bonus Total,2019 Zone Ready Kicker,2019 Zone Kicker,High Perfor"
                               "mance Fenestration Kicker,High Performance Attic Kicker,High Performance Wall Kicker,Whole House Fans Kicker,Balanced IAQ Kicker,DOE Zero "
                               "Energy Kicker,Drain Water Heat Recovery Kicker,Design Charrette Kicker,ENERGYStar Laundry Recycling Kicker,CAHP Base Incentive,CAHP Total "
-                              "Incentive\n";  // ~3739 chars
+                              "Incentive,Proposed Design,,Standard Design,\n";  // ~3788 chars
 static char szCECResCSV3_Dlr[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2),Analysis Type,Fail,($/ft2-yr),Margin,Margin,Total,Margin,Total,(kWh),(kWh),(kWh),(kW"
                               "h),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),($/ft2-yr),($/f"
                               "t2-yr),($/ft2-yr),($/ft2-yr),($/ft2-yr),($/ft2-yr),($/ft2-yr),($/ft2-yr),($/ft2-yr),($/ft2-yr),($/ft2-yr),($"
@@ -5823,7 +6082,7 @@ static char szCECResCSV3_Dlr[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(
                               "ooling,Heating,Cooling,Heating,Cooling,(kW),(gal),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg"
                               "),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),,"
                               "(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(MBtu/yr),(frac),(MBtu/yr),(MBtu/yr),(MBtu/yr),,"
-                              ",,(MBtu/yr),(int),(int),($),($),($),($),($),($),($),($),($),($),($),($),($),($)\n";  // ~3025 chars
+                              ",,(MBtu/yr),(int),(int),($),($),($),($),($),($),($),($),($),($),($),($),($),($),(kWh/yr),(%),(kWh/yr),(%)\n";  // ~3064 chars
 
 int CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )
 {	int iRetVal = 0;
@@ -6381,6 +6640,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 					{	if (ParseCSVRecord( saOptionCSV[iRun].c_str(), &saCSVOptions ) < 2)
 						{	assert( false );
 					}	}
+               long iCUACReportID = GetCSVOptionValue( "CUACReportID", 0, saCSVOptions );    // value > 0 => doing CUAC analysis & reporting - SAC 01/22/25 (CUAC)
 
 //	if (iRun < (iRunsToPerform - 1) && ::MessageBox( hWnd, "Confirm Continue", "Run Succeeded ... Continue w/ remaining runs?", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) != IDYES)
 //		bAbort = true;
@@ -6411,42 +6671,54 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 						{	assert( FALSE );
 						}
 						else
-						{	if (bWriteHdrs)
-							{	// WRITE HEADER RECORDS
-                        QString qsCompMetricLbl_Short, qsDynamicHeader;       // base metric label on new ruleset var - SAC 01/27/23
-                        if (BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsCompMetricLbl_Short ) && !qsCompMetricLbl_Short.isEmpty())
-                        {  qsDynamicHeader = QString( GetResultsCSVHeader_Res( 1 ) ).arg( qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short );
-                           csvFile.write( qsDynamicHeader.toLocal8Bit().constData() );
-                           qsDynamicHeader = QString( GetResultsCSVHeader_Res( 2 ) ).arg( qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short );
-                           csvFile.write( qsDynamicHeader.toLocal8Bit().constData() );
+						{	if (iCUACReportID > 0)     // SAC 01/22/25
+                     {
+							   if (bWriteHdrs)
+							   {	// WRITE HEADER RECORDS
+                           //csvFile.write( ",,,,,,,,,,,,,,,,,,Unit Type Results,,\n" );
+                           csvFile.write( ",,,,Electric,,,Gas,,,Unit,Utility Allowances ($),,,,,Num Units,\n" );
+                           csvFile.write( "Start Date & Time,Filename (saved to),Run Title,Weather Station,Utility,Territory,Tariff,Utility,Territory,Tariff,Type,Electric,Gas,Water,Trash,Total,Total,\n" );
                         }
-                        else
-                        {  csvFile.write( GetResultsCSVHeader_Res( 1 ) );
-                           csvFile.write( GetResultsCSVHeader_Res( 2 ) );
-                        }
-                        csvFile.write( GetResultsCSVHeader_Res( 3 ) );
-							}
-				//			else
-			   //      	   csvFile.SeekToEnd();
+                        int iCSVRetVal = CUAC_WriteCSVSummary( csvFile, sProjPathFile.c_str(), pszCSEWeatherPath, 1 /*SFam*/ );
+                     }
+                     else
+                     {  if (bWriteHdrs)
+				   			{	// WRITE HEADER RECORDS
+                           QString qsCompMetricLbl_Short, qsDynamicHeader;       // base metric label on new ruleset var - SAC 01/27/23
+                           if (BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMetricLbl_Short" ), qsCompMetricLbl_Short ) && !qsCompMetricLbl_Short.isEmpty())
+                           {  qsDynamicHeader = QString( GetResultsCSVHeader_Res( 1 ) ).arg( qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short );
+                              csvFile.write( qsDynamicHeader.toLocal8Bit().constData() );
+                              qsDynamicHeader = QString( GetResultsCSVHeader_Res( 2 ) ).arg( qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short, qsCompMetricLbl_Short );
+                              csvFile.write( qsDynamicHeader.toLocal8Bit().constData() );
+                           }
+                           else
+                           {  csvFile.write( GetResultsCSVHeader_Res( 1 ) );
+                              csvFile.write( GetResultsCSVHeader_Res( 2 ) );
+                           }
+                           csvFile.write( GetResultsCSVHeader_Res( 3 ) );
+				   			}
+				   			//else
+			            	//   csvFile.SeekToEnd();
 
-							char pszCSVResultSummary[ 2560 ];
-							// SAC 1/17/18 - code to cause batch runs to write all 5 orientations records to results CSV (tic #943)
-							long lAllOrientations=0;
-							if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations" ), lAllOrientations ))
-								lAllOrientations = 0;
-							const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
-							bool bAllOrientationsResultsCSV =	(GetCSVOptionValue( "AllOrientationsResultsCSV", 1, saCSVOptions ) > 0);  // default to always writing all 5 orientaiton results for All Orients runs
-							int iMaxCSVOrient = (lAllOrientations > 0 && bAllOrientationsResultsCSV ? 4 : 0);
-							for (int iO=0; iO<=iMaxCSVOrient; iO++)
-							{
-								int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, 2560, pszOrientation[iO] /*pszRunOrientation*/, -1 /*iResFormatVer*/, sProjPathFile.c_str() );
-								if (iCSVResVal == 0)
-				   	      {	csvFile.write( pszCSVResultSummary );
-				   	      	csvFile.write( "\n" );
-			   		      }
-								else
-									sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d:  unable to retrieve results summary data.  CMX_PopulateCSVResultSummary_CECRes( orientation %d ) returned %d" ) % (iRun+1) % iaBatchRecNums[iRun] % (iO+1) % iCSVResVal );
-							}
+							   char pszCSVResultSummary[ 3200 ];      // 2560 -> 3200 - SAC 11/18/24
+							   // SAC 1/17/18 - code to cause batch runs to write all 5 orientations records to results CSV (tic #943)
+							   long lAllOrientations=0;
+							   if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations" ), lAllOrientations ))
+							   	lAllOrientations = 0;
+							   const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
+							   bool bAllOrientationsResultsCSV =	(GetCSVOptionValue( "AllOrientationsResultsCSV", 1, saCSVOptions ) > 0);  // default to always writing all 5 orientaiton results for All Orients runs
+							   int iMaxCSVOrient = (lAllOrientations > 0 && bAllOrientationsResultsCSV ? 4 : 0);
+							   for (int iO=0; iO<=iMaxCSVOrient; iO++)
+							   {
+							   	int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, 3200, pszOrientation[iO] /*pszRunOrientation*/, -1 /*iResFormatVer*/, sProjPathFile.c_str() );
+							   	if (iCSVResVal == 0)
+				   	         {	csvFile.write( pszCSVResultSummary );
+				   	         	csvFile.write( "\n" );
+			   		         }
+							   	else
+							   		sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d:  unable to retrieve results summary data.  CMX_PopulateCSVResultSummary_CECRes( orientation %d ) returned %d" ) % (iRun+1) % iaBatchRecNums[iRun] % (iO+1) % iCSVResVal );
+							   }
+                     }
 							csvFile.flush();
 							csvFile.close();
 							bThisRunGood = true;
@@ -6457,7 +6729,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 					bool bStoreResultsToModelInput =	(GetCSVOptionValue( "StoreResultsToModelInput", 1, saCSVOptions ) > 0);
 // SAC 1/17/19 - this is now redundant, as it is performed within the analysis routine
 bStoreResultsToModelInput = false;
-					if (!bAbort && bStoreResultsToModelInput)
+					if (!bAbort && bStoreResultsToModelInput && iCUACReportID < 1)
 					{
 						QVector<QString> saProjEUseSumObjs, saUniqueEUseSumObjs, saTempPathFiles, saNewEUseSumObjs;
 						CMX_SaveAnalysisResultsToTempFiles( saProjEUseSumObjs, saUniqueEUseSumObjs, saTempPathFiles );  // SAC 2/1/14

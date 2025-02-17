@@ -42,6 +42,7 @@
 #include "stdafx.h"
 #include "..\BEMProc\BEMClass.h"
 #include "BEMProcUI_Globals.h"
+#include "boost/filesystem.hpp"   // SAC 06/08/24
 
 #include "BEMProcUIX.h"
 #include "Screens.h"
@@ -346,17 +347,19 @@ void SetExternals( CWnd* pWnd )
 // Check for file existence
 
 BOOL FileExists( const char* pszFileName )
-{
-   BOOL retVal = FALSE;
-   FILE *pfTempFile;
-	int iErrorCode = fopen_s( &pfTempFile, pszFileName, "r" );
-   if (pfTempFile != NULL)
-   {
-      fclose( pfTempFile );
-      retVal = (iErrorCode==0);
-   }
-   return retVal;
+{	return (boost::filesystem::exists(pszFileName));      // replaced following w/ this boost call - SAC 06/07/24
 }
+// {
+//    BOOL retVal = FALSE;
+//    FILE *pfTempFile;
+// 	int iErrorCode = fopen_s( &pfTempFile, pszFileName, "r" );
+//    if (pfTempFile != NULL)
+//    {
+//       fclose( pfTempFile );
+//       retVal = (iErrorCode==0);
+//    }
+//    return retVal;
+// }
 
 
 /////////////////////////////////////////////////////////////////////////////

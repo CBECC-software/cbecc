@@ -201,22 +201,26 @@ bool FileExists( const char* pszFileName )
 
 BOOL DirectoryExists( QString sDirName )
 {
-   int len = sDirName.length();
-   if (len > 0)
-   {
-      if (sDirName[len-1] != '\\' && sDirName[len-1] != '/')
-         sDirName += '\\';
-      sDirName += '.';
-
-      struct _finddata_t c_file;
-      long hFile = _findfirst( sDirName.toLocal8Bit().constData(), &c_file );
-      if (hFile != -1)
-      {
-         _findclose( hFile );
-         return TRUE;
-      }
-   }
-   return FALSE;
+   DWORD dwAttrib = GetFileAttributes(sDirName.toLocal8Bit().constData());
+   return (dwAttrib != INVALID_FILE_ATTRIBUTES && 
+          (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+   // try replacing below w/ above to avoid exception fault - SAC 06/08/24
+   // int len = sDirName.length();
+   // if (len > 0)
+   // {
+   //    if (sDirName[len-1] != '\\' && sDirName[len-1] != '/')
+   //       sDirName += '\\';
+   //    sDirName += '.';
+   // 
+   //    struct _finddata_t c_file;
+   //    long hFile = _findfirst( sDirName.toLocal8Bit().constData(), &c_file );
+   //    if (hFile != -1)
+   //    {
+   //       _findclose( hFile );
+   //       return TRUE;
+   //    }
+   // }
+   // return FALSE;
 }
 
 
@@ -565,6 +569,8 @@ QApplication* sq_app = NULL;
 bool sbQtAppDuringInit = false;
 #endif
 
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
 QString ssEXEPath;
 void StoreEXEPath()
 {  // get the .exe path
@@ -573,12 +579,20 @@ void StoreEXEPath()
 //	ssEXEPath = szFullPath;				assert( ssEXEPath.lastIndexOf('\\') > 0 );
 //	if (ssEXEPath.lastIndexOf('\\') > 0)
 //		ssEXEPath = ssEXEPath.left( ssEXEPath.lastIndexOf('\\')+1 );
-assert( false );
+//assert( false );
 	if (sq_app)
 	{	ssEXEPath = sq_app->applicationDirPath();
 	}
 	else
-		ssEXEPath.clear();
+	//	ssEXEPath.clear();
+   {  //char szFullPath[MAX_PATH+1];     
+      //GetModuleFileName( BEMCmpMgrDLL.hModule, szFullPath, sizeof(szFullPath) );
+      TCHAR szFullPath[_MAX_PATH];
+      GetModuleFileName( (HINSTANCE)&__ImageBase, szFullPath, sizeof(szFullPath) );    // restore original EXE path retrieval for when no sq_app - SAC 01/19/25
+      ssEXEPath = szFullPath;				assert( ssEXEPath.lastIndexOf('\\') > 0 );
+      if (ssEXEPath.lastIndexOf('\\') > 0)
+         ssEXEPath = ssEXEPath.left( ssEXEPath.lastIndexOf('\\')+1 );
+   }
 }
 
 bool RelativeToCompletePath_IfNeeded( QString& sPathFile )
@@ -2243,7 +2257,7 @@ int CheckSiteAccessViaHttpLib(   const char* pszSite, const char* pszCACertPath,
 int GenerateReportViaHttpLib(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 									const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,		// pass NULLs for no proxy
 									char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bVerbose /*=false*/, int iConnectTimeoutSecs /*=10*/, int iReadWriteTimeoutSecs /*=CECRptGenDefaultReadWriteTimeoutSecs*/,
-                           const char* pszOperationDescrip /*=NULL*/, const char* pszPostDescrip /*=NULL*/ )
+                           const char* pszOperationDescrip /*=NULL*/, const char* pszPostDescrip /*=NULL*/, bool bAzure /*=false*/ )
 {	int iRetVal = 0;
    std::string sOperationDescrip = (pszOperationDescrip ? pszOperationDescrip : "Report generator");
    std::string sPostDescrip = (pszPostDescrip ? pszPostDescrip : "text/plain");

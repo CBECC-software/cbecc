@@ -1,0 +1,6996 @@
+RulesetFilename   "T24N_2022.bin"  
+
+Proj   "CUAC Example"  
+   BldgEngyModelVersion = 17
+   CreateDate = 1734078619
+   ModDate = 1738351051
+   RunDate = 1738351052
+   RptComplianceID = "EnergyPro - 8273"
+   GeometryInpType = "Simplified"
+   GasType = "Propane"
+   NatGasAvail = 0
+   CliZn = "ClimateZone3"
+   Lat = 37.5
+   Long = -122.26
+   Elevation = 26
+   StAddress = "123 Main Street"
+   City = "San Carlos"
+   State = "CA"
+   ZipCode = 94070
+   WeatherStation = "SAN FRANCISCO INTL"
+   HVACAutoSizing = 0
+   QuickAnalysis = 0
+   ExcptCondNoClgSys = "No"
+   ExcptCondRtdCap = "No"
+   ExcptCondNarrative = "No"
+   ExcptCondHERSKitHood = "Yes"
+   SolAccessRfArea = 0
+   ReducedPVReq = 0
+   ReducedBattReq = 0
+   UseCommunitySolar = 0
+   InCmntySlrProjTerritory = 0
+   AutoHardSize = 0
+   AutoEffInput = 0
+   AutoHardSizeAirFlowPerSqFt = 0
+   AutoHardSizeAirFlowPerTon = 0
+   SimVarsSite = 0
+   SimVarsThrmlZn = 0
+   SimVarsDayltg = 0
+   SimVarsHVACSec = 0
+   SimVarsHVACSecTempFlow = 0
+   SimVarsHVACPri = 0
+   SimVarsHVACZn = 0
+   SimVarsHVACZnTempFlow = 0
+   SimVarsVRFSys = 0
+   SimVarsHtRcvry = 0
+   SimVarsFen = 0
+   SimVarsDr = 0
+   SimVarsWtrHtr = 0
+   SimVarsThrmlEngyStor = 0
+   RunTitle = "Title 24 Analysis"
+   AnalysisType = "Title24Compliance"
+   CompOptNew = 1
+   CompOptExist = 0
+   CompOptAlt = 0
+   CompOptAdd = 0
+   CompOptEnve = 1
+   CompOptLtg = 1
+   CompOptPartLtg = 0
+   CompOptMech = 1
+   CompOptPartMech = 0
+   CompOptDHW = 1
+   ZEROCode = 0
+   AirBarrier = "No air barrier"
+   CUACReport = 1
+   TakeCentralElecDHWSolPVCred = 0
+   CentralElecDHWSolPVCredPct = 0
+   RptGenUIVer = "90"
+   RptGenUIApp = "EnergyPro"
+   SoftwareVersion = "CBECC 2022.3.2 (1369)"
+   CompReportPDF = 1
+   CompReportStd = 0
+   MandCompChk = 1
+   ElecMandComp = "NA"
+   SolReadyMandComp = "NA"
+   NRCIEnv01E = 1
+   NRCAEnv02F = 0
+   NRCILti01E = 1
+   NRCILti02E = 0
+   NRCILti03E = 0
+   NRCILti04E = 0
+   NRCILti05E = 0
+   NRCILti06E = 0
+   NRCALti02A = 1
+   NRCALti03A = 0
+   NRCALti04A = 1
+   NRCALti05A = 0
+   NRCIMch01E = 1
+   NRCVMch04H = 0
+   NRCVMch24H = 0
+   NRCVMch27H = 1
+   NRCVMch32H = 1
+   NRCIPlb01E = 1
+   NRCIPlb02E = 0
+   NRCIPlb03E = 1
+   NRCIPlb21E = 0
+   NRCIPlb22E = 0
+   NRCVPlb21H = 0
+   NRCVPlb22H = 1
+   NRCIElc01E = 0
+   NRCISpv01E = 0
+   NRCILto01E = 0
+   NRCILto02E = 0
+   NRCALto02A = 0
+   NRCILts01E = 0
+   NRCIPrc01E = 0
+   NRCAPrc01F = 0
+   NRCAPrc02F = 0
+   NRCAPrc03F = 0
+   NRCAPrc04F = 0
+   NRCAPrc05F = 0
+   NRCAPrc06F = 0
+   NRCAPrc07F = 0
+   NRCAPrc08F = 0
+   NRCAPrc12F = 0
+   NRCAPrc13F = 0
+   NRCAPrc14F = 0
+   NRCAPrc15F = 0
+   NRCAPrc16A = 0
+   OccSensorCntRpt = 0
+   AutoTimeSwitchRpt = 0
+   AutoDayltgRpt = 0
+   DemandResponsiveRpt = 0
+   InstitutionalTuningPAFRpt = 0
+   OutdrCtrlsRpt = 0
+   MandatoryLtgCtrlIsBldgDemandResponseCtrlRpt = "Required"
+   MandatoryLtgCtrlIsBldgShutOffCtrlRpt = "Required"
+   ..
+
+Bldg   "CUAC Example (com)"  
+   WholeBldgModeled = 1
+   BldgAz = 315
+   TotStoryCnt = 5
+   AboveGrdStoryCnt = 5
+   ..
+
+ResZnGrp   "MF-Floor 2"  
+   Mult = 1
+   NumStories = 1
+   Z = 10
+   FlrToFlrHgt = 10
+   FlrToCeilingHgt = 9
+   ..
+
+ResZn   "S-1-2-BD-699 1-R-2"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 762
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-1 "  
+   DwellUnitTypeRef = "DU-1 "
+   Count = 1
+   CondFlrArea = 762
+   WasherZoneRef = "S-1-2-BD-699 1-R-2"
+   DryerZoneRef = "S-1-2-BD-699 1-R-2"
+   ..
+
+ResExtWall   "Left F,D"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 231
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F(2),D"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 275
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 2"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 3"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 2"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1"  
+   Status = "New"
+   Area = 275
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-5-3-BD-971 2-F-2"
+   ..
+
+ResDr   "Door 1 3070 21"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 9"  
+   Status = "New"
+   Area = 231
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-5-3-BD-971 2-F-2"
+   ..
+
+ResExtFlr   "Raised Floor"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 762
+   FloorZ = 10
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-5-3-BD-971 2-F-2"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 1057
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-5 "  
+   DwellUnitTypeRef = "DU-5 "
+   Count = 1
+   CondFlrArea = 1057
+   WasherZoneRef = "S-5-3-BD-971 2-F-2"
+   DryerZoneRef = "S-5-3-BD-971 2-F-2"
+   ..
+
+ResExtWall   "Left F,D 2"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 274
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 4"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 3"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2)"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 313
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 5"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 4"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 5"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 2"  
+   Status = "New"
+   Area = 313
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-1-2-BD-699 1-R-2"
+   ..
+
+ResDr   "Door 1 3070 21 2"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 10"  
+   Status = "New"
+   Area = 274
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-9-1-BD-520 3-F-2"
+   ..
+
+ResExtFlr   "Raised Floor 2"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 1057
+   FloorZ = 10
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-9-1-BD-520 3-F-2"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 583
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-9 "  
+   DwellUnitTypeRef = "DU-9 "
+   Count = 1
+   CondFlrArea = 583
+   WasherZoneRef = "S-9-1-BD-520 3-F-2"
+   DryerZoneRef = "S-9-1-BD-520 3-F-2"
+   ..
+
+ResExtWall   "Back F,D"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 214
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 6"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 6"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 3"  
+   Status = "New"
+   Area = 214
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-13-1-BD-503 4-F-2"
+   ..
+
+ResDr   "Door 1 3070 21 3"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 10"  
+   Status = "New"
+   Area = 275
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-5-3-BD-971 2-F-2"
+   ..
+
+ResIntWall   "Right 11"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-13-1-BD-503 4-F-2"
+   ..
+
+ResExtFlr   "Raised Floor 3"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 583
+   FloorZ = 10
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-13-1-BD-503 4-F-2"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-13 "  
+   DwellUnitTypeRef = "DU-13 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-13-1-BD-503 4-F-2"
+   DryerZoneRef = "S-13-1-BD-503 4-F-2"
+   ..
+
+ResExtWall   "Left"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 274
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F,D 2"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 7"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 7"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 4"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-9-1-BD-520 3-F-2"
+   ..
+
+ResDr   "Door 1 3070 21 4"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 11"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-9-1-BD-520 3-F-2"
+   ..
+
+ResIntWall   "Right 12"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-15-2-BD-875 5-F-2"
+   ..
+
+ResExtFlr   "Raised Floor 4"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 561
+   FloorZ = 10
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-15-2-BD-875 5-F-2"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 952
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-15 "  
+   DwellUnitTypeRef = "DU-15 "
+   Count = 1
+   CondFlrArea = 952
+   WasherZoneRef = "S-15-2-BD-875 5-F-2"
+   DryerZoneRef = "S-15-2-BD-875 5-F-2"
+   ..
+
+ResExtWall   "Left 2"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F,D,F"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 315
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 8"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 8"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 9"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 180
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 10"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 9"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 5"  
+   Status = "New"
+   Area = 315
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-21-3-BD-918 7-B-2"
+   ..
+
+ResDr   "Door 1 3070 21 5"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 13"  
+   Status = "New"
+   Area = 95
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-21-3-BD-918 7-B-2"
+   ..
+
+ResIntWall   "Left 12"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-13-1-BD-503 4-F-2"
+   ..
+
+ResExtFlr   "Raised Floor 5"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 952
+   FloorZ = 10
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-21-3-BD-918 7-B-2"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 997
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 10
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-21 "  
+   DwellUnitTypeRef = "DU-21 "
+   Count = 1
+   CondFlrArea = 997
+   WasherZoneRef = "S-21-3-BD-918 7-B-2"
+   DryerZoneRef = "S-21-3-BD-918 7-B-2"
+   ..
+
+ResExtWall   "Left F(2)"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 289
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 11"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 12"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2) 2"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 311
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 13"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 10"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 11"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D,A"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 289
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 14"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 12"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window A 2040 8.0"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 8
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 6"  
+   Status = "New"
+   Area = 311
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-15-2-BD-875 5-F-2"
+   ..
+
+ResDr   "Door 1 3070 21 6"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResExtFlr   "Raised Floor 6"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 997
+   FloorZ = 10
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZnGrp   "MF-Floor 3"  
+   Mult = 1
+   NumStories = 1
+   Z = 20
+   FlrToFlrHgt = 10
+   FlrToCeilingHgt = 9
+   ..
+
+ResZn   "S-2-2-BD-699 1-R-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 762
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-2 "  
+   DwellUnitTypeRef = "DU-2 "
+   Count = 1
+   CondFlrArea = 762
+   WasherZoneRef = "S-2-2-BD-699 1-R-3"
+   DryerZoneRef = "S-2-2-BD-699 1-R-3"
+   ..
+
+ResExtWall   "Left F,D 3"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 231
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 15"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 13"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F(2),D 2"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 275
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 16"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 17"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 14"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 7"  
+   Status = "New"
+   Area = 275
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-31-1-BD-503 10-B-3"
+   ..
+
+ResDr   "Door 1 3070 21 7"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 14"  
+   Status = "New"
+   Area = 231
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-6-3-BD-971 2-F-3"
+   ..
+
+ResIntFlr   "Floor"  
+   Status = "New"
+   Area = 762
+   FloorZ = 20
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-1-2-BD-699 1-R-2"
+   ..
+
+ResZn   "S-6-3-BD-971 2-F-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 1057
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-6 "  
+   DwellUnitTypeRef = "DU-6 "
+   Count = 1
+   CondFlrArea = 1057
+   WasherZoneRef = "S-6-3-BD-971 2-F-3"
+   DryerZoneRef = "S-6-3-BD-971 2-F-3"
+   ..
+
+ResExtWall   "Left F,D 4"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 274
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 18"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 15"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2) 3"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 313
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 19"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 16"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 17"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 8"  
+   Status = "New"
+   Area = 313
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-6-3-BD-971 2-F-3"
+   ..
+
+ResDr   "Door 1 3070 21 8"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 15"  
+   Status = "New"
+   Area = 274
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-10-1-BD-520 3-F-3"
+   ..
+
+ResIntFlr   "Floor 3"  
+   Status = "New"
+   Area = 1057
+   FloorZ = 20
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-5-3-BD-971 2-F-2"
+   ..
+
+ResZn   "S-10-1-BD-520 3-F-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 583
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-10 "  
+   DwellUnitTypeRef = "DU-10 "
+   Count = 1
+   CondFlrArea = 583
+   WasherZoneRef = "S-10-1-BD-520 3-F-3"
+   DryerZoneRef = "S-10-1-BD-520 3-F-3"
+   ..
+
+ResExtWall   "Left 3"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F,D 3"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 214
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 20"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 18"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right 2"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 9"  
+   Status = "New"
+   Area = 214
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-14-1-BD-504 4-F-3"
+   ..
+
+ResDr   "Door 1 3070 21 9"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 13"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-6-3-BD-971 2-F-3"
+   ..
+
+ResIntWall   "Right 16"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-14-1-BD-504 4-F-3"
+   ..
+
+ResIntFlr   "Floor 4"  
+   Status = "New"
+   Area = 583
+   FloorZ = 20
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-9-1-BD-520 3-F-2"
+   ..
+
+ResZn   "S-14-1-BD-504 4-F-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 576
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-14 "  
+   DwellUnitTypeRef = "DU-14 "
+   Count = 1
+   CondFlrArea = 576
+   WasherZoneRef = "S-14-1-BD-504 4-F-3"
+   DryerZoneRef = "S-14-1-BD-504 4-F-3"
+   ..
+
+ResExtWall   "Left F,D 5"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 274
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 21"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 19"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D 4"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 203
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 22"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 20"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 21"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 10"  
+   Status = "New"
+   Area = 203
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-10-1-BD-520 3-F-3"
+   ..
+
+ResDr   "Door 1 3070 21 10"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 14"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-10-1-BD-520 3-F-3"
+   ..
+
+ResIntWall   "Right 17"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-16-2-BD-875 5-F-3"
+   ..
+
+ResIntFlr   "Floor 5"  
+   Status = "New"
+   Area = 576
+   FloorZ = 20
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-13-1-BD-503 4-F-2"
+   ..
+
+ResZn   "S-16-2-BD-875 5-F-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 952
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-16 "  
+   DwellUnitTypeRef = "DU-16 "
+   Count = 1
+   CondFlrArea = 952
+   WasherZoneRef = "S-16-2-BD-875 5-F-3"
+   DryerZoneRef = "S-16-2-BD-875 5-F-3"
+   ..
+
+ResExtWall   "Left 4"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F,D,F 2"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 315
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 23"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 22"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 24"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D 2"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 180
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 25"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 23"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Right 18"  
+   Status = "New"
+   Area = 95
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-19-1-BD-505 6-L-3"
+   ..
+
+ResIntWall   "Front 1 11"  
+   Status = "New"
+   Area = 315
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-22-3-BD-918 7-B-3"
+   ..
+
+ResDr   "Door 1 3070 21 11"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 15"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-14-1-BD-504 4-F-3"
+   ..
+
+ResIntFlr   "Floor 6"  
+   Status = "New"
+   Area = 952
+   FloorZ = 20
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-15-2-BD-875 5-F-2"
+   ..
+
+ResZn   "S-19-1-BD-505 6-L-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 574
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-19 "  
+   DwellUnitTypeRef = "DU-19 "
+   Count = 1
+   CondFlrArea = 574
+   WasherZoneRef = "S-19-1-BD-505 6-L-3"
+   DryerZoneRef = "S-19-1-BD-505 6-L-3"
+   ..
+
+ResExtWall   "Left 5"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 36
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back D(2),F,A"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 368
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window D 4060 24.0 24"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 25"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 26"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window A 2040 8.0 2"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 8
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right 3"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 36
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 12"  
+   Status = "New"
+   Area = 368
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-25-1-BD-501 8-B-3"
+   ..
+
+ResDr   "Door 1 3070 21 12"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 16"  
+   Status = "New"
+   Area = 99
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-16-2-BD-875 5-F-3"
+   ..
+
+ResIntWall   "Right 19"  
+   Status = "New"
+   Area = 99
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-22-3-BD-918 7-B-3"
+   ..
+
+ResExtFlr   "Raised Floor 7"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 574
+   FloorZ = 20
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-22-3-BD-918 7-B-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 997
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-22 "  
+   DwellUnitTypeRef = "DU-22 "
+   Count = 1
+   CondFlrArea = 997
+   WasherZoneRef = "S-22-3-BD-918 7-B-3"
+   DryerZoneRef = "S-22-3-BD-918 7-B-3"
+   ..
+
+ResExtWall   "Left F(2) 2"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 289
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 27"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 28"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2) 4"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 311
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 29"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 26"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 27"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D,A 2"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 289
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 30"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 28"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window A 2040 8.0 3"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 8
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 13"  
+   Status = "New"
+   Area = 95
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-19-1-BD-505 6-L-3"
+   ..
+
+ResDr   "Door 1 3070 21 13"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Front 2"  
+   Status = "New"
+   Area = 216
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-16-2-BD-875 5-F-3"
+   ..
+
+ResIntFlr   "Floor 7"  
+   Status = "New"
+   Area = 997
+   FloorZ = 20
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-21-3-BD-918 7-B-2"
+   ..
+
+ResZn   "S-25-1-BD-501 8-B-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-25 "  
+   DwellUnitTypeRef = "DU-25 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-25-1-BD-501 8-B-3"
+   DryerZoneRef = "S-25-1-BD-501 8-B-3"
+   ..
+
+ResExtWall   "Back F,D 5"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 31"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 29"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-28-1-BD-503 9-B-3"
+   ..
+
+ResDr   "Door 1 3070 21 14"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 17"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-19-1-BD-505 6-L-3"
+   ..
+
+ResIntWall   "Right 20"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-28-1-BD-503 9-B-3"
+   ..
+
+ResExtFlr   "Raised Floor 8"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 561
+   FloorZ = 20
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-28-1-BD-503 9-B-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-28 "  
+   DwellUnitTypeRef = "DU-28 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-28-1-BD-503 9-B-3"
+   DryerZoneRef = "S-28-1-BD-503 9-B-3"
+   ..
+
+ResExtWall   "Back F,D 6"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 32"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 30"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 3"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-25-1-BD-501 8-B-3"
+   ..
+
+ResDr   "Door 1 3070 21 15"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 18"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-25-1-BD-501 8-B-3"
+   ..
+
+ResIntWall   "Right 21"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-31-1-BD-503 10-B-3"
+   ..
+
+ResExtFlr   "Raised Floor 9"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 561
+   FloorZ = 20
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZn   "S-31-1-BD-503 10-B-3"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 20
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-31 "  
+   DwellUnitTypeRef = "DU-31 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-31-1-BD-503 10-B-3"
+   DryerZoneRef = "S-31-1-BD-503 10-B-3"
+   ..
+
+ResExtWall   "Back F,D 7"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 33"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 31"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 4"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-6-3-BD-971 2-F-3"
+   ..
+
+ResDr   "Door 1 3070 21 16"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 19"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-28-1-BD-503 9-B-3"
+   ..
+
+ResIntWall   "Right 22"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-2-2-BD-699 1-R-3"
+   ..
+
+ResExtFlr   "Raised Floor 10"  
+   Type = "Raised Light Floor"
+   Status = "New"
+   Area = 561
+   FloorZ = 20
+   Construction = "Interior Floor - High- L2"
+   ..
+
+ResZnGrp   "MF-Floor 4"  
+   Mult = 1
+   NumStories = 1
+   Z = 30
+   FlrToFlrHgt = 10
+   FlrToCeilingHgt = 9
+   ..
+
+ResZn   "S-3-2-BD-699 1-R-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 762
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-3 "  
+   DwellUnitTypeRef = "DU-3 "
+   Count = 1
+   CondFlrArea = 762
+   WasherZoneRef = "S-3-2-BD-699 1-R-4"
+   DryerZoneRef = "S-3-2-BD-699 1-R-4"
+   ..
+
+ResExtWall   "Left F,D 6"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 231
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 34"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 32"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F(2),D 3"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 275
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 35"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 36"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 33"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 14"  
+   Status = "New"
+   Area = 275
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-32-1-BD-503 10-B-4"
+   ..
+
+ResDr   "Door 1 3070 21 17"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 23"  
+   Status = "New"
+   Area = 231
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-7-3-BD-977 2-F-4"
+   ..
+
+ResIntFlr   "Floor 8"  
+   Status = "New"
+   Area = 762
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-2-2-BD-699 1-R-3"
+   ..
+
+ResZn   "S-7-3-BD-977 2-F-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 1047
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-7 "  
+   DwellUnitTypeRef = "DU-7 "
+   Count = 1
+   CondFlrArea = 1047
+   WasherZoneRef = "S-7-3-BD-977 2-F-4"
+   DryerZoneRef = "S-7-3-BD-977 2-F-4"
+   ..
+
+ResExtWall   "Left F,D 7"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 274
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 37"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 34"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2) 5"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 310
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 38"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 35"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 36"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right 4"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 15"  
+   Status = "New"
+   Area = 310
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-7-3-BD-977 2-F-4"
+   ..
+
+ResDr   "Door 1 3070 21 18"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 24"  
+   Status = "New"
+   Area = 229
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-7-3-BD-977 2-F-4"
+   ..
+
+ResIntFlr   "Floor 9"  
+   Status = "New"
+   Area = 1047
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-6-3-BD-971 2-F-3"
+   ..
+
+ResZn   "S-11-3-BD-1053 3-F-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 1142
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-11 "  
+   DwellUnitTypeRef = "DU-11 "
+   Count = 1
+   CondFlrArea = 1142
+   WasherZoneRef = "S-11-3-BD-1053 3-F-4"
+   DryerZoneRef = "S-11-3-BD-1053 3-F-4"
+   ..
+
+ResExtWall   "Left 6"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F(2),D(2)"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 412
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 39"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 37"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 40"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 38"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right 5"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 16"  
+   Status = "New"
+   Area = 412
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-29-1-BD-503 9-B-4"
+   ..
+
+ResDr   "Door 1 3070 21 19"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 20"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-7-3-BD-977 2-F-4"
+   ..
+
+ResIntWall   "Right 25"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-17-2-BD-868 5-F-4"
+   ..
+
+ResIntFlr   "Floor 1"  
+   Status = "New"
+   Area = 561
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-14-1-BD-504 4-F-3"
+   ..
+
+ResIntFlr   "Floor 2"  
+   Status = "New"
+   Area = 583
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-10-1-BD-520 3-F-3"
+   ..
+
+ResZn   "S-17-2-BD-868 5-F-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 952
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-17 "  
+   DwellUnitTypeRef = "DU-17 "
+   Count = 1
+   CondFlrArea = 952
+   WasherZoneRef = "S-17-2-BD-868 5-F-4"
+   DryerZoneRef = "S-17-2-BD-868 5-F-4"
+   ..
+
+ResExtWall   "Left 7"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F,D,F 3"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 315
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 41"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 39"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 42"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D 3"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 180
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 43"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 40"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 17"  
+   Status = "New"
+   Area = 315
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-23-3-BD-918 7-B-4"
+   ..
+
+ResDr   "Door 1 3070 21 20"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 21"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-11-3-BD-1053 3-F-4"
+   ..
+
+ResIntWall   "Right 26"  
+   Status = "New"
+   Area = 95
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-20-1-BD-505 6-L-4"
+   ..
+
+ResIntFlr   "Floor 10"  
+   Status = "New"
+   Area = 952
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-16-2-BD-875 5-F-3"
+   ..
+
+ResZn   "S-20-1-BD-505 6-L-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 574
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-20 "  
+   DwellUnitTypeRef = "DU-20 "
+   Count = 1
+   CondFlrArea = 574
+   WasherZoneRef = "S-20-1-BD-505 6-L-4"
+   DryerZoneRef = "S-20-1-BD-505 6-L-4"
+   ..
+
+ResExtWall   "Left 8"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 36
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back D(2),F,A 2"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 368
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window D 4060 24.0 41"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 42"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 44"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window A 2040 8.0 4"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 8
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right 6"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 36
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 18"  
+   Status = "New"
+   Area = 368
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-26-1-BD-503 8-B-4"
+   ..
+
+ResDr   "Door 1 3070 21 21"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 22"  
+   Status = "New"
+   Area = 99
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-17-2-BD-868 5-F-4"
+   ..
+
+ResIntWall   "Right 27"  
+   Status = "New"
+   Area = 99
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-23-3-BD-918 7-B-4"
+   ..
+
+ResCathedralCeiling   "Roof 505"  
+   Status = "New"
+   Area = 574
+   RoofRise = 0
+   Orientation = "Front"
+   Construction = "FLOOR-ROOF, ROOF DECK"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResIntFlr   "Floor 11"  
+   Status = "New"
+   Area = 574
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-19-1-BD-505 6-L-3"
+   ..
+
+ResZn   "S-23-3-BD-918 7-B-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 997
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-23 "  
+   DwellUnitTypeRef = "DU-23 "
+   Count = 1
+   CondFlrArea = 997
+   WasherZoneRef = "S-23-3-BD-918 7-B-4"
+   DryerZoneRef = "S-23-3-BD-918 7-B-4"
+   ..
+
+ResExtWall   "Left F(2) 3"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 289
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 45"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 46"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2) 6"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 311
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 47"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 43"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 44"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D,A 3"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 289
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 48"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 45"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window A 2040 8.0 5"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 8
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 19"  
+   Status = "New"
+   Area = 95
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-20-1-BD-505 6-L-4"
+   ..
+
+ResDr   "Door 1 3070 21 22"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Front 2 2"  
+   Status = "New"
+   Area = 216
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-17-2-BD-868 5-F-4"
+   ..
+
+ResIntFlr   "Floor 12"  
+   Status = "New"
+   Area = 997
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-22-3-BD-918 7-B-3"
+   ..
+
+ResZn   "S-26-1-BD-503 8-B-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-26 "  
+   DwellUnitTypeRef = "DU-26 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-26-1-BD-503 8-B-4"
+   DryerZoneRef = "S-26-1-BD-503 8-B-4"
+   ..
+
+ResExtWall   "Back F,D 8"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 49"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 46"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 5"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-29-1-BD-503 9-B-4"
+   ..
+
+ResDr   "Door 1 3070 21 23"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 23"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-20-1-BD-505 6-L-4"
+   ..
+
+ResIntWall   "Right 28"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-29-1-BD-503 9-B-4"
+   ..
+
+ResIntFlr   "Floor 13"  
+   Status = "New"
+   Area = 561
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-25-1-BD-501 8-B-3"
+   ..
+
+ResZn   "S-29-1-BD-503 9-B-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-29 "  
+   DwellUnitTypeRef = "DU-29 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-29-1-BD-503 9-B-4"
+   DryerZoneRef = "S-29-1-BD-503 9-B-4"
+   ..
+
+ResExtWall   "Back F,D 9"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 50"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 47"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 6"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-26-1-BD-503 8-B-4"
+   ..
+
+ResDr   "Door 1 3070 21 24"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 24"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-26-1-BD-503 8-B-4"
+   ..
+
+ResIntWall   "Right 29"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-32-1-BD-503 10-B-4"
+   ..
+
+ResIntFlr   "Floor 14"  
+   Status = "New"
+   Area = 561
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-28-1-BD-503 9-B-3"
+   ..
+
+ResZn   "S-32-1-BD-503 10-B-4"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 30
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-32 "  
+   DwellUnitTypeRef = "DU-32 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-32-1-BD-503 10-B-4"
+   DryerZoneRef = "S-32-1-BD-503 10-B-4"
+   ..
+
+ResExtWall   "Back F,D 10"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 51"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 48"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 7"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-7-3-BD-977 2-F-4"
+   ..
+
+ResDr   "Door 1 3070 21 25"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 25"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-29-1-BD-503 9-B-4"
+   ..
+
+ResIntWall   "Right 30"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-3-2-BD-699 1-R-4"
+   ..
+
+ResIntFlr   "Floor 15"  
+   Status = "New"
+   Area = 561
+   FloorZ = 30
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-31-1-BD-503 10-B-3"
+   ..
+
+ResZnGrp   "MF-Floor 5"  
+   Mult = 1
+   NumStories = 1
+   Z = 40
+   FlrToFlrHgt = 10
+   FlrToCeilingHgt = 9
+   ..
+
+ResZn   "S-4-2-BD-699 1-R-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 762
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-4 "  
+   DwellUnitTypeRef = "DU-4 "
+   Count = 1
+   CondFlrArea = 762
+   WasherZoneRef = "S-4-2-BD-699 1-R-5"
+   DryerZoneRef = "S-4-2-BD-699 1-R-5"
+   ..
+
+ResExtWall   "Left F,D 8"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 231
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 52"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 49"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F(2),D 4"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 275
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 53"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 54"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 50"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 1 20"  
+   Status = "New"
+   Area = 275
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-8-3-BD-977 2-F-5"
+   ..
+
+ResDr   "Door 1 3070 21 26"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 31"  
+   Status = "New"
+   Area = 231
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-4-2-BD-699 1-R-5"
+   ..
+
+ResCathedralCeiling   "Roof"  
+   Status = "New"
+   Area = 762
+   RoofRise = 0
+   Orientation = "Front"
+   Construction = "FLOOR-ROOF, ROOF DECK"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResIntFlr   "Floor 16"  
+   Status = "New"
+   Area = 762
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-3-2-BD-699 1-R-4"
+   ..
+
+ResZn   "S-8-3-BD-977 2-F-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 1047
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-8 "  
+   DwellUnitTypeRef = "DU-8 "
+   Count = 1
+   CondFlrArea = 1047
+   WasherZoneRef = "S-8-3-BD-977 2-F-5"
+   DryerZoneRef = "S-8-3-BD-977 2-F-5"
+   ..
+
+ResExtWall   "Left F,D 9"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 274
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 55"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 51"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2) 7"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 310
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 56"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 52"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 53"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right 7"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 21"  
+   Status = "New"
+   Area = 310
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-8-3-BD-977 2-F-5"
+   ..
+
+ResDr   "Door 1 3070 21 27"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Right 32"  
+   Status = "New"
+   Area = 229
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-8-3-BD-977 2-F-5"
+   ..
+
+ResCathedralCeiling   "Roof 977"  
+   Status = "New"
+   Area = 1047
+   RoofRise = 0
+   Orientation = "Front"
+   Construction = "FLOOR-ROOF, ROOF DECK"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResIntFlr   "Floor 17"  
+   Status = "New"
+   Area = 1047
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-7-3-BD-977 2-F-4"
+   ..
+
+ResZn   "S-12-3-BD-1040 3-F-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 1150
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-12 "  
+   DwellUnitTypeRef = "DU-12 "
+   Count = 1
+   CondFlrArea = 1150
+   WasherZoneRef = "S-12-3-BD-1040 3-F-5"
+   DryerZoneRef = "S-12-3-BD-1040 3-F-5"
+   ..
+
+ResExtWall   "Left 9"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F(2),D(2) 2"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 414
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 57"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 54"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 58"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 55"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right 8"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 45
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResIntWall   "Front 1 22"  
+   Status = "New"
+   Area = 414
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-30-1-BD-503 9-B-5"
+   ..
+
+ResDr   "Door 1 3070 21 28"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 26"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-8-3-BD-977 2-F-5"
+   ..
+
+ResIntWall   "Right 33"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-18-2-BD-870 5-F-5"
+   ..
+
+ResCathedralCeiling   "Roof 1040"  
+   Status = "New"
+   Area = 1150
+   RoofRise = 0
+   Orientation = "Front"
+   Construction = "FLOOR-ROOF, ROOF DECK"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResIntFlr   "Floor 18"  
+   Status = "New"
+   Area = 1150
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-11-3-BD-1053 3-F-4"
+   ..
+
+ResZn   "S-18-2-BD-870 5-F-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 938
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-18 "  
+   DwellUnitTypeRef = "DU-18 "
+   Count = 1
+   CondFlrArea = 938
+   WasherZoneRef = "S-18-2-BD-870 5-F-5"
+   DryerZoneRef = "S-18-2-BD-870 5-F-5"
+   ..
+
+ResExtWall   "Front ---"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 61
+   Construction = "R-21 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Left ---"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 45
+   Construction = "R-21 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResExtWall   "Back F,D,F 4"  
+   Status = "New"
+   Orientation = "Back"
+   Area = 277
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 59"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 56"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window F 5060 30.0 60"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D(2)"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 275
+   Construction = "R-21 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 61"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 57"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 58"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResCeilingBelowAttic   "Roof 870"  
+   Status = "New"
+   Area = 938
+   Construction = "Roof - High"
+   AtticZone = "Attic S-18-2-BD-870 5-F-5"
+   ..
+
+ResIntWall   "Front 1 23"  
+   Status = "New"
+   Area = 216
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-24-2-BD-797 7-B-5"
+   ..
+
+ResDr   "Door 1 3070 21 29"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 27"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-12-3-BD-1040 3-F-5"
+   ..
+
+ResIntFlr   "Int Floor 1"  
+   Status = "New"
+   Area = 862.3
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-17-2-BD-868 5-F-4"
+   ..
+
+ResIntFlr   "Int Floor 2"  
+   Status = "New"
+   Area = 75.6
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-20-1-BD-505 6-L-4"
+   ..
+
+ResZn   "S-24-2-BD-797 7-B-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 878
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-24 "  
+   DwellUnitTypeRef = "DU-24 "
+   Count = 1
+   CondFlrArea = 878
+   WasherZoneRef = "S-24-2-BD-797 7-B-5"
+   DryerZoneRef = "S-24-2-BD-797 7-B-5"
+   ..
+
+ResExtWall   "Left F,D 10"  
+   Status = "New"
+   Orientation = "Right"
+   Area = 290
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 62"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 59"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Back F,D(2) 8"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 277
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 63"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 60"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 61"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResExtWall   "Right F,D,A 4"  
+   Status = "New"
+   Orientation = "Left"
+   Area = 290
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 64"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 62"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window A 2040 8.0 6"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 8
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResCeilingBelowAttic   "Roof 5"  
+   Status = "New"
+   Area = 878
+   Construction = "Roof - High"
+   AtticZone = "Attic S-24-2-BD-797 7-B-5"
+   ..
+
+ResIntWall   "Front 1 24"  
+   Status = "New"
+   Area = 277
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-18-2-BD-870 5-F-5"
+   ..
+
+ResDr   "Door 1 3070 21 30"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntFlr   "Floor 19"  
+   Status = "New"
+   Area = 878
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-23-3-BD-918 7-B-4"
+   ..
+
+ResZn   "S-27-1-BD-503 8-B-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-27 "  
+   DwellUnitTypeRef = "DU-27 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-27-1-BD-503 8-B-5"
+   DryerZoneRef = "S-27-1-BD-503 8-B-5"
+   ..
+
+ResExtWall   "Back F,D 11"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 65"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 63"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 8"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-30-1-BD-503 9-B-5"
+   ..
+
+ResDr   "Door 1 3070 21 31"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 28"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-33-1-BD-503 10-B-5"
+   ..
+
+ResIntWall   "Right 34"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-30-1-BD-503 9-B-5"
+   ..
+
+ResCathedralCeiling   "Roof 2"  
+   Status = "New"
+   Area = 561
+   RoofRise = 0
+   Orientation = "Front"
+   Construction = "FLOOR-ROOF, ROOF DECK"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResIntFlr   "Floor 20"  
+   Status = "New"
+   Area = 561
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-26-1-BD-503 8-B-4"
+   ..
+
+ResZn   "S-30-1-BD-503 9-B-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-30 "  
+   DwellUnitTypeRef = "DU-30 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-30-1-BD-503 9-B-5"
+   DryerZoneRef = "S-30-1-BD-503 9-B-5"
+   ..
+
+ResExtWall   "Back F,D 12"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 66"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 64"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 9"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-27-1-BD-503 8-B-5"
+   ..
+
+ResDr   "Door 1 3070 21 32"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 29"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-27-1-BD-503 8-B-5"
+   ..
+
+ResIntWall   "Right 35"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-33-1-BD-503 10-B-5"
+   ..
+
+ResCathedralCeiling   "Roof 3"  
+   Status = "New"
+   Area = 561
+   RoofRise = 0
+   Orientation = "Front"
+   Construction = "FLOOR-ROOF, ROOF DECK"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResIntFlr   "Floor 21"  
+   Status = "New"
+   Area = 561
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-29-1-BD-503 9-B-4"
+   ..
+
+ResZn   "S-33-1-BD-503 10-B-5"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   DHWSys1Status = "New"
+   FloorArea = 561
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 6.7
+   Bottom = 40
+   NumStories = 1
+   AffordableHousing = 1
+   ..
+
+DwellUnit   "DDU-33 "  
+   DwellUnitTypeRef = "DU-33 "
+   Count = 1
+   CondFlrArea = 561
+   WasherZoneRef = "S-33-1-BD-503 10-B-5"
+   DryerZoneRef = "S-33-1-BD-503 10-B-5"
+   ..
+
+ResExtWall   "Back F,D 13"  
+   Status = "New"
+   Orientation = "Front"
+   Area = 198
+   Construction = "R-19 Wall"
+   Exception = "- none -"
+   Tilt = 90
+   ..
+
+ResWin   "Window F 5060 30.0 67"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 30
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResWin   "Window D 4060 24.0 65"  
+   Status = "New"
+   SpecMethod = "Overall Window Area"
+   Area = 24
+   WinProdType = "All Other Fenestration"
+   NFRCUfactor = 0.26
+   NFRCSHGC = 0.24
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ..
+
+ResIntWall   "Front 10"  
+   Status = "New"
+   Area = 198
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-8-3-BD-977 2-F-5"
+   ..
+
+ResDr   "Door 1 3070 21 33"  
+   Status = "New"
+   Area = 21
+   Ufactor = 0.10989
+   ..
+
+ResIntWall   "Left 30"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-30-1-BD-503 9-B-5"
+   ..
+
+ResIntWall   "Right 36"  
+   Status = "New"
+   Area = 230
+   Construction = "Interior Wall - High"
+   IsPartySurface = 1
+   Outside = "S-4-2-BD-699 1-R-5"
+   ..
+
+ResCathedralCeiling   "Roof 4"  
+   Status = "New"
+   Area = 561
+   RoofRise = 0
+   Orientation = "Front"
+   Construction = "FLOOR-ROOF, ROOF DECK"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResIntFlr   "Floor 22"  
+   Status = "New"
+   Area = 561
+   FloorZ = 40
+   Construction = "Interior Floor - High"
+   IsPartySurface = 1
+   Outside = "S-32-1-BD-503 10-B-4"
+   ..
+
+ResAttic   "Attic S-18-2-BD-870 5-F-5"  
+   Type = "Ventilated"
+   Status = "New"
+   RoofRise = 3
+   Construction = "Roof-Attic S-18-2-BD-870 5-F-5"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+ResAttic   "Attic S-24-2-BD-797 7-B-5"  
+   Type = "Ventilated"
+   Status = "New"
+   RoofRise = 3
+   Construction = "Roof-Attic S-24-2-BD-797 7-B-5"
+   RoofSolReflect = 0.1
+   RoofEmiss = 0.85
+   ..
+
+CUAC   "CalUtilityAllowanceCalc"  
+   RptOption = "Draft"
+   ProjectID = 1
+   Locality = "San Carlos"
+   UnitType = "Affordable Housing"
+   AffordablePVDCSysSize = 68
+   PctIndivUnitPVByBedrms[2] = 2.51
+   PctIndivUnitPVByBedrms[3] = 3.22
+   PctIndivUnitPVByBedrms[4] = 3.71
+   PVBillingOption = "PV Offsets Monthly Use"
+   AffordableBattMaxCap = 50.7
+   PctIndivUnitBattByBedrms[2] = 2.51
+   PctIndivUnitBattByBedrms[3] = 3.22
+   ElecUtility = "PG&E -- Pacific Gas and Electric Company"
+   G2ElecTerritory = "T"
+   G2ElecTariff = "Rate E1 Code H"
+   ElecTariffAdj = "- none -"
+   GasUtility = "no gas service"
+   WaterRateType = "Not Paid by Tenant"
+   WaterMonthlyCost = 25
+   WaterVolumeCost = 0.01
+   TrashRateType = "Not Paid by Tenant"
+   TrashMonthlyCost = 10
+   ..
+
+ResProj   "CUAC Example (res)"  
+   StdDesignFuel_Ckg = "Proposed"
+   StdDesignFuel_Dry = "Proposed"
+   StdDesignFuel_HVAC = "Electricity"
+   StdDesignFuel_DHW = "Proposed"
+   StdDesignCompactDistrib = 0
+   StdDesignDrnWtrHtRecov = 0
+   StdDesignHPWHLocOverride = 0
+   StdDesignWinPerfAdjust = 0
+   UseDefaultACH50 = 0
+   ACH50 = 5
+   ProjInclKitchen = 1
+   InsulConsQuality = "No"
+   IAQSupInletsAccessible = 0
+   IAQHasFID = 0
+   ..
+
+PVArray   "Photovoltaic Array 1"  
+   SpecMthd = "Detailed"
+   DCSysSize = 85
+   ModuleType = "Standard"
+   CalFlexibleInstallOpt = "n/a"
+   GeomSpecMthd = "azimuth and tilt"
+   Az = 180
+   TiltInp = "deg"
+   TiltAngle = 22
+   ArrayType = "Fixed (open rack)"
+   PwrElec = "- none -"
+   SolarAccess = 100
+   InverterEff = 96
+   ..
+
+SchDay   "CARes2013 InsLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.023, 0.019, 0.015, 0.017, 0.021, 0.031, 0.042, 0.041, 0.034, 
+          0.029, 0.027, 0.025, 0.021, 0.021, 0.021, 0.026, 0.031, 0.044, 
+          0.084, 0.118, 0.113, 0.096, 0.063, 0.038 )
+   ..
+
+SchDay   "CARes2013 Occupancy Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.035, 0.035, 0.035, 0.035, 0.035, 0.059, 0.082, 0.055, 0.027, 
+          0.014, 0.014, 0.014, 0.014, 0.014, 0.019, 0.027, 0.041, 0.055, 
+          0.068, 0.082, 0.082, 0.07, 0.053, 0.035 )
+   ..
+
+SchDay   "CARes2013 Equipment Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.037, 0.035, 0.034, 0.034, 0.032, 0.036, 0.042, 0.044, 0.037, 
+          0.032, 0.033, 0.033, 0.032, 0.033, 0.035, 0.037, 0.044, 0.053, 
+          0.058, 0.06, 0.062, 0.06, 0.052, 0.045 )
+   ..
+
+SchDay   "CARes2013 ExtLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+          0.25, 0.25, 0.25, 0.25 )
+   ..
+
+SchDay   "CARes2013 SZ Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Liv Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Slp Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 65, 65, 65, 65, 65, 65, 
+          65, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 SZ Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Liv Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Slp Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+Batt   "Battery"  
+   MaxCap = 50.7
+   Ctrl = "Time of Use"
+   MaxChrgPwr = 12.17
+   MaxDschrgPwr = 12.17
+   ..
+
+EUseSummary   "Pol 15% RetAdd CH4Leak 20yr"  
+   Title1[2] = "Proposed"
+   Title1[3] = "Proposed"
+   Title1[4] = "Proposed"
+   Title1[11] = "Proposed"
+   Title1[17] = "Prop Design"
+   Title1[18] = "Prop Design"
+   Title1[19] = "Prop Design"
+   Title2[2] = "Design"
+   Title2[3] = "Design"
+   Title2[4] = "Design TDV"
+   Title2[11] = "Source Energy"
+   Title2[17] = "Electric CO2"
+   Title2[18] = "Fuel CO2"
+   Title2[19] = "Total CO2"
+   Title3[1] = "End Use"
+   Title3[2] = "Site (MWh)"
+   Title3[3] = "Site (MBtu)"
+   Title3[4] = "(kBtu/ft²-yr)"
+   Title3[11] = "(kBtu/ft²-yr)"
+   Title3[17] = "Emis. (tonne)"
+   Title3[18] = "Emis. (tonne)"
+   Title3[19] = "Emis. (tonne)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "--"
+   Enduse1[3] = "--"
+   Enduse1[4] = "--"
+   Enduse1[9] = "--"
+   Enduse1[11] = "--"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "--"
+   Enduse2[3] = "--"
+   Enduse2[4] = "--"
+   Enduse2[9] = "--"
+   Enduse2[11] = "--"
+   Enduse3[1] = "Indoor Fans"
+   Enduse3[2] = "--"
+   Enduse3[3] = "--"
+   Enduse3[4] = "--"
+   Enduse3[9] = "--"
+   Enduse3[11] = "--"
+   Enduse4[1] = "Heat Rejection"
+   Enduse4[2] = "--"
+   Enduse4[3] = "--"
+   Enduse4[4] = "--"
+   Enduse4[9] = "--"
+   Enduse4[11] = "--"
+   Enduse5[1] = "Pumps & Misc."
+   Enduse5[2] = "--"
+   Enduse5[3] = "--"
+   Enduse5[4] = "--"
+   Enduse5[9] = "--"
+   Enduse5[11] = "--"
+   Enduse6[1] = "Domestic Hot Water"
+   Enduse6[2] = "--"
+   Enduse6[3] = "--"
+   Enduse6[4] = "--"
+   Enduse6[9] = "--"
+   Enduse6[11] = "--"
+   Enduse7[1] = "Indoor Lighting"
+   Enduse7[2] = "--"
+   Enduse7[3] = "--"
+   Enduse7[4] = "--"
+   Enduse7[9] = "--"
+   Enduse7[11] = "--"
+   Enduse8[1] = "Total Compliance"
+   Enduse8[2] = "-136.3"
+   Enduse8[3] = "0.0"
+   Enduse8[4] = "-113.80"
+   Enduse8[9] = "-4.6"
+   Enduse8[11] = "-4.65"
+   Enduse8[17] = "-7.36"
+   Enduse8[19] = "-7.36"
+   Enduse9[1] = "Receptacle"
+   Enduse9[2] = "--"
+   Enduse9[3] = "--"
+   Enduse9[4] = "--"
+   Enduse9[9] = "--"
+   Enduse9[11] = "--"
+   Enduse10[1] = "Process"
+   Enduse10[2] = "--"
+   Enduse10[3] = "--"
+   Enduse10[4] = "--"
+   Enduse10[9] = "--"
+   Enduse10[11] = "--"
+   Enduse11[1] = "Other Ltg"
+   Enduse11[2] = "--"
+   Enduse11[3] = "--"
+   Enduse11[4] = "--"
+   Enduse11[9] = "--"
+   Enduse11[11] = "--"
+   Enduse12[1] = "Process Motors"
+   Enduse12[2] = "--"
+   Enduse12[3] = "--"
+   Enduse12[4] = "--"
+   Enduse12[9] = "--"
+   Enduse12[11] = "--"
+   Enduse13[1] = "Photovoltaics"
+   Enduse13[2] = "-137.8"
+   Enduse13[3] = "--"
+   Enduse13[4] = "-103.19"
+   Enduse13[9] = "-0.2"
+   Enduse13[11] = "-2.97"
+   Enduse13[17] = "-4.70"
+   Enduse13[19] = "-4.70"
+   Enduse14[1] = "Battery"
+   Enduse14[2] = "1.5"
+   Enduse14[3] = "--"
+   Enduse14[4] = "-10.61"
+   Enduse14[9] = "-4.4"
+   Enduse14[11] = "-1.68"
+   Enduse14[17] = "-2.66"
+   Enduse14[19] = "-2.66"
+   Enduse15[1] = "TOTAL"
+   Enduse15[2] = "-136.3"
+   Enduse15[3] = "0.0"
+   Enduse15[4] = "-113.80"
+   Enduse15[9] = "-4.6"
+   Enduse15[11] = "-4.65"
+   Enduse15[17] = "-7.36"
+   Enduse15[19] = "-7.36"
+   Enduse16[1] = "Efficiency Compliance"
+   Enduse16[2] = "0.0"
+   Enduse16[3] = "0.0"
+   Enduse16[4] = "0.00"
+   Enduse16[9] = "--"
+   Enduse16[11] = "0.00"
+   ZoneUMLHsLoaded[1] = 0
+   SimSummary[1] = "CSE Successful"
+   AnalysisValid = 1
+   PropPV_Total = 137776
+   PropPV_Export = 136286
+   PropPV_PctExport = 98.919
+   ..
+
+ResConsAssm   "R-19 Wall"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   AbvDeckInsulLayerRVal = 0
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayerRVal = 0
+   WallExtFinishLayer = "3 Coat Stucco"
+   NonStdSprayFoam = 0
+   ..
+
+ResConsAssm   "Interior Wall - High"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   AbvDeckInsulLayerRVal = 0
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayerRVal = 0
+   OtherSideFinishLayer = "Gypsum Board"
+   NonStdSprayFoam = 0
+   ..
+
+ResConsAssm   "Interior Floor - High- L2"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Wood Framed Floor"
+   AbvDeckInsulLayerRVal = 0
+   InsideFinishLayer = "Gypsum Board"
+   FloorSurfaceLayer = "Carpeted"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "R 38"
+   FrameLayer = "2x12 @ 16 in. O.C."
+   SheathInsulLayerRVal = 0
+   NonStdSprayFoam = 0
+   ..
+
+ResConsAssm   "Interior Floor - High"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   AbvDeckInsulLayerRVal = 0
+   InsideFinishLayer = "Gypsum Board"
+   FloorSurfaceLayer = "Carpeted"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x12 @ 16 in. O.C."
+   SheathInsulLayerRVal = 0
+   NonStdSprayFoam = 0
+   ..
+
+ResConsAssm   "FLOOR-ROOF, ROOF DECK"  
+   CanAssignTo = "Cathedral Ceilings"
+   Type = "Built-up Roof"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayerRVal = 0
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2LayerRVal = 0
+   FurringInsul2Layer = "- specify R-value -"
+   FurringInsul2LayerRVal = 39
+   FurringInsulLayerRVal = 0
+   Furring2Layer = "- none -"
+   SheathInsulLayer = "- specify R-value -"
+   SheathInsulLayerRVal = 39
+   RadiantBarrier = 0
+   RoofingType = "all others"
+   NonStdSprayFoam = 0
+   ..
+
+ResConsAssm   "Roof - High"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AbvDeckInsulLayerRVal = 0
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 @ 24 in. O.C."
+   SheathInsulLayerRVal = 0
+   NonStdSprayFoam = 0
+   ..
+
+ResConsAssm   "R-21 Wall"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   AbvDeckInsulLayerRVal = 0
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "R 21"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayerRVal = 0
+   WallExtFinishLayer = "3 Coat Stucco"
+   NonStdSprayFoam = 0
+   ..
+
+ResConsAssm   "Roof-Attic S-18-2-BD-870 5-F-5"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- specify R-value -"
+   AbvDeckInsulLayerRVal = 0
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "R 39"
+   FrameLayer = "2x4 @ 24 in. O.C."
+   SheathInsulLayerRVal = 0
+   RadiantBarrier = 0
+   RoofingType = "all others"
+   CavInsulOverFrame = 0
+   ..
+
+ResConsAssm   "Roof-Attic S-24-2-BD-797 7-B-5"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- specify R-value -"
+   AbvDeckInsulLayerRVal = 0
+   SheathInsul2LayerRVal = 0
+   FurringInsul2LayerRVal = 0
+   FurringInsulLayerRVal = 0
+   CavityLayer = "R 39"
+   FrameLayer = "2x4 @ 24 in. O.C."
+   SheathInsulLayerRVal = 0
+   RadiantBarrier = 0
+   RoofingType = "all others"
+   CavInsulOverFrame = 0
+   ..
+
+ResMat   "SoftWood"  
+   Density = 35
+   SpecHeat = 0.39
+   Conductivity = 0.08167
+   ConductivityCT = 0.0012
+   RValPerInch = 1.0204
+   ..
+
+ResMat   "Steel"  
+   Density = 489
+   SpecHeat = 0.12
+   Conductivity = 26.2
+   RValPerInch = 0.00318
+   ..
+
+ResMat   "SIPSskin"  
+   Thickness = 0.4375
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+ResMat   "Ceiling Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.00418
+   ..
+
+ResMat   "Other Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "VertWallCavity"  
+   Thickness = 3.5
+   Density = 0.075
+   SpecHeat = 0.24
+   Conductivity = 0.314
+   ConductivityCT = 0.00397
+   RValPerInch = 1.1333
+   ..
+
+ResMat   "Gypsum Board"  
+   Thickness = 0.5
+   Density = 40
+   SpecHeat = 0.27
+   Conductivity = 0.09167
+   ConductivityCT = 0.0001217
+   RValPerInch = 0.9091
+   ..
+
+ResMat   "3 Coat Stucco"  
+   Thickness = 0.875
+   Density = 116
+   SpecHeat = 0.2
+   Conductivity = 0.4167
+   RValPerInch = 0.2686
+   ..
+
+ResMat   "Carpet"  
+   Thickness = 0.5
+   Density = 12.3
+   SpecHeat = 0.34
+   Conductivity = 0.02
+   RValPerInch = 4.1667
+   ..
+
+ResMat   "Wood layer"  
+   Thickness = 0.5
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+ResMat   "Insul-R39-D1.5-SH0.35-C0.00214"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.00213667
+   ConductivityQII = 0.00213667
+   ConductivityCT = 0.00175
+   ..
+
+ResMat   "Light Roof"  
+   Thickness = 0.2
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+ResMat   "Ins-R19-D1.5-SH0.2-C0.02412"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0241228
+   ConductivityQII = 0.0241228
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R13-D1.5-SH0.2-C0.02244"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0224359
+   ConductivityQII = 0.0224359
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R38-D1.5-SH0.2-C0.02467"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0246711
+   ConductivityQII = 0.0246711
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "Ins-R21-D1.5-SH0.2-C0.02183"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0218254
+   ConductivityQII = 0.0218254
+   ConductivityCT = 0.0032537
+   ..
+
+ResMat   "FrameGap"  
+   Density = 0
+   SpecHeat = 0
+   Conductivity = 200
+   RValPerInch = 0.000417
+   ..
+
+DwellUnitType   "DU-1 "  
+   NumBedrooms = 2
+   CondFlrArea = 762
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 1"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF0-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-2 "  
+   NumBedrooms = 2
+   CondFlrArea = 762
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 1"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF0-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-3 "  
+   NumBedrooms = 2
+   CondFlrArea = 762
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 1"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF0-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-4 "  
+   NumBedrooms = 2
+   CondFlrArea = 762
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 1"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF0-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-5 "  
+   NumBedrooms = 3
+   CondFlrArea = 1057
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 2"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF1-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-6 "  
+   NumBedrooms = 3
+   CondFlrArea = 1057
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 2"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF1-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-7 "  
+   NumBedrooms = 3
+   CondFlrArea = 1047
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 2"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF1-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-8 "  
+   NumBedrooms = 3
+   CondFlrArea = 1047
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 2"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF1-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-9 "  
+   NumBedrooms = 1
+   CondFlrArea = 583
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 3"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF2-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-10 "  
+   NumBedrooms = 1
+   CondFlrArea = 583
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 3"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF2-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-11 "  
+   NumBedrooms = 3
+   CondFlrArea = 1142
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 4"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF3-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-12 "  
+   NumBedrooms = 3
+   CondFlrArea = 1150
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 4"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF3-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-13 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 5"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF4-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-14 "  
+   NumBedrooms = 1
+   CondFlrArea = 576
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 5"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF4-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-15 "  
+   NumBedrooms = 2
+   CondFlrArea = 952
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 6"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF5-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-16 "  
+   NumBedrooms = 2
+   CondFlrArea = 952
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 6"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF5-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-17 "  
+   NumBedrooms = 2
+   CondFlrArea = 952
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 6"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF5-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-18 "  
+   NumBedrooms = 2
+   CondFlrArea = 938
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 6"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF5-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-19 "  
+   NumBedrooms = 1
+   CondFlrArea = 574
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 7"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF6-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-20 "  
+   NumBedrooms = 1
+   CondFlrArea = 574
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Electricity"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 7"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF6-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-21 "  
+   NumBedrooms = 3
+   CondFlrArea = 997
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 8"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF7-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-22 "  
+   NumBedrooms = 3
+   CondFlrArea = 997
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 8"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF7-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-23 "  
+   NumBedrooms = 3
+   CondFlrArea = 997
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 8"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF7-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-24 "  
+   NumBedrooms = 2
+   CondFlrArea = 878
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 9"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF8-2-BD Rheem PROPH65 T2 RH31"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-25 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 10"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF9-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-26 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 10"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF9-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-27 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 10"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF9-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-28 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 11"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF10-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-29 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 11"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF10-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-30 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 11"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF10-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-31 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 12"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF11-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-32 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 12"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF11-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+DwellUnitType   "DU-33 "  
+   NumBedrooms = 1
+   CondFlrArea = 561
+   HaveRefrig = 1
+   RefrigEffMethod = "from # bedrooms/unit"
+   HaveDish = 1
+   DishUsageMethod = "from # bedrooms/unit"
+   WasherOption = "- none -"
+   DryerOption = "- none -"
+   DryerFuel = "Gas"
+   HaveCook = 1
+   CookFuel = "Electricity"
+   IAQOption = "Default Minimum Balanced IAQ Fan"
+   CentralSupplyCFM = 0
+   CentralExhaustCFM = 0
+   HVACSysType = "Heat Pump Heating and Cooling System"
+   HVACHtPumpRef[1] = "Heat Pump System 12"
+   HVACDistRef = "- none -"
+   DHWSysRef[1] = "MF11-1-BD Rheem PROPH50 T2 RH32"
+   TotShowersServed[1] = 0
+   UsrSpecCmpctDist = 0
+   CDServesMBathFix[1] = 0
+   CDServesKitFix[1] = 0
+   CDServesThirdFix[1] = 0
+   DWHRSysShowers1[1] = 0
+   DWHRSysTakeCold1[1] = 0
+   DWHRSysFeedHeater1[1] = 0
+   ..
+
+ResHVACSys   "2-BD 1-R1"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 8
+   HtPumpSystem[1] = "Heat Pump System 1"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "3-BD 2-F2"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 12
+   HtPumpSystem[1] = "Heat Pump System 2"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "1-BD 3-F3"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 2
+   HtPumpSystem[1] = "Heat Pump System 3"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "3-BD 3-F4"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 6
+   HtPumpSystem[1] = "Heat Pump System 4"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "1-BD 4-F5"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 2
+   HtPumpSystem[1] = "Heat Pump System 5"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "2-BD 5-F6"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 8
+   HtPumpSystem[1] = "Heat Pump System 6"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "1-BD 6-L7"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 3
+   HtPumpSystem[1] = "Heat Pump System 7"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "3-BD  7-B8"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 9
+   HtPumpSystem[1] = "Heat Pump System 8"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "2-DB 7-B9"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 2
+   HtPumpSystem[1] = "Heat Pump System 9"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "1-BD 8-B10"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 3
+   HtPumpSystem[1] = "Heat Pump System 10"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "1-BD 9-B11"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 3
+   HtPumpSystem[1] = "Heat Pump System 11"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHVACSys   "1-BD 10-B12"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   NumHeatSystemTypes = 1
+   NumCoolSystemTypes = 1
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount[1] = 3
+   HtPumpSystem[1] = "Heat Pump System 12"
+   HtPumpDucted = 0
+   DistribSystem = "- none -"
+   ..
+
+ResHtPumpSys   "Heat Pump System 1"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 2"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 3"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 4"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 5"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 6"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 7"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 8"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 9"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 10"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 11"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResHtPumpSys   "Heat Pump System 12"  
+   Type = "RoomHeatPump - Non-central room A/C system"
+   EffMetric = "HSPF2/SEER2/EER2"
+   HSPF2 = 3.3
+   HeatPower = 1000
+   AutoSize = 0
+   Cap47 = 10407
+   SEER2 = 14
+   EER2 = 11.2
+   CEER = 11.2
+   ACCharge = "Not Verified"
+   IsMultiSpeed = 0
+   IsZonal = 0
+   UseEERinAnalysis = 1
+   IsDualFuel = 0
+   HasHPLockout = 0
+   VCHPCertAutoFan = 0
+   ..
+
+ResDHWSys   "MF0-2-BD Rheem PROPH65 T2 RH31"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "2-BD Rheem PROPH65 T2 RH310"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF1-2-BD Rheem PROPH65 T2 RH31"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "2-BD Rheem PROPH65 T2 RH311"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF2-1-BD Rheem PROPH50 T2 RH32"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "1-BD Rheem PROPH50 T2 RH322"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF3-2-BD Rheem PROPH65 T2 RH31"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "2-BD Rheem PROPH65 T2 RH313"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF4-1-BD Rheem PROPH50 T2 RH32"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "1-BD Rheem PROPH50 T2 RH324"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF5-2-BD Rheem PROPH65 T2 RH31"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "2-BD Rheem PROPH65 T2 RH315"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF6-1-BD Rheem PROPH50 T2 RH32"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "1-BD Rheem PROPH50 T2 RH326"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF7-2-BD Rheem PROPH65 T2 RH31"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "2-BD Rheem PROPH65 T2 RH317"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF8-2-BD Rheem PROPH65 T2 RH31"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "2-BD Rheem PROPH65 T2 RH318"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF9-1-BD Rheem PROPH50 T2 RH32"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "1-BD Rheem PROPH50 T2 RH329"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF10-1-BD Rheem PROPH50 T2 RH32"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "1-BD Rheem PROPH50 T2 RH3210"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResDHWSys   "MF11-1-BD Rheem PROPH50 T2 RH32"  
+   SystemType = "(HERS req'd) Pipe Insulation, All Lines"
+   CentralRecircType = "Non-Central"
+   CHPWHNumComp = 0
+   CHPWHTotTankVol = 0
+   CHPWHTankCount = 0
+   CHPWHTankRVal = 0
+   CHPWHLoopTankConfig = "Series (Swing)"
+   CHPWHLoopTankCompCnt = 0
+   CHPWHLoopTankVol = 0
+   CHPWHLoopTankTankCnt = 0
+   CHPWHLoopTankRVal = 0
+   CDServesMBathFix = 0
+   CDServesKitFix = 0
+   CDServesThirdFix = 0
+   DHWHeater[1] = "1-BD Rheem PROPH50 T2 RH3211"
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   NRecircLoops = 1
+   TotShowersServed = 0
+   DWHRSysShowers[1] = 0
+   DWHRSysTakeCold[1] = 0
+   DWHRSysFeedHeater[1] = 0
+   ..
+
+ResWtrHtr   "2-BD Rheem PROPH65 T2 RH310"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH65 T2 RH375-30  (65 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "2-BD Rheem PROPH65 T2 RH311"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH65 T2 RH375-30  (65 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "1-BD Rheem PROPH50 T2 RH322"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH50 T2 RH375-30  (50 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "2-BD Rheem PROPH65 T2 RH313"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH65 T2 RH375-30  (65 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "1-BD Rheem PROPH50 T2 RH324"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH50 T2 RH375-30  (50 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "2-BD Rheem PROPH65 T2 RH315"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH65 T2 RH375-30  (65 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "1-BD Rheem PROPH50 T2 RH326"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH50 T2 RH375-30  (50 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "2-BD Rheem PROPH65 T2 RH317"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH65 T2 RH375-30  (65 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "2-BD Rheem PROPH65 T2 RH318"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH65 T2 RH375-30  (65 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "1-BD Rheem PROPH50 T2 RH329"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH50 T2 RH375-30  (50 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "1-BD Rheem PROPH50 T2 RH3210"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH50 T2 RH375-30  (50 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+ResWtrHtr   "1-BD Rheem PROPH50 T2 RH3211"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHBrand = "Rheem"
+   HPWHModel = "PROPH50 T2 RH375-30  (50 gal)"
+   TankOutside = 1
+   EnergyFactor = 3.2
+   ExtInsulRVal = 0
+   StandbyLossFrac = 0
+   RecovEff = 98
+   FirstHourRating = 80
+   RatedFlow = 8
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+
+END_OF_FILE

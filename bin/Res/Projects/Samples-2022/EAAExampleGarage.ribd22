@@ -2,10 +2,10 @@ RulesetFilename   "CA Res 2022.bin"
 
 Proj   "EAA Example 3"  
    BEMVersion = 12
-   SoftwareVersion = "CBECC-Res 2022.3.1 RC (1342)"
+   SoftwareVersion = "CBECC-Res 2022.3.2 (1368)"
    SoftwareVersionDetail = "CBECC-Res 2022.3.1 RC (1342)"
    CreateDate = 1556730321
-   ModDate = 1714754686
+   ModDate = 1738260294
    RunDate = 1474307407
    ProjFileName = "EAAExampleGarage.ribd22"
    RunTitle = "Ex HVAC Altered DHW"
@@ -18,6 +18,7 @@ Proj   "EAA Example 3"
    ComplianceReportXML = 1
    CommunitySolarProject = "- select CS project -"
    InCmntySlrProjTerritory = 0
+   SMUDSlrSharesReserved = 0
    PVCompCredit = 0
    PVWInputs = "Simplified"
    PVSizeOption = "Use Specified Sizes"
@@ -976,7 +977,7 @@ Attic   "Attic"
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 220301
+   ResultsAnalysisVer = 220303
    AllOrientations = 0
    Title1[2] = "Proposed Design:"
    Title1[5] = "Standard Design:"
@@ -1230,8 +1231,8 @@ EUseSummary   "EUSummary"
    PctSavTDVLbl = "0.2"
    PctSavCmpTDVLbl = "0.3"
    PctSavSrcLbl = "-0.2"
-   PropElecDemand[1] = 0.984964
-   StdElecDemand = 0.990655
+   PropElecDemand[1] = 0.984968
+   StdElecDemand = 0.990656
    StdDesignPVSize = 0
    PropPV_Total = 0
    PropPV_Export = 0
@@ -1246,17 +1247,17 @@ EUseSummary   "EUSummary"
    MeetsTier1 = 0
    MeetsTier2 = 0
    PropElecCarbon[1] = 1.11791
-   PropFuelCarbon[1] = 3.15605
-   PropFinalCarbon[1] = 4.27396
-   PropExclExpCarbon[1] = 4.27396
+   PropFuelCarbon[1] = 3.15604
+   PropFinalCarbon[1] = 4.27395
+   PropExclExpCarbon[1] = 4.27395
    PropExportCarbon[1] = 0
    PropSelfConsCarbon[1] = 0
-   PropNoSolFlxCarbon[1] = 4.27396
-   StdFinalCarbon = 4.26588
-   StdExclExpCarbon = 4.26588
+   PropNoSolFlxCarbon[1] = 4.27395
+   StdFinalCarbon = 4.26589
+   StdExclExpCarbon = 4.26589
    StdExportCarbon = 0
    StdSelfConsCarbon = 0
-   StdNoSolFlxCarbon = 4.26588
+   StdNoSolFlxCarbon = 4.26589
    HideCompSummary = 1
    HideEDRs = 1
    HideC02Emissions = 0
@@ -1354,6 +1355,7 @@ Cons   "Asphalt Shingle Roof-user"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 1
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1387,6 +1389,7 @@ Cons   "Asphalt Shingle Roof"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1420,6 +1423,7 @@ Cons   "Ceiling R11"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1451,6 +1455,7 @@ Cons   "Wall R0"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1483,6 +1488,7 @@ Cons   "Raised Crawl R0"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1515,6 +1521,7 @@ Cons   "Interior R0"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1547,6 +1554,7 @@ Cons   "R-38 Ceiling"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1578,6 +1586,7 @@ Cons   "R-21 + R5"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1610,6 +1619,7 @@ Cons   "Asphalt High performance"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 1
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1643,6 +1653,7 @@ Cons   "Asphalt RB"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 1
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -1676,6 +1687,7 @@ Cons   "Ceiling R-0"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
    RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
    RaisedHeelTruss = 0
    RaisedHeelTrussHeight = 3.5
    RoofingType = "all others"
@@ -2133,6 +2145,7 @@ HVACDist   "Ducts"
    Status = "Existing + New"
    IsVerified = 0
    DefaultSystem = 0
+   InUnventedInsulAttic = 0
    DuctLeakage = "Sealed and tested"
    DuctLeakageVal = 5
    exDuctLeakageVal = 10
@@ -2195,6 +2208,7 @@ DHWHeater   "Tankless"
    HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
+   JA13UICompliance = 0
    HPWHComModel = "n/a"
    ASHPType = "- select HPWH type -"
    EnergyFactor = 0.81
@@ -2217,6 +2231,7 @@ DHWHeater   "Gas Storage"
    HPWHCategory = "Non-UEF Rated (existing only)"
    HPWHBrand = "n/a"
    HPWHModel = "n/a"
+   JA13UICompliance = 0
    HPWHComModel = "n/a"
    ASHPType = "- select HPWH type -"
    EnergyFactor = 0.56

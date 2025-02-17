@@ -266,6 +266,8 @@ public:
 	std::string GetColumnName( int i1ColID );
 	BEMTableCell* LookupCell( int iRetColID, vector<string>& saIndepNames, vector<string>& saIndepStrings,
 											vector<double>& faIndepValues, vector<bool>& baIndepNumeric, string& sErrMsg, BOOL bVerboseOutput=FALSE );  // SAC 10/17/12
+	bool get2DInterpolatedValue( double& dInterpResult, vector<string>& saIndepNames, vector<string>& saIndepStrings,
+											vector<double>& faIndepValues, vector<bool>& baIndepNumeric, string& sErrMsg, BOOL bVerboseOutput=FALSE );  // SAC 08/22/24 (VCHP3)
 	std::string	GetErrorMessage(   string& sErrorLabel );
 	std::string	GetErrorMessage(   int i0MsgIndex );
 	std::string	GetWarningMessage( string& sWarningLabel );
