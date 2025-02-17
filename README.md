@@ -9,7 +9,7 @@ CBECC-Res:  https://sourceforge.net/projects/cbecc-res/
 Only occasional release versions of ruleset binaries for these products will be posted to this repository. For the latest rule source, refer to the repositories above.
 
 # Supported Compiler and Platform
-This project currently supports compilation using Visual Studio 2022 to produce Windows executables, 32-bit (x86) for CBECC-Res and 64-bit (x64) for CBECC-Com.   Refer to the descriptions of each module under \src\ for more information on system dependencies.
+This project currently supports compilation using Visual Studio 2022 to produce Windows 64-bit (x64) executables, CBECC and CBECC-Res. Refer to the descriptions of each module under \src\ for more information on system dependencies.
 
 # Build Guidance
 Visual Studio 2022 solution and project files are located under src. The main solution file is: \src\CBECC-VS22.sln
