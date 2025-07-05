@@ -623,6 +623,7 @@ extern int eiBDBCID_ProcLd;
 extern int eiBDBCID_StorTank;
 extern int eiBDBCID_WtrHtr;
 //extern int eiBDBCID_BlrHtPump;			// SAC 10/23/20      // removed BlrHtPump... - SAC 05/14/21
+extern int eiBDBCID_HtPump;         // SAC 04/28/25 (AWHP_EIR)
 
 extern long elDBID_Proj_Name;
 extern long elDBID_Proj_RunDate;

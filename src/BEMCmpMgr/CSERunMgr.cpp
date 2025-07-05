@@ -2684,7 +2684,9 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 											bool bRemovePVBatt /*=false*/, bool bPerformFullCSESim /*=false*/, int iCUACReportID /*=0*/,       // iCUACReportID - SAC 12/13/24
                                  const char* pszSubstituteOutFile /*=NULL*/ )     // SAC 01/21/25
 {
-	int iRetVal = 0;
+               // debugging
+               //BEMPX_WriteLogFile( QString( "     CSERunMgr::SetupRun_NonRes():  iRunIdx %1, iRunType %2, pszRunID %3, pszRunAbbrev %4" ).arg( QString::number( iRunIdx ), QString::number( iRunType ), pszRunID, pszRunAbbrev ),  NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // SAC 04/10/25
+   int iRetVal = 0;
 	QString sLogMsg;
 #ifdef OSWRAPPER
 	int iPrevBEMProcIdx = -1;	// SAC 7/23/18

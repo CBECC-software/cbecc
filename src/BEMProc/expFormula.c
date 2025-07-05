@@ -549,6 +549,8 @@ static FuncTable functable[] =
    {                "#CPC",        EXP_BEMPFunc, BF_CopyComp,      VAR_ARGS },  /* SAC 11/29/23 */
    { "OrderAssignments",           EXP_BEMPFunc, BF_OrderAssigns,  2 },         /* SAC 01/13/25 - added (CUAC) */
    {                "#OA",         EXP_BEMPFunc, BF_OrderAssigns,  2 },         /* SAC 01/13/25 - added */
+   { "SetObjectFlagBySum",         EXP_BEMPFunc, BF_SetObjFlagSum, VAR_ARGS },  /* SAC 05/21/25 (Com tic #3618) */
+   {                "#SOFS",       EXP_BEMPFunc, BF_SetObjFlagSum, VAR_ARGS },  /* SAC 05/21/25 */
    { NULL,                         0,            0,                0 }
 };
 

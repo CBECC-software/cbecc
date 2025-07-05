@@ -342,6 +342,8 @@ void LoadFileExtensionString( CString& sSaveAsExt, bool bUseProjectData, bool bX
 		sCodeYr = "22";
 #elif  UI_PROGYEAR2025
 		sCodeYr = "25";
+#elif  UI_PROGYEAR2028
+		sCodeYr = "28";
 #endif
 	}
 	sSaveAsExt.Format( "%s%s%s", sBaseExt, sCodeYr, sXML );
@@ -376,6 +378,8 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 	iProgYear = 2022;
 #elif UI_PROGYEAR2025	// SAC 10/23/22
 	iProgYear = 2025;
+#elif UI_PROGYEAR2028	// SAC 04/30/25
+	iProgYear = 2028;
 #endif
 	if (bUseProjectData)
 		CodeYearAbbrev( sCodeYr );	

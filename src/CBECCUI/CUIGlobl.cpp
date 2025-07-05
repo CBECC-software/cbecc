@@ -136,12 +136,15 @@ CString esUserManualPDF;	// SAC 7/8/13
 	#elif  UI_PROGYEAR2025
    CString esProgramName = "CBECC";        // SAC 10/23/22
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd25", "cpbd25", "cbbd25" };
+	#elif  UI_PROGYEAR2028
+   CString esProgramName = "CBECC";        // SAC 10/23/22
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd28", "cpbd28", "cbbd28" };
 	#else
    CString esProgramName = "CBECC-Com";    // SAC 9/2/14
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd", "cpbd", "cbbd" };
 	#endif
 CString esDataModRulelist = "rl_DEFAULT";  // SAC 10/24/12
-const char pcCharsNotAllowedInObjNames[] = { '"', ',', '\'', '!', ';', NULL };	// SAC 8/20/14
+const char pcCharsNotAllowedInObjNames[] = { '"', ',', '\'', '!', ';', ']', '[', NULL };	// SAC  8/20/14   // added '[' & ']' due to EPlus auto-sizing capacity reading issue - SAC 04/25/25 (gh support #166)
 #elif UI_CARES
 CString esProgramName = "CBECC-Res";    // SAC 9/2/14
 	#ifdef UI_PROGYEAR2016
@@ -152,6 +155,8 @@ CString esProgramName = "CBECC-Res";    // SAC 9/2/14
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd22", "rpbd22", "rbbd22" };
 	#elif  UI_PROGYEAR2025
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd25", "rpbd25", "rbbd25" };
+	#elif  UI_PROGYEAR2028
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd28", "rpbd28", "rbbd28" };
 	#else
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd", "rpbd", "rbbd" };
 	#endif
@@ -662,6 +667,9 @@ void GetProgramPath()
  #elif  UI_PROGYEAR2025
 	esOverviewPDF   = esProgramPath + "CBECC-25_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-25_UserManual.pdf";			// SAC 10/23/22
+ #elif  UI_PROGYEAR2028
+	esOverviewPDF   = esProgramPath + "CBECC-28_QuickStartGuide.pdf";
+	esUserManualPDF = esProgramPath + "CBECC-28_UserManual.pdf";			// SAC 04/30/25
  #else
  	esOverviewPDF   = esProgramPath + "CBECC-Com_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com_UserManual.pdf";			// SAC 7/8/13
@@ -729,7 +737,8 @@ CString ReadProgString(LPCSTR section, LPCSTR entry, LPCSTR def, BOOL bGetPath)
    if (bGetPath && sPath.Find(':') < 0 && sPath.Find('\\') != 0 && sPath.Find('/') != 0) 
 //      sPath = esProgramPath + sPath;
 	{  CString sEntry = entry;
-		if (sEntry.Find( "Prog" ) >= 0 || sEntry.Find( "Data" ) >= 0 || sEntry.Find( "Proj" ) >= 0)
+		if (sEntry.Find( "Prog" ) >= 0 || sEntry.Find( "Data" ) >= 0 || sEntry.Find( "Proj" ) >= 0 ||
+          sEntry.Find( "EnergyPlusPath" ) >= 0 || sEntry.Find( "CSEPath" ) >= 0)    // added EnergyPlusPath & CSEPath - SAC 04/24/25
 //		if (sEntry.Find( "DataPath" ) >= 0)
          sPath = esProgramPath + sPath;
 		else
@@ -1074,7 +1083,7 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 			sProgVer.Format( "%d.%d.%d%s (%d)", major, iMiddleNum, iMinorNum, sAlphBeta, build );
 		else
 			sProgVer.Format( "%d.%d.%d%s", major, iMiddleNum, iMinorNum, sAlphBeta );
-#elif  UI_PROGYEAR2022 || UI_PROGYEAR2025
+#elif  UI_PROGYEAR2022 || UI_PROGYEAR2025 || UI_PROGYEAR2028
 		//CString sCodeYr = "2022";
 	// SAC 10/29/15 - implemented new numbering scheme - defined in CEC LF e-mail 10/2/15
 	// SAC 11/27/18 - altered to allow 2-digit iMinorNum (by increasing iMiddleNum multiplier *10)
@@ -2577,6 +2586,7 @@ int eiBDBCID_ProcLd = 0;
 int eiBDBCID_StorTank = 0;
 int eiBDBCID_WtrHtr = 0;
 //int eiBDBCID_BlrHtPump = 0;			// SAC 10/23/20      // removed BlrHtPump... - SAC 05/14/21
+int eiBDBCID_HtPump = 0;         // SAC 04/28/25 (AWHP_EIR)
 
 
 long elDBID_Proj_Name = 0;
@@ -2751,8 +2761,8 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_ResHVACSys)			{	iTabCtrlWd = 900;		iTabCtrlHt = 540;   }   // wd 750->900 - SAC 10/10/22
 	else if (iBDBClass == eiBDBCID_ResHtgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }      // SAC 08/18/21
 	else if (iBDBClass == eiBDBCID_ResClgSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
-	else if (iBDBClass == eiBDBCID_ResHtPumpSys)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 690;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21   // Ht 660->690 - SAC 07/21/24 (VCHP3)
-	else if (iBDBClass == eiBDBCID_ResCentralHtgClgSys) { iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 12/31/21 (MFam)
+	else if (iBDBClass == eiBDBCID_ResHtPumpSys)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 720;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21   // Ht 660->690 - SAC 07/21/24 (VCHP3)   // Ht 690->720 - SAC 02/22/25 (VCHP3)
+   else if (iBDBClass == eiBDBCID_ResCentralHtgClgSys) { iTabCtrlWd = 600;    iTabCtrlHt = 660;   }	// SAC 12/31/21 (MFam)
 	else if (iBDBClass == eiBDBCID_ResDistSys)	   	{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
 	else if (iBDBClass == eiBDBCID_ResFanSys)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
 	else if (iBDBClass == eiBDBCID_ResIAQFan)	  			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
@@ -3022,7 +3032,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd = 730;    iTabCtrlHt = 535;   }	// SAC 2/21/17
 	else if (iBDBClass == eiBDBCID_HVACSys)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
-	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 690;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21   // Ht 660->690 - SAC 07/21/24 (VCHP3)
+	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 720;   }	// SAC 11/10/20 - Ht 580 -> 640   // Ht 640->660 - SAC 07/24/21   // Ht 660->690 - SAC 07/21/24 (VCHP3)   // Ht 690->720 - SAC 02/22/25 (VCHP3)
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;   // ht 510->540 - SAC 12/15/24 (Res-2025)
 	else if (iBDBClass == eiBDBCID_IAQFan)	   			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
 	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20
@@ -3309,6 +3319,7 @@ void InitBEMDBIDs()
 	eiBDBCID_StorTank           = BEMPX_GetDBComponentID( "StorTank" );      
 	eiBDBCID_WtrHtr             = BEMPX_GetDBComponentID( "WtrHtr" );        
 //	eiBDBCID_BlrHtPump          = BEMPX_GetDBComponentID( "BlrHtPump" );        // removed BlrHtPump... - SAC 05/14/21
+   eiBDBCID_HtPump             = BEMPX_GetDBComponentID( "HtPump" );          // SAC 04/28/25 (AWHP_EIR)
 
    elDBID_Proj_Name               = BEMPX_GetDatabaseID( "Name",               eiBDBCID_Project );
    elDBID_Proj_RunDate            = BEMPX_GetDatabaseID( "RunDate",            eiBDBCID_Project );

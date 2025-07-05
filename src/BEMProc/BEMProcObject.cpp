@@ -1786,7 +1786,7 @@ BOOL BEMPX_CompileDataModel(	const char* sBEMFileName, const char* sEnumsFileNam
 	{
       int iError, iNumClasses = BEMPX_GetNumClasses();
       if (psClassPropMsg)
-      	psClassPropMsg->append( QString( "%1 Classes\nNumber of properties by class:\n" ).arg( QString::number( iNumClasses ) ) );
+      	psClassPropMsg->append( QString( "%1 Classes\nNumber of properties by class:" ).arg( QString::number( iNumClasses ) ) );
 
       // Set final Class and PropType data
 	   int i=0;
@@ -2258,7 +2258,7 @@ BOOL ReadBEMEnumsText( std::vector<CASymLst*>& aSymLists, const char* sBEMFileNa
    		               // Post error message if DBID is not of type BEMP_Sym
 // 	  	               if (GetLocalDataType( lSymDBID ) != BEMP_Sym)
    		               if (BEMPX_GetDataType( lSymDBID ) != BEMP_Sym)
-   		                  BEMMessageBox( QString( "\tParameter not of type 'BEMP_Sym' on line: %1\n\n" ).arg( QString::number( file.GetLineCount() ) ), "", 2 /*warning*/ );
+   		                  BEMMessageBox( QString( "\tParameter not of type 'BEMP_Sym' on line %1 of file: %2\n\n" ).arg( QString::number( file.GetLineCount() ), saEnumFiles[iEF] ), "", 2 /*warning*/ );  // expand msg - SAC 06/09/25
    		            }
    		            else if (iRecHdr == 1)  // beginning of a symbol dep list
    		            {

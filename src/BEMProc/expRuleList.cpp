@@ -1348,10 +1348,18 @@ int BEMPX_EvaluateTransform(	LPCSTR sShortTransformName, BOOL bVerboseOutput /*=
 		RuleSetTransformation* pTrans = ruleSet.getTransformation(i);			assert( pTrans );
 		if (pTrans && !pTrans->getShortName().compare( sShortTransformName, Qt::CaseInsensitive ) &&
 				!pTrans->getRuleListName().isEmpty())
-		{	if (BEMPX_EvaluateRuleList( pTrans->getRuleListName().toLocal8Bit().constData(), FALSE /*bTagDataAsUserDefined*/,
+		{	
+         int iPrevRuleErrs = BEMPX_GetRulesetErrorCount();			//assert( iPrevRuleErrs < 1 );
+         if (BEMPX_EvaluateRuleList( pTrans->getRuleListName().toLocal8Bit().constData(), FALSE /*bTagDataAsUserDefined*/,
 											0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/,
 											bVerboseOutput, pvTargetedDebugInfo, plNumRuleEvals, pdNumSeconds ))
-				iRetVal = i;
+			{	if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)     // added check to ensure no errors encountered in evaluating transform setup rules - SAC 04/24/25
+            {	assert( FALSE );
+               iRetVal = -3;
+            }
+            else 
+               iRetVal = i;
+         }
 			else
 			{	assert( FALSE );
 				iRetVal = -2;

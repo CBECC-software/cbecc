@@ -200,7 +200,8 @@ void BEMPROC_API __cdecl BEMPX_SetUIActiveFlag( bool bActiveUI );
 //  27 -> 28 : SAC 8/6/15  - (no text file upd) Addition of CStringArray member m_saPreviousNames of CBEMPropertyType to facilitate data model backward compatibility by tracking previous property names
 //  28 -> 29 : SAC 12/29/16- (no text file upd) Addition of flag near beginning of file documenting whether BEMBroc was compiled by a "secure" version of code
 //  29 -> 30 : SAC 9/11/18 - (text file ver 7) Increased max # class parent types from 15 to 20
-#define  BEMPROC_VERSION  30
+//  30 -> 31 : SAC 04/28/25- (no text file upd) Increased max # referencing object Class/TypeDBID/TypeValue combinations from 5 to 8
+#define  BEMPROC_VERSION  31
 
 
 class  BEMClass;
@@ -269,10 +270,10 @@ private:
 };
 
 
-#define BEM_MODEL_MULT 1000000000   // added MODEL multiplier to facilitate longlong DBID (MDBID) values to identify which model to set/retrieve data to/from
-#define BEM_COMP_MULT     1000000
-#define BEM_PARAM_MULT       1000
-#define BEM_MAX_COMP_ID       600  // 300->600 - SAC 04/26/21   // SAC 4/13/19 - was:  214   // SAC 5/11/16
+#define BEM_MODEL_MULT  1000000000  // added MODEL multiplier to facilitate longlong DBID (MDBID) values to identify which model to set/retrieve data to/from  // x10 - SAC 06/09/25 / restored prior value - SAC 06/10/25
+#define BEM_COMP_MULT      1000000  // x10 - SAC 06/09/25 / restored prior value - SAC 06/10/25
+#define BEM_PARAM_MULT        1000
+#define BEM_MAX_COMP_ID        600  // 300->600 - SAC 04/26/21   // SAC 4/13/19 - was:  214   // SAC 5/11/16
 #define BEMPX_GetModelID(    lDBID )  (int)  (lDBID / BEM_MODEL_MULT)
 #define BEMPX_GetClassID(    lDBID )  (int)  ((lDBID - ((lDBID / BEM_MODEL_MULT) * BEM_MODEL_MULT)) / BEM_COMP_MULT )
 #define BEMPX_GetPropertyID( lDBID )  (int)  ((lDBID - ((lDBID / BEM_COMP_MULT ) * BEM_COMP_MULT )) / BEM_PARAM_MULT)

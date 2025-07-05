@@ -271,6 +271,7 @@ typedef enum optypes_   /* types other than what the parser generates */
    BF_MinAcrsIf,     /* 198 */  /* SAC 04/26/23 - added (Com tic #3392) */
    BF_CopyComp,      /* 199 */  /* SAC 11/29/23 */
    BF_OrderAssigns,  /* 200 */  /* SAC 01/13/25 - added (CUAC) */
+   BF_SetObjFlagSum, /* 201 */  /* SetObjectFlagBySum() - SAC 05/21/25 (Com tic #3618) */
 } OpTypes;
 
 typedef enum fmerrorcode_

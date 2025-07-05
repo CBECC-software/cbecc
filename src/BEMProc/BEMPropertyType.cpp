@@ -426,6 +426,8 @@ bool BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion, QString& qsPT
             qsPTErrMsg = QString( "Number of referenceable object types (NO) of %1 too high, must be 1-%2" ).arg(QString::number(iNumObjClassEntries), QString::number(BEM_MAX_PROPTYPE_OBJREFCLASSES));
       }
 	}
+   if (iNumObjClassEntries > BEM_MAX_PROPTYPE_OBJREFCLASSES)   // prevent crash if BEM_MAX_PROPTYPE_OBJREFCLASSES ever exceeded - SAC 04/28/25
+      iNumObjClassEntries = BEM_MAX_PROPTYPE_OBJREFCLASSES;
 	int iObjClsIdx = 0;
 	for (; iObjClsIdx < iNumObjClassEntries; iObjClsIdx++)
 	{	m_obj1ClassStr[iObjClsIdx] = file.ReadString();		file.PostReadToken();
@@ -438,7 +440,9 @@ bool BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion, QString& qsPT
    	m_objPropStr[  iObjClsIdx].clear();
 	}
 
-   m_helpID = (UINT) file.ReadLong();   file.PostReadToken();
+   if (bRetVal)   // SAC 04/28/25
+   {
+      m_helpID = (UINT) file.ReadLong();   file.PostReadToken();
 
 //   if (iFileVersion >= 2)
 //   {
@@ -446,15 +450,16 @@ bool BEMPropertyType::ReadText( BEMTextIO& file, int iFileVersion, QString& qsPT
 //      file.PostReadToken();
 //   }
 
-   m_description = file.ReadString();
-   file.PostReadToken();
+      m_description = file.ReadString();
+      file.PostReadToken();
 
-	if (iFileVersion >= 6)
-   {	m_inputClassInfo = file.ReadString();		// SAC 3/3/14 - (file ver 6)
-   	file.PostReadToken();
-	}
+   	if (iFileVersion >= 6)
+      {	m_inputClassInfo = file.ReadString();		// SAC 3/3/14 - (file ver 6)
+   	   file.PostReadToken();
+   	}
+   }
 
-	m_reportPrecision = -9;  // SAC 2/4/15 - property to facilitate rounding of numeric results for compliance reporting - rounding only for output of non-User models written to analysis results XML file
+   m_reportPrecision = -9;  // SAC 2/4/15 - property to facilitate rounding of numeric results for compliance reporting - rounding only for output of non-User models written to analysis results XML file
    return bRetVal;
 }
 

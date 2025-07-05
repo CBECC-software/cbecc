@@ -737,8 +737,8 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 
          int i1Class = BEMPX_GetDBComponentID( sObjType.toLocal8Bit().constData() );
          // read the object's name from the file
-//         QString sObjName = m_file.ReadString();
-// SAC 1/27/12 - code to enable components to be listed in IBD files WITHOUT component names
+         //QString sObjName = m_file.ReadString();
+         // SAC 1/27/12 - code to enable components to be listed in IBD files WITHOUT component names
          QString sObjName;
          if (m_file.NextCharacterOnLine() != '\"')
 				BEMPX_GetDefaultComponentName( i1Class, sObjName, iBEMProcIdx );
@@ -757,8 +757,8 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
          }
          else
          {  
-// SAC 10/18/01 - Added code to catch and deal with no longer supported component types
-            int iBEMMapGroupID = -1;
+            // SAC 10/18/01 - Added code to catch and deal with no longer supported component types
+            int iBEMMapGroupID = -1, iSecBEMMapGroupID = -1;
             int i1BEMMapGroupNewClasses[] = {0,0,0,0,0};
             if (i1Class <= 0 && pCompMap && pPropMap)
             {
@@ -773,11 +773,11 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                      {
                         i1BEMMapGroupNewClasses[iCMIdx2] = BEMPX_GetDBComponentID( pCompMap[iCMIdx].szNewCompType[iCMIdx2] );
                         assert( i1BEMMapGroupNewClasses[iCMIdx2] > 0 );
-// SAC 10/18/01 - This backward comp mapping stuff assumes that only ONE new component of each replacement type is to be created
+                        // SAC 10/18/01 - This backward comp mapping stuff assumes that only ONE new component of each replacement type is to be created
                         if (i1BEMMapGroupNewClasses[iCMIdx2] > 0)
                         {
-						// SAC 4/21/14 - revise code to enable mapping of properties for MULTIPLE objects of the mapped type
-						//			if (BEMPX_GetNumObjects( i1BEMMapGroupNewClasses[iCMIdx2], BEMO_User, iBEMProcIdx ) < 1)
+						         // SAC 4/21/14 - revise code to enable mapping of properties for MULTIPLE objects of the mapped type
+									//if (BEMPX_GetNumObjects( i1BEMMapGroupNewClasses[iCMIdx2], BEMO_User, iBEMProcIdx ) < 1)
 									if (BEMPX_CanCreateAnotherUserObject( i1BEMMapGroupNewClasses[iCMIdx2], 1 /*iNumObjs*/, iBEMProcIdx ))
                            {
                               QString sMapObjName = (iCMIdx2 == 0 ? sObjName : pBEMProc->getClass( i1BEMMapGroupNewClasses[iCMIdx2]-1 )->getLongName());
@@ -804,13 +804,19 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                   }
                }
             }
+            else if (i1Class > 0 && pCompMap && pPropMap)      // new use of pCompMap & pPropMap, to map a subset of properties from one object type to another - SAC 06/12/25
+            {  int iCMIdx = -1;
+               while (iSecBEMMapGroupID < 0 && pCompMap[++iCMIdx].iCompTypeID > 0)  // SAC 3/22/05 - modified logic to handle variety of version cutoffs
+               {  if (pCompMap[iCMIdx].iVersionCutoff >= m_lVersion && sObjType.compare( pCompMap[iCMIdx].szOldCompType ) == 0)  // SAC 5/1/03 - Switched '<=' to '>='
+                     iSecBEMMapGroupID = pCompMap[iCMIdx].iCompTypeID;
+            }  }
 
-// SAC 10/18/01 - Removed "i1OtherClass" stuff as the WinDoorWiz component has been removed
-//            int i1OtherClass = i1Class;
-//            BEMObject* newOtherObject = NULL;
+            // SAC 10/18/01 - Removed "i1OtherClass" stuff as the WinDoorWiz component has been removed
+            //int i1OtherClass = i1Class;
+            //BEMObject* newOtherObject = NULL;
             if (iBEMMapGroupID < 0)
             {
-// SAC 10/19/01 - Added code to prevent re-creation of component already created via the backward compatibility mapping mechanism
+               // SAC 10/19/01 - Added code to prevent re-creation of component already created via the backward compatibility mapping mechanism
                if (bCreateObj && pivMapCompsCreated && pivMapCompsCreated->size() > 0)
                {
                   for (int i=0; (bCreateObj && i<(int) pivMapCompsCreated->size()); i++)
@@ -837,6 +843,8 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                while ( sPropType != ".." )
                {
                   int i1CurClass = i1Class;
+                  BEMObject* pCurObject = newObject;     // added more 'Cur'rent properties to enable switching back and forth during looping - SAC 06/13/25
+                  int iCurObjIdx = iObjIdx;
                   if ( sPropType.compare( szCritDefComment, Qt::CaseInsensitive ) == 0 )
                   {  // if the property type string => beginning of a critical default comment, then read and store it
                      // with the LAST property that was read from the file.
@@ -850,7 +858,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                   //      m_file.ThrowFormatException(); // missing '='
                   //   QString strComment = ReadCritDefComment();  // read the comment string
                   //   // store the critical default comment into the building database
-                  //   BEMPX_AddCriticalDefaultComment( strComment, lDBID, iError, iObjIdx, eObjType, iBEMProcIdx );
+                  //   BEMPX_AddCriticalDefaultComment( strComment, lDBID, iError, iCurObjIdx, eObjType, iBEMProcIdx );
                   //   lDBID = -1; // ensures not 2 comments in a row.
                   }
                   else if ( sPropType.compare( szTreeState, Qt::CaseInsensitive ) == 0 )
@@ -861,9 +869,9 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                         m_file.ThrowFormatException(); // missing '='
                      m_file.Advance();
 
-                     newObject->setTreeState( (int) m_file.ReadLong() );
+                     pCurObject->setTreeState( (int) m_file.ReadLong() );
                   }
-// SAC 11/15/04 - Added code to enable "Parent" to be specified within PD2 component properties
+                  // SAC 11/15/04 - Added code to enable "Parent" to be specified within PD2 component properties
                   else if ( sPropType.compare( "Parent", Qt::CaseInsensitive ) == 0 )
                   {
                      // advance past any spaces to the next character
@@ -878,7 +886,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                      // post the parent name to BEMProc
                      lDBID = (i1CurClass * BEM_COMP_MULT) + BEM_PARAM0_PARENT;
                      if (BEMPX_SetBEMData( lDBID, BEMP_QStr, (void*) &strParent,  // BEMP_Str, (void*) strParent.toLocal8Bit().constData(),
-                                        BEMO_User, iObjIdx, BEMS_UserDefined, eObjType, FALSE, iBEMProcIdx ) < 0)
+                                        BEMO_User, iCurObjIdx, BEMS_UserDefined, eObjType, FALSE, iBEMProcIdx ) < 0)
                      {  // report error in setting parent component type
                         QString sMsg = QString( "   ERROR - reading file: %1 '%2' Parent" ).arg( sObjType, sObjName );
                         if (!strParent.isEmpty())
@@ -894,7 +902,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                            piDBIDSetFailures[ iDBIDSetFailureIdx ] = lDBID;
 
                            if (piObjIdxSetFailures)
-                              piObjIdxSetFailures[ iDBIDSetFailureIdx ] = (iObjIdx >= 0 ? iObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), newObject, iBEMProcIdx ));
+                              piObjIdxSetFailures[ iDBIDSetFailureIdx ] = (iCurObjIdx >= 0 ? iCurObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), pCurObject, iBEMProcIdx ));
                            if (psaDataSetFailures)
                               SetAtGrow( psaDataSetFailures, iDBIDSetFailureIdx, strParent );
 
@@ -928,9 +936,9 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                      // get a pointer to the PropertyType
                      int i1PropTypeIdx = -1;
                      BEMPropertyType* pPropType = NULL;
-// SAC 10/18/01 - Added code to catch and deal with no longer supported component types & properties
+                     // SAC 10/18/01 - Added code to catch and deal with no longer supported component types & properties
                      BOOL bPostData = TRUE;
-// SAC 2/1/02 - Replaced occurences of i1Class with i1CurClass to prevent i1Class from being reset by property redirections and because i1CurClass is what is referenced below
+                     // SAC 2/1/02 - Replaced occurences of i1Class with i1CurClass to prevent i1Class from being reset by property redirections and because i1CurClass is what is referenced below
                      if (iBEMMapGroupID >= 0)
                      {
                         int iPMIdx = -1;
@@ -944,6 +952,8 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                               newObject = BEMPX_GetObjectByClass( i1CurClass, iError, -1, BEMO_User, iBEMProcIdx );	// SAC 4/21/14 - switched 3rd arg 0->-1 to grab CURRENT object, not always first
                               assert( newObject );
                               iObjIdx = BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), newObject, iBEMProcIdx );  // SAC 7/10/03 - Added as it seems like errors could occur without it ???
+                              pCurObject = newObject;     // added more 'Cur'rent properties to enable switching back and forth during looping - SAC 06/13/25
+                              iCurObjIdx = iObjIdx;
                               QString sMapPropType = ( pPropMap[iPMIdx].szNewPropType == NULL ? sPropType : pPropMap[iPMIdx].szNewPropType );
                               i1PropTypeIdx = BEMPX_GetPropertyTypeIndexByShortName( i1CurClass, sMapPropType.toLocal8Bit().constData(), iBEMProcIdx );
                               pPropType = BEMPX_GetPropertyType( i1CurClass, i1PropTypeIdx, iBEMProcIdx );
@@ -956,14 +966,14 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                         //i1PropTypeIdx = BEMPX_GetPropertyTypeIndexByShortName( i1CurClass, sPropType );
                         i1PropTypeIdx = BEMPX_GetPropertyTypeIndexByName( i1CurClass, sPropType.toLocal8Bit().constData(), iBEMProcIdx );
 
-// SAC 11/14/01 - Added code to reference new BEMStraightMap array to handle simple property maps within the same component
+                        // SAC 11/14/01 - Added code to reference new BEMStraightMap array to handle simple property maps within the same component
                         if (i1PropTypeIdx < 1 && pStraightMap)
                         {
                            int iSMIdx = -1;
-//                           while (i1PropTypeIdx < 1 && pStraightMap[iSMIdx].szOldPropType != NULL && pStraightMap[++iSMIdx].iVersionCutoff <= m_lVersion)
+                           //while (i1PropTypeIdx < 1 && pStraightMap[iSMIdx].szOldPropType != NULL && pStraightMap[++iSMIdx].iVersionCutoff <= m_lVersion)
                            while (i1PropTypeIdx < 1 && pStraightMap[++iSMIdx].szOldPropType != NULL)  // SAC 3/22/05 - modified logic to handle variety of version cutoffs
                               if ( pStraightMap[iSMIdx].iVersionCutoff >= m_lVersion  &&    // SAC 5/1/03 - Switched '<=' to '>='
-						//						*pStraightMap[iSMIdx].pi1Class == i1CurClass  &&  sPropType.CompareNoCase( pStraightMap[iSMIdx].szOldPropType ) == 0)  // SAC 1/27/14 - "NoCase" comparison
+											//	*pStraightMap[iSMIdx].pi1Class == i1CurClass  &&  sPropType.CompareNoCase( pStraightMap[iSMIdx].szOldPropType ) == 0)  // SAC 1/27/14 - "NoCase" comparison
 												sPropType.compare( pStraightMap[iSMIdx].szOldPropType, Qt::CaseInsensitive ) == 0 && BEMPX_GetDBComponentID( pStraightMap[iSMIdx].szClassName ) == i1CurClass )  // SAC 1/27/14 - "NoCase" comparison
                               {
 										// SAC 6/1/16 - added code to enable pStraightMap[iSMIdx].szNewPropType to include array indices (inside square brackets)
@@ -979,28 +989,50 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                                     bPostData = pStraightMap[iSMIdx].bPostMappedData;
                               }
                         }
+                        if (i1PropTypeIdx < 1 && iSecBEMMapGroupID >= 0)      // added code to handle shifting of certain properties from one object to another - SAC 06/13/25
+                        {
+                           int iPMIdx = -1;
+                           while (pPropType == NULL && pPropMap[++iPMIdx].iCompTypeID > 0) 
+                              if ( pPropMap[iPMIdx].iVersionCutoff >= m_lVersion  &&  
+                                   pPropMap[iPMIdx].iCompTypeID == iSecBEMMapGroupID  &&
+                                   ( pPropMap[iPMIdx].szOldPropType == NULL  ||  sPropType.compare( pPropMap[iPMIdx].szOldPropType ) == 0 ) )
+                              {
+                                 i1CurClass = BEMPX_GetDBComponentID( pPropMap[iPMIdx].szNewCompType );           assert( i1CurClass > 0 );
+                                 pCurObject = BEMPX_GetObjectByClass( i1CurClass, iError, -1, BEMO_User, iBEMProcIdx );	   // grab CURRENT object, not always first
+                                 if( pCurObject == NULL )
+                                 {  // create new object to post property data to - SAC 06/13/25
+                                    QString sNewMapObjName = QString( "%1 - %2" ).arg( sObjName, pPropMap[iPMIdx].szNewCompType );
+                                    pCurObject = BEMPX_CreateObject( i1CurClass, sNewMapObjName.toLocal8Bit().constData(), NULL, eObjType, TRUE, m_bIsUserInputMode, iBEMProcIdx );
+                                 }     assert( pCurObject );
+                                 iCurObjIdx = BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), pCurObject, iBEMProcIdx ); 
+                                 QString sMapPropType = ( pPropMap[iPMIdx].szNewPropType == NULL ? sPropType : pPropMap[iPMIdx].szNewPropType );
+                                 i1PropTypeIdx = BEMPX_GetPropertyTypeIndexByShortName( i1CurClass, sMapPropType.toLocal8Bit().constData(), iBEMProcIdx );
+                                 if (i1PropTypeIdx > 0)
+                                    bPostData = pPropMap[iPMIdx].bPostMappedData;
+                              }
+                        }
                         if ( i1PropTypeIdx > 0 )
                            pPropType = BEMPX_GetPropertyType( i1CurClass, i1PropTypeIdx, iBEMProcIdx );
                      }
 
-							bool bHaveSkippedToNextProperty = false;
+                     bool bHaveSkippedToNextProperty = false;
                      if (!pPropType)
                      {  QString lastError = QString("component %1 '%2' includes unrecognized property '%3'" ).arg( sObjType, sObjName, sPropType);
 	                  	if (m_file.GetLineCount() > 0)	// SAC 6/22/16 - improve error reporting by adding project file line #
 	                     	lastError += QString( " on line # %1" ).arg( QString::number(m_file.GetLineCount()) );
 
-						// SAC 6/23/16 - modified to log unrecognized property as a more generic error, rather than throwing exception causing file read to abort
+      						// SAC 6/23/16 - modified to log unrecognized property as a more generic error, rather than throwing exception causing file read to abort
                         if (iDBIDSetFailureIdx < iMaxDBIDSetFailures)
                         {	lastError = "   ERROR - reading file: " + lastError;
                         	piDBIDSetFailures[ iDBIDSetFailureIdx ] = i1CurClass;		// lDBID;
                            if (piObjIdxSetFailures)
-                              piObjIdxSetFailures[ iDBIDSetFailureIdx ] = (iObjIdx >= 0 ? iObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), newObject, iBEMProcIdx ));
+                              piObjIdxSetFailures[ iDBIDSetFailureIdx ] = (iCurObjIdx >= 0 ? iCurObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), pCurObject, iBEMProcIdx ));
                            if (psaDataSetFailures)
                               SetAtGrow( psaDataSetFailures, iDBIDSetFailureIdx, lastError );
                            iDBIDSetFailureIdx++;
 		                     BEMPX_WriteLogFile( lastError, NULL, FALSE, m_bSupressAllMessageBoxes );  // SAC 4/27/03
 
-                        // NEXT we have to skip past all data that follows the (bogus) property name, prior to the subsequent property name (or '..')
+                           // NEXT we have to skip past all data that follows the (bogus) property name, prior to the subsequent property name (or '..')
 	                     	// advance past any spaces to the next character ('=')
    		                  m_file.Advance();
          		            if ( m_file.GetChr() != '=' )
@@ -1043,7 +1075,10 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                            m_file.ThrowFormatException(lastError.toLocal8Bit().constData());
                      }
 
-							if (!bHaveSkippedToNextProperty)
+
+
+
+                     if (!bHaveSkippedToNextProperty)
                      {	// advance past any spaces to the next character ('=')
 	                     m_file.Advance();
 	                     if ( m_file.GetChr() != '=' )
@@ -1053,7 +1088,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                     // confirm that the next character is '(' if this proerty type is an array and we are not in bracket mode
 	                     m_file.Advance();
 	                     if ( nValues > 1 && !bBracketMode && m_file.GetChr() != '(' ) // read not called if nVals <1
-// SAC 3/22/05 - Modified code to allow multiple array element properties to be written w/out square brackets => set only first array element
+                        // SAC 3/22/05 - Modified code to allow multiple array element properties to be written w/out square brackets => set only first array element
 	                     {  //m_file.ThrowFormatException(); // missing '('
 	                        nValues = 1;
 	                        m_file.UnGetChr();
@@ -1086,14 +1121,14 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                        lDBID = BEMPX_GetDBID( i1CurClass, i1PropTypeIdx, (i + 1) );  // SAC 7/18/01
 	                        int iSet = 0;
 
-							// SAC 8/13/15 - added code to prevent setting of this property based on BEMDataType:m_iNotInputMode (and m_eCompDataType == BEMD_NotInput...
+      							// SAC 8/13/15 - added code to prevent setting of this property based on BEMDataType:m_iNotInputMode (and m_eCompDataType == BEMD_NotInput...
 									QString sErrMsg;
 									bool bNotInputError = false;
 	                        if (ePropStat != BEMS_Undefined && lDBID > 0 && m_bIsUserInputMode)
-	                     //   {	assert( pPropType->m_olDataTypes.GetCount() > i );
-								//		POSITION pos = pPropType->m_olDataTypes.FindIndex( i );
-								//		BEMDataType* pDT = (BEMDataType*) pPropType->m_olDataTypes.GetAt( pos );		assert( pDT );
-								//		if (pDT && pDT->m_eCompDataType == BEMD_NotInput && pDT->m_iNotInputMode != DTNotInp_AllowUIReset)
+	                        //   {	assert( pPropType->m_olDataTypes.GetCount() > i );
+								   //		POSITION pos = pPropType->m_olDataTypes.FindIndex( i );
+								   //		BEMDataType* pDT = (BEMDataType*) pPropType->m_olDataTypes.GetAt( pos );		assert( pDT );
+								   //		if (pDT && pDT->m_eCompDataType == BEMD_NotInput && pDT->m_iNotInputMode != DTNotInp_AllowUIReset)
 									{	BEMPropTypeDetails* pDT = pPropType->getPropTypeDetails(i);		assert( pDT );
 										if (pDT && pDT->getCompDataType() == BEMD_NotInput && pDT->getNotInputMode() != DTNotInp_AllowUIReset)
 										{	ePropStat = BEMS_Undefined;
@@ -1133,7 +1168,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                                             if (bPostData && ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
 	                                             {
 	                                                iSet = BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lTemp,
-	                                                                      BEMO_User, iObjIdx, ePropStat, eObjType, FALSE, iBEMProcIdx );
+	                                                                      BEMO_User, iCurObjIdx, ePropStat, eObjType, FALSE, iBEMProcIdx );
 	                                                if (iSet < 0)  // SAC 7/10/03 - added to facilitate more informative error reporting
 	                                                   sErrantData = QString( "%1" ).arg( QString::number(lTemp) );
 	                                             }
@@ -1147,7 +1182,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                                             if (bPostData && ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
 	                                             {
 	                                                iSet = BEMPX_SetBEMData( lDBID, BEMP_Flt, (void*) &fTemp,
-	                                                                      BEMO_User, iObjIdx, ePropStat, eObjType, FALSE, iBEMProcIdx );
+	                                                                      BEMO_User, iCurObjIdx, ePropStat, eObjType, FALSE, iBEMProcIdx );
 	                                                if (iSet < 0)  // SAC 7/10/03 - added to facilitate more informative error reporting
 	                                                   sErrantData = QString( "%1" ).arg( QString::number(fTemp) );
 	                                             }
@@ -1157,9 +1192,9 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                           						bool bNotSymOrNotNull = (iTempPropType != BEMP_Sym || sTemp.compare("(null)")!=0 ? true : false);	// SAC 4/7/16 - prevent storing enums = "(null)"
 	                                             if (bPostData && bNotSymOrNotNull && ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
 	                                             {
-	               //                                 iSet = BEMPX_SetBEMData( lDBID, BEMP_Str, (void*) sTemp.toLocal8Bit().constData(),
+	                                                //iSet = BEMPX_SetBEMData( lDBID, BEMP_Str, (void*) sTemp.toLocal8Bit().constData(),
 	                                                iSet = BEMPX_SetBEMData( lDBID, BEMP_QStr, (void*) &sTemp,
-	                                                                      BEMO_User, iObjIdx, ePropStat, eObjType, FALSE, iBEMProcIdx );
+	                                                                      BEMO_User, iCurObjIdx, ePropStat, eObjType, FALSE, iBEMProcIdx );
 	                                             	if (iSet < 0 && (!pPropType->getShortName().compare("Ruleset", Qt::CaseInsensitive) || !pPropType->getDescription().compare("Ruleset", Qt::CaseInsensitive)))
 	                                             		iSet = 0;	// SAC 11/22/15 - ignore read errors where Ruleset not valid or not found
 	                                                if (iSet < 0)  // SAC 7/10/03 - added to facilitate more informative error reporting
@@ -1171,7 +1206,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                                             // iError;
 	                                             if (bPostData && ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
 	                                             {
-	                                                BEMProperty* pProp = BEMPX_GetProperty( lDBID, iError, iObjIdx, eObjType, iBEMProcIdx );
+	                                                BEMProperty* pProp = BEMPX_GetProperty( lDBID, iError, iCurObjIdx, eObjType, iBEMProcIdx );
 	                                                if (pProp)
 	                                                {
 	                                                   // if we are pasting from the clipboard, then substitute names
@@ -1219,9 +1254,9 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                           {
 	                              piDBIDSetFailures[ iDBIDSetFailureIdx ] = lDBID;
 
-// SAC 7/10/03 - added to facilitate more informative error reporting
+                                 // SAC 7/10/03 - added to facilitate more informative error reporting
 	                              if (piObjIdxSetFailures)
-	                                 piObjIdxSetFailures[ iDBIDSetFailureIdx ] = (iObjIdx >= 0 ? iObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), newObject, iBEMProcIdx ));
+	                                 piObjIdxSetFailures[ iDBIDSetFailureIdx ] = (iCurObjIdx >= 0 ? iCurObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), pCurObject, iBEMProcIdx ));
 	                              if (psaDataSetFailures)
 	                                 SetAtGrow( psaDataSetFailures, iDBIDSetFailureIdx, sErrantData );
 
@@ -1243,8 +1278,8 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 							}
                   }
                   sPropType = ReadNextPropType();
-               }
-            }
+               }  // end of While loop reading/processing each Property
+            }  // end of If new object created
             else
             {  // => error creating object
                QString sError = "   ERROR - unable to create ";
@@ -1274,7 +1309,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                if (iDBIDSetFailureIdx < iMaxDBIDSetFailures)
                {  piDBIDSetFailures[ iDBIDSetFailureIdx ] = 1000;
 	               if (piObjIdxSetFailures)
-	                  piObjIdxSetFailures[ iDBIDSetFailureIdx ] = 1000;  // (iObjIdx >= 0 ? iObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), newObject, iBEMProcIdx ));
+	                  piObjIdxSetFailures[ iDBIDSetFailureIdx ] = 1000;  // (iObjIdx >= 0 ? iObjIdx : BEMPX_GetObjectIndex( BEMPX_GetClass( i1CurClass, iError, iBEMProcIdx ), pCurObject, iBEMProcIdx ));
 	               if (psaDataSetFailures)
 	                  SetAtGrow( psaDataSetFailures, iDBIDSetFailureIdx, sError );
 	               iDBIDSetFailureIdx++;  // SAC 7/10/03 - moved down here from within brackets of setting piDBIDSetFailures[] to preserve value for reference in other arrays
@@ -5537,25 +5572,30 @@ static int FindOldCompMapGroupID( BEMComponentMap* pCompMap, QString sObjType, l
 
 // SAC 5/7/14 - migrated code from *ibd reading to handle backward compatibility component mappings
 BEMObject* CreateCompMapObjects( BEMComponentMap* pCompMap, int iBEMMapGroupID, int iCMIdx, int* i1BEMMapGroupNewClasses, int iBEMProcIdx, const char* pszObjName, 
-												bool bIsUserInputMode, QVector<int>* pivMapCompsCreated )
+												bool bIsUserInputMode, QVector<int>* pivMapCompsCreated, bool bShiftingProperties )
 {	BEMObject* pNewObj = NULL;
-	if (pCompMap == NULL || iBEMMapGroupID < 0 || iCMIdx < 0 || iCMIdx >= 5 )
+	if (pCompMap == NULL || iBEMMapGroupID < 0 || iCMIdx < 0 )  // || iCMIdx >= 5 )
 	{	assert( FALSE );	// invalid arguments
 	}
 	else
-	{	assert( iCMIdx >= 0 && iCMIdx < 5 );
-		BEM_ObjType eObjType = BEMO_User;
+	{	BEM_ObjType eObjType = BEMO_User;
 		int iError, i1Class, iObjIdx;  // not sure if these are needed...?
 		BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );			assert( pBEMProc );
 		int iCMIdx2 = -1;
+                                                //BEMPX_WriteLogFile( QString( "   CreateCompMapObjects() line 5586 - iBEMMapGroupID %1 / iCMIdx %2" ).arg( QString::number( iBEMMapGroupID ), QString::number( iCMIdx ) ), NULL, FALSE, true /*m_bSupressAllMessageBoxes*/ );  // dbg - SAC 06/13/25
 		while (iCMIdx2 < 4 && pCompMap[iCMIdx].szNewCompType[++iCMIdx2] != NULL)
 		{	i1BEMMapGroupNewClasses[iCMIdx2] = BEMPX_GetDBComponentID( pCompMap[iCMIdx].szNewCompType[iCMIdx2] );
 			assert( i1BEMMapGroupNewClasses[iCMIdx2] > 0 );
 			if (i1BEMMapGroupNewClasses[iCMIdx2] > 0)
 			{	if (BEMPX_CanCreateAnotherUserObject( i1BEMMapGroupNewClasses[iCMIdx2], 1 /*iNumObjs*/, iBEMProcIdx ))
-				{	QString sMapObjName = (iCMIdx2 == 0 ? pszObjName : pBEMProc->getClass( i1BEMMapGroupNewClasses[iCMIdx2]-1 )->getLongName());
+				{	QString sMapObjName;
+               if( bShiftingProperties )
+                  sMapObjName = QString( "%1 - %2" ).arg( pszObjName, pBEMProc->getClass( i1BEMMapGroupNewClasses[iCMIdx2]-1 )->getShortName() );
+               else
+                  sMapObjName = (iCMIdx2 == 0 ? pszObjName : pBEMProc->getClass( i1BEMMapGroupNewClasses[iCMIdx2]-1 )->getLongName());
 					BEMObject* pMapObj = BEMPX_CreateObject( i1BEMMapGroupNewClasses[iCMIdx2], sMapObjName.toLocal8Bit().constData(), NULL, eObjType, TRUE, bIsUserInputMode, iBEMProcIdx );
 					assert( pMapObj );
+                                                //BEMPX_WriteLogFile( QString( "   CreateCompMapObjects() line 5598 - classIdx %1 / %2 / %3" ).arg( QString::number( i1BEMMapGroupNewClasses[iCMIdx2] ), sMapObjName, (pMapObj ? "success" : "failed" ) ), NULL, FALSE, true /*m_bSupressAllMessageBoxes*/ );  // dbg - SAC 06/13/25
 					if (pivMapCompsCreated)
 						pivMapCompsCreated->push_back( i1BEMMapGroupNewClasses[iCMIdx2] );
 					if (pMapObj && pNewObj == NULL)
@@ -5691,11 +5731,16 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 	QString sObjectName;
 
 	// SAC 5/7/14 - migrated code from *ibd reading to handle backward compatibility component mappings
-	int iBEMMapGroupID = -1;
+	int iBEMMapGroupID = -1, iSecBEMMapGroupID = -1;
 	int i1BEMMapGroupNewClasses[] = {0,0,0,0,0};
-	int iCMIdx = -1;
+	int iCMIdx = -1, iSecCMIdx = -1;
+	int i1SecBEMMapGroupNewClasses[] = {0,0,0,0,0};
+   QVector<int> ivSecMapCompsCreated;
 	if (iBEMClassIdx <= 0 && pCompMap && pPropMap)
 		iBEMMapGroupID = FindOldCompMapGroupID( pCompMap, sElemName, lFileVersion, &iCMIdx );
+	else if (iBEMClassIdx > 0 && pCompMap && pPropMap)       // added code to facilitate moving properties from one object type to another - SAC 06/13/25
+		iSecBEMMapGroupID = FindOldCompMapGroupID( pCompMap, sElemName, lFileVersion, &iSecCMIdx );
+                           //BEMPX_WriteLogFile( QString( "   ReadXMLComponent() class %1 '%2' - iSecBEMMapGroupID %3 / iSecCMIdx %4" ).arg( QString::number( iBEMClassIdx ), sElemName, QString::number( iSecBEMMapGroupID ), QString::number( iSecCMIdx ) ), NULL, FALSE, true /*m_bSupressAllMessageBoxes*/ );  // dbg - SAC 06/13/25
 
 	BEMObject* pBEMObject = NULL;
 	BEMClass* pBEMClass = BEMPX_GetClass( iBEMClassIdx, iError, iBEMProcIdx );					assert( pBEMClass );
@@ -5764,16 +5809,28 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																						{	
 																							if (bStoreData)  // 11/29/13
 																							{	// CREATE OBJECT  (iff it has not yet been created, which will happen only if NO properties are specified (other than Name) prior to encountering a child object in the XML file
+                                                                                             //BEMPX_WriteLogFile( QString("  XML read CreateObj #1:  class %1 / iBEMMapGroupID %2 / iSecBEMMapGroupID %3").arg( QString::number(iBEMClassIdx), QString::number(iBEMMapGroupID), QString::number(iSecBEMMapGroupID) ), NULL, FALSE, FALSE /*m_bSupressAllMessageBoxes*/ );  // SAC 06/18/25
 																								if (iBEMMapGroupID < 0)
 																									pBEMObject = BEMPX_CreateObject( iBEMClassIdx, sObjectName.toLocal8Bit().constData(), NULL /*pParent*/,
 																																				BEMO_User /*eObjType*/, TRUE, bIsUserInputMode, iBEMProcIdx );
 																								else	// SAC 5/7/14 - migrated code from *ibd reading to handle backward compatibility component mappings
 																									pBEMObject = CreateCompMapObjects(	pCompMap, iBEMMapGroupID, iCMIdx, i1BEMMapGroupNewClasses, iBEMProcIdx,
-																																					sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated );
+																																					sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated, false );
 																								if (pBEMObject)
 																								{	bObjectCreated = TRUE;
 																									PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
-																							}	}
+                                                                        }
+                                                                        if (iSecBEMMapGroupID >= 0)
+                                                                           bObjectCreated = (CreateCompMapObjects( pCompMap, iSecBEMMapGroupID, iSecCMIdx, i1SecBEMMapGroupNewClasses, iBEMProcIdx,
+                                                                                                                  sObjectName.toLocal8Bit().constData(), bIsUserInputMode, &ivSecMapCompsCreated, true ) != NULL);
+                                                                        if (!bObjectCreated && iBEMClassIdx > 0 && iBEMMapGroupID < 0 && iSecBEMMapGroupID < 0)
+                                                                        {  // MAY have already been created in prior call to CreateCompMapObjects() - SAC 06/18/25
+                                                                           pBEMObject = BEMPX_GetObjectByClass( iBEMClassIdx, iError, 0, BEMO_User, iBEMProcIdx );
+                                                                           if (pBEMObject && pBEMObject->getClass() && pBEMObject->getClass()->getMaxDefinable() == 1)
+                                                                           {  bObjectCreated = TRUE;
+                                                                              PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
+                                                                        }  }
+                                                                     }
 																							else
 																							{	//if (pBEMClass && piObjPropCounts)
 																								//	VERIFY( pBEMClass->IncrementPropertyCounts( piObjPropCounts, iBEMProcIdx ) );  // SAC 10/30/13
@@ -5782,7 +5839,7 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																							if (!bObjectCreated)
 																							{	assert( FALSE );
 																								bRetVal = false;
-																								sErrMsg = QString( "ERROR:  Unable to create SDDXML %1 object '%2' (line %3):  %4" ).arg( (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, QString::number(stream.lineNumber()), fileName );
+																								sErrMsg = QString( "ERROR:  Unable to create SDDXML %1 object '%2' (line %3, #1):  %4" ).arg( (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, QString::number(stream.lineNumber()), fileName );
 																							}
 																						}
 																						if (bRetVal)
@@ -5832,8 +5889,28 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																									lLastElemDBID = 0;		// SAC 10/19/15 - prevent this property from being mis-characterized as the same as the last one, simply because it maps to the same property name
 																								}
 																						}
-
-																						if (lThisElemDBID < BEM_COMP_MULT)
+																						// added code similar to above to support shifting of properties from one object type to another - SAC 06/13/25
+                                                                                 //BEMPX_WriteLogFile( QString( "   ReadXMLComponent() line 5884 - lThisElemDBID %1 / iSecBEMMapGroupID %2" ).arg( QString::number( lThisElemDBID ), QString::number( iSecBEMMapGroupID ) ), NULL, FALSE, true /*m_bSupressAllMessageBoxes*/ );  // dbg - SAC 06/13/25
+																						if (lThisElemDBID < BEM_COMP_MULT && iSecBEMMapGroupID >= 0)
+																						{	int iPMIdx = -1;
+																							while (lThisElemDBID < BEM_COMP_MULT && pPropMap[++iPMIdx].iCompTypeID > 0)
+																								if ( pPropMap[iPMIdx].iVersionCutoff >= lFileVersion  &&
+																									  pPropMap[iPMIdx].iCompTypeID == iSecBEMMapGroupID  &&
+																									  ( pPropMap[iPMIdx].szOldPropType == NULL  ||  sElementName.compare( pPropMap[iPMIdx].szOldPropType ) == 0 ) )
+																								{	int i1MapClass = BEMPX_GetDBComponentID( pPropMap[iPMIdx].szNewCompType );							assert( i1MapClass > 0 );
+																									QString sMapPropType = ( pPropMap[iPMIdx].szNewPropType == NULL ? sElementName : pPropMap[iPMIdx].szNewPropType );
+																									int i1MapPropTypeIdx = BEMPX_GetPropertyTypeIndexByShortName( i1MapClass, sMapPropType.toLocal8Bit().constData(), iBEMProcIdx );
+																									lThisElemDBID = BEMPX_GetDBID( i1MapClass, i1MapPropTypeIdx, 1 );
+																									bPostDataForThisElement = pPropMap[iPMIdx].bPostMappedData;
+																									lLastElemDBID = 0;
+                                                                                 //BEMPX_WriteLogFile( QString( "   ReadXMLComponent() line 5899 - lThisElemDBID %1 / bPostDataForThisElement %2 / iSecBEMMapGroupID %3 / ivSecMapCompsCreated size %4" ).arg( QString::number( lThisElemDBID ), QString::number( bPostDataForThisElement ), QString::number( iSecBEMMapGroupID ), QString::number( ivSecMapCompsCreated.size() ) ), NULL, FALSE, true /*m_bSupressAllMessageBoxes*/ );  // dbg - SAC 06/13/25
+                                                                           // make sure map object(s) are created before data set to them
+                                                                           //if (iSecBEMMapGroupID >= 0 && ivSecMapCompsCreated.size() < 1)
+                                                                           //   CreateCompMapObjects( pCompMap, iSecBEMMapGroupID, iSecCMIdx, i1SecBEMMapGroupNewClasses, iBEMProcIdx,
+                                                                           //                         sObjectName.toLocal8Bit().constData(), bIsUserInputMode, &ivSecMapCompsCreated, true );
+                                                                        }
+																						}
+                                                                  if (lThisElemDBID < BEM_COMP_MULT)
 																						{	bRetVal = false;
 																							//sErrMsg = QString( "ERROR:  Unrecognized %s property or child object type '%s' (line %ld):  %s", (pBEMClass ? pBEMClass->getShortName() : "<unknown object type>"), sElementName, (long) stream.lineNumber(), fileName );
 																							sErrMsg = QString( "   ERROR - reading file: component %1 '%2' includes unrecognized property '%3' on line # %4" ).arg( 
@@ -5908,16 +5985,28 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																				if (!bObjectCreated)
 																				{	if (bStoreData)
 																					{	// CREATE OBJECT  (iff it has not yet been created, which will happen only if NO properties are specified (other than Name) for this component
+                                                                                             //BEMPX_WriteLogFile( QString("  XML read CreateObj #2:  class %1 / iBEMMapGroupID %2 / iSecBEMMapGroupID %3").arg( QString::number(iBEMClassIdx), QString::number(iBEMMapGroupID), QString::number(iSecBEMMapGroupID) ), NULL, FALSE, FALSE /*m_bSupressAllMessageBoxes*/ );  // SAC 06/18/25
 																						if (iBEMMapGroupID < 0)
 																							pBEMObject = BEMPX_CreateObject( iBEMClassIdx, sObjectName.toLocal8Bit().constData(), NULL /*pParent*/,
 																																BEMO_User /*eObjType*/, TRUE, bIsUserInputMode, iBEMProcIdx );
 																						else	// SAC 5/7/14 - migrated code from *ibd reading to handle backward compatibility component mappings
 																							pBEMObject = CreateCompMapObjects(	pCompMap, iBEMMapGroupID, iCMIdx, i1BEMMapGroupNewClasses, iBEMProcIdx,
-																																			sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated );
+																																			sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated, false );
 																						if (pBEMObject)
 																						{	bObjectCreated = TRUE;
 																							PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
-																					}	}
+                                                                  }
+                                                                  if (iSecBEMMapGroupID >= 0)
+                                                                     bObjectCreated = (CreateCompMapObjects( pCompMap, iSecBEMMapGroupID, iSecCMIdx, i1SecBEMMapGroupNewClasses, iBEMProcIdx,
+                                                                                                            sObjectName.toLocal8Bit().constData(), bIsUserInputMode, &ivSecMapCompsCreated, true ) != NULL);
+                                                                  if (!bObjectCreated && iBEMClassIdx > 0 && iBEMMapGroupID < 0 && iSecBEMMapGroupID < 0)
+                                                                  {  // MAY have already been created in prior call to CreateCompMapObjects() - SAC 06/18/25
+                                                                     pBEMObject = BEMPX_GetObjectByClass( iBEMClassIdx, iError, 0, BEMO_User, iBEMProcIdx );
+                                                                     if (pBEMObject && pBEMObject->getClass() && pBEMObject->getClass()->getMaxDefinable() == 1)
+                                                                     {  bObjectCreated = TRUE;
+                                                                        PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
+                                                                  }  }
+                                                               }
 																					else
 																					{	//if (pBEMClass && piObjPropCounts)
 																						//	VERIFY( pBEMClass->IncrementPropertyCounts( piObjPropCounts, iBEMProcIdx ) );  // SAC 10/30/13
@@ -5926,7 +6015,7 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																					if (!bObjectCreated)
 																					{	assert( FALSE );
 																						bRetVal = false;
-																						sErrMsg = QString( "ERROR:  Unable to create SDDXML %1 object '%2' (line %3):  %4" ).arg( (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, QString::number(stream.lineNumber()), fileName );
+																						sErrMsg = QString( "ERROR:  Unable to create SDDXML %1 object '%2' (line %3, #2):  %4" ).arg( (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, QString::number(stream.lineNumber()), fileName );
 																				// abort on this error ??
 																					}
 																				}
@@ -5958,16 +6047,28 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																					if (!bObjectCreated)
 																					{	if (bStoreData)
 																						{	// CREATE OBJECT
+                                                                                          //BEMPX_WriteLogFile( QString("  XML read CreateObj #3:  class %1 / iBEMMapGroupID %2 / iSecBEMMapGroupID %3").arg( QString::number(iBEMClassIdx), QString::number(iBEMMapGroupID), QString::number(iSecBEMMapGroupID) ), NULL, FALSE, FALSE /*m_bSupressAllMessageBoxes*/ );  // SAC 06/18/25
 																							if (iBEMMapGroupID < 0)
 																								pBEMObject = BEMPX_CreateObject( iBEMClassIdx, sObjectName.toLocal8Bit().constData(), NULL /*pParent*/,
 																																	BEMO_User /*eObjType*/, TRUE, bIsUserInputMode, iBEMProcIdx );
 																							else	// SAC 5/7/14 - migrated code from *ibd reading to handle backward compatibility component mappings
 																								pBEMObject = CreateCompMapObjects(	pCompMap, iBEMMapGroupID, iCMIdx, i1BEMMapGroupNewClasses, iBEMProcIdx,
-																																				sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated );
+																																				sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated, false );
 																							if (pBEMObject)
 																							{	bObjectCreated = TRUE;
 																								PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
-																						}	}
+                                                                     }
+                                                                     if (iSecBEMMapGroupID >= 0)
+                                                                        bObjectCreated = (CreateCompMapObjects( pCompMap, iSecBEMMapGroupID, iSecCMIdx, i1SecBEMMapGroupNewClasses, iBEMProcIdx,
+                                                                                                               sObjectName.toLocal8Bit().constData(), bIsUserInputMode, &ivSecMapCompsCreated, true ) != NULL);
+                                                                     if (!bObjectCreated && iBEMClassIdx > 0 && iBEMMapGroupID < 0 && iSecBEMMapGroupID < 0)
+                                                                     {  // MAY have already been created in prior call to CreateCompMapObjects() - SAC 06/18/25
+                                                                        pBEMObject = BEMPX_GetObjectByClass( iBEMClassIdx, iError, 0, BEMO_User, iBEMProcIdx );
+                                                                        if (pBEMObject && pBEMObject->getClass() && pBEMObject->getClass()->getMaxDefinable() == 1)
+                                                                        {  bObjectCreated = TRUE;
+                                                                           PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
+                                                                     }  }
+                                                                  }
 																						else
 																						{	//if (pBEMClass && piObjPropCounts)
 																							//	VERIFY( pBEMClass->IncrementPropertyCounts( piObjPropCounts, iBEMProcIdx ) );  // SAC 10/30/13
@@ -5976,7 +6077,7 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																						if (!bObjectCreated)
 																						{	assert( FALSE );
 																							bRetVal = false;
-																							sErrMsg = QString( "ERROR:  Unable to create SDDXML %1 object '%2' (line %3):  %4" ).arg( (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, QString::number(stream.lineNumber()), fileName );
+																							sErrMsg = QString( "ERROR:  Unable to create SDDXML %1 object '%2' (line %3, #3):  %4" ).arg( (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, QString::number(stream.lineNumber()), fileName );
 																					// abort on this error ??
 																						}
 																					}
@@ -6018,6 +6119,7 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
                      																		   // Set the lDBID which is used to post the data read into the database
                      																		   long lDBID = lThisElemDBID + i0ArrIdx;  // + 1;
                      																		   int iSet = 0;
+                                                                                       //BEMPX_WriteLogFile( QString( "   ReadXMLComponent() line 6093 - lDBID %1 / pPropType %2" ).arg( QString::number( lThisElemDBID ), (pPropType ? pPropType->getShortName() : "unknown") ), NULL, FALSE, true /*m_bSupressAllMessageBoxes*/ );  // dbg - SAC 06/13/25
 
 																								// SAC 8/13/15 - added code to prevent setting of this property based on BEMDataType:m_iNotInputMode (and m_eCompDataType == BEMD_NotInput...)
 																										QString sErrMsg2;
@@ -6111,6 +6213,7 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
                      																		   {  // throw error message if data not successfully posted to database
 																											//sErrMsg2.Format( "   ERROR - unable to post '%s' to property %s, %s object '%s' on line # %ld", sChars, sElementName,
 																											//								(pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, (long) stream.lineNumber() );
+                                                                                       //BEMPX_WriteLogFile( QString( "   ReadXMLComponent() line 6187 - iSet %1 / bNotInputError %2" ).arg( QString::number( iSet ), QString::number( bNotInputError ) ), NULL, FALSE, true /*m_bSupressAllMessageBoxes*/ );  // dbg - SAC 06/13/25
 																											sErrMsg2 = QString( "   ERROR - reading file: %1 '%2' property %3  =  '%4' on line # %5" ).arg( (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"),
 																																			 sObjectName, sElementName, sChars, QString::number(stream.lineNumber()) );
 																											// SAC 6/28/16 - added more error tracking/reporting code

@@ -158,7 +158,9 @@
 #define IDB_TREERESOTHZN2               271
 #define IDB_TREERESDWELL                272
 #define IDB_TREERESDWELL2               273
-#define IDB_TREELAST                    273
+#define IDB_TREEAWHP                    274
+#define IDB_TREEAWHP2                   275
+#define IDB_TREELAST                    275
 #define IDD_WIZARD                      301
 #define IDD_ANALYSISSTATUS              302
 #define IDD_BEMPROCERRORS               303

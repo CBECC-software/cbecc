@@ -174,7 +174,8 @@ BOOL BEMPX_PerformErrorCheck( BOOL bRequireRequiredData, BOOL bReportSimDefaultE
 									  (pDT->getCompDataType() == BEMD_Prescribed && iUserInpChk & BEM_UserInpChk_DisallowPrescribed) ) )
 					{	bool bPostErr = true;
 				// SAC 2/25/17 - special code to catch backward compat for CBECC-Com where Proj:ExcptCondWtrHtr Yes/No enum (values 1/2) needs to map to Proj:CompOptDHW 0/1 integer (boolean)
-						if (pProp->getType()->get1ClassIdx() == 1 && pProp->getType()->getShortName().compare( "ExcptCondWtrHtr", Qt::CaseInsensitive )==0)
+						if ( (pProp->getType()->get1ClassIdx() == 1 || pProp->getType()->get1ClassIdx() == BEMPX_GetDBComponentID( "ProjVar" )) &&    // ProjVar - SAC 06/12/25
+                       pProp->getType()->getShortName().compare( "ExcptCondWtrHtr", Qt::CaseInsensitive )==0)
 						{	// map old Proj:ExcptCondWtrHtr enum to Proj:CompOptDHW
 							long lCompOptDHW = pProp->getInt() - 1;										assert( lCompOptDHW >= 0 && lCompOptDHW <= 1 );
 							long lDBID_CompOptDHW = BEMPX_GetDatabaseID( "CompOptDHW", 1 );		assert( lDBID_CompOptDHW > 0 );

@@ -1,0 +1,1862 @@
+RulesetFilename   "T24_2025.bin"  
+
+Proj   "030012S-OffMed-CECStd25"  
+   BldgEngyModelVersion = 17
+   CreateDate = 1416416094
+   ModDate = 1750731782
+   RunDate = 1750731783
+   GeometryInpType = "Simplified"
+   ZipCode = 95814
+   AutoHardSize = 1
+   AutoEffInput = 1
+   DefaultDayltgCtrls = 1
+   SimVarsHVACSec = 0
+   SimVarsHVACSecTempFlow = 0
+   SimVarsHVACPri = 0
+   AnalysisType = "Title24Compliance"
+   AirBarrier = "Air barrier - not verified"
+   SoftwareVersion = "CBECC 2025.1.0 (1381)"
+   CompReportPDF = 1
+   ResultsCurrentMessage = "(not current)"
+   ..
+
+ProjVar   "030012S-OffMed-CECStd25 - ProjVar"  
+   ExcptCondNoClgSys = "No"
+   ExcptCondRtdCap = "No"
+   ExcptCondNarrative = "No"
+   ..
+
+ConsAssm   "Base_CZ12-SlabOnOrBelowGradeF073"  
+   CompatibleSurfType = "UndergroundFloor"
+   SlabType = "UnheatedSlabOnGrade"
+   MatRef[1] = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+Mat   "Concrete - 140 lb/ft3 - 6 in."  
+   CodeCat = "Concrete"
+   CodeItem = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+ConsAssm   "Base_CZ12-NonresMetalFrameWallU055"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R14.60"
+   MatRef[3] = "Compliance Insulation R1.41"
+   MatRef[4] = "Compliance Insulation R0.02"
+   MatRef[5] = "Compliance Insulation R0.02"
+   MatRef[6] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[7] = "Gypsum Board - 1/2 in."
+   ..
+
+Mat   "Stucco - 7/8 in."  
+   CodeCat = "Plastering Materials"
+   CodeItem = "Stucco - 7/8 in."
+   ..
+
+Mat   "Air - Metal Wall Framing - 16 or 24 in. OC"  
+   CodeCat = "Air"
+   CodeItem = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   ..
+
+Mat   "Gypsum Board - 1/2 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 1/2 in."
+   ..
+
+ConsAssm   "NACM_Interior Wall"  
+   CompatibleSurfType = "InteriorWall"
+   MatRef[1] = "Gypsum Board - 5/8 in."
+   MatRef[2] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[3] = "Gypsum Board - 5/8 in."
+   ..
+
+Mat   "Gypsum Board - 5/8 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 5/8 in."
+   ..
+
+ConsAssm   "Base_CZ12-FlatNonresWoodFramingAndOtherRoofU028"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.63
+   CRRCAgedRefl = 0.63
+   CRRCInitialEmit = 0.75
+   CRRCAgedEmit = 0.75
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R34.93"
+   ..
+
+Mat   "Metal Standing Seam - 1/16 in."  
+   CodeCat = "Roofing"
+   CodeItem = "Metal Standing Seam - 1/16 in."
+   ..
+
+Mat   "Compliance Insulation R34.93"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R34.93"
+   ..
+
+ConsAssm   "NACM_Drop Ceiling"  
+   CompatibleSurfType = "InteriorFloor"
+   MatRef[1] = "Acoustic Tile - 3/4 in."
+   ..
+
+Mat   "Acoustic Tile - 3/4 in."  
+   CodeCat = "Finish Materials"
+   CodeItem = "Acoustic Tile - 3/4 in."
+   ..
+
+ConsAssm   "NACM_Interior Floor"  
+   CompatibleSurfType = "InteriorFloor"
+   MatRef[1] = "Metal Deck - 1/16 in."
+   MatRef[2] = "Concrete - 140 lb/ft3 - 4 in."
+   MatRef[3] = "Carpet - 3/4 in."
+   ..
+
+Mat   "Metal Deck - 1/16 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Metal Deck - 1/16 in."
+   ..
+
+Mat   "Concrete - 140 lb/ft3 - 4 in."  
+   CodeCat = "Concrete"
+   CodeItem = "Concrete - 140 lb/ft3 - 4 in."
+   ..
+
+Mat   "Carpet - 3/4 in."  
+   CodeCat = "Finish Materials"
+   CodeItem = "Carpet - 3/4 in."
+   ..
+
+FenCons   "Base_AllCZ_FixedWindowU34"  
+   FenType = "VerticalFenestration"
+   FenProdType = "FixedWindow"
+   AssmContext = "Manufactured"
+   CertificationMthd = "NFRCRated"
+   SHGC = 0.22
+   UFactor = 0.34
+   VT = 0.42
+   ..
+
+Bldg   "OfficeMedium"  
+   TotStoryCnt = 3
+   AboveGrdStoryCnt = 3
+   ..
+
+Story   "BottomFlr"  
+   Z = 0
+   FlrToFlrHgt = 13
+   FlrToCeilingHgt = 9
+   ..
+
+Spc   "Core_bottom"  
+   TreeState = 254
+   CondgType = "DirectlyConditioned"
+   ThrmlZnRef = "Core_bottom Thermal Zone"
+   Area = 10586.7
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+UndgrFlr   "Core_bot_ZN_5_Floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 10586.7
+   ..
+
+IntWall   "Core_bot_ZN_5_Wall_East"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 712.424
+   ..
+
+IntWall   "Core_bot_ZN_5_Wall_North"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 1203.67
+   ..
+
+IntWall   "Core_bot_ZN_5_Wall_South"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_1"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 1203.67
+   ..
+
+IntWall   "Core_bot_ZN_5_Wall_West"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 712.424
+   ..
+
+Spc   "Perimeter_bot_ZN_1"  
+   TreeState = 254
+   CondgType = "DirectlyConditioned"
+   ThrmlZnRef = "Perimeter_bot_ZN_1 Thermal Zone"
+   Area = 2231.76
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+UndgrFlr   "Perimeter_bot_ZN_1_Floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 2231.76
+   ..
+
+IntWall   "Perimeter_bot_ZN_1_Wall_East"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.975
+   ..
+
+ExtWall   "Perimeter_bot_ZN_1_Wall_South"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 1473.75
+   Az = 180
+   ..
+
+Win   "Perimeter_bot_ZN_1_Wall_South_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 702.694
+   ..
+
+IntWall   "Perimeter_bot_ZN_4_Wall_South Reversed"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.968
+   ..
+
+Spc   "Perimeter_bot_ZN_2"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_bot_ZN_2 Thermal Zone"
+   Area = 1412.9
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+UndgrFlr   "Perimeter_bot_ZN_2_Floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 1412.9
+   ..
+
+ExtWall   "Perimeter_bot_ZN_2_Wall_East"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 982.494
+   Az = 90
+   ..
+
+Win   "Perimeter_bot_ZN_2_Wall_East_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 468.468
+   ..
+
+IntWall   "Perimeter_bot_ZN_2_Wall_North"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.975
+   ..
+
+Spc   "Perimeter_bot_ZN_3"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_bot_ZN_3 Thermal Zone"
+   Area = 2231.76
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+UndgrFlr   "Perimeter_bot_ZN_3_Floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 2231.76
+   ..
+
+ExtWall   "Perimeter_bot_ZN_3_Wall_North"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 1473.75
+   Az = 0
+   ..
+
+Win   "Perimeter_bot_ZN_3_Wall_North_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 702.694
+   ..
+
+IntWall   "Perimeter_bot_ZN_3_Wall_West"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.968
+   ..
+
+Spc   "Perimeter_bot_ZN_4"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_bot_ZN_4 Thermal Zone"
+   Area = 1412.8
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+UndgrFlr   "Perimeter_bot_ZN_4_Floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 1412.8
+   ..
+
+ExtWall   "Perimeter_bot_ZN_4_Wall_West"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 982.494
+   Az = 270
+   ..
+
+Win   "Perimeter_bot_ZN_4_Wall_West_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 468.468
+   ..
+
+Spc   "FirstFloor_Plenum"  
+   TreeState = 254
+   CondgType = "Plenum"
+   ThrmlZnRef = "FirstFloor_Plenum Thermal Zone"
+   Area = 17875.9
+   ..
+
+IntFlr   "Core_bot_ZN_5_Ceiling Reversed"  
+   AdjacentSpcRef = "Core_bottom"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 10586.7
+   ..
+
+ExtWall   "Perimeter_bot_Plenum_Wall_East"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 436.664
+   Az = 90
+   ..
+
+ExtWall   "Perimeter_bot_Plenum_Wall_North"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 655
+   Az = 0
+   ..
+
+ExtWall   "Perimeter_bot_Plenum_Wall_South"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 655
+   Az = 180
+   ..
+
+ExtWall   "Perimeter_bot_Plenum_Wall_West"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 436.664
+   Az = 270
+   ..
+
+IntFlr   "Perimeter_bot_ZN_1_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_1"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 2231.76
+   ..
+
+IntFlr   "Perimeter_bot_ZN_2_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_2"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1412.9
+   ..
+
+IntFlr   "Perimeter_bot_ZN_3_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_3"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 2231.76
+   ..
+
+IntFlr   "Perimeter_bot_ZN_4_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_bot_ZN_4"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1412.8
+   ..
+
+Story   "MidFlr"  
+   Z = 13
+   FlrToFlrHgt = 13
+   FlrToCeilingHgt = 9
+   ..
+
+Spc   "Core_mid"  
+   TreeState = 254
+   ThrmlZnRef = "Core_mid Thermal Zone"
+   Area = 10586.7
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Core_mid_ZN_5_Floor"  
+   AdjacentSpcRef = "FirstFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 10586.7
+   ..
+
+IntWall   "Core_mid_ZN_5_Wall_East"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 712.424
+   ..
+
+IntWall   "Core_mid_ZN_5_Wall_North"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 1203.67
+   ..
+
+IntWall   "Core_mid_ZN_5_Wall_South"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_1"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 1203.67
+   ..
+
+IntWall   "Core_mid_ZN_5_Wall_West"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 712.424
+   ..
+
+Spc   "Perimeter_mid_ZN_1"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_mid_ZN_1 Thermal Zone"
+   Area = 2231.76
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_mid_ZN_1_Floor"  
+   AdjacentSpcRef = "FirstFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 2231.76
+   ..
+
+IntWall   "Perimeter_mid_ZN_1_Wall_East"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.975
+   ..
+
+ExtWall   "Perimeter_mid_ZN_1_Wall_South"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 1473.75
+   Az = 180
+   ..
+
+Win   "Perimeter_mid_ZN_1_Wall_South_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 702.704
+   ..
+
+IntWall   "Perimeter_mid_ZN_4_Wall_South Reversed"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.968
+   ..
+
+Spc   "Perimeter_mid_ZN_2"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_mid_ZN_2 Thermal Zone"
+   Area = 1412.9
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_mid_ZN_2_Floor"  
+   AdjacentSpcRef = "FirstFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 1412.9
+   ..
+
+ExtWall   "Perimeter_mid_ZN_2_Wall_East"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 982.494
+   Az = 90
+   ..
+
+Win   "Perimeter_mid_ZN_2_Wall_East_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 468.475
+   ..
+
+IntWall   "Perimeter_mid_ZN_2_Wall_North"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.975
+   ..
+
+Spc   "Perimeter_mid_ZN_3"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_mid_ZN_3 Thermal Zone"
+   Area = 2231.76
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_mid_ZN_3_Floor"  
+   AdjacentSpcRef = "FirstFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 2231.76
+   ..
+
+ExtWall   "Perimeter_mid_ZN_3_Wall_North"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 1473.75
+   Az = 0
+   ..
+
+Win   "Perimeter_mid_ZN_3_Wall_North_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 702.704
+   ..
+
+IntWall   "Perimeter_mid_ZN_3_Wall_West"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.968
+   ..
+
+Spc   "Perimeter_mid_ZN_4"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_mid_ZN_4 Thermal Zone"
+   Area = 1412.8
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_mid_ZN_4_Floor"  
+   AdjacentSpcRef = "FirstFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 1412.8
+   ..
+
+ExtWall   "Perimeter_mid_ZN_4_Wall_West"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 982.494
+   Az = 270
+   ..
+
+Win   "Perimeter_mid_ZN_4_Wall_West_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 468.475
+   ..
+
+Spc   "MidFloor_Plenum"  
+   TreeState = 254
+   CondgType = "Plenum"
+   ThrmlZnRef = "MidFloor_Plenum Thermal Zone"
+   Area = 17875.9
+   ..
+
+IntFlr   "Core_mid_ZN_5_Ceiling Reversed"  
+   AdjacentSpcRef = "Core_mid"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 10586.7
+   ..
+
+ExtWall   "Perimeter_mid_Plenum_Wall_East"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 436.664
+   Az = 90
+   ..
+
+ExtWall   "Perimeter_mid_Plenum_Wall_North"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 655
+   Az = 0
+   ..
+
+ExtWall   "Perimeter_mid_Plenum_Wall_South"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 655
+   Az = 180
+   ..
+
+ExtWall   "Perimeter_mid_Plenum_Wall_West"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 436.664
+   Az = 270
+   ..
+
+IntFlr   "Perimeter_mid_ZN_1_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_1"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 2231.76
+   ..
+
+IntFlr   "Perimeter_mid_ZN_2_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_2"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1412.9
+   ..
+
+IntFlr   "Perimeter_mid_ZN_3_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_3"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 2231.76
+   ..
+
+IntFlr   "Perimeter_mid_ZN_4_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_mid_ZN_4"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1412.8
+   ..
+
+Story   "TopFloor"  
+   Z = 26
+   FlrToFlrHgt = 13
+   FlrToCeilingHgt = 9
+   ..
+
+Spc   "Core_top"  
+   TreeState = 254
+   ThrmlZnRef = "Core_top Thermal Zone"
+   Area = 10586.7
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Core_top_ZN_5_Floor"  
+   AdjacentSpcRef = "MidFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 10586.7
+   ..
+
+IntWall   "Core_top_ZN_5_Wall_East"  
+   AdjacentSpcRef = "Perimeter_top_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 712.424
+   ..
+
+IntWall   "Core_top_ZN_5_Wall_North"  
+   AdjacentSpcRef = "Perimeter_top_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 1203.67
+   ..
+
+IntWall   "Core_top_ZN_5_Wall_South"  
+   AdjacentSpcRef = "Perimeter_top_ZN_1"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 1203.67
+   ..
+
+IntWall   "Core_top_ZN_5_Wall_West"  
+   AdjacentSpcRef = "Perimeter_top_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 712.424
+   ..
+
+Spc   "Perimeter_top_ZN_1"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_top_ZN_1 Thermal Zone"
+   Area = 2231.76
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_top_ZN_1_Floor"  
+   AdjacentSpcRef = "MidFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 2231.76
+   ..
+
+IntWall   "Perimeter_top_ZN_1_Wall_East"  
+   AdjacentSpcRef = "Perimeter_top_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.976
+   ..
+
+ExtWall   "Perimeter_top_ZN_1_Wall_South"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 1473.75
+   Az = 180
+   ..
+
+Win   "Perimeter_top_ZN_1_Wall_South_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 702.704
+   ..
+
+IntWall   "Perimeter_top_ZN_4_Wall_South Reversed"  
+   AdjacentSpcRef = "Perimeter_top_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.968
+   ..
+
+Spc   "Perimeter_top_ZN_2"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_top_ZN_2 Thermal Zone"
+   Area = 1412.9
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_top_ZN_2_Floor"  
+   AdjacentSpcRef = "MidFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 1412.9
+   ..
+
+ExtWall   "Perimeter_top_ZN_2_Wall_East"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 982.494
+   Az = 90
+   ..
+
+Win   "Perimeter_top_ZN_2_Wall_East_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 468.475
+   ..
+
+IntWall   "Perimeter_top_ZN_2_Wall_North"  
+   AdjacentSpcRef = "Perimeter_top_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.975
+   ..
+
+Spc   "Perimeter_top_ZN_3"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_top_ZN_3 Thermal Zone"
+   Area = 2231.76
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_top_ZN_3_Floor"  
+   AdjacentSpcRef = "MidFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 2231.76
+   ..
+
+ExtWall   "Perimeter_top_ZN_3_Wall_North"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 1473.75
+   Az = 0
+   ..
+
+Win   "Perimeter_top_ZN_3_Wall_North_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 702.704
+   ..
+
+IntWall   "Perimeter_top_ZN_3_Wall_West"  
+   AdjacentSpcRef = "Perimeter_top_ZN_4"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 190.968
+   ..
+
+Spc   "Perimeter_top_ZN_4"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_top_ZN_4 Thermal Zone"
+   Area = 1412.8
+   SpcFuncDefaultsRef = "Office Mod Defaults"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupplyElec"
+   ..
+
+IntFlr   "Perimeter_top_ZN_4_Floor"  
+   AdjacentSpcRef = "MidFloor_Plenum"
+   ConsAssmRef = "NACM_Interior Floor"
+   Area = 1412.8
+   ..
+
+ExtWall   "Perimeter_top_ZN_4_Wall_West"  
+   TreeState = 254
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 982.494
+   Az = 270
+   ..
+
+Win   "Perimeter_top_ZN_4_Wall_West_Window"  
+   FenConsRef = "Base_AllCZ_FixedWindowU34"
+   Area = 468.475
+   ..
+
+Spc   "TopFloor_Plenum"  
+   TreeState = 254
+   CondgType = "Plenum"
+   ThrmlZnRef = "TopFloor_Plenum Thermal Zone"
+   Area = 17875.9
+   ..
+
+Roof   "Building_Roof"  
+   ConsAssmRef = "Base_CZ12-FlatNonresWoodFramingAndOtherRoofU028"
+   Area = 17875.9
+   Az = 270
+   Tilt = 0
+   ..
+
+IntFlr   "Core_top_ZN_5_Ceiling Reversed"  
+   AdjacentSpcRef = "Core_top"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 10586.7
+   ..
+
+ExtWall   "Perimeter_top_Plenum_Wall_East"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 436.664
+   Az = 90
+   ..
+
+ExtWall   "Perimeter_top_Plenum_Wall_North"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 655
+   Az = 0
+   ..
+
+ExtWall   "Perimeter_top_Plenum_Wall_South"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 655
+   Az = 180
+   ..
+
+ExtWall   "Perimeter_top_Plenum_Wall_West"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU055"
+   Area = 436.664
+   Az = 270
+   ..
+
+IntFlr   "Perimeter_top_ZN_1_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_top_ZN_1"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 2231.76
+   ..
+
+IntFlr   "Perimeter_top_ZN_2_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_top_ZN_2"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1412.9
+   ..
+
+IntFlr   "Perimeter_top_ZN_3_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_top_ZN_3"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 2231.76
+   ..
+
+IntFlr   "Perimeter_top_ZN_4_Ceiling Reversed"  
+   AdjacentSpcRef = "Perimeter_top_ZN_4"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1412.8
+   ..
+
+ThrmlZn   "Core_bottom Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BottomVAV"
+   ..
+
+ThrmlZn   "Perimeter_bot_ZN_1 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BottomVAV"
+   ..
+
+ThrmlZn   "Perimeter_bot_ZN_2 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BottomVAV"
+   ..
+
+ThrmlZn   "Perimeter_bot_ZN_3 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BottomVAV"
+   ..
+
+ThrmlZn   "Perimeter_bot_ZN_4 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "BottomVAV"
+   ..
+
+ThrmlZn   "FirstFloor_Plenum Thermal Zone"  
+   Type = "Plenum"
+   ..
+
+ThrmlZn   "Core_mid Thermal Zone"  
+   PriAirCondgSysRef[1] = "Mid VAV"
+   ..
+
+ThrmlZn   "Perimeter_mid_ZN_1 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Mid VAV"
+   ..
+
+ThrmlZn   "Perimeter_mid_ZN_2 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Mid VAV"
+   ..
+
+ThrmlZn   "Perimeter_mid_ZN_3 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Mid VAV"
+   ..
+
+ThrmlZn   "Perimeter_mid_ZN_4 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Mid VAV"
+   ..
+
+ThrmlZn   "MidFloor_Plenum Thermal Zone"  
+   Type = "Plenum"
+   ..
+
+ThrmlZn   "Core_top Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Top VAV"
+   ..
+
+ThrmlZn   "Perimeter_top_ZN_1 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Top VAV"
+   ..
+
+ThrmlZn   "Perimeter_top_ZN_2 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Top VAV"
+   ..
+
+ThrmlZn   "Perimeter_top_ZN_3 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Top VAV"
+   ..
+
+ThrmlZn   "Perimeter_top_ZN_4 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef[1] = "Top VAV"
+   ..
+
+ThrmlZn   "TopFloor_Plenum Thermal Zone"  
+   Type = "Plenum"
+   ..
+
+AirSys   "BottomVAV"  
+   Type = "PVAV"
+   CtrlSysType = "DDCToZone"
+   ReheatCtrlMthd = "DualMaximum"
+   OptStart = 1
+   ClgCtrl = "WarmestReset"
+   ClRstSupHi = 60
+   ClRstSupLow = 55
+   DuctIns = 8
+   ..
+
+AirSeg   "Bottom VAV AirSegment Supply"  
+   TreeState = 253
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilHtg   "Bottom VAV CoilHeating"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+CoilClg   "Bottom VAV CoilCooling"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   NumClgStages = 2
+   CndsrType = "Air"
+   ..
+
+Fan   "BottomVAV SupplyFan"  
+   CtrlMthd = "VariableSpeedDrive"
+   ..
+
+TrmlUnit   "CoreBottomZn TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Core_bottom Thermal Zone"
+   PriAirSegRef = "Bottom VAV AirSegment Supply"
+   ..
+
+CoilHtg   "CoreBottomReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+AirSeg   "Bottom VAV ReturnAirSegment"  
+   ..
+
+TrmlUnit   "PerimeterBottomZn1 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_bot_ZN_1 Thermal Zone"
+   PriAirSegRef = "Bottom VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterBottom1ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+TrmlUnit   "PerimeterBottomZn2 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_bot_ZN_2 Thermal Zone"
+   PriAirSegRef = "Bottom VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterBottom2ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+TrmlUnit   "PerimeterBottomZn3 TU"  
+   TreeState = 253
+   Type = "ParallelFanBox"
+   ZnServedRef = "Perimeter_bot_ZN_3 Thermal Zone"
+   PriAirSegRef = "Bottom VAV AirSegment Supply"
+   FanPwrPerFlow = 0.3
+   ParallelBoxFanFlowFrac = 0
+   ..
+
+CoilHtg   "PerimeterBottom3ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+Fan   "PerimeterBottom3Fan"  
+   ..
+
+TrmlUnit   "PerimeterBottomZn4 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_bot_ZN_4 Thermal Zone"
+   PriAirSegRef = "Bottom VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterBottom4ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+OACtrl   "BottomVAV Economizer"  
+   EconoCtrlMthd = "FixedDryBulb"
+   EconoIntegration = "Integrated"
+   EconoHiTempLockout = 75
+   AirSegSupRef = "Bottom VAV AirSegment Supply"
+   AirSegRetRef = "Bottom VAV ReturnAirSegment"
+   ..
+
+AirSys   "Mid VAV"  
+   Type = "PVAV"
+   CtrlSysType = "DDCToZone"
+   ReheatCtrlMthd = "DualMaximum"
+   OptStart = 1
+   ClgCtrl = "WarmestReset"
+   ClRstSupHi = 60
+   ClRstSupLow = 55
+   DuctIns = 8
+   ..
+
+AirSeg   "Mid VAV AirSegment Supply"  
+   TreeState = 253
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilHtg   "Mid VAV CoilHeating"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+CoilClg   "Mid VAV CoilCooling"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   NumClgStages = 2
+   CndsrType = "Air"
+   ..
+
+Fan   "MidVAV SupplyFan"  
+   CtrlMthd = "VariableSpeedDrive"
+   ..
+
+TrmlUnit   "CoreMidZn TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Core_mid Thermal Zone"
+   PriAirSegRef = "Mid VAV AirSegment Supply"
+   ..
+
+CoilHtg   "CoreMidReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+AirSeg   "MidVAV RetAirSeg"  
+   ..
+
+OACtrl   "MidVAV OACtrl"  
+   EconoCtrlMthd = "FixedDryBulb"
+   EconoIntegration = "Integrated"
+   EconoHiTempLockout = 75
+   AirSegSupRef = "Mid VAV AirSegment Supply"
+   AirSegRetRef = "MidVAV RetAirSeg"
+   ..
+
+TrmlUnit   "PerimeterMidZn1 TU"  
+   TreeState = 253
+   Type = "ParallelFanBox"
+   ZnServedRef = "Perimeter_mid_ZN_1 Thermal Zone"
+   PriAirSegRef = "Mid VAV AirSegment Supply"
+   FanPwrPerFlow = 0.3
+   ParallelBoxFanFlowFrac = 0
+   ..
+
+CoilHtg   "PerimeterMid1ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+Fan   "PerimeterMid1Fan"  
+   ..
+
+TrmlUnit   "PerimeterMidZn2 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_mid_ZN_2 Thermal Zone"
+   PriAirSegRef = "Mid VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterMid2ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+TrmlUnit   "PerimeterMidZn3 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_mid_ZN_3 Thermal Zone"
+   PriAirSegRef = "Mid VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterMid3ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+TrmlUnit   "PerimeterMidZn4 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_mid_ZN_4 Thermal Zone"
+   PriAirSegRef = "Mid VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterMid4ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+AirSys   "Top VAV"  
+   Type = "PVAV"
+   CtrlSysType = "DDCToZone"
+   ReheatCtrlMthd = "DualMaximum"
+   OptStart = 1
+   ClgCtrl = "WarmestReset"
+   ClRstSupHi = 60
+   ClRstSupLow = 55
+   DuctIns = 8
+   ..
+
+AirSeg   "Top VAV AirSegment Supply"  
+   TreeState = 253
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilHtg   "Top VAV CoilHeating"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+CoilClg   "Top VAV CoilCooling"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   NumClgStages = 2
+   CndsrType = "Air"
+   ..
+
+Fan   "TopVAV SupplyFan"  
+   CtrlMthd = "VariableSpeedDrive"
+   ..
+
+TrmlUnit   "Core Top Zn TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Core_top Thermal Zone"
+   PriAirSegRef = "Top VAV AirSegment Supply"
+   ..
+
+CoilHtg   "CoreTopReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+AirSeg   "TopVAV RetAirSeg"  
+   ..
+
+TrmlUnit   "PerimeterTopZn1 TU"  
+   TreeState = 253
+   Type = "ParallelFanBox"
+   ZnServedRef = "Perimeter_top_ZN_1 Thermal Zone"
+   PriAirSegRef = "Top VAV AirSegment Supply"
+   FanPwrPerFlow = 0.3
+   ParallelBoxFanFlowFrac = 0
+   ..
+
+CoilHtg   "PerimeterTop1ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+Fan   "PerimeterTop1Fan"  
+   ..
+
+TrmlUnit   "PerimeterTopZn2 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_top_ZN_2 Thermal Zone"
+   PriAirSegRef = "Top VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterTop2ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+TrmlUnit   "PerimeterTopZn3 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_top_ZN_3 Thermal Zone"
+   PriAirSegRef = "Top VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterTop3ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+TrmlUnit   "PerimeterTopZn4 TU"  
+   TreeState = 253
+   Type = "VAVReheatBox"
+   ZnServedRef = "Perimeter_top_ZN_4 Thermal Zone"
+   PriAirSegRef = "Top VAV AirSegment Supply"
+   ..
+
+CoilHtg   "PerimeterTop4ReheatCoil"  
+   Type = "HotWater"
+   FluidSegInRef = "HW Primary Supply"
+   FluidSegOutRef = "HW Primary Return"
+   ..
+
+OACtrl   "Top VAV OACtrl"  
+   EconoCtrlMthd = "FixedDryBulb"
+   EconoIntegration = "Integrated"
+   EconoHiTempLockout = 75
+   AirSegSupRef = "Top VAV AirSegment Supply"
+   AirSegRetRef = "TopVAV RetAirSeg"
+   ..
+
+CrvQuad   "BlrHWBlrFIRRatio_fQRatio"  
+   Coef1 = 0.082597
+   Coef2 = 0.996764
+   Coef3 = -0.079361
+   ..
+
+CrvCubic   "PumpVSDPwrRatio_fGPMRatio"  
+   Coef1 = 0.00153
+   Coef2 = 0.005208
+   Coef3 = 1.10862
+   Coef4 = -0.116356
+   ..
+
+CrvCubic   "PumpVSDPwrRatio_fGPMRatio-2"  
+   Coef1 = 0.00153
+   Coef2 = 0.005208
+   Coef3 = 1.10862
+   Coef4 = -0.116356
+   ..
+
+CrvCubic   "PumpVSDPwrRatio_fGPMRatio-3"  
+   Coef1 = 0.00153
+   Coef2 = 0.005208
+   Coef3 = 1.10862
+   Coef4 = -0.116356
+   ..
+
+CrvCubic   "PumpVSDPwrRatio_fGPMRatio-4"  
+   Coef1 = 0.00153
+   Coef2 = 0.005208
+   Coef3 = 1.10862
+   Coef4 = -0.116356
+   ..
+
+CrvCubic   "PumpVSDPwrRatio_fGPMRatio-5"  
+   Coef1 = 0.00153
+   Coef2 = 0.005208
+   Coef3 = 1.10862
+   Coef4 = -0.116356
+   ..
+
+CrvCubic   "PumpVSDPwrRatio_fGPMRatio-6"  
+   Coef1 = 0.00153
+   Coef2 = 0.005208
+   Coef3 = 1.10862
+   Coef4 = -0.116356
+   ..
+
+CrvQuad   "WtHtrStorFIRRatio_fQRatio"  
+   Coef1 = 0.021826
+   Coef2 = 0.97763
+   Coef3 = 0.000543
+   MaxOut = 1
+   MaxVar1 = 1
+   MinOut = 0.1
+   MinVar1 = 0.1
+   ..
+
+FluidSys   "SHWFluidSysElec"  
+   Type = "ServiceHotWater"
+   ..
+
+FluidSeg   "SHWSupplyElec"  
+   Type = "PrimarySupply"
+   ..
+
+FluidSeg   "SHWMakeupElec"  
+   Type = "MakeupFluid"
+   Src = "MunicipalWater"
+   ..
+
+WtrHtr   "WaterHeaterElec"  
+   FluidSegOutRef = "SHWSupplyElec"
+   FluidSegMakeupRef = "SHWMakeupElec"
+   StorCap = 30
+   UEF = 0.9361
+   RE = 0.99
+   FuelSrc = "Electricity"
+   InpPwr = 8.74435
+   ..
+
+FluidSys   "HotWater Loop"  
+   Type = "HotWater"
+   DsgnSupWtrTemp = 130
+   CtrlType = "DDC"
+   RstSupHi = 180
+   RstSupLow = 130
+   RstOutdrHi = 20
+   RstOutdrLow = 50
+   ..
+
+FluidSeg   "HW Primary Supply"  
+   Type = "PrimarySupply"
+   ..
+
+FluidSeg   "HW Primary Return"  
+   Type = "PrimaryReturn"
+   ..
+
+HtPump   "AWHP"  
+   HtgFluidSegInRef = "HW Primary Return"
+   HtgFluidSegOutRef = "HW Primary Supply"
+   HtgCapRtd = 253100
+   HtgSuppBlrRef = "SupBlr"
+   HtgRtdCondWtrTemp = "120 F/140 F"
+   ..
+
+Pump   "AWHP Pump"  
+   SpdCtrl = "VariableSpeed"
+   TotHd = 61.1022
+   MtrEff = 0.865
+   ..
+
+Blr   "SupBlr"  
+   Type = "HotWater"
+   FuelSrc = "Electric"
+   FluidSegInRef = "HW Primary Return"
+   FluidSegOutRef = "HW Primary Supply"
+   CapRtd = 520920
+   ..
+
+SpcFuncDefaults   "Office Mod Defaults"  
+   SpcFunc = "Office Area (>250 square feet)"
+   ..
+
+Mat   "Metal Deck - 1/16 in"  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Metal Deck - 1/16 in."
+   ..
+
+Mat   "Compliance Insulation R14.60"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R14.60"
+   ..
+
+Mat   "Compliance Insulation R1.41"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R1.41"
+   ..
+
+Mat   "Compliance Insulation R0.02"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R0.02"
+   ..
+
+PVArray   "T24 PVArray"  
+   DCSysSize = 167.855
+   ..
+
+Batt   "T24 Batt"  
+   MaxCap = 296.928
+   Ctrl = "Time of Use"
+   MaxChrgPwr = 74.2321
+   MaxDschrgPwr = 74.2321
+   ..
+
+EUseSummary   "Metrics 2025 (Oct 2022)"  
+   Title1[2] = "Proposed Design"
+   Title1[3] = "Proposed"
+   Title1[4] = "Proposed"
+   Title1[5] = "Standard Design"
+   Title1[6] = "Standard"
+   Title1[7] = "Standard"
+   Title1[8] = "Compliance Margins"
+   Title1[11] = "Proposed"
+   Title1[12] = "Standard"
+   Title1[13] = "Compliance"
+   Title1[17] = "Proposed Design Emissions"
+   Title1[18] = "Prop Design"
+   Title1[19] = "Prop Design"
+   Title1[20] = "Standard Design Emissions"
+   Title1[21] = "Std Design"
+   Title1[22] = "Std Design"
+   Title1[23] = "Emissions Margin"
+   Title2[2] = "Site Elec."
+   Title2[3] = "Site Gas"
+   Title2[4] = "LSC¹"
+   Title2[5] = "Site Elec."
+   Title2[6] = "Site Gas"
+   Title2[7] = "LSC¹"
+   Title2[8] = "LSC¹"
+   Title2[11] = "Source"
+   Title2[12] = "Source"
+   Title2[13] = "Source"
+   Title2[17] = "Electricity"
+   Title2[18] = "Fuel"
+   Title2[19] = "Total"
+   Title2[20] = "Electricity"
+   Title2[21] = "Fuel"
+   Title2[22] = "Total"
+   Title2[23] = "Total"
+   Title3[1] = "End Use"
+   Title3[2] = "(MWh/yr)"
+   Title3[3] = "(MBtu/yr)"
+   Title3[4] = "($/ft²-yr)"
+   Title3[5] = "(MWh/yr)"
+   Title3[6] = "(MBtu/yr)"
+   Title3[7] = "($/ft²-yr)"
+   Title3[8] = "($/ft²-yr)"
+   Title3[11] = "(kBtu/ft²-yr)"
+   Title3[12] = "(kBtu/ft²-yr)"
+   Title3[13] = "(kBtu/ft²-yr)"
+   Title3[17] = "(tonnes of CO2)"
+   Title3[18] = "(tonnes of CO2)"
+   Title3[19] = "(tonnes of CO2)"
+   Title3[20] = "(tonnes of CO2)"
+   Title3[21] = "(tonnes of CO2)"
+   Title3[22] = "(tonnes of CO2)"
+   Title3[23] = "(tonnes of CO2)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "37.2"
+   Enduse1[3] = "--"
+   Enduse1[4] = "4.83"
+   Enduse1[5] = "37.3"
+   Enduse1[6] = "--"
+   Enduse1[7] = "4.83"
+   Enduse1[8] = "--"
+   Enduse1[9] = "11.5"
+   Enduse1[10] = "11.5"
+   Enduse1[11] = "2.28"
+   Enduse1[12] = "2.28"
+   Enduse1[13] = "--"
+   Enduse1[17] = "6.47"
+   Enduse1[19] = "6.47"
+   Enduse1[20] = "6.47"
+   Enduse1[22] = "6.47"
+   Enduse1[23] = "0.00"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "77.7"
+   Enduse2[3] = "--"
+   Enduse2[4] = "6.46"
+   Enduse2[5] = "77.7"
+   Enduse2[6] = "--"
+   Enduse2[7] = "6.46"
+   Enduse2[8] = "--"
+   Enduse2[9] = "0.7"
+   Enduse2[10] = "0.7"
+   Enduse2[11] = "0.78"
+   Enduse2[12] = "0.78"
+   Enduse2[13] = "--"
+   Enduse2[17] = "2.22"
+   Enduse2[19] = "2.22"
+   Enduse2[20] = "2.22"
+   Enduse2[22] = "2.22"
+   Enduse2[23] = "0.00"
+   Enduse3[1] = "Indoor Fans"
+   Enduse3[2] = "30.8"
+   Enduse3[3] = "--"
+   Enduse3[4] = "2.63"
+   Enduse3[5] = "30.8"
+   Enduse3[6] = "--"
+   Enduse3[7] = "2.63"
+   Enduse3[8] = "--"
+   Enduse3[9] = "1.2"
+   Enduse3[10] = "1.2"
+   Enduse3[11] = "0.52"
+   Enduse3[12] = "0.52"
+   Enduse3[13] = "--"
+   Enduse3[17] = "1.48"
+   Enduse3[19] = "1.48"
+   Enduse3[20] = "1.48"
+   Enduse3[22] = "1.48"
+   Enduse3[23] = "0.00"
+   Enduse4[1] = "Heat Rejection"
+   Enduse4[2] = "--"
+   Enduse4[3] = "--"
+   Enduse4[4] = "--"
+   Enduse4[5] = "--"
+   Enduse4[6] = "--"
+   Enduse4[7] = "--"
+   Enduse4[8] = "--"
+   Enduse4[9] = "--"
+   Enduse4[10] = "--"
+   Enduse4[11] = "--"
+   Enduse4[12] = "--"
+   Enduse4[13] = "--"
+   Enduse4[23] = "0.00"
+   Enduse5[1] = "Pumps & Misc."
+   Enduse5[2] = "0.2"
+   Enduse5[3] = "--"
+   Enduse5[4] = "0.02"
+   Enduse5[5] = "0.2"
+   Enduse5[6] = "--"
+   Enduse5[7] = "0.02"
+   Enduse5[8] = "--"
+   Enduse5[9] = "0.1"
+   Enduse5[10] = "0.1"
+   Enduse5[11] = "0.01"
+   Enduse5[12] = "0.01"
+   Enduse5[13] = "--"
+   Enduse5[17] = "0.03"
+   Enduse5[19] = "0.03"
+   Enduse5[20] = "0.03"
+   Enduse5[22] = "0.03"
+   Enduse5[23] = "0.00"
+   Enduse6[1] = "Domestic Hot Water"
+   Enduse6[2] = "14.3"
+   Enduse6[3] = "--"
+   Enduse6[4] = "1.29"
+   Enduse6[5] = "14.3"
+   Enduse6[6] = "--"
+   Enduse6[7] = "1.29"
+   Enduse6[8] = "--"
+   Enduse6[9] = "0.5"
+   Enduse6[10] = "0.6"
+   Enduse6[11] = "0.30"
+   Enduse6[12] = "0.30"
+   Enduse6[13] = "--"
+   Enduse6[17] = "0.85"
+   Enduse6[19] = "0.85"
+   Enduse6[20] = "0.86"
+   Enduse6[22] = "0.86"
+   Enduse6[23] = "0.01"
+   Enduse7[1] = "Indoor Lighting"
+   Enduse7[2] = "72.5"
+   Enduse7[3] = "--"
+   Enduse7[4] = "6.45"
+   Enduse7[5] = "72.5"
+   Enduse7[6] = "--"
+   Enduse7[7] = "6.45"
+   Enduse7[8] = "--"
+   Enduse7[9] = "2.3"
+   Enduse7[10] = "2.3"
+   Enduse7[11] = "1.44"
+   Enduse7[12] = "1.44"
+   Enduse7[13] = "--"
+   Enduse7[17] = "4.09"
+   Enduse7[19] = "4.09"
+   Enduse7[20] = "4.09"
+   Enduse7[22] = "4.09"
+   Enduse7[23] = "0.00"
+   Enduse8[1] = "Total Compliance"
+   Enduse8[2] = "-28.4"
+   Enduse8[3] = "0.0"
+   Enduse8[4] = "4.23"
+   Enduse8[5] = "-28.3"
+   Enduse8[6] = "0.0"
+   Enduse8[7] = "4.23"
+   Enduse8[8] = "--"
+   Enduse8[9] = "15.5"
+   Enduse8[10] = "15.5"
+   Enduse8[11] = "2.39"
+   Enduse8[12] = "2.39"
+   Enduse8[13] = "--"
+   Enduse8[17] = "6.80"
+   Enduse8[19] = "6.80"
+   Enduse8[20] = "6.81"
+   Enduse8[22] = "6.81"
+   Enduse8[23] = "0.01"
+   Enduse9[1] = "Receptacle"
+   Enduse9[2] = "229.7"
+   Enduse9[3] = "--"
+   Enduse9[4] = "19.93"
+   Enduse9[5] = "229.7"
+   Enduse9[6] = "--"
+   Enduse9[7] = "19.93"
+   Enduse9[8] = "--"
+   Enduse9[9] = "5.9"
+   Enduse9[10] = "5.9"
+   Enduse9[11] = "4.21"
+   Enduse9[12] = "4.21"
+   Enduse9[13] = "--"
+   Enduse9[17] = "11.95"
+   Enduse9[19] = "11.95"
+   Enduse9[20] = "11.95"
+   Enduse9[22] = "11.95"
+   Enduse9[23] = "0.00"
+   Enduse10[1] = "Process"
+   Enduse10[2] = "--"
+   Enduse10[3] = "--"
+   Enduse10[4] = "--"
+   Enduse10[5] = "--"
+   Enduse10[6] = "--"
+   Enduse10[7] = "--"
+   Enduse10[8] = "--"
+   Enduse10[9] = "--"
+   Enduse10[10] = "--"
+   Enduse10[11] = "--"
+   Enduse10[12] = "--"
+   Enduse10[13] = "--"
+   Enduse10[23] = "0.00"
+   Enduse11[1] = "Other Lighting"
+   Enduse11[2] = "--"
+   Enduse11[3] = "--"
+   Enduse11[4] = "--"
+   Enduse11[5] = "--"
+   Enduse11[6] = "--"
+   Enduse11[7] = "--"
+   Enduse11[8] = "--"
+   Enduse11[9] = "--"
+   Enduse11[10] = "--"
+   Enduse11[11] = "--"
+   Enduse11[12] = "--"
+   Enduse11[13] = "--"
+   Enduse11[23] = "0.00"
+   Enduse12[1] = "Process Motors"
+   Enduse12[2] = "--"
+   Enduse12[3] = "--"
+   Enduse12[4] = "--"
+   Enduse12[5] = "--"
+   Enduse12[6] = "--"
+   Enduse12[7] = "--"
+   Enduse12[8] = "--"
+   Enduse12[9] = "--"
+   Enduse12[10] = "--"
+   Enduse12[11] = "--"
+   Enduse12[12] = "--"
+   Enduse12[13] = "--"
+   Enduse12[23] = "0.00"
+   Enduse13[1] = "Photovoltaics"
+   Enduse13[2] = "-263.7"
+   Enduse13[3] = "--"
+   Enduse13[4] = "-17.77"
+   Enduse13[5] = "-263.7"
+   Enduse13[6] = "--"
+   Enduse13[7] = "-17.77"
+   Enduse13[8] = "--"
+   Enduse13[9] = "-0.4"
+   Enduse13[10] = "-0.4"
+   Enduse13[11] = "-2.12"
+   Enduse13[12] = "-2.12"
+   Enduse13[13] = "--"
+   Enduse13[17] = "-6.01"
+   Enduse13[19] = "-6.01"
+   Enduse13[20] = "-6.01"
+   Enduse13[22] = "-6.01"
+   Enduse13[23] = "0.00"
+   Enduse14[1] = "Battery Storage"
+   Enduse14[2] = "2.6"
+   Enduse14[3] = "--"
+   Enduse14[4] = "0.32"
+   Enduse14[5] = "2.6"
+   Enduse14[6] = "--"
+   Enduse14[7] = "0.32"
+   Enduse14[8] = "--"
+   Enduse14[9] = "-0.4"
+   Enduse14[10] = "-0.4"
+   Enduse14[11] = "-0.82"
+   Enduse14[12] = "-0.82"
+   Enduse14[13] = "--"
+   Enduse14[17] = "-2.33"
+   Enduse14[19] = "-2.33"
+   Enduse14[20] = "-2.33"
+   Enduse14[22] = "-2.33"
+   Enduse14[23] = "0.00"
+   Enduse15[1] = "Project Total"
+   Enduse15[2] = "201.3"
+   Enduse15[3] = "0.0"
+   Enduse15[4] = "24.16"
+   Enduse15[5] = "201.4"
+   Enduse15[6] = "0.0"
+   Enduse15[7] = "24.16"
+   Enduse15[8] = "--"
+   Enduse15[9] = "21.4"
+   Enduse15[10] = "21.4"
+   Enduse15[11] = "6.60"
+   Enduse15[12] = "6.60"
+   Enduse15[13] = "--"
+   Enduse15[17] = "18.75"
+   Enduse15[19] = "18.75"
+   Enduse15[20] = "18.76"
+   Enduse15[22] = "18.76"
+   Enduse15[23] = "0.01"
+   Enduse16[1] = "Efficiency Compliance"
+   Enduse16[2] = "232.7"
+   Enduse16[3] = "0.0"
+   Enduse16[4] = "21.68"
+   Enduse16[5] = "232.8"
+   Enduse16[6] = "0.0"
+   Enduse16[7] = "21.68"
+   Enduse16[8] = "--"
+   Enduse16[9] = "16.3"
+   Enduse16[10] = "16.3"
+   Enduse16[11] = "5.33"
+   Enduse16[12] = "5.33"
+   Enduse16[13] = "--"
+   Enduse16[17] = "15.14"
+   Enduse16[19] = "15.14"
+   Enduse16[20] = "15.15"
+   Enduse16[22] = "15.15"
+   Enduse16[23] = "0.01"
+   ZoneUMLHsLoaded = ( 0, 1 )
+   ZoneUMLHs = ( 
+                 "clg: 0  htg: 2  'Core_bottom Thermal Zone'
+clg: 0  htg: 1  'Perimeter_bot_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_bot_ZN_2 Thermal Zone'
+clg: 0  htg: 2  'Perimeter_bot_ZN_3 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_bot_ZN_4 Thermal Zone'
+clg: 0  htg: 0  'FirstFloor_Plenum Thermal Zone'
+clg: 0  htg: 1  'Core_mid Thermal Zone'
+clg: 0  htg: 2  'Perimeter_mid_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_mid_ZN_2 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_mid_ZN_3 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_mid_ZN_4 Thermal Zone'
+clg: 0  htg: 0  'MidFloor_Plenum Thermal Zone'
+clg: 0  htg: 0  'Core_top Thermal Zone'
+clg: 0  htg: 2  'Perimeter_top_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_2 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_3 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_4 Thermal Zone'
+clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'", 
+                 "clg: 0  htg: 2  'Core_bottom Thermal Zone'
+clg: 0  htg: 1  'Perimeter_bot_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_bot_ZN_2 Thermal Zone'
+clg: 0  htg: 2  'Perimeter_bot_ZN_3 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_bot_ZN_4 Thermal Zone'
+clg: 0  htg: 0  'FirstFloor_Plenum Thermal Zone'
+clg: 0  htg: 1  'Core_mid Thermal Zone'
+clg: 0  htg: 2  'Perimeter_mid_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_mid_ZN_2 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_mid_ZN_3 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_mid_ZN_4 Thermal Zone'
+clg: 0  htg: 0  'MidFloor_Plenum Thermal Zone'
+clg: 0  htg: 1  'Core_top Thermal Zone'
+clg: 0  htg: 2  'Perimeter_top_ZN_1 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_2 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_3 Thermal Zone'
+clg: 0  htg: 1  'Perimeter_top_ZN_4 Thermal Zone'
+clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'" )
+   SimSummary[1] = "CSE Successful, E+ Successful (207 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (207 warnings)"
+   PassFail = "PASS"
+   MetricPassFail[1] = "Pass"
+   MetricPassFail[2] = "Pass"
+   MetricPassFail[3] = "Pass"
+   ComplyMessage = "COMPLIES"
+   StdPVBatteryMsg = "Standard Design PV Capacity: 167.9 kWdc  /  Battery System Capacity: 296.9 kWh  (power 74.23 kW)"
+   AnalysisValid = 0
+   HideCompSmrySrc = 0
+   HideCompSmryTot = 0
+   PctSavingsSLCC = 0
+   PctSavingsEffSLCC = 0
+   PctSavingsCmpSLCC = 0
+   PctSavSLCCLbl = "-"
+   PctSavEffSLCCLbl = "-"
+   PctSavCmpSLCCLbl = "-"
+   PctSavingsSrc = 0
+   PctSavingsEffSrc = 0
+   PctSavingsCmpSrc = 0
+   PctSavSrcLbl = "-"
+   PctSavEffSrcLbl = "-"
+   PctSavCmpSrcLbl = "-"
+   MarginkW = 0
+   PVBattResultsValid = 1
+   PropPV_Size = 167.86
+   PropPV_Total = 263727
+   PropPV_Export = 46806
+   PropPV_PctExport = 17.7479
+   PropBatt_Size = 296.9
+   PropBatt_Pwr = 74.23
+   PropBatt_Ctrl = "Time of Use"
+   StdPV_Size = 167.85
+   StdPV_Total = 263727
+   StdPV_Export = 46802.3
+   StdPV_PctExport = 17.7465
+   StdBatt_Size = 296.9
+   StdBatt_Pwr = 74.23
+   StdBatt_Ctrl = "Time of Use"
+   NRCCPRFPayldTransID = "f519b7b4-4b9a-4bd8-9d44-c5f503cd9637"
+   NRCCPRFPayldProcDate = "2025-06-23T19:22:47"
+   ..
+
+BatchRuns   "BatchRuns"  
+   ProjDirectory = "OtherTests2022\"
+   IncludeSubdirs = 0
+   ProjFileNames = "*.cibd22"
+   AdditionalInputs = 1
+   StoreProjToSepDir = 1
+   OutputProjDir = "C:\_svn_CBECC_WeatherZip\Projects-2022\BatchRunSets\Batch-92-Weather\"
+   RunSetFile = "C:\_svn_CBECC_WeatherZip\Projects-2022\BatchRunSets\Com 2022 CZ-Weather-92-runs.csv"
+   ..
+
+
+END_OF_FILE

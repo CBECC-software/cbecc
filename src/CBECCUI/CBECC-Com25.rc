@@ -123,6 +123,8 @@ IDB_TREEHVAC            BITMAP  DISCARDABLE     "res\\t_HVAC_1.bmp"
 IDB_TREEHVAC2           BITMAP  DISCARDABLE     "res\\t_HVAC_2.bmp"
 IDB_TREEHPMP            BITMAP  DISCARDABLE     "res\\t_HPMP_1.bmp"
 IDB_TREEHPMP2           BITMAP  DISCARDABLE     "res\\t_HPMP_2.bmp"
+IDB_TREEAWHP            BITMAP  DISCARDABLE     "res\\t_AWHP_1.bmp"
+IDB_TREEAWHP2           BITMAP  DISCARDABLE     "res\\t_AWHP_2.bmp"
 IDB_TREEECON            BITMAP  DISCARDABLE     "res\\t_ECON_1.bmp"
 IDB_TREEECON2           BITMAP  DISCARDABLE     "res\\t_ECON_2.bmp"
 IDB_TREEPLNT            BITMAP  DISCARDABLE     "res\\t_PLNT_1.bmp"
@@ -712,8 +714,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2025,0046,0,1370		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2025,0046,0,1370	//   examples:  2025,1007,0,### => 2025.1.0 RC (###) / 2025,1010,0,### => 2025.1.1 (###) / 2025,1024,0,### => 2025.1.2 Beta (###)
+ FILEVERSION    2025,1000,0,1381	// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2025,1000,0,1381	//   examples:  2025,1007,0,### => 2025.1.0 RC (###) / 2025,1010,0,### => 2025.1.1 (###) / 2025,1024,0,### => 2025.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC-Com version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -731,15 +733,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (2025)\0"
-            VALUE "FileVersion", "2025.0.4 RV (1370)\0"
+            VALUE "FileVersion", "2025.1.0 (1381)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
-            VALUE "LegalCopyright", "Copyright (C) 2012-2024, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2025, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-25.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (2025)\0"
-            VALUE "ProductVersion", "2025.0.4 RV\0"
-            VALUE "SpecialBuild", "build 1370\0"
+            VALUE "ProductVersion", "2025.1.0\0"
+            VALUE "SpecialBuild", "build 1381\0"
         END
     END
     BLOCK "VarFileInfo"

@@ -1844,7 +1844,7 @@ static int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportT
 
 static const char* GetResultsCSVHeader_NonRes( int i1HdrIdx, int iCodeType );
 
-const char pcCharsNotAllowedInObjNames_CECNonRes[] = { '"', ',', '\'', '!', ';', NULL };	// SAC 8/20/14
+const char pcCharsNotAllowedInObjNames_CECNonRes[] = { '"', ',', '\'', '!', ';', '[', ']', NULL };	// SAC 8/20/14   // added '[' & ']' due to EPlus auto-sizing capacity reading issue - SAC 04/25/25 (gh support #166)
 
 static QString sDbgFileName;
 
@@ -1866,6 +1866,10 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
    bool bReportSimProgress = (iRulesetCodeYear >= 2022);    // SAC 01/24/22 (MFam)   // renamed & added 2019 vs. 22 logic - SAC 02/07/22 (tic #3345)
    long lDBID_ResProj_HVACSizingNeeded  = BEMPX_GetDatabaseID( "ResProj:HVACSizingNeeded" );
    long lDBID_Proj_HaveStandaloneBatt   = BEMPX_GetDatabaseID( "Proj:HaveStandaloneBatt" );     // SAC 05/26/22
+
+                           // debugging
+                           //BEMPX_WriteLogFile( QString( "     CSERunLoop():  iSimRunIdx %1, bStoreHourlyResults %2, bPerformFullCSESim %3, posSimInfo[iSR]->pszLongRunID %4" ).arg( 
+                           //         QString::number( iSimRunIdx ), QString::number( (bStoreHourlyResults ? 1 : 0) ), QString::number( (bPerformFullCSESim ? 1 : 0) ), posSimInfo[iSimRunIdx]->pszLongRunID ),  NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // SAC 04/10/25
 
 
               				std::vector<int> iaCSESimRunIdx;
@@ -2410,6 +2414,7 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 //											95 : Error downloading CUAC gas tariff schedule
 //											96 : Error calculating CUAC utility bill(s)
 //											97	: Error evaluating SetupMFamInteriorSurfaces rules
+//											98	: Incompatible EnergyPlus simulation versions between executable and project/ruleset code years
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2543,6 +2548,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	    iDLLCodeYear = 2022;		// SAC 4/24/20
 #elif  CODEYEAR2025
 	    iDLLCodeYear = 2025;		// SAC 10/23/22
+#elif  CODEYEAR2028
+	    iDLLCodeYear = 2028;		// SAC 04/30/25
 #endif
 
 	int iNumFileOpenDefaultingRounds = GetCSVOptionValue( "NumFileOpenDefaultingRounds", 3, saCSVOptions );		// SAC 4/11/18
@@ -2665,7 +2672,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	GetCSVOptionString( "EnergyPlusPath", sEPlusPath, saCSVOptions );
 	if (sEPlusPath.isEmpty())
 	//	sEPlusPath = "EPlus\\";
-		sEPlusPath = sCompMgrDLLPath + "EPlus\\";
+	{	sEPlusPath = sCompMgrDLLPath + "EPlus\\";
+      if (!DirectoryExists( sEPlusPath ))          // check new default repository directory - SAC 03/04/25
+      {  int iDLLPathLenMinusLastPart = std::max( sCompMgrDLLPath.lastIndexOf( '\\', sCompMgrDLLPath.length()-2 ), sCompMgrDLLPath.lastIndexOf( '/', sCompMgrDLLPath.length()-2 ) );
+         if (iDLLPathLenMinusLastPart > 0 && iDLLPathLenMinusLastPart < sCompMgrDLLPath.length()-1)
+         {  QString sEPlusPath2 = sCompMgrDLLPath.left( iDLLPathLenMinusLastPart+1 ) + "sim-EPlus\\current\\";
+            if (DirectoryExists( sEPlusPath2 ))
+               sEPlusPath = sEPlusPath2;
+   }  }  }
 	if (sModelkitPath.isEmpty())     // HybridCooling - SAC 06/23/22
 		sModelkitPath = sCompMgrDLLPath + "Modelkit\\";
    else if (sModelkitPath.right(1).compare('/')!=0 && sModelkitPath.right(1).compare('\\')!=0)
@@ -2674,6 +2688,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	QString sProcessingPath		= pszProcessingPath;
 	QString sModelPathFile		= pszModelPathFile;
 	QString sLogPathFile			= pszLogPathFile;
+   QString sCSEPath;		   // added - SAC 02/18/25
+	GetCSVOptionString( "CSEPath", sCSEPath, saCSVOptions );
 
 	RelativeToCompletePath_IfNeeded( sBEMBasePathFile );		// revise EACH path to be relative to EXE path (if the path is specified but not complete)
 	RelativeToCompletePath_IfNeeded( sRulesetPathFile );
@@ -3229,6 +3245,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							}
 #endif
 
+   if (!bAbort && !BEMPX_AbortRuleEvaluation() && iDLLCodeYear >= 2025 && iRulesetCodeYear < 2025)    // added check to prevent analysis when EnergyPlus versions are incompatible - SAC 04/24/25
+   {	sErrMsg = QString::asprintf( "Error: Analysis of project/ruleset year (%d) cannot be performed using this executable (%d) due to incompatibilities in the associated EnergyPlus versions.", iRulesetCodeYear, iDLLCodeYear );
+         //											98	: Incompatible EnergyPlus simulation versions between executable and project/ruleset code years
+      ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 98 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+   }
+
   // SAC 8/20/14 - added check (& fix) for object name violations
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())
 	{	QString sObjNameViolationMsg;
@@ -3379,33 +3401,95 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 	}
 
-   // Update sSimWeatherPath to account for research mode substitution - SAC 08/27/24
+   // Update sSimWeatherPath to account for research mode substitution - SAC 08/27/24   - and SVN (non-research mode) as of 02/19/25
    if (!bAbort && !BEMPX_AbortRuleEvaluation() && !sSimWeatherPath.isEmpty())
    {  QString sSimWeatherPathSub, sWthrPathSub;
       long lERM, lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) ),
                  lDBID_Proj_WeatherPathSub     = BEMPX_GetDatabaseID( "WeatherPathSub",     BEMPX_GetDBComponentID( "Proj" ) );
-      if (lDBID_Proj_EnableResearchMode > 0 && lDBID_Proj_WeatherPathSub > 0 &&
-          BEMPX_GetInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ) && lERM > 0 &&
-          BEMPX_GetString(  lDBID_Proj_WeatherPathSub, sWthrPathSub ) && !sWthrPathSub.isEmpty())
-      {  // replace right-most portion of sSimWeatherPath with sWthrPathSub, and confirm that it is a valid path
-         int iPathLenMinusLastPart = sSimWeatherPath.lastIndexOf( '\\', sSimWeatherPath.length()-2 );
-         if (iPathLenMinusLastPart > 0)
-         {  QString sTempSimWeatherPath = sSimWeatherPath.left( iPathLenMinusLastPart+1 );
-            sTempSimWeatherPath += sWthrPathSub;
-            sTempSimWeatherPath += '\\';
-                  // BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - iPathLenMinusLastPart: %d / sSimWeatherPath:  %s / sTempSimWeatherPath:  %s", iPathLenMinusLastPart, sSimWeatherPath.toLocal8Bit().constData(), sTempSimWeatherPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-            if (DirectoryExists( sTempSimWeatherPath ))
-            {        BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Replacing weather file path:  %s  -->>  %s", sSimWeatherPath.toLocal8Bit().constData(), sTempSimWeatherPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-               sSimWeatherPath = sTempSimWeatherPath;
-      }  }  }
+      if (lDBID_Proj_WeatherPathSub > 0)
+         BEMPX_GetString(  lDBID_Proj_WeatherPathSub, sWthrPathSub );
+      if (!sWthrPathSub.isEmpty())
+      {  long lWthrPathSubStatus = BEMPX_GetDataStatus( lDBID_Proj_WeatherPathSub );
+         if ( lWthrPathSubStatus < BEMS_UserDefault ||      // revised logic to apply WeatherPathSub in research mode -OR- if it is defaulted in rules - SAC 02/19/25
+              (lDBID_Proj_EnableResearchMode > 0 && BEMPX_GetInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ) && lERM > 0) )
+         {  // replace right-most portion of sSimWeatherPath with sWthrPathSub, and confirm that it is a valid path
+            int iPathLenMinusLastPart = sSimWeatherPath.lastIndexOf( '\\', sSimWeatherPath.length()-2 );
+            if (iPathLenMinusLastPart > 0)
+            {  QString sTempSimWeatherPath = sSimWeatherPath.left( iPathLenMinusLastPart+1 );
+               sTempSimWeatherPath += sWthrPathSub;
+               sTempSimWeatherPath += '\\';
+                     // BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - iPathLenMinusLastPart: %d / sSimWeatherPath:  %s / sTempSimWeatherPath:  %s", iPathLenMinusLastPart, sSimWeatherPath.toLocal8Bit().constData(), sTempSimWeatherPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               if (DirectoryExists( sTempSimWeatherPath ))
+               {  if (bVerbose || ebLogAnalysisMsgs)
+                     BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Replacing weather file path:  %s  -->>  %s", sSimWeatherPath.toLocal8Bit().constData(), sTempSimWeatherPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  sSimWeatherPath = sTempSimWeatherPath;
+      }  }  }  }
    }
 
-	QString sCSEEXEPath			= sCompMgrDLLPath + "CSE\\";		// SAC 5/24/16
-	QString sCSEWeatherPath		= sSimWeatherPath;
+   if (!bAbort && !BEMPX_AbortRuleEvaluation())
+   {  // Update sEPlusPath to account for research mode and SVN (non-research mode) substitution - SAC 02/20/25
+      if (!sEPlusPath.isEmpty())
+      {  QString sEngyPlusPathSub;
+         long lERM, lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) ),
+                    lDBID_Proj_EngyPlusPathSub    = BEMPX_GetDatabaseID( "EngyPlusPathSub",    BEMPX_GetDBComponentID( "Proj" ) );
+         if (lDBID_Proj_EngyPlusPathSub > 0)
+            BEMPX_GetString( lDBID_Proj_EngyPlusPathSub, sEngyPlusPathSub );
+         if (!sEngyPlusPathSub.isEmpty())
+         {  long lEngyPlusPathSubStatus = BEMPX_GetDataStatus( lDBID_Proj_EngyPlusPathSub );
+            if ( lEngyPlusPathSubStatus < BEMS_UserDefault ||      // apply EngyPlusPathSub in research mode -OR- if it is defaulted in rules
+                 (lDBID_Proj_EnableResearchMode > 0 && BEMPX_GetInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ) && lERM > 0) )
+            {  // replace right-most portion of sEPlusPath with sEngyPlusPathSub, and confirm that it is a valid path
+               int iPathLenMinusLastPart = sEPlusPath.lastIndexOf( '\\', sEPlusPath.length()-2 );
+               if (iPathLenMinusLastPart > 0)
+               {  QString sTempEPlusPath = sEPlusPath.left( iPathLenMinusLastPart+1 );
+                  sTempEPlusPath += sEngyPlusPathSub;
+                  sTempEPlusPath += '\\';
+                        // BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - iPathLenMinusLastPart: %d / sEPlusPath:  %s / sTempEPlusPath:  %s", iPathLenMinusLastPart, sEPlusPath.toLocal8Bit().constData(), sTempEPlusPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  if (DirectoryExists( sTempEPlusPath ))
+                  {  if (bVerbose || ebLogAnalysisMsgs)
+                        BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Replacing EnergyPlus executable path:  %s  -->>  %s", sEPlusPath.toLocal8Bit().constData(), sTempEPlusPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                     sEPlusPath = sTempEPlusPath;
+         }  }  }  }
+   }  }
+
+	QString sCSEEXEPath			= (!sCSEPath.isEmpty() ? sCSEPath : sCompMgrDLLPath + "CSE\\");		// SAC 5/24/16  // updated - SAC 02/18/25
+   if (!DirectoryExists( sCSEEXEPath ))      // check new default repository directory - SAC 03/04/25
+   {  int iDLLPathLenMinusLastPart = std::max( sCompMgrDLLPath.lastIndexOf( '\\', sCompMgrDLLPath.length()-2 ), sCompMgrDLLPath.lastIndexOf( '/', sCompMgrDLLPath.length()-2 ) );
+      if (iDLLPathLenMinusLastPart > 0 && iDLLPathLenMinusLastPart < sCompMgrDLLPath.length()-1)
+      {  QString sCSEEXEPath2 = sCompMgrDLLPath.left( iDLLPathLenMinusLastPart+1 ) + "sim-CSE\\current\\";
+         if (DirectoryExists( sCSEEXEPath2 ))
+            sCSEEXEPath = sCSEEXEPath2;
+   }  }
+   QString sCSEWeatherPath		= sSimWeatherPath;
 	QString qsCSEName="CSE";
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())
 	{
-	// Setup CSE executable filename based on setting from ruleset - SAC 12/17/17
+      // Update sCSEEXEPath to account for research mode and SVN (non-research mode) substitution - SAC 02/20/25
+      if (!sCSEEXEPath.isEmpty())
+      {  QString sCSEPathSub;
+         long lERM, lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) ),
+                    lDBID_Proj_CSEPathSub         = BEMPX_GetDatabaseID( "CSEPathSub",         BEMPX_GetDBComponentID( "Proj" ) );
+         if (lDBID_Proj_CSEPathSub > 0)
+            BEMPX_GetString( lDBID_Proj_CSEPathSub, sCSEPathSub );
+         if (!sCSEPathSub.isEmpty())
+         {  long lCSEPathSubStatus = BEMPX_GetDataStatus( lDBID_Proj_CSEPathSub );
+            if ( lCSEPathSubStatus < BEMS_UserDefault ||      // apply CSEPathSub in research mode -OR- if it is defaulted in rules
+                 (lDBID_Proj_EnableResearchMode > 0 && BEMPX_GetInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ) && lERM > 0) )
+            {  // replace right-most portion of sCSEEXEPath with sCSEPathSub, and confirm that it is a valid path
+               int iPathLenMinusLastPart = sCSEEXEPath.lastIndexOf( '\\', sCSEEXEPath.length()-2 );
+               if (iPathLenMinusLastPart > 0)
+               {  QString sTempCSEEXEPath = sCSEEXEPath.left( iPathLenMinusLastPart+1 );
+                  sTempCSEEXEPath += sCSEPathSub;
+                  sTempCSEEXEPath += '\\';
+                        // BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - iPathLenMinusLastPart: %d / sCSEEXEPath:  %s / sTempCSEEXEPath:  %s", iPathLenMinusLastPart, sCSEEXEPath.toLocal8Bit().constData(), sTempCSEEXEPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  if (DirectoryExists( sTempCSEEXEPath ))
+                  {  if (bVerbose || ebLogAnalysisMsgs)
+                        BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Replacing CSE executable path:  %s  -->>  %s", sCSEEXEPath.toLocal8Bit().constData(), sTempCSEEXEPath.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                     sCSEEXEPath = sTempCSEEXEPath;
+         }  }  }  }
+      }
+
+      // Setup CSE executable filename based on setting from ruleset - SAC 12/17/17
 		if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSEName" ), qsCSEName ) || qsCSEName.isEmpty())
 			qsCSEName = "CSE";
 					//	#ifdef _DEBUG
@@ -3420,7 +3504,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	}	//}
 
 // Check fairly wide variety of file hashes for supporting files - some required, some not - if inconcistencies found, log them and turn OFF report signature use
-#define  MAX_FileHashID  32      // 50->32 - SAC 04/14/21
+#define  MAX_FileHashID  35      // 50->32 - SAC 04/14/21   // 32->35 - SAC 05/29/25
 	int iNumFileHashErrs = 0;
 	if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
 		bBypassValidFileChecks = true;	// SAC 12/23/14 - turn OFF file hash checks for S901G analyses
@@ -3439,40 +3523,43 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			{	bRequiredForCodeYear = true;
 			// SAC 1/14/17 - updated file hash table for 2016/19 analysis (using new open source exes)
 				switch (iFHID)
-				{	case  1 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case  2 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
-					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr22c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths
-					case  4 :	sFHPathFile = sCompMgrDLLPath + "BEMProc22c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
-					case  5 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap22.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
-					case  6 :	sFHPathFile = sCompMgrDLLPath + "libcrypto-1_1-x64.dll";  	      bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
-					case  7 :	sFHPathFile = sCompMgrDLLPath + "libssl-1_1-x64.dll"; 			   bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
-					case  8 :	sFHPathFile = sCompMgrDLLPath + "openstudiolib.dll";              break;
-					case  9 :	sFHPathFile = sCompMgrDLLPath + "Qt5Cored.dll";                   break;  // SAC 12/3/14 - revised for Qt5
-					case 10 :	sFHPathFile = sCompMgrDLLPath + "Qt5Guid.dll";                    break;
-					case 11 :	sFHPathFile = sCompMgrDLLPath + "Qt5Networkd.dll";                break;
-					case 12 :	sFHPathFile = sCompMgrDLLPath + "Qt5Sqld.dll";                    break;
-					case 13 :	sFHPathFile = sCompMgrDLLPath + "Qt5Widgetsd.dll";                break;
-					case 14 :	sFHPathFile = sCompMgrDLLPath + "Qt5Xmld.dll";                    break;
-					case 15 :	sFHPathFile = sCompMgrDLLPath + "Qt5Core.dll";                    break;
-					case 16 :   sFHPathFile = sCompMgrDLLPath + "Qt5Gui.dll";                     break;
-					case 17 :   sFHPathFile = sCompMgrDLLPath + "Qt5Network.dll";                 break;
-					case 18 :   sFHPathFile = sCompMgrDLLPath + "Qt5Sql.dll";                     break;
-					case 19 :   sFHPathFile = sCompMgrDLLPath + "Qt5Widgets.dll";                 break;
-					case 20 :   sFHPathFile = sCompMgrDLLPath + "Qt5Xml.dll";                     break;
-					case 21 :   sFHPathFile = sEPlusPath + "EnergyPlus.exe";          				break;
-					case 22 :   sFHPathFile = sEPlusPath + "Energy+.idd";             				break;
-					case 23 :	sFHPathFile = sEPlusPath + "energyplusapi.dll";        				break;
-					case 24 :	sFHPathFile = sEPlusPath + "EPMacro.exe";               				break;
-					case 25 :	sFHPathFile = sEPlusPath + "ExpandObjects.exe";        				break;
-					case 26 :	sFHPathFile = sEPlusPath + "ReadVarsESO.exe";	        				break;
-					case 27 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr19c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 28 :	sFHPathFile = sCompMgrDLLPath + "BEMProc19c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 29 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap19.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 30 :	sFHPathFile = sCSEEXEPath + "cse19d.exe";	             				break;	// SAC 5/24/16
-					case 31 :	if (lRuleRepoRev >= 8681)     // SAC 12/18/24
+				{	case  1 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case  2 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr25c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths
+					case  4 :	sFHPathFile = sCompMgrDLLPath + "BEMProc25c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case  5 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap25.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case  6 :	sFHPathFile = sCompMgrDLLPath + "openstudiolib_9-4.dll"; 		   bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;	// switched from old (unused) SSL DLL to the OpenStudio DLL linked to E+ 9.4 - SAC 05/29/25
+					case  7 :	sFHPathFile = sCompMgrDLLPath + "openstudiolib.dll";              bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case  8 :	sFHPathFile = sCompMgrDLLPath + "Qt5Cored.dll";                   break;  // SAC 12/3/14 - revised for Qt5
+					case  9 :	sFHPathFile = sCompMgrDLLPath + "Qt5Guid.dll";                    break;
+					case 10 :	sFHPathFile = sCompMgrDLLPath + "Qt5Networkd.dll";                break;
+					case 11 :	sFHPathFile = sCompMgrDLLPath + "Qt5Sqld.dll";                    break;
+					case 12 :	sFHPathFile = sCompMgrDLLPath + "Qt5Widgetsd.dll";                break;
+					case 13 :	sFHPathFile = sCompMgrDLLPath + "Qt5Xmld.dll";                    break;
+					case 14 :	sFHPathFile = sCompMgrDLLPath + "Qt5Core.dll";                    break;
+					case 15 :   sFHPathFile = sCompMgrDLLPath + "Qt5Gui.dll";                     break;
+					case 16 :   sFHPathFile = sCompMgrDLLPath + "Qt5Network.dll";                 break;
+					case 17 :   sFHPathFile = sCompMgrDLLPath + "Qt5Sql.dll";                     break;
+					case 18 :   sFHPathFile = sCompMgrDLLPath + "Qt5Widgets.dll";                 break;
+					case 19 :   sFHPathFile = sCompMgrDLLPath + "Qt5Xml.dll";                     break;
+               case 20 :   sFHPathFile = sEPlusPath + "EnergyPlus.exe";          				bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case 21 :   sFHPathFile = sEPlusPath + "Energy+.idd";             				bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case 22 :	sFHPathFile = sEPlusPath + "energyplusapi.dll";        				bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case 23 :	sFHPathFile = sEPlusPath + "ExpandObjects.exe";        				bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+               case 24 :   sFHPathFile = sEPlusPath + "EnergyPlus.exe";          				bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 25 :   sFHPathFile = sEPlusPath + "Energy+.idd";             				bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 26 :	sFHPathFile = sEPlusPath + "energyplusapi.dll";        				bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 27 :	sFHPathFile = sEPlusPath + "EPMacro.exe";               				bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 28 :	sFHPathFile = sEPlusPath + "ExpandObjects.exe";        				bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 29 :	sFHPathFile = sEPlusPath + "ReadVarsESO.exe";	        				bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+               case 30 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr22c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 31 :	sFHPathFile = sCompMgrDLLPath + "BEMProc22c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 32 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap22.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+					case 33 :	sFHPathFile = sCSEEXEPath + "cse19d.exe";	             				break;	// SAC 5/24/16
+					case 34 :	if (lRuleRepoRev >= 8681)     // SAC 12/18/24
                                  sFHPathFile = sCSEEXEPath + "cse.exe";
                            else  sFHPathFile = sCSEEXEPath + "cse19.exe";	       				break;
-					case 32 :	sFHPathFile = sCSEEXEPath + sCSE_DHWUseIncFile;	     					break;     
+					case 35 :	sFHPathFile = sCSEEXEPath + sCSE_DHWUseIncFile;	     					break;     
 					default :			assert( FALSE );                                      		break;
 				}
 				if (!bRequiredForCodeYear)
@@ -3482,9 +3569,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				{	// DO NOTHING - some files expected to be missing - others will prevent success when missing...
 										if (bVerbose &&	// SAC 3/6/14 - added verbose logging of this condition
 #ifdef _DEBUG
-												((iFHID < 15 || iFHID > 20) && iFHID != 31))
+												((iFHID < 14 || iFHID > 19) && iFHID != 34))
 #else
-												((iFHID <  9 || iFHID > 14) && iFHID != 30))
+												((iFHID <  8 || iFHID > 13) && iFHID != 33))
 #endif
 										{	if (sFHPathFile.isEmpty())
 												sLogMsg = QString::asprintf( "    File to perform hash check on not specified (iFHID = %d)", iFHID );
@@ -4917,8 +5004,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				if (iRun == 0 || !bModelInitialized[iRun])
 				{  bModelOK  = CMX_TransformModel( sRunID.toLocal8Bit().constData(), TRUE /*bEvalRules*/, bVerbose /*bLogRuleEvaluation*/, bVerbose /*bVerboseOutput*/,
 				   											sDbgFileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo );
-                                 if (bLogCSERunLoopDetails)    // SAC 05/24/22
-                                    BEMPX_WriteLogFile( QString::asprintf( "    model transform performed for '%s'", sRunID.toLocal8Bit().constData() ) );
+                                 if (bLogCSERunLoopDetails || !bModelOK)    // SAC 05/24/22  // force log output if !bModelOK & include success/error in log message - SAC 04/24/25
+                                    BEMPX_WriteLogFile( QString::asprintf( "    model transform performed for '%s': %s", sRunID.toLocal8Bit().constData(), (bModelOK ? "success" : "Error") ) );
             }
 				else
 				{  int iThisRunBEMProcIdx = BEMPX_GetTransformIndex( sRunID.toLocal8Bit().constData() );		assert( iThisRunBEMProcIdx > 0 );
@@ -4933,8 +5020,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					}
 			   	bModelOK  = CM_EvaluateModelRules( sRunID.toLocal8Bit().constData(), bVerbose /*bLogRuleEvaluation*/, bVerbose /*bVerboseOutput*/, 
 			   													sDbgFileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo );		assert( bModelOK );
-                                 if (bLogCSERunLoopDetails)    // SAC 05/24/22
-                                    BEMPX_WriteLogFile( QString::asprintf( "    model transform rules evaluated for '%s'", sRunID.toLocal8Bit().constData() ) );
+                                 if (bLogCSERunLoopDetails || !bModelOK)    // SAC 05/24/22
+                                    BEMPX_WriteLogFile( QString::asprintf( "    model transform rules evaluated for '%s': %s", sRunID.toLocal8Bit().constData(), (bModelOK ? "success" : "Error") ) );
 				}
 				if (bModelOK && bPurgeUnreferencedObjects)
 					// Purge user-defined non-parent/child components which are not referenced  - SAC 8/12/13 - added to prevent simulation of objects that are not referenced in the building model
@@ -5051,13 +5138,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation())
 			{	// set flag indicating hourly results storage
 		//		int iCID_Proj = BEMPX_GetDBComponentID( "Proj" );									assert( iCID_Proj > 0 );
-				long lBeginMonth, lBeginDay, lEndMonth, lEndDay, lYear;
+				long lBeginMonth, lBeginDay, lEndMonth, lEndDay, lYear;   QString sRunAbbrev;
 				if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodBeginMonth", iCID_Proj ), lBeginMonth ) && lBeginMonth ==  1  &&
 						BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodBeginDay",   iCID_Proj ), lBeginDay   ) && lBeginDay   ==  1  && 
 						BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodEndMonth",   iCID_Proj ), lEndMonth   ) && lEndMonth   == 12  && 
 						BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodEndDay",     iCID_Proj ), lEndDay     ) && lEndDay     == 31  && 
-						BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodYear",       iCID_Proj ), lYear       ) && lYear       > 0  )
-					bStoreHourlyResults = true;
+						BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodYear",       iCID_Proj ), lYear       ) && lYear       >   0  &&
+                  BEMPX_GetString(  BEMPX_GetDatabaseID( "RunAbbrev",           iCID_Proj ), sRunAbbrev  ) && sRunAbbrev.indexOf('z') < 0 )   // added check for RunAbbrev containing 'z' to confirm sizing, for 2025 where RunPeriod defined for ALL runs - SAC 04/10/25
+                    bStoreHourlyResults = true;
 				if (bStoreHourlyResults)
 				{	if (iLastHrlyStorModelIdx >= 0 && iLastHrlyStorModelIdx < iCurActiveBEMProcIdx)
 					{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
@@ -5815,11 +5903,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 																if (fMaxUnmetHtgLdHrs > -0.5 && BEMPX_GetFloat( lDBID_ThrmlZn_HtgUnmetLdHrs, fNumZoneHtgUMLHs, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ) &&
 																	 fNumZoneHtgUMLHs > 0 /*&& lBypassHtgUMLHLimit == 0*/)		// SAC 5/13/19 (tic #2680)
-																{	if ((lBypassClgUMLHLimit == 0 || bReportAllUMLHZones) && fNumZoneHtgUMLHs > (fMaxZoneHtgUMLHs + 0.1))
+																{	if ((lBypassHtgUMLHLimit == 0 || bReportAllUMLHZones) && fNumZoneHtgUMLHs > (fMaxZoneHtgUMLHs + 0.1))  // bug fix: lBypassClgUMLHLimit -> lBypassHtgUMLHLimit = SAC 02/17/25 (user support gh #126)
 																	{	iMaxZoneExceedHtgUMLHsIdx = iZn;
 																		fMaxZoneHtgUMLHs = fNumZoneHtgUMLHs;
 																	}
-																	if (lBypassClgUMLHLimit == 0 && fNumZoneHtgUMLHs > (fMaxUnmetHtgLdHrs + 0.1))		// SAC 11/11/19 - moved lBypassClgUMLHLimit == 0 check from above to here (to enable reporting of Std model UMLH info)
+                                                      // SAC 11/11/19 - moved lBypassClgUMLHLimit == 0 check from above to here (to enable reporting of Std model UMLH info)
+																	if (lBypassHtgUMLHLimit == 0 && fNumZoneHtgUMLHs > (fMaxUnmetHtgLdHrs + 0.1))		// bug fix: lBypassClgUMLHLimit -> lBypassHtgUMLHLimit = SAC 02/17/25 (user support gh #126)
 																	{	iNumZonesExceedHtgUMLHs++;
 																		if (bIsPropModel)		// SAC 4/6/20
 																			iNumPropHtgUMLHViolations++;

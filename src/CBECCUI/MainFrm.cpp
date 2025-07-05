@@ -1594,7 +1594,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 		}
 
 		else if ( (wAction >= 3070 && wAction <= 3072) ||	// new range to present QMessageBox w/ Caption, Message & Details (that can include hyperlinks) - SAC 6/30/20 (Res tic #1018)
-                wAction == 3091 )
+                wAction == 3091 || wAction == 3092 )
 		{	QString qsMBCaption, qsMBMessage, qsMBDetails;    long lIconID=0;
 			if (wAction == 3070)		// info re: Res Community Solar program(s)
 			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoCap" ), qsMBCaption );
@@ -1608,18 +1608,24 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:rnSupportInfoDtl" ), qsMBDetails );
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:rnSupportInfoIcn" ), lIconID );
 			}
-			if (wAction == 3072)		// info re: Res Community Solar program(s) Opt-Out UI - SAC 04/07/23
+			else if (wAction == 3072)		// info re: Res Community Solar program(s) Opt-Out UI - SAC 04/07/23
 			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoCap" ), qsMBCaption );
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoMsg" ), qsMBMessage );
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoDtl" ), qsMBDetails );
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PVOptOutCSProjInfoIcn" ), lIconID );
 			}
-			if (wAction == 3091)		// info re: Res Community Solar program(s) (for CUAC analysis) - SAC 10/01/23
+			else if (wAction == 3091)		// info re: Res Community Solar program(s) (for CUAC analysis) - SAC 10/01/23
 			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:CmntySlrProjInfoCap" ), qsMBCaption );
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:CmntySlrProjInfoMsg" ), qsMBMessage );
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:CmntySlrProjInfoDtl" ), qsMBDetails );
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:CmntySlrProjInfoIcn" ), lIconID );
 			}
+			else if (wAction == 3092)		// info re: JA12 certified solar equipment listings - SAC 05/27/25 (tic #1395)
+			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:BattJA12EquipInfoCap" ), qsMBCaption );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:BattJA12EquipInfoMsg" ), qsMBMessage );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:BattJA12EquipInfoDtl" ), qsMBDetails );
+				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:BattJA12EquipInfoIcn" ), lIconID );
+         }
 			if (!qsMBCaption.isEmpty() && !qsMBMessage.isEmpty())
 			{
 				BEMMessageBox( qsMBMessage, qsMBCaption, (UINT) lIconID, 1024, 0, qsMBDetails );
@@ -3703,6 +3709,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sOptionsCSVString += sOptTemp;
 		}
 
+      CString sCSEPath = ReadProgString( "paths", "CSEPath", "CSE\\", TRUE );         // SAC 02/20/25  // added path default: EPlus\ - SAC 04/24/25
+      if (sCSEPath.GetLength() > 0)
+      {	sOptTemp.Format( "CSEPath,\"%s\",", sCSEPath );
+         sOptionsCSVString += sOptTemp;
+      }
+
 #ifdef UI_CANRES
 		AnalysisOption saCECNonResAnalOpts[] =	{	{  "LogRuleEvaluation"           ,  "Verbose"                     ,    0   },
 																{  "MaxNumErrorsReportedPerType" ,  "MaxNumErrorsReportedPerType" ,    5   },
@@ -3781,6 +3793,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       else if (ReadProgInt( sOptsSec, "PromptUserUMLHWarning",   0 /*default*/ ) > 0)		// SAC 3/11/15 - special handling since CBECC-Com default = 1 while CompMgr analysis routine default is 0   // switch default to 0 - SAC 7/28/20
          sOptionsCSVString +=         "PromptUserUMLHWarning,1,";
 	// new, valid, temporary (?) option:  WriteUMLHViolationsToFile - default to 1		// SAC 3/18/15
+
+      CString sEnergyPlusPath = ReadProgString( "paths", "EnergyPlusPath", "EPlus\\", TRUE );    // SAC 02/17/25  // added path default: EPlus\ - SAC 04/24/25
+      if (sEnergyPlusPath.GetLength() > 0)
+      {	sOptTemp.Format( "EnergyPlusPath,\"%s\",", sEnergyPlusPath );
+         sOptionsCSVString += sOptTemp;
+      }
 
       int iPreAnalysisCheckPromptOption = ReadProgInt( sOptsSec, "PreAnalysisCheckPromptOption", (bFromAltSection ? -999 : (bBatchMode ? 0 : 3)) /*default*/ );		// SAC 1/26/19 (com tic #2924)
       if (iPreAnalysisCheckPromptOption >= 0)		// SAC 7/5/16 - pass regardless of value, since default varies by mode
@@ -3870,6 +3888,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			lEnergyCodeYr = 2022;
 			#elif  UI_PROGYEAR2025
 			lEnergyCodeYr = 2025;
+			#elif  UI_PROGYEAR2028
+			lEnergyCodeYr = 2028;
 			#else
 			lEnergyCodeYr = 0;  // ???
 			#endif
@@ -9173,7 +9193,7 @@ void CMainFrame::OnToolsCAHPReport()		// SAC 10/8/14
 	CString sNoRptIDMsg, sCAHPResultProperty;
 #ifdef UI_PROGYEAR2019
 	AfxMessageBox( "CAHP report generation only available in 2013/16 Title-24 mode." );
-#elif UI_PROGYEAR2022 || UI_PROGYEAR2025
+#elif UI_PROGYEAR2022 || UI_PROGYEAR2025 || UI_PROGYEAR2028	  // SAC 04/30/25
 	AfxMessageBox( "CAHP report generation only available in 2013/16 Title-24 mode." );
 #elif  UI_PROGYEAR2016
 	sNoRptIDMsg = "CAHP report generation not available when CAHP program not selected.\nCAHP options must be specified in Project > Analysis -and- CAHP dialog tabs and analysis performed before this report can be generated.";
@@ -11294,7 +11314,8 @@ int CMainFrame::RefreshCustomRulelistEnum( QString qsSelectedRulelist )
 {
 #ifdef UI_CANRES
 	long lRuleFileDBID = elDBID_Proj_ExcptDsgnModelFile;
-	long lRLDBID = BEMPX_GetDatabaseID( "Proj:ExcptCondCompleteBldg" );
+	long lRLDBID = (BEMPX_GetDBComponentID( "ProjVar" ) > 0 ? BEMPX_GetDatabaseID( "ProjVar:ExcptCondCompleteBldg" ) :   // Proj->ProjVar - SAC 06/12/25
+                                                             BEMPX_GetDatabaseID(    "Proj:ExcptCondCompleteBldg" ));
 #elif UI_CARES
 	long lRuleFileDBID = 0;
 	long lRLDBID = 0;
@@ -11387,7 +11408,8 @@ void CMainFrame::OnToolsApplyCustomRules() 	// SAC 1/28/18 - ability to import &
 #ifdef UI_CANRES
 		long lRuleFileDBID      = elDBID_Proj_ExcptDsgnModelFile;
 		long lRuleFileValidDBID = BEMPX_GetDatabaseID( "Proj:UseExcptDsgnModel" );
-		long lRuleListDBID      = BEMPX_GetDatabaseID( "Proj:ExcptCondCompleteBldg" );
+		long lRuleListDBID      = (BEMPX_GetDBComponentID( "ProjVar" ) > 0 ? BEMPX_GetDatabaseID( "ProjVar:ExcptCondCompleteBldg" ) :   // Proj->ProjVar - SAC 06/12/25
+                                                                           BEMPX_GetDatabaseID(    "Proj:ExcptCondCompleteBldg" ));
 #elif UI_CARES
 		long lRuleFileDBID      = 0;
 		long lRuleFileValidDBID = 0;
@@ -11562,7 +11584,7 @@ afx_msg LRESULT CMainFrame::OnBEMGridOpen(  WPARAM wClass, LPARAM l1Occur)   // 
 	int iEnableGridDflt = 0;
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
 	iEnableGridDflt = 1;
-#elif UI_PROGYEAR2022 || UI_PROGYEAR2025	// SAC 6/19/19
+#elif UI_PROGYEAR2022 || UI_PROGYEAR2025 || UI_PROGYEAR2028	  // SAC 6/19/19  // SAC 04/30/25
 	iEnableGridDflt = 1;
 #endif
 	if (ReadProgInt( "options", "EnableGrid", iEnableGridDflt ) < 1)
@@ -11607,7 +11629,7 @@ void CMainFrame::OnUpdateShowModelGrid(CCmdUI* pCmdUI)
 	int iEnableGridDflt = 0;
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
 	iEnableGridDflt = 1;
-#elif UI_PROGYEAR2022 || UI_PROGYEAR2025	// SAC 6/19/19
+#elif UI_PROGYEAR2022 || UI_PROGYEAR2025 || UI_PROGYEAR2028	  // SAC 6/19/19  // SAC 04/30/25
 	iEnableGridDflt = 1;
 #endif
    CDocument* pDoc = NULL;
@@ -11621,8 +11643,8 @@ void CMainFrame::OnToolsShowModelGrid() 	// SAC 3/8/18 - initial model grid test
 	int iEnableGridDflt = 0;
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
 	iEnableGridDflt = 1;
-#elif UI_PROGYEAR2022 || UI_PROGYEAR2025	// SAC 6/19/19
-	iEnableGridDflt = 1;
+#elif UI_PROGYEAR2022 || UI_PROGYEAR2025 || UI_PROGYEAR2028	  // SAC 6/19/19  // SAC 04/30/25
+   iEnableGridDflt = 1;
 #endif
    CDocument* pDoc = GetActiveDocument();
    if (!pDoc || (!pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))))

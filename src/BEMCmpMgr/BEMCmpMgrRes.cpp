@@ -641,6 +641,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	    iDLLCodeYear = 2022;		// SAC 4/24/20
 #elif  CODEYEAR2025
 	    iDLLCodeYear = 2025;		// SAC 11/12/22
+#elif  CODEYEAR2028
+	    iDLLCodeYear = 2028;		// SAC 04/30/25
 #endif
 
 	bool bAnalysisPriorToRptGenOK = false;
@@ -1138,9 +1140,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				for (long iFHID=101; (ResRetVal_ContinueProcessing( iRetVal ) && iFHID <= 118); iFHID++)		// SAC 3/17/16 - removed T24DHW DLLs and revised numbering   // revised for VS19 2019 & 22 files - SAC 03/01/21
 				{	bRequiredForCodeYear = true;
 					switch (iFHID)
-					{	case 101 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2022);	break;
-						case 102 :	sFHPathFile = ssEXEPath + "BEMCmpMgr22r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2022);	break;
-						case 103 :	sFHPathFile = ssEXEPath + "BEMProc22r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2022);	break;
+					{	case 101 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2025);	break;      // updated for 2025/22 analysis - SAC 05/27/25
+						case 102 :	sFHPathFile = ssEXEPath + "BEMCmpMgr25r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2025);	break;
+						case 103 :	sFHPathFile = ssEXEPath + "BEMProc25r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2025);	break;
 						case 104 :	sFHPathFile = ssEXEPath + "Qt5Cored.dll";         break;
 						case 105 :	sFHPathFile = ssEXEPath + "Qt5Guid.dll";          break;
 						case 106 :	sFHPathFile = ssEXEPath + "Qt5Networkd.dll";      break;
@@ -1153,9 +1155,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						case 113 :	sFHPathFile = ssEXEPath + "Qt5Xml.dll";           break;
 						case 114 :  sFHPathFile = sCSEEXEPath+"cse19.exe";            bRequiredForCodeYear = (iDLLCodeYear == 2019 || (iDLLCodeYear == 2022 && lRuleRepoRev <= 2511));		break;	// SAC 12/4/17  // limit to only 2019 & 2022 thru rev2511 - SAC 12/18/24
 						case 115 :  sFHPathFile = sCSEEXEPath+"cse.exe";              bRequiredForCodeYear = (iDLLCodeYear <= 2016 || (iDLLCodeYear >= 2022 && lRuleRepoRev  > 2511));		break;   // revert back to CSE.exe starting 2022 rev2512 - SAC 12/18/24
-						case 116 :	sFHPathFile = ssEXEPath + "BEMCmpMgr19r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-						case 117 :	sFHPathFile = ssEXEPath + "BEMProc19r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-						case 118 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+						case 116 :	sFHPathFile = ssEXEPath + "BEMCmpMgr22r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+						case 117 :	sFHPathFile = ssEXEPath + "BEMProc22r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
+						case 118 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
 						default :						assert( FALSE );                   break;
 					}
 					if (!bRequiredForCodeYear)
@@ -1268,9 +1270,13 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
       // toggle inclusion of PeakCooling in compliance result calc/reporting - SAC 03/18/24
       long lDBID_Proj_IncludePeakCooling = BEMPX_GetDatabaseID( "Proj:IncludePeakCooling" );
+      bool bIncludePeakCoolingToggledOff = false;     // SAC 05/12/25
       if (lDBID_Proj_IncludePeakCooling > 0)
       {  if (lIncludePeakCooling >= 0)
             BEMPX_SetBEMData( lDBID_Proj_IncludePeakCooling, BEMP_Int, (void*) &lIncludePeakCooling );
+         long lTempIncludePeakCooling=1;              // SAC 05/12/25
+         BEMPX_GetInteger( lDBID_Proj_IncludePeakCooling, lTempIncludePeakCooling, -1 );
+         bIncludePeakCoolingToggledOff = (lTempIncludePeakCooling == 0);
       }
 
 	   // SAC 10/30/19 - 
@@ -1800,11 +1806,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						{	sErrorMsg = QString( "ERROR:  Error setting up check of weather file hash - Invalid Proj:FileHashStatus (%1)" ).arg( QString::number(lWthrFileHashStatus) );
 							iRetVal = BEMAnal_CECRes_SetupWthrHashError;
 						}
-						else if (ResRetVal_ContinueProcessing( iRetVal ) && lWthrFileHashStatus != 0 && lBypassRuleLimits < 1)	// SAC 4/22/19 - prevent this error when BypassRuleLimits is activated
+						else if (ResRetVal_ContinueProcessing( iRetVal ) && lWthrFileHashStatus != 0)
 						{	//if (lEnergyCodeYear == 2022)		// SAC 6/8/19 - prevent error return for 2022 analysis (while ensuring report watermark)
 							//	bWeatherFileHashOK = false;
 							//else
-                     if (1)      // removed above when setting up 2025 soruce - SAC 11/12/22
+                     if( lBypassRuleLimits > 0 || lEnableResearchMode > 0 )	// SAC 4/22/19 - prevent this error when BypassRuleLimits is activated
+                        // post only a warning when BypassRuleLimits or EnableResearchMode are activated - SAC 05/01/25
+                        BEMPX_WriteLogFile( QString( "Warning:  Weather file hash failed consistency check (%1) on:  %2" ).arg( QString::number(lWthrFileHashStatus), sCSEWthr ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                     else      // removed above when setting up 2025 source - SAC 11/12/22
 							{	sErrorMsg = QString( "ERROR:  Weather file hash failed consistency check (%1)" ).arg( QString::number(lWthrFileHashStatus) );
 								iRetVal = BEMAnal_CECRes_WthrHashChkFail;
 						}	}
@@ -2060,7 +2069,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		{	iRunIdxDesignRtg = iRunIdxFinalCF1R = iNumRuns;		// SAC 11/7/19
 			pszRunAbbrev[iNumRuns] = pszRunAbbrev_dr;		iRunType[iNumRuns++] = CRM_DesignRating;
 		}
-      if (iRunIdxFinalCF1R < 0)     // SAC 07/17/23
+      if (iRunIdxFinalCF1R < 0 || lEnergyCodeYear >= 2025)     // SAC 07/17/23  // add check for 2025 analysis to ensure that Final rules performed after ALL runs - SAC 04/04/25 (tic #1395)
          iRunIdxFinalCF1R = iNumRuns-1;
 		if (lRHERSEnabled > 0 && (lAnalysisType >= 13 || lAnalysisType == 2))
 		{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_hrtd;		iCopyFrom[iNumRuns] = CRM_User;      	iRunType[iNumRuns++] = CRM_HERSRtd 	  ;		BEMPX_AddTransformBEMProcMap( 2, iNumRuns-1+iNotReusingPrelimPropBEMProc );	// 2-5 => 1-based idx of this Transform hard-coded into ruleset compilation code (expRuleFile.cpp - DATAMODELRULES CAHERS) - SAC 3/27/20
@@ -3387,7 +3396,8 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 		if (ResRetVal_ContinueProcessing( iRetVal ))
 			xmlResultsFile.Close();
 
-      long lDBID_PctSavCmpMetricLbl = (iRulesetCodeYear < 2025 ? BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpTDVLbl" ) : BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpSLCCLbl" ));
+      //long lDBID_PctSavCmpMetricLbl = (iRulesetCodeYear < 2025 ? BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpTDVLbl" ) : BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpSLCCLbl" ));
+      long lDBID_PctSavCmpMetricLbl = BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpTDVLbl" );     // results stored to ...TDV... property regardless of code year - SAC 02/24/25
 		// SAC 2/7/17 - moved some results code up here to enable Pass/Fail result to impact bSendRptSignature (tic #803)
 		bHaveResult = (	iRetVal != BEMAnal_CECRes_RuleProcAbort && ResRetVal_ContinueProcessing( iRetVal ) && iCUACReportID < 1 &&
 								!sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName.toLocal8Bit().constData() ) &&
@@ -3476,7 +3486,9 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
 					sNoSignMsg = "Compliance report will be generated without security measures due to " + sShuffleSFamDHWMsg_Invalid;      // SAC 06/24/21
 				else if (lEnableMixedFuelCompare > 0)		// SAC 12/28/21 (MxdFuel)
 					sNoSignMsg = "Compliance report will be generated without security measures due to analysis option EnableMixedFuelCompare being enabled";
-				else if (iRetVal >= BEMAnal_CECRes_MinErrorWithResults)		// SAC 12/12/16
+            else if (iRulesetCodeYear >= 2025 && bIncludePeakCoolingToggledOff)     // SAC 05/12/25
+               sNoSignMsg = "Compliance report will be generated without security measures due to analysis option IncludePeakCooling toggled off";
+            else if (iRetVal >= BEMAnal_CECRes_MinErrorWithResults)		// SAC 12/12/16
 				{	switch (iRetVal)
 					{	case  BEMAnal_CECRes_ModelRptError			:	sNoSignMsg = "Compliance report will be generated without security measures due to error generating model report";		break;
 					//	case  BEMAnal_CECRes_CompRptWriteError		:  sNoSignMsg = "Compliance report will be generated without security measures due to inability to write compliance report file (.pdf or .xml)";		break;
@@ -4637,9 +4649,17 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 						{	sCompEDR1Margs = QString( "%1,%2," ).arg( QString::number( dEDR1Marg ), QString::number( dEDR1 ) );
 							sDRtg_Src      = QString( "%1,%2," ).arg( QString::number( dEDR1 ), QString::number( dEDR1Std ) );
 					}	}
-				}
 
-				double dFlexElec=0.0, dFlexFuel=0.0, dFlexTDV=0.0, dFlexDem=0.0, dPFlxElecCarbon=0.0, dPFlxFuelCarbon=0.0;
+               if( bExpectStdDesResults )    // fix problem where fCompMargin set above does NOT account for Flexibility (self utilization) - SAC 06/24/25
+               {  //QString qsFlexDbgMsg = QString( "updating fCompMargin from %1 to " ).arg( QString::number( fCompMargin ) );
+                  fCompMargin = faStdTDV[10] - (faPropTDV[10]-dGHCTDV-dSSTPVTDV);
+                  sCompMargin = QString("%1,").arg( QString::number( fCompMargin ) );
+                  //qsFlexDbgMsg += QString( "%1 based on Std %2, Prop %3, dGHCTDV %4, dSSTPVTDV %5" ).arg( QString::number( fCompMargin ), QString::number( faStdTDV[10] ), QString::number( faPropTDV[10] ), QString::number( dGHCTDV ), QString::number( dSSTPVTDV ) );
+                  //BEMPX_WriteLogFile( qsFlexDbgMsg, NULL, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               }
+            }
+
+            double dFlexElec=0.0, dFlexFuel=0.0, dFlexTDV=0.0, dFlexDem=0.0, dPFlxElecCarbon=0.0, dPFlxFuelCarbon=0.0;
 				if (iResultsFormatVersion >= 20 && iEUseSummaryObjIdx >= 0 && lEnergyCodeYear >= 2019)		// SAC 2/6/19 - (tic #1053)
 				{	double dFlexOthrFuel=0.0;
 					BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PFlxElecEnergy"   )+1, dFlexElec,        0, BEMP_Flt, iEUseSummaryObjIdx );  // DBID+1 => raw value w/ max decimal precision

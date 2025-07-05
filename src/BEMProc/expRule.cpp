@@ -287,6 +287,7 @@ static QString FuncName( int iFuncID )
 		case  BF_MinAcrsIf      :  return "MinAcrossIf";          
 		case  BF_CopyComp       :  return "CopyComp";          
 		case  BF_OrderAssigns   :  return "OrderAssignments";  
+		case  BF_SetObjFlagSum  :  return "SetObjectFlagBySum";  
 
 		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
 	}
@@ -2282,6 +2283,9 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_OrderAssigns : // added OrderAssignments() - 2 arguments: first name of local assignment array property, second the Obj:Prop of the numeric value used to define assignment order - SAC 01/13/25 (CUAC)
          break;
 
+      case BF_SetObjFlagSum : // added SetObjectFlagBySum() - 5-6 arguments: object type, property name being summed (in quotes), property name to set 0/1 flag to (in quotes), target sum value (float), operation (LT/LE/EQ/GE/GT) (in quotes), <optional> return value (default "Count", also "Sum") - SAC 05/21/25 (Com tic #3618)
+         break;
+
       case BF_Format      :
       case BF_FormatNL    : // SAC 12/11/20
       case BF_PostError   :
@@ -2427,6 +2431,7 @@ static void CreateCompFor(                     int op, int nArgs, ExpStack* stac
 static void CreateChildrenOrComp(              int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );
 static void DeleteChildrenCompOrAll(           int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );
 static void AssignOrCreateComp(                int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );  // SAC 3/11/14
+static void SetObjectFlagBySum(                int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error );  // SAC 05/21/25 (Com tic #3618)
 static double ConsAssmUFactor( int iCalcMethod, int iConsAssmObjIdx, BEM_ObjType eConsAssmObjType, QString sConsAssmName, ExpEvalStruct* pEval, ExpError* error );
 static double ConsUFactorRes( int iCodeVintage, int iConsAssmObjIdx, BEM_ObjType eConsAssmObjType, const QString& sConsName, ExpEvalStruct* pEval, ExpError* error );
 static int    CreateSCSysRptObjects(  QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error );		// SAC 3/10/14
@@ -6711,6 +6716,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpxStackPush( stack, pNode );
                            break; }
 
+      case BF_SetObjFlagSum : // added SetObjectFlagBySum() - 5-6 arguments: object type, property name being summed (in quotes), property name to set 0/1 flag to (in quotes), target sum value (float), operation (LT/LE/EQ/GE/GT) (in quotes), <optional> return value (default "Count", also "Sum") - SAC 05/21/25 (Com tic #3618)
+                        {  SetObjectFlagBySum( op, nArgs, stack, pEval, error );
+                          	break; }
+
       case BF_YrMoDa2Date :   // long YrMoDaToSerial( int iYr, int iMo, int iDa );  
       case BF_YrMoDa2DOW  :   // int YrMoDaToDayOfWeek( int iYr, int iMo, int iDa );
 								{	ExpNode* pNode=NULL;
@@ -8689,6 +8698,334 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 
 	// Push result node onto stack
 	ExpxStackPush( stack, pNode );
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+int ValueInVector( vector<int>& ivValues, int iVal )     // SAC 05/24/25
+{  int iCount = (int) ivValues.size();
+   for (int i=0; i<iCount; i++)
+   {  if (ivValues[i] == iVal)
+         return i;
+   }
+   return -1;
+}
+
+pair<vector<double>, double> findClosestSum(const vector<double>& arr, vector<int>& ivRetObjIdxs, double target, int iOper)
+{
+   pair<vector<double>, double> result;
+   result.second = INT_MAX;
+   int n = (int) arr.size();
+
+   for (int i = 0; i < (1 << n); ++i) 
+   {  vector<double> current_subset;
+      vector<int> ivIdxs;
+      double current_sum = 0;
+
+      for (int j = 0; j < n; ++j) 
+      {  if ((i >> j) & 1)
+         {  current_subset.push_back(arr[j]);
+            current_sum += arr[j];
+            ivIdxs.push_back(j);
+         }
+      }
+
+      if ( (iOper == BEMC_GrtrOrEqual && current_sum >= target && (current_sum - target) < result.second) ||
+           (iOper == BEMC_Greater     && current_sum >  target && (current_sum - target) < result.second) ||
+           (iOper == BEMC_Equal       && current_sum == target) )
+      {  result.first = current_subset;
+         result.second = current_sum - target;
+         ivRetObjIdxs = ivIdxs;
+      }
+   }
+   return result;
+}
+
+pair<vector<double>, double> findClosestLTSum(const vector<double>& arr, vector<int>& ivRetObjIdxs, double target, int iOper)    // SAC 05/26/25
+{  int n = arr.size();
+   double closestSum = -1;
+   vector<double> closestSubset;
+
+   for (int i = 0; i < (1 << n); ++i)
+   {  double currentSum = 0;
+      vector<int> ivIdxs;
+      vector<double> currentSubset;
+
+      for (int j = 0; j < n; ++j)
+      {  if ((i >> j) & 1)
+         {  currentSum += arr[j];
+            currentSubset.push_back(arr[j]);
+            ivIdxs.push_back(j);
+         }
+      }
+
+      if ( (iOper == BEMC_LessOrEqual && currentSum <= target) ||
+           (iOper == BEMC_Less        && currentSum <  target) ||
+           (iOper == BEMC_Equal       && currentSum == target) )
+      {  if (closestSum == -1 || abs(target - currentSum) < abs(target- closestSum))
+         {   closestSum = currentSum;
+             closestSubset = currentSubset;
+             ivRetObjIdxs = ivIdxs;
+         }
+      }
+   }
+   return make_pair(closestSubset, (closestSum-target));
+}
+
+void SetObjectFlagBySum( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error )     // SAC 05/21/25 (Com tic #3618)
+{  // case BF_SetObjFlagSum : // added SetObjectFlagBySum() - 5-6 arguments: object type (in quotes), property name being summed (in quotes), property name to set 0/1 flag to (in quotes), target sum value (float), operation (LT/LE/EQ/GE/GT) (in quotes), <optional> return value (default "Count", also "Sum") - SAC 05/21/25 (Com tic #3618)
+   double dRetVal = 0.0;
+   bool bVerbose = pEval->bVerboseOutput;
+            // DEBUGGING
+            //bVerbose = true;      // removed verbose output (by default) - SAC 05/28/25
+   int iParClassID = BEMPX_GetClassID( pEval->lPrimDBID );
+   ExpNode* pNode = NULL;
+   int iChkCompID=0, iNumChkCompObjs=0, i, iArg, iStatus, iSpecVal, iError, iCount=0, iRetType=0;
+   int iOper=-1;  // maps to BEM_Condition enums
+   long lDBID_SumVal=0, lDBID_SetFlag=0;
+   double dVal, dTargetVal=0.0, dSum=0.0;
+   string sOperStr, sSumValProp, sSetFlagProp, sErrMsg = (iParClassID > 0 ? "" : "SetObjectFlagBySum() Error:  Invalid parent object type");
+   //string sCompName;
+
+   if (nArgs < 5 || nArgs > 6)
+      sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Expecting 5-6 arguments (%d supplied)" ) % nArgs );
+   for (iArg = nArgs; iArg > 0; iArg--)
+   {  pNode = ExpxStackPop( stack );
+      if (sErrMsg.size() < 1)
+      {  if (iArg == 1)
+         {  // object type node
+            if (pNode->type != EXP_String)
+               sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  First argument must be name of object type being summed/adjusted ('%g' supplied)" ) % pNode->fValue );
+            else if (pNode->pValue == NULL)
+               sErrMsg = "SetObjectFlagBySum() Error:  First argument must be name of object type being summed/adjusted (none supplied)";
+            else
+            {  QString qsCompName = (char*) pNode->pValue;
+               iChkCompID = BEMP_GetDBComponentID( qsCompName );
+               if (iChkCompID < 1 || iChkCompID > BEMPX_GetNumClasses())
+                  sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  First argument must be object type being summed/adjusted (%g supplied)" ) % pNode->fValue );
+               else
+               {  iNumChkCompObjs = BEMPX_GetNumObjects( iChkCompID );
+                  if( iNumChkCompObjs < 1 )
+                     sErrMsg = "SetObjectFlagBySum() Error:  No objects of type specified in the first argument";
+               }
+         }  }
+         else if (iArg == 2)
+         {  // property name being summed
+            if (pNode->type != EXP_String)
+               sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Second argument must be name of property being summed (%g supplied)" ) % pNode->fValue );
+            else if (pNode->pValue == NULL)
+               sErrMsg = "SetObjectFlagBySum() Error:  Second argument must be name of property being summed (none supplied)";
+            else
+            {  sSumValProp = (char*) pNode->pValue;
+               //lDBID_SumVal = BEMPX_GetDatabaseID( (char*) pNode->pValue, iChkCompID );
+               //if (lDBID_SumVal < BEM_COMP_MULT)
+               //   sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Second argument must be name of property being summed (DBID= %ld for '%s' supplied)" ) % lDBID_SumVal % (char*) pNode->pValue );
+         }  }
+         else if (iArg == 3)
+         {  // property name to set 0/1 flag to
+            if (pNode->type != EXP_String)
+               sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Third argument must be name of property to set 0/1 flag to (%g supplied)" ) % pNode->fValue );
+            else if (pNode->pValue == NULL)
+               sErrMsg = "SetObjectFlagBySum() Error:  Third argument must be name of property to set 0/1 flag to (none supplied)";
+            else
+            {  sSetFlagProp = (char*) pNode->pValue;
+               //lDBID_SetFlag = BEMPX_GetDatabaseID( (char*) pNode->pValue, iChkCompID );
+               //if (lDBID_SetFlag < BEM_COMP_MULT)
+               //   sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Third argument must be name of property to set 0/1 flag to (DBID= %ld for '%s' supplied)" ) % lDBID_SetFlag % (char*) pNode->pValue );
+         }  }
+         else if (iArg == 4)
+         {  // target sum value
+            if (pNode->type != EXP_Value)
+               sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Fourth argument must be target sum value ('%s' supplied)" ) % (char*) pNode->pValue );
+            else
+               dTargetVal = pNode->fValue;
+         }
+         else if (iArg == 5)
+         {  // operation (LT/LE/EQ/GE/GT)
+            if (pNode->type != EXP_String)
+               sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Fifth argument must be one of 5 comparison operators, LT, LE, EQ, GE or GT (%g supplied)" ) % pNode->fValue );
+            else if (pNode->pValue == NULL)
+               sErrMsg = "SetObjectFlagBySum() Error:  Fifth argument must be one of 5 comparison operators, LT, LE, EQ, GE or GT (none supplied)";
+            else
+            {  sOperStr = (char*) pNode->pValue;
+               if (     sOperStr == "EQ")   iOper = BEMC_Equal;       
+               else if (sOperStr == "LE")   iOper = BEMC_LessOrEqual; 
+               else if (sOperStr == "GE")   iOper = BEMC_GrtrOrEqual; 
+               else if (sOperStr == "LT")   iOper = BEMC_Less;        
+               else if (sOperStr == "GT")   iOper = BEMC_Greater;     
+               else     sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Fifth argument must be one of 5 comparison operators, LT, LE, EQ, GE or GT ('%s' supplied)" ) % (char*) pNode->pValue );
+         }  }
+         else if (iArg == 6)
+         {  // return value option (default "Count", also "Sum")
+            if (pNode->type != EXP_String)
+               sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Sixth argument must be one of 5 comparison operators, LT, LE, EQ, GE or GT (%g supplied)" ) % pNode->fValue );
+            else if (pNode->pValue == NULL)
+               sErrMsg = "SetObjectFlagBySum() Error:  Sixth argument must be one of 5 comparison operators, LT, LE, EQ, GE or GT (none supplied)";
+            else
+            {  string sRetType = (char*) pNode->pValue;
+               if (     sRetType == "Count")   iRetType = 0;       
+               else if (sRetType == "Sum"  )   iRetType = 1; 
+               else     sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Sixth argument must be return value option ('Count' or 'Sum') ('%s' supplied)" ) % (char*) pNode->pValue );
+         }  }
+   }  }
+
+   if( sErrMsg.size() < 1 )      // SAC 05/26/25
+   {  if( sSumValProp.size() < 1 )
+         sErrMsg = "SetObjectFlagBySum() Error:  Second argument must be name of property being summed (none supplied)";
+      else
+      {  lDBID_SumVal = BEMPX_GetDatabaseID( sSumValProp.c_str(), iChkCompID );
+         if (lDBID_SumVal < BEM_COMP_MULT)
+            sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Second argument must be name of property being summed (DBID= %ld for '%s' supplied)" ) % lDBID_SumVal % sSumValProp );
+   }  }
+   if( sErrMsg.size() < 1 )
+   {  if( sSetFlagProp.size() < 1 )
+         sErrMsg = "SetObjectFlagBySum() Error:  Third argument must be name of property to set 0/1 flag to (none supplied)";
+      else
+      {  lDBID_SetFlag = BEMPX_GetDatabaseID( sSetFlagProp.c_str(), iChkCompID );
+         if (lDBID_SetFlag < BEM_COMP_MULT)
+            sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  Third argument must be name of property to set 0/1 flag to (DBID= %ld for '%s' supplied)" ) % lDBID_SetFlag % sSetFlagProp );
+   }  }
+
+   vector<int> ivObjIdxs, ivChildIdxs;   vector<double> dvObjVals;   double dAllObjSum=0.0, dAllObjMax=-99999999.0, dAllObjMin=99999999.0;
+   if (sErrMsg.size() < 1)
+   {  BEM_ObjType bemObjTypeUser = BEMO_User;
+      if( iParClassID == 1 )
+      {  for( i=0; i < iNumChkCompObjs; i++ )
+         {  dVal = BEMPX_GetFloatAndStatus( lDBID_SumVal, iStatus, iSpecVal, iError, i );
+            if( iStatus > 0 )
+            {  dAllObjSum += dVal;
+               if( dVal > dAllObjMax )
+                  dAllObjMax = dVal;
+               if( dVal < dAllObjMin )
+                  dAllObjMin = dVal;
+               ivObjIdxs.push_back( i );
+               dvObjVals.push_back( dVal );
+      }  }  }
+      else
+      {  int iNumChildObjs = (int) BEMPX_GetNumChildren( iParClassID, pEval->iPrimObjIdx, BEMO_User, iChkCompID );
+         for( i=1; i <= iNumChildObjs; i++ )
+         {  int iChildObjIdx = BEMPX_GetChildObjectIndex( iParClassID, iChkCompID, iError, bemObjTypeUser, i, pEval->iPrimObjIdx );
+            if( iChildObjIdx >= 0 )
+            {  dVal = BEMPX_GetFloatAndStatus( lDBID_SumVal, iStatus, iSpecVal, iError, iChildObjIdx );
+               if( iStatus > 0 )
+               {  dAllObjSum += dVal;
+                  if( dVal > dAllObjMax )
+                     dAllObjMax = dVal;
+                  if( dVal < dAllObjMin )
+                     dAllObjMin = dVal;
+                  ivObjIdxs.push_back( iChildObjIdx );
+                  dvObjVals.push_back( dVal );
+                  ivChildIdxs.push_back( i );
+         }  }  }
+   }  }
+
+   BEMClass* pChkClass = BEMPX_GetClass( iChkCompID, iError );
+   string sVerboseMsg;     if( bVerbose )    // SAC 05/25/25
+                           {  if( sErrMsg.size() > 0 )
+                              {  sVerboseMsg = sErrMsg;
+                                 bVerbose = false;
+                              }
+                              else
+                              {  if( iParClassID == 1 )
+                                    sVerboseMsg = boost::str( boost::format( "      SetObjectFlagBySum() - project-wide on %s objects: " ) % (pChkClass ? pChkClass->getShortName().toLocal8Bit().constData() : "unknown") );
+                                 else
+                                 {  BEMClass* pParClass = BEMPX_GetClass( iParClassID, iError );
+                                    BEMObject* pParObj  = BEMPX_GetObjectByClass( iParClassID, iError, pEval->iPrimObjIdx );
+                                    sVerboseMsg = boost::str( boost::format( "      SetObjectFlagBySum() - on %s children of %s '%s': " ) % (pChkClass ? pChkClass->getShortName().toLocal8Bit().constData() : "unknown") % (pParClass ? pParClass->getShortName().toLocal8Bit().constData() : "unknown") % (pParObj ? pParObj->getName().toLocal8Bit().constData() : "unknown") );
+                           }  }  }
+   int iNumChkObjs = (int) ivObjIdxs.size();    // SAC 05/24/25
+   bool bContinue = (sErrMsg.size() < 1 && iNumChkObjs > 0);
+                           if( bVerbose && iNumChkObjs < 1 )
+                              sVerboseMsg += boost::str( boost::format( "no %s objects found to operate on" ) % (pChkClass ? pChkClass->getShortName().toLocal8Bit().constData() : "unknown") );
+   if( bContinue && dAllObjMin > dTargetVal &&
+       (iOper == BEMC_Equal || iOper == BEMC_LessOrEqual || iOper == BEMC_Less) )
+   {  bContinue = false;
+                           if( bVerbose )
+                              sVerboseMsg += boost::str( boost::format( "No subset found - minimum check value of %g is greater than target %g and incompatible w/ operation '%s'" ) % dAllObjMin % dTargetVal % sOperStr );
+   }
+   else if( bContinue && dAllObjSum < dTargetVal &&
+            (iOper == BEMC_Equal || iOper == BEMC_GrtrOrEqual || iOper == BEMC_Greater) )
+   {  bContinue = false;
+                           if( bVerbose )
+                              sVerboseMsg += boost::str( boost::format( "No subset found - sum of all values %g is less than target %g and incompatible w/ operation '%s'" ) % dAllObjSum % dTargetVal % sOperStr );
+   }
+   else if( iNumChkObjs == 1 )
+   {  // if only one object to check and above issues not encountered, then the 1 object can be flagged as '1' - SAC 05/25/25
+      iCount = 1;
+      dSum   = dvObjVals[0];
+      long lFlagVal = 1;
+      BEMPX_SetBEMData( lDBID_SetFlag, BEMP_Int,  (void*) &lFlagVal, BEMO_User, ivObjIdxs[0] );
+      bContinue = false;
+                           if( bVerbose )
+                              sVerboseMsg += boost::str( boost::format( "Single %s found - %g %s target %g" ) % (pChkClass ? pChkClass->getShortName().toLocal8Bit().constData() : "unknown") % dvObjVals[0] % sOperStr % dTargetVal );
+   }
+   else
+   {                       if( bVerbose )
+                           {  sVerboseMsg += boost::str( boost::format( "%d %ss: sum %g, min %g, max %g: " ) % iNumChkObjs % (pChkClass ? pChkClass->getShortName().toLocal8Bit().constData() : "unknown") % dAllObjSum % dAllObjMin % dAllObjMax );
+                              for( i=0; i< (int) dvObjVals.size(); i++ )
+                              {  if( iParClassID == 1 )
+                                    sVerboseMsg += boost::str( boost::format( "#%d %g / " ) % ivObjIdxs[i] % dvObjVals[i] );
+                                 else
+                                    sVerboseMsg += boost::str( boost::format( "#%d %g / " ) % ivChildIdxs[i] % dvObjVals[i] );
+   }                       }  }
+
+   if (bContinue && sErrMsg.size() < 1)
+   {
+      //vector<double> arr = {10.0, 20.0, 30.0, 40.0, 50.0};
+      //double target = 75.0;
+      vector<int> ivRetObjIdxs;
+      pair<vector<double>, double> closest_sum_pair;
+      if( iOper == BEMC_GrtrOrEqual || iOper == BEMC_Greater )
+         closest_sum_pair = findClosestSum(   dvObjVals, ivRetObjIdxs, dTargetVal, iOper );
+      else
+         closest_sum_pair = findClosestLTSum( dvObjVals, ivRetObjIdxs, dTargetVal, iOper );
+
+         //   cout << "Values: ";
+         //   for (double val : closest_sum_pair.first)
+         //   {  cout << val << " ";
+         //   }
+         //   cout << endl;
+         //   cout << "Sum: " << dTargetVal + closest_sum_pair.second << endl;
+
+      assert( closest_sum_pair.first.size() == ivRetObjIdxs.size() );
+      iCount = (int) ivRetObjIdxs.size();
+      int iFlagValsSet=0;
+      if (iCount > 0)
+      {  dSum = dTargetVal + closest_sum_pair.second;
+                           if( bVerbose )
+                              sVerboseMsg += boost::str( boost::format( "sum %g (%s %g) achieved across %d of %d %ss, including " ) % dSum % sOperStr % dTargetVal % iCount % iNumChkObjs % (pChkClass ? pChkClass->getShortName().toLocal8Bit().constData() : "unknown") );
+         for( i=0; i < iNumChkObjs; i++ )    // SAC 05/24/25
+         {  long lFlagVal = (ValueInVector( ivRetObjIdxs, i /*ivObjIdxs[i]*/ ) >= 0 ? 1 : 0 );
+            BEMPX_SetBEMData( lDBID_SetFlag, BEMP_Int,  (void*) &lFlagVal, BEMO_User, ivObjIdxs[i] );
+            if (lFlagVal > 0)
+            {              if( bVerbose )
+                           {  if( iFlagValsSet > 0 )
+                                 sVerboseMsg += " + ";
+                              sVerboseMsg += boost::str( boost::format( "child #%d (%g)" ) % ivChildIdxs[i] % closest_sum_pair.first[iFlagValsSet] );
+                           }
+               iFlagValsSet++;
+      }  }  }
+      //else 
+      //   sErrMsg = boost::str( boost::format( "SetObjectFlagBySum() Error:  No collection of object values match target value %g" ) % dTargetVal );
+   }
+
+   if (sVerboseMsg.size() > 0)
+      BEMPX_WriteLogFile( sVerboseMsg.c_str() );
+
+   // allocate & setup result node
+   pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
+   if (sErrMsg.size() > 0)
+   {  ExpSetErr( error, EXP_RuleProc, sErrMsg.c_str() );
+      pNode->type   = EXP_Invalid;
+      pNode->fValue = 0.0;
+   }
+   else
+   {  pNode->type   = EXP_Value;
+      pNode->fValue = (iRetType == 1 ? dSum : iCount);
+   }
+
+   // Push result node onto stack
+   ExpxStackPush( stack, pNode );
 }
 
 /////////////////////////////////////////////////////////////////////////////

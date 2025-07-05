@@ -96,19 +96,19 @@ BEMStraightMap sbemStraightMap[] = {
      {      1,         "ZnSys",             "PkCoinHtgLd",                       "HeatingCapacity",                    FALSE        },     // SAC 1/27/14 - NewProp supplied simply to identify type of data expected - input from file to be ignored
      {      1,         "AirSeg",            "Src",                               "Path",                               FALSE        },     // SAC 1/27/14 - NewProp supplied simply to identify type of data expected - input from file to be ignored
    // iVersionCutoff   szClassName          szOldPropType                        szNewPropType                       bPostMappedData
-     {      2,         "Proj",              "ExcptCndCRRC",                      "ExcptCondCRRC",                      TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndPartComp1",                 "ExcptCondPartComp1",                 TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndPartComp2",                 "ExcptCondPartComp2",                 TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndDsplyPerim",                "ExcptCondDisplayPerim",              TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndCompleteBldg",              "ExcptCondCompleteBldg",              TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndLtgCred",                   "ExcptCondLtgCred",                   TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndNoLtg",                     "ExcptCondNoLtg",                     TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndDesIllum",                  "ExcptCondDsgnIllum",                 TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndExtLtg",                    "ExcptCondExtLtg",                    TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndRtdCap",                    "ExcptCondRtdCap",                    TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndFanPress",                  "ExcptCondFanPress",                  TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndWCC",                       "ExcptCondWCC",                       TRUE         },     // SAC 1/29/14
-     {      2,         "Proj",              "ExcptCndElevEsc",                   "ExcptCondElevEscal",                 TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndCRRC",                      "ExcptCondCRRC",                      TRUE         },     // SAC 1/29/14   // removed - SAC 06/12/25
+   //  {      2,         "Proj",              "ExcptCndPartComp1",                 "ExcptCondPartComp1",                 TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndPartComp2",                 "ExcptCondPartComp2",                 TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndDsplyPerim",                "ExcptCondDisplayPerim",              TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndCompleteBldg",              "ExcptCondCompleteBldg",              TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndLtgCred",                   "ExcptCondLtgCred",                   TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndNoLtg",                     "ExcptCondNoLtg",                     TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndDesIllum",                  "ExcptCondDsgnIllum",                 TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndExtLtg",                    "ExcptCondExtLtg",                    TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndRtdCap",                    "ExcptCondRtdCap",                    TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndFanPress",                  "ExcptCondFanPress",                  TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndWCC",                       "ExcptCondWCC",                       TRUE         },     // SAC 1/29/14
+   //  {      2,         "Proj",              "ExcptCndElevEsc",                   "ExcptCondElevEscal",                 TRUE         },     // SAC 1/29/14
 //     {      2,         "RecircDHWSys",      "RecircPumpPwr",                     "PumpPwr",                            TRUE         },     // SAC 1/28/14 - NewProp supplied simply to identify type of data expected - input from file to be ignored
 //     {      2,         "RecircDHWSys",      "RecircPumpHP",                      "PumpHP",                             TRUE         },     // SAC 1/28/14 - NewProp supplied simply to identify type of data expected - input from file to be ignored
 //     {      2,         "RecircDHWSys",      "RecircPumpEff",                     "PumpEff",                            TRUE         },     // SAC 1/28/14 - NewProp supplied simply to identify type of data expected - input from file to be ignored
@@ -552,6 +552,7 @@ BEMComponentMap sbemComponentMap[] = {
 		{     10,              3,       "RecirculationDHWSystem",   { "ResidentialDHWSystem", NULL, NULL, NULL, NULL } },
 		{     10,              4,       "RecircWtrHtr",             { "ResWtrHtr", NULL, NULL, NULL, NULL } },
 		{     10,              5,       "RecirculationWaterHeater", { "ResidentialWaterHeater", NULL, NULL, NULL, NULL } },
+		{     17,              6,       "Proj",                     { "ProjVar", NULL, NULL, NULL, NULL } },     // SAC 06/12/25
 	 // end of list
 		{ 0, 0, NULL, { NULL, NULL, NULL, NULL, NULL } } };
 
@@ -767,7 +768,91 @@ BEMPropertyMap sbemPropertyMap[] = {
 		{     10,              5,       "StandbyLossFraction",                          "ResidentialWaterHeater",    "StandbyLossFraction",           TRUE  },
 		{     10,              5,       "ThermalEfficiency",                            "ResidentialWaterHeater",    "ThermalEfficiency",             TRUE  },
 		{     10,              5,       "Count",                                        "ResidentialWaterHeater",    "Count",                         TRUE  },
-	 // end of list
+ 	// iVersionCutoff    iCompTypeID   szOldPropType                                       szNewCompType    szNewPropType                               bPostMappedData
+      {     18,              6,       "ExcptCondCRRC",                                    "ProjVar",       "ExcptCondCRRC",                                  TRUE  },    // SAC 06/12/25
+      {     18,              6,       "ExcptCondPartComp1",                               "ProjVar",       "ExcptCondPartComp1",                             TRUE  },
+      {     18,              6,       "ExcptCondPartComp2",                               "ProjVar",       "ExcptCondPartComp2",                             TRUE  },
+      {     18,              6,       "ExcptCondPartComp3",                               "ProjVar",       "ExcptCondPartComp3",                             TRUE  },
+      {     18,              6,       "ExcptCondDisplayPerim",                            "ProjVar",       "ExcptCondDisplayPerim",                          TRUE  },
+      {     18,              6,       "ExcptCondAtriumGT55ft",                            "ProjVar",       "ExcptCondAtriumGT55ft",                          TRUE  },
+      {     18,              6,       "ExcptCondLtgCred",                                 "ProjVar",       "ExcptCondLtgCred",                               TRUE  },
+      {     18,              6,       "ExcptCondPAFCredit",                               "ProjVar",       "ExcptCondPAFCredit",                             TRUE  },
+      {     18,              6,       "ExcptCondNoLtg",                                   "ProjVar",       "ExcptCondNoLtg",                                 TRUE  },
+      {     18,              6,       "ExcptCondDsgnIllum",                               "ProjVar",       "ExcptCondDsgnIllum",                             TRUE  },
+      {     18,              6,       "ExcptCondPrescriptiveDayltg",                      "ProjVar",       "ExcptCondPrescriptiveDayltg",                    TRUE  },
+      {     18,              6,       "PrescriptiveDayltgException",                      "ProjVar",       "PrescriptiveDayltgException",                    TRUE  },
+      {     18,              6,       "ExcptCondClerestory",                              "ProjVar",       "ExcptCondClerestory",                            TRUE  },
+      {     18,              6,       "ExcptCondExtLtg",                                  "ProjVar",       "ExcptCondExtLtg",                                TRUE  },
+      {     18,              6,       "ExcptCondNoClgSys",                                "ProjVar",       "ExcptCondNoClgSys",                              TRUE  },
+      {     18,              6,       "ExcptCondRtdCap",                                  "ProjVar",       "ExcptCondRtdCap",                                TRUE  },
+      {     18,              6,       "ExcptCondMinEffCheck",                             "ProjVar",       "ExcptCondMinEffCheck",                           TRUE  },
+      {     18,              6,       "ExcptCondFanPress",                                "ProjVar",       "ExcptCondFanPress",                              TRUE  },
+      {     18,              6,       "ExcptCondWCC",                                     "ProjVar",       "ExcptCondWCC",                                   TRUE  },
+      {     18,              6,       "ExcptCondElevEscal",                               "ProjVar",       "ExcptCondElevEscal",                             TRUE  },
+      {     18,              6,       "ExcptCondWtrHtrSizing",                            "ProjVar",       "ExcptCondWtrHtrSizing",                          TRUE  },
+      {     18,              6,       "ExcptCondWtrHtr",                                  "ProjVar",       "ExcptCondWtrHtr",                                TRUE  },
+      {     18,              6,       "ExcptCondWtrHtrPrscrp",                            "ProjVar",       "ExcptCondWtrHtrPrscrp",                          TRUE  },
+      {     18,              6,       "AnnualSolFrac",                                    "ProjVar",       "AnnualSolFrac",                                  TRUE  },
+      {     18,              6,       "ExcptCondNarrative",                               "ProjVar",       "ExcptCondNarrative",                             TRUE  },
+      {     18,              6,       "ExcptCondGasTypeNone",                             "ProjVar",       "ExcptCondGasTypeNone",                           TRUE  },
+      {     18,              6,       "ExcptCondPropane",                                 "ProjVar",       "ExcptCondPropane",                               TRUE  },
+      {     18,              6,       "ExcptCondPrkgGarExhFan",                           "ProjVar",       "ExcptCondPrkgGarExhFan",                         TRUE  },
+      {     18,              6,       "ExcptCondHERSDuctReqTested",                       "ProjVar",       "ExcptCondHERSDuctReqTested",                     TRUE  },
+      {     18,              6,       "ExcptCondHERSDuctTestedOnly",                      "ProjVar",       "ExcptCondHERSDuctTestedOnly",                    TRUE  },
+      {     18,              6,       "ExcptCondInterlockWarn1",                          "ProjVar",       "ExcptCondInterlockWarn1",                        TRUE  },
+      {     18,              6,       "ExcptCondInterlockWarn2",                          "ProjVar",       "ExcptCondInterlockWarn2",                        TRUE  },
+      {     18,              6,       "ExcptCondVentStdOther",                            "ProjVar",       "ExcptCondVentStdOther",                          TRUE  },
+      {     18,              6,       "ExcptCondFlexEnduse",                              "ProjVar",       "ExcptCondFlexEnduse",                            TRUE  },
+      {     18,              6,       "ExcptCondPVReqdSolThrml",                          "ProjVar",       "ExcptCondPVReqdSolThrml",                        TRUE  },
+      {     18,              6,       "ExcptCondDsgnOcc",                                 "ProjVar",       "ExcptCondDsgnOcc",                               TRUE  },
+      {     18,              6,       "ExcptSARAReducedPVReq",                            "ProjVar",       "ExcptSARAReducedPVReq",                          TRUE  },
+      {     18,              6,       "Excpt1ReducedPVReq",                               "ProjVar",       "Excpt1ReducedPVReq",                             TRUE  },
+      {     18,              6,       "Excpt2ReducedPVReq",                               "ProjVar",       "Excpt2ReducedPVReq",                             TRUE  },
+      {     18,              6,       "Excpt3ReducedPVReq",                               "ProjVar",       "Excpt3ReducedPVReq",                             TRUE  },
+      {     18,              6,       "Excpt4ReducedPVReq",                               "ProjVar",       "Excpt4ReducedPVReq",                             TRUE  },
+      {     18,              6,       "Excpt5ReducedPVReq",                               "ProjVar",       "Excpt5ReducedPVReq",                             TRUE  },
+      {     18,              6,       "ExcptSARAResReducedPVReq",                         "ProjVar",       "ExcptSARAResReducedPVReq",                       TRUE  },
+      {     18,              6,       "Excpt1ResReducedPVReq",                            "ProjVar",       "Excpt1ResReducedPVReq",                          TRUE  },
+      {     18,              6,       "Excpt2ResReducedPVReq",                            "ProjVar",       "Excpt2ResReducedPVReq",                          TRUE  },
+      {     18,              6,       "Excpt3ResReducedPVReq",                            "ProjVar",       "Excpt3ResReducedPVReq",                          TRUE  },
+      {     18,              6,       "Excpt4ResReducedPVReq",                            "ProjVar",       "Excpt4ResReducedPVReq",                          TRUE  },
+      {     18,              6,       "Excpt1ReducedBattReq",                             "ProjVar",       "Excpt1ReducedBattReq",                           TRUE  },
+      {     18,              6,       "Excpt2ReducedBattReq",                             "ProjVar",       "Excpt2ReducedBattReq",                           TRUE  },
+      {     18,              6,       "Excpt3ReducedBattReq",                             "ProjVar",       "Excpt3ReducedBattReq",                           TRUE  },
+      {     18,              6,       "Excpt4ReducedBattReq",                             "ProjVar",       "Excpt4ReducedBattReq",                           TRUE  },
+      {     18,              6,       "ExcptCondPVBldgType",                              "ProjVar",       "ExcptCondPVBldgType",                            TRUE  },
+      {     18,              6,       "ExcptCondInCWUICHazard",                           "ProjVar",       "ExcptCondInCWUICHazard",                         TRUE  },
+      {     18,              6,       "ExcptCondLabHtRcvry",                              "ProjVar",       "ExcptCondLabHtRcvry",                            TRUE  },
+      {     18,              6,       "ExcptCondHERSResDHWSysPipeIns",                    "ProjVar",       "ExcptCondHERSResDHWSysPipeIns",                  TRUE  },
+      {     18,              6,       "ExcptCondHERSResDHWSysParallelPiping",             "ProjVar",       "ExcptCondHERSResDHWSysParallelPiping",           TRUE  },
+      {     18,              6,       "ExcptCondHERSResDHWSysRecircDemCtrlPushButton",    "ProjVar",       "ExcptCondHERSResDHWSysRecircDemCtrlPushButton",  TRUE  },
+      {     18,              6,       "ExcptCondHERSResDHWSysRecircDemCtrlOccSensor",     "ProjVar",       "ExcptCondHERSResDHWSysRecircDemCtrlOccSensor",   TRUE  },
+      {     18,              6,       "ExcptCondHERSResDHWSysCompactDistSys",             "ProjVar",       "ExcptCondHERSResDHWSysCompactDistSys",           TRUE  },
+      {     18,              6,       "ExcptCondHERSDrainWtrHtRcvrySys",                  "ProjVar",       "ExcptCondHERSDrainWtrHtRcvrySys",                TRUE  },
+      {     18,              6,       "ExcptCondHERSVent",                                "ProjVar",       "ExcptCondHERSVent",                              TRUE  },
+      {     18,              6,       "ExcptCondHERSKitHood",                             "ProjVar",       "ExcptCondHERSKitHood",                           TRUE  },
+      {     18,              6,       "ExcptCondHERSEnvAirLkge",                          "ProjVar",       "ExcptCondHERSEnvAirLkge",                        TRUE  },
+
+      {     18,              6,       "ExcptCndCRRC",                                     "ProjVar",       "ExcptCondCRRC",                                  TRUE  },   // older mappings
+      {     18,              6,       "ExcptCndPartComp1",                                "ProjVar",       "ExcptCondPartComp1",                             TRUE  }, 
+      {     18,              6,       "ExcptCndPartComp2",                                "ProjVar",       "ExcptCondPartComp2",                             TRUE  }, 
+      {     18,              6,       "ExcptCndDsplyPerim",                               "ProjVar",       "ExcptCondDisplayPerim",                          TRUE  }, 
+      {     18,              6,       "ExcptCndCompleteBldg",                             "ProjVar",       "ExcptCondCompleteBldg",                          TRUE  }, 
+      {     18,              6,       "ExcptCndLtgCred",                                  "ProjVar",       "ExcptCondLtgCred",                               TRUE  }, 
+      {     18,              6,       "ExcptCndNoLtg",                                    "ProjVar",       "ExcptCondNoLtg",                                 TRUE  }, 
+      {     18,              6,       "ExcptCndDesIllum",                                 "ProjVar",       "ExcptCondDsgnIllum",                             TRUE  }, 
+      {     18,              6,       "ExcptCndExtLtg",                                   "ProjVar",       "ExcptCondExtLtg",                                TRUE  }, 
+      {     18,              6,       "ExcptCndRtdCap",                                   "ProjVar",       "ExcptCondRtdCap",                                TRUE  }, 
+      {     18,              6,       "ExcptCndFanPress",                                 "ProjVar",       "ExcptCondFanPress",                              TRUE  }, 
+      {     18,              6,       "ExcptCndWCC",                                      "ProjVar",       "ExcptCondWCC",                                   TRUE  }, 
+      {     18,              6,       "ExcptCndElevEsc",                                  "ProjVar",       "ExcptCondElevEscal",                             TRUE  }, 
+
+      {     18,              6,       "ExcptCondUFactorLimit",                            "ProjVar",       "ExcptCondUFactorLimit",                          FALSE  },     // newly ignored going forward
+      {     18,              6,       "ExcptCondCompleteBldg",                            "ProjVar",       "ExcptCondCompleteBldg",                          FALSE  },
+      {     18,              6,       "ExcptCondFxdSeat",                                 "ProjVar",       "ExcptCondFxdSeat",                               FALSE  },
+      {     18,              6,       "ExcptCondCompleteBldg",                            "ProjVar",       "ExcptCondCompleteBldg",                          FALSE  },     // RULE NEWs
+
+   // end of list
 		{ 0, 0, NULL, NULL, NULL } };
 
 #else						// => CEC Res -------------------------------

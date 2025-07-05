@@ -484,6 +484,8 @@
     <Image Include="res\t_AirSeg_2.bmp" />
     <Image Include="res\t_area_1.bmp" />
     <Image Include="res\t_area_2.bmp" />
+    <Image Include="res\t_awhp_1.bmp" />
+    <Image Include="res\t_awhp_2.bmp" />
     <Image Include="res\t_blck_1.bmp" />
     <Image Include="res\t_blck_2.bmp" />
     <Image Include="res\t_bldg_1.bmp" />

@@ -21,12 +21,12 @@ We recommend that you read through and download (& unzip) the vendor binaries be
 # Vendor Binaries
 Executable and library files for each of these tools can either be compiled by you, the devloper, or downloaded via the following links. Each of these compressed files are designed to be unzipped into the root repository directory.
 
-*CSE v0.923.1*:  https://drive.google.com/file/d/1anJCTqV1oIA_rMS2XIr-yUf4rtcvUdNK/view?usp=sharing (~3.2 MB, updated 1/30/25 for 2022.3.2 releases)  
+*CSE v0.926.0*:  https://drive.google.com/file/d/1g3tglKi77czO8ssNJ87NZzguf6cyYh-9/view?usp=sharing (~3.5 MB, updated 6/23/25 for 2025.1.0 releases)  
 - Project site:  https://github.com/cse-sim 
 
-*OpenStudio / EnergyPlus v9.4*:  https://drive.google.com/file/d/1yEO0ILgJf50m8fIwBvomiULhc2zSImvl/view?usp=sharing (~359 MB, updated 1/30/25)  
+*OpenStudio / EnergyPlus v24-1*:  https://drive.google.com/file/d/1toGwiGWaELYTULD4YdbO8bpzJU0kKwln/view?usp=sharing (~124 MB, updated 6/23/25)  
 - OpenStudio project site:  https://github.com/NREL/OpenStudio  
-- Link to [OpenStudio branch CBECC-9-4 commit]https://github.com/NREL/OpenStudio/commit/6c605c36c6ec7e45e7648c835ae2e9a7d823838a) used by CBECC 2033.3.2
+- Link to [OpenStudio branch CBECC-24-1 commit]https://github.com/NREL/OpenStudio/commit/6a8570cdae42820db881da7308db96fca97036b4 (used by CBECC 2025.1.0)
 - EnergyPlus project site:  https://github.com/NREL/EnergyPlus  
 
 *Boost v1.74.0*:  https://drive.google.com/file/d/1VRc5BLzsbdP94S6UoLPIQ3EQhz4TjrIv/view?usp=sharing (~46 MB, updated 1/30/25)  

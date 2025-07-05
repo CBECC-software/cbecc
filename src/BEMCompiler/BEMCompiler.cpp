@@ -77,6 +77,7 @@
 #include "BEMCompiler.h"
 #include "../BEMProc/BEMProc.h"
 #include "../BEMProc/BEMProcCompile.h"
+#include "../BEMProc/BEMClass.h"
 #include "memLkRpt.h"
 
 int main(int argc, char *argv[])
@@ -181,13 +182,13 @@ int main(int argc, char *argv[])
 //	bemCmplr.SetRuleLog(      "../../RuleDev/Rulesets/CA RESNET/Rules/Rules-2019-RESNET dbg Log.out" );
 #else		// CBECC-Com
 // to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
-	bemCmplr.SetSP1Text(      "../Com/RuleDev/src/shared/" );
-	bemCmplr.SetBEMBaseText(  "../Com/RuleDev/src/BEMBase.txt" );
-	bemCmplr.SetBEMEnumsText( "../Com/RuleDev/src/T24N/T24N_2022 BEMEnums.txt" );
-	bemCmplr.SetBEMBaseBin(   "../Com/Rulesets/T24N_2022/T24N_2022 BEMBase.bin" );
-	bemCmplr.SetRuleText(     "../Com/RuleDev/src/T24N/Rules/T24N_2022.txt" );
-	bemCmplr.SetRuleBin(      "../Com/Rulesets/T24N_2022.bin" );
-	bemCmplr.SetRuleLog(      "_Rules-2022 Log.out" );
+	bemCmplr.SetSP1Text(      "../Com/RulesetSrc/shared/" );
+	bemCmplr.SetBEMBaseText(  "../Com/RulesetSrc/BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../Com/RulesetSrc/T24NRMF/T24N_2025 BEMEnums.txt" );
+	bemCmplr.SetBEMBaseBin(   "../Com/Rules64/T24_2025/T24_2025 BEMBase.bin" );
+	bemCmplr.SetRuleText(     "../Com/RulesetSrc/T24NRMF/T24_2025.txt" );
+	bemCmplr.SetRuleBin(      "../Com/Rules64/T24_2025.bin" );
+	bemCmplr.SetRuleLog(      "_Rules-2025 Log.out" );
 
 //// to compile rules relative to SVN exe->rule source locations
 //	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
@@ -651,7 +652,18 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 				else
 				{	BEMPX_WriteDataModelExport( BEMDMX_INPMP, sInpDataModelOutFile.toLocal8Bit().constData(), bWritePrevNamesToIDMTxt );
 					BEMPX_WriteDataModelExport( BEMDMX_SIM  , sSimDataModelOutFile.toLocal8Bit().constData(), bWritePrevNamesToIDMTxt );
-			}	}
+
+               // added additional info to sRuleDetails documenting # of properties per class INCLUDING RULE NEWs - SAC 06/09/25
+               if( !sDetails.isEmpty() )
+                  sDetails += "\n\n\n";
+               sDetails += "BEMBase Properties by Class (including ruleset-defined properties):\n";
+               int iError, i1Class=1, iNumClasses = BEMPX_GetNumClasses();
+               for (; i1Class <= iNumClasses; i1Class++)
+               {  BEMClass* pClass = BEMPX_GetClass( i1Class, iError );
+                  if (pClass)
+                     sDetails += QString( "   %1 - %2 - %3\n" ).arg( QString::number( i1Class ), 3 ).arg( QString::number( pClass->getNumProps() ), 4 ).arg( pClass->getLongName() );
+               }
+         }	}
 
 			QApplication::restoreOverrideCursor();
 			QApplication::processEvents();

@@ -1,6 +1,6 @@
 # CBECC Program Modules
 Each of the source directories here compile into unique executables (DLL or EXE). The first two, BEMProc and BEMCmpMgr provide the most critical functionality in managing and analyzing building descriptions in testing their compliance to energy codes. These modules were recently migrated away from propertietary library dependencies to open soruce options. BEMCompiler and OS_Wrap also rely primarily on open source depndencies while the main user interface modules, CBECCUI and BEMProcUI, are still heavily dependent on MFC (Microsoft Foundation Classes).  
-With the exception of the main UI executable, each of these modules compile into two, and soon more, unique executables. The output name of these executables has a trailing number (currently 16) representing the energy code year and letter (c/r) representing commercial vs. residnetial analysis. This enables multiple sector and energy code year tools to co-exist in a single directory.  
+With the exception of the main UI executable, each of these modules compile into several unique executables. The output name of these executables has a trailing number (currently 22, 25 & 28) representing the energy code year and letter (c/r) representing commercial vs. residential analysis. This enables multiple sector and energy code year tools to co-exist in a single directory.  
 
 **BEMProc** - Building Energy Model Processor:  Reads, parses & compiles data model and ruleset source into binaries, manages and applies compliance rules to building description during analysis.  
 
@@ -12,6 +12,8 @@ With the exception of the main UI executable, each of these modules compile into
 
 **BEMTest** - a work in progress - to be a simple interfacing enabling the launching of single-run and batch compliance analysis. No use in compiling or running this program yet.
 
-**BEMProcUI** - a DLL used to read, parse and manage textual screen definition files specific to energy code sector and year, used to drive the tabbed dialog interface of the CBECC tools.
+**BEMProcUI** - a DLL used to read, parse and manage screen definition (text) files specific to energy code sector and year, used to drive the tabbed dialog interface of the CBECC tools.
+
+**CBECC-CLI** - command line executables enabling automated testing of compliance analysis for nonresidential & multifamily (and eventually single family residential) models.
 
 **CBECCUI** - main program user interface.

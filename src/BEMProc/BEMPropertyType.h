@@ -44,7 +44,7 @@ class BEMTextIO;
 //    An instance of this class is created ...
 /////////////////////////////////////////////////////////////////////////////
 
-#define  BEM_MAX_PROPTYPE_OBJREFCLASSES  5   // SAC 6/14/12 - switched from single value to array of up to 5
+#define  BEM_MAX_PROPTYPE_OBJREFCLASSES  8   // SAC 6/14/12 - switched from single value to array of up to 5  // 5->8 - SAC 04/28/25
 
 enum BEMDT_NotInputModes { DTNotInp_AllowUIReset, DTNotInp_IgnoreUserInput, DTNotInp_ErrorIfInput, DTNotInp_Num };		// SAC 8/13/15
 

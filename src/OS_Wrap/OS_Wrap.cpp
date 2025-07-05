@@ -771,6 +771,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
                               const char* pszIDFFile, bool bFirstRunOfGroup, bool bLastRunOfGroup, QuickAnalysisRunPeriodInfo* pQSimRunPeriodInfo,
                               double fResultMult, int iRptFuelUseAs, const char* pszEPlusPath, double dEPlusVerNum, OSWRAP_MSGCALLBACK* pMsgCallback /*=NULL*/ )
 {	bool bRetVal = true;
+                           bool bWriteSizingDetailsTxt = bWriteHourlyDebugCSV;    // debugging upgrade from EP 9.4 -> 24.1 - SAC 04/09/25  // switched init from true to bWriteHourlyDebugCSV - SAC 05/05/25
 
 	// kludge until we gain access to the E+ Job
 				std::string sEPlusOutputSQLPathFile = sProcessingPath;
@@ -1436,6 +1437,15 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 						{	int iObj;
 							std::string sObj, s;
 
+                                 FILE *dbgSzgFile = NULL;         // debugging upgrade from EP 9.4 -> 24.1 - SAC 04/09/25
+                                 char sDbgSzg[512];
+                                 if (bWriteSizingDetailsTxt)
+                                 {	std::string sDbgSzgFN = pszIDFFile;
+                                    sDbgSzgFN = sDbgSzgFN.substr( 0, sDbgSzgFN.rfind('.') );
+                                    sDbgSzgFN += " - Sizing.txt";
+                                    dbgSzgFile = fopen( sDbgSzgFN.c_str(), "wt" );
+                                 }
+
 							int iNumZones = pOSWrap->InitZoneData( iRunIdx );;
 						//	int iNumZones = (int) pRunData->saZone.size();
 							if (iNumZones > 0)
@@ -1471,8 +1481,12 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 					// SAC 1/11/14 - units -> IP  (no change)
 										s += "') AND (ColumnName='During Occupied Cooling') AND (Units = 'hr')";
 										boost::optional<double> unmetHrsClg = sqlFile.execAndReturnFirstDouble(s);
-										pOSWrap->SetZoneData( iRunIdx, iObj, 0, (unmetHrsClg ? *unmetHrsClg : 0.0) );
+                              pOSWrap->SetZoneData( iRunIdx, iObj, 0, (unmetHrsClg ? *unmetHrsClg : 0.0) );
 								//		pRunData->daZone_UMLHClg[iObj] = (unmetHrsClg ? *unmetHrsClg : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "Zone:  %s -->> %g\n", s.c_str(), (unmetHrsClg ? *unmetHrsClg : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 										s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='SystemSummary') AND (ReportForString='Entire Facility') AND (TableName='Time Setpoint Not Met') AND (RowName='";
 										s += sObj;
@@ -1481,6 +1495,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										boost::optional<double> unmetHrsHtg = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetZoneData( iRunIdx, iObj, 1, (unmetHrsHtg ? *unmetHrsHtg : 0.0) );
 								//		pRunData->daZone_UMLHHtg[iObj] = (unmetHrsHtg ? *unmetHrsHtg : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n", s.c_str(), (unmetHrsHtg ? *unmetHrsHtg : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 										s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='HVACSizingSummary') AND (ReportForString='Entire Facility') AND (TableName='";
 										s += (dEPlusVer >= 8.5 ? "Zone Sensible Cooling" : "Zone Cooling");	// SAC 4/20/16
@@ -1492,6 +1510,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										boost::optional<double> clgDsgnLd = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetZoneData( iRunIdx, iObj, 2, (clgDsgnLd ? *clgDsgnLd : 0.0) );
 								//		pRunData->daZone_ClgDsgnLd[iObj] = (clgDsgnLd ? *clgDsgnLd : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n", s.c_str(), (clgDsgnLd ? *clgDsgnLd : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 										s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='HVACSizingSummary') AND (ReportForString='Entire Facility') AND (TableName='";
 										s += (dEPlusVer >= 8.5 ? "Zone Sensible Heating" : "Zone Heating");	// SAC 4/20/16
@@ -1503,6 +1525,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										boost::optional<double> htgDsgnLd = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetZoneData( iRunIdx, iObj, 3, (htgDsgnLd ? *htgDsgnLd : 0.0) );
 								//		pRunData->daZone_HtgDsgnLd[iObj] = (htgDsgnLd ? *htgDsgnLd : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n", s.c_str(), (htgDsgnLd ? *htgDsgnLd : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 										s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='HVACSizingSummary') AND (ReportForString='Entire Facility') AND (TableName='";
 										s += (dEPlusVer >= 8.5 ? "Zone Sensible Cooling" : "Zone Cooling");	// SAC 4/20/16
@@ -1514,6 +1540,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										boost::optional<double> clgDsgnFlow = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetZoneData( iRunIdx, iObj, 4, (clgDsgnFlow ? *clgDsgnFlow : 0.0) );
 								//		pRunData->daZone_ClgDsgnFlow[iObj] = (clgDsgnFlow ? *clgDsgnFlow : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n", s.c_str(), (clgDsgnFlow ? *clgDsgnFlow : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 										s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='HVACSizingSummary') AND (ReportForString='Entire Facility') AND (TableName='";
 										s += (dEPlusVer >= 8.5 ? "Zone Sensible Heating" : "Zone Heating");	// SAC 4/20/16
@@ -1525,7 +1555,11 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										boost::optional<double> htgDsgnFlow = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetZoneData( iRunIdx, iObj, 5, (htgDsgnFlow ? *htgDsgnFlow : 0.0) );
 								//		pRunData->daZone_HtgDsgnFlow[iObj] = (htgDsgnFlow ? *htgDsgnFlow : 0.0);
-									}
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n\n", s.c_str(), (htgDsgnFlow ? *htgDsgnFlow : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
+                           }
 								}
 							}
 
@@ -1543,7 +1577,11 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										s += "') AND (ColumnName='Max Air Flow Rate') AND (Units = 'ft3/min')";
 										boost::optional<double> data = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetFanData(     iRunIdx, iObj, 0, (data ? *data : 0.0) );     // pRunData->daFan_FlowCap[iObj] = (data ? *data : 0.0);
-									}
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "Fan:  %s -->> %g\n\n", s.c_str(), (data ? *data : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
+                           }
 								}
 							}
 
@@ -1564,6 +1602,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										s += "') AND (ColumnName='Nominal Total Capacity') AND (Units = 'Btu/h')";
 										boost::optional<double> data = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetCoilClgData( iRunIdx, iObj, 0, (data ? *data : 0.0) );      // pRunData->daCoilClg_TotCap[iObj] = (data ? *data : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "CoilClg:  %s -->> %g\n", s.c_str(), (data ? *data : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 										s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='EquipmentSummary') AND (ReportForString='Entire Facility') AND (TableName='Cooling Coils') AND (RowName = '";
 										s += sObj;
@@ -1572,6 +1614,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										s += "') AND (ColumnName='Nominal Sensible Capacity') AND (Units = 'Btu/h')";
 										boost::optional<double> data2 = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetCoilClgData( iRunIdx, iObj, 1, (data2 ? *data2 : 0.0) );      // pRunData->daCoilClg_SensCap[iObj] = (data2 ? *data2 : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n", s.c_str(), (data2 ? *data2 : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 	//									s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='EquipmentSummary') AND (ReportForString='Entire Facility') AND (TableName='Cooling Coils') AND (RowName = '";
 	//									s += sObj;
@@ -1586,6 +1632,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										s += "') AND (Description='Design Size Design Water Flow Rate') AND (Units = 'm3/s')";
 										boost::optional<double> data3 = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetCoilClgData( iRunIdx, iObj, 2, (data3 ? *data3 : 0.0) );      // pRunData->daCoilClg_FluidFlowRtDsgnSim[iObj] = (data3 ? *data3 : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n\n", s.c_str(), (data3 ? *data3 : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 									}
 								}
 							}
@@ -1607,6 +1657,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										s += "') AND (ColumnName='Nominal Total Capacity') AND (Units = 'Btu/h')";
 										boost::optional<double> data = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetCoilHtgData( iRunIdx, iObj, 0, (data ? *data : 0.0) );		// pRunData->daCoilHtg_TotCap[iObj] = (data ? *data : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "CoilHtg:  %s -->> %g\n", s.c_str(), (data ? *data : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 
 	//									s = "SELECT Value FROM TabularDataWithStrings WHERE (ReportName='EquipmentSummary') AND (ReportForString='Entire Facility') AND (TableName='Heating Coils') AND (RowName = '";
 	//									s += sObj;
@@ -1619,6 +1673,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										s += "') AND (Description='Maximum Water Flow Rate') AND (Units = 'm3/s')";
 										boost::optional<double> data2 = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetCoilHtgData( iRunIdx, iObj, 1, (data2 ? *data2 : 0.0) );		// pRunData->daCoilHlg_FluidFlowRtDsgnSim[iObj] = (data2 ? *data2 : 0.0);
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "        %s -->> %g\n\n", s.c_str(), (data2 ? *data2 : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
 									}
 								}
 							}
@@ -1655,7 +1713,11 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 														dPkVal = values(i);
 										}	}	}
 										pOSWrap->SetBlrData(     iRunIdx, iObj, 0, (dPkVal > -99999. ? dPkVal : 0.0) );		// pRunData->daBlr_CapRtd[iObj] = (dPkVal > -99999. ? dPkVal : 0.0);
-									}
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "Boiler:  timeSeries( eachPeriod, Hourly, %s, %s ) -->> %g\n", sVarName.c_str(), s.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
+                           }
 							}	}
 
 							int iNumChillers = pOSWrap->InitChlrData( iRunIdx );		// (int) pRunData->saChlr.size();
@@ -1685,7 +1747,11 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 														dPkVal = values(i);
 										}	}	}
 										pOSWrap->SetChlrData(    iRunIdx, iObj, 0, (dPkVal > -99999. ? dPkVal : 0.0) );		// pRunData->daChlr_CapRtd[iObj] = (dPkVal > -99999. ? dPkVal : 0.0);
-									}
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "Chiller:  timeSeries( eachPeriod, Hourly, %s, %s ) -->> %g\n", sVarName.c_str(), s.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
+                           }
 							}	}
 
 							int iNumClgTowers = pOSWrap->InitHtRejData( iRunIdx );		// (int) pRunData->saHtRej.size();
@@ -1715,7 +1781,11 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 														dPkVal = values(i);
 										}	}	}
 										pOSWrap->SetHtRejData(   iRunIdx, iObj, 0, (dPkVal > -99999. ? dPkVal : 0.0) );		// pRunData->daHtRej_CapRtd[iObj] = (dPkVal > -99999. ? dPkVal : 0.0);
-									}
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "HtReject:  timeSeries( eachPeriod, Hourly, %s, %s ) -->> %g\n", sVarName.c_str(), s.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
+                           }
 							}	}
 
 							int iNumPumps = pOSWrap->InitPumpData( iRunIdx );		// (int) pRunData->saPump.size();
@@ -1733,9 +1803,18 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										s += "') AND (ColumnName='Water Flow') AND (Units = 'gal/min')";
 										boost::optional<double> data = sqlFile.execAndReturnFirstDouble(s);
 										pOSWrap->SetPumpData(    iRunIdx, iObj, 0, (data ? *data : 0.0) );		// pRunData->daPump_FlowCap[iObj] = (data ? *data : 0.0);
-									}
+                                    if (dbgSzgFile)      // SAC 04/09/25
+                                    {	snprintf( sDbgSzg, 512, "Pump:  %s -->> %g\n", s.c_str(), (data ? *data : 0.0) );
+                                       fprintf( dbgSzgFile, sDbgSzg );
+                                    }
+                           }
 								}
 							}
+                     
+                     if (dbgSzgFile)      // SAC 04/09/25
+                     {  fflush( dbgSzgFile );
+                        fclose( dbgSzgFile );
+                     }
 
 						}  // if pRunData is valid
 
@@ -2479,7 +2558,7 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 
 	if (strErrMsg.size() > 0 && pszErrorMsg && iErrorMsgLen > 1)  // SAC 1/30/14
 	{	// check error string for paths specific to development machines, and blast that info to reduce size (and for privacy)
-		size_t iOSIdx = strErrMsg.find( "\\OpenStudio\\" );
+		size_t iOSIdx = strErrMsg.find( "\\OpenStudio" );
 		size_t iPathBeginIdx = (iOSIdx == std::string::npos ? std::string::npos : strErrMsg.rfind( ":\\", iOSIdx-1 ));
 	//	// SAC 5/1/14 - added secondary check of iOSIdx because 'iOSIdx == std::string::npos' not always behaving...
 	//	size_t iPathBeginIdx = (iOSIdx == std::string::npos ? std::string::npos : ((iOSIdx < 1 || iOSIdx > strErrMsg.size()-12) ? -1 : strErrMsg.rfind( ":\\", iOSIdx-1 )));
@@ -3053,7 +3132,7 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 
 	if (strErrMsg.size() > 0 && pszErrorMsg && iErrorMsgLen > 1)  // SAC 1/30/14
 	{	// check error string for paths specific to development machines, and blast that info to reduce size (and for privacy)
-		size_t iOSIdx = strErrMsg.find( "\\OpenStudio\\" );
+		size_t iOSIdx = strErrMsg.find( "\\OpenStudio" );
 		size_t iPathBeginIdx = (iOSIdx == std::string::npos ? std::string::npos : strErrMsg.rfind( ":\\", iOSIdx-1 ));
 		if (iOSIdx != std::string::npos && iPathBeginIdx != std::string::npos)
 		{	while (--iPathBeginIdx >= 0 && strErrMsg.at( iPathBeginIdx ) != 39)
@@ -3191,7 +3270,7 @@ long OSWrapLib::ProcessResults_Multiple(	const char* pszEPlusPath, const char* p
 
 	if (strErrMsg.size() > 0 && pszErrorMsg && iErrorMsgLen > 1)  // SAC 1/30/14
 	{	// check error string for paths specific to development machines, and blast that info to reduce size (and for privacy)
-		size_t iOSIdx = strErrMsg.find( "\\OpenStudio\\" );
+		size_t iOSIdx = strErrMsg.find( "\\OpenStudio" );
 		size_t iPathBeginIdx = (iOSIdx == std::string::npos ? std::string::npos : strErrMsg.rfind( ":\\", iOSIdx-1 ));
 		if (iOSIdx != std::string::npos && iPathBeginIdx != std::string::npos)
 		{	while (--iPathBeginIdx >= 0 && strErrMsg.at( iPathBeginIdx ) != 39)
