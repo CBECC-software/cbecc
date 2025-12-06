@@ -38,9 +38,9 @@
 #include "EPlusRunMgr.h"
 #include "memLkRpt.h"
 #include "BEMCmpMgrCom.h"
-#ifdef OSWRAPPER
+//#ifdef OSWRAPPER
 #include "OpenStudioInterface.h"
-#endif
+//#endif
 #include "BEMCmpMgrProgress.h"   // SAC 06/20/22
 
 using namespace std;

@@ -127,6 +127,7 @@ CDlgStartLoad::CDlgStartLoad(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CDlgStartLoad)
 	//}}AFX_DATA_INIT
    m_iOption = 0;
+   m_iSector = 0;    // 0-Nonres/MFam | 1-SFam/Duplex
 }
 
 
@@ -146,9 +147,12 @@ BEGIN_MESSAGE_MAP(CDlgStartLoad, CDialog)
 	ON_BN_CLICKED(IDC_START_BLANK, OnStartBlankSlate)
 	ON_BN_CLICKED(IDC_START_EXISTING, OnStartExistingProject)
 	ON_BN_CLICKED(IDC_START_OLDCUAC, OnStartOldCUAC)
-#ifdef UI_CANRES
+//#ifdef UI_CANRES
 	ON_BN_CLICKED(IDC_START_NEW, OnStartNewProject)
-#endif   // UI_CANRES
+	ON_BN_CLICKED(IDC_START_NEW_SF, OnStartNewProjectSFam)
+   ON_BN_CLICKED(IDC_START_BATCH_SF, OnStartBatchProcessingSFam)
+	ON_BN_CLICKED(IDC_START_BLANK_SF, OnStartBlankSlateSFam)
+   //#endif   // UI_CANRES
 	ON_BN_CLICKED(IDC_START_RECENT, OnStartRecentProject)
 	ON_CBN_SELCHANGE(IDC_START_FILELIST, OnSelChangeStartFilelist)
 	ON_BN_CLICKED(IDC_START_OVERVIEW, OnStartViewOverview)
@@ -168,7 +172,7 @@ BOOL CDlgStartLoad::OnInitDialog()
    {
       // SAC 7/31/99 - reset maximum # characters allowed in display string
       int iSaveMRUMaxDisplayLength = epMRU->m_nMaxDisplayLength;
-      epMRU->m_nMaxDisplayLength = 55;
+      epMRU->m_nMaxDisplayLength = 70;
 
       char pszCurDir[_MAX_PATH];   /* Get the current working directory: */
       _getcwd( pszCurDir, _MAX_PATH );
@@ -213,10 +217,16 @@ BOOL CDlgStartLoad::OnInitDialog()
          m_iOption = -1;  // SAC 2/5/14 - was: -3
    }
 
+   // // single app Sector control added - SAC 09/05/25 (gh dev #433)
+   // m_cmbbSector.AddString( "Nonresidential and/or Multifamily" );    m_cmbbSector.SetItemData( 0, 0 );
+   // m_cmbbSector.AddString( "Single Family Residential / Duplex" );   m_cmbbSector.SetItemData( 1, 1 );
+   // m_cmbbSector.SetCurSel( 0 );
+   // m_cmbbSector.ShowWindow( SW_HIDE );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+
 	int iAllowBlankSlateDefault = 1;		// SAC 2/5/14 - added option to turn OFF access to blank slate
-#ifdef UI_CANRES
-	iAllowBlankSlateDefault = 0;
-#endif
+//#ifdef UI_CANRES
+//	iAllowBlankSlateDefault = 0;
+//#endif
 	bool bAllowBlankSlate = (ReadProgInt( "options", "AllowBlankSlate", iAllowBlankSlateDefault ) > 0);
 	if (!bAllowBlankSlate && m_iOption == -3)
 		m_iOption = -1;
@@ -224,7 +234,37 @@ BOOL CDlgStartLoad::OnInitDialog()
 	{	CWnd* pWnd = GetDlgItem( IDC_START_BLANK );
 		if (pWnd)
 			pWnd->ShowWindow( SW_HIDE );
+      pWnd = GetDlgItem( IDC_START_BLANK_SF );
+		if (pWnd)
+			pWnd->ShowWindow( SW_HIDE );
+      pWnd = GetDlgItem( IDC_START_BLANK_LBL );
+		if (pWnd)
+			pWnd->ShowWindow( SW_HIDE );
 	}
+
+#ifdef  UI_PROGYEAR2028
+	if (true)
+	{	CWnd* pWnd = GetDlgItem( IDC_START_NEW_SF );
+		if (pWnd)
+			pWnd->ShowWindow( SW_HIDE );
+      pWnd = GetDlgItem( IDC_START_BATCH_SF );
+		if (pWnd)
+			pWnd->ShowWindow( SW_HIDE );
+      pWnd = GetDlgItem( IDC_START_BLANK_SF );
+		if (pWnd)
+			pWnd->ShowWindow( SW_HIDE );
+	}
+#endif
+
+   //UINT uiRadioBtnIDs[] = {   IDC_START_RECENT, IDC_START_EXISTING, IDC_START_OLDCUAC, IDC_START_NEW_SF, 
+   //                           IDC_START_NEW, IDC_START_BATCH_SF, IDC_START_BATCH, IDC_START_BLANK_SF, 
+   //                           IDC_START_BLANK, 0 };
+   //int iRIdx=-1;
+   //while (uiRadioBtnIDs[++iRIdx] > 0)
+   //{  CWnd* pWnd = GetDlgItem( uiRadioBtnIDs[iRIdx] );
+	//	if (pWnd)
+   //
+   //}
 
 // SAC 11/20/17 - removed code to hide batch processing option when developer menu option not set
 	int iEnableBatchProc = 1;
@@ -261,19 +301,53 @@ BOOL CDlgStartLoad::OnInitDialog()
 }
 
 void CDlgStartLoad::OnStartRecentProject() 
-{   m_iOption =  0;   }
+{  m_iOption =  0;
+   // m_cmbbSector.ShowWindow( SW_HIDE );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
 void CDlgStartLoad::OnStartExistingProject() 
-{   m_iOption = -1;   }
+{  m_iOption = -1;
+   // m_cmbbSector.ShowWindow( SW_HIDE );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
 void CDlgStartLoad::OnStartNewProject() 
-{   m_iOption = -2;   }
+{  m_iOption = -2;
+   m_iSector = 0;
+   // m_cmbbSector.ShowWindow( SW_SHOW );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
+void CDlgStartLoad::OnStartNewProjectSFam() 
+{  m_iOption = -2;
+   m_iSector = 1;
+   // m_cmbbSector.ShowWindow( SW_SHOW );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
 void CDlgStartLoad::OnStartBlankSlate() 
-{   m_iOption = -3;   }
+{  m_iOption = -3;
+   m_iSector = 0;
+   // m_cmbbSector.ShowWindow( SW_SHOW );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
+void CDlgStartLoad::OnStartBlankSlateSFam() 
+{  m_iOption = -3;
+   m_iSector = 1;
+   // m_cmbbSector.ShowWindow( SW_SHOW );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
 void CDlgStartLoad::OnStartBatchProcessing() 
-{   m_iOption = -4;   }
+{  m_iOption = -4;
+   m_iSector = 0;
+   // m_cmbbSector.ShowWindow( SW_SHOW );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
+void CDlgStartLoad::OnStartBatchProcessingSFam() 
+{  m_iOption = -4;
+   m_iSector = 1;
+   // m_cmbbSector.ShowWindow( SW_SHOW );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
 void CDlgStartLoad::OnStartCommunitySolarOptOut()  // SAC 03/28/23
-{   m_iOption = -5;   }
+{  m_iOption = -5;
+   m_iSector = 1;
+   // m_cmbbSector.ShowWindow( SW_HIDE );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
 void CDlgStartLoad::OnStartOldCUAC()   // SAC 09/18/23
-{   m_iOption = -6;   }
+{  m_iOption = -6;
+   m_iSector = 0;
+   // m_cmbbSector.ShowWindow( SW_HIDE );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
+}
 
 void CDlgStartLoad::OnSelChangeStartFilelist() 
 {
@@ -301,6 +375,10 @@ void CDlgStartLoad::OnSelChangeStartFilelist()
    }
 }
 
+// void CDlgStartLoad::OnSelChangeSector() 
+// {
+// }
+
 void CDlgStartLoad::OnCancel() 
 {
    m_iOption = -10;     // switched from -5 to -10 - SAC 04/05/23
@@ -311,6 +389,18 @@ void CDlgStartLoad::OnOK()
 {
    if (m_iOption >= 0)
       m_iOption = (int) m_cmbbFileList.GetItemData( m_cmbbFileList.GetCurSel() );
+   // m_iSector = (int) m_cmbbSector.GetItemData( m_cmbbSector.GetCurSel() );
+
+   if ( m_iOption == -2 ||    // NewProject
+        m_iOption == -3 ||    // BlankSlate
+        m_iOption == -4 ||    // BatchProcessing
+        m_iOption == -5 ||    // CommunitySolarOptOut
+        m_iOption == -6 )     // OldCUAC
+   {  if (m_iSector == 1)        // SAC 09/09/25 (gh dev #433)
+         SetUICodeTypeBools_SFam();
+      else 
+         SetUICodeTypeBools_NRMF();
+   }
 
 	CDialog::OnOK();
 }

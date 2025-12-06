@@ -1,0 +1,1989 @@
+RulesetFilename   "CA Res 2025.bin"  
+
+Proj   "2025 Example"  
+   BEMVersion = 12
+   CreateDate = 1761082228
+   ModDate = 1762415279
+   SoftwareVersion = "CBECC 2025.2.0 (1394)"
+   SoftwareVersionDetail = "CBECC 2025.2.0 RC (1390)"
+   ProjFileName = "1storyExampleDuctlessMSHP.ribd25"
+   RunTitle = "Ductless MiniSplit Heat Pump"
+   AnalysisType = "Proposed and Standard"
+   CALGreen = 0
+   TDVType = "TDV"
+   StandardsVersion = "Compliance 2026"
+   AnalysisReport = "Building Summary (csv)"
+   ComplianceReportPDF = 0
+   ComplianceReportXML = 0
+   LAFirePVBattExcpt = 0
+   CommunitySolarProject = "- select CS project -"
+   InCmntySlrProjTerritory = 0
+   SMUDSlrSharesReserved = 0
+   PVCompCredit = 0
+   PVWInputs = "Simplified"
+   PVSizeOption = "Standard Design PV"
+   PVWDCSysSize = ( 2.42, 0, 0, 0, 0 )
+   PVWModuleType = ( "Standard", "Standard", "Standard", "Standard", 
+                     "Standard" )
+   PVWCalFlexInstType = ( "CFI1", "CFI1", "CFI1", "CFI1", "CFI1" )
+   PVWAzm[1] = 170
+   PVWArrayTiltInput = ( "deg", "deg", "deg", "deg", "deg" )
+   PVWArrayTiltPitch[1] = 5
+   PVWArrayTiltDeg[1] = 22.6199
+   PVWArrayType = ( "Fixed (open rack)", "Fixed (open rack)", 
+                    "Fixed (open rack)", "Fixed (open rack)", 
+                    "Fixed (open rack)" )
+   PVWPwrElec = ( "- none -", "- none -", "- none -", "- none -", 
+                  "- none -" )
+   PVWSolarAccess[1] = 98
+   PVWInverterEff[1] = 96
+   AllowExcessPVEDR = 0
+   SolAccessRfPctSteep = 100
+   DefaultReducedPVReq = 1
+   ReducedPVReq = 0
+   ReducedPVReqExcept = "- select applicable required PV exception -"
+   SimStandaloneBatt = 0
+   BattMaxCap = 0
+   BatteryControl = "Basic"
+   BattJA12Compliant = 0
+   BattGridHarmCredit = 1
+   BattDRNumRankedDays = 20
+   BattRoundTripEff = 0.9025
+   SimSpeedOption = "Compliance"
+   DRtgLtgCredit = 0
+   DRtgLtgReduction = 0
+   IncludePeakCooling = 1
+   SpecifyTargetDRtg = 0
+   SFamCompactDistrib = "not compact"
+   SFamCDSpecFixDists = 0
+   SFamUserSpecCmpctDist = 0
+   SFamUserCompactFactor = 0.7
+   CAHPProgram = "- none -"
+   IsCAHPElecUtil = 1
+   IsCAHPNGasUtil = 1
+   IsCAHPDOEChalHome = 0
+   IsCAHPFutureCode = 0
+   CAHPSolarOption = "- select -"
+   ClimateZone = "CZ12  (Sacramento)"
+   Address = "1516 Ninth St"
+   ZipCode = 95814
+   RunScope = "Newly Constructed"
+   City = "Sacramento, CA"
+   IsMultiFamily = 0
+   SFamADUType = "no"
+   CentralMFamLaundry = 0
+   DfltMFamLaundryZn = "Zone1"
+   ZonalControl = 0
+   Description = "2022 CEC Prototype with tile roof"
+   UseDefaultACH50 = 0
+   ACH50 = 5
+   Status = "New"
+   IsVerified = 0
+   IsAddAlone = 0
+   NoDwellingUnit = 0
+   ProjInclKitchen = 1
+   InsulConsQuality = "Yes"
+   NumBedrooms = 3
+   NumAddBedrooms = 0
+   AllOrientations = 0
+   FrontOrientation = 0
+   GasType = "Natural Gas"
+   HasGarage = 1
+   UsePreCooling = 0
+   SFamMaxVertDist = 9
+   IAQSupInletsAccessible = 0
+   IAQHasFID = 0
+   UnitIAQOption[1] = "Default Minimum IAQ Fan"
+   UnitIAQOption[2] = "Default Minimum IAQ Fan"
+   UnitIAQFanCnt1[1] = 1
+   UnitIAQFanCnt1[2] = 0
+   UnitIAQFanCnt2[1] = 1
+   UnitIAQFanCnt2[2] = 0
+   UnitIAQFanCnt3[1] = 1
+   UnitIAQFanCnt3[2] = 0
+   UnitIAQFanCnt4[1] = 1
+   UnitIAQFanCnt4[2] = 0
+   UnitIAQZone1[1] = "Zone1"
+   UnitIAQZone1[2] = "Zone1"
+   UnitIAQZone2[1] = "Zone1"
+   UnitIAQZone2[2] = "Zone1"
+   UnitIAQZone3[1] = "Zone1"
+   UnitIAQZone3[2] = "Zone1"
+   UnitIAQZone4[1] = "Zone1"
+   UnitIAQZone4[2] = "Zone1"
+   UnitClVentOption = "Default Prescriptive Whole House Fan"
+   ClVentVerified = 0
+   UnitClVentZone[1] = "Zone1"
+   ApplRefrigZone[1] = "Zone1"
+   ApplWasherZone[1] = "Zone1"
+   ApplDryerZone[1] = "Zone1"
+   ApplCookZone[1] = "Zone1"
+   ApplDishZone[1] = "Zone1"
+   Appl_HaveRefrig[1] = 1
+   Appl_HaveDish[1] = 1
+   Appl_HaveCook[1] = 1
+   Appl_HaveWasher[1] = 1
+   Appl_HaveDryer[1] = 1
+   ApplCookFuel[1] = "Gas"
+   ApplDryerFuel[1] = "Gas"
+   Appl_RefrigUsage[1] = 565
+   ApplRefrigEffMethod[1] = "from # bedrooms/unit"
+   ApplDishUsageMethod[1] = "from # bedrooms/unit"
+   BypassMessageBoxes = 1
+   CSERpt_ZnDataDump = 0
+   CSERpt_HVACDescrip = 1
+   CSERpt_ZnEnergy = 0
+   CSERpt_HtPumpHtg = 0
+   CSERpt_Mtr_All = 0
+   CSERpt_Mtr_Elec = 0
+   CSERpt_Mtr_NGas = 0
+   CSERpt_Mtr_Othr = 0
+   CSERpt_ZnEnergy_DD = 0
+   CSERpt_Mtr_All_DD = 0
+   CSERpt_Mtr_Elec_DD = 0
+   CSERpt_Mtr_NGas_DD = 0
+   CSERpt_Mtr_Othr_DD = 0
+   CSERpt_ZnEnergy_CD = 0
+   CSERpt_Mtr_All_CD = 0
+   CSERpt_Mtr_Elec_CD = 0
+   CSERpt_Mtr_NGas_CD = 0
+   CSERpt_Mtr_Othr_CD = 0
+   CSERpt_ZnEnergy_HD = 0
+   CSERpt_Mtr_All_HD = 0
+   CSERpt_Mtr_Elec_HD = 0
+   CSERpt_Mtr_NGas_HD = 0
+   CSERpt_Mtr_Othr_HD = 0
+   ..
+
+Zone   "Zone1"  
+   Type = "Conditioned"
+   Status = "New"
+   HVACSysStatus = "New"
+   HVACSysVerified = 0
+   HVACSystem = "HVACHeatpump"
+   DHWSys1Status = "New"
+   DHWSys1Verified = 0
+   DHWSys1 = "DHWHeatpump"
+   FloorArea = 2100
+   CeilingHeight = 9
+   FloorHeight = 10
+   WinHeadHeight = 7.7
+   Bottom = 0.7
+   NumStories = 1
+   ..
+
+ExtWall   "Zone1WallFront"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 270
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   Absorptivity = 0.5
+   ..
+
+Win   "Zone1WinFront"  
+   Status = "New"
+   IsVerified = 0
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 15
+   Height = 5
+   Width = 3
+   Multiplier = 7
+   NFRCUfactor = 0.27
+   NFRCSHGC = 0.23
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 15
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 7
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+Door   "Zone1DoorFront"  
+   Status = "New"
+   IsVerified = 0
+   Area = 20
+   Ufactor = 0.2
+   exUfactor = 0.2
+   ..
+
+ExtWall   "Zone1WallLeft"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 324
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   Absorptivity = 0.5
+   ..
+
+Win   "Zone1WinLeft"  
+   Status = "New"
+   IsVerified = 0
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 15
+   Height = 5
+   Width = 3
+   Multiplier = 3.5
+   NFRCUfactor = 0.27
+   NFRCSHGC = 0.23
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 15
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 3.5
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "Zone1WallBack"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Back"
+   OrientationValue = 180
+   Area = 450
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   Absorptivity = 0.5
+   ..
+
+Win   "Zone1WinBack"  
+   Status = "New"
+   IsVerified = 0
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 15
+   Height = 5
+   Width = 3
+   Multiplier = 14
+   NFRCUfactor = 0.27
+   NFRCSHGC = 0.23
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 15
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 14
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+ExtWall   "Zone1WallRight"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 414
+   Construction = "Exterior Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   Absorptivity = 0.5
+   ..
+
+Win   "Zone1WinRight"  
+   Status = "New"
+   IsVerified = 0
+   SpecMethod = "Window Dimensions (required for fins/overhangs)"
+   Area = 15
+   Height = 5
+   Width = 3
+   Multiplier = 3.5
+   NFRCUfactor = 0.27
+   NFRCSHGC = 0.23
+   UfactorSHGCSource = "NFRC"
+   ExteriorShade = "Insect Screen (default)"
+   exArea = 15
+   exHeight = 5
+   exWidth = 3
+   exMultiplier = 3.5
+   exUfactorSHGCSource = "NFRC"
+   exExteriorShade = "Insect Screen (default)"
+   ModelFinsOverhang = 1
+   OverhangDepth = 1
+   OverhangDistUp = 1.33
+   OverhangExL = 3
+   OverhangExR = 3
+   OverhangFlap = 0.4
+   exOverhangDepth = 1
+   exOverhangDistUp = 1.33
+   exOverhangExL = 3
+   exOverhangExR = 3
+   exOverhangFlap = 0.4
+   LeftFinDepth = 0
+   LeftFinTopUp = 0
+   LeftFinDistL = 0
+   LeftFinBotUp = 0
+   exLeftFinDepth = 0
+   exLeftFinTopUp = 0
+   exLeftFinDistL = 0
+   exLeftFinBotUp = 0
+   RightFinDepth = 0
+   RightFinTopUp = 0
+   RightFinDistR = 0
+   RightFinBotUp = 0
+   exRightFinDepth = 0
+   exRightFinTopUp = 0
+   exRightFinDistR = 0
+   exRightFinBotUp = 0
+   ..
+
+CeilingBelowAttic   "Zone1ToAtticCeiling"  
+   Status = "New"
+   IsVerified = 0
+   Area = 2100
+   Construction = "Ceiling Below Attic Cons"
+   AtticZone = "Attic"
+   ..
+
+SlabFloor   "Zone1Slab"  
+   Status = "New"
+   IsVerified = 0
+   Area = 2100
+   Surface = "Default (80% carpeted/covered, 20% exposed)"
+   Perimeter = 162
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-7, 16 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+IntWall   "Zone1ToGarageWallFront"  
+   Status = "New"
+   IsVerified = 0
+   Area = 180
+   Construction = "IntWall Cons"
+   IsPartySurface = 0
+   OtherSideModeled = 0
+   Outside = "Garage"
+   ..
+
+Door   "Zone1ToGarageDoorFront"  
+   Status = "New"
+   IsVerified = 0
+   Area = 20
+   Ufactor = 0.2
+   exUfactor = 0.2
+   ..
+
+IntWall   "Zone1ToGarageWallLeft"  
+   Status = "New"
+   IsVerified = 0
+   Area = 90
+   Construction = "IntWall Cons"
+   IsPartySurface = 0
+   OtherSideModeled = 0
+   Outside = "Garage"
+   ..
+
+EnergyUse   "EU-SpcHtg"  
+   ..
+
+EnergyUse   "EU-SpcClg"  
+   ..
+
+EnergyUse   "EU-Vent"  
+   ..
+
+EnergyUse   "EU-WtrHt"  
+   ..
+
+EnergyUse   "EU-Total"  
+   ..
+
+Garage   "Garage"  
+   Area = 440
+   Volume = 3960
+   Bottom = 0.7
+   ..
+
+ExtWall   "GarageWallFront"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Front"
+   OrientationValue = 0
+   Area = 180
+   Construction = "Garage Ext Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   Absorptivity = 0.5
+   ..
+
+Door   "GarageCarDoorFront"  
+   Status = "New"
+   IsVerified = 0
+   Area = 128
+   Ufactor = 1
+   exUfactor = 1
+   ..
+
+ExtWall   "GarageWallLeft"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Left"
+   OrientationValue = 90
+   Area = 198
+   Construction = "Garage Ext Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   Absorptivity = 0.5
+   ..
+
+ExtWall   "GarageWallRight"  
+   Status = "New"
+   IsVerified = 0
+   Orientation = "Right"
+   OrientationValue = 270
+   Area = 108
+   Construction = "Garage Ext Wall Cons"
+   Exception = "- none -"
+   Tilt = 90
+   Absorptivity = 0.5
+   ..
+
+SlabFloor   "GarageSlab"  
+   Status = "New"
+   IsVerified = 0
+   Area = 440
+   Surface = "Exposed"
+   Perimeter = 54
+   HeatedSlab = 0
+   EdgeInsulation = 0
+   EdgeInsulOption = "R-5, 8 inches"
+   exSurface = "Default (80% carpeted/covered, 20% exposed)"
+   exEdgeInsulOption = "R-5, 8 inches"
+   ..
+
+CeilingBelowAttic   "GarageToGarageAttic"  
+   Status = "New"
+   IsVerified = 0
+   Area = 440
+   Construction = "Garage Ceiling Below Attic Cons"
+   AtticZone = "GarageAttic"
+   ..
+
+Attic   "Attic"  
+   Type = "Ventilated"
+   Status = "New"
+   IsVerified = 0
+   RoofRise = 5
+   Construction = "Attic Roof Cons"
+   RoofSolReflect = 0.2
+   RoofEmiss = 0.85
+   ..
+
+Attic   "GarageAttic"  
+   Type = "Ventilated"
+   Status = "New"
+   IsVerified = 0
+   RoofRise = 5
+   Construction = "Garage Attic Roof Cons"
+   RoofSolReflect = 0.2
+   RoofEmiss = 0.85
+   ..
+
+EUseSummary   "EUSummary"  
+   ResultsAnalysisVer = 250200
+   AllOrientations = 0
+   Title1[2] = "Proposed Design"
+   Title1[5] = "Standard Design"
+   Title1[8] = "Compliance Margins"
+   Title1[10] = "Proposed"
+   Title1[11] = "Standard"
+   Title1[23] = "Prop Design"
+   Title1[24] = "Prop Design"
+   Title1[25] = "Prop Design"
+   Title1[27] = "Std Design"
+   Title1[28] = "Std Design"
+   Title1[29] = "Std Design"
+   Title1[30] = "CO2"
+   Title2[2] = "Site Elec."
+   Title2[3] = "Site Gas"
+   Title2[4] = "LSC¹"
+   Title2[5] = "Site Elec."
+   Title2[6] = "Site Gas"
+   Title2[7] = "LSC¹"
+   Title2[8] = "LSC¹"
+   Title2[10] = "Design"
+   Title2[11] = "Design"
+   Title2[23] = "Electric CO2"
+   Title2[24] = "Fuel CO2"
+   Title2[25] = "Total CO2"
+   Title2[27] = "Electric CO2"
+   Title2[28] = "Fuel CO2"
+   Title2[29] = "Total CO2"
+   Title2[30] = "Emissions"
+   Title2[31] = "Source"
+   Title2[32] = "Source"
+   Title2[33] = "Source"
+   Title2[34] = "Source"
+   Title2[35] = "EDR1"
+   Title2[36] = "EDR1"
+   Title3[1] = "End Use"
+   Title3[2] = "(kWh/yr)"
+   Title3[3] = "(therms/yr)"
+   Title3[4] = "($/ft²-yr)"
+   Title3[5] = "(kWh/yr)"
+   Title3[6] = "(therms/yr)"
+   Title3[7] = "($/ft²-yr)"
+   Title3[8] = "($/ft²-yr)"
+   Title3[10] = "(kW)"
+   Title3[11] = "(kW)"
+   Title3[23] = "Emis. (kg)"
+   Title3[24] = "Emis. (kg)"
+   Title3[25] = "Emis. (kg)"
+   Title3[27] = "Emis. (kg)"
+   Title3[28] = "Emis. (kg)"
+   Title3[29] = "Emis. (kg)"
+   Title3[30] = "Margin (kg)"
+   Title3[31] = "(kBtu/ft²-yr)"
+   Title3[32] = "(kBtu/ft²-yr)"
+   Title3[33] = "(kBtu/ft²-yr)"
+   Title3[34] = "(kBtu/ft²-yr)"
+   Title3[35] = "(kBtu/ft²-yr)"
+   Title3[36] = "(kBtu/ft²-yr)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "1,318"
+   Enduse1[4] = "5.01"
+   Enduse1[5] = "1,642"
+   Enduse1[7] = "6.27"
+   Enduse1[8] = "1.26"
+   Enduse1[10] = "0.43"
+   Enduse1[11] = "0.55"
+   Enduse1[23] = "443"
+   Enduse1[25] = "443"
+   Enduse1[27] = "280"
+   Enduse1[29] = "280"
+   Enduse1[30] = "-163"
+   Enduse1[31] = "1.99"
+   Enduse1[32] = "2.50"
+   Enduse1[33] = "0.51"
+   Enduse1[34] = "1.99"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "175"
+   Enduse2[4] = "0.60"
+   Enduse2[5] = "235"
+   Enduse2[7] = "0.83"
+   Enduse2[8] = "0.23"
+   Enduse2[10] = "0.01"
+   Enduse2[11] = "0.01"
+   Enduse2[23] = "25"
+   Enduse2[25] = "25"
+   Enduse2[27] = "17"
+   Enduse2[29] = "17"
+   Enduse2[30] = "-8"
+   Enduse2[31] = "0.11"
+   Enduse2[32] = "0.15"
+   Enduse2[33] = "0.04"
+   Enduse2[34] = "0.11"
+   Enduse3[1] = "IAQ Ventilation"
+   Enduse3[2] = "277"
+   Enduse3[4] = "0.88"
+   Enduse3[5] = "277"
+   Enduse3[7] = "0.88"
+   Enduse3[8] = "0.00"
+   Enduse3[10] = "0.03"
+   Enduse3[11] = "0.03"
+   Enduse3[23] = "50"
+   Enduse3[25] = "50"
+   Enduse3[27] = "25"
+   Enduse3[29] = "25"
+   Enduse3[30] = "-25"
+   Enduse3[31] = "0.22"
+   Enduse3[32] = "0.22"
+   Enduse3[33] = "0.00"
+   Enduse3[34] = "0.22"
+   Enduse4[1] = "Other HVAC"
+   Enduse4[4] = "0.00"
+   Enduse4[7] = "0.00"
+   Enduse4[8] = "0.00"
+   Enduse4[10] = "0.00"
+   Enduse4[11] = "0.00"
+   Enduse4[25] = "0"
+   Enduse4[29] = "0"
+   Enduse4[31] = "0.00"
+   Enduse4[32] = "0.00"
+   Enduse4[33] = "0.00"
+   Enduse4[34] = "0.00"
+   Enduse5[1] = "Water Heating"
+   Enduse5[2] = "1,305"
+   Enduse5[4] = "4.18"
+   Enduse5[5] = "1,271"
+   Enduse5[7] = "4.07"
+   Enduse5[8] = "-0.11"
+   Enduse5[10] = "0.15"
+   Enduse5[11] = "0.14"
+   Enduse5[23] = "247"
+   Enduse5[25] = "247"
+   Enduse5[27] = "120"
+   Enduse5[29] = "120"
+   Enduse5[30] = "-127"
+   Enduse5[31] = "1.11"
+   Enduse5[32] = "4.95"
+   Enduse5[33] = "3.84"
+   Enduse5[34] = "1.11"
+   Enduse6[1] = "Inside Lighting"
+   Enduse6[2] = "506"
+   Enduse6[4] = "1.75"
+   Enduse6[5] = "506"
+   Enduse6[7] = "1.75"
+   Enduse6[8] = "0.00"
+   Enduse6[10] = "0.06"
+   Enduse6[11] = "0.06"
+   Enduse6[23] = "110"
+   Enduse6[25] = "110"
+   Enduse6[27] = "55"
+   Enduse6[29] = "55"
+   Enduse6[30] = "-55"
+   Enduse6[31] = "0.50"
+   Enduse6[32] = "0.50"
+   Enduse6[33] = "0.00"
+   Enduse6[34] = "0.50"
+   Enduse7[1] = "Appl. & Cooking"
+   Enduse7[2] = "935"
+   Enduse7[3] = "43.1"
+   Enduse7[4] = "5.42"
+   Enduse7[5] = "941"
+   Enduse7[6] = "43.1"
+   Enduse7[7] = "5.44"
+   Enduse7[8] = "0.02"
+   Enduse7[10] = "0.09"
+   Enduse7[11] = "0.09"
+   Enduse7[23] = "157"
+   Enduse7[24] = "252"
+   Enduse7[25] = "409"
+   Enduse7[27] = "79"
+   Enduse7[28] = "252"
+   Enduse7[29] = "331"
+   Enduse7[30] = "-78"
+   Enduse7[31] = "2.57"
+   Enduse7[32] = "2.57"
+   Enduse7[33] = "0.00"
+   Enduse7[34] = "2.57"
+   Enduse8[1] = "Plug Loads"
+   Enduse8[2] = "2,026"
+   Enduse8[4] = "6.66"
+   Enduse8[5] = "2,026"
+   Enduse8[7] = "6.66"
+   Enduse8[8] = "0.00"
+   Enduse8[10] = "0.25"
+   Enduse8[11] = "0.25"
+   Enduse8[23] = "391"
+   Enduse8[25] = "391"
+   Enduse8[27] = "196"
+   Enduse8[29] = "196"
+   Enduse8[30] = "-195"
+   Enduse8[31] = "1.76"
+   Enduse8[32] = "1.76"
+   Enduse8[33] = "0.00"
+   Enduse8[34] = "1.76"
+   Enduse9[1] = "Exterior"
+   Enduse9[2] = "120"
+   Enduse9[4] = "0.42"
+   Enduse9[5] = "120"
+   Enduse9[7] = "0.42"
+   Enduse9[8] = "0.00"
+   Enduse9[10] = "0.02"
+   Enduse9[11] = "0.02"
+   Enduse9[23] = "28"
+   Enduse9[25] = "28"
+   Enduse9[27] = "14"
+   Enduse9[29] = "14"
+   Enduse9[30] = "-14"
+   Enduse9[31] = "0.12"
+   Enduse9[32] = "0.12"
+   Enduse9[33] = "0.00"
+   Enduse9[34] = "0.12"
+   Enduse10[1] = "TOTAL"
+   Enduse10[2] = "2,439"
+   Enduse10[3] = "43.1"
+   Enduse10[4] = "19.78"
+   Enduse10[5] = "2,796"
+   Enduse10[6] = "43.1"
+   Enduse10[7] = "21.14"
+   Enduse10[8] = "1.36"
+   Enduse10[10] = "1.02"
+   Enduse10[11] = "1.13"
+   Enduse10[23] = "1,162"
+   Enduse10[24] = "252"
+   Enduse10[25] = "1,414"
+   Enduse10[27] = "690"
+   Enduse10[28] = "252"
+   Enduse10[29] = "942"
+   Enduse10[30] = "-472"
+   Enduse10[31] = "7.51"
+   Enduse10[32] = "11.90"
+   Enduse10[33] = "4.39"
+   Enduse10[34] = "7.51"
+   Enduse11[1] = "Efficiency Total"
+   Enduse11[2] = "3,075"
+   Enduse11[4] = "10.67"
+   Enduse11[5] = "3,426"
+   Enduse11[7] = "12.05"
+   Enduse11[8] = "1.38"
+   Enduse11[10] = "0.62"
+   Enduse11[11] = "0.73"
+   Enduse11[23] = "765"
+   Enduse11[25] = "765"
+   Enduse11[27] = "442"
+   Enduse11[29] = "442"
+   Enduse11[30] = "-323"
+   Enduse11[31] = "3.43"
+   Enduse11[32] = "7.82"
+   Enduse11[33] = "4.39"
+   Enduse11[34] = "3.43"
+   Enduse13[1] = "Photovoltaics"
+   Enduse13[2] = "-4,222"
+   Enduse13[4] = "-5.14"
+   Enduse13[5] = "-4,222"
+   Enduse13[7] = "-5.18"
+   Enduse13[8] = "-0.04"
+   Enduse13[10] = "-0.01"
+   Enduse13[23] = "-289"
+   Enduse13[25] = "-289"
+   Enduse13[27] = "-96"
+   Enduse13[29] = "-96"
+   Enduse13[30] = "193"
+   Enduse13[31] = "-0.87"
+   Enduse13[32] = "-0.87"
+   Enduse13[33] = "0.00"
+   Enduse13[34] = "-0.87"
+   Enduse13[35] = " "
+   Enduse14[1] = "Battery"
+   Enduse14[4] = "0.00"
+   Enduse14[7] = " "
+   Enduse14[8] = "0.00"
+   Enduse14[10] = "0.00"
+   Enduse14[11] = "0.00"
+   Enduse14[25] = "0"
+   Enduse14[29] = "0"
+   Enduse14[30] = "0"
+   Enduse14[31] = "0.00"
+   Enduse14[32] = " "
+   Enduse14[33] = "0.00"
+   Enduse14[34] = "0.00"
+   Enduse98[1] = "Flexibility"
+   Enduse98[30] = "0"
+   Enduse98[31] = "0.00"
+   Enduse98[33] = "0.00"
+   Enduse98[34] = "0.00"
+   Enduse98[36] = "0.00"
+   Enduse99[1] = "Self Util/Flexibility Credit"
+   Enduse99[4] = "0.00"
+   Enduse99[8] = "0.00"
+   Enduse99[25] = "0"
+   Enduse99[29] = "0"
+   Enduse99[30] = "0"
+   Enduse99[31] = "0.00"
+   Enduse99[33] = "0.00"
+   EndusePVB[1] = "PV & Battery"
+   EndusePVB[2] = "-4,222"
+   EndusePVB[4] = "-5.14"
+   EndusePVB[5] = "-4,222"
+   EndusePVB[7] = "-5.18"
+   EndusePVB[8] = "-0.04"
+   EndusePVB[10] = "-0.01"
+   EndusePVB[11] = "0.00"
+   EndusePVB[23] = "-289"
+   EndusePVB[25] = "-289"
+   EndusePVB[27] = "-96"
+   EndusePVB[29] = "-96"
+   EndusePVB[30] = "193"
+   EndusePVB[31] = "-0.87"
+   EndusePVB[32] = "-0.87"
+   EndusePVB[33] = "0.00"
+   EndusePVB[34] = "-0.87"
+   MetricPassFail = ( "Pass", "Pass", "Pass" )
+   PassFail = "PASS"
+   ComplyMessage = "COMPLIES"
+   SummaryCol1[4] = "Standard Design"
+   SummaryCol1[5] = "Proposed Design"
+   SummaryCol2[1] = "Compliance"
+   SummaryCol2[2] = "Energy Use"
+   SummaryCol2[3] = "(kTDV/ft²-yr)"
+   SummaryCol2[4] = "12.05"
+   SummaryCol2[5] = "10.67"
+   SummaryColNPVMarg[2] = "Efficiency¹"
+   SummaryColNPVMarg[3] = "(EDR)"
+   SummaryColFinMarg[2] = "Total²"
+   SummaryColFinMarg[3] = "(EDR)"
+   SummaryColNoPVDR[2] = "Efficiency¹"
+   SummaryColNoPVDR[3] = "(EDR)"
+   SummaryColPVOnlyDR[2] = "Flexibility"
+   SummaryColPVOnlyDR[3] = "(EDR)"
+   SummaryColFinDR[2] = "Total²"
+   SummaryColFinDR[3] = "(EDR)"
+   MarginkW[1] = 0.11
+   MarginkWh = 356.7
+   MarginTherms = 0
+   PctSavingskW = 9.8
+   PctSavingskWh = 12.8
+   PctSavingsTherms = 0
+   PctSavingsTDV = 6.4
+   PctSavingsCmpTDV = 11.5
+   PctSavingsSrc = 36.9
+   PctSavkWLbl = "9.8"
+   PctSavkWhLbl = "12.8"
+   PctSavThermsLbl = "-"
+   PctSavTDVLbl = "6.4"
+   PctSavCmpTDVLbl = "11.5"
+   PctSavSrcLbl = "36.9"
+   PropElecDemand[1] = 1.02367
+   StdElecDemand = 1.1343
+   IncludePeakCooling = 1
+   PropPeakCoolElec = 37.6973
+   StdPeakCoolElec = 73.7752
+   StdPeakCoolElecLimit = 88.5302
+   PeakCoolElecMargin = 51
+   PeakCoolElecLabels = ( "38", "89", "51", "Pass" )
+   PropDesignPVInp[1] = 2.42
+   PropDesignPVInp[6] = 2.42
+   PropDesignPVSize[1] = 2.6873
+   PropDesignPVTot = 2.6873
+   StdDesignPVSize = 2.6873
+   PrelimPropkWh = 6663.02
+   PrelimPropCompTDV = 10.6796
+   PrelimPropPV = -3803.29
+   PrelimPropPVTDV = -9.22
+   UnscaledPropPVRatio = 0.633854
+   PropPV_Total = 4223.38
+   PropPV_Export = 2266.08
+   PropPV_PctExport = 53.6556
+   StdPV_Total = 4223.38
+   StdPV_Export = 2248.14
+   StdPV_PctExport = 53.2307
+   ResultsNotes[1] = "PV System resized to 2.69 kWdc (a factor of 1.110) to achieve 'Standard Design PV' PV scaling"
+   ResultsNotes[4] = "PV System resized to 2.69 kWdc (a factor of 1.110) to achieve 'Standard Design PV' PV scaling"
+   ResultsNotes[5] = "Standard Design PV Capacity: 2.69 kWdc"
+   HaveResultsNotesPV[1] = 1
+   HaveResultsNotesPV[4] = 1
+   HaveResultsNotesPV[5] = 1
+   CO2FuelUnitLabel = "kg"
+   CO2TotalUnitLabel = "kg"
+   GHCEnergyEffCap = 0
+   GHCEnergyEffBattFrac = 0
+   GHCEnergyEffTDV = 0
+   GHCEnergyEffSrc = 0
+   GHCEnergyEffElec = 0
+   GHCEnergyEffCO2 = 0
+   MeetsTier1 = 0
+   MeetsTier2 = 0
+   PropElecCarbon[1] = 0.629252
+   PropFuelCarbon[1] = 0.252315
+   PropFinalCarbon[1] = 0.88
+   PropExclExpCarbon[1] = 1.54
+   PropExclExpCO2Str[1] = "1.54"
+   PropExportCarbon[1] = 0.03
+   PropExportCO2Str[1] = "0.03"
+   PropSelfConsCarbon[1] = 0.16
+   PropSelfConsCO2Str[1] = "0.16"
+   PropNoSolFlxCarbon[1] = 1.7
+   StdFinalCarbon = 0.94
+   StdExclExpCarbon = 0.98
+   StdExportCarbon = 0.03
+   StdSelfConsCarbon = 0.06
+   StdNoSolFlxCarbon = 1.04
+   HideCompSummary = 0
+   HideEDRs = 1
+   HideC02Emissions = 0
+   EDRMsg = "Energy Design Rating calcs not yet implemented for 2025 analysis."
+   ..
+
+SchDay   "CARes2013 InsLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.023, 0.019, 0.015, 0.017, 0.021, 0.031, 0.042, 0.041, 0.034, 
+          0.029, 0.027, 0.025, 0.021, 0.021, 0.021, 0.026, 0.031, 0.044, 
+          0.084, 0.118, 0.113, 0.096, 0.063, 0.038 )
+   ..
+
+SchDay   "CARes2013 Occupancy Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.035, 0.035, 0.035, 0.035, 0.035, 0.059, 0.082, 0.055, 0.027, 
+          0.014, 0.014, 0.014, 0.014, 0.014, 0.019, 0.027, 0.041, 0.055, 
+          0.068, 0.082, 0.082, 0.07, 0.053, 0.035 )
+   ..
+
+SchDay   "CARes2013 Equipment Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.037, 0.035, 0.034, 0.034, 0.032, 0.036, 0.042, 0.044, 0.037, 
+          0.032, 0.033, 0.033, 0.032, 0.033, 0.035, 0.037, 0.044, 0.053, 
+          0.058, 0.06, 0.062, 0.06, 0.052, 0.045 )
+   ..
+
+SchDay   "CARes2013 ExtLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+          0.25, 0.25, 0.25, 0.25 )
+   ..
+
+SchDay   "CARes2013 SZ Heat Hrly-user"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 65, 68, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Liv Heat Hrly-user"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 65, 68, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Slp Heat Hrly-user"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 65, 68, 65, 65, 65, 65, 65, 65, 65, 65, 
+          65, 65, 65, 65, 65, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 SZ Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Liv Cool Hrly-user"  
+   Type = "Temperature"
+   Hr = ( 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 83 )
+   ..
+
+SchDay   "CARes2013 Slp Cool Hrly-user"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 83, 83, 83, 
+          83, 83, 83, 83, 83, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 SZ Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Liv Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 
+          68, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Slp Heat Hrly"  
+   Type = "Temperature"
+   Hr = ( 65, 65, 65, 65, 65, 65, 66.5, 68, 68, 65, 65, 65, 65, 65, 65, 
+          65, 68, 68, 68, 68, 68, 68, 68, 65 )
+   ..
+
+SchDay   "CARes2013 Liv Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+SchDay   "CARes2013 Slp Cool Hrly"  
+   Type = "Temperature"
+   Hr = ( 78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 
+          79, 78, 78, 78, 78, 78, 78, 78 )
+   ..
+
+Cons   "Exterior Wall Cons"  
+   TreeState = 254
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "R 21"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- specify R-value -"
+   SheathInsulLayerRVal = 5
+   WallExtFinishLayer = "Synthetic Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Ceiling Below Attic Cons"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "R 38"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Interior Floor Cons"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x12 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Attic Roof Cons"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTileAirGap)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "- select inside finish -"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "R 19"
+   FrameLayer = "2x4 @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   CavInsulOverFrame = 0
+   ..
+
+Cons   "Garage Attic Roof Cons"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTileAirGap)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "- select inside finish -"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   CavInsulOverFrame = 0
+   ..
+
+Cons   "Ext Floor Cons"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   FlrExtConditions = "Exterior"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Garage Ext Wall Cons"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "- no insulation (vertical) -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Garage Ceiling Below Attic Cons"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Zone1ToGarageFloor Cons"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "IntWall Cons"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "R 21"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Cons   "Interior Floor"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   RoofingLayer = "Light Roof (Asphalt Shingle)"
+   AbvDeckInsulLayer = "- no insulation -"
+   RoofDeckLayer = "Wood Siding/sheathing/decking"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   MassLayer = "- none -"
+   MassThickness = "- none -"
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   StructPanel2Layer = "1.25 in. Laminated Bamboo Panel"
+   StructPanelLayer = "1.25 in. Laminated Bamboo Panel"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x12 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "- select finish -"
+   OtherSideFinishLayer = "Gypsum Board"
+   FlrExtFinishLayer = "- select finish -"
+   RadiantBarrier = 0
+   RadiantBarrierOvrSkip = 0
+   RaisedHeelTruss = 0
+   RaisedHeelTrussHeight = 3.5
+   RoofingType = "all others"
+   ..
+
+Mat   "Gypsum Board-user"  
+   Thickness = 0.5
+   Density = 40
+   SpecHeat = 0.27
+   Conductivity = 0.09167
+   RValPerInch = 0.9091
+   ..
+
+Mat   "3 Coat Stucco-user"  
+   Thickness = 0.875
+   Density = 116
+   SpecHeat = 0.2
+   Conductivity = 0.4167
+   RValPerInch = 0.2
+   ..
+
+Mat   "SoftWood-user"  
+   Density = 35
+   SpecHeat = 0.39
+   Conductivity = 0.08167
+   RValPerInch = 1.0204
+   ..
+
+Mat   "Wood layer-user"  
+   Thickness = 0.5
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   RValPerInch = 1.36
+   ..
+
+Mat   "Light Roof"  
+   Thickness = 0.2
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+Mat   "Carpet"  
+   Thickness = 0.5
+   Density = 12.3
+   SpecHeat = 0.34
+   Conductivity = 0.02
+   RValPerInch = 4.1667
+   ..
+
+Mat   "R4 Sheathing"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.02083
+   RValPerInch = 4
+   ..
+
+Mat   "VertWallCavity"  
+   Thickness = 3.5
+   Density = 0.075
+   SpecHeat = 0.24
+   Conductivity = 0.314
+   ConductivityCT = 0.00397
+   RValPerInch = 1.1333
+   ..
+
+Mat   "R4 Synth Stucco"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.02083
+   ConductivityCT = 0.00418
+   RValPerInch = 4
+   ..
+
+Mat   "R1 Sheathing"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.08333
+   ConductivityCT = 0.00418
+   RValPerInch = 1
+   ..
+
+Mat   "R4 Sheathing (Copy)"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.02083
+   ConductivityCT = 0.00418
+   RValPerInch = 4
+   ..
+
+Mat   "TileGap"  
+   Thickness = 0.75
+   Density = 0.075
+   SpecHeat = 0.24
+   Conductivity = 0.07353
+   RValPerInch = 1.1333
+   ..
+
+Mat   "10 PSF Roof"  
+   Thickness = 1
+   Density = 120
+   SpecHeat = 0.2
+   Conductivity = 1
+   RValPerInch = 0.0833
+   ..
+
+Mat   "SoftWood"  
+   Density = 35
+   SpecHeat = 0.39
+   Conductivity = 0.08167
+   ConductivityCT = 0.0012
+   RValPerInch = 1.0204
+   ..
+
+Mat   "Steel"  
+   Density = 489
+   SpecHeat = 0.12
+   Conductivity = 26.2
+   RValPerInch = 0.00318
+   ..
+
+Mat   "SIPSskin"  
+   Thickness = 0.4375
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+Mat   "Ceiling Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Other Insul"  
+   Density = 1.5
+   SpecHeat = 0.2
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Gypsum Board"  
+   Thickness = 0.5
+   Density = 40
+   SpecHeat = 0.27
+   Conductivity = 0.09167
+   ConductivityCT = 0.0001217
+   RValPerInch = 0.9091
+   ..
+
+Mat   "Insul-R5-D1.5-SH0.35-C0.01667"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.016666
+   ConductivityQII = 0.016666
+   ConductivityCT = 0.00175
+   ..
+
+Mat   "Synthetic Stucco"  
+   Thickness = 0.375
+   Density = 58
+   SpecHeat = 0.2
+   Conductivity = 0.2
+   RValPerInch = 0.5333
+   ..
+
+Mat   "Wood layer"  
+   Thickness = 0.5
+   Density = 41
+   SpecHeat = 0.45
+   Conductivity = 0.06127
+   ConductivityCT = 0.0012
+   RValPerInch = 1.36
+   ..
+
+Mat   "3 Coat Stucco"  
+   Thickness = 0.875
+   Density = 116
+   SpecHeat = 0.2
+   Conductivity = 0.4167
+   RValPerInch = 0.2686
+   ..
+
+Mat   "Ins-R21-D1.5-SH0.2-C0.02183"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0218254
+   ConductivityQII = 0.0218254
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "Ins-R9.1-D1.5-SH0.2-C0.03205"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0320513
+   ConductivityQII = 0.0320513
+   ConductivityCT = 0.00418
+   ..
+
+Mat   "Ins-R13-D1.5-SH0.2-C0.02244"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.0224376
+   ConductivityQII = 0.0224376
+   ConductivityCT = 0.0032537
+   ..
+
+Mat   "FrameGap"  
+   Density = 0
+   SpecHeat = 0
+   Conductivity = 200
+   RValPerInch = 0.000417
+   ..
+
+Mat   "Ins-R18-D1.5-SH0.2-C0.02546"  
+   Density = 1.5
+   SpecHeat = 0.2
+   Conductivity = 0.025463
+   ConductivityQII = 0.025463
+   ConductivityCT = 0.0032537
+   ..
+
+HVACSys   "HVACHeatpump"  
+   Type = "Heat Pump Heating and Cooling System"
+   Status = "New"
+   CFIClVentOption = "- none -"
+   CFIClVentFlow = 0
+   CFIClVentPwr = 0
+   CFIClVentAttic = "Attic"
+   NumHeatSystemTypes = 0
+   AutoSizeHeatInp = 1
+   HeatDucted = 0
+   NumCoolSystemTypes = 0
+   AutoSizeCoolInp = 1
+   CoolDucted = 0
+   NumHtPumpSystemTypes = 1
+   HtPumpSystemCount = ( 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
+   HtPumpSystem[1] = "HeatpumpSystem"
+   HtPumpDucted = 0
+   ServesAsDHWHtr = 0
+   DHWTankVolume = 50
+   DHWIntInsulRVal = 0
+   DHWExtInsulRVal = 0
+   DHWAmbientCond = "Unconditioned"
+   ..
+
+HVACHeat   "HeatingComponent"  
+   Type = "CntrlFurnace - Fuel-fired central furnace"
+   AFUE = 80
+   AutoSize = 1
+   ElecSpcHtgExcpt = "- select applicable exception -"
+   ..
+
+HVACCool   "CoolingComponent"  
+   Type = "SplitAirCond - Split air conditioning system"
+   EffMetric = "SEER2/EER2"
+   SEER = 15
+   SEER2 = 14.3
+   EER2 = 11.7
+   CFMperTon = 350
+   ACCharge = "Verified"
+   RefrigerantType = "R410A"
+   AutoSize = 1
+   UseEERinAnalysis = 1
+   IsMultiSpeed = 0
+   Speeds = "Single"
+   IsZonal = 0
+   ..
+
+HVACHtPump   "HeatpumpSystem"  
+   Type = "DuctlessPkgHeatPump - Ductless packaged heat pump"
+   EffMetric = "HSPF2/SEER2/EER2"
+   Speeds = "Variable"
+   HSPF = 8
+   HSPF2 = 7.5
+   Cap47 = 28848
+   Cap17 = 18059
+   IncludesCooling = 1
+   SEER = 14
+   SEER2 = 14.3
+   EER2 = 11.7
+   CFMperTon = 350
+   ACCharge = "Verified"
+   RefrigerantType = "R410A"
+   ClSizingFactor = 1.2
+   IsMultiSpeed = 0
+   IsZonal = 0
+   BackupOption = "- none -"
+   HasHPLockout = 1
+   HPLockoutTemp = -30
+   VCHPDucts = "Unducted"
+   VCHPCertAutoFan = 0
+   Cap95 = 29253
+   ..
+
+IAQFan   "IAQFan1"  
+   Status = "New"
+   IAQCFM = 91.6
+   WperCFMIAQ = 0.25
+   IAQFanType = "Exhaust"
+   IncludesRecov = 1
+   SensRecovEff = 67
+   AdjSensRecovEff = 67
+   SetPerfByHVIInterp = 0
+   ..
+
+ClVentFan   "CoolVentFan"  
+   ExhaustsTo = "Attic"
+   DefaultSystem = 0
+   WperCFMCool = 0.14
+   CoolingVent = 3150
+   ..
+
+DHWSys   "DHWHeatpump"  
+   SystemType = "Standard"
+   NewSmConsInstElecExcept = 0
+   CentralRecircType = "Non-Central"
+   CHPWHComModel = "- select Model -"
+   CHPWHTankLoc = "- select tank location -"
+   CHPWHSrcAirLoc = "- select source air location -"
+   CDServesMBathFix = 1
+   CDServesKitFix = 1
+   CDServesThirdFix = 1
+   DHWHeater[1] = "Heatpump"
+   HeaterMult[1] = 1
+   UseDefaultLoops = 1
+   LoopPipeInsulThk[1] = 1.5
+   RecircPipeLoc[1] = "Conditioned"
+   TotShowersServed = 2
+   TotBathsServed = 1
+   DWHRSysRef[1] = "- none -"
+   DWHRSysShowers[1] = 2
+   DWHRSysTakeCold[1] = 2
+   DWHRSysFeedHeater[1] = 0
+   DemRespControl = "Basic"
+   ..
+
+DWHRSys   "DWHR Sys 1"  
+   Type = "Vertical"
+   CSARatedEff = 42
+   ..
+
+DHWHeater   "Gas"  
+   HeaterElementType = "Gas"
+   TankType = "Consumer Instantaneous (UEF)"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHTierAndTankSz = "- select option -"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   EnergyFactor = 0.81
+   TankVolume = 0
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   RecovEff = 83.3662
+   RatedFlow = 4.7
+   AnnFuelUse = 205
+   AnnElecUse = 52
+   StandbyElec = 4
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "Heatpump"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Generic Tier"
+   HPWHTierAndTankSz = "Standard Design 50 gal HPWH"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   TankOutside = 0
+   TankZone = "Garage"
+   ASHPTSrcOutside = 0
+   ASHPTSrcZone = "Garage"
+   EnergyFactor = 2
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "GasCond"  
+   HeaterElementType = "Gas"
+   TankType = "Consumer Instantaneous (UEF)"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHTierAndTankSz = "- select option -"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   EnergyFactor = 0.92
+   TankVolume = 0
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   RecovEff = 95.1384
+   RatedFlow = 4.7
+   AnnFuelUse = 205
+   AnnElecUse = 52
+   StandbyElec = 4
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "GasCond95"  
+   HeaterElementType = "Gas"
+   TankType = "Consumer Instantaneous (UEF)"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHTierAndTankSz = "- select option -"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   EnergyFactor = 0.95
+   TankVolume = 0
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   RecovEff = 98.349
+   RatedFlow = 4.7
+   AnnFuelUse = 205
+   AnnElecUse = 52
+   StandbyElec = 4
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "HeatpumpNEEA"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHTierAndTankSz = "- select option -"
+   HPWHBrand = "A. O. Smith"
+   HPWHModel = "HPTU 80 120  (80 gal)"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   TankOutside = 0
+   TankZone = "Garage"
+   ASHPTSrcOutside = 0
+   ASHPTSrcZone = "Garage"
+   EnergyFactor = 0.59
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "HeatpumpZ1"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Generic Tier"
+   HPWHTierAndTankSz = "Standard Design 50 gal HPWH"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   TankOutside = 0
+   TankZone = "Garage"
+   ASHPTSrcOutside = 0
+   ASHPTSrcZone = "Garage"
+   EnergyFactor = 2
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "HeatpumpZ2"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Generic Tier"
+   HPWHTierAndTankSz = "Standard Design 50 gal HPWH"
+   HPWHBrand = "n/a"
+   HPWHModel = "n/a"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   TankOutside = 0
+   TankZone = "Garage"
+   ASHPTSrcOutside = 0
+   ASHPTSrcZone = "Garage"
+   EnergyFactor = 2
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "HeatpumpNEEAZ1"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHTierAndTankSz = "- select option -"
+   HPWHBrand = "A. O. Smith"
+   HPWHModel = "HPTU 80 120  (80 gal)"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   TankOutside = 0
+   TankZone = "Garage"
+   ASHPTSrcOutside = 0
+   ASHPTSrcZone = "Garage"
+   EnergyFactor = 0.59
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+DHWHeater   "HeatpumpNEEAZ2"  
+   HeaterElementType = "Heat Pump"
+   TankType = "Small Storage"
+   HPWHCategory = "Residential (NEEA rated) Product"
+   HPWHTierAndTankSz = "- select option -"
+   HPWHBrand = "A. O. Smith"
+   HPWHModel = "HPTU 80 120  (80 gal)"
+   JA13UICompliance = 0
+   HPWHComModel = "n/a"
+   TankOutside = 0
+   TankZone = "Garage"
+   ASHPTSrcOutside = 0
+   ASHPTSrcZone = "Garage"
+   EnergyFactor = 0.59
+   TankVolume = 50
+   IntInsulRVal = 0
+   ExtInsulRVal = 0
+   AmbientCond = "Unconditioned"
+   HasElecMiniTank = 0
+   ElecMiniTankPower = 0
+   ..
+
+
+END_OF_FILE

@@ -1,0 +1,163 @@
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) Alliance for Sustainable Energy, LLC.
+*  See also https://openstudio.net/license
+***********************************************************************************************************************/
+
+#ifndef UTILITIES_IDD_TABLE_LOOKUP_FIELDENUMS_HXX
+#define UTILITIES_IDD_TABLE_LOOKUP_FIELDENUMS_HXX
+
+#include <utilities/UtilitiesAPI.hpp>
+#include <utilities/core/Enum.hpp>
+
+namespace openstudio {
+/** \class Table_LookupFields
+ *  \brief Enumeration of Table:Lookup's Idd and Idf non-extensible fields. 
+ *  \details This enumeration provides readable, and semi-robust tags to use instead
+ *  of bare unsigned integer field indices. (The enumeration value names are more likely
+ *  to be valid across EnergyPlus and OpenStudio releases, and will break if they become
+ *  invalid.) See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp. The actual macro
+ *  call is:
+ *
+ *  \code
+ *  \endcode */
+#ifdef SWIG 
+  OPENSTUDIO_ENUM(Table_LookupFields, )
+#else
+class Table_LookupFields: public ::EnumBase<Table_LookupFields> {
+ public: 
+  enum domain 
+  {
+Name, IndependentVariableListName, NormalizationMethod, NormalizationDivisor, MinimumOutput, MaximumOutput, OutputUnitType, ExternalFileName, ExternalFileColumnNumber, ExternalFileStartingRowNumber,   };
+  Table_LookupFields()
+   : EnumBase<Table_LookupFields>(Name) {} 
+  Table_LookupFields(const std::string &t_name) 
+   : EnumBase<Table_LookupFields>(t_name) {} 
+  Table_LookupFields(int t_value) 
+   : EnumBase<Table_LookupFields>(t_value) {} 
+  static std::string enumName() 
+  { return "Table_LookupFields"; }
+  domain value() const { return static_cast<domain>(EnumBase<Table_LookupFields>::integer_value()); }
+   private:
+    friend class EnumBase<Table_LookupFields>;
+    typedef std::pair<std::string, int> PT;
+    typedef std::vector<PT> VecType;
+    static VecType buildStringVec(bool isd)
+    {
+      struct evalue
+      {
+        int value; const char *name; const char *description;
+      };
+      const evalue a[] =
+      {
+{ Table_LookupFields::Name, "Name", "Name"},
+{ Table_LookupFields::IndependentVariableListName, "IndependentVariableListName", "Independent Variable List Name"},
+{ Table_LookupFields::NormalizationMethod, "NormalizationMethod", "Normalization Method"},
+{ Table_LookupFields::NormalizationDivisor, "NormalizationDivisor", "Normalization Divisor"},
+{ Table_LookupFields::MinimumOutput, "MinimumOutput", "Minimum Output"},
+{ Table_LookupFields::MaximumOutput, "MaximumOutput", "Maximum Output"},
+{ Table_LookupFields::OutputUnitType, "OutputUnitType", "Output Unit Type"},
+{ Table_LookupFields::ExternalFileName, "ExternalFileName", "External File Name"},
+{ Table_LookupFields::ExternalFileColumnNumber, "ExternalFileColumnNumber", "External File Column Number"},
+{ Table_LookupFields::ExternalFileStartingRowNumber, "ExternalFileStartingRowNumber", "External File Starting Row Number"},
+        { 0,0,0 }
+      };
+      VecType v;
+      int i = 0;
+      while (!(a[i].value == 0 && a[i].name == 0 && a[i].description == 0))
+      {
+        if (isd)
+        {
+          std::string description = a[i].description; 
+          if (!description.empty())
+          {
+            v.push_back(PT(description, a[i].value));
+          }
+        } else {
+          v.push_back(PT(a[i].name, a[i].value));
+        }
+        ++i;
+      }
+      return v;
+    }
+  
+  };
+  inline std::ostream &operator<<(std::ostream &os, const Table_LookupFields &e)
+  {
+    return os << e.valueName() << "(" << e.value() << ")";
+  }
+  typedef boost::optional<Table_LookupFields> OptionalTable_LookupFields ;
+#endif
+
+/** \class Table_LookupExtensibleFields
+ *  \brief Enumeration of Table:Lookup's Idd and Idf extensible fields
+ *  to be used in conjunction with ExtensibleIndex and ExtensibleGroup.
+ *  \details This enumeration provides readable, and semi-robust tags to use instead
+ *  of bare unsigned integer ExtensibleIndex.field indices. (The enumeration value names
+ *  are more likely to be valid across EnergyPlus and OpenStudio releases, and will break
+ *  if they become invalid.)See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp. The actual macro
+ *  call is:
+ *
+ *  \code
+ *  \endcode */
+#ifdef SWIG 
+  OPENSTUDIO_ENUM(Table_LookupExtensibleFields, )
+#else
+class Table_LookupExtensibleFields: public ::EnumBase<Table_LookupExtensibleFields> {
+ public: 
+  enum domain 
+  {
+OutputValue,   };
+  Table_LookupExtensibleFields()
+   : EnumBase<Table_LookupExtensibleFields>(OutputValue) {} 
+  Table_LookupExtensibleFields(const std::string &t_name) 
+   : EnumBase<Table_LookupExtensibleFields>(t_name) {} 
+  Table_LookupExtensibleFields(int t_value) 
+   : EnumBase<Table_LookupExtensibleFields>(t_value) {} 
+  static std::string enumName() 
+  { return "Table_LookupExtensibleFields"; }
+  domain value() const { return static_cast<domain>(EnumBase<Table_LookupExtensibleFields>::integer_value()); }
+   private:
+    friend class EnumBase<Table_LookupExtensibleFields>;
+    typedef std::pair<std::string, int> PT;
+    typedef std::vector<PT> VecType;
+    static VecType buildStringVec(bool isd)
+    {
+      struct evalue
+      {
+        int value; const char *name; const char *description;
+      };
+      const evalue a[] =
+      {
+{ Table_LookupExtensibleFields::OutputValue, "OutputValue", "Output Value"},
+        { 0,0,0 }
+      };
+      VecType v;
+      int i = 0;
+      while (!(a[i].value == 0 && a[i].name == 0 && a[i].description == 0))
+      {
+        if (isd)
+        {
+          std::string description = a[i].description; 
+          if (!description.empty())
+          {
+            v.push_back(PT(description, a[i].value));
+          }
+        } else {
+          v.push_back(PT(a[i].name, a[i].value));
+        }
+        ++i;
+      }
+      return v;
+    }
+  
+  };
+  inline std::ostream &operator<<(std::ostream &os, const Table_LookupExtensibleFields &e)
+  {
+    return os << e.valueName() << "(" << e.value() << ")";
+  }
+  typedef boost::optional<Table_LookupExtensibleFields> OptionalTable_LookupExtensibleFields ;
+#endif
+
+} // openstudio
+
+#endif // UTILITIES_IDD_TABLE_LOOKUP_FIELDENUMS_HXX

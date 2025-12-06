@@ -48,16 +48,6 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-//     UI MODE TOGGLE
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-//#define  UI_ASHRAE901E
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
 // Application wide externals
 
 //extern const char* szCUIVersion;
@@ -104,7 +94,8 @@ enum InterfaceMode {
       NUM_INTERFACE_MODES };
 
 extern InterfaceMode eInterfaceMode;
-extern const char* pszCUIFileExt[ NUM_INTERFACE_MODES ];
+extern const char* pszNRMFCUIFileExt[ NUM_INTERFACE_MODES ];
+extern const char* pszSFamCUIFileExt[ NUM_INTERFACE_MODES ];
 
 extern const char* szErrIntModeNotInp;
 extern const char* szErrNotEditable;
@@ -229,7 +220,10 @@ extern CString esProxyINIPathFile;	// SAC 1/4/17
 extern CString esCUIVersion;
 extern CString esOverviewPDF;		// SAC 6/3/13
 extern CString esUserManualPDF;	// SAC 7/8/13
+extern CString esUserManualPDF_SFam;   // SAC 09/25/25
+extern CString esUserManualPDF_NRMF;   // SAC 09/25/25
 extern CString esSecurityKey;		// SAC 1/10/17
+extern CString esResSecurityKey;		// SAC 11/09/25
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -389,7 +383,7 @@ extern BOOL MenuRulesetSelectionAllowed( int idx, CString& sRuleSwitchDisallowed
 extern BOOL MenuRulesetSelection( CWnd* pWnd, int idx, CString& sRulesetFileString );
 extern BOOL LoadRuleset( const char* pszRulesetFileName=NULL, BOOL bDeleteAllObjects=TRUE );
 extern void LoadRulesetListIfNotLoaded();
-extern BOOL CodeYearRulesetAvailable( CString sCodeYear );
+extern BOOL CodeYearRulesetAvailable( CString sCodeYear, bool bSFamRes );
 
 // Ruleset Report Generation stuff     - SAC 6/9/13
 extern std::vector<std::string> saReportRulelistNames;
@@ -414,11 +408,17 @@ extern void TweakString( char* lpBuf, int length );
 
 /////////////////////////////////////////////////////////////////////////////
 
+extern void SetUICodeTypeBools_NRMF();    // single Res/Com app - SAC 09/09/25 (gh dev #433)
+extern void SetUICodeTypeBools_SFam(); 
+extern void SetUICodeTypeBools();         // single Res/Com app - SAC 08/21/25 (gh dev #433)
 extern void InitBEMDBIDs();
 
-#ifdef UI_CANRES
+extern bool ebUI_CARES;          // single Res/Com app - SAC (gh dev #433)
+extern bool ebUI_CANRES;
+
+//#ifdef UI_CANRES
 extern void AdjustDataModelForGeometryInpType();
-#endif   // UI_CANRES
+//#endif   // UI_CANRES
 
 extern int eiBDBCID_Proj;
 extern long elDBID_Proj_Ruleset;
@@ -447,111 +447,149 @@ extern long elDefaultOptionDone;
 #define  DefaultAction_CloseDialog  3
 #define  DefaultAction_InitAnalysis	4
 
-#ifdef UI_ASHRAE901E
-extern int eiBDBCID_Run;
-extern int eiBDBCID_Site;
-extern int eiBDBCID_Bldg;
-extern int eiBDBCID_Bshade;
-extern int eiBDBCID_Block;
-extern int eiBDBCID_Floor;
-extern int eiBDBCID_Space;
-extern int eiBDBCID_ActArea;
-extern int eiBDBCID_LtSys;
-extern int eiBDBCID_LtFix;
-extern int eiBDBCID_ExtWall;
-extern int eiBDBCID_ExtRoof;
-extern int eiBDBCID_IntWall;
-extern int eiBDBCID_IntCeil;
-extern int eiBDBCID_UndWall;
-extern int eiBDBCID_FlrWall;
-extern int eiBDBCID_Win;
-extern int eiBDBCID_Skylt;
-extern int eiBDBCID_Door;
-extern int eiBDBCID_Cons;
-extern int eiBDBCID_Layers;
+// #ifdef UI_ASHRAE901E
+// extern int eiBDBCID_Run;
+// extern int eiBDBCID_Site;
+// extern int eiBDBCID_Bldg;
+// extern int eiBDBCID_Bshade;
+// extern int eiBDBCID_Block;
+// extern int eiBDBCID_Floor;
+// extern int eiBDBCID_Space;
+// extern int eiBDBCID_ActArea;
+// extern int eiBDBCID_LtSys;
+// extern int eiBDBCID_LtFix;
+// extern int eiBDBCID_ExtWall;
+// extern int eiBDBCID_ExtRoof;
+// extern int eiBDBCID_IntWall;
+// extern int eiBDBCID_IntCeil;
+// extern int eiBDBCID_UndWall;
+// extern int eiBDBCID_FlrWall;
+// extern int eiBDBCID_Win;
+// extern int eiBDBCID_Skylt;
+// extern int eiBDBCID_Door;
+// extern int eiBDBCID_Cons;
+// extern int eiBDBCID_Layers;
+// extern int eiBDBCID_Mat;
+// extern int eiBDBCID_HVACSys;
+// extern int eiBDBCID_Size;
+// extern int eiBDBCID_HtPump;
+// extern int eiBDBCID_AirCond;
+// extern int eiBDBCID_Furn;
+// extern int eiBDBCID_Econ;
+// extern int eiBDBCID_Plant;
+// extern int eiBDBCID_Fan;
+// extern int eiBDBCID_ClTower;
+// extern int eiBDBCID_Chiller;
+// extern int eiBDBCID_Boiler;
+// extern int eiBDBCID_Pump;
+// extern int eiBDBCID_Curve;
+// extern int eiBDBCID_Sched;
+// extern int eiBDBCID_WkSch;
+// extern int eiBDBCID_DaySch;
+// extern int eiBDBCID_ResSch;
+// extern int eiBDBCID_DResSch;
+// extern int eiBDBCID_Wizard;
+// extern int eiBDBCID_AreaWiz;
+// extern int eiBDBCID_HVACWiz;
+// extern int eiBDBCID_PlantWiz;  // SAC 5/26/00 - added
+// 
+// extern long elDBID_Proj_Name;
+// extern long elDBID_Proj_ArchTreeOption;
+// extern long elDBID_Proj_FinalResult;
+// extern long elDBID_Proj_RunDate;
+// extern long elDBID_Proj_RulesetName;
+// extern long elDBID_Proj_RulesetVersion;
+// extern long elDBID_Proj_SoftwareVersion;  // SAC 8/19/11 - changed var name
+// 
+// extern long elDBID_Site_WeatherFile;
+// 
+// extern long elDBID_Spc_HVACSystem;
+// extern long elDBID_Spc_Fan;          // SAC 6/30/00
+// extern long elDBID_Spc_ExhaustFan;   // SAC 6/30/00
+// 
+// extern long elDBID_FWall_Type;
+// 
+// extern long elDBID_LtSys_Fixture1;
+// extern long elDBID_LtSys_Fixture2;
+// extern long elDBID_LtSys_Fixture3;
+// extern long elDBID_LtSys_Fixture4;
+// 
+// extern long elDBID_Sys_HtPump;
+// extern long elDBID_Sys_AirCond;
+// extern long elDBID_Sys_Furnace;
+// extern long elDBID_Sys_AirEcon;
+// extern long elDBID_Sys_SupplyFan;
+// extern long elDBID_Sys_ReturnFan;
+// 
+// extern long elDBID_CTwr_TowerPump;
+// 
+// extern long elDBID_Chlr_CHWPump;
+// extern long elDBID_Chlr_CWPump;   // SAC 6/20/00 - added
+// 
+// extern long elDBID_Boil_HWPump;
+// 
+// extern long elDBID_Plant_CHWPump;
+// extern long elDBID_Plant_CWPump;
+// extern long elDBID_Plant_HPCircPump;
+// extern long elDBID_Plant_HWPump;
+// 
+// extern long elDBID_Wiz_ScreenIdx;
+// extern long elDBID_Wiz_ScreenID;
+// extern long elDBID_Wiz_PrevScreenID;
+// extern long elDBID_Wiz_NextScreenID;
+// extern long	elDBID_Wiz_FootprintWMF;
+// extern long	elDBID_Wiz_FPOrientXFrac;
+// extern long	elDBID_Wiz_FPOrientYFrac;
+// extern long	elDBID_Wiz_Orientation;
+// extern long	elDBID_Wiz_EnableFinishBtn;  // SAC 1/2/01
+// #endif   // UI_ASHRAE901E
+
+// both NRMF & SFam
 extern int eiBDBCID_Mat;
-extern int eiBDBCID_HVACSys;
-extern int eiBDBCID_Size;
-extern int eiBDBCID_HtPump;
-extern int eiBDBCID_AirCond;
-extern int eiBDBCID_Furn;
-extern int eiBDBCID_Econ;
-extern int eiBDBCID_Plant;
-extern int eiBDBCID_Fan;
-extern int eiBDBCID_ClTower;
-extern int eiBDBCID_Chiller;
-extern int eiBDBCID_Boiler;
-extern int eiBDBCID_Pump;
-extern int eiBDBCID_Curve;
-extern int eiBDBCID_Sched;
-extern int eiBDBCID_WkSch;
-extern int eiBDBCID_DaySch;
-extern int eiBDBCID_ResSch;
-extern int eiBDBCID_DResSch;
-extern int eiBDBCID_Wizard;
-extern int eiBDBCID_AreaWiz;
-extern int eiBDBCID_HVACWiz;
-extern int eiBDBCID_PlantWiz;  // SAC 5/26/00 - added
+extern int eiBDBCID_EUseSummary;
+extern int eiBDBCID_CUAC;        // SAC 07/26/22 (CUAC)
+extern int eiBDBCID_CeilingBelowAttic;
+extern int eiBDBCID_ExtWall;
+extern int eiBDBCID_IntWall;
+extern int eiBDBCID_Door;
+extern int eiBDBCID_PolyLp;
+extern int eiBDBCID_CartesianPt;
+extern int eiBDBCID_DwellUnitType;
+extern int eiBDBCID_DwellUnit;
+extern int eiBDBCID_PVArrayGeom;
+extern int eiBDBCID_DHWSolarSys;		// SAC 1/31/20 (Com tic #3157)  // SAC 1/12/20 (Res tic #1013)
 
 extern long elDBID_Proj_Name;
-extern long elDBID_Proj_ArchTreeOption;
-extern long elDBID_Proj_FinalResult;
 extern long elDBID_Proj_RunDate;
-extern long elDBID_Proj_RulesetName;
-extern long elDBID_Proj_RulesetVersion;
-extern long elDBID_Proj_SoftwareVersion;  // SAC 8/19/11 - changed var name
+extern long elDBID_Proj_SoftwareVersion;
 
-extern long elDBID_Site_WeatherFile;
+extern long elDBID_CUAC_ResultsCSVToCombineDir;    // SAC 10/25/24
 
-extern long elDBID_Spc_HVACSystem;
-extern long elDBID_Spc_Fan;          // SAC 6/30/00
-extern long elDBID_Spc_ExhaustFan;   // SAC 6/30/00
+extern long elDBID_PolyLp_Area;			// SAC 5/29/14 
+extern long elDBID_CartesianPt_Coord;	// SAC 5/29/14 
 
-extern long elDBID_FWall_Type;
+extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
+extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
 
-extern long elDBID_LtSys_Fixture1;
-extern long elDBID_LtSys_Fixture2;
-extern long elDBID_LtSys_Fixture3;
-extern long elDBID_LtSys_Fixture4;
+extern int eiBDBCID_BatchRuns;
+extern long elDBID_BatchRuns_BatchDefsCSV;        // BEMP_Str "CSV file containing definitions of all batch runs (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_BatchName;           // BEMP_Str "Name used as basis of log and results filenames" 
+extern long elDBID_BatchRuns_ProjDirectory;       // BEMP_Str "Directory of projects to be batch processed (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_IncludeSubdirs;      // BEMP_Int "Flag indicating whether BatchDefsCSV file defined and exists" 
+extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string identifying projects to be processed (including wildcard '*')" 
+extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
+extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to process each project across ALL 16 climate zones (appends 'CZ#' to output project filenames and run titles)" - SAC 1/4/19 
+extern long elDBID_BatchRuns_RunSetFile;          // BEMP_Str "(relative path and) name of RunSet CSV file"     ; SAC 10/06/20
+extern long elDBID_BatchRuns_RunSetFileStatus;    // BEMP_Int "status of RunSet file (0-blank, 1-not found, 2-invalid, 3-OK)"
+extern long elDBID_BatchRuns_RunSetDescrip;       // BEMP_Str "Description of batch processing from RunSet file"
 
-extern long elDBID_Sys_HtPump;
-extern long elDBID_Sys_AirCond;
-extern long elDBID_Sys_Furnace;
-extern long elDBID_Sys_AirEcon;
-extern long elDBID_Sys_SupplyFan;
-extern long elDBID_Sys_ReturnFan;
-
-extern long elDBID_CTwr_TowerPump;
-
-extern long elDBID_Chlr_CHWPump;
-extern long elDBID_Chlr_CWPump;   // SAC 6/20/00 - added
-
-extern long elDBID_Boil_HWPump;
-
-extern long elDBID_Plant_CHWPump;
-extern long elDBID_Plant_CWPump;
-extern long elDBID_Plant_HPCircPump;
-extern long elDBID_Plant_HWPump;
-
-extern long elDBID_Wiz_ScreenIdx;
-extern long elDBID_Wiz_ScreenID;
-extern long elDBID_Wiz_PrevScreenID;
-extern long elDBID_Wiz_NextScreenID;
-extern long	elDBID_Wiz_FootprintWMF;
-extern long	elDBID_Wiz_FPOrientXFrac;
-extern long	elDBID_Wiz_FPOrientYFrac;
-extern long	elDBID_Wiz_Orientation;
-extern long	elDBID_Wiz_EnableFinishBtn;  // SAC 1/2/01
-#endif   // UI_ASHRAE901E
-
-#ifdef UI_CANRES
-extern int eiBDBCID_Project;
+//#ifdef UI_CANRES
 extern int eiBDBCID_SchDay;
 extern int eiBDBCID_ThrmlEngyStorModeSchDay;  // SAC 2/27/17
 extern int eiBDBCID_SchWeek;
 extern int eiBDBCID_Schedule;
 extern int eiBDBCID_ConsAssm;
-extern int eiBDBCID_Mat;
 extern int eiBDBCID_FenCons;
 extern int eiBDBCID_DrCons;
 extern int eiBDBCID_SpcFuncDefaults;
@@ -560,34 +598,25 @@ extern int eiBDBCID_CrvLin;
 extern int eiBDBCID_CrvQuad;
 extern int eiBDBCID_CrvCubic;
 extern int eiBDBCID_CrvDblQuad;
-extern int eiBDBCID_EUseSummary;
 extern int eiBDBCID_PVArray;
-extern int eiBDBCID_PVArrayGeom;
 extern int eiBDBCID_PVArrayShade;
 extern int eiBDBCID_Battery;
 
 extern int eiBDBCID_ResProj;     // SAC 10/20/21 (MFam)
-extern int eiBDBCID_CUAC;        // SAC 07/26/22 (CUAC)
 extern int eiBDBCID_Building;
 extern int eiBDBCID_Story;
 extern int eiBDBCID_Space;
 extern int eiBDBCID_IntLtgSys;
 extern int eiBDBCID_DayltgCtrl;
 extern int eiBDBCID_Ceiling;
-extern int eiBDBCID_CeilingBelowAttic;
 extern int eiBDBCID_ExtFlr;
-extern int eiBDBCID_ExtWall;
 extern int eiBDBCID_FlrAboveCrawlSpc;
 extern int eiBDBCID_IntFlr;
-extern int eiBDBCID_IntWall;
 extern int eiBDBCID_Roof;
 extern int eiBDBCID_UndgrFlr;
 extern int eiBDBCID_UndgrWall;
 extern int eiBDBCID_Window;
 extern int eiBDBCID_Skylight;
-extern int eiBDBCID_Door;
-extern int eiBDBCID_PolyLp;
-extern int eiBDBCID_CartesianPt;
 extern int eiBDBCID_ExtShdgObj;
 
 extern int eiBDBCID_ThrmlZn;
@@ -616,7 +645,6 @@ extern int eiBDBCID_ResDHWSys;
 extern int eiBDBCID_ResDWHRSys;	// SAC 1/24/19
 extern int eiBDBCID_ResWtrHtr;
 extern int eiBDBCID_ResLpTankHtr;		// SAC 1/12/20 (Com tic #3156)
-extern int eiBDBCID_DHWSolarSys;		// SAC 1/31/20 (Com tic #3157)
 extern int eiBDBCID_ResSpcDHWFeatures;	// SAC 1/23/19
 
 extern int eiBDBCID_ProcLd;
@@ -625,19 +653,11 @@ extern int eiBDBCID_WtrHtr;
 //extern int eiBDBCID_BlrHtPump;			// SAC 10/23/20      // removed BlrHtPump... - SAC 05/14/21
 extern int eiBDBCID_HtPump;         // SAC 04/28/25 (AWHP_EIR)
 
-extern long elDBID_Proj_Name;
-extern long elDBID_Proj_RunDate;
-extern long elDBID_Proj_SoftwareVersion;
 extern long elDBID_Proj_WeatherPath;       
 extern long elDBID_Proj_WeatherStation;    
 extern long elDBID_Proj_DDWeatherFile;     
 extern long elDBID_Proj_AnnualWeatherFile; 
 extern long elDBID_Proj_ExcptDsgnModelFile; 
-
-extern long elDBID_CUAC_ResultsCSVToCombineDir;    // SAC 10/25/24
-
-extern long elDBID_PolyLp_Area;			// SAC 5/29/14 
-extern long elDBID_CartesianPt_Coord;	// SAC 5/29/14 
 
 extern long elDBID_Spc_ResSpcDHWFeaturesRef;		// SAC 1/23/19
 
@@ -698,30 +718,12 @@ extern long elDBID_ResDHWSys_DHWHeater4;
 extern long elDBID_ResDHWSys_DHWHeater5;
 extern long elDBID_ResDHWSys_DHWHeater6;
 
-extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
-extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
-
-extern int eiBDBCID_BatchRuns;
-extern long elDBID_BatchRuns_BatchDefsCSV;        // BEMP_Str "CSV file containing definitions of all batch runs (complete path or relative to Projects folder)" 
-extern long elDBID_BatchRuns_BatchName;           // BEMP_Str "Name used as basis of log and results filenames" 
-extern long elDBID_BatchRuns_ProjDirectory;       // BEMP_Str "Directory of projects to be batch processed (complete path or relative to Projects folder)" 
-extern long elDBID_BatchRuns_IncludeSubdirs;      // BEMP_Int "Flag indicating whether BatchDefsCSV file defined and exists" 
-extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string identifying projects to be processed (including wildcard '*')" 
-extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
-extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
-extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to process each project across ALL 16 climate zones (appends 'CZ#' to output project filenames and run titles)" - SAC 1/4/19 
-extern long elDBID_BatchRuns_RunSetFile;          // BEMP_Str "(relative path and) name of RunSet CSV file"     ; SAC 10/06/20
-extern long elDBID_BatchRuns_RunSetFileStatus;    // BEMP_Int "status of RunSet file (0-blank, 1-not found, 2-invalid, 3-OK)"
-extern long elDBID_BatchRuns_RunSetDescrip;       // BEMP_Str "Description of batch processing from RunSet file"
-
 // integration of CBECC-Res into CBECC-Com - SAC 04/27/21
 extern int eiBDBCID_ResZnGrp;       // SAC 08/11/21
 extern int eiBDBCID_ResConsAssm;
 extern int eiBDBCID_ResMat;
 extern int eiBDBCID_ResWinType;
 extern int eiBDBCID_ResZn;
-extern int eiBDBCID_DwellUnitType;
-extern int eiBDBCID_DwellUnit;
 extern int eiBDBCID_ResOtherZn;
 extern int eiBDBCID_ResAttic;
 //extern int eiBDBCID_ResGarage;
@@ -753,25 +755,19 @@ extern int eiBDBCID_ResIAQFan;
 extern int eiBDBCID_ResCentralVentSys;    // SAC 12/31/21 (MFam)
 extern int eiBDBCID_ResClVentFan;
 
-#endif   // UI_CANRES
-
-#ifdef UI_CARES
-extern int eiBDBCID_CUAC;           // SAC 05/28/24 (CUAC, tic #1378)
+//#endif   // UI_CANRES
+//
+//#ifdef UI_CARES
 extern int eiBDBCID_RESNETBldg;		// SAC 9/27/20
-extern int eiBDBCID_DwellUnitType;	// SAC 6/18/14
-extern int eiBDBCID_DwellUnit;
 extern int eiBDBCID_Zone;
 extern int eiBDBCID_OtherZone;	// SAC 9/3/19 - MFamProto
 extern int eiBDBCID_Garage;
 extern int eiBDBCID_Attic;
 extern int eiBDBCID_CrawlSpace;
-extern int eiBDBCID_ExtWall;
-extern int eiBDBCID_IntWall;
 extern int eiBDBCID_UndWall;
 extern int eiBDBCID_UndFloor;
 //extern int eiBDBCID_AtticRoof;
 extern int eiBDBCID_CathedralCeiling;
-extern int eiBDBCID_CeilingBelowAttic;
 extern int eiBDBCID_SlabFloor;
 extern int eiBDBCID_ExteriorFloor;
 extern int eiBDBCID_FloorOverCrawl;
@@ -780,14 +776,9 @@ extern int eiBDBCID_InteriorCeiling;
 extern int eiBDBCID_Opening;	// SAC 7/30/20 - MFamProto
 extern int eiBDBCID_Win;
 extern int eiBDBCID_Skylt;
-extern int eiBDBCID_Door;
 extern int eiBDBCID_Cons;
-extern int eiBDBCID_Mat;
 extern int eiBDBCID_WindowType;  // SAC 8/27/13
-extern int eiBDBCID_PVArrayGeom;
 extern int eiBDBCID_Shade;
-extern int eiBDBCID_PolyLp;
-extern int eiBDBCID_CartesianPt;
 extern int eiBDBCID_HVACSys;
 extern int eiBDBCID_HVACHeat;
 extern int eiBDBCID_HVACCool;
@@ -797,18 +788,13 @@ extern int eiBDBCID_HVACFan;
 extern int eiBDBCID_IAQFan;
 extern int eiBDBCID_ClVentFan;
 extern int eiBDBCID_DHWSys;
-extern int eiBDBCID_DHWSolarSys;		// SAC 1/12/20 (Res tic #1013)
 extern int eiBDBCID_DWHRSys;	// SAC 12/23/18  // SAC 1/5/19 - renamed (was DWHX)
 extern int eiBDBCID_DHWHeater;
 extern int eiBDBCID_DHWLoopTankHeater;	// SAC 11/14/19
 extern int eiBDBCID_SCSysRpt;
 extern int eiBDBCID_DHWSysRpt;
 extern int eiBDBCID_IAQVentRpt;
-extern int eiBDBCID_EUseSummary;
 
-extern long elDBID_Proj_Name;
-extern long elDBID_Proj_RunDate;
-extern long elDBID_Proj_SoftwareVersion;
 extern long elDBID_Proj_SoftwareVersionDetail;	// SAC 2/13/20 (tic #1192)
 extern long elDBID_Proj_AnalysisType;    // SAC 9/12/11
 extern long elDBID_Proj_IsMultiFamily;   // SAC 7/29/16
@@ -817,7 +803,6 @@ extern long elDBID_Proj_ElecMETER;			// SAC 6/19/12
 extern long elDBID_Proj_NatGasMETER;		// SAC 6/19/12
 extern long elDBID_Proj_OtherFuelMETER;	// SAC 6/19/12
 extern long elDBID_Proj_RHERSEnabled;		// SAC 9/28/20
-extern long elDBID_CUAC_ResultsCSVToCombineDir;    // SAC 10/25/24
 //extern long elDBID_Site_WeatherFile;
 	// SAC 12/9/13 - added several Zone properties to enhance tree display to confirm to E+A+A assignments
 extern long elDBID_Zone_HVACSysStatus;			//	BEMP_Sym,   0,                            3008, "Status of HVAC System - New, Altered or Existing"                                      
@@ -849,8 +834,6 @@ extern long elDBID_InteriorFloor_Construction;
 extern long elDBID_InteriorCeiling_Construction;
 extern long elDBID_PVArrayGeom_IsBldgAttached;     // BEMP_Int  - SAC 3/2/17
 extern long elDBID_Shade_Type;            // BEMP_Sym ->  0:"- select type -"  1:"Site Shade"  2:"Building Shade"   - SAC 2/21/17
-extern long elDBID_PolyLp_Area;			   // SAC 2/24/17
-extern long elDBID_CartesianPt_Coord;     // BEMP_Flt,  3,  0,  1, "ft",  "X, Y, Z coordinates of polyloop vertex"   - SAC 2/21/17
 extern long elDBID_Cons_Materials1;
 extern long elDBID_Cons_Materials2;
 extern long elDBID_Cons_Materials3;
@@ -903,22 +886,7 @@ extern long elDBID_DHWSys_DHWHeater5;
 extern long elDBID_DHWSys_DHWHeater6;
 extern long elDBID_DHWSys_LoopHeater;	// SAC 11/19/19
 extern long elDBID_DHWSys_CentralDHWType;	// SAC 1/21/20
-extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
-extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
-
-extern int eiBDBCID_BatchRuns;
-extern long elDBID_BatchRuns_BatchDefsCSV;        // BEMP_Str "CSV file containing definitions of all batch runs (complete path or relative to Projects folder)" 
-extern long elDBID_BatchRuns_BatchName;           // BEMP_Str "Name used as basis of log and results filenames" 
-extern long elDBID_BatchRuns_ProjDirectory;       // BEMP_Str "Directory of projects to be batch processed (complete path or relative to Projects folder)" 
-extern long elDBID_BatchRuns_IncludeSubdirs;      // BEMP_Int "Flag indicating whether BatchDefsCSV file defined and exists" 
-extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string identifying projects to be processed (including wildcard '*')" 
-extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
-extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
-extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to process each project across ALL 16 climate zones (appends 'CZ#' to output project filenames and run titles)" - SAC 1/4/19 
-extern long elDBID_BatchRuns_RunSetFile;          // BEMP_Str "(relative path and) name of RunSet CSV file"     ; SAC 10/21/20
-extern long elDBID_BatchRuns_RunSetFileStatus;    // BEMP_Int "status of RunSet file (0-blank, 1-not found, 2-invalid, 3-OK)"
-extern long elDBID_BatchRuns_RunSetDescrip;       // BEMP_Str "Description of batch processing from RunSet file"
-#endif   // UI_CARES
+//#endif   // UI_CARES
 
 extern BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt );   // SAC 8/29/11 - enable class-specific dialog tab dimensions
 

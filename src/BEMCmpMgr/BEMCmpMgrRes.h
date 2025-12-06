@@ -57,7 +57,7 @@ int BEMCMPMGR_API __cdecl CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchP
 														const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV=NULL,
 														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL,
 														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL, char* pszResultMsg=NULL, int iResultMsgLen=0, 		// SAC 1/10/17  // SAC 11/13/17
-                                          const char* pszProxyOptionsCSV=NULL );    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
+                                          const char* pszProxyOptionsCSV=NULL, bool bSilent=false );    // separate out Proxy settings since can't communicate these via CSV file (nested quoted strings) - SAC 10/09/21
 
 // -----------------------------------------------------------------------------
 int BEMCMPMGR_API __cdecl CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
@@ -74,7 +74,8 @@ int BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECRes(	const char* pszBEMBasePath
 //		Return Values:		0 =>	SUCCESS
 //							 > 0 =>	Error Codes listed below...
 
-int BEMCMPMGR_API __cdecl CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len );
+int BEMCMPMGR_API __cdecl CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len,
+                                                         int iResultsFormatVersion=-1 );   // added iResultsFormatVersion to retain both 2022- & 2025+ compatibility - SAC 10/29/25 (dev #506)
 int BEMCMPMGR_API __cdecl CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation=NULL,
 														int iResultsFormatVersion=-1, const char* pszProjectPathFileName=NULL );
 int BEMCMPMGR_API __cdecl CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName,

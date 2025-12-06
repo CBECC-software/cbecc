@@ -106,8 +106,8 @@ int  BEMCMPMGR_API __cdecl CMX_ExportCSVHourlyResults_Com( const char* pszHourly
 long BEMCMPMGR_API __cdecl CMX_TranslateToSDD( const char* pszInputPathFile, const char* pszOutputPathFile, int iInputType );  // SAC 1/10/14
 
 int  BEMCMPMGR_API __cdecl CMX_ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptPathFile,     // SAC 06/16/22
-                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, bool bVerboseOutput=false,
-                        char* pszReturnStr=NULL, int iReturnStrLength=0 );
+                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, LPCSTR sEPlusPath,           // added sEPlusPath - SAC 07/26/25
+                        bool bVerboseOutput=false, char* pszReturnStr=NULL, int iReturnStrLength=0 );
 
 
 #ifdef __cplusplus

@@ -193,6 +193,11 @@
 #define IDB_DEFAULT24G                  331
 #define IDC_START_PVOPTOUT              332
 #define IDC_START_OLDCUAC               333
+#define IDC_START_SECTOR                334
+#define IDC_START_NEW_SF                335
+#define IDC_START_BLANK_SF              336
+#define IDC_START_BATCH_SF              337
+#define IDC_START_BLANK_LBL             338
 #define IDS_VER_INFO_LANG               999
 #define IDC_MAINTAB                     1000
 #define IDC_COMPTYPE                    1002
@@ -501,7 +506,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        334
+#define _APS_NEXT_RESOURCE_VALUE        339
 #define _APS_NEXT_COMMAND_VALUE         33046
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106

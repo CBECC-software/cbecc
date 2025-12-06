@@ -664,7 +664,7 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 						{	lDBID_ToSet = BEMPX_GetDatabaseID( qsAAObjProp );
 							if (lDBID_ToSet < BEM_COMP_MULT)
 							{	iRetVal = -2;
-								sErrorMsg = QString( "Error applying AnalysisAction %1: cannot map '%s' to BEMBase DBID" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
+								sErrorMsg = QString( "Error applying AnalysisAction %1: cannot map '%2' to BEMBase DBID" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
 						}	}
 						else
 						{	iRetVal = -1;
@@ -778,7 +778,7 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 														{	iRetVal++;
 															if (bVerbose)
 															{	sLogMsg = QString( "      '%1' set to obj #%2, %3  by AnalysisAction %4" ).arg(
-																												qsSetStr, QString::number( iObj+1 ), qsAAObjProp, AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sAlterClassName );
+																												qsSetStr, QString::number( iObj+1 ), qsAAObjProp, AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );  // , sAlterClassName );
 																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 												}	}	}	}
 											}  break;

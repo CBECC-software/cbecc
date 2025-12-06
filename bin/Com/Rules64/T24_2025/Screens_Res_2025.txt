@@ -560,9 +560,9 @@
 
 
     ; SAC 01/21/21 (tic #1243), JP 11/23/22 (tic #3425)
-    CTRL, "IAQSupInletsAccessible", 10740, TDCT_Check, 35, 262,   25, 770,   0, FNT_STD, "All supply air filters, outside air inlets, and H/ERV recovery cores are accessible per RACM Reference Manual",  TA_LEFT,  0, 4,   0, TA_LEFT, 0, 0,  None,   IAQDisabled < 1 And HasIndvIAQSup > 0,    0,  0,  "Whether all (building-wide) supply air filters, outside air inlets, and H/ERV recovery cores are accessible according to the criteria set in the Residential Alternative Calculation Method Reference Manual. Selection may impact compliance credit." 
+    CTRL, "IAQSupInletsAccessible", 10740, TDCT_Check, 35, 262,   25, 770,   0, FNT_STD, "All supply air filters, outside air inlets, and H/ERV recovery cores are accessible per RACM Reference Manual",  TA_LEFT,  0, 4,   0, TA_LEFT, 0, 0,  None,   IAQDisabled < 1 And HasIndvIAQSup > 0,    0,  0,  "Whether all supply air filters, outside air inlets, and H/ERV recovery cores are accessible according to mandatory requirements set Section 160.2(b)2A.xi." 
     CTRL, "IAQSupInletsAccessMsg",  10741, TDCT_Label, 40, 288,   18, 560,   0, FNT_STD, "",                                                                                                               TA_LEFT,  0, 0,   0, TA_LEFT, 0, 0,  None,   IAQDisabled < 1 And HasIndvIAQSup > 0 And ResProj:IAQSupInletsAccessible < 1,    0,  0,  ""
-    CTRL, "IAQHasFID",              10742, TDCT_Check, 35, 322,   25, 670,   0, FNT_STD, "IAQ system has fault indicator display (FID) in compliance with RACM Reference Manual",                          TA_LEFT,  0, 4,   0, TA_LEFT, 0, 0,  None,   IAQDisabled < 1 And HasIndvIAQSup > 0,    0,  0,  "Whether all (building-wide) IAQ fans have fault indicator display (FID) according to the criteria set in the Residential Alternative Calculation Method Reference Manual. Selection may impact compliance credit." 
+    CTRL, "IAQHasFID",              10742, TDCT_Check, 35, 322,   25, 670,   0, FNT_STD, "IAQ system has fault indicator display (FID) in compliance with RACM Reference Manual",                          TA_LEFT,  0, 4,   0, TA_LEFT, 0, 0,  None,   IAQDisabled < 1 And HasIndvIAQSup > 0,    0,  0,  "Whether all IAQ fans have fault indicator display (FID) according to the criteria set in the Residential Alternative Calculation Method Reference Manual. Selection may impact compliance credit." 
 
    ; SAC 12/13/19
     CTRL, "StdDesignIAQCFM",           107211, TDCT_Edit,   440, 400,   25,  55,  11, FNT_STD, "Std Design IAQ:",        TA_RIGHT,    -5, 4,   1, TA_LEFT, 4, 4,  None,    IAQDisabled < 1 And ResProj:BypassRuleLimits > 0, -120, 40,  "CFM to force standard design IAQ to" 
@@ -2106,13 +2106,18 @@ TAB, "ResOtherZn",  308,      15,    "  Process Loads  "
 
 	 CTRL, "Area",              7008, TDCT_Edit,   115, 250,  25,  75, 11, FNT_STD, "Wall Area:",                         TA_LEFT,   -95, 4,     1, TA_LEFT, 4, 4,  None,                           None,       0,  0,  ""
 	 CTRL, "Tilt",              7020, TDCT_Edit,   115, 280,  25,  75, 11, FNT_STD, "Wall Tilt:",                         TA_LEFT,   -95, 4,     1, TA_LEFT, 4, 4,  None,                           None,       0,  0,  ""
-	 CTRL, "Orientation",       7009, TDCT_Combo,  115, 310, 250,  93, 25, FNT_STD, "Orientation:",                       TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
-	 CTRL, "OrientationValue",  7010, TDCT_Edit,   280, 310,  25,  55, 11, FNT_STD, "Value:",                             TA_RIGHT,   -4, 4,     1, TA_LEFT, 4, 4,  None,  Orientation = 99, -60, 30,  ""
+	 CTRL, "Orientation",       7009, TDCT_Combo,  115, 310, 250,  85, 25, FNT_STD, "Orientation:",                       TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  "Wall orientation relative to Building Azimuth (specified on Building dialog)"
+	 CTRL, "OrientationValue",  7010, TDCT_Edit,   260, 310,  25,  50, 11, FNT_STD, "Value:",                             TA_RIGHT,   -4, 4,     1, TA_LEFT, 4, 4,  None,               Orientation = 99,     -60, 30,  "Specified orientation is a relative angle from building front (bldg azimuth, specified on Building dialog)"
 	 CTRL, "Absorptivity",      7021, TDCT_Edit,   115, 340,  25,  75, 11, FNT_STD, "Absorptivity:",                      TA_LEFT,   -95, 4,     1, TA_LEFT, 4, 4,  None,  ResProj:ResAnalysisType = 0,    0,  0,  ""
+	 CTRL, "AzimuthLabel",      7022, TDCT_Label,  200, 339,  18, 180,  0, FNT_STD, "",                                   TA_RIGHT,  180, 0,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
+	 CTRL, "",                   201, TDCT_Label,  225, 339,  18, 110,  0, FNT_STD, "(angle from front)",                 TA_LEFT,   110, 0,     0, TA_LEFT, 0, 0,  None,               Orientation = 99,       0,  0,  ""
+	 CTRL, "ResProj:EWallOrientGraphic",  202, TDCT_WMF, 350, 280, 135, 135, 25, FNT_STD, "",                             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  "Diagram describing front/back/left/right exterior wall orientation."  ; SAC 11/20/25 (dev #574)
+
+	 CTRL, "Absorptivity",      7021, TDCT_Edit,   345, 250,  25,  65, 11, FNT_STD, "Absorptivity:",                      TA_LEFT,   -85, 4,     1, TA_LEFT, 4, 4,  None,          Proj:AnalysisType = 0,       0,  0,  ""
 ; mjb	new existWall Construction entry	9/17/13
-	 CTRL, "",                  7032, TDCT_Line,    10, 370, 435, 370, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None, Status = 2 And IsVerified = 1,   -10,  10,  ""
+	 CTRL, "",                  7032, TDCT_Line,    10, 370, 335, 370, -1, FNT_STD, "",                                   TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None, Status = 2 And IsVerified = 1,   -10,  10,  ""
  	 CTRL, "",                  7033, TDCT_Label,   20, 381, 100,   0, 12, FNT_STD, "Existing",                           TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None, Status = 2 And IsVerified = 1,   -10,  10,  ""
-	 CTRL, "exConstruction",    7034, TDCT_Combo,  115, 395, 300, 220, 12, FNT_STD, "Construction:",                      TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None, Status = 2 And IsVerified = 1,  -100, 100,  ""
+	 CTRL, "exConstruction",    7034, TDCT_Combo,  115, 395, 300, 220, 12, FNT_STD, "Construction:",                      TA_LEFT,   -95, 4,     0, TA_LEFT, 0, 0,  None, Status = 2 And IsVerified = 1,  -100,   0,  ""
 
 ;	 CTRL, "CavityRValue",      7014, TDCT_Combo,  145, 190, 300, 150, 25, FNT_STD, "Cavity R-value:",                    TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
 ;	 CTRL, "SheathingVRValue",  7015, TDCT_Combo,  145, 220, 300, 150, 25, FNT_STD, "Sheathing R-value:",                 TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,                           None,       0,  0,  ""
@@ -3308,19 +3313,19 @@ TAB, "ResOtherZn",  308,      15,    "  Process Loads  "
 	 CTRL, "",                 30202, TDCT_Line,    10,  45, 590,  45, -1, FNT_STD, "",                                      TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       None,                    0,  0,  ""
 
 	 CTRL, "Name",             30203, TDCT_Edit,    70,  60,  25, 220, 99, FNT_STD, "Name:",                                 TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,                    0,  0,  "Name of this heat pump system"
-	 CTRL, "Type",             30204, TDCT_Combo,   70,  90, 350, 400, 12, FNT_STD, "Type:",                                 TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,                    0,  0,  "Type of heat pump system"
+	 CTRL, "Type",             30204, TDCT_Combo,   70,  90, 350, 480, 12, FNT_STD, "Type:",                                 TA_LEFT,   -50, 4,     0, TA_LEFT, 0, 0,  None,       None,                    0,  0,  "Type of heat pump system"
 	 CTRL, "TypeDescrip",      30205, TDCT_RTF,     70, 120,  80, 510,  0, FNT_STD, "",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  Type = -1,  None,                    0,  0,  "Description of this heat pump system"
 
 ;	 CTRL, "",                   999, TDCT_Label,   75, 215,  19, 400, -1, FNT_BOLD, "This system type is not yet available for compliance analysis",  TA_LEFT, 0, 0,  0, TA_LEFT, 0, 0,  None,  IsAvailable = 0,   0,  0,  ""
 	 CTRL, "UIDialogMsg",        999, TDCT_Label,   20, 210,  19, 520, -1, FNT_BOLD, "",                                     TA_LEFT, 0, 0,  0, TA_LEFT, 0, 0,  None,  None,   0,  0,  ""  ; SAC 11/13/18 - VCHP
 
    ; enable specification of HSPF2/SEER2 (shifting all other UI controls down by one row) - SAC 10/06/22 (tic #3431)
-	 CTRL, "EffMetric",        30340, TDCT_Combo,  145, 235, 350, 155, 12, FNT_STD, "Efficiency Metric(s):",                 TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,       ShowEffMetric > 0,               -127,  0,  "Efficiency metric to enter (SEER/EER vs. SEER2/EER2)"
-	 CTRL, "EffLabel1",        30341, TDCT_Label,   30, 294,  18,  58,  0, FNT_STD, "",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       ShowHSPF > 0 Or Type = 35,          0,  0,  ":"
+	 CTRL, "EffMetric",        30340, TDCT_Combo,  145, 235, 350, 155, 12, FNT_STD, "Efficiency Metric(s):",                 TA_LEFT,  -125, 4,     0, TA_LEFT, 0, 0,  None,       IsAvailable > 0 And ShowEffMetric > 0,   -127,  0,  "Efficiency metric to enter (SEER/EER vs. SEER2/EER2)"
+	 CTRL, "EffLabel1",        30341, TDCT_Label,   30, 294,  18,  58,  0, FNT_STD, "",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       ShowHSPF > 0 Or Type = 35,                  0,  0,  ":"
 	 CTRL, "EffLabel2",        30342, TDCT_Label,  360, 354,  18,  80,  0, FNT_STD, "",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsAvailable > 0 And IncludesCooling > 0 And ShowCEER < 1 And Type != 34,   0,  0,  ":"    ; disp cond also incl. ShowEffMetric > 0 - SAC 04/05/23 (tic #1349)
 
-	 CTRL, "Speeds",           30345, TDCT_Combo,  350, 235, 350,  80, 12, FNT_STD, "",                                      TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       UsePMModel > 0,          0,  0,  "Number of speeds the equipment supports"   ; SAC 07/21/24 (VCHP3)
-	 CTRL, "SpeedsLbl",        30346, TDCT_Label,  437, 239,  18,  50,  0, FNT_STD, "",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       UsePMModel > 0,          0,  0,  ""
+	 CTRL, "Speeds",           30345, TDCT_Combo,  350, 235, 350,  80, 12, FNT_STD, "",                                      TA_LEFT,    -1, 4,     0, TA_LEFT, 0, 0,  None,       IsAvailable > 0 And UsePMModel > 0,          0,  0,  "Number of speeds the equipment supports"   ; SAC 07/21/24 (VCHP3)
+	 CTRL, "SpeedsLbl",        30346, TDCT_Label,  437, 239,  18,  50,  0, FNT_STD, "",                                      TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       IsAvailable > 0 And UsePMModel > 0,          0,  0,  ""
 
 ;	; SAC 1/3/13 - added autosizing & sizing factor inputs
 ;;	 CTRL, "AutoSize",       30230, TDCT_Check,  370, 290,  22, 150,  2, FNT_STD, "Autosize Capacity",                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  ResProj:ResAnalysisType = 0,  IsAvailable > 0 And DisplayHPData = 0,                     0,  0,  "Whether or not the heating capacity is to be auto-sized by the simulation engine"  
@@ -4443,7 +4448,7 @@ TAB, "ResOtherZn",  308,      15,    "  Process Loads  "
    CTRL, "NRCAMch15A",           3325, TDCT_Check,   20, 260,  22, 350,  0, FNT_STD, "NRCA-MCH-15-A  Thermal Energy Storage",      TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch17A",           3327, TDCT_Check,   20, 280,  22, 350,  0, FNT_STD, "NRCA-MCH-17-A  Condenser Water Reset Ctrl.", TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
    CTRL, "NRCAMch18A",           3328, TDCT_Check,   20, 300,  22, 350,  0, FNT_STD, "NRCA-MCH-18-A  ECMS",                        TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-
+   CTRL, "NRCAMch24A",           3329, TDCT_Check,   20, 320,  22, 350,  0, FNT_STD, "NRCA-MCH-24-A - Cooling Tower Conductivity Controls",    TA_LEFT,    0, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
 
 
 ; ;----------------------------------------------------------------

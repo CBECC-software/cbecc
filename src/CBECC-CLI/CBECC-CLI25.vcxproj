@@ -245,7 +245,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>../../bin/Release_VC142x64_OS-24-1/</OutDir>
+    <OutDir>../../bin/Release_VC142x64/</OutDir>
     <IntDir>../../bin/CBECC-CLI_VC142/25/x64/Release/</IntDir>
     <TargetName>CBECC-CLI25</TargetName>
   </PropertyGroup>
@@ -433,7 +433,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Qt5Cored.lib;..\..\bin\Debug_VC142x64\BEMProc25c.lib;..\..\bin\Debug_VC142x64\BEMCmpMgr25c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;Qt5Cored.lib;..\..\bin\Debug_VC142x64\BEMProc25.lib;..\..\bin\Debug_VC142x64\BEMCmpMgr25.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -455,7 +455,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Qt5Core.lib;..\..\bin\Release_VC142x64_OS-24-1\BEMProc25c.lib;..\..\bin\Release_VC142x64_OS-24-1\BEMCmpMgr25c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;Qt5Core.lib;..\..\bin\Release_VC142x64\BEMProc25.lib;..\..\bin\Release_VC142x64\BEMCmpMgr25.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
@@ -511,6 +511,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>version.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -529,6 +530,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>version.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

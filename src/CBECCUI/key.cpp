@@ -34,7 +34,8 @@
 #include "stdafx.h"
 #include "CUIGlobl.h"
 
-CString esSecurityKey = "MIIBOwIBAAJBAL5lFmZz1I2ZbDFId15RL3dyHnn2AIKW5LMy6Zh/Qq4Qwa+CBhHZ";
+CString esSecurityKey    = "MIIBOwIBAAJBAL5lFmZz1I2ZbDFId15RL3dyHnn2AIKW5LMy6Zh/Qq4Qwa+CBhHZ";
+CString esResSecurityKey = "MIIBOwIBAAJBAL5lFmZz1I2ZbDFId15RL3dyHnn2AIKW5LMy6Zh/Qq4Qwa+CBhHZ";
 
 void TweakString( char* /*lpBuf*/, int /*length*/ )
 {  AfxMessageBox( "Tweak" );

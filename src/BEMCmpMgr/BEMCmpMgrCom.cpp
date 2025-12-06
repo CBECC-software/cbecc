@@ -2415,6 +2415,7 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 //											96 : Error calculating CUAC utility bill(s)
 //											97	: Error evaluating SetupMFamInteriorSurfaces rules
 //											98	: Incompatible EnergyPlus simulation versions between executable and project/ruleset code years
+//											99	: Standard design DHW source energy calc error (BEMAnal_CECRes_StdDHWSrcError)
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2507,6 +2508,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
    long lAllowPropPVBatt            =   GetCSVOptionValue( "AllowProposedPVBattery"     ,  -1,  saCSVOptions );		// SAC 10/25/23
    long lAllowStdPV                 =   GetCSVOptionValue( "AllowStandardPV"            ,  -1,  saCSVOptions );		// SAC 10/25/23
    long lAllowStdBatt               =   GetCSVOptionValue( "AllowStandardBattery"       ,  -1,  saCSVOptions );		// SAC 10/25/23
+   long iSimSpeedOption             =   GetCSVOptionValue( "SimSpeedOption"             ,  -1,  saCSVOptions );      // SAC 1/14/15  // ported to Com - SAC 09/22/25
    bool bAllowAnalysisAbort			=  true;		//(GetCSVOptionValue( "AllowAnalysisAbort"         ,   1,  saCSVOptions ) > 0);	// SAC 4/5/15
 	if (bPromptUserUMLHWarning && (bSilent || iDontAbortOnErrorsThruStep > 6))
 		bPromptUserUMLHWarning = false;		// SAC 3/19/15 - toggle OFF PromptUserUMLHWarning if 'silent' flag set or DontAbortOnErrorsThruStep includes UMLH check step
@@ -2680,6 +2682,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
             if (DirectoryExists( sEPlusPath2 ))
                sEPlusPath = sEPlusPath2;
    }  }  }
+                        // BEMPX_WriteLogFile( QString( "    sEPlusPath:  %1" ).arg( sEPlusPath ) );  // , sLogPathFile.toLocal8Bit().constData(), FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	if (sModelkitPath.isEmpty())     // HybridCooling - SAC 06/23/22
 		sModelkitPath = sCompMgrDLLPath + "Modelkit\\";
    else if (sModelkitPath.right(1).compare('/')!=0 && sModelkitPath.right(1).compare('\\')!=0)
@@ -3525,8 +3528,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				switch (iFHID)
 				{	case  1 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
 					case  2 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
-					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr25c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths
-					case  4 :	sFHPathFile = sCompMgrDLLPath + "BEMProc25c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
+					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr25.dll";                bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths  // updated for single app libs - SAC 09/24/25
+					case  4 :	sFHPathFile = sCompMgrDLLPath + "BEMProc25.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
 					case  5 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap25.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
 					case  6 :	sFHPathFile = sCompMgrDLLPath + "openstudiolib_9-4.dll"; 		   bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;	// switched from old (unused) SSL DLL to the OpenStudio DLL linked to E+ 9.4 - SAC 05/29/25
 					case  7 :	sFHPathFile = sCompMgrDLLPath + "openstudiolib.dll";              bRequiredForCodeYear = (iDLLCodeYear == 2025);		break;
@@ -3556,7 +3559,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case 31 :	sFHPathFile = sCompMgrDLLPath + "BEMProc22c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
 					case 32 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap22.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2022);		break;
 					case 33 :	sFHPathFile = sCSEEXEPath + "cse19d.exe";	             				break;	// SAC 5/24/16
-					case 34 :	if (lRuleRepoRev >= 8681)     // SAC 12/18/24
+					case 34 :	if (iDLLCodeYear >= 2025 || lRuleRepoRev  > 2511 || lRuleRepoRev < 1000)     // SAC 12/18/24  // SAC 09/24/25
                                  sFHPathFile = sCSEEXEPath + "cse.exe";
                            else  sFHPathFile = sCSEEXEPath + "cse19.exe";	       				break;
 					case 35 :	sFHPathFile = sCSEEXEPath + sCSE_DHWUseIncFile;	     					break;     
@@ -3675,9 +3678,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	}
 
    // Make changes to address MFam dwelling/common interior surfaces - SAC 01/31/24
+   long lIntSurfModelMthd=0;  // ensure we keep track of this to impact validity of compliance report (until this feature finalized) - SAC 07/23/25
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())
-	{	long lIntSurfModelMthd=0;
-		if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:IntSurfModelMthd" ), lIntSurfModelMthd ) && lIntSurfModelMthd > 0)
+	{	if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:IntSurfModelMthd" ), lIntSurfModelMthd ) && lIntSurfModelMthd > 0)
 		{  int iSetupMFamIntSurfsRetVal = LocalEvaluateRuleset( sErrMsg, 97, "SetupMFamInteriorSurfaces", bVerbose, pCompRuleDebugInfo );  
                            //											97	: Error evaluating SetupMFamInteriorSurfaces rules
          if (iSetupMFamIntSurfsRetVal > 0)
@@ -3691,7 +3694,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "IsDetailedGeometry", iCID_Proj ), lIsDetailedGeom ) && lIsDetailedGeom == 0)
 		{	// first make sure ruleset's GeomIDs are valid
 			QString sCr8PolyLpErrMsg;
-			if (!BEMPX_InitGeometryIDs( sCr8PolyLpErrMsg ))
+			if (!BEMPX_InitGeometryIDs( sCr8PolyLpErrMsg, true ))
 			{	if (sCr8PolyLpErrMsg.isEmpty())
 					sErrMsg = "ERROR:  Building geometry DBID initialization failed";
 				else
@@ -3741,7 +3744,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{						if (bVerbose)
 									BEMPX_WriteLogFile( QString::asprintf( "  PerfAnal_NRes - Generating shades for %d model windows", lNumWinsHavingShades ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			QString sGenWinShadesErrMsg;
-			if (!BEMPX_InitGeometryIDs( sGenWinShadesErrMsg ))
+			if (!BEMPX_InitGeometryIDs( sGenWinShadesErrMsg, true ))
 			{	if (sGenWinShadesErrMsg.isEmpty())
 					sErrMsg = "ERROR:  Building geometry DBID initialization failed (prior to CMX_GenerateWindowShades)";
 				else
@@ -3991,6 +3994,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			bReDefaultModel = TRUE;
 		}
 
+      if (iSimSpeedOption >= 0)     // hardwire CSE sim to either 0-compliance, or 1-quick - SAC 09/22/25
+      {  lCSESimSpeedOption = iSimSpeedOption;
+			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ResProj:SimSpeedOption" ), BEMP_Int, (void*) &lCSESimSpeedOption );
+      }
       BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:SimSpeedOption" ), lCSESimSpeedOption, -1 );     // 0:Compliance, 1:Quick, 2:Specify - SAC 03/02/23
       if (lCSESimSpeedOption == 0 && lQuickAnalysis > 0)
 		{						if (bVerbose)
@@ -4155,6 +4162,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			}
 		}
 
+      if (iRetVal > 0 && iCUACReportID > 0)    // SAC 10/28/25 (CUAC)
+      {  long lDbgElecTariffGen=0, lDbgGasTariffGen=0;
+         BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lDbgElecTariffGen );
+         BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lDbgGasTariffGen  );
+         if (lDbgElecTariffGen > 0 || lDbgGasTariffGen > 0)
+            BEMPX_WriteLogFile( QString( "CUAC utility rate download Not performed due to analysis return code = %1" ).arg( QString::number(iRetVal) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+      }
       if (iRetVal == 0 && iCUACReportID > 0)    // SAC 08/30/23 (CUAC)
       {  bool bG2ElecRateLoaded=false, bG2GasRateLoaded=false;
 
@@ -4423,7 +4437,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					long lDisableMandOccSensorCtrl;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandOccSensorCtrl", iCID_Proj ), lDisableMandOccSensorCtrl ))		// SAC 11/1/19 - new cause for disabling report security
 						lDisableMandOccSensorCtrl = 0;
-			#define  NumRptSecOff  30
+			#define  NumRptSecOff  31
 					int iRptSecOffIdx[NumRptSecOff];
 					bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
 													(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
@@ -4455,6 +4469,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                        (lAllowStdPV      != -1),              // AllowStdPV      activated - SAC 10/25/23
                                        (lAllowStdBatt    != -1),              // AllowStdBatt    activated - SAC 10/25/23
                                        (iCustomMeterOption > 0),              // CustomMeterOption - SAC 11/02/23
+                                       (lIntSurfModelMthd  > 0),              // IntSurfModelMthd - SAC 07/23/25
                                        false  };
 
 					for (iRF=0; iRF < NumRptSecOff; iRF++)
@@ -4512,6 +4527,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									case 27 :	sLogMsg =        "      AllowStandardPV flag activated";		      break;	// SAC 10/25/23
 									case 28 :	sLogMsg =        "      AllowStandardBattery flag activated";		break;	// SAC 10/25/23
 									case 29 :	sLogMsg =        "      CustomMeterOption activated";		break;	// SAC 11/02/23
+									case 30 :	sLogMsg =        "      Interior surface modeling method (IntSurfModelMthd) activated";		break;	// SAC 07/23/25
 									default :	sLogMsg.clear();		break;
 								}
 								if (!sLogMsg.isEmpty())
@@ -4763,6 +4779,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
 			}
 
+         if (iRetVal == 0 || (iRetVal >= 11 && iRetVal <= 13))
+         {  // post error based on Proj:PreventAnalysisMsg regardless of bChkCode or failure of checks immediately above - SAC 11/25/25 (dev #523)
+            QString sPreventAnalysisMsg;
+            BEMPX_GetString( BEMPX_GetDatabaseID( "PreventAnalysisMsg", iCID_Proj ), sPreventAnalysisMsg );
+            if (!sPreventAnalysisMsg.isEmpty())
+            {  BEMPX_AddRulesetError( sPreventAnalysisMsg.toLocal8Bit().constData() );
+               iRetVal = 13;  // Error(s) encountered checking input model for code requirements
+               bAbort = true;
+         }  }
+
 			// blast weather file hash property values - not helpful for them to remain in analysis inputs - SAC 9/3/13
 			if (bWthrHashesSet)
 			{	BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "WthrFileEPWHash", iCID_Proj ), iError );
@@ -4801,7 +4827,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 67 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
 			}
 
-	QVector<QString> saSimulatedRunIDs;
+   // added array of classes to be written to CIBD##I files (excluding cf1r, lmcc, nrcc & cse objects) - SAC 07/15/25
+   std::vector<long> laCIBDIClsObjIndices;
+   int iNumBEMClasses = BEMPX_GetNumClasses();
+   for (int iBCls=1; iBCls<=iNumBEMClasses; iBCls++)
+   {  BEMClass* pBCls = BEMPX_GetClass( iBCls, iError );
+      if (pBCls && pBCls->getShortName().indexOf( "cf1r" )!=0 &&
+                   pBCls->getShortName().indexOf( "lmcc" )!=0 &&
+                   pBCls->getShortName().indexOf( "nrcc" )!=0 &&
+                   pBCls->getShortName().indexOf( "cse"  )!=0 )
+         laCIBDIClsObjIndices.push_back( iBCls * BEMF_ClassIDMult );
+   }
+
+   QVector<QString> saSimulatedRunIDs;
 	double dEPlusVer=0.0;	// SAC 5/16/14
 	char pszEPlusVerStr[60] = "\0";
 	char pszOpenStudioVerStr[60] = "\0";
@@ -4849,7 +4887,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																		if (bStoreBEMDetails)
 																		{	sDbgFileName = sProcessingPath + sModelFileOnly + QString(".ibd-Detail");
    																		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
-																		}
+                                                      }
 
 		BEMPX_InitializeHourlyResults();  // initialize hourly results stored in BEMProc
 		// DELETE ALL EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
@@ -4999,11 +5037,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			{
 				sErrMsg.clear();
 				sDbgFileName = (bStoreBEMDetails ? sProcessingPath + sModelFileOnly + QString(" - ") + sRunID + QString(".ibd-Detail") : "");
+				QString sDbgInpFileName = (bStoreBEMDetails ? sProcessingPath + sModelFileOnly + QString(" - ") + sRunID + QString(".cibd%1i").arg( QString::number( (iRulesetCodeYear % 100) ) ) : "");
 
 				bool bCopySizingResultsOK = true;		int iBEMProcIdxToCopy = -1;
 				if (iRun == 0 || !bModelInitialized[iRun])
 				{  bModelOK  = CMX_TransformModel( sRunID.toLocal8Bit().constData(), TRUE /*bEvalRules*/, bVerbose /*bLogRuleEvaluation*/, bVerbose /*bVerboseOutput*/,
-				   											sDbgFileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo );
+				   											sDbgFileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo, &laCIBDIClsObjIndices, sDbgInpFileName.toLocal8Bit().constData() );
                                  if (bLogCSERunLoopDetails || !bModelOK)    // SAC 05/24/22  // force log output if !bModelOK & include success/error in log message - SAC 04/24/25
                                     BEMPX_WriteLogFile( QString::asprintf( "    model transform performed for '%s': %s", sRunID.toLocal8Bit().constData(), (bModelOK ? "success" : "Error") ) );
             }
@@ -5019,7 +5058,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                     BEMPX_WriteLogFile( QString::asprintf( "    sizing results copied from BEMProcIdx %d to model '%s'", iBEMProcIdxToCopy, sRunID.toLocal8Bit().constData() ) );
 					}
 			   	bModelOK  = CM_EvaluateModelRules( sRunID.toLocal8Bit().constData(), bVerbose /*bLogRuleEvaluation*/, bVerbose /*bVerboseOutput*/, 
-			   													sDbgFileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo );		assert( bModelOK );
+			   													sDbgFileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo, &laCIBDIClsObjIndices, sDbgInpFileName.toLocal8Bit().constData() );		assert( bModelOK );
                                  if (bLogCSERunLoopDetails || !bModelOK)    // SAC 05/24/22
                                     BEMPX_WriteLogFile( QString::asprintf( "    model transform rules evaluated for '%s': %s", sRunID.toLocal8Bit().constData(), (bModelOK ? "success" : "Error") ) );
 				}
@@ -5095,11 +5134,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						long laDBIDsToBypassCopy[21] = {  0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,  0 };
 	   				int iTransIdx = BEMPX_GetTransformInitializationInfo( sRunID2.toLocal8Bit().constData(), &iBEMProcIdxToCopy, laDBIDsToBypassCopy, 20 );			assert( iTransIdx >= 0 );
 						if (iBEMProcIdxToCopy <= iRunBEMProcIdx)
-						{	QString sDbgRun2FileName;
+						{	QString sDbgRun2FileName, sDbgRun2InpFileName;
 							if (bStoreBEMDetails)
-								sDbgRun2FileName = QString::asprintf( "%s%s - %s.ibd-Detail", sProcessingPath.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunID2.toLocal8Bit().constData() );
+							{  sDbgRun2FileName = QString::asprintf( "%s%s - %s.ibd-Detail", sProcessingPath.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunID2.toLocal8Bit().constData() );
+				            sDbgRun2InpFileName = sProcessingPath + sModelFileOnly + QString(" - ") + sRunID2 + QString(".cibd%1i").arg( QString::number( (iRulesetCodeYear % 100) ) );
+                     }
 							bModelInitialized[iRun2] = CMX_TransformModel( sRunID2.toLocal8Bit().constData(), FALSE /*bEvalRules*/, bVerbose /*bLogRuleEvaluation*/, bVerbose /*bVerboseOutput*/, 
-																							sDbgRun2FileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo );
+																							sDbgRun2FileName.toLocal8Bit().constData(), bDurationStats, pCompRuleDebugInfo, &laCIBDIClsObjIndices, sDbgRun2InpFileName.toLocal8Bit().constData() );
 
 							if (!bModelInitialized[iRun2])
 							{	sErrMsg = QString::asprintf( "Error generating %s model", sRunID2Long.toLocal8Bit().constData() );
@@ -6202,7 +6243,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									if (osRunInfo[iR].RunID() >= 0)
 									{	sDbgFileName = sProcessingPath + sModelFileOnly + QString(" - ") + osRunInfo[iR].RunID() + ".ibd-Detail-PostSim";
 										BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL, false, false, FALSE, 0, false, NULL, true, osRunInfo[iR].BEMProcIdx() );
-							}		}
+                     }		}
 							BEMPX_RefreshLogFile();	// SAC 5/19/14
 						}
 					}
@@ -7504,6 +7545,7 @@ static char szT24NCSV1[]	 =	",,,,,,,Analysis:,,,,Proposed Model:,,,Proposed Mode
 										"ndard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,Standard Model,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,"
 										",Calling,Compliance,,,,Secondary,,,Report Generation,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Standard"
 										" Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,\n";   // 665 chars
+#ifdef CODEYEAR2022
 static char szT24NCSV2[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
 										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling"
 										" Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Ene"
@@ -7512,6 +7554,16 @@ static char szT24NCSV2[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Complia
 										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC/LMCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
 										",,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,"
 										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1117 chars
+#else
+static char szT24NCSV2[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
+										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Long-term System Cost ($/ft2),,,,,,,,,,,,,,,,LSC by Fuel ($/ft2),,,Cooling"
+										" Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Ene"
+										"rgy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Long-term System Cost ($/ft2),,,,,,,,,,,,,,,LSC by Fuel ($"
+										"/ft2),,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak De"
+										"mand (kW),,,,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,NRCC/LMCC PRF Processing,,Site Electric CO2 Emissions (tonne),,,,"
+										",,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,"
+										",,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1105 chars
+#endif
 static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Results Set,Area (SqFt),Area (SqFt),Analysis Type,Elapsed Time,Fail,Margin,Time,Rul"
 										"e Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle"
 										",Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp To"
@@ -9973,11 +10025,11 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 /////////////////////////////////////////////////////////////////////////////
 
 int CMX_ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptPathFile,  
-                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, bool bVerboseOutput,
-                        char* pszReturnStr, int iReturnStrLength )
+                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, LPCSTR sEPlusPath,        // added sEPlusPath - SAC 07/26/25
+                        bool bVerboseOutput, char* pszReturnStr, int iReturnStrLength )
 {
-   return ExecuteModelkitBat(	sModelkitBatPathFile, sModelkitRubyScriptPathFile, sIDFPath,
-                              sIDFFilenameNoExt, bVerboseOutput, pszReturnStr, iReturnStrLength );
+   return ExecuteModelkitBat(	sModelkitBatPathFile, sModelkitRubyScriptPathFile, sIDFPath, sIDFFilenameNoExt, 
+                              sEPlusPath, bVerboseOutput, pszReturnStr, iReturnStrLength );
 }
 
 

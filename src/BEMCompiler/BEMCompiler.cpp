@@ -638,7 +638,7 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 															 fileCmpld.toLocal8Bit().constData(), fileLog.toLocal8Bit().constData(),
                                               &sRuleDetails, (qslSharedPaths.size() > 0 ? &qslSharedPaths : NULL) );
 
-		// SAC 10/12/16 - added code to create and store data model documentaiton files
+		// SAC 10/12/16 - added code to create and store data model documentation files
 			if (bCompOK)
 			{	QString sSimDataModelOutFile = fileCmpld.left( fileCmpld.lastIndexOf('.') );
 				QString sInpDataModelOutFile = sSimDataModelOutFile + " - Input Data Model.txt";

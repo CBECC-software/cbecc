@@ -3384,7 +3384,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									{	double dDayltArea = -1;
 										ExpNode* pNode = NULL;
 										QString sErrMsg;
-										if (!ruleSet.initGeomIDs( pEval, error ))  // SAC 10/1/13
+										if (!ruleSet.initGeomIDs( pEval, error, ruleSet.IsDataModel() ))  // SAC 10/1/13
 										{	// do nothing here - error already posted
 										}
 										else if (nArgs != 1)
@@ -3461,7 +3461,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               double fPolyArea = -1;
 										ExpNode* pNode = NULL;
 										QString sErrMsg;
-										if (!ruleSet.initGeomIDs( pEval, error ))  // SAC 10/1/13
+										if (!ruleSet.initGeomIDs( pEval, error, ruleSet.IsDataModel() ))  // SAC 10/1/13
 										{	// do nothing here - error already posted
 										}
 										else if (op == BF_ScalePolyLp && (nArgs < 2 || nArgs > 3))
@@ -4029,7 +4029,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										ExpNode* pNode[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 										QString sErrMsg;
 										bool bNumArgsOK = (nArgs > 4 && nArgs < 11);
-										if (!ruleSet.initGeomIDs( pEval, error ))
+										if (!ruleSet.initGeomIDs( pEval, error, ruleSet.IsDataModel() ))
 										{	// do nothing here - error already posted
 										}
 										else if (!bNumArgsOK)
@@ -4104,7 +4104,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										int iPolyLpObjIdx = -2;
 										ExpNode* pNode = NULL;
 										QString sErrMsg;
-										if (!ruleSet.initGeomIDs( pEval, error ))
+										if (!ruleSet.initGeomIDs( pEval, error, ruleSet.IsDataModel() ))
 										{	// do nothing here - error already posted
 										}
 										else

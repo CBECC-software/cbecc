@@ -78,7 +78,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>CBECC-25</TargetName>
-    <OutDir>../../bin/Release_VC142x64_OS-24-1/</OutDir>
+    <OutDir>../../bin/Release_VC142x64/</OutDir>
     <IntDir>../../bin/CBECCUI_VC142/Com/25/x64/Release/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -90,7 +90,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>CBECC-25</TargetName>
-    <OutDir>../../bin/Debug_VC142x64_OS-24-1/</OutDir>
+    <OutDir>../../bin/Debug_VC142x64/</OutDir>
     <IntDir>../../bin/CBECCUI_VC142/Com/25/x64/Debug/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -186,7 +186,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;Qt5WinExtras.lib;..\..\bin\Release_VC142x64_OS-24-1\BEMProc25c.lib;..\..\bin\Release_VC142x64_OS-24-1\BEMCmpMgr25c.lib;..\..\bin\Release_VC142x64_OS-24-1\BEMProcUI25c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;Qt5WinExtras.lib;..\..\bin\Release_VC142x64\BEMProc25c.lib;..\..\bin\Release_VC142x64\BEMCmpMgr25c.lib;..\..\bin\Release_VC142x64\BEMProcUI25c.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(IntDir)CBECC-25.pdb</ProgramDatabaseFile>
@@ -305,7 +305,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;Qt5WinExtrasd.lib;..\..\bin\Debug_VC142x64_OS-24-1\BEMProc25c.lib;..\..\bin\Debug_VC142x64_OS-24-1\BEMCmpMgr25c.lib;..\..\bin\Debug_VC142x64_OS-24-1\BEMProcUI25c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;Qt5WinExtrasd.lib;..\..\bin\Debug_VC142x64\BEMProc25c.lib;..\..\bin\Debug_VC142x64\BEMCmpMgr25c.lib;..\..\bin\Debug_VC142x64\BEMProcUI25c.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_74_0\lib;..\..\bin\vendor\Qt_5.15.0\lib-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>

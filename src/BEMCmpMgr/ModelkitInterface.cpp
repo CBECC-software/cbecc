@@ -48,14 +48,15 @@ using namespace std;
 
 // return value:                 // SAC 06/16/22
 //       0 : success
-//       1 : IDF file to process not found - <sIDFPath>\<sIDFFilenameNoExt>.idf
-//       2 : IDF file to process not found - <sIDFPath>\<sIDFFilenameNoExt>.idf
+//       1 : Modelkit .bat file not found: sModelkitBatPathFile
+//       2 : Modelkit ruby script file to process not found: sModelkitRubyScriptPathFile
 //       3 : IDF file to process not found - <sIDFPath>\<sIDFFilenameNoExt>.idf
+//       6 : Energy+ IDD file not found: sEPlusIDDPathFile    - SAC 07/26/25
 //       4 : Intermediate IDF file cannot exist before processing - <sIDFPath>\<sIDFFilenameNoExt> - HybridHVAC-initial.idf
 //       5 : error encountered renaming IDF to processing name
 int ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptPathFile,
-                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, bool bVerboseOutput /*=false*/,
-                        char* pszReturnStr /*=NULL*/, int iReturnStrLength /*=0*/ )
+                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, LPCSTR sEPlusPath,        // added sEPlusPath - SAC 07/26/25
+                        bool bVerboseOutput /*=false*/, char* pszReturnStr /*=NULL*/, int iReturnStrLength /*=0*/ )
 {  int iRetVal = 0;
    string sRetStr;
 
@@ -65,6 +66,8 @@ int ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptP
    string sProcessIDFPathFile = sMainIDFPathFile;
    sMainIDFPathFile += ".idf";
    sProcessIDFPathFile += " - HybridHVAC-initial.idf";
+   string sEPlusIDDPath = sEPlusPath;  // "C:/CBECC/SVN-MFamRestruct-wHybridClg/sim-EPlus/current";    // SAC 07/25/25
+   string sEPlusIDDPathFile = sEPlusIDDPath + "/Energy+.idd";
 
    if (!FileExists( sModelkitBatPathFile ))
    {  iRetVal = 1;
@@ -72,7 +75,7 @@ int ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptP
    }
    else if (!FileExists( sModelkitRubyScriptPathFile ))
    {  iRetVal = 2;
-      sRetStr = "IDF file to process not found:  " + string( sModelkitRubyScriptPathFile );
+      sRetStr = "Modelkit ruby script file to process not found:  " + string( sModelkitRubyScriptPathFile );
    }
    else if (!FileExists( sMainIDFPathFile.c_str() ))
    {  iRetVal = 3;
@@ -81,6 +84,10 @@ int ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptP
    else if (FileExists( sProcessIDFPathFile.c_str() ))
    {  iRetVal = 4;
       sRetStr = "Intermediate IDF file cannot exist before processing:  " + sProcessIDFPathFile;
+   }
+   else if (!FileExists( sEPlusIDDPathFile.c_str() ))
+   {  iRetVal = 6;
+      sRetStr = "Energy+ IDD file not found:  " + sEPlusIDDPathFile;
    }
    else  // assuming here that other needed file(s) present, such as:  <sIDFPath>\<sIDFFilenameNoExt> - HybridHVAC.csv
    {
@@ -93,7 +100,7 @@ int ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptP
       {
          //string sCmdLine = boost::str( boost::format( "ruby \"%s\" \"%s\"" ) % sModelkitRubyScriptPathFile % sModelkitProcPathFileNoExt.c_str() );
          //string sCmdLine = boost::str( boost::format( "\"%s\" ruby \"%s\" \"%s\"" ) % sModelkitBatPathFile % sModelkitRubyScriptPathFile % sModelkitProcPathFileNoExt.c_str() );
-         string sCmdLine = boost::str( boost::format( "CALL \"%s\" ruby \"%s\" \"%s\"" ) % sModelkitBatPathFile % sModelkitRubyScriptPathFile % sModelkitProcPathFileNoExt.c_str() );
+         string sCmdLine = boost::str( boost::format( "CALL \"%s\" ruby \"%s\" \"%s\" \"%s\"" ) % sModelkitBatPathFile % sModelkitRubyScriptPathFile % sModelkitProcPathFileNoExt.c_str() % sEPlusIDDPath.c_str() );
                if (bVerboseOutput)
                   //BEMPX_WriteLogFile( QString( "              ExecuteModelkitBat() - executing Modelkit:  %1 %2" ).arg( sModelkitBatPathFile, sCmdLine.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                   //BEMPX_WriteLogFile( QString( "              ExecuteModelkitBat() - executing Modelkit:  CALL %1" ).arg( sCmdLine.c_str() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );

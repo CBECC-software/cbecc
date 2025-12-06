@@ -3,8 +3,8 @@ RulesetFilename   "T24_2025.bin"
 Proj   "MF36 Restructure Prototype"  
    BldgEngyModelVersion = 17
    CreateDate = 1647908594
-   ModDate = 1750556962
-   RunDate = 1750556963
+   ModDate = 1762452834
+   RunDate = 1762452835
    RunDateFmt = "18:39, Thu, Mar 17, 2022"
    RunDateISO = "2022-03-17T18:39:29-06:00"
    GasType = "NaturalGas"
@@ -22,7 +22,7 @@ Proj   "MF36 Restructure Prototype"
    AnalysisType = "Title24Compliance"
    CompOptDHW = 1
    ResDwellUnits = 1
-   SoftwareVersion = "CBECC 2025.1.0 (1381)"
+   SoftwareVersion = "CBECC 2025.2.0 (1394)"
    ProjFileName = "MF36_Prop_NGAS-CZ12_Restructure - Zoned - Latest.cibd22"
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 1
@@ -165,7 +165,7 @@ SchDay   "CARes2013 Slp Cool Hrly"
    ..
 
 Bldg   "Building"  
-   TreeState = 252
+   TreeState = 253
    TotStoryCnt = 3
    AboveGrdStoryCnt = 3
    ..
@@ -1405,7 +1405,7 @@ ResSlabFlr   "F1 Laundry Slab"
 ResOtherZn   "F1 Leasing Office"  
    TreeState = 254
    Type = "Conditioned"
-   SpcFunc = "Office Area (<250 square feet)"
+   SpcFunc = "Office Area (<=250 square feet)"
    VentSpcFunc = "Office - Office space"
    ozHVACSystem = "F1 Leasing Offic AirSys"
    ozDHWSys = "DHW Heat Pump Indiv"
@@ -4855,11 +4855,11 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse3[1] = "Indoor Fans"
    Enduse3[2] = "19.7"
    Enduse3[3] = "--"
-   Enduse3[4] = "3.40"
+   Enduse3[4] = "3.39"
    Enduse3[5] = "19.7"
    Enduse3[6] = "--"
    Enduse3[7] = "3.39"
-   Enduse3[8] = "-0.01"
+   Enduse3[8] = "--"
    Enduse3[9] = "2.2"
    Enduse3[10] = "2.2"
    Enduse3[11] = "0.84"
@@ -4903,23 +4903,23 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse5[22] = "0.10"
    Enduse5[23] = "0.00"
    Enduse6[1] = "Domestic Hot Water"
-   Enduse6[2] = "45.5"
+   Enduse6[2] = "45.6"
    Enduse6[3] = "--"
-   Enduse6[4] = "7.62"
+   Enduse6[4] = "7.63"
    Enduse6[5] = "45.6"
    Enduse6[6] = "--"
    Enduse6[7] = "7.62"
-   Enduse6[8] = "--"
+   Enduse6[8] = "-0.01"
    Enduse6[9] = "3.8"
    Enduse6[10] = "3.8"
    Enduse6[11] = "1.97"
-   Enduse6[12] = "1.96"
-   Enduse6[13] = "-0.01"
-   Enduse6[17] = "4.10"
-   Enduse6[19] = "4.10"
+   Enduse6[12] = "2.05"
+   Enduse6[13] = "0.08"
+   Enduse6[17] = "4.09"
+   Enduse6[19] = "4.09"
    Enduse6[20] = "4.06"
    Enduse6[22] = "4.06"
-   Enduse6[23] = "-0.04"
+   Enduse6[23] = "-0.03"
    Enduse7[1] = "Indoor Lighting"
    Enduse7[2] = "22.9"
    Enduse7[3] = "--"
@@ -4939,7 +4939,7 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse7[22] = "2.02"
    Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "-12.5"
+   Enduse8[2] = "-12.4"
    Enduse8[3] = "0.0"
    Enduse8[4] = "1.96"
    Enduse8[5] = "-12.4"
@@ -4949,13 +4949,13 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse8[9] = "9.6"
    Enduse8[10] = "9.6"
    Enduse8[11] = "2.83"
-   Enduse8[12] = "2.82"
-   Enduse8[13] = "-0.01"
-   Enduse8[17] = "5.90"
-   Enduse8[19] = "5.90"
+   Enduse8[12] = "2.91"
+   Enduse8[13] = "0.08"
+   Enduse8[17] = "5.89"
+   Enduse8[19] = "5.89"
    Enduse8[20] = "5.86"
    Enduse8[22] = "5.86"
-   Enduse8[23] = "-0.04"
+   Enduse8[23] = "-0.03"
    Enduse9[1] = "Receptacle"
    Enduse9[2] = "58.7"
    Enduse9[3] = "--"
@@ -5057,7 +5057,7 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse14[13] = "--"
    Enduse14[23] = "0.00"
    Enduse15[1] = "Project Total"
-   Enduse15[2] = "114.8"
+   Enduse15[2] = "114.9"
    Enduse15[3] = "0.0"
    Enduse15[4] = "23.67"
    Enduse15[5] = "114.9"
@@ -5067,15 +5067,15 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse15[9] = "21.8"
    Enduse15[10] = "21.8"
    Enduse15[11] = "8.28"
-   Enduse15[12] = "8.27"
-   Enduse15[13] = "-0.01"
-   Enduse15[17] = "17.21"
-   Enduse15[19] = "17.21"
+   Enduse15[12] = "8.36"
+   Enduse15[13] = "0.08"
+   Enduse15[17] = "17.20"
+   Enduse15[19] = "17.20"
    Enduse15[20] = "17.17"
    Enduse15[22] = "17.17"
-   Enduse15[23] = "-0.04"
+   Enduse15[23] = "-0.03"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "104.1"
+   Enduse16[2] = "104.2"
    Enduse16[3] = "0.0"
    Enduse16[4] = "17.80"
    Enduse16[5] = "104.2"
@@ -5085,20 +5085,20 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse16[9] = "10.0"
    Enduse16[10] = "10.0"
    Enduse16[11] = "4.39"
-   Enduse16[12] = "4.38"
-   Enduse16[13] = "-0.01"
-   Enduse16[17] = "9.13"
-   Enduse16[19] = "9.13"
+   Enduse16[12] = "4.47"
+   Enduse16[13] = "0.08"
+   Enduse16[17] = "9.12"
+   Enduse16[19] = "9.12"
    Enduse16[20] = "9.09"
    Enduse16[22] = "9.09"
-   Enduse16[23] = "-0.04"
+   Enduse16[23] = "-0.03"
    ZoneUMLHsLoaded = ( 0, 0 )
    SimSummary[1] = "CSE Successful"
    SimSummary[3] = "CSE Successful"
    PassFail = "FAIL"
    MetricPassFail[1] = "Fail"
    MetricPassFail[2] = "Fail"
-   MetricPassFail[3] = "Fail"
+   MetricPassFail[3] = "Pass"
    ComplyMessage = "DOES NOT COMPLY"
    StdPVBatteryMsg = "Standard Design PV Capacity: 69.2 kWdc  /  (no battery)"
    AnalysisValid = 0
@@ -5110,18 +5110,18 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    PctSavSLCCLbl = "-0.0"
    PctSavEffSLCCLbl = "-0.1"
    PctSavCmpSLCCLbl = "-0.5"
-   PctSavingsSrc = -0.120919
-   PctSavingsEffSrc = -0.228311
-   PctSavingsCmpSrc = -0.35461
-   PctSavSrcLbl = "-0.1"
-   PctSavEffSrcLbl = "-0.2"
-   PctSavCmpSrcLbl = "-0.4"
+   PctSavingsSrc = 0.956938
+   PctSavingsEffSrc = 1.78971
+   PctSavingsCmpSrc = 2.74914
+   PctSavSrcLbl = "1.0"
+   PctSavEffSrcLbl = "1.8"
+   PctSavCmpSrcLbl = "2.7"
    MarginkW = 0
    PVBattResultsValid = 1
    PropPV_Size = 69.2
    PropPV_Total = 116594
-   PropPV_Export = 28409.3
-   PropPV_PctExport = 24.366
+   PropPV_Export = 28429.5
+   PropPV_PctExport = 24.3833
    PropBatt_Size = 0
    PropBatt_Pwr = 0
    StdPV_Size = 69.18
@@ -5151,10 +5151,10 @@ ResConsAssm   "Exterior Wall Cons"
    FurringInsulLayer = "- no insulation -"
    Furring2Layer = "- none -"
    FurringLayer = "- none -"
-   CavityLayer = "R 19 in 5-1/2 in. cavity (R-18)"
+   CavityLayer = "R 21"
    FrameLayer = "2x6 @ 16 in. O.C."
    SheathInsulLayer = "- specify R-value -"
-   SheathInsulLayerRVal = 5
+   SheathInsulLayerRVal = 4
    WallExtFinishLayer = "Synthetic Stucco"
    OtherSideFinishLayer = "Gypsum Board"
    FlrExtFinishLayer = "- select finish -"
@@ -5920,7 +5920,7 @@ ResClgSys   "Cooling Component - Res"
    ..
 
 ResHtPumpSys   "Heat Pump System - Res"  
-   Type = "SplitHeatPump - Central split heat pump"
+   Type = "SplitHeatPump - Ducted central split heat pump"
    AutoSize = 1
    BackupOption = "Electric Resistance"
    VCHPDucts = "Unducted"
@@ -6028,7 +6028,7 @@ ResDHWSys   "DHW Heat Pump"
    CHPWHNEEAModel = "n/a"
    CHPWHAutosize = 0
    CHPWHNumComp = 6
-   CHPWHTotTankVol = 400
+   CHPWHTotTankVol = 480
    CHPWHTankCount = 1
    CHPWHTankRVal = 16
    CHPWHTankLoc = "Zone"
@@ -6161,7 +6161,7 @@ ResWtrHtr   "Electric"
 ResWtrHtr   "Heat Pump"  
    HeaterElementType = "Heat Pump"
    HPWHBrand = "(generic)"
-   HPWHModel = "UEF 2  (50 gal)"
+   HPWHModel = "Standard Design 50 gal HPWH"
    HPWHComModel = "n/a"
    TankOutside = 1
    AmbientCond = "Unconditioned"

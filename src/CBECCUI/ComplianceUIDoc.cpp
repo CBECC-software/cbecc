@@ -290,38 +290,35 @@ BOOL CComplianceUIDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 bool IsXMLFileExt( CString sExt )	// SAC 10/29/15
 {	bool bRetVal = false;
-#ifdef UI_CANRES
-	bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .cibd##x
-				  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".cibd") && !sExt.Right(1).CompareNoCase("x")));
-#elif UI_CARES
-	bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .ribd##x
-				  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".ribd") && !sExt.Right(1).CompareNoCase("x")));
-#endif
+   if (ebUI_CANRES)        // #ifdef UI_CANRES
+	   bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .cibd##x
+	   			  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".cibd") && !sExt.Right(1).CompareNoCase("x")));
+   else if (ebUI_CARES)    // #elif UI_CARES
+	   bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .ribd##x
+	   			  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".ribd") && !sExt.Right(1).CompareNoCase("x")));
 	bRetVal = (bRetVal || !sExt.CompareNoCase(".xml"));
 	return bRetVal;
 }
 
 bool IsRecognizedFileExt( CString sExt )	// SAC 10/29/15
-{
-#ifdef UI_CANRES
-	bool bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".cibd") || !sExt.CompareNoCase(".cibd16x") || !sExt.CompareNoCase(".cibd16"));
-#elif UI_CARES
-	bool bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".ribd") || !sExt.CompareNoCase(".ribd16x") || !sExt.CompareNoCase(".ribd16"));
-#else
-	bool bRetVal = (!sExt.CompareNoCase(".ibd"));
-#endif
+{  bool bRetVal = false;
+   if (ebUI_CANRES)        // #ifdef UI_CANRES
+	   bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".cibd"));  // || !sExt.CompareNoCase(".cibd16x") || !sExt.CompareNoCase(".cibd16"));
+   else if (ebUI_CARES)    // #elif UI_CARES
+	   bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".ribd"));  // || !sExt.CompareNoCase(".ribd16x") || !sExt.CompareNoCase(".ribd16"));
+   else
+	   bRetVal = (!sExt.CompareNoCase(".ibd"));
 	return bRetVal;
 }
 
 void BaseFileExt( CString& sExt )	// SAC 10/29/15
 {
-#ifdef UI_CANRES
-	sExt = "cibd";
-#elif UI_CARES
-	sExt = "ribd";
-#else
-	sExt = "ibd";
-#endif
+   if (ebUI_CANRES)        // #ifdef UI_CANRES
+	   sExt = "cibd";
+   else if (ebUI_CARES)    // #elif UI_CARES
+	   sExt = "ribd";
+   else
+	   sExt = "ibd";
 	return;
 }
 
@@ -334,11 +331,7 @@ void LoadFileExtensionString( CString& sSaveAsExt, bool bUseProjectData, bool bX
 		CodeYearAbbrev( sCodeYr );	
 	else
 	{
-#ifdef UI_PROGYEAR2016
-		sCodeYr = "16";
-#elif  UI_PROGYEAR2019
-		sCodeYr = "19";
-#elif  UI_PROGYEAR2022
+#ifdef UI_PROGYEAR2022
 		sCodeYr = "22";
 #elif  UI_PROGYEAR2025
 		sCodeYr = "25";
@@ -367,36 +360,31 @@ bool FileExtensionAllowsSave( CString sSaveAsExt )
 void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpen )	// SAC 10/29/15
 {	CString sBaseExt, sCodeYr;
 	BaseFileExt( sBaseExt );
-	CString sFileDescrip;
+	CString sProjFileDescrip, sNRMFFileDescrip, sSFamFileDescrip;
 
-	int iProgYear = 2013;
-#ifdef UI_PROGYEAR2016
-	iProgYear = 2016;
-#elif UI_PROGYEAR2019	// SAC 10/10/16
-	iProgYear = 2019;
-#elif UI_PROGYEAR2022	// SAC 6/19/19
-	iProgYear = 2022;
-#elif UI_PROGYEAR2025	// SAC 10/23/22
+	int iProgYear = 2022;
+#ifdef UI_PROGYEAR2025	// SAC 10/23/22
 	iProgYear = 2025;
 #elif UI_PROGYEAR2028	// SAC 04/30/25
 	iProgYear = 2028;
 #endif
 	if (bUseProjectData)
 		CodeYearAbbrev( sCodeYr );	
-	else if (iProgYear == 2016)
-		sCodeYr = "16";
-	else if (iProgYear == 2019)
-		sCodeYr = "19";
 	else if (iProgYear == 2022)
 		sCodeYr = "22";
 	else if (iProgYear == 2025)
 		sCodeYr = "25";
+	else if (iProgYear == 2028)
+		sCodeYr = "28";
 
-#ifdef UI_CANRES
-	sFileDescrip = "SDD ";
-#elif UI_CARES
-	sFileDescrip = "Res ";
-#endif
+//#ifdef UI_CANRES
+	sNRMFFileDescrip = "NonRes/MFam SDD ";
+	sSFamFileDescrip = "SFam/Duplex SDD ";
+   if (bUseProjectData)
+      sProjFileDescrip = (ebUI_CANRES ? sNRMFFileDescrip : sSFamFileDescrip);
+//#elif UI_CARES
+//	sFileDescrip = "Res ";
+//#endif
 
 	CString sFirstFileType, sInsertFileType;
 	if (!bUseProjectData)  // SAC 11/17/15 - allow selection of other types even when ruleset switching toggled OFF - was:  && ReadProgInt( "options", "EnableRulesetSwitching", 0 ) > 0)	// SAC 10/30/15 - enable selection of other recognized and selectable file types
@@ -408,43 +396,54 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 		bool bRuleSwitchingAllowed = (ReadProgInt( "options", "EnableRulesetSwitching", 0 ) > 0);
 
 		if (bFileOpen && bRuleSwitchingAllowed && eiNumRulesetsAvailable > 1)
-			// SAC 2/8/17 - code to cause *.ribd* to be initial file option when opening files and ruleset switching allowed
-			sFirstFileType.Format( "%sProject Files (*.%s*)|*.%s*|", sFileDescrip, sBaseExt, sBaseExt );
-		
-		//if (!sCodeYr.Compare("16") && CodeYearRulesetAvailable( "2013" ))
-		if (iProgYear > 2013)
-		{	sFTTemp.Format( "2013 %sProject Files (*.%s)|*.%s|2013 %sXML Project Files (*.%sx)|*.%sx|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+		{	// SAC 2/8/17 - code to cause *.ribd* to be initial file option when opening files and ruleset switching allowed
+			//sFirstFileType.Format( "%sProject Files (*.cibd*)|*.cibd*|", sNRMFFileDescrip );
+			//sFirstFileType.Format( "%sProject Files (*.ribd*)|*.ribd*|", sSFamFileDescrip );
+			sFirstFileType = "SDD Project Files (*.ribd*;*.cibd*)|*.ribd*;*.cibd*|";      // SAC 09/04/25 (gh dev #433)
+      }
+
+		if (iProgYear > 2022 || (iProgYear < 2022 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2022", false /*bSFamRes*/ )))	// SAC 6/19/19
+		{	sFTTemp.Format( "2022 %sProject Files (*.cibd22)|*.cibd22|2022 %sXML Project Files (*.cibd22x)|*.cibd22x|", sNRMFFileDescrip, sNRMFFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
-		//if ((sCodeYr.IsEmpty() || !sCodeYr.Compare("13")) && CodeYearRulesetAvailable( "2016" ))
-		if (iProgYear > 2016 || (iProgYear < 2016 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2016" )))
-		{	sFTTemp.Format( "2016 %sProject Files (*.%s16)|*.%s16|2016 %sXML Project Files (*.%s16x)|*.%s16x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+		if (iProgYear > 2022 || (iProgYear < 2022 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2022", true /*bSFamRes*/ )))	// SAC 6/19/19
+		{	sFTTemp.Format( "2022 %sProject Files (*.ribd22)|*.ribd22|2022 %sXML Project Files (*.ribd22x)|*.ribd22x|", sSFamFileDescrip, sSFamFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
-		if (iProgYear > 2019 || (iProgYear < 2019 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2019" )))	// SAC 10/10/16
-		{	sFTTemp.Format( "2019 %sProject Files (*.%s19)|*.%s19|2019 %sXML Project Files (*.%s19x)|*.%s19x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+
+		if (iProgYear > 2025 || (iProgYear < 2025 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2025", false /*bSFamRes*/ )))	// SAC 10/23/22
+		{	sFTTemp.Format( "2025 %sProject Files (*.cibd25)|*.cibd25|2025 %sXML Project Files (*.cibd25x)|*.cibd25x|", sNRMFFileDescrip, sNRMFFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
-		if (iProgYear > 2022 || (iProgYear < 2022 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2022" )))	// SAC 6/19/19
-		{	sFTTemp.Format( "2022 %sProject Files (*.%s22)|*.%s22|2022 %sXML Project Files (*.%s22x)|*.%s22x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+		if (iProgYear > 2025 || (iProgYear < 2025 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2025", true /*bSFamRes*/ )))	
+		{	sFTTemp.Format( "2025 %sProject Files (*.ribd25)|*.ribd25|2025 %sXML Project Files (*.ribd25x)|*.ribd25x|", sSFamFileDescrip, sSFamFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
-		if (iProgYear > 2025 || (iProgYear < 2025 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2025" )))	// SAC 10/23/22
-		{	sFTTemp.Format( "2025 %sProject Files (*.%s25)|*.%s25|2025 %sXML Project Files (*.%s25x)|*.%s25x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+
+		if (iProgYear > 2028 || (iProgYear < 2028 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2028", false /*bSFamRes*/ )))	// SAC 08/21/25
+		{	sFTTemp.Format( "2028 %sProject Files (*.cibd28)|*.cibd28|2028 %sXML Project Files (*.cibd28x)|*.cibd28x|", sNRMFFileDescrip, sNRMFFileDescrip );
+			sInsertFileType += sFTTemp;
+		}
+		if (iProgYear > 2028 || (iProgYear < 2028 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2028", true /*bSFamRes*/ )))	
+		{	sFTTemp.Format( "2028 %sProject Files (*.ribd28)|*.ribd28|2028 %sXML Project Files (*.ribd28x)|*.ribd28x|", sSFamFileDescrip, sSFamFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
 	}
-	sSaveAs.Format( "%s%sProject Files (*.%s%s)|*.%s%s|%sXML Project Files (*.%s%sx)|*.%s%sx|%sXML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
-							sFirstFileType, sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sInsertFileType );
+
+	if (bUseProjectData)  // SAC 08/21/25
+      sSaveAs.Format( "%sProject Files (*.%s%s)|*.%s%s|%sXML Project Files (*.%s%sx)|*.%s%sx|XML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
+	   						sProjFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sProjFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr );
+   else
+      sSaveAs.Format( "%s%sProject Files (*.cibd%s)|*.cibd%s|%sXML Project Files (*.cibd%sx)|*.cibd%sx|%sProject Files (*.ribd%s)|*.ribd%s|%sXML Project Files (*.ribd%sx)|*.ribd%sx|%sXML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
+	   						sFirstFileType, sNRMFFileDescrip, sCodeYr, sCodeYr, sNRMFFileDescrip, sCodeYr, sCodeYr, sSFamFileDescrip, sCodeYr, sCodeYr, sSFamFileDescrip, sCodeYr, sCodeYr, sInsertFileType );
 }
 
 void CodeYearAbbrev( CString& sCodeYearAbbrev, bool bForFileExtension /*=true*/ )		// SAC 10/29/15
 {	sCodeYearAbbrev.Empty();
-#ifdef UI_CANRES
+   if (ebUI_CANRES)        // #ifdef UI_CANRES
 		BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:EngyCodeYear"   ), sCodeYearAbbrev );
-#elif UI_CARES
+   else if (ebUI_CARES)    // #elif UI_CARES
 		BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:EnergyCodeYear" ), sCodeYearAbbrev );
-#endif
 
 	if (bForFileExtension && !sCodeYearAbbrev.Compare("2013"))
 		sCodeYearAbbrev.Empty();
@@ -489,6 +488,12 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
       AfxMessageBox( sBadExtMsg );
    }
 
+   // added code to ensure ebUI_CA* flag is consistent w/ the project file extension - SAC 11/10/25
+   if ( sExt.Find( ".C" ) == 0 && ebUI_CARES )
+      SetUICodeTypeBools_NRMF();
+   else if ( sExt.Find( ".R" ) == 0 && ebUI_CANRES )
+      SetUICodeTypeBools_SFam(); 
+
 //	bool bExtIsXML = IsXMLFileExt( sExt );		// SAC 10/29/15
 	bool bLogProjectOpen = (ReadProgInt( "options", "LogProjectOpen", 0) > 0);		// SAC 10/22/13
 	CString sLogMsg;
@@ -508,17 +513,16 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 // SAC 11/17/15 - code relating to automatically updating past project files to the latest program
 	bool bRuleSwitchingAllowed = (ReadProgInt( "options", "EnableRulesetSwitching", 0 ) > 0);
 	CString sRulesetPath = ReadProgString( "paths", "RulesetPath", "", TRUE );
-	CString sDefaultRulesetFN = ReadProgString( "files", "RulesetFile", NULL );
+	CString sDefaultRulesetFN = ReadProgString( "files", (ebUI_CARES ? "SFamRulesetFile" : "RulesetFile"), NULL );    // SAC 09/09/25 (gh dev #433)
 	CString sChkRulePathFile, sDefaultRulesetPathFile = sRulesetPath + sDefaultRulesetFN;
 	bool bDefaultRulesetExists = (!sDefaultRulesetFN.IsEmpty() && FileExists( sDefaultRulesetPathFile ));
 	bool bDefaultRulesetIsCA = false;
 	CString sDfltRulesFNAllCaps = sDefaultRulesetFN;		sDfltRulesFNAllCaps.MakeUpper();
-#ifdef UI_CARES
-	bDefaultRulesetIsCA = (bDefaultRulesetExists && sDfltRulesFNAllCaps.Find( "CA RES" ) == 0);
-#elif UI_CANRES
-	bDefaultRulesetIsCA = (bDefaultRulesetExists && ( (sDfltRulesFNAllCaps.Find( "CEC" ) == 0 && sDfltRulesFNAllCaps.Find( "NONRES" ) > 0) ||
-																	  (sDfltRulesFNAllCaps.Find( "T24N" ) >= 0) ));		// SAC 11/16/18 - added check for new default ruleset name (as of 2019)
-#endif
+   if (ebUI_CARES)            // #ifdef UI_CARES   // SAC 08/23/25 (gh dev #433)
+   	bDefaultRulesetIsCA = (bDefaultRulesetExists && sDfltRulesFNAllCaps.Find( "CA RES" ) == 0);
+   else if (ebUI_CANRES)      // #ifdef UI_CANRES   // SAC 08/23/25 (gh dev #433)
+   	bDefaultRulesetIsCA = (bDefaultRulesetExists && ( (sDfltRulesFNAllCaps.Find( "CEC" ) == 0 && sDfltRulesFNAllCaps.Find( "NONRES" ) > 0) ||
+   																	  (sDfltRulesFNAllCaps.Find( "T24N" ) >= 0) ));		// SAC 11/16/18 - added check for new default ruleset name (as of 2019)
 	// note - no check to ensure that sDefaultRulesetFN is consistent w/ UI_PROGYEARxxxx
 
 	bool bRulesetExists = false;
@@ -637,11 +641,13 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 	}
 		      //AfxMessageBox( "in CComplianceUIDoc::OpenTheFile(), about to CMX_LoadModel()" );  // debugging - SAC 07/15/23 (CalPRM)
 
+	bool bLogNonInputProperties = (ReadProgInt( "options", "LogNonInputProperties", 0 ) > 0);    // SAC 10/24/25
 	QStringList saWarningsForUser;	// SAC 7/8/14 - added to track issues (not designated as read failures, but worthy of logging)
 	int iLoadModelRetVal = CMX_LoadModel( NULL /*pszBEMBinPathFile*/, NULL /*pszRulesetPathFile*/, sInputFile, MAX_BEMBASE_DATA_SET_ERRORS, iaFailedBEMBaseDBIDs,
 														true /*bSupressAllMsgBoxes*/, iaFailedBEMBaseObjIdxs, &saFailedBEMBaseData, (bLogProjectOpen), NULL /*pszLogPathFile*/,
-														bKeepLogFileOpen, &saWarningsForUser, true /*bCalledFromUI*/ );	// SAC 5/1/14 - supress msgboxes		// SAC 5/19/14 - option to keep log file OPEN  - SAC 4/6/16 - added bCalledFromUI
-	bRetVal = (iLoadModelRetVal == 0);
+														bKeepLogFileOpen, &saWarningsForUser, true /*bCalledFromUI*/,  	// SAC 5/1/14 - supress msgboxes		// SAC 5/19/14 - option to keep log file OPEN  - SAC 4/6/16 - added bCalledFromUI
+                                          bLogNonInputProperties );  // bLogNonInputProperties - SAC 10/24/25
+   bRetVal = (iLoadModelRetVal == 0);
 
 	ptime t2(microsec_clock::local_time());		// SAC 10/22/13
 	time_duration td = t2-t1;
@@ -669,21 +675,22 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 			eiBDBCID_Proj > 0 && elDBID_Proj_Ruleset > 0 && BEMPX_GetNumObjects( (int) eiBDBCID_Proj ) > 0)
 	{
 		long lDBID_Proj_StdDesignBase = -1;
-#ifdef UI_CARES
-		// SAC 4/23/15 - if we loaded a new ruleset prior to reading the project file, then default certain properties that should be consistent w/ newly selected ruleset
-		int iError;
-		     lDBID_Proj_StdDesignBase    = BEMPX_GetDatabaseID( "StdDesignBase"   , eiBDBCID_Proj );		ASSERT( lDBID_Proj_StdDesignBase    > 0 );
-		long lDBID_Proj_StandardsVersion = BEMPX_GetDatabaseID( "StandardsVersion", eiBDBCID_Proj );		ASSERT( lDBID_Proj_StandardsVersion > 0 );
-		if (lDBID_Proj_StdDesignBase > 0)
-			BEMPX_DefaultProperty( lDBID_Proj_StdDesignBase, iError );
-		if (lDBID_Proj_StandardsVersion > 0)
-			BEMPX_DefaultProperty( lDBID_Proj_StandardsVersion, iError );
-#elif UI_CANRES
-		int iError;
-		long lDBID_Proj_StdsVersion = BEMPX_GetDatabaseID( "StdsVersion", eiBDBCID_Proj );		ASSERT( lDBID_Proj_StdsVersion > 0 );
-		if (lDBID_Proj_StdsVersion > 0)
-			BEMPX_DefaultProperty( lDBID_Proj_StdsVersion, iError );
-#endif
+      if (ebUI_CARES)         // #ifdef UI_CARES   // SAC 08/23/25 (gh dev #433)
+      {  // SAC 4/23/15 - if we loaded a new ruleset prior to reading the project file, then default certain properties that should be consistent w/ newly selected ruleset
+   		int iError;
+   		     lDBID_Proj_StdDesignBase    = BEMPX_GetDatabaseID( "StdDesignBase"   , eiBDBCID_Proj );		ASSERT( lDBID_Proj_StdDesignBase    > 0 );
+   		long lDBID_Proj_StandardsVersion = BEMPX_GetDatabaseID( "StandardsVersion", eiBDBCID_Proj );		ASSERT( lDBID_Proj_StandardsVersion > 0 );
+   		if (lDBID_Proj_StdDesignBase > 0)
+   			BEMPX_DefaultProperty( lDBID_Proj_StdDesignBase, iError );
+   		if (lDBID_Proj_StandardsVersion > 0)
+   			BEMPX_DefaultProperty( lDBID_Proj_StandardsVersion, iError );
+      }
+      if (ebUI_CANRES)        // #ifdef UI_CANRES   // SAC 08/23/25 (gh dev #433)
+      {  int iError;
+   		long lDBID_Proj_StdsVersion = BEMPX_GetDatabaseID( "StdsVersion", eiBDBCID_Proj );		ASSERT( lDBID_Proj_StdsVersion > 0 );
+   		if (lDBID_Proj_StdsVersion > 0)
+   			BEMPX_DefaultProperty( lDBID_Proj_StdsVersion, iError );
+      }                       // #endif
 // debugging
 //CString sDbgMsg;	sDbgMsg.Format( "Setting elDBID_Proj_Ruleset (%ld) to lRulesetSymVal = %ld", elDBID_Proj_Ruleset, lRulesetSymVal );	AfxMessageBox( sDbgMsg );
 		// SAC 8/14/14 - moved from MenuRulesetSelection()
@@ -812,12 +819,15 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
    else if (pMainWnd)
    {  // check for this being a CUAC_OldAccessDB project, and if so, open up the main CUAC dialog - SAC 09/19/23
 //#ifdef UI_CANRES      // switched to either Com or Res - SAC 06/14/24 (res tic #1378)
-#if defined(UI_CARES) || defined(UI_CANRES)
-      long lCUAC_OldAccessDB=0;
-		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" ), lCUAC_OldAccessDB );
-      if (lCUAC_OldAccessDB > 0)
-         pMainWnd->PostMessage( WM_COMMAND, IDM_DISPLAYCUACDLG, 0L );
-#endif
+//#if defined(UI_CARES) || defined(UI_CANRES)
+      long lDBID_Proj_CUAC_OldAccessDB = BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" );
+      if (lDBID_Proj_CUAC_OldAccessDB > 0)
+      {  long lCUAC_OldAccessDB=0;
+		   BEMPX_SetDataInteger( lDBID_Proj_CUAC_OldAccessDB, lCUAC_OldAccessDB );
+         if (lCUAC_OldAccessDB > 0)
+            pMainWnd->PostMessage( WM_COMMAND, IDM_DISPLAYCUACDLG, 0L );
+      }
+//#endif
    }
 
 	return bRetVal;
@@ -844,115 +854,122 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 				bCheckModel && ReadProgInt( "options", "BypassInputChecks", 0 ) == 0)
 			((CMainFrame*)pMainWnd)->CheckBuildingModel( FALSE /*bReportModelOK*/, FALSE /*bPerformRangeChecks*/ ) ;
 
-// SAC 4/14/13 - added code to address access to Research mode analysis
-// SAC 10/7/13 - modified storage of these flags to be default so that they are not stored in project (RIBD) files
-#ifdef UI_CARES
-	   long lEnableResearchMode = ReadProgInt( "options", "EnableResearchMode", 0 );
-		long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableResearchMode > 0 );
-		long lDBID_Proj_AnalysisType       = BEMPX_GetDatabaseID( "AnalysisType"      , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AnalysisType       > 0 );
-		if (lDBID_Proj_EnableResearchMode > 0 && lDBID_Proj_AnalysisType > 0)
-		{	long lERM, lAT;
-			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ))
-				lERM = -1;
-			if (!BEMPX_SetDataInteger( lDBID_Proj_AnalysisType      , lAT , -1 ))
-				lAT  = -1;
-	//		if (lEnableResearchMode == 0 && lERM > 0.5 && lAT == 0)
-	//		{	// This file was last SAVED IN RESEARCH MODE, but current INI file does not include research mode enabling setting
-	//	      AfxMessageBox( "Research mode is selected in this project file but not available in the current software installation." );  // then do what ??
-	//		}
-	// SAC 2/4/16 - retain 
-			if (lEnableResearchMode == 0 && lERM < 0.5 && lAT == 0)
-			{	// This file was last SAVED IN RESEARCH MODE, but current INI file does not include research mode enabling setting
-		      AfxMessageBox( "Research mode is selected in this project file but not available in the current software installation." );  // then do what ??
-		   }
-			else if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
-		      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
-		}
+      // SAC 4/14/13 - added code to address access to Research mode analysis
+      // SAC 10/7/13 - modified storage of these flags to be default so that they are not stored in project (RIBD) files
+      if (ebUI_CARES)         // #ifdef UI_CARES   // SAC 08/23/25 (gh dev #433)
+	   {  long lEnableResearchMode = ReadProgInt( "options", "EnableResearchMode", 0 );
+   		long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableResearchMode > 0 );
+   		long lDBID_Proj_AnalysisType       = BEMPX_GetDatabaseID( "AnalysisType"      , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AnalysisType       > 0 );
+   		if (lDBID_Proj_EnableResearchMode > 0 && lDBID_Proj_AnalysisType > 0)
+   		{	long lERM, lAT;
+   			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ))
+   				lERM = -1;
+   			if (!BEMPX_SetDataInteger( lDBID_Proj_AnalysisType      , lAT , -1 ))
+   				lAT  = -1;
+   	//		if (lEnableResearchMode == 0 && lERM > 0.5 && lAT == 0)
+   	//		{	// This file was last SAVED IN RESEARCH MODE, but current INI file does not include research mode enabling setting
+   	//	      AfxMessageBox( "Research mode is selected in this project file but not available in the current software installation." );  // then do what ??
+   	//		}
+   	// SAC 2/4/16 - retain 
+   			if (lEnableResearchMode == 0 && lERM < 0.5 && lAT == 0)
+   			{	// This file was last SAVED IN RESEARCH MODE, but current INI file does not include research mode enabling setting
+   		      AfxMessageBox( "Research mode is selected in this project file but not available in the current software installation." );  // then do what ??
+   		   }
+   			else if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
+   		      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
+   		}
 
-	   long lEnableMixedFuelCompare = ReadProgInt( "options", "EnableMixedFuelCompare", 0 );     // SAC 12/28/21 (MxdFuel)
-		long lDBID_Proj_EnableMixedFuelCompare = BEMPX_GetDatabaseID( "EnableMixedFuelCompare", BEMPX_GetDBComponentID( "Proj" ) );
-		if (lDBID_Proj_EnableMixedFuelCompare > 0)
-		{	long lEMFC;  int iBEMErr;
-			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableMixedFuelCompare, lEMFC, -1 ))
-				lEMFC = -1;
-			if (lEnableMixedFuelCompare == 0 && lEMFC > 0)
-			{	// This file was last SAVED w/ EnableMixedFuelCompare true, but current INI file does not include EnableMixedFuelCompare setting
-		      AfxMessageBox( "EnableMixedFuelCompare is selected in this project file but not available in the current software installation. Exit program without saving the project file to retain this feature." );
-            BEMPX_DefaultProperty( lDBID_Proj_EnableMixedFuelCompare, iBEMErr );    // re-default flag in proj data
-		   }
-			else if (lEMFC < -0.5 && lEnableMixedFuelCompare > 0)  // only set EnableMixedFuelCompare if INI setting TRUE and if NOT specified in input file
-		      BEMPX_SetBEMData( lDBID_Proj_EnableMixedFuelCompare, BEMP_Int, (void*) &lEnableMixedFuelCompare, BEMO_User );  // , -1, BEMS_ProgDefault );
-		}
+   	   long lEnableMixedFuelCompare = ReadProgInt( "options", "EnableMixedFuelCompare", 0 );     // SAC 12/28/21 (MxdFuel)
+   		long lDBID_Proj_EnableMixedFuelCompare = BEMPX_GetDatabaseID( "EnableMixedFuelCompare", BEMPX_GetDBComponentID( "Proj" ) );
+   		if (lDBID_Proj_EnableMixedFuelCompare > 0)
+   		{	long lEMFC;  int iBEMErr;
+   			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableMixedFuelCompare, lEMFC, -1 ))
+   				lEMFC = -1;
+   			if (lEnableMixedFuelCompare == 0 && lEMFC > 0)
+   			{	// This file was last SAVED w/ EnableMixedFuelCompare true, but current INI file does not include EnableMixedFuelCompare setting
+   		      AfxMessageBox( "EnableMixedFuelCompare is selected in this project file but not available in the current software installation. Exit program without saving the project file to retain this feature." );
+               BEMPX_DefaultProperty( lDBID_Proj_EnableMixedFuelCompare, iBEMErr );    // re-default flag in proj data
+   		   }
+   			else if (lEMFC < -0.5 && lEnableMixedFuelCompare > 0)  // only set EnableMixedFuelCompare if INI setting TRUE and if NOT specified in input file
+   		      BEMPX_SetBEMData( lDBID_Proj_EnableMixedFuelCompare, BEMP_Int, (void*) &lEnableMixedFuelCompare, BEMO_User );  // , -1, BEMS_ProgDefault );
+   		}
 
-	// SAC 10/7/13 - additional flags to toggle on/off INI-controlled features
-	// SAC 8/7/14 - change INI default for EnableVarFlowOAV & EnableFixedFlowOAV from 0 -> 1
-		long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
-		long lEnableVarFlowOAV    = ReadProgInt( "options", "EnableVarFlowOAV"  , 1 ),	lDBID_Proj_EnableVarFlowOAV   = BEMPX_GetDatabaseID( "EnableVarFlowOAV"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableVarFlowOAV   > 0 );
-		long lEnableFixedFlowOAV  = ReadProgInt( "options", "EnableFixedFlowOAV", 1 ),	lDBID_Proj_EnableFixedFlowOAV = BEMPX_GetDatabaseID( "EnableFixedFlowOAV", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableFixedFlowOAV > 0 );
-		long lEnableEDR           = ReadProgInt( "options", "EnableEDR"         , 0 ),	lDBID_Proj_EnableEDR          = BEMPX_GetDatabaseID( "EnableEDR"         , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableEDR          > 0 );  // SAC 12/17/16
-		long lBypassRuleLimits    = ReadProgInt( "options", "BypassRuleLimits"  , 0 ),	lDBID_Proj_BypassRuleLimits   = BEMPX_GetDatabaseID( "BypassRuleLimits"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_BypassRuleLimits   > 0 );  // SAC 6/2/14 - added
-		long lAllowNegativeDesignRatings = ReadProgInt( "options", "AllowNegativeDesignRatings", 0 ),	lDBID_Proj_AllowNegativeDesignRatings = BEMPX_GetDatabaseID( "AllowNegativeDesignRatings", BEMPX_GetDBComponentID( "Proj" ) );		ASSERT( lDBID_Proj_AllowNegativeDesignRatings > 0 );  // SAC 1/11/18 - added
-		long lCalcCO2DesignRatings = ReadProgInt( "options", "EnableCO2DesignRatings", 0 ),	lDBID_Proj_CalcCO2DesignRatings = BEMPX_GetDatabaseID( "CalcCO2DesignRatings", BEMPX_GetDBComponentID( "Proj" ) );		ASSERT( lDBID_Proj_CalcCO2DesignRatings > 0 );  // SAC 1/27/18 - added
-		long lEnableHPAutosize    = ReadProgInt( "options", "EnableHPAutosize"  , 0 ),	lDBID_Proj_EnableHPAutosize   = BEMPX_GetDatabaseID( "EnableHPAutosize"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableHPAutosize > 0 );	// SAC 6/21/19
-		long lEnableRHERS         = ReadProgInt( "options", "EnableRHERS"       , 0 ),	lDBID_Proj_EnableRHERS        = BEMPX_GetDatabaseID( "EnableRHERS"       , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRHERS      > 0 );	// SAC 10/19/19
-		long lSimulateCentralDHWBranches = ReadProgInt( "options", "SimulateCentralDHWBranches", 1 ),	lDBID_Proj_SimulateCentralDHWBranches = BEMPX_GetDatabaseID( "SimulateCentralDHWBranches", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimulateCentralDHWBranches > 0 );	// SAC 10/30/19		// SAC 11/6/19 - default 0->1
-		long lShuffleSFamDHW      = ReadProgInt( "options", "ShuffleSFamDHW"    ,-1 ),	lDBID_Proj_ShuffleSFamDHW     = BEMPX_GetDatabaseID( "ShuffleSFamDHW"    , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_ShuffleSFamDHW > 0 );	// SAC 05/13/21
-		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
-		if (lEnableVarFlowOAV > 0 &&		lDBID_Proj_EnableVarFlowOAV   > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_EnableVarFlowOAV  , BEMP_Int, (void*) &lEnableVarFlowOAV  , BEMO_User, -1, BEMS_ProgDefault );
-		if (lEnableFixedFlowOAV > 0 &&	lDBID_Proj_EnableFixedFlowOAV > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_EnableFixedFlowOAV, BEMP_Int, (void*) &lEnableFixedFlowOAV, BEMO_User, -1, BEMS_ProgDefault );
-		if (lEnableEDR > 0 &&	lDBID_Proj_EnableEDR > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_EnableEDR         , BEMP_Int, (void*) &lEnableEDR         , BEMO_User, -1, BEMS_ProgDefault );
-		if (lBypassRuleLimits > 0 &&	   lDBID_Proj_BypassRuleLimits > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_BypassRuleLimits  , BEMP_Int, (void*) &lBypassRuleLimits  , BEMO_User, -1, BEMS_ProgDefault );
-		if (lAllowNegativeDesignRatings > 0 &&	   lDBID_Proj_AllowNegativeDesignRatings > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_AllowNegativeDesignRatings, BEMP_Int, (void*) &lAllowNegativeDesignRatings, BEMO_User, -1, BEMS_ProgDefault );
-		if (lCalcCO2DesignRatings > 0 &&	   lDBID_Proj_CalcCO2DesignRatings > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_CalcCO2DesignRatings, BEMP_Int, (void*) &lCalcCO2DesignRatings, BEMO_User, -1, BEMS_ProgDefault );
-		if (lEnableHPAutosize > 0 &&	   lDBID_Proj_EnableHPAutosize > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_EnableHPAutosize, BEMP_Int, (void*) &lEnableHPAutosize, BEMO_User, -1, BEMS_ProgDefault );
-		if (lEnableRHERS      > 0 &&	   lDBID_Proj_EnableRHERS > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_EnableRHERS     , BEMP_Int, (void*) &lEnableRHERS     , BEMO_User, -1, BEMS_ProgDefault );
-		if (lSimulateCentralDHWBranches == 0 &&	lDBID_Proj_SimulateCentralDHWBranches > 0)		// SAC 11/6/19 - default 0->1
-	      				BEMPX_SetBEMData( lDBID_Proj_SimulateCentralDHWBranches, BEMP_Int, (void*) &lSimulateCentralDHWBranches, BEMO_User, -1, BEMS_ProgDefault );
-		if (lShuffleSFamDHW >= 0 &&	   lDBID_Proj_ShuffleSFamDHW > 0)      // SAC 05/13/21
-	      				BEMPX_SetBEMData( lDBID_Proj_ShuffleSFamDHW, BEMP_Int, (void*) &lShuffleSFamDHW, BEMO_User, -1, BEMS_ProgDefault );
-		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 - added
-		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
-	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
-      long iIncludePeakCooling = ReadProgInt( "options", "IncludePeakCooling", -1 /*default*/ ),  lDBID_Proj_IncludePeakCooling = BEMPX_GetDatabaseID( "Proj:IncludePeakCooling" );      // SAC 03/18/24 (2025)
-		if (iIncludePeakCooling >= 0 && lDBID_Proj_IncludePeakCooling > 0)
-         BEMPX_SetBEMData( lDBID_Proj_IncludePeakCooling, BEMP_Int, (void*) &iIncludePeakCooling );
-#endif
+   	// SAC 10/7/13 - additional flags to toggle on/off INI-controlled features
+   	// SAC 8/7/14 - change INI default for EnableVarFlowOAV & EnableFixedFlowOAV from 0 -> 1
+   		long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
+   		long lEnableVarFlowOAV    = ReadProgInt( "options", "EnableVarFlowOAV"  , 1 ),	lDBID_Proj_EnableVarFlowOAV   = BEMPX_GetDatabaseID( "EnableVarFlowOAV"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableVarFlowOAV   > 0 );
+   		long lEnableFixedFlowOAV  = ReadProgInt( "options", "EnableFixedFlowOAV", 1 ),	lDBID_Proj_EnableFixedFlowOAV = BEMPX_GetDatabaseID( "EnableFixedFlowOAV", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableFixedFlowOAV > 0 );
+   		long lEnableEDR           = ReadProgInt( "options", "EnableEDR"         , 0 ),	lDBID_Proj_EnableEDR          = BEMPX_GetDatabaseID( "EnableEDR"         , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableEDR          > 0 );  // SAC 12/17/16
+   		long lBypassRuleLimits    = ReadProgInt( "options", "BypassRuleLimits"  , 0 ),	lDBID_Proj_BypassRuleLimits   = BEMPX_GetDatabaseID( "BypassRuleLimits"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_BypassRuleLimits   > 0 );  // SAC 6/2/14 - added
+   		long lAllowNegativeDesignRatings = ReadProgInt( "options", "AllowNegativeDesignRatings", 0 ),	lDBID_Proj_AllowNegativeDesignRatings = BEMPX_GetDatabaseID( "AllowNegativeDesignRatings", BEMPX_GetDBComponentID( "Proj" ) );		ASSERT( lDBID_Proj_AllowNegativeDesignRatings > 0 );  // SAC 1/11/18 - added
+   		long lCalcCO2DesignRatings = ReadProgInt( "options", "EnableCO2DesignRatings", 0 ),	lDBID_Proj_CalcCO2DesignRatings = BEMPX_GetDatabaseID( "CalcCO2DesignRatings", BEMPX_GetDBComponentID( "Proj" ) );		ASSERT( lDBID_Proj_CalcCO2DesignRatings > 0 );  // SAC 1/27/18 - added
+   		long lEnableHPAutosize    = ReadProgInt( "options", "EnableHPAutosize"  , 0 ),	lDBID_Proj_EnableHPAutosize   = BEMPX_GetDatabaseID( "EnableHPAutosize"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableHPAutosize > 0 );	// SAC 6/21/19
+   		long lEnableRHERS         = ReadProgInt( "options", "EnableRHERS"       , 0 ),	lDBID_Proj_EnableRHERS        = BEMPX_GetDatabaseID( "EnableRHERS"       , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRHERS      > 0 );	// SAC 10/19/19
+   		long lSimulateCentralDHWBranches = ReadProgInt( "options", "SimulateCentralDHWBranches", 1 ),	lDBID_Proj_SimulateCentralDHWBranches = BEMPX_GetDatabaseID( "SimulateCentralDHWBranches", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimulateCentralDHWBranches > 0 );	// SAC 10/30/19		// SAC 11/6/19 - default 0->1
+   		long lShuffleSFamDHW      = ReadProgInt( "options", "ShuffleSFamDHW"    ,-1 ),	lDBID_Proj_ShuffleSFamDHW     = BEMPX_GetDatabaseID( "ShuffleSFamDHW"    , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_ShuffleSFamDHW > 0 );	// SAC 05/13/21
+   		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
+   		if (lEnableVarFlowOAV > 0 &&		lDBID_Proj_EnableVarFlowOAV   > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_EnableVarFlowOAV  , BEMP_Int, (void*) &lEnableVarFlowOAV  , BEMO_User, -1, BEMS_ProgDefault );
+   		if (lEnableFixedFlowOAV > 0 &&	lDBID_Proj_EnableFixedFlowOAV > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_EnableFixedFlowOAV, BEMP_Int, (void*) &lEnableFixedFlowOAV, BEMO_User, -1, BEMS_ProgDefault );
+   		if (lEnableEDR > 0 &&	lDBID_Proj_EnableEDR > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_EnableEDR         , BEMP_Int, (void*) &lEnableEDR         , BEMO_User, -1, BEMS_ProgDefault );
+   		if (lBypassRuleLimits > 0 &&	   lDBID_Proj_BypassRuleLimits > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_BypassRuleLimits  , BEMP_Int, (void*) &lBypassRuleLimits  , BEMO_User, -1, BEMS_ProgDefault );
+   		if (lAllowNegativeDesignRatings > 0 &&	   lDBID_Proj_AllowNegativeDesignRatings > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_AllowNegativeDesignRatings, BEMP_Int, (void*) &lAllowNegativeDesignRatings, BEMO_User, -1, BEMS_ProgDefault );
+   		if (lCalcCO2DesignRatings > 0 &&	   lDBID_Proj_CalcCO2DesignRatings > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_CalcCO2DesignRatings, BEMP_Int, (void*) &lCalcCO2DesignRatings, BEMO_User, -1, BEMS_ProgDefault );
+   		if (lEnableHPAutosize > 0 &&	   lDBID_Proj_EnableHPAutosize > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_EnableHPAutosize, BEMP_Int, (void*) &lEnableHPAutosize, BEMO_User, -1, BEMS_ProgDefault );
+   		if (lEnableRHERS      > 0 &&	   lDBID_Proj_EnableRHERS > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_EnableRHERS     , BEMP_Int, (void*) &lEnableRHERS     , BEMO_User, -1, BEMS_ProgDefault );
+   		if (lSimulateCentralDHWBranches == 0 &&	lDBID_Proj_SimulateCentralDHWBranches > 0)		// SAC 11/6/19 - default 0->1
+   	      				BEMPX_SetBEMData( lDBID_Proj_SimulateCentralDHWBranches, BEMP_Int, (void*) &lSimulateCentralDHWBranches, BEMO_User, -1, BEMS_ProgDefault );
+   		if (lShuffleSFamDHW >= 0 &&	   lDBID_Proj_ShuffleSFamDHW > 0)      // SAC 05/13/21
+   	      				BEMPX_SetBEMData( lDBID_Proj_ShuffleSFamDHW, BEMP_Int, (void*) &lShuffleSFamDHW, BEMO_User, -1, BEMS_ProgDefault );
+   		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 - added
+   		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
+   	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
+         long iIncludePeakCooling = ReadProgInt( "options", "IncludePeakCooling", -1 /*default*/ ),  lDBID_Proj_IncludePeakCooling = BEMPX_GetDatabaseID( "Proj:IncludePeakCooling" );      // SAC 03/18/24 (2025)
+   		if (iIncludePeakCooling >= 0 && lDBID_Proj_IncludePeakCooling > 0)
+            BEMPX_SetBEMData( lDBID_Proj_IncludePeakCooling, BEMP_Int, (void*) &iIncludePeakCooling );
+      }                       // #endif
 
-#ifdef UI_CANRES      // EnableResearchMode for CBECC-22 - SAC 02/25/22
-		long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) );	
-      if (lDBID_Proj_EnableResearchMode > 0)
-      {  long lEnableResearchMode = ReadProgInt( "options", "EnableResearchMode", 0 );
-			long lERM;
-			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ))
-				lERM = -1;
-			if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
-		      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
-		}
-      // SAC 05/27/23
-		long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "ResProj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
-		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
+      if (ebUI_CANRES)        // #ifdef UI_CANRES      // EnableResearchMode for CBECC-22 - SAC 02/25/22   // SAC 08/23/25 (gh dev #433)
+		{  long lDBID_Proj_EnableResearchMode = BEMPX_GetDatabaseID( "EnableResearchMode", BEMPX_GetDBComponentID( "Proj" ) );	
+         if (lDBID_Proj_EnableResearchMode > 0)
+         {  long lEnableResearchMode = ReadProgInt( "options", "EnableResearchMode", 0 );
+   			long lERM;
+   			if (!BEMPX_SetDataInteger( lDBID_Proj_EnableResearchMode, lERM, -1 ))
+   				lERM = -1;
+   			if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
+   		      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
+   		}
+   		long lBypassRuleLimits    = ReadProgInt( "options", "BypassRuleLimits"  , 0 ),	lDBID_Proj_BypassRuleLimits   = BEMPX_GetDatabaseID( "BypassRuleLimits"  , BEMPX_GetDBComponentID( "ResProj" ) );			ASSERT( lDBID_Proj_BypassRuleLimits   > 0 );  // SAC 09/22/25
+   		if (lBypassRuleLimits > 0 &&	   lDBID_Proj_BypassRuleLimits > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_BypassRuleLimits  , BEMP_Int, (void*) &lBypassRuleLimits  , BEMO_User, -1, BEMS_ProgDefault );
+   		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "ResProj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 // SAC 09/22/25
+   		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
+   	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
 
-      // override default selections to include/exclude PV/Battery (in EAA runs) - SAC 10/25/23
-		long lAllowPropPVBatt = ReadProgInt( "options", "AllowProposedPVBattery", -1 ),	lDBID_Proj_AllowPropPVBatt = BEMPX_GetDatabaseID( "AllowPropPVBatt", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowPropPVBatt > 0 );
-		long lAllowStdPV      = ReadProgInt( "options", "AllowStandardPV"       , -1 ),	lDBID_Proj_AllowStdPV      = BEMPX_GetDatabaseID( "AllowStdPV"     , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowStdPV      > 0 );
-		long lAllowStdBatt    = ReadProgInt( "options", "AllowStandardBattery"  , -1 ),	lDBID_Proj_AllowStdBatt    = BEMPX_GetDatabaseID( "AllowStdBatt"   , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowStdBatt    > 0 );
-		if (lAllowPropPVBatt != -1 &&		lDBID_Proj_AllowPropPVBatt > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_AllowPropPVBatt , BEMP_Int, (void*) &lAllowPropPVBatt  , BEMO_User, -1, BEMS_ProgDefault );
-		if (lAllowStdPV      != -1 &&		lDBID_Proj_AllowStdPV      > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_AllowStdPV      , BEMP_Int, (void*) &lAllowStdPV       , BEMO_User, -1, BEMS_ProgDefault );
-		if (lAllowStdBatt    != -1 &&		lDBID_Proj_AllowStdBatt    > 0)
-	      				BEMPX_SetBEMData( lDBID_Proj_AllowStdBatt    , BEMP_Int, (void*) &lAllowStdBatt     , BEMO_User, -1, BEMS_ProgDefault );
-#endif
+         // SAC 05/27/23
+   		long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "ResProj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
+   		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
+
+         // override default selections to include/exclude PV/Battery (in EAA runs) - SAC 10/25/23
+   		long lAllowPropPVBatt = ReadProgInt( "options", "AllowProposedPVBattery", -1 ),	lDBID_Proj_AllowPropPVBatt = BEMPX_GetDatabaseID( "AllowPropPVBatt", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowPropPVBatt > 0 );
+   		long lAllowStdPV      = ReadProgInt( "options", "AllowStandardPV"       , -1 ),	lDBID_Proj_AllowStdPV      = BEMPX_GetDatabaseID( "AllowStdPV"     , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowStdPV      > 0 );
+   		long lAllowStdBatt    = ReadProgInt( "options", "AllowStandardBattery"  , -1 ),	lDBID_Proj_AllowStdBatt    = BEMPX_GetDatabaseID( "AllowStdBatt"   , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_AllowStdBatt    > 0 );
+   		if (lAllowPropPVBatt != -1 &&		lDBID_Proj_AllowPropPVBatt > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_AllowPropPVBatt , BEMP_Int, (void*) &lAllowPropPVBatt  , BEMO_User, -1, BEMS_ProgDefault );
+   		if (lAllowStdPV      != -1 &&		lDBID_Proj_AllowStdPV      > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_AllowStdPV      , BEMP_Int, (void*) &lAllowStdPV       , BEMO_User, -1, BEMS_ProgDefault );
+   		if (lAllowStdBatt    != -1 &&		lDBID_Proj_AllowStdBatt    > 0)
+   	      				BEMPX_SetBEMData( lDBID_Proj_AllowStdBatt    , BEMP_Int, (void*) &lAllowStdBatt     , BEMO_User, -1, BEMS_ProgDefault );
+      }     // #endif
 
 		long lNumFileOpenDefaultingRounds = ReadProgInt( "options", "NumFileOpenDefaultingRounds", 3 );		// SAC 4/11/18
       if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))
@@ -998,10 +1015,11 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
          {  CMainView* pMainView = (CMainView*) ((CMainFrame*)pMainWnd)->m_wndSplitter.GetPane(0,0);
             if (pMainView != NULL)            // update main view's tree control(s)
             {
-#ifdef UI_CARES
-		   		pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
-			   	pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_RHERSEnabled );		// SAC 9/28/20 - ensure access/non-access to RESNETBldg object
-#endif
+//#ifdef UI_CARES
+		   		//pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+			   	if (elDBID_Proj_RHERSEnabled > 0)
+                  pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_RHERSEnabled );		// SAC 9/28/20 - ensure access/non-access to RESNETBldg object
+//#endif
                pMainView->SendMessage( WM_DISPLAYDATA );
 
                CView* pLibView = (CView*) ((CMainFrame*)pMainWnd)->m_wndSplitter.GetPane(1,0);
@@ -1050,14 +1068,14 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 
 		SetRulesetCodeYear();  // SAC 6/12/19
 
-#ifdef UI_CARES      // remove MFam stuff from CBECC-Res 2022 - SAC 01/20/22 (tic #1323)
-      if (elRulesetCodeYear >= 2022 && elDBID_Proj_IsMultiFamily > 0 &&
+            // #ifdef UI_CARES      // remove MFam stuff from CBECC-Res 2022 - SAC 01/20/22 (tic #1323)
+      if (ebUI_CARES && elRulesetCodeYear >= 2022 && elDBID_Proj_IsMultiFamily > 0 &&     // SAC 08/23/25 (gh dev #433)
           BEMPX_GetInteger( elDBID_Proj_IsMultiFamily, iSpecVal, iErr ) > 0)
       {  CString sMFamMsg;		sMFamMsg.Format( "This project describes a Multifamily building, but analysis of these buildings is not supported in CBECC-Res starting with the 2022 code cycle. "
                                                "Analysis of this building should be performed using CBECC-%d software.", (elRulesetCodeYear % 100) );
          AfxMessageBox( sMFamMsg ); 
       }
-#endif
+            // #endif
 
 
 //	else	// SAC 10/29/12 - added else to ensure tree view is updated even if errors occurred during project open

@@ -176,6 +176,8 @@ public:
                         const char* pszSubstituteOutFile=NULL );     // SAC 01/21/25
 	bool T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 									QString& sErrorMsg, int iModelType=0 );	// SAC 12/13/18 (HPWHSIZE)
+   bool T24Res_DHWSourceEnergy(  QString sProjFileAlone, QString sRunID,
+                                 QString& sErrorMsg, int iModelType=0 );  // SAC 10/14/25 (dev #512)
 	bool T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID,
 								QString& sErrorMsg, int iModelType=0 );	// SAC 1/27/20 (StdSolarSys)
 	bool T24Res_DHWNoSolarSysRun( QString sProjFileAlone, QString sRunID,

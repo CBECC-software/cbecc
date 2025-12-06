@@ -100,7 +100,7 @@ int  BEMCMPMGR_API __cdecl CMX_LoadModel( const char* pszBEMBinPathFile, const c
 														int iMaxDBIDSetFailures=0, int* piDBIDSetFailures=NULL, bool bSupressAllMsgBoxes=false,
 														int* piObjIdxSetFailures=NULL, QStringList* psaDataSetFailures=NULL, bool bLogDurations=false,
 														const char* pszLogPathFile=NULL, bool bKeepLogFileOpen=false, QStringList* psaWarningsForUser=NULL,
-														bool bCalledFromUI=false );
+														bool bCalledFromUI=false, bool bLogNonInputProperties=false );   // bLogNonInputProperties - SAC 10/24/25
 
 typedef void (CALLBACK* PLogMsgCallbackFunc) ( int iClassification, const char* pszErrorMsg, const char* pszHelpKey );
 BOOL BEMCMPMGR_API __cdecl CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog=FALSE, BOOL bTagDataAsUserDefined=FALSE,
@@ -192,6 +192,7 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_RNXMLPropError			74		//  Error evaluating RESNET Rated model rules
 #define  BEMAnal_CECRes_RNXMLFinalError		75		//  Error evaluating RESNET final/results rules
 #define  BEMAnal_CECRes_RNXMLCompIDError		76		//  Main RESNET-XML object type invalid
+#define  BEMAnal_CECRes_StdDHWSrcError	   	77		//  Standard design DHW source energy calc error
 
 #define  BEMAnal_CECRes_DwnldTariffElec		94		//  Error downloading CUAC electric tariff schedule
 #define  BEMAnal_CECRes_DwnldTariffGas 		95		//  Error downloading CUAC gas tariff schedule
@@ -250,7 +251,8 @@ int  BEMCMPMGR_API __cdecl CMX_GenerateRulesetModelReport(	const char* pszReport
 
 BOOL BEMCMPMGR_API __cdecl CMX_TransformModel(	LPCSTR sShortTransformName, BOOL bEvalRules, BOOL bReportToLog=FALSE,
 														BOOL bVerboseOutput=FALSE, const char* pszBEMBaseDetailsPathFile=NULL,
-														BOOL bLogDurationStats=FALSE, void* pCompRuleDebugInfo=NULL );
+														BOOL bLogDurationStats=FALSE, void* pCompRuleDebugInfo=NULL,
+                                          std::vector<long>* plaIBDIClsObjIndices=NULL, const char* pszBEMBaseInputPathFile=NULL );    // SAC 07/15/25
 
 // routines to access BEMBase data:
 int  BEMCMPMGR_API __cdecl CMX_GetDataString(  char* sReturnStr, int iRetStrLen, const char* pszCompParam, const char* pszCompName=NULL, 

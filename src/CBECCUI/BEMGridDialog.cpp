@@ -2887,11 +2887,12 @@ QPushButton *BEMGridDialog::createIconButton(int iconID)  //, const char *member
 	actionRestoreOrder->setEnabled(false);
 	menuOptions->addAction(actionRestoreOrder);
 	actionOptions = new QAction(tr("Options..."), this);
-#ifdef UI_CANRES
-	actionOptions->setEnabled(true);
-#else
-	actionOptions->setEnabled(false);
-#endif
+	actionOptions->setEnabled( ebUI_CANRES );    // SAC 08/23/25 (gh dev #433)
+   // #ifdef UI_CANRES
+   // 	actionOptions->setEnabled(true);
+   // #else
+   // 	actionOptions->setEnabled(false);
+   // #endif
 	menuOptions->addAction(actionOptions);
 	button->setMenu(menuOptions);
 

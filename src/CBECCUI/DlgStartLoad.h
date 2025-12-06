@@ -62,6 +62,7 @@ public:
 	//}}AFX_DATA
 
    int m_iOption;
+   int m_iSector;    // 0-Nonres/MFam | 1-SFam/Duplex
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -82,11 +83,15 @@ protected:
 	afx_msg void OnStartExistingProject();
 	afx_msg void OnStartNewProject();
 	afx_msg void OnStartRecentProject();
-	virtual void OnCancel();
+	afx_msg void OnStartBatchProcessingSFam();  // SAC 11/03/25 (dev #549)
+	afx_msg void OnStartBlankSlateSFam();
+	afx_msg void OnStartNewProjectSFam();
+   virtual void OnCancel();
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	afx_msg void OnSelChangeStartFilelist();
 	afx_msg void OnStartViewOverview();
+	//afx_msg void OnSelChangeSector();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

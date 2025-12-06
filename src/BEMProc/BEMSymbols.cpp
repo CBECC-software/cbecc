@@ -208,6 +208,10 @@ QString BEMPX_GetSymbolString(	long iSymVal, long lDBID, int iOccur, BEM_ObjType
    return sRet;
 }
 
+QString BEMPX_GetSymbolStringFromPtrs( long iSymVal, BEMObject* pObj, BEMProperty* pProp,
+                                       int iBEMProcIdx /*=-1*/, BOOL bOnlyFromCurrentSymDepSet /*=TRUE*/ )   // SAC 10/24/25
+{  return GetSymbolStringFromPtrs( iSymVal, pObj, pProp,iBEMProcIdx, bOnlyFromCurrentSymDepSet );
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //

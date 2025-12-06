@@ -22,6 +22,7 @@ EXPORTS
     BEMPX_GetRulesetFilenameFromProjectFile
     BEMPX_GetSymbolListPointer
     BEMPX_GetSymbolString
+    BEMPX_GetSymbolStringFromPtrs
     BEMPX_OverwriteSymbolList
     BEMPX_AddSymbolDepList
     BEMPX_GetErrorPtr

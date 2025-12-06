@@ -3,30 +3,28 @@ Building energy code compliance analysis tools - developed for and supported by 
 For more information about each program module, refer to the src\README.md file.  
 
 # Supporting Files
-Weather, rule and other analysis files are included in this repository under \bin. These files include CEC Title-24 analysis rules that are maintained on the following SVN repositories:  
-CBECC:      https://sourceforge.net/projects/cbecc-com/  
-CBECC-Res:  https://sourceforge.net/projects/cbecc-res/  
-Only occasional release versions of ruleset binaries for these products will be posted to this repository. For the latest rule source, refer to the repositories above.
+Weather, rule and other analysis files are included in this repository under \bin. These files include CEC Title-24 analysis rules that are maintained on the following GitHub repository: https://github.com/NOR-Codes-Stds/CBECC
+As of version 2025.2.0, CBECC-Res has been integrated into CBECC, but analysis rulesets (both source and binaries) remain unique to NRMF (nonresidential/multifamily) and SFam (single-family/duplex) model analysis. Only occasional release versions of CBECC ruleset binaries will be posted to this repository. For the latest rule source, refer to the repository above.
 
 # Supported Compiler and Platform
-This project currently supports compilation using Visual Studio 2022 to produce Windows 64-bit (x64) executables, CBECC and CBECC-Res. Refer to the descriptions of each module under \src\ for more information on system dependencies.
+This project currently supports compilation using Visual Studio 2022 to produce Windows 64-bit (x64) CBECC executable. Refer to the descriptions of each module under \src\ for more information on system dependencies.
 
 # Build Guidance
 Visual Studio 2022 solution and project files are located under src. The main solution file is: \src\CBECC-VS22.sln
 
 In addition to the conventional third party tool dependencies (described below), developers must also have the MFC MBCS DLL add-on (Microsoft Foundation Classes library for multibyte character encoding).  
-The CBECC tools rely on a number of other open source projects. A subset of code from these tools (all needed to compile CBECC-*) is included under \vendor.  
-We recommend that you read through and download (& unzip) the vendor binaries below (or install the complete versions listed below) prior to opening up the CBECC solution in Visual Studio 2022.
+The CBECC tools rely on a number of other open source projects. A subset of code from these tools (all needed to compile CBECC) is included under \vendor.  
+We recommend that you read through and download (& unzip) the vendor binaries below (or install the complete versions listed below) prior to opening up the CBECC solution in Visual Studio.
 
 # Vendor Binaries
 Executable and library files for each of these tools can either be compiled by you, the devloper, or downloaded via the following links. Each of these compressed files are designed to be unzipped into the root repository directory.
 
-*CSE v0.926.0*:  https://drive.google.com/file/d/1g3tglKi77czO8ssNJ87NZzguf6cyYh-9/view?usp=sharing (~3.5 MB, updated 6/23/25 for 2025.1.0 releases)  
+*CSE v0.927.0*:  https://drive.google.com/file/d/1a3BCXN2W0py-yKveYXY1ukvnSAC04st_/view?usp=sharing (~3.5 MB, updated 11/4/25 for 2025.2.0 release)  
 - Project site:  https://github.com/cse-sim 
 
-*OpenStudio / EnergyPlus v24-1*:  https://drive.google.com/file/d/1toGwiGWaELYTULD4YdbO8bpzJU0kKwln/view?usp=sharing (~124 MB, updated 6/23/25)  
+*OpenStudio / EnergyPlus v25-1*:  https://drive.google.com/file/d/1pjbVf7rDkZ1AXBdzaJZ7mZcTTRDm8VBH/view?usp=sharing (~124 MB, updated 8/14/25)  
 - OpenStudio project site:  https://github.com/NREL/OpenStudio  
-- Link to [OpenStudio branch CBECC-24-1 commit]https://github.com/NREL/OpenStudio/commit/6a8570cdae42820db881da7308db96fca97036b4 (used by CBECC 2025.1.0)
+- Link to [OpenStudio branch CBECC-25-1 commit]https://github.com/NREL/OpenStudio/commit/e80a80c812eefa68d5b6df209e32373646515355 (used by CBECC 2025.2.*)
 - EnergyPlus project site:  https://github.com/NREL/EnergyPlus  
 
 *Boost v1.74.0*:  https://drive.google.com/file/d/1VRc5BLzsbdP94S6UoLPIQ3EQhz4TjrIv/view?usp=sharing (~46 MB, updated 1/30/25)  

@@ -1469,6 +1469,453 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 }
 
 
+//----------------------------------------------------------------------------- SAC 10/15/25 (dev #512)
+//  ModelType:		0  T24-SFam
+//						1  T24-NRMF
+//  RunType:      0  T24 DHW Source Energy
+int CSE_MidAnalysisRun( QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath,
+								const char* pszResSrcEngyMultTableName, long lCliZnNum, long lGasType, bool bVerbose, int iModelType, int iRunType )
+// returns 0 iff success
+//         1 fail (CSE error, ...)
+{
+	bool bStoreBEMDetails = bVerbose;
+	bool bSilent = false;
+	CSERunMgr cseRunMgr( sCSEexe, sCSEWthr, sModelPathOnly, sModelFileOnlyNoExt, sProcessPath, false /*bFullComplianceAnalysis*/,
+						false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, 0 /*lAnalysisType*/, 2019 /*iRulesetCodeYear(unused?)*/, 0 /*lDesignRatingRunID*/,
+						bVerbose, bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, NULL /*pCompRuleDebugInfo*/, NULL /*pszUIVersionString*/,
+						0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);
+	//int iNumRuns = (int) daRunMults.size();
+	//int iMultDecPrec=5, iR=0;
+	int iCSESimRetVal=0;
+   QString sRunAbbrev = (iRunType == 0 ? "DHWSrc" : "unknown");
+	QString sErrMsg, sLogMsg;
+	//for (iR=0; (iCSESimRetVal == 0 && sErrMsg.isEmpty() && iR < iNumRuns); iR++)
+	//{
+		//QString sCSECmdLineArg = QString( " -DHPWHSIZE=%1" ).arg( QString::number(daRunMults[iR], 'f', iMultDecPrec) );
+		//QString sNum = QString::number(iR+1);
+		iCSESimRetVal = cseRunMgr.SetupRun_Simple( 0 /*iRunIdx*/, CRM_User /*iRunType*/, sErrMsg, true /*bAllowReportIncludeFile*/,
+													sRunAbbrev.toLocal8Bit().constData(), NULL /*sHPWHSizeCmdLineArg.toLocal8Bit().constData()*/, NULL /*sNum.toLocal8Bit().constData()*/, iModelType );
+			//BEMMessageBox( QString("hsz_Run1():  cseRunMgr.SetupRun_Simple() returned %1 (0=>OK) for file:  %2").arg(QString::number(iCSESimRetVal), hsz_sModelFileOnlyNoExt) );		// debugging
+	//}
+
+   if (iCSESimRetVal == 0)
+	{	bool bSaveFreezeProg = sbFreezeProgress;
+		sbFreezeProgress = true;	// SAC 5/31/16 - prevent progress reporting during (very quick) CSE simulations
+		cseRunMgr.DoRuns();
+		sbFreezeProgress = bSaveFreezeProg;
+	}
+
+	double dHrlyRes[2][8760];  // , dAnnUse[2] = {0.0,0.0};
+	double dDbgRawRes[2] = {0.0,0.0};
+	//for (iR=0; (iCSESimRetVal == 0 && sErrMsg.isEmpty() && iR < iNumRuns); iR++)
+	//{
+      const CSERun& cseRun = cseRunMgr.GetRun( 0 /*iRunIdx*/ );
+		const QString& sRunID = cseRun.GetRunID();
+	//	const QString& sRunAbbrev = cseRun.GetRunAbbrev();
+		//long lRunNumber = 1;  //(lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
+		int iCSERetVal = cseRun.GetExitCode();
+		if (bVerbose)  // SAC 1/31/13
+		{	sLogMsg = QString::asprintf( "      %s simulation returned %d (std DHW source energy of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
+			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+		BEMPX_RefreshLogFile();	// SAC 5/19/14
+
+		if (iCSERetVal != 0)
+		{	sErrMsg = QString::asprintf( "ERROR:  %s simulation returned %d (std DHW source energy of run %s)", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal, sRunAbbrev.toLocal8Bit().constData() );
+			iCSESimRetVal = BEMAnal_CECRes_CSESimError;
+			BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+
+		//if (iCSESimRetVal == 0)
+		//{	assert( iR < 3 );	 // only set up for 3 runs of results (for now)
+		//	if (iR >= 3)
+		//		iCSESimRetVal = 1;
+		//}
+
+		if (iCSESimRetVal == 0)
+		{	// read CSE results (fixed column - to avoid dealing w/ BEMProc stored results...)
+			filebuf fb;		int i;
+			QString sResFile = QString( "%1%2.csv" ).arg( sProcessPath, sModelFileOnlyNoExt );
+			if (!fb.open(sResFile.toLocal8Bit().constData(), std::ios::in))
+				iCSESimRetVal = 1;
+			else
+			{	string line;
+				std::istream is(&fb);
+            // 4 file header rows
+				for (i=0;i<4;i++)
+					getline(is, line);
+				const int colTot = 5;
+				for (i=0;i<8760;i++)
+				{	getline(is, line);
+					vector< string> toks = split_string(line, ",");
+					dHrlyRes[0][i] = stod(toks[colTot]);
+					dDbgRawRes[0] += dHrlyRes[0][i];
+				}
+            // 5 rows between elec & gas results
+				for (i=0;i<5;i++)
+					getline(is, line);
+				for (i=0;i<8760;i++)
+				{	getline(is, line);
+					vector< string> toks = split_string(line, ",");
+					dHrlyRes[1][i] = stod(toks[colTot]);
+					dDbgRawRes[1] += dHrlyRes[1][i];
+				}
+				fb.close();
+		}	}
+
+      int iElecTableCol = (0 * 16) + lCliZnNum + 1;      // SAC 10/18/25 (dev #512)
+      int iGasTableCol = ((lGasType == 2 ? 2 : 1) * 16) + lCliZnNum + 1;
+		if (iCSESimRetVal == 0)
+		{	if (true)  // iModelType == 1)	
+			{	for (int i=0;i<8760;i++)
+				{	dHrlyRes[0][i] /= 3.412;      // kBtu Elec CSE results to kWh
+               dHrlyRes[1][i] /= 100.0;      // kBtu Gas CSE results to therms
+			   }
+            dDbgRawRes[0] /= 3.412;
+            dDbgRawRes[1] /= 100.0;
+         }
+
+			// apply hourly TDV multipliers to DHW results (or simply sum hourlys into single use result)
+			double dAnnElecSrc = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes[0], pszResSrcEngyMultTableName, iElecTableCol, bVerbose );  // SAC 10/18/25 (dev #512)
+			double dAnnGasSrc  = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes[1], pszResSrcEngyMultTableName, iGasTableCol , bVerbose );
+			// else
+			// {	for (int i=0;i<8760;i++)
+			// 		dAnnUse += dHrlyRes[i];
+			// }
+
+               // BEMPX_WriteLogFile( QString( "   %1 run results:  ElecUse %2 kWh, GasUse %3 therms, ElecSrc %4 kBtu, GasSrc %5 kBtu" ).arg( sRunAbbrev, 
+               //                                     QString::number( dDbgRawRes[0] ), QString::number( dDbgRawRes[1] ), QString::number( dAnnElecSrc ), QString::number( dAnnGasSrc ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+         long lDBID_StdSrcDHWResults = BEMPX_GetDatabaseID( "ResProj:StdSrcDHWResults" );
+         int iSetRetVal = BEMPX_SetBEMData( lDBID_StdSrcDHWResults  , BEMP_Flt, (void*) &dDbgRawRes[0], BEMO_User, 0, BEMS_SimResult );
+			    iSetRetVal = BEMPX_SetBEMData( lDBID_StdSrcDHWResults+1, BEMP_Flt, (void*) &dDbgRawRes[1], BEMO_User, 0, BEMS_SimResult );
+			    iSetRetVal = BEMPX_SetBEMData( lDBID_StdSrcDHWResults+2, BEMP_Flt, (void*) &dAnnElecSrc  , BEMO_User, 0, BEMS_SimResult );
+			    iSetRetVal = BEMPX_SetBEMData( lDBID_StdSrcDHWResults+3, BEMP_Flt, (void*) &dAnnGasSrc   , BEMO_User, 0, BEMS_SimResult );
+
+			// int iSetRetVal = BEMPX_SetBEMData( BEMPX_GetDatabaseID( "cseDHWSYS:StdHPWHSzRunUse[1]" )+iR, BEMP_Flt, (void*) &dAnnUse[iR], BEMO_User, iSysIdx-1 );
+			// if (iSetRetVal < 0)
+			// {	iCSESimRetVal = 1;
+			// 	sErrMsg = QString( "Error storing HPWH sizing run use for cseDHWSYS %1:  Setting of StdHPWHSzRunUse[%2] (%3) returned %4." ).arg(
+			// 											QString::number(iSysIdx), QString::number(iR+1), QString::number(dAnnUse[iR]), QString::number( iSetRetVal ) );
+		}	// }
+
+	   // //	if (bVerbose)
+		// if (1)  // temporarily always log each sizing run
+		// {	if (iCSESimRetVal != 0)
+		// 		sLogMsg = QString( "   HPWH Sizing system %1, run %2 using multiplier %3, failed (returned %4)" ).arg(
+		// 												sRunAbbrev, QString::number(iSysIdx), QString::number(iR+1), QString::number(daRunMults[iR], 'f', iMultDecPrec), QString::number(iCSESimRetVal) );
+		// 	else if (!sErrMsg.isEmpty())
+		// 		sLogMsg = QString( "   HPWH Sizing system %1, run %2 using multiplier %3,  %4" ).arg(
+		// 												sRunAbbrev, QString::number(iSysIdx), QString::number(iR+1), QString::number(daRunMults[iR], 'f', iMultDecPrec), sErrMsg );
+		// 	else
+		// 		sLogMsg = QString( "   HPWH Sizing system %1, run %2 using multiplier %3 resulted in %4 kTDV   (%5 kWh)" ).arg(
+		// 												sRunAbbrev, QString::number(iSysIdx), QString::number(iR+1), QString::number(daRunMults[iR], 'f', iMultDecPrec), QString::number(dAnnUse[iR], 'f', 0), QString::number(dDbgRawRes[iR]/3.412, 'f', 0) );
+		// 	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		// }
+	//}
+
+	if (bVerbose)
+	{	// output to Project Log file
+	}
+
+	int ret=0;
+	if (iCSESimRetVal != 0)
+		ret = iCSESimRetVal;
+	else if (!sErrMsg.isEmpty())
+		ret = 1;
+
+	return ret;
+}	// CSE_MidAnalysisRun
+
+bool CSERunMgr::T24Res_DHWSourceEnergy(   QString sProjFileAlone, QString sRunID,
+                                          QString& sErrorMsg, int iModelType )	// SAC 10/14/25 (dev #512)
+{
+	QString qsMainDWHSysClass = (iModelType == 1 ? "ResDHWSys" : "DHWSys");
+	std::vector<int> iaCSEDHWSystemsSizedIdx, iaDHWSystemsSizedIdx;
+	int iCID_DHWSys       = BEMPX_GetDBComponentID( qsMainDWHSysClass.toLocal8Bit().constData() );
+	int iCID_CSEDHWSys    = BEMPX_GetDBComponentID( "cseDHWSYS" );
+   int iErr;
+	// int iCID_CSEDHWHeater = BEMPX_GetDBComponentID( "cseDHWHEATER" );
+	// long lDBID_SzRunMults = BEMPX_GetDatabaseID( (iModelType == 1 ? "StdHPWHSizingRunMults[1]" : "StdHPWHSzRunMlts[1]"), iCID_DHWSys );
+	// int iSV, iNumCSEDHWSystems = BEMPX_GetNumObjects( iCID_CSEDHWSys );
+	// bool bFirstDHWSysBeingSized = true;
+	// for (int iSIdx=0; (sErrorMsg.isEmpty() && iSIdx < iNumCSEDHWSystems); iSIdx++)
+	// {	BEMObject* pCentralSys = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsCentralDHWSYS" ), iSV, iErr, iSIdx );
+	// 	BEMObject* pSrcDHWSys  = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:SourceDHWSys"    ), iSV, iErr, iSIdx );
+	// 	int iDHWSysObjIdx = (pSrcDHWSys && pSrcDHWSys->getClass()) ? BEMPX_GetObjectIndex( pSrcDHWSys->getClass(), pSrcDHWSys ) : -1;
+	// 	long lHPWHSizingReqd=0;
+	// 	if (pCentralSys == NULL && iDHWSysObjIdx >= 0 && 
+	// 		 BEMPX_GetInteger( BEMPX_GetDatabaseID( "HPWHSizingReqd", iCID_DHWSys ), lHPWHSizingReqd, 0, -1, iDHWSysObjIdx ) && lHPWHSizingReqd > 0)
+	// 	{	// process each system that isn't a slave and that has the flag set HPWHSizingReqd
+	// 		iaCSEDHWSystemsSizedIdx.push_back( iSIdx );
+	// 		iaDHWSystemsSizedIdx.push_back( iDHWSysObjIdx );
+	// 		BEMObject* pCSEDHWSysObj = BEMPX_GetObjectByClass( iCID_CSEDHWSys, iErr, iSIdx );								assert( pCSEDHWSysObj );
+	// 		std::vector<int> iaCSEDHWHtrIdx;
+	// 		QString sWHHeatSrc;		bool bHaveFuelHtr=false;		BEM_ObjType bemObjTypeUser = BEMO_User;
+	// 		int iHtr, iNumCSEDHWHtrs = (int) BEMPX_GetNumChildren( iCID_CSEDHWSys, iSIdx, BEMO_User /*eParObjType*/, iCID_CSEDHWHeater );
+	// 		for (iHtr=1; (sErrorMsg.isEmpty() && iHtr <= iNumCSEDHWHtrs); iHtr++)
+	// 		{	int iCSEDHWHtrIdx = BEMPX_GetChildObjectIndex( iCID_CSEDHWSys, iCID_CSEDHWHeater, iErr, bemObjTypeUser, iHtr, iSIdx );
+	// 			if (iCSEDHWHtrIdx >= 0)
+	// 			{	BEMPX_GetString( BEMPX_GetDatabaseID( "cseDHWHEATER:whHeatSrc" ), sWHHeatSrc, TRUE, 0, -1, iCSEDHWHtrIdx );
+	// 				if (!sWHHeatSrc.compare("ASHPX"))
+	// 				{	// this is a heater child of the system being sized and is of type ASHPX, so set it up for sizing run
+	// 					BEMObject* pCSEDHWHtrObj = BEMPX_GetObjectByClass( iCID_CSEDHWHeater, iErr, iCSEDHWHtrIdx );			assert( pCSEDHWHtrObj );
+	// 	            // SAC 1/8/19 - remove check for cseDHWHEATER:whXBUEndUse undefined as the latest rule mods have this set for EVERY cseDHWHEATER (per BW request)
+	// 				   //	int iWHXBUEndUse_Status = BEMPX_GetDataStatus( BEMPX_GetDatabaseID( "cseDHWHEATER:whXBUEndUse" ), iCSEDHWHtrIdx );
+	// 				   //	assert( iWHXBUEndUse_Status < 1 );
+	// 				   //	if (iWHXBUEndUse_Status < 1)
+	// 				   //	{
+	// 						if (!CMX_EvaluateRuleset( "CSE_DHWHeater_SetupHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+	// 													NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+	// 													NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWHeater, iCSEDHWHtrIdx, 0 /*iEvalOnlyObjType*/ ))
+	// 							sErrorMsg = QString( "Error evaluating 'CSE_DHWHeater_SetupHPWHSizingRun' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3', heater '%4'" ).arg(
+	// 																		sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), pCSEDHWHtrObj->getName() );
+	// 						iaCSEDHWHtrIdx.push_back( iCSEDHWHtrIdx );
+	// 				   //	}
+	// 				   //	else
+	// 				   //	{		assert( false );  // should never get here - indicates this cseDHWHEATER is already setup for sizing runs...
+	// 				   //	}
+	// 				}
+	// 				else if (!sWHHeatSrc.compare("Fuel"))
+	// 				{	bHaveFuelHtr = true;
+	// 				}
+	// 		}	}
+	// 		if (sErrorMsg.isEmpty() && iaCSEDHWHtrIdx.size() < 1)
+	// 			sErrorMsg = QString( "Error performing %1 run HPWH sizing for DHWSys '%2' / cseDHWSYS '%3':  no ASHPX heaters identified." ).arg( sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+	// 		else if (sErrorMsg.isEmpty() && iaCSEDHWHtrIdx.size() > 0)
+	// 		{	// evaluate rules to setup cseDHWSYS for HPWHSIZE run(s)
+	// 			if (!CMX_EvaluateRuleset( "CSE_DHWSystem_SetupHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+	// 										NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+	// 										NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWSys, iSIdx, 0 /*iEvalOnlyObjType*/ ))
+	// 				sErrorMsg = QString( "Error evaluating 'CSE_DHWSystem_SetupHPWHSizingRun' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3'" ).arg(
+	// 															sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+	// 		}
+	// 		if (sErrorMsg.isEmpty() && iaCSEDHWHtrIdx.size() > 0 && bFirstDHWSysBeingSized)
+	// 		{	// call 1-time (project level) rulelist to setup Export, REport and perhaps other objects used in HPWHSIZE runs
+	// 			bFirstDHWSysBeingSized = false;
+	// 			if (!CMX_EvaluateRuleset( "CSE_Project_SetupHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+	// 												NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo ))
+	// 				sErrorMsg = QString( "Error evaluating 'CSE_Project_SetupHPWHSizingRun' rulelist on %1 run during HPWH sizing process" ).arg( sRunID );
+	// 		}
+
+
+         		//	double dHPWHSizingFrac=0.005, dHPWHSizingTol=0.001, dStdHPWHSizingMult=1.0;		- SAC 1/24/19 - removed due to unreferenced
+         		//	if (sErrorMsg.isEmpty())
+         		//	{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizingFrac" ), dHPWHSizingFrac ) ||
+         		//			 !BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizingTol"  ), dHPWHSizingTol  ) ||
+         		//			 !BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:StdHPWHSizingMult"  ), dStdHPWHSizingMult ))
+         		//		sErrorMsg = QString( "Error performing %1 run HPWH sizing for DHWSys '%2' / cseDHWSYS '%3':  Unable to retrieve CSE_HPWHSizingFrac, CSE_HPWHSizingTol or StdHPWHSizingMult." ).arg( sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+         		//	}
+
+			// long lStdHPWHSzNumRuns=0;
+			// BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdHPWHSzNumRuns" ), lStdHPWHSzNumRuns );				assert( lStdHPWHSzNumRuns > 0 );		// SAC 1/2/19
+			// QString sStdHPWHSzTDVTbl;		long lStdHPWHSzTDVCol;
+			// BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:StdHPWHSzTDVTbl" ), sStdHPWHSzTDVTbl );
+			// BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdHPWHSzTDVCol" ), lStdHPWHSzTDVCol );
+
+			// long lStdHPWHSizingFormula=0;
+			// BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdHPWHSizingForm" ), lStdHPWHSizingFormula );		assert( lStdHPWHSizingFormula >= 0 && lStdHPWHSizingFormula <= 1 );
+
+// SAC 1/1/19 - removed code to store ElecRes version of std design HPWH sizing run (HPWHSIZE)
+//			// depending on lStdHPWHSizingFormula, write separate ElecRes CSE input for FIRST sizing run, to serve as basis of sizing mechanism - SAC 12/29/18 (HPWHSIZE)
+//			QString sERSrcCSEFileOnlyNoExt;
+//			if (sErrorMsg.isEmpty() && lStdHPWHSizingFormula == 1)
+//			{	for (iHtr=0; (sErrorMsg.isEmpty() && iHtr < (int) iaCSEDHWHtrIdx.size()); iHtr++)
+//				{	if (!CMX_EvaluateRuleset( "cseDHWHEATER_InstallSizingElecRes", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+//														NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+//														NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWHeater, iaCSEDHWHtrIdx[iHtr], 0 /*iEvalOnlyObjType*/ ))
+//					{	BEMObject* pCSEDHWHtrObj = BEMPX_GetObjectByClass( iCID_CSEDHWHeater, iErr, iaCSEDHWHtrIdx[iHtr] );			assert( pCSEDHWHtrObj );
+//						sErrorMsg = QString( "Error evaluating 'cseDHWHEATER_InstallSizingElecRes' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3', heater '%4'" ).arg(
+//														sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), pCSEDHWHtrObj->getName() );
+//				}	}
+//				if (sErrorMsg.isEmpty())
+//				{	sERSrcCSEFileOnlyNoExt = QString( "%1-dhwszer%2" ).arg( sProjFileAlone, QString::number(iSIdx+1) );
+//					QString sSrcCSEFile = QString( "%1%2.cse" ).arg( m_sProcessPath, sERSrcCSEFileOnlyNoExt );
+//					// Write CSE input file  (and store BEM details file)
+//					QString sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+//									 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+//									 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CSE input", sSrcCSEFile );
+//					if (!OKToWriteOrDeleteFile( sSrcCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+//					{	if (m_bSilent)
+//							sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "ElecRes sizing CSE input", sSrcCSEFile );
+//						else
+//							sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "ElecRes sizing CSE input", sSrcCSEFile );
+//					}
+//					else if (!BEMPX_WriteProjectFile( sSrcCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/,
+//												FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
+//												NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
+//												true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/, &laClsObjIndicesToWrite ))
+//						sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "ElecRes sizing CSE input", sSrcCSEFile );
+//					else
+//					{	for (iHtr=0; (sErrorMsg.isEmpty() && iHtr < (int) iaCSEDHWHtrIdx.size()); iHtr++)
+//						{	if (!CMX_EvaluateRuleset( "cseDHWHEATER_RestoreStdElecDHWHeater", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+//																NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+//																NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWHeater, iaCSEDHWHtrIdx[iHtr], 0 /*iEvalOnlyObjType*/ ))
+//							{	BEMObject* pCSEDHWHtrObj = BEMPX_GetObjectByClass( iCID_CSEDHWHeater, iErr, iaCSEDHWHtrIdx[iHtr] );			assert( pCSEDHWHtrObj );
+//								sErrorMsg = QString( "Error evaluating 'cseDHWHEATER_RestoreStdElecDHWHeater' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3', heater '%4'" ).arg(
+//																sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), pCSEDHWHtrObj->getName() );
+//					}	}	}
+//			}	}
+
+         long lCliZnNum=0, lGasType=0;   QString sResSrcEngyMultTableName;
+         if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"     ), lCliZnNum ) ||
+             !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RptFuelUseAs" ), lGasType  ) ||     // switched from GasType (that can = 3) to RptFuelUseAs which is always 1,2 - SAC 11/18/25 (dev #615)
+             !BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:ResSrcEngyMultTableName" ), sResSrcEngyMultTableName ))
+            sErrorMsg = QString( "Error retrieving climate zone, gas type and/or ResSrcEngyMultTableName on %1 run during Standard Design DHW Source Energy calculation" ).arg( sRunID );
+			else if (!CMX_EvaluateRuleset( "DHWStandardSourceEnergy_Prep", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+                                         NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+                                         NULL /*QStringList* psaWarningMsgs*/, 0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ ))
+			{	sErrorMsg = QString( "Error evaluating 'DHWStandardSourceEnergy_Prep' rulelist on %1 run during Standard Design DHW Source Energy calculation" ).arg( sRunID );
+			}
+
+         // moved following down from above to ensure the appropriate flagged CSE items (exports might have been created by above rule evals) - SAC 11/18/25 (dev #615)
+  			std::vector<long> laClsObjIndicesToWrite;		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
+			if (sErrorMsg.isEmpty())
+		   {  // store flags for each object to be written to HPWH Sizing CSE input
+   			laClsObjIndicesToWrite.push_back( BEMF_ClassIDMult );  // Proj object
+   			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseTOP" ) * BEMF_ClassIDMult) );  // cseTOP object
+
+   			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseMETER" ) * BEMF_ClassIDMult) );  // ALL cseMETERs
+
+   		   // SAC 2/10/20 - added to enable solar systems to feed central DHWSystems
+   			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
+   			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
+   			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR" ) * BEMF_ClassIDMult) );
+   			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDESCOND" ) * BEMF_ClassIDMult) );      // SAC 10/11/22
+
+   			laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );  // ALL cseDHWSYS
+   			// laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iSIdx+1 );			// Main cseDHWSYS being sized
+   			// for (int iS2Idx=0; (sErrorMsg.isEmpty() && iS2Idx < iNumCSEDHWSystems); iS2Idx++)
+   			// {	BEMObject* pCentralSys2 = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsCentralDHWSYS" ), iSV, iErr, iS2Idx );
+   			// 	if (pCentralSys2 && pCentralSys2 == pCSEDHWSysObj)
+   			// 	{	assert( iSIdx != iS2Idx );
+   			// 		laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iS2Idx+1 );		// Slave to Main cseDHWSYS being sized
+   			// }	}
+   			// output HPWHSIZE-related EXPORT & REPORT objects
+   			int iCID_CSEExport = BEMPX_GetDBComponentID( "cseEXPORT" );
+   			// int iCID_CSEReport = BEMPX_GetDBComponentID( "cseREPORT" );
+   			BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEExport, iErr, "ExportElec" );		assert(pObj);  	// cseEXPORT object
+   			if (pObj)
+   				laClsObjIndicesToWrite.push_back( (iCID_CSEExport * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );
+   			pObj = BEMPX_GetObjectByName( iCID_CSEExport, iErr, "ExportNatGas" );		         //assert(pObj);  	// cseEXPORT object
+   			if (pObj)
+   				laClsObjIndicesToWrite.push_back( (iCID_CSEExport * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );
+   			pObj = BEMPX_GetObjectByName( iCID_CSEExport, iErr, "ExportOther" );		            //assert(pObj);  	// cseEXPORT object
+   			if (pObj)
+   				laClsObjIndicesToWrite.push_back( (iCID_CSEExport * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );
+         }
+
+			QString sSrcCSEFileOnlyNoExt = QString( "%1-dhwsrc" ).arg( sProjFileAlone );
+			if (sErrorMsg.isEmpty())
+			{	QString sSrcCSEFile = QString( "%1%2.cse" ).arg( m_sProcessPath, sSrcCSEFileOnlyNoExt );
+				// Write CSE input file  (and store BEM details file)
+				QString sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+								 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+								 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CSE input", sSrcCSEFile );
+				if (!OKToWriteOrDeleteFile( sSrcCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+				{	if (m_bSilent)
+						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "DHW Source Energy CSE input", sSrcCSEFile );
+					else
+						sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "DHW Source Energy CSE input", sSrcCSEFile );
+				}
+				else if (!BEMPX_WriteProjectFile( sSrcCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/,
+											FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
+											NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
+											true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/, &laClsObjIndicesToWrite ))
+					sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "DHW Source Energy CSE input", sSrcCSEFile );
+				else
+				{	// HPWH Sizing CSE input file written - so now process it
+                                 //QString sDbg = QString( "   CSE_PerformHPWHSizing_Iterate( '%1', " ).arg( m_sCSEexe );			BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                 //sDbg = QString(         "                          '%1', " ).arg( sSrcCSEFile );		BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                 //sDbg = QString( "                          %1, %2, ... )" ).arg( QString::number(dHPWHSizingFrac), QString::number(dHPWHSizingTol) );		BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+									boost::posix_time::ptime	tmHPWHSizingStartTime = boost::posix_time::microsec_clock::local_time();
+
+					// double dRunMult;
+					// std::vector<double> daRunMults;
+					// QString sModelFileOnlyNoExt = sSrcCSEFileOnlyNoExt.left( sSrcCSEFileOnlyNoExt.length()-1 );
+					// QString sSzRun1CSEPathFile = QString( "%1%21.cse" ).arg( m_sProcessPath, sSrcCSEFileOnlyNoExt );
+					// for (int iM=0; iM < lStdHPWHSzNumRuns; iM++)
+					// {	BEMPX_GetFloat( lDBID_SzRunMults+iM, dRunMult, 0.0, -1, iDHWSysObjIdx );		assert( dRunMult > 0 );
+					// 	if (dRunMult > 0)
+					// 	{	daRunMults.push_back( dRunMult );
+					// 		if (iM>0)
+					// 		{	// COPY first CSE input file to subsequent (unique) run filenames
+					// 			QString sSrcCSEFile = QString( "%1%2%3.cse" ).arg( m_sProcessPath, sModelFileOnlyNoExt, QString::number(iM+1) );
+					// 			// Write CSE input file  (and store BEM details file)
+					// 			QString sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+					// 							 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+					// 							 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CSE input", sSrcCSEFile );
+					// 			if (!OKToWriteOrDeleteFile( sSrcCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+					// 			{	if (m_bSilent)
+					// 					sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "HPWH sizing CSE input", sSrcCSEFile );
+					// 				else
+					// 					sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "HPWH sizing CSE input", sSrcCSEFile );
+					// 			}
+					// 			else if (!CopyFile( sSzRun1CSEPathFile.toLocal8Bit().constData(), sSrcCSEFile.toLocal8Bit().constData(), FALSE ))
+					// 				sErrorMsg = QString( "Error:  Unable to copy run %1 cseDHWSYS '%2' HPWH sizing run CSE file:  '%3'  to:  '%4'" ).arg(
+					// 												sRunID, pCSEDHWSysObj->getName(), sSzRun1CSEPathFile, sSrcCSEFile );
+					// 			//else
+					// 			//	saModelFileOnlyNoExt.push_back( sSrcCSEFile );
+					// 	}	}
+					// 	else
+					// 	{
+               //                // POST ERROR
+					// }	}
+					int iDHWSrcRetVal = -1;
+					if (sErrorMsg.isEmpty())
+					{	iDHWSrcRetVal = CSE_MidAnalysisRun( m_sCSEexe /*"CSE"*/, m_sCSEWthr, m_sModelPathOnly, sSrcCSEFileOnlyNoExt /*sModelFileOnlyNoExt*/, m_sProcessPath,
+																		/*daRunMults, iSIdx+1,*/ sResSrcEngyMultTableName.toLocal8Bit().constData(), lCliZnNum, lGasType, m_bVerbose, iModelType, 0 /*iRunType*/ );
+               }
+					if (sErrorMsg.isEmpty() && iDHWSrcRetVal==0)
+					{	// evaluat RULES to calculate final heater multiplier based on sizing run results already posted to the cseDHWSYS
+						if (!CMX_EvaluateRuleset( "DHWStandardSourceEnergy_Restore", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+															NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+															NULL /*QStringList* psaWarningMsgs*/, 0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ ))
+							sErrorMsg = QString( "Error evaluating 'DHWStandardSourceEnergy_Restore' rulelist on %1 run during Standard Design DHW Source Energy calculation" ).arg( sRunID );
+						// else
+						// {	double dWHMult=0.0;
+					 	// 	BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseDHWSYS:CentralWHMult" ), dWHMult, 0.0, -1, iSIdx );
+
+						// 			double dTimeForHPWHSizing = DeltaTime( tmHPWHSizingStartTime );
+						// 			QString sLogMsg = QString( "HPWH sizing for DHWSys '%1' / cseDHWSYS '%2' %3, multiplier %4, processing time %5" ).arg(
+						// 											pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), (iDHWSrcRetVal==0 ? "successful" : "failed"), QString::number(dWHMult, 'f', 4), QString::number(dTimeForHPWHSizing, 'f', 2) );
+						// 			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+						// 	// roll back project data mods setup specifically for the system & heaters of the current system being sized
+						// 	if (!CMX_EvaluateRuleset( "CSE_DHWSystem_RestoreFollowingHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+						// 								NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+						// 								NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWSys, iSIdx, 0 /*iEvalOnlyObjType*/ ))
+						// 		sErrorMsg = QString( "Error evaluating 'CSE_DHWSystem_RestoreFollowingHPWHSizingRun' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3'" ).arg(
+						// 									sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+						// 	for (iHtr=0; (sErrorMsg.isEmpty() && iHtr < (int) iaCSEDHWHtrIdx.size()); iHtr++)
+						// 	{	if (!CMX_EvaluateRuleset( "CSE_DHWHeater_RestoreFollowingHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+						// 							NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+						// 							NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWHeater, iaCSEDHWHtrIdx[iHtr], 0 /*iEvalOnlyObjType*/ ))
+						// 		{	BEMObject* pCSEDHWHtrObj = BEMPX_GetObjectByClass( iCID_CSEDHWHeater, iErr, iaCSEDHWHtrIdx[iHtr] );			assert( pCSEDHWHtrObj );
+						// 			sErrorMsg = QString( "Error evaluating 'CSE_DHWHeater_RestoreFollowingHPWHSizingRun' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3', heater '%4'" ).arg(
+						// 											sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), pCSEDHWHtrObj->getName() );
+						// 	}	}
+					}	// }
+				}
+			}
+	// 	}
+	// 	if (!sErrorMsg.isEmpty())		// write details file if HPWHSIZE run error encountered
+	// 	{	QString sDbgFileName = QString( "%1%2-dhwsz%3-Error.ibd-Detail" ).arg( m_sProcessPath, sProjFileAlone, QString::number(iSIdx+1) );
+	// 		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+	// 	}
+	// }	// end of loop over each cseDHWSYS
+
+	// if (sErrorMsg.isEmpty() && !bFirstDHWSysBeingSized)		// roll back project data mods setup specifically for HPWHSIZE runs
+	// {	if (!CMX_EvaluateRuleset( "CSE_Project_RestoreHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+	// 										NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo ))
+	// 		sErrorMsg = QString( "Error evaluating 'CSE_Project_RestoreHPWHSizingRun' rulelist on %1 run during HPWH sizing process" ).arg( sRunID );
+	// }
+
+	return (sErrorMsg.isEmpty());
+}  // end of CSERunMgr::T24Res_DHWSourceEnergy()
+
+
 //-----------------------------------------------------------------------------
 //  ModelType:		0  T24-Res
 //						1  T24-Com
@@ -3380,10 +3827,9 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 							iRetVal = 78;
 				}	}
 
-
-// debugging
-//bool bVerboseInit = m_bVerbose;
-//m_bVerbose = true;
+                     // debugging
+                     //bool bVerboseInit = m_bVerbose;
+                     //m_bVerbose = true;
 				// SAC 1/29/19 - code to initiate HPWH Sizing run(s) when called for (based on Res)
 				long lCSE_HPWHSizingReqd=0, lHPWHSizInProc=0;
 				long lDBID_HPWHSizInProc = BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizInProc" );	// SAC 12/18/18
@@ -3401,7 +3847,23 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 					// re-default (blast) flag indicating that we are performing HPWHSizing
 					BEMPX_DefaultProperty( lDBID_HPWHSizInProc, m_iError );
 				}
-// debugging
+                     // debugging
+                     //m_bVerbose = bVerboseInit;
+
+//// debugging
+//bool bVerboseInit = m_bVerbose;
+//m_bVerbose = true;
+            long lStdSrcDHWSimNeeded, lDBID_StdSrcDHWSimNeeded = BEMPX_GetDatabaseID( "ResProj:StdSrcDHWSimNeeded" );		//assert( lDBID_StdSrcDHWSimNeeded > 0 );
+				if (iRetVal == 0 && !bIsCSEHVACSizingRun && lSimPVBattOnly < 1 &&       // Run to calculate Std design DHW source energy for 2025+ code - SAC 10/15/25 (dev #512)
+                lDBID_StdSrcDHWSimNeeded > 0 && BEMPX_GetInteger( lDBID_StdSrcDHWSimNeeded, lStdSrcDHWSimNeeded ) && lStdSrcDHWSimNeeded > 0)
+				{	// PERFORM Std design DHW source energy run
+                     //BEMPX_WriteLogFile( QString("in CSERunMgr::SetupRun_NonRes(), calling T24Res_DHWSourceEnergy()"), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // dbg - SAC 10/16/25
+					if (!T24Res_DHWSourceEnergy( sProjFileAlone, sRunID, sErrorMsg, 1 /*iModelType*/ ))
+					{	iRetVal = 99;  // BEMAnal_CECRes_StdDHWSrcError;
+						if (!sErrorMsg.isEmpty())
+							BEMPX_WriteLogFile( sErrorMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				}  }
+//// debugging
 //m_bVerbose = bVerboseInit;
 
 

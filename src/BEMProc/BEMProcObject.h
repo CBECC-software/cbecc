@@ -43,13 +43,16 @@
 /////////////////////////////////////////////////////////////////////////////
 //	BEM Run Hourly Results
 
-#ifdef GEOM_RES
-#define	BEMRun_MaxNumRuns				   1	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)
+//#ifdef GEOM_RES
+//#define	BEMRun_MaxNumRuns				   1	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)
+//#define	BEMRun_NumEnduses				  54   // SAC 12/14/17 - added 6 to accommodate Carbon results  // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
+//#else
+//#define	BEMRun_MaxNumRuns				   4	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)  - SAC 1/6/18 - 6->4 to reduce Com analysis memory usage
+//#define	BEMRun_NumEnduses				  48   // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
+//#endif
+// replace above w/ following to enable both Res & NRes analysis in single executable - SAC 07/24/25
+#define	BEMRun_MaxNumRuns				   4   // max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)
 #define	BEMRun_NumEnduses				  54   // SAC 12/14/17 - added 6 to accommodate Carbon results  // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
-#else
-#define	BEMRun_MaxNumRuns				   4	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)  - SAC 1/6/18 - 6->4 to reduce Com analysis memory usage
-#define	BEMRun_NumEnduses				  48   // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
-#endif
 #define	BEMRun_RunNameLen				  32
 #define	BEMRun_RunAbbrevLen			  16
 #define	BEMRun_NumMeters				  16   // 4->16 - SAC 09/07/22 (CUAC)

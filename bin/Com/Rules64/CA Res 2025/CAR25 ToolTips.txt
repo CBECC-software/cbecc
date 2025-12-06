@@ -1,0 +1,146 @@
+;-------------------------------------------------------------------------------
+;
+;  Building Energy Model Database Tool Tips
+;
+;-------------------------------------------------------------------------------
+;  Comments:
+;-------------------------------------------------------------------------------
+
+Proj:Name,             "the project name/description"
+Proj:ClimateZone,      "California climate zone (CTZ 1-16)"   
+Proj:Address,          "the building's address"
+Proj:City,             "the building's city, state and zip code"
+Proj:Owner,            "the building's owner"
+Proj:Designer,         "the name of the designer or analyst performing the compliance analysis"
+Proj:RunTitle,         "Title that appears on reports to identify this analysis"    
+Proj:AnalysisType,     "type of analysis to be perfomed"
+Proj:RunScope,         "the desired runscope"
+Proj:CreateDate,       "the project's creation date"
+Proj:ModDate,          "the project's last revision date"
+Proj:RunDate,          "The project's last compliance analysis run date"
+Proj:FinalResult,      "This control is checked if the building has passed the compliance analysis"
+Proj:ErrorCode,        "Error Code"
+Proj:BuildingType,     "Building type"    
+Proj:Description,      "Description of building"    
+Proj:ACH50,            "Air infiltration" 
+Proj:InsulConsQuality, "Insulation construction quality"    
+Proj:NumBedrooms,      "Number of bedrooms" 
+Proj:NatGasAvailable,  "Whether or not natural gas is available on site" 
+Proj:NumDwellingUnits, "Number of dwelling units" 
+Proj:AllOrientations,  "Whether or not analysis is to be performed for all (4 cardinal) orientations" 
+Proj:FrontOrientation, "Orientation of home front (0 = North, 90 = East, etc.)" 
+Proj:AlterIncl2Categs, "Alterations-only projects must include upgrades to at least two components listed in standard table 150.2-B, including:
+(1) Ceiling/Wall/Raised Floor Insulation
+(2) Fenestration
+(3) Window Film
+(4) Space Heating and/or Cooling Equip
+(5) Duct Sealing
+(6) Duct Insulation
+(7) Water Heating Systems
+(8) Roofing Products
+(9) Others"
+Proj:PVWModuleType, "PV module type:
+(Standard) is a typical poly- or mono-crystalline silicon module with efficiencies of 14-17%,
+(Premium) is high efficiency (~18-20%) mono-crystalline silicon modules that have anti-reflective coatings and lower temperature coefficients, and
+(Thin Film) assumes a low efficiency (~11%) with a significantly lower temperature coefficient."
+
+; SAC 03/10/25
+Proj:SolAccessRfArea, "from standards section 150.1(c)14:
+A. SARA includes the area of the building’s roof space capable of structurally supporting a PV system, and the area of all roof space on 
+covered parking areas, carports, and all other newly constructed structures on the site that are compatible with supporting a PV system 
+per Title 24, Part 2, Section 1511.10.
+B. SARA does NOT include:
+i. Any roof area that has less than 70 percent annual solar access. Annual solar access is determined by dividing the total annual solar 
+insolation, accounting for shading obstructions, by the total annual solar insolation if the same areas were unshaded by obstructions. 
+For steep slope roofs only shading from existing permanent natural or manmade obstructions that are external to the dwelling, including 
+but not limited to trees, hills, and adjacent structures, shall be considered for annual solar access calculations. For low slope roofs, 
+all obstructions including those that are external to the dwelling unit, and obstructions that are part of the building design and 
+elevation features shall be considered for the annual solar access calculations.
+ii. Occupied roof areas as specified by CBC Section 503.1.4.
+iii. Roof area that is otherwise not available due to compliance with:
+a. Other state building code requirements, or
+b. Local building code requirements if local building code requirements are confirmed by the Executive Director."
+
+; SAC 10/19/25 (dev #240)
+Proj:LAFirePVBattExcpt, "Executive Order N-29-25 applies to projects to repair, restore, demolish, or replace residential structures and associated facilities, accessory structures, and supportive infrastructure substantially damaged / destroyed as a result of the emergency caused by the 2025 fires in the Greater Los Angeles Area"
+
+; tooltip updated for clarity - SAC 11/03/25 (dev #417)
+Proj:DefaultReducedPVReq, "‘Default PV Exceptions’ automatically applies applicable PV exceptions and adjusts PV requirements based on proposed building data.
+When enabled, manual selection of ‘Reduced PV Requirement’ and PV exceptions is disabled.
+Uncheck to manually select exceptions such as ‘Excessive Snow Load’ or ‘Buildings Approved by Local Planning Department Prior to 1/1/20’."
+
+Zone:FloorArea,        "Floor area of zone measured to outside stud face of exterior walls and centerline if walls between zones"    
+
+ExtWall:Orientation,       "Wall orientation"    
+ExtWall:OrientationValue,  "Wall orientation value (in relation to parent Zone azimuth)"    
+ExtWall:Area,              "Wall area" 
+; ExtWall:CavityRValue,      "Wall cavity R-value"    
+; ExtWall:SheathingVRValue,  "Wall shething R-value"    
+; ExtWall:FrameType,         "Wall frame type"    
+; ExtWall:FrameSpacing,      "Wall frame spacing"    
+ExtWall:Tilt,              "Wall tilt (60 < wall < 180, 90-vertical, 180-floor, 0-ceiling)" 
+ExtWall:Absorptivity,      "Absorptivity"
+ExtWall:FrameSURFACE,      "CSE SURFACE component to model Frame portion of wall" 
+ExtWall:CavitySURFACE,     "CSE SURFACE component to model Cavity portion of wall" 
+
+UndWall:DepthBelowGrade,   "Depth of bottom of wall below grade" 
+
+UndFloor:DepthBelowGrade,  "Depth of floor below grade" 
+
+SlabFloor:Perimeter,       "Length of the slab perimeter measured at the outside of the plan edge" 
+
+cseSURFACE:sfType,     "Type of opaque surface"    
+cseSURFACE:UI_Con,     "Surface construction"    
+cseSURFACE:sfCon,      "Surface construction"    
+cseSURFACE:sfArea,     "Wall area" 
+cseSURFACE:sfTilt,     "Surface tilt (floor=180, ceiling=0, vertical wall=90)" 
+cseSURFACE:sfAzm,      "Surface azimuth (with respect to parent zone azimuth)" 
+cseSURFACE:sfExAbs,    "Absorptivity"
+cseSURFACE:sfModel,    "Modeling option" 
+
+Win:Area,              "Area"
+Win:Height,            "Height"
+Win:Width,             "Width"
+Win:Multiplier,        "Multiplier (number of identical windows on this wall)"
+Win:NFRCUfactor,       "NFRC U-factor"
+Win:NFRCSHGC,          "NFRC solar heat gain coefficient"
+Win:ExteriorShade,     "Exterior shade type"
+
+cseWINDOW:wnArea,      "Area"
+cseWINDOW:wnHeight,    "Height"
+cseWINDOW:wnWidth,     "Width"
+cseWINDOW:wnMult,      "Multiplier"
+cseWINDOW:wnModel,     "Window model"
+cseWINDOW:wnFMult,     "F? multiplier"
+cseWINDOW:wnNGlz,      "Number of glazing layers"
+cseWINDOW:wnUnfrc,     "NFRC U-factor"
+cseWINDOW:wnSHGC,      "NFRC solar heat gain coefficient"
+cseWINDOW:wnDirtLoss,  "Dirt loss factor"
+cseWINDOW:wnExShd,     "Exterior shade type"
+cseWINDOW:wnInShd,     "Interior shade type"
+
+Door:Area,             "Area"
+Door:Ufactor,          "U-factor"
+
+cseDOOR:drArea,        "Area"
+cseDOOR:drU,           "U-factor"
+
+
+IAQFan:IAQCFM,           "IAQ CFM"                   
+IAQFan:WperCFMIAQ,       "W / CFM IAQ Vent"          
+IAQFan:IAQFanType,       "IAQ Fan Type"              
+IAQFan:IAQRecovEffect,   "IAQ Recovery Effectiveness"
+
+ClVentFan:DefaultSystem, "Use all fan system defaults" 
+ClVentFan:WperCFMCool,   "W / CFM Cooling Vent"       
+ClVentFan:CoolingVent,   "Cooling Vent CFM"           
+
+BatchRuns:ProjFileNames,  "Character string identifying projects to be processed (including wildcards '*' and/or '?')
+The asterisk * causes matching of any combination of characters. Some examples:
+> *.ribd16 - run any 2016 project file
+> 1Story*.ribd* - run files that start with 1Story
+The question mark ? will match any single character. Some examples:
+> ?StoryExample3.ribd16 - run files that start with any one character followed by Story (e.g. 1StoryExample3, 2StoryExample3) for 2016 project files
+> 1StoryExample?.ribd* - run files that start with 1StoryExample followed by a single character"
+
+

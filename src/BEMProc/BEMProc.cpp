@@ -199,6 +199,14 @@ void BEMPX_SetRulesetFilename( const char* sRulesetFilename, BEM_PropertyStatus 
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////// SAc 07/24/25
+bool BEMPX_RulesetIsDataModel()
+{  return ruleSet.IsDataModel();
+}
+bool BEMPX_RulesetIsProcedural()
+{  return ruleSet.IsProcedural();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // 

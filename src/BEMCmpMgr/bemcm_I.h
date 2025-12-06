@@ -81,7 +81,8 @@ extern int LocalEvaluateRuleset( QString& sErrMsg, int iErrRetVal, const char* p
 
 extern BOOL CM_EvaluateModelRules(	LPCSTR sShortTransformName, BOOL bReportToLog=FALSE,
 	  									BOOL bVerboseOutput=FALSE, const char* pszBEMBaseDetailsPathFile=NULL,
-										BOOL bLogDurationStats=FALSE, void* pCompRuleDebugInfo=NULL );
+										BOOL bLogDurationStats=FALSE, void* pCompRuleDebugInfo=NULL,
+                              std::vector<long>* plaIBDIClsObjIndices=NULL, const char* pszBEMBaseInputPathFile=NULL );    // SAC 07/15/25
 
 extern int Local_GenerateRulesetModelReport( QString sRptPathFile, QString sRptRL,
 	 											bool bVerbose /*=false*/, bool bSilent /*=false*/ );

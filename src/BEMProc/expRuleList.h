@@ -589,8 +589,8 @@ public:
 
 	void	Clear()	{	m_bIDInitAttempted = false;
 							m_bIDsOK = false;		};
-	bool	Init( ExpEvalStruct* pEval, ExpError* error );
-	bool	Init( QString& sErrMsg );	// SAC 2/25/14 - added to facilitate calling from compliance manager
+	bool	Init( ExpEvalStruct* pEval, ExpError* error, bool bNResGeom );    // bNResGeom - SAC 07/24/25
+	bool	Init( QString& sErrMsg, bool bNResGeom );	// SAC 2/25/14 - added to facilitate calling from compliance manager
 };
 
 extern double CalcDaylighting( int iDayltMethod, int iSpcObjIdx, const char* pszSpcName, ExpEvalStruct* pEval, ExpError* pError );
@@ -826,8 +826,8 @@ public:
 	void  addToolTip(RuleToolTip* pTT)			{	m_ruleToolTips.push_back(pTT);  return;  }
 
 	GeomDBIDs* getGeomIDs()													{	return &m_GeomIDs;  }
-	bool initGeomIDs( ExpEvalStruct* pEval, ExpError* error )	{	return m_GeomIDs.Init( pEval, error );  }
-	bool initGeomIDs( QString& sErrMsg )								{	return m_GeomIDs.Init( sErrMsg );  }
+	bool initGeomIDs( ExpEvalStruct* pEval, ExpError* error, bool bNResGeom )	{	return m_GeomIDs.Init( pEval, error, bNResGeom );  }  // bNResGeom - SAC 07/24/25
+	bool initGeomIDs( QString& sErrMsg, bool bNResGeom )								{	return m_GeomIDs.Init( sErrMsg, bNResGeom );  }
 
 	int  nextExportFileIndex()		{	for (int i=0; i<NUM_RULE_EXPORTFILES; i++)
 												{	if (m_pfExportFile[i] == NULL)

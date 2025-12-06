@@ -102,16 +102,16 @@ void CMainView::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CMainView message handlers
 
-#ifdef UI_ASHRAE901E
-static int siNumTabs = 4;
-static char* pszTabLabels[] = { "  Project  " , "  Architecture  ", "  Lighting  ", "  Mechanical  " };
-#elif UI_CARES
+// #ifdef UI_ASHRAE901E
+// static int siNumTabs = 4;
+// static char* pszTabLabels[] = { "  Project  " , "  Architecture  ", "  Lighting  ", "  Mechanical  " };
+// #elif UI_CARES
 static int siNumTabs = 2;
 static char* pszTabLabels[] = { "  Envelope  ", "  Mechanical  " };
-#elif UI_CANRES
-static int siNumTabs = 2;
-static char* pszTabLabels[] = { "  Envelope  ", "  Mechanical  " };
-#endif
+// #elif UI_CANRES
+// static int siNumTabs = 2;
+// static char* pszTabLabels[] = { "  Envelope  ", "  Mechanical  " };
+// #endif
 
 LRESULT CMainView::OnUpdateTabs( WPARAM, LPARAM )
 {
@@ -226,7 +226,8 @@ void CMainView::OnSelchangeMaintab(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 void CMainView::OnInitialUpdate() 
 {
    CFormView::OnInitialUpdate();
-   
+
+         //AfxMessageBox( "in CMainView::OnInitialUpdate()" );  // debug - SAC 09/03/25
    if (!m_bTabInitialized)
    {
       m_iTabData = BEMPUIX_GetMainScreenInfo();  // value indicating which tabs are present based on which bits are set

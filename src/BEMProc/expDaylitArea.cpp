@@ -2948,7 +2948,7 @@ int BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx /*=-
 	int iError;
 	BEM_ObjType eObjType = BEMO_User;
 
-	if (!geomIDs.Init( NULL /*ExpEvalStruct**/, NULL /*ExpError**/ ))
+	if (!geomIDs.Init( NULL /*ExpEvalStruct**/, NULL /*ExpError**/, true /*bNResGeom*/ ))
 		iRetVal = -1;
 	else if (iBEMClass != geomIDs.m_iOID_Story && iBEMClass != geomIDs.m_iOID_Spc)
 		iRetVal = -2;

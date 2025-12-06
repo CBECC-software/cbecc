@@ -283,8 +283,8 @@ void BEMPX_SetAbortRuleEvaluationFlag( bool bAbortRuleEval )
 }
 
 /////////////////////////////////////////////////////////////////////////////
-bool BEMPX_InitGeometryIDs( QString& sErrMsg )		// SAC 2/25/14
-{	return ruleSet.initGeomIDs( sErrMsg );
+bool BEMPX_InitGeometryIDs( QString& sErrMsg, bool bNResGeom )		// SAC 2/25/14  // bNResGeom - SAC 07/24/25
+{	return ruleSet.initGeomIDs( sErrMsg, bNResGeom );
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -598,7 +598,7 @@ static inline long GetPropertyDBID_LogError( const char* pszObj, const char* psz
 	return lDBID;
 }
 
-bool GeomDBIDs::Init( QString& sErrMsg )	// SAC 2/25/14 - added to facilitate calling from compliance manager
+bool GeomDBIDs::Init( QString& sErrMsg, bool bNResGeom )	// SAC 2/25/14 - added to facilitate calling from compliance manager
 {
 	if (!m_bIDInitAttempted)
 	{	int iNumInitErrors = 0;
@@ -635,108 +635,111 @@ bool GeomDBIDs::Init( QString& sErrMsg )	// SAC 2/25/14 - added to facilitate ca
 		if (m_iOID_CartesianPt > 0)
    		m_lDBID_CartesianPt_Coord = GetPropertyDBID_LogError( "CartesianPt", "Coord", m_iOID_CartesianPt, iNumInitErrors, sFirstInitError );
 
-#ifdef GEOM_NRES
-		m_iOID_Story	= GetObjectID_LogError( "Story", iNumInitErrors, sFirstInitError );
+//#ifdef GEOM_NRES   // replace use of GEOM_NRES w/ new bNResGeom argument
+      if (bNResGeom)
+      {
+   		m_iOID_Story	= GetObjectID_LogError( "Story", iNumInitErrors, sFirstInitError );
 
-		m_iOID_Spc		= GetObjectID_LogError( "Spc", iNumInitErrors, sFirstInitError );
-		if (m_iOID_Spc > 0)
-   	{
-		//	m_lDBID_Spc_PlenumSpcRef            			= GetPropertyDBID_LogError( "Spc", "PlenumSpcRef",            m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   	//	m_lDBID_Spc_ThrmlZnRef              			= GetPropertyDBID_LogError( "Spc", "ThrmlZnRef",              m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_FlrArea                 			= GetPropertyDBID_LogError( "Spc", "FlrArea",                 m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_FlrToCeilingHgt         			= GetPropertyDBID_LogError( "Spc", "FlrToCeilingHgt",         m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SkylitDaylitArea        			= GetPropertyDBID_LogError( "Spc", "SkylitDaylitArea",        m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_PriSideDaylitArea       			= GetPropertyDBID_LogError( "Spc", "PriSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SecSideDaylitArea       			= GetPropertyDBID_LogError( "Spc", "SecSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarSkylitDayltgRefPtCoordX  	= GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtCoordX",  m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarSkylitDayltgRefPtCoordY  	= GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtCoordY",  m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarPriSideDayltgRefPtCoordX 	= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtCoordX", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarPriSideDayltgRefPtCoordY 	= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtCoordY", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarSecSideDayltgRefPtCoordX 	= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtCoordX", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarSecSideDayltgRefPtCoordY 	= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtCoordY", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   	//	m_lDBID_Spc_SkylitDayltgCtrlRef     			= GetPropertyDBID_LogError( "Spc", "SkylitDayltgCtrlRef",     m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   	//	m_lDBID_Spc_PriSideDayltgCtrlRef    			= GetPropertyDBID_LogError( "Spc", "PriSideDayltgCtrlRef",    m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   	//	m_lDBID_Spc_SecSideDayltgCtrlRef    			= GetPropertyDBID_LogError( "Spc", "SecSideDayltgCtrlRef",    m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarSkylitDaylitArea           = GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDaylitArea",        m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarPriSideDaylitArea          = GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-   		m_lDBID_Spc_SrcVarSecSideDaylitArea          = GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
-         m_lDBID_Spc_SrcVarSkylitRDP               	= GetPropertyDBID_LogError( "Spc", "SrcVarSkylitRDP",               m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarPriSideRDP              	= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideRDP",              m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarSecSideRDP              	= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideRDP",              m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SkylitRDPCoefs          			= GetPropertyDBID_LogError( "Spc", "SkylitRDPCoefs",          m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_PriSideRDPCoefs         			= GetPropertyDBID_LogError( "Spc", "PriSideRDPCoefs",         m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SecSideRDPCoefs         			= GetPropertyDBID_LogError( "Spc", "SecSideRDPCoefs",         m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarSkylitDayltgRefPtEffAp     = GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtEffAp",      m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarSkylitDayltgRefPtSrcOrient = GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtSrcOrient",  m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarPriSideDayltgRefPtEffAp    = GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtEffAp",     m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarPriSideDayltgRefPtSrcOrient= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtSrcOrient", m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarSecSideDayltgRefPtEffAp    = GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtEffAp",     m_iOID_Spc, iNumInitErrors, sFirstInitError );
-         m_lDBID_Spc_SrcVarSecSideDayltgRefPtSrcOrient= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtSrcOrient", m_iOID_Spc, iNumInitErrors, sFirstInitError );
-		}
+   		m_iOID_Spc		= GetObjectID_LogError( "Spc", iNumInitErrors, sFirstInitError );
+   		if (m_iOID_Spc > 0)
+      	{
+   		//	m_lDBID_Spc_PlenumSpcRef            			= GetPropertyDBID_LogError( "Spc", "PlenumSpcRef",            m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      	//	m_lDBID_Spc_ThrmlZnRef              			= GetPropertyDBID_LogError( "Spc", "ThrmlZnRef",              m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_FlrArea                 			= GetPropertyDBID_LogError( "Spc", "FlrArea",                 m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_FlrToCeilingHgt         			= GetPropertyDBID_LogError( "Spc", "FlrToCeilingHgt",         m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SkylitDaylitArea        			= GetPropertyDBID_LogError( "Spc", "SkylitDaylitArea",        m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_PriSideDaylitArea       			= GetPropertyDBID_LogError( "Spc", "PriSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SecSideDaylitArea       			= GetPropertyDBID_LogError( "Spc", "SecSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarSkylitDayltgRefPtCoordX  	= GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtCoordX",  m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarSkylitDayltgRefPtCoordY  	= GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtCoordY",  m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarPriSideDayltgRefPtCoordX 	= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtCoordX", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarPriSideDayltgRefPtCoordY 	= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtCoordY", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarSecSideDayltgRefPtCoordX 	= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtCoordX", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarSecSideDayltgRefPtCoordY 	= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtCoordY", m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      	//	m_lDBID_Spc_SkylitDayltgCtrlRef     			= GetPropertyDBID_LogError( "Spc", "SkylitDayltgCtrlRef",     m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      	//	m_lDBID_Spc_PriSideDayltgCtrlRef    			= GetPropertyDBID_LogError( "Spc", "PriSideDayltgCtrlRef",    m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      	//	m_lDBID_Spc_SecSideDayltgCtrlRef    			= GetPropertyDBID_LogError( "Spc", "SecSideDayltgCtrlRef",    m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarSkylitDaylitArea           = GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDaylitArea",        m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarPriSideDaylitArea          = GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+      		m_lDBID_Spc_SrcVarSecSideDaylitArea          = GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDaylitArea",       m_iOID_Spc, iNumInitErrors, sFirstInitError ); 
+            m_lDBID_Spc_SrcVarSkylitRDP               	= GetPropertyDBID_LogError( "Spc", "SrcVarSkylitRDP",               m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarPriSideRDP              	= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideRDP",              m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarSecSideRDP              	= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideRDP",              m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SkylitRDPCoefs          			= GetPropertyDBID_LogError( "Spc", "SkylitRDPCoefs",          m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_PriSideRDPCoefs         			= GetPropertyDBID_LogError( "Spc", "PriSideRDPCoefs",         m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SecSideRDPCoefs         			= GetPropertyDBID_LogError( "Spc", "SecSideRDPCoefs",         m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarSkylitDayltgRefPtEffAp     = GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtEffAp",      m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarSkylitDayltgRefPtSrcOrient = GetPropertyDBID_LogError( "Spc", "SrcVarSkylitDayltgRefPtSrcOrient",  m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarPriSideDayltgRefPtEffAp    = GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtEffAp",     m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarPriSideDayltgRefPtSrcOrient= GetPropertyDBID_LogError( "Spc", "SrcVarPriSideDayltgRefPtSrcOrient", m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarSecSideDayltgRefPtEffAp    = GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtEffAp",     m_iOID_Spc, iNumInitErrors, sFirstInitError );
+            m_lDBID_Spc_SrcVarSecSideDayltgRefPtSrcOrient= GetPropertyDBID_LogError( "Spc", "SrcVarSecSideDayltgRefPtSrcOrient", m_iOID_Spc, iNumInitErrors, sFirstInitError );
+   		}
 
-   	m_iOID_ExtWall	= GetObjectID_LogError( "ExtWall", iNumInitErrors, sFirstInitError );
-		if (m_iOID_ExtWall > 0)
-   	{	m_lDBID_ExtWall_Az     = GetPropertyDBID_LogError( "ExtWall", "Az", m_iOID_ExtWall, iNumInitErrors, sFirstInitError ); 
-		}
+      	m_iOID_ExtWall	= GetObjectID_LogError( "ExtWall", iNumInitErrors, sFirstInitError );
+   		if (m_iOID_ExtWall > 0)
+      	{	m_lDBID_ExtWall_Az     = GetPropertyDBID_LogError( "ExtWall", "Az", m_iOID_ExtWall, iNumInitErrors, sFirstInitError ); 
+   		}
 
-   	m_iOID_Roof		= GetObjectID_LogError( "Roof", iNumInitErrors, sFirstInitError );
+      	m_iOID_Roof		= GetObjectID_LogError( "Roof", iNumInitErrors, sFirstInitError );
 
-   	m_iOID_Win		= GetObjectID_LogError( "Win", iNumInitErrors, sFirstInitError );
-		if (m_iOID_Win > 0)
-   	{	m_lDBID_Win_FenConsRef             = GetPropertyDBID_LogError( "Win", "FenConsRef",             m_iOID_Win, iNumInitErrors, sFirstInitError );
-   		m_lDBID_Win_Area                   = GetPropertyDBID_LogError( "Win", "Area",                   m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_AllowWinShades         = GetPropertyDBID_LogError( "Win", "AllowWinShades",         m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_EnableWinShades        = GetPropertyDBID_LogError( "Win", "EnableWinShades",        m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangDepth          = GetPropertyDBID_LogError( "Win", "OverhangDepth",          m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangDistance       = GetPropertyDBID_LogError( "Win", "OverhangDistance",       m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangLeftExtension  = GetPropertyDBID_LogError( "Win", "OverhangLeftExtension",  m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangRightExtension = GetPropertyDBID_LogError( "Win", "OverhangRightExtension", m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangAngle          = GetPropertyDBID_LogError( "Win", "OverhangAngle",          m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangTransOption    = GetPropertyDBID_LogError( "Win", "OverhangTransOption",    m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangTrans          = GetPropertyDBID_LogError( "Win", "OverhangTrans",          m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_OverhangTransSchRef    = GetPropertyDBID_LogError( "Win", "OverhangTransSchRef",    m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinDepth           = GetPropertyDBID_LogError( "Win", "LeftFinDepth",           m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinDistance        = GetPropertyDBID_LogError( "Win", "LeftFinDistance",        m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinDistanceAbove   = GetPropertyDBID_LogError( "Win", "LeftFinDistanceAbove",   m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinDistanceBelow   = GetPropertyDBID_LogError( "Win", "LeftFinDistanceBelow",   m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinAngle           = GetPropertyDBID_LogError( "Win", "LeftFinAngle",           m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinTransOption     = GetPropertyDBID_LogError( "Win", "LeftFinTransOption",     m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinTrans           = GetPropertyDBID_LogError( "Win", "LeftFinTrans",           m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_LeftFinTransSchRef     = GetPropertyDBID_LogError( "Win", "LeftFinTransSchRef",     m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_RightFinDepth          = GetPropertyDBID_LogError( "Win", "RightFinDepth",          m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_RightFinDistance       = GetPropertyDBID_LogError( "Win", "RightFinDistance",       m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_RightFinDistanceAbove  = GetPropertyDBID_LogError( "Win", "RightFinDistanceAbove",  m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_RightFinDistanceBelow  = GetPropertyDBID_LogError( "Win", "RightFinDistanceBelow",  m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_RightFinAngle          = GetPropertyDBID_LogError( "Win", "RightFinAngle",          m_iOID_Win, iNumInitErrors, sFirstInitError );
-			m_lDBID_Win_DisableDayltgImpact    = BEMPX_GetDatabaseID(             "DisableDayltgImpact",    m_iOID_Win );		// SAC 7/29/18 - added w/ NO error checking (used when present for 2019 DayLtg)
-		}
+      	m_iOID_Win		= GetObjectID_LogError( "Win", iNumInitErrors, sFirstInitError );
+   		if (m_iOID_Win > 0)
+      	{	m_lDBID_Win_FenConsRef             = GetPropertyDBID_LogError( "Win", "FenConsRef",             m_iOID_Win, iNumInitErrors, sFirstInitError );
+      		m_lDBID_Win_Area                   = GetPropertyDBID_LogError( "Win", "Area",                   m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_AllowWinShades         = GetPropertyDBID_LogError( "Win", "AllowWinShades",         m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_EnableWinShades        = GetPropertyDBID_LogError( "Win", "EnableWinShades",        m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangDepth          = GetPropertyDBID_LogError( "Win", "OverhangDepth",          m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangDistance       = GetPropertyDBID_LogError( "Win", "OverhangDistance",       m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangLeftExtension  = GetPropertyDBID_LogError( "Win", "OverhangLeftExtension",  m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangRightExtension = GetPropertyDBID_LogError( "Win", "OverhangRightExtension", m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangAngle          = GetPropertyDBID_LogError( "Win", "OverhangAngle",          m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangTransOption    = GetPropertyDBID_LogError( "Win", "OverhangTransOption",    m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangTrans          = GetPropertyDBID_LogError( "Win", "OverhangTrans",          m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_OverhangTransSchRef    = GetPropertyDBID_LogError( "Win", "OverhangTransSchRef",    m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinDepth           = GetPropertyDBID_LogError( "Win", "LeftFinDepth",           m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinDistance        = GetPropertyDBID_LogError( "Win", "LeftFinDistance",        m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinDistanceAbove   = GetPropertyDBID_LogError( "Win", "LeftFinDistanceAbove",   m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinDistanceBelow   = GetPropertyDBID_LogError( "Win", "LeftFinDistanceBelow",   m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinAngle           = GetPropertyDBID_LogError( "Win", "LeftFinAngle",           m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinTransOption     = GetPropertyDBID_LogError( "Win", "LeftFinTransOption",     m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinTrans           = GetPropertyDBID_LogError( "Win", "LeftFinTrans",           m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_LeftFinTransSchRef     = GetPropertyDBID_LogError( "Win", "LeftFinTransSchRef",     m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_RightFinDepth          = GetPropertyDBID_LogError( "Win", "RightFinDepth",          m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_RightFinDistance       = GetPropertyDBID_LogError( "Win", "RightFinDistance",       m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_RightFinDistanceAbove  = GetPropertyDBID_LogError( "Win", "RightFinDistanceAbove",  m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_RightFinDistanceBelow  = GetPropertyDBID_LogError( "Win", "RightFinDistanceBelow",  m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_RightFinAngle          = GetPropertyDBID_LogError( "Win", "RightFinAngle",          m_iOID_Win, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Win_DisableDayltgImpact    = BEMPX_GetDatabaseID(             "DisableDayltgImpact",    m_iOID_Win );		// SAC 7/29/18 - added w/ NO error checking (used when present for 2019 DayLtg)
+   		}
 
-   	m_iOID_Skylt	= GetObjectID_LogError( "Skylt", iNumInitErrors, sFirstInitError );
-		if (m_iOID_Skylt > 0)
-   	{	m_lDBID_Skylt_FenConsRef = GetPropertyDBID_LogError( "Skylt", "FenConsRef", m_iOID_Skylt, iNumInitErrors, sFirstInitError );
-   		m_lDBID_Skylt_Area       = GetPropertyDBID_LogError( "Skylt", "Area",       m_iOID_Skylt, iNumInitErrors, sFirstInitError );
-			m_lDBID_Skylt_DisableDayltgImpact  = BEMPX_GetDatabaseID(     "DisableDayltgImpact",  m_iOID_Skylt );		// SAC 7/29/18 - added w/ NO error checking (used when present for 2019 DayLtg)
-		}
+      	m_iOID_Skylt	= GetObjectID_LogError( "Skylt", iNumInitErrors, sFirstInitError );
+   		if (m_iOID_Skylt > 0)
+      	{	m_lDBID_Skylt_FenConsRef = GetPropertyDBID_LogError( "Skylt", "FenConsRef", m_iOID_Skylt, iNumInitErrors, sFirstInitError );
+      		m_lDBID_Skylt_Area       = GetPropertyDBID_LogError( "Skylt", "Area",       m_iOID_Skylt, iNumInitErrors, sFirstInitError );
+   			m_lDBID_Skylt_DisableDayltgImpact  = BEMPX_GetDatabaseID(     "DisableDayltgImpact",  m_iOID_Skylt );		// SAC 7/29/18 - added w/ NO error checking (used when present for 2019 DayLtg)
+   		}
 
-   	m_iOID_FenCons	= GetObjectID_LogError( "FenCons", iNumInitErrors, sFirstInitError );
-		if (m_iOID_FenCons > 0)
-   		m_lDBID_FenCons_VT = GetPropertyDBID_LogError( "FenCons", "VT", m_iOID_FenCons, iNumInitErrors, sFirstInitError );
+      	m_iOID_FenCons	= GetObjectID_LogError( "FenCons", iNumInitErrors, sFirstInitError );
+   		if (m_iOID_FenCons > 0)
+      		m_lDBID_FenCons_VT = GetPropertyDBID_LogError( "FenCons", "VT", m_iOID_FenCons, iNumInitErrors, sFirstInitError );
 
-				//   int   m_iOID_DayltgCtrl                     // Typ  NV   US     UL     NO    OC   CV   CP    LName                 
-				//   long  m_lDBID_DayltgCtrlDayltgCtrlType      // Sym,  1,  Req,  "",      0,                  "DaylightingControlType"
-				//   long  m_lDBID_DayltgCtrlDaylitAreaType      // Sym,  1,  Req,  "",      0,                  "DaylitAreaType"
-				//   long  m_lDBID_DayltgCtrlDaylitArea          // Flt,  1,  Req,  "ft2",   0,                  "DaylitArea"
-				//   long  m_lDBID_DayltgCtrlIllumRefPtCoord     // Flt,  3,  Req,  "ft",    0,                  "IlluminanceReferencePointCoordinate"
-				//   long  m_lDBID_DayltgCtrlDayltgCtrlLtgFrac   // Flt,  1,  Req,  "",      0,                  "DaylightingControlLightingFraction"
-				//   long  m_lDBID_DayltgCtrlMinDimLtgFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingLightFraction"
-				//   long  m_lDBID_DayltgCtrlMinDimPwrFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingPowerFraction"
-				//   long  m_lDBID_DayltgCtrlNumOfCtrlSteps      // Int,  1,  Opt,  "",      0,                  "NumberOfControlSteps"
-				//   long  m_lDBID_DayltgCtrlIllumSetPt          // Flt,  1,  Req,  "lux",   0,                  "IlluminanceSetPoint"
-				//   long  m_lDBID_DayltgCtrlIllumSetPtAdjFac    // Flt,  1,  NInp, "",      0,                  "IlluminanceSetPointAdjustmentFactor"
-				//   long  m_lDBID_DayltgCtrlAdjIllumSetPt       // Flt,  1,  NInp, "lux",   0,                  "AdjustedIlluminanceSetPoint"
-				//   long  m_lDBID_DayltgCtrlGlrAz               // Flt,  1,  Req,  "",      0,                  "GlareAzimuth"
-				//   long  m_lDBID_DayltgCtrlMaxGlrIdx           // Flt,  1,  Req,  "",      0,                  "MaximumGlareIndex"
-#endif
+   				//   int   m_iOID_DayltgCtrl                     // Typ  NV   US     UL     NO    OC   CV   CP    LName                 
+   				//   long  m_lDBID_DayltgCtrlDayltgCtrlType      // Sym,  1,  Req,  "",      0,                  "DaylightingControlType"
+   				//   long  m_lDBID_DayltgCtrlDaylitAreaType      // Sym,  1,  Req,  "",      0,                  "DaylitAreaType"
+   				//   long  m_lDBID_DayltgCtrlDaylitArea          // Flt,  1,  Req,  "ft2",   0,                  "DaylitArea"
+   				//   long  m_lDBID_DayltgCtrlIllumRefPtCoord     // Flt,  3,  Req,  "ft",    0,                  "IlluminanceReferencePointCoordinate"
+   				//   long  m_lDBID_DayltgCtrlDayltgCtrlLtgFrac   // Flt,  1,  Req,  "",      0,                  "DaylightingControlLightingFraction"
+   				//   long  m_lDBID_DayltgCtrlMinDimLtgFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingLightFraction"
+   				//   long  m_lDBID_DayltgCtrlMinDimPwrFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingPowerFraction"
+   				//   long  m_lDBID_DayltgCtrlNumOfCtrlSteps      // Int,  1,  Opt,  "",      0,                  "NumberOfControlSteps"
+   				//   long  m_lDBID_DayltgCtrlIllumSetPt          // Flt,  1,  Req,  "lux",   0,                  "IlluminanceSetPoint"
+   				//   long  m_lDBID_DayltgCtrlIllumSetPtAdjFac    // Flt,  1,  NInp, "",      0,                  "IlluminanceSetPointAdjustmentFactor"
+   				//   long  m_lDBID_DayltgCtrlAdjIllumSetPt       // Flt,  1,  NInp, "lux",   0,                  "AdjustedIlluminanceSetPoint"
+   				//   long  m_lDBID_DayltgCtrlGlrAz               // Flt,  1,  Req,  "",      0,                  "GlareAzimuth"
+   				//   long  m_lDBID_DayltgCtrlMaxGlrIdx           // Flt,  1,  Req,  "",      0,                  "MaximumGlareIndex"
+      }
+//#endif
 
 		m_bIDInitAttempted = true;
 		m_bIDsOK = (iNumInitErrors == 0);
@@ -750,10 +753,10 @@ bool GeomDBIDs::Init( QString& sErrMsg )	// SAC 2/25/14 - added to facilitate ca
 	return m_bIDsOK;
 }
 
-bool GeomDBIDs::Init( ExpEvalStruct* /*pEval*/, ExpError* error )
+bool GeomDBIDs::Init( ExpEvalStruct* /*pEval*/, ExpError* error, bool bNResGeom )
 {
 	QString sErrMsg;
-	Init( sErrMsg );
+	Init( sErrMsg, bNResGeom );
 	if (!m_bIDsOK && error)
 		ExpSetErr( error, EXP_RuleProc, sErrMsg.toLocal8Bit().constData() );
 	return m_bIDsOK;

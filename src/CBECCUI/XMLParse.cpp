@@ -104,15 +104,21 @@ int ProcessXMLElement_Shade( int /*iSchema*/, QDomElement& elem, int lvl, QStrin
 		if (bFamInclPV)
 			sName += (bFamInclSite ? " (site pv)" : (sFamNm.indexOf("Building") >= 0 ? " (bldg pv)" : " (pv)"));
 
-#ifdef UI_CARES
-		int iBDBCID_Shade = eiBDBCID_Shade;
-		long lDBID_Shade_Type = elDBID_Shade_Type;
-		long lDBID_PVArrayGeom_IsBldgAttached = elDBID_PVArrayGeom_IsBldgAttached;
-#else
-		int iBDBCID_Shade = eiBDBCID_PVArrayShade;
-		long lDBID_Shade_Type                 = BEMPX_GetDatabaseID( "PVArrayShade:Type" );
-		long lDBID_PVArrayGeom_IsBldgAttached = BEMPX_GetDatabaseID( "PVArrayGeom:IsBldgAttached" );
-#endif
+		int iBDBCID_Shade=0;
+		long lDBID_Shade_Type=0, lDBID_PVArrayGeom_IsBldgAttached=0;
+      //#ifdef UI_CARES
+      if (ebUI_CARES)         // single Res/Com app - SAC 09/02/25 (gh dev #433)
+		{  iBDBCID_Shade = eiBDBCID_Shade;
+   		lDBID_Shade_Type = elDBID_Shade_Type;
+   		lDBID_PVArrayGeom_IsBldgAttached = elDBID_PVArrayGeom_IsBldgAttached;
+      }
+      //#else
+      else
+		{  iBDBCID_Shade = eiBDBCID_PVArrayShade;
+   		lDBID_Shade_Type                 = BEMPX_GetDatabaseID( "PVArrayShade:Type" );
+   		lDBID_PVArrayGeom_IsBldgAttached = BEMPX_GetDatabaseID( "PVArrayGeom:IsBldgAttached" );
+      }
+      //#endif
 		BEMObject* pShadeObj = BEMPX_CreateObject( (bFamInclPV ? eiBDBCID_PVArrayGeom : iBDBCID_Shade), sName.toLatin1().constData() );		assert( pShadeObj );
 		if (pShadeObj)
 		{	sName = pShadeObj->getName();

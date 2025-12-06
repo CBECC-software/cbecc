@@ -1831,6 +1831,19 @@ BOOL BEMPX_CompileDataModel(	const char* sBEMFileName, const char* sEnumsFileNam
          {	bool bPTObjClsInfoOK = pPT->setObjClassDataFromStrings();			assert( bPTObjClsInfoOK );
          }
       }
+
+      // // debugging - SAC 10/09/25
+      // if (psClassPropMsg)
+      // {  int iDbgClassID = BEMPX_GetDBComponentID( "ResDHWSys" );
+      //    int iDbgTblRowExClassID = BEMPX_GetDBComponentID( "cf1rtblRowDHWSysExisting" );
+      //    long lDbgDBID = (iDbgClassID > 0 ? BEMPX_GetDatabaseID( "CF1R_DHWSysRowExisting", iDbgClassID ) : 0);
+      //    int iDbgError;
+      //    BEMPropertyType* pDbgPropType = (lDbgDBID > 0 ? BEMPX_GetPropertyTypeFromDBID( lDbgDBID, iDbgError ) : NULL);
+      //    int iDbgDHWSysRowClassIdx = (pDbgPropType ? pDbgPropType->getObj1ClassIdx(0) : -1);
+      //    psClassPropMsg->append( QString( "\n\n     Class ID of ResDHWSys:CF1R_DHWSysRowExisting assignment = %1 / class ID of cf1rtblRowDHWSysExisting = %2 / ResDHWSys class ID %3" ).arg( 
+      //                                                 QString::number( iDbgDHWSysRowClassIdx ), QString::number( iDbgTblRowExClassID ), QString::number( iDbgClassID ) ) );
+      // }
+
 //            // ERROR - if m_iPropType == BEMP_Obj then m_lpszObjClass must have a valid class name
 //            assert( pPT->m_saObjClass[0].length() > 0 );
 //				for (int iObjCls=0; iObjCls<BEM_MAX_PROPTYPE_OBJREFCLASSES; iObjCls++)  // SAC 6/14/12 - revised to handle ARRAY of compatible referenced object classes

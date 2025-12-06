@@ -32,7 +32,7 @@
 #define __MODELKITINTERFACE_H__
 
 int ExecuteModelkitBat(	LPCSTR sModelkitBatPathFile, LPCSTR sModelkitRubyScriptPathFile,     // SAC 06/15/22
-                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, bool bVerboseOutput=false,
-                        char* pszReturnStr=NULL, int iReturnStrLength=0 );
+                        LPCSTR sIDFPath, LPCSTR sIDFFilenameNoExt, LPCSTR sEPlusPath,        // added sEPlusPath - SAC 07/26/25
+                        bool bVerboseOutput=false, char* pszReturnStr=NULL, int iReturnStrLength=0 );
 
 #endif // __MODELKITINTERFACE_H__

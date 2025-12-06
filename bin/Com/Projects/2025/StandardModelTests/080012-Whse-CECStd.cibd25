@@ -3,15 +3,15 @@ RulesetFilename   "T24_2025.bin"
 Proj   "080012-Whse-CECStd25"  
    BldgEngyModelVersion = 17
    CreateDate = 1415238845
-   ModDate = 1750732478
-   RunDate = 1750732479
+   ModDate = 1762523622
+   RunDate = 1762523623
    ZipCode = 95814
    AutoHardSize = 1
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2025.1.0 (1381)"
+   SoftwareVersion = "CBECC 2025.2.0 (1394)"
    ..
 
 ProjVar   "080012-Whse-CECStd25 - ProjVar"  
@@ -5069,15 +5069,15 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse8[1] = "Total Compliance"
    Enduse8[2] = "44.3"
    Enduse8[3] = "445.5"
-   Enduse8[4] = "10.42"
+   Enduse8[4] = "10.28"
    Enduse8[5] = "44.3"
    Enduse8[6] = "445.4"
-   Enduse8[7] = "10.42"
+   Enduse8[7] = "10.28"
    Enduse8[8] = "--"
-   Enduse8[9] = "5.8"
-   Enduse8[10] = "5.8"
-   Enduse8[11] = "9.23"
-   Enduse8[12] = "9.22"
+   Enduse8[9] = "5.5"
+   Enduse8[10] = "5.5"
+   Enduse8[11] = "9.24"
+   Enduse8[12] = "9.23"
    Enduse8[13] = "-0.01"
    Enduse8[17] = "4.10"
    Enduse8[18] = "24.34"
@@ -5167,15 +5167,15 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse14[1] = "Battery Storage"
    Enduse14[2] = "0.2"
    Enduse14[3] = "--"
-   Enduse14[4] = "0.03"
+   Enduse14[4] = "-0.11"
    Enduse14[5] = "0.2"
    Enduse14[6] = "--"
-   Enduse14[7] = "0.03"
+   Enduse14[7] = "-0.11"
    Enduse14[8] = "--"
-   Enduse14[9] = "-0.0"
-   Enduse14[10] = "-0.0"
-   Enduse14[11] = "-0.07"
-   Enduse14[12] = "-0.07"
+   Enduse14[9] = "-0.4"
+   Enduse14[10] = "-0.4"
+   Enduse14[11] = "-0.06"
+   Enduse14[12] = "-0.06"
    Enduse14[13] = "--"
    Enduse14[17] = "-0.18"
    Enduse14[19] = "-0.18"
@@ -5185,15 +5185,15 @@ EUseSummary   "Metrics 2025 (Oct 2022)"
    Enduse15[1] = "Project Total"
    Enduse15[2] = "78.5"
    Enduse15[3] = "445.5"
-   Enduse15[4] = "13.37"
+   Enduse15[4] = "13.23"
    Enduse15[5] = "78.5"
    Enduse15[6] = "445.4"
-   Enduse15[7] = "13.37"
+   Enduse15[7] = "13.23"
    Enduse15[8] = "--"
-   Enduse15[9] = "6.7"
-   Enduse15[10] = "6.7"
-   Enduse15[11] = "9.80"
-   Enduse15[12] = "9.79"
+   Enduse15[9] = "6.3"
+   Enduse15[10] = "6.3"
+   Enduse15[11] = "9.81"
+   Enduse15[12] = "9.80"
    Enduse15[13] = "-0.01"
    Enduse15[17] = "5.67"
    Enduse15[18] = "24.34"
@@ -5230,8 +5230,8 @@ clg: 0  htg: 0  'Zn_BulkStorage'",
                  "clg: 0  htg: 0  'Zn_Office'
 clg: 0  htg: 0  'Zn_FineStorage'
 clg: 0  htg: 0  'Zn_BulkStorage'" )
-   SimSummary[1] = "CSE Successful, E+ Successful (110 warnings)"
-   SimSummary[3] = "CSE Successful, E+ Successful (110 warnings)"
+   SimSummary[1] = "CSE Successful, E+ Successful (115 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (115 warnings)"
    PassFail = "FAIL"
    MetricPassFail[1] = "Pass"
    MetricPassFail[2] = "Pass"
@@ -5247,9 +5247,9 @@ clg: 0  htg: 0  'Zn_BulkStorage'" )
    PctSavSLCCLbl = "-"
    PctSavEffSLCCLbl = "-"
    PctSavCmpSLCCLbl = "-"
-   PctSavingsSrc = -0.102145
+   PctSavingsSrc = -0.102041
    PctSavingsEffSrc = -0.103306
-   PctSavingsCmpSrc = -0.10846
+   PctSavingsCmpSrc = -0.108342
    PctSavSrcLbl = "-0.1"
    PctSavEffSrcLbl = "-0.1"
    PctSavCmpSrcLbl = "-0.1"
@@ -5257,15 +5257,15 @@ clg: 0  htg: 0  'Zn_BulkStorage'" )
    PVBattResultsValid = 1
    PropPV_Size = 29.76
    PropPV_Total = 46756.2
-   PropPV_Export = 7080.31
-   PropPV_PctExport = 15.143
+   PropPV_Export = 5414.55
+   PropPV_PctExport = 11.5804
    PropBatt_Size = 35.5
    PropBatt_Pwr = 8.87
    PropBatt_Ctrl = "Time of Use"
    StdPV_Size = 29.76
    StdPV_Total = 46755.6
-   StdPV_Export = 7078.82
-   StdPV_PctExport = 15.14
+   StdPV_Export = 5415.55
+   StdPV_PctExport = 11.5827
    StdBatt_Size = 35.5
    StdBatt_Pwr = 8.87
    StdBatt_Ctrl = "Time of Use"

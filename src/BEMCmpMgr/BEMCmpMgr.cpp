@@ -323,11 +323,20 @@ BOOL OKToWriteOrDeleteFile( const char* pszFileName, QString sUserMsg, bool bSil
 //            fclose( pfTempFile );
 //            bRetVal = TRUE;
 //         }
-			QFile file(pszFileName);
-			if (file.open(QIODevice::WriteOnly | QIODevice::Append))
-			{	file.close();
-				bRetVal = TRUE;
-			}
+		//	QFile file(pszFileName);
+		//	if (file.open(QIODevice::WriteOnly | QIODevice::Append))
+		//	{	file.close();
+		//		bRetVal = TRUE;
+		//	}
+      // replaced above w/ below - SAC 10/22/25
+      //AfxMessageBox( "About to try opening file..." );
+         FILE *pfTempFile = fopen( pszFileName, "r+" );
+         if (pfTempFile != NULL)
+         {
+      //AfxMessageBox( "File opened OK." );
+            fclose( pfTempFile );
+            bRetVal = TRUE;
+         }
 
 			if (bSilent)
 			   bAbort = TRUE;
@@ -1358,7 +1367,8 @@ static char szTrsnErr[]  = "ERROR(s) encountered";
 
 BOOL CMX_TransformModel(	LPCSTR sShortTransformName, BOOL bEvalRules, BOOL bReportToLog /*=FALSE*/,
 	  								BOOL bVerboseOutput /*=FALSE*/, const char* pszBEMBaseDetailsPathFile /*=NULL*/,
-									BOOL bLogDurationStats /*=FALSE*/, void* pCompRuleDebugInfo /*=NULL*/ )  // SAC 1/9/14 - added pCompRuleDebugInfo argument - void pointer to BEMCompNameTypePropArray object
+									BOOL bLogDurationStats /*=FALSE*/, void* pCompRuleDebugInfo /*=NULL*/,   // SAC 1/9/14 - added pCompRuleDebugInfo argument - void pointer to BEMCompNameTypePropArray object
+                           std::vector<long>* plaIBDIClsObjIndices /*=NULL*/, const char* pszBEMBaseInputPathFile /*=NULL*/ )    // SAC 07/15/25
 {
 	BOOL bRetVal = TRUE;
 
@@ -1400,7 +1410,8 @@ BOOL CMX_TransformModel(	LPCSTR sShortTransformName, BOOL bEvalRules, BOOL bRepo
 		}
 
 		if (bRetVal && bEvalRules)
-			bRetVal = CM_EvaluateModelRules( sShortTransformName, bReportToLog, bVerboseOutput, pszBEMBaseDetailsPathFile, bLogDurationStats, pCompRuleDebugInfo );
+			bRetVal = CM_EvaluateModelRules( sShortTransformName, bReportToLog, bVerboseOutput, pszBEMBaseDetailsPathFile, bLogDurationStats,
+                                          pCompRuleDebugInfo, plaIBDIClsObjIndices, pszBEMBaseInputPathFile );
 
 			if (bLogDurationStats)
 			{	QString sEvalTransSecsMsg;
@@ -1414,7 +1425,8 @@ BOOL CMX_TransformModel(	LPCSTR sShortTransformName, BOOL bEvalRules, BOOL bRepo
 
 BOOL CM_EvaluateModelRules(	LPCSTR sShortTransformName, BOOL bReportToLog /*=FALSE*/,
 	  									BOOL bVerboseOutput /*=FALSE*/, const char* pszBEMBaseDetailsPathFile /*=NULL*/,
-										BOOL bLogDurationStats /*=FALSE*/, void* pCompRuleDebugInfo /*=NULL*/ )  // SAC 1/9/14 - added pCompRuleDebugInfo argument - void pointer to BEMCompNameTypePropArray object
+										BOOL bLogDurationStats /*=FALSE*/, void* pCompRuleDebugInfo /*=NULL*/,   // SAC 1/9/14 - added pCompRuleDebugInfo argument - void pointer to BEMCompNameTypePropArray object
+                              std::vector<long>* plaIBDIClsObjIndices /*=NULL*/, const char* pszBEMBaseInputPathFile /*=NULL*/ )    // SAC 07/15/25
 {
 	BOOL bRetVal = TRUE;
 
@@ -1455,7 +1467,13 @@ BOOL CM_EvaluateModelRules(	LPCSTR sShortTransformName, BOOL bReportToLog /*=FAL
 //										((pszBEMBaseDetailsPathFile==NULL || strlen( pszBEMBaseDetailsPathFile ) < 1) ? "blank" : pszBEMBaseDetailsPathFile), 
 //										((pszBEMBaseDetailsPathFile==NULL || strlen( pszBEMBaseDetailsPathFile ) < 1) ? " NOT" : "") );			BEMMessageBox( sDbgDetailWrite, "" );
 			if (pszBEMBaseDetailsPathFile && strlen( pszBEMBaseDetailsPathFile ) > 0)
-				BEMPX_WriteProjectFile( pszBEMBaseDetailsPathFile, BEMFM_DETAIL );
+			   BEMPX_WriteProjectFile( pszBEMBaseDetailsPathFile, BEMFM_DETAIL );
+         if (pszBEMBaseInputPathFile && strlen( pszBEMBaseInputPathFile ) > 0)
+            BEMPX_WriteProjectFile( pszBEMBaseInputPathFile, BEMFM_INPUT, false /*bUseLogFileName*/, false /*bWriteAllProperties*/,
+                                    FALSE /*bSupressAllMessageBoxes*/, 0 /*iFileType*/, false /*bAppend*/, NULL /*pszModelName*/,
+                                    true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lModDate*/, false /*bOnlyValidInputs*/,
+                                    true /*bAllowCreateDateReset*/, 0 /*iPropertyCommentOption*/, plaIBDIClsObjIndices, false /*bReportInvalidEnums*/ );	
+
 //		}
 
 	return bRetVal;

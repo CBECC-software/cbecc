@@ -273,7 +273,7 @@ private:
 #define BEM_MODEL_MULT  1000000000  // added MODEL multiplier to facilitate longlong DBID (MDBID) values to identify which model to set/retrieve data to/from  // x10 - SAC 06/09/25 / restored prior value - SAC 06/10/25
 #define BEM_COMP_MULT      1000000  // x10 - SAC 06/09/25 / restored prior value - SAC 06/10/25
 #define BEM_PARAM_MULT        1000
-#define BEM_MAX_COMP_ID        600  // 300->600 - SAC 04/26/21   // SAC 4/13/19 - was:  214   // SAC 5/11/16
+#define BEM_MAX_COMP_ID        990  // 600->990 - SAC 10/09/25   // 300->600 - SAC 04/26/21   // SAC 4/13/19 - was:  214   // SAC 5/11/16
 #define BEMPX_GetModelID(    lDBID )  (int)  (lDBID / BEM_MODEL_MULT)
 #define BEMPX_GetClassID(    lDBID )  (int)  ((lDBID - ((lDBID / BEM_MODEL_MULT) * BEM_MODEL_MULT)) / BEM_COMP_MULT )
 #define BEMPX_GetPropertyID( lDBID )  (int)  ((lDBID - ((lDBID / BEM_COMP_MULT ) * BEM_COMP_MULT )) / BEM_PARAM_MULT)
@@ -326,6 +326,9 @@ int  BEMPROC_API __cdecl BEMPX_GetRulesetOrganization();	// was: RuleProcGetRule
 const char* __cdecl BEMPX_GetRulesetFilenameFromProjectFile( const char* fileName );
 
 void BEMPROC_API __cdecl BEMPX_SetRulesetFilename( const char* fileName, BEM_PropertyStatus eStatus=BEMS_UserDefault );
+
+bool BEMPROC_API __cdecl BEMPX_RulesetIsDataModel();     // SAC 07/24/25
+bool BEMPROC_API __cdecl BEMPX_RulesetIsProcedural();
 
 int  BEMPROC_API __cdecl BEMPX_GetNumRuleToolTips();		// was: RuleProcGetNumRuleToolTips()
 bool BEMPROC_API __cdecl BEMPX_GetRuleToolTipData( int i0TTIdx, QString& sTTText, long& lDBID, int idx=0 );	// was: RuleProcGetRuleToolTipData()
@@ -606,6 +609,8 @@ BEMSymDependencySet* __cdecl BEMPX_GetSymbolListPointer(	int& iNumSymbols, long 
 																			int iBEMProcIdx=-1, BOOL* pbSymListArrayDependent=NULL );
 QString              __cdecl BEMPX_GetSymbolString(	long iSymVal, long lDBID, int iOccur=-1, BEM_ObjType eObjType=BEMO_User,
 																		int iBEMProcIdx=-1, BOOL bOnlyFromCurrentSymDepSet=TRUE );
+QString              __cdecl BEMPX_GetSymbolStringFromPtrs( long iSymVal, BEMObject* pObj, BEMProperty* pProp,
+                                                            int iBEMProcIdx=-1, BOOL bOnlyFromCurrentSymDepSet=TRUE );  // SAC 10/24/25
 int  BEMPROC_API     __cdecl BEMPX_GetSymbolData( long& iSymValue, QString& sSymString, BEMSymDependencySet* pSymDepSet, int iSymIdx=0 );
 
 // enable rule processor to override BEMProc symbol definitions based on the contents of the compliance ruleset being loaded
@@ -740,7 +745,7 @@ bool   BEMPROC_API __cdecl BEMPX_EvalErrorCheckList( LPCSTR listName, QStringLis
 bool   BEMPROC_API __cdecl BEMPX_AbortRuleEvaluation();											// was: RuleProcAbortRuleEvaluation();
 void   BEMPROC_API __cdecl BEMPX_SetAbortRuleEvaluationFlag( bool bAbortRuleEval );		// was: RuleProcSetAbortRuleEvaluationFlag( bool bAbortRuleEval );
 
-bool   BEMPROC_API __cdecl BEMPX_InitGeometryIDs( QString& sErrMsg );		// was: RuleProcInitializeGeometryIDs()
+bool   BEMPROC_API __cdecl BEMPX_InitGeometryIDs( QString& sErrMsg, bool bNResGeom );		// was: RuleProcInitializeGeometryIDs()  // bNResGeom - SAC 07/24/25
 
 double BEMPROC_API __cdecl BEMPX_GetRulesetSimulateFlagValue( double fDefault=1 );
 

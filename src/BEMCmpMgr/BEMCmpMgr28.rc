@@ -1,0 +1,45 @@
+// RC file to define Windows file property details
+//
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include "winver.h"
+
+VS_VERSION_INFO     VERSIONINFO
+  FILEVERSION       28,0,1,1395
+  PRODUCTVERSION    28,0,1,1395
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+        BLOCK "040904B0"
+		BEGIN 
+			VALUE "CompanyName",     "California Energy Commission\0"
+			VALUE "FileDescription", "BEM Compliance Manager (Title-24)\0"
+			VALUE "FileVersion",     "2028.0.1 RV (1395)\0"
+			VALUE "InternalName",    "BEMCmpMgr28\0"
+			VALUE "LegalCopyright",  "Copyright (C) 2012-2025, California Energy Commission. All rights reserved.\0"
+			VALUE "LegalTrademarks", "\0"
+			VALUE "OriginalFilename","BEMCmpMgr28.dll\0"
+			VALUE "ProductName",     "BEM Compliance Manager DLL (T-24)\0"
+			VALUE "ProductVersion",  "2028.0.1 RV\0"
+			VALUE "SpecialBuild",    "build 1395\0"
+		END
+	END
+	BLOCK "VarFileInfo" 
+	BEGIN 
+		VALUE "Translation", 0x409, 1200
+    END
+END
+

@@ -1,11 +1,10 @@
 RulesetFilename   "T24_2025.bin"  
 
 Proj   "CUAC Example"  
-   Ruleset = "CA 2025 Nonresidential, Vers. 1.0 (T24_2025.bin)"
    BldgEngyModelVersion = 17
    CreateDate = 1746063034
-   ModDate = 1750744982
-   RunDate = 1750744983
+   ModDate = 1760394251
+   RunDate = 1760394252
    RptComplianceID = "EnergyPro - 8273"
    GeometryInpType = "Simplified"
    GasType = "Propane"
@@ -62,7 +61,7 @@ Proj   "CUAC Example"
    CentralElecDHWSolPVCredPct = 0
    RptGenUIVer = "90"
    RptGenUIApp = "EnergyPro"
-   SoftwareVersion = "CBECC 2025.1.0 (1381)"
+   SoftwareVersion = "CBECC 2025.2.0 RC (1390)"
    CompReportPDF = 1
    CompReportStd = 0
    MandCompChk = 1
@@ -170,7 +169,7 @@ ResExtWall   "Left F,D"
    Status = "New"
    Orientation = "Front"
    Area = 231
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -205,7 +204,7 @@ ResExtWall   "Back F(2),D"
    Status = "New"
    Orientation = "Left"
    Area = 275
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -305,7 +304,7 @@ ResExtWall   "Left F,D 2"
    Status = "New"
    Orientation = "Left"
    Area = 274
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -340,7 +339,7 @@ ResExtWall   "Back F,D(2)"
    Status = "New"
    Orientation = "Back"
    Area = 313
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -440,7 +439,7 @@ ResExtWall   "Back F,D"
    Status = "New"
    Orientation = "Back"
    Area = 214
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -475,7 +474,7 @@ ResExtWall   "Right"
    Status = "New"
    Orientation = "Right"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -544,7 +543,7 @@ ResExtWall   "Left"
    Status = "New"
    Orientation = "Left"
    Area = 274
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -553,7 +552,7 @@ ResExtWall   "Back F,D 2"
    Status = "New"
    Orientation = "Back"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -648,7 +647,7 @@ ResExtWall   "Left 2"
    Status = "New"
    Orientation = "Left"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -657,7 +656,7 @@ ResExtWall   "Back F,D,F"
    Status = "New"
    Orientation = "Back"
    Area = 315
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -705,7 +704,7 @@ ResExtWall   "Right F,D"
    Status = "New"
    Orientation = "Right"
    Area = 180
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -800,7 +799,7 @@ ResExtWall   "Left F(2)"
    Status = "New"
    Orientation = "Right"
    Area = 289
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -835,7 +834,7 @@ ResExtWall   "Back F,D(2) 2"
    Status = "New"
    Orientation = "Front"
    Area = 311
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -883,7 +882,7 @@ ResExtWall   "Right F,D,A"
    Status = "New"
    Orientation = "Left"
    Area = 289
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -983,7 +982,7 @@ ResExtWall   "Left F,D 3"
    Status = "New"
    Orientation = "Front"
    Area = 231
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1018,7 +1017,7 @@ ResExtWall   "Back F(2),D 2"
    Status = "New"
    Orientation = "Left"
    Area = 275
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1119,7 +1118,7 @@ ResExtWall   "Left F,D 4"
    Status = "New"
    Orientation = "Left"
    Area = 274
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1154,7 +1153,7 @@ ResExtWall   "Back F,D(2) 3"
    Status = "New"
    Orientation = "Back"
    Area = 313
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1255,7 +1254,7 @@ ResExtWall   "Left 3"
    Status = "New"
    Orientation = "Left"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1264,7 +1263,7 @@ ResExtWall   "Back F,D 3"
    Status = "New"
    Orientation = "Back"
    Area = 214
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1299,7 +1298,7 @@ ResExtWall   "Right 2"
    Status = "New"
    Orientation = "Right"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1369,7 +1368,7 @@ ResExtWall   "Left F,D 5"
    Status = "New"
    Orientation = "Left"
    Area = 274
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1404,7 +1403,7 @@ ResExtWall   "Back F,D 4"
    Status = "New"
    Orientation = "Back"
    Area = 203
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1513,7 +1512,7 @@ ResExtWall   "Left 4"
    Status = "New"
    Orientation = "Left"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1522,7 +1521,7 @@ ResExtWall   "Back F,D,F 2"
    Status = "New"
    Orientation = "Back"
    Area = 315
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1570,7 +1569,7 @@ ResExtWall   "Right F,D 2"
    Status = "New"
    Orientation = "Right"
    Area = 180
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1666,7 +1665,7 @@ ResExtWall   "Left 5"
    Status = "New"
    Orientation = "Back"
    Area = 36
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1675,7 +1674,7 @@ ResExtWall   "Back D(2),F,A"
    Status = "New"
    Orientation = "Right"
    Area = 368
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1736,7 +1735,7 @@ ResExtWall   "Right 3"
    Status = "New"
    Orientation = "Front"
    Area = 36
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1805,7 +1804,7 @@ ResExtWall   "Left F(2) 2"
    Status = "New"
    Orientation = "Right"
    Area = 289
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1840,7 +1839,7 @@ ResExtWall   "Back F,D(2) 4"
    Status = "New"
    Orientation = "Front"
    Area = 311
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1888,7 +1887,7 @@ ResExtWall   "Right F,D,A 2"
    Status = "New"
    Orientation = "Left"
    Area = 289
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -1989,7 +1988,7 @@ ResExtWall   "Back F,D 5"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2084,7 +2083,7 @@ ResExtWall   "Back F,D 6"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2179,7 +2178,7 @@ ResExtWall   "Back F,D 7"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2282,7 +2281,7 @@ ResExtWall   "Left F,D 6"
    Status = "New"
    Orientation = "Front"
    Area = 231
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2317,7 +2316,7 @@ ResExtWall   "Back F(2),D 3"
    Status = "New"
    Orientation = "Left"
    Area = 275
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2418,7 +2417,7 @@ ResExtWall   "Left F,D 7"
    Status = "New"
    Orientation = "Left"
    Area = 274
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2453,7 +2452,7 @@ ResExtWall   "Back F,D(2) 5"
    Status = "New"
    Orientation = "Back"
    Area = 310
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2501,7 +2500,7 @@ ResExtWall   "Right 4"
    Status = "New"
    Orientation = "Right"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2563,7 +2562,7 @@ ResExtWall   "Left 6"
    Status = "New"
    Orientation = "Left"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2572,7 +2571,7 @@ ResExtWall   "Back F(2),D(2)"
    Status = "New"
    Orientation = "Back"
    Area = 412
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2633,7 +2632,7 @@ ResExtWall   "Right 5"
    Status = "New"
    Orientation = "Right"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2712,7 +2711,7 @@ ResExtWall   "Left 7"
    Status = "New"
    Orientation = "Left"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2721,7 +2720,7 @@ ResExtWall   "Back F,D,F 3"
    Status = "New"
    Orientation = "Back"
    Area = 315
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2769,7 +2768,7 @@ ResExtWall   "Right F,D 3"
    Status = "New"
    Orientation = "Right"
    Area = 180
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2865,7 +2864,7 @@ ResExtWall   "Left 8"
    Status = "New"
    Orientation = "Back"
    Area = 36
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2874,7 +2873,7 @@ ResExtWall   "Back D(2),F,A 2"
    Status = "New"
    Orientation = "Right"
    Area = 368
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -2935,7 +2934,7 @@ ResExtWall   "Right 6"
    Status = "New"
    Orientation = "Front"
    Area = 36
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3015,7 +3014,7 @@ ResExtWall   "Left F(2) 3"
    Status = "New"
    Orientation = "Right"
    Area = 289
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3050,7 +3049,7 @@ ResExtWall   "Back F,D(2) 6"
    Status = "New"
    Orientation = "Front"
    Area = 311
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3098,7 +3097,7 @@ ResExtWall   "Right F,D,A 3"
    Status = "New"
    Orientation = "Left"
    Area = 289
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3199,7 +3198,7 @@ ResExtWall   "Back F,D 8"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3295,7 +3294,7 @@ ResExtWall   "Back F,D 9"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3391,7 +3390,7 @@ ResExtWall   "Back F,D 10"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3495,7 +3494,7 @@ ResExtWall   "Left F,D 8"
    Status = "New"
    Orientation = "Front"
    Area = 231
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3530,7 +3529,7 @@ ResExtWall   "Back F(2),D 4"
    Status = "New"
    Orientation = "Left"
    Area = 275
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3641,7 +3640,7 @@ ResExtWall   "Left F,D 9"
    Status = "New"
    Orientation = "Left"
    Area = 274
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3676,7 +3675,7 @@ ResExtWall   "Back F,D(2) 7"
    Status = "New"
    Orientation = "Back"
    Area = 310
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3724,7 +3723,7 @@ ResExtWall   "Right 7"
    Status = "New"
    Orientation = "Right"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3796,7 +3795,7 @@ ResExtWall   "Left 9"
    Status = "New"
    Orientation = "Left"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3805,7 +3804,7 @@ ResExtWall   "Back F(2),D(2) 2"
    Status = "New"
    Orientation = "Back"
    Area = 414
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3866,7 +3865,7 @@ ResExtWall   "Right 8"
    Status = "New"
    Orientation = "Right"
    Area = 45
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -3964,7 +3963,7 @@ ResExtWall   "Back F,D,F 4"
    Status = "New"
    Orientation = "Back"
    Area = 277
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -4129,7 +4128,7 @@ ResExtWall   "Left F,D 10"
    Status = "New"
    Orientation = "Right"
    Area = 290
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -4164,7 +4163,7 @@ ResExtWall   "Back F,D(2) 8"
    Status = "New"
    Orientation = "Front"
    Area = 277
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -4212,7 +4211,7 @@ ResExtWall   "Right F,D,A 4"
    Status = "New"
    Orientation = "Left"
    Area = 290
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -4312,7 +4311,7 @@ ResExtWall   "Back F,D 11"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -4418,7 +4417,7 @@ ResExtWall   "Back F,D 12"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -4524,7 +4523,7 @@ ResExtWall   "Back F,D 13"
    Status = "New"
    Orientation = "Front"
    Area = 198
-   Construction = "R-19 Wall"
+   Construction = "R-21 Wall"
    Exception = "- none -"
    Tilt = 90
    ..
@@ -4742,138 +4741,376 @@ Batt   "Battery"
    ..
 
 EUseSummary   "Metrics 2025 (Oct 2022)"  
-   Title1[2] = "Proposed"
+   Title1[2] = "Proposed Design"
    Title1[3] = "Proposed"
    Title1[4] = "Proposed"
+   Title1[5] = "Standard Design"
+   Title1[6] = "Standard"
+   Title1[7] = "Standard"
+   Title1[8] = "Compliance Margins"
    Title1[11] = "Proposed"
-   Title1[17] = "Prop Design"
+   Title1[12] = "Standard"
+   Title1[13] = "Compliance"
+   Title1[17] = "Proposed Design Emissions"
    Title1[18] = "Prop Design"
    Title1[19] = "Prop Design"
-   Title2[2] = "Design"
-   Title2[3] = "Design"
-   Title2[4] = "Design TDV"
-   Title2[11] = "Source Energy"
-   Title2[17] = "Electric CO2"
-   Title2[18] = "Fuel CO2"
-   Title2[19] = "Total CO2"
+   Title1[20] = "Standard Design Emissions"
+   Title1[21] = "Std Design"
+   Title1[22] = "Std Design"
+   Title1[23] = "Emissions Margin"
+   Title2[2] = "Site Elec."
+   Title2[3] = "Site Gas"
+   Title2[4] = "LSC¹"
+   Title2[5] = "Site Elec."
+   Title2[6] = "Site Gas"
+   Title2[7] = "LSC¹"
+   Title2[8] = "LSC¹"
+   Title2[11] = "Source"
+   Title2[12] = "Source"
+   Title2[13] = "Source"
+   Title2[17] = "Electricity"
+   Title2[18] = "Fuel"
+   Title2[19] = "Total"
+   Title2[20] = "Electricity"
+   Title2[21] = "Fuel"
+   Title2[22] = "Total"
+   Title2[23] = "Total"
    Title3[1] = "End Use"
-   Title3[2] = "Site (MWh)"
-   Title3[3] = "Site (MBtu)"
+   Title3[2] = "(MWh/yr)"
+   Title3[3] = "(MBtu/yr)"
    Title3[4] = "($/ft²-yr)"
+   Title3[5] = "(MWh/yr)"
+   Title3[6] = "(MBtu/yr)"
+   Title3[7] = "($/ft²-yr)"
+   Title3[8] = "($/ft²-yr)"
    Title3[11] = "(kBtu/ft²-yr)"
-   Title3[17] = "Emis. (tonne)"
-   Title3[18] = "Emis. (tonne)"
-   Title3[19] = "Emis. (tonne)"
+   Title3[12] = "(kBtu/ft²-yr)"
+   Title3[13] = "(kBtu/ft²-yr)"
+   Title3[17] = "(tonnes of CO2)"
+   Title3[18] = "(tonnes of CO2)"
+   Title3[19] = "(tonnes of CO2)"
+   Title3[20] = "(tonnes of CO2)"
+   Title3[21] = "(tonnes of CO2)"
+   Title3[22] = "(tonnes of CO2)"
+   Title3[23] = "(tonnes of CO2)"
    Enduse1[1] = "Space Heating"
-   Enduse1[2] = "--"
+   Enduse1[2] = "2.5"
    Enduse1[3] = "--"
-   Enduse1[4] = "--"
-   Enduse1[9] = "--"
-   Enduse1[11] = "--"
+   Enduse1[4] = "0.85"
+   Enduse1[5] = "3.1"
+   Enduse1[6] = "--"
+   Enduse1[7] = "1.05"
+   Enduse1[8] = "0.20"
+   Enduse1[9] = "1.0"
+   Enduse1[10] = "1.3"
+   Enduse1[11] = "0.36"
+   Enduse1[12] = "0.44"
+   Enduse1[13] = "0.08"
+   Enduse1[17] = "0.49"
+   Enduse1[19] = "0.49"
+   Enduse1[20] = "0.60"
+   Enduse1[22] = "0.60"
+   Enduse1[23] = "0.11"
    Enduse2[1] = "Space Cooling"
-   Enduse2[2] = "--"
+   Enduse2[2] = "0.6"
    Enduse2[3] = "--"
-   Enduse2[4] = "--"
-   Enduse2[9] = "--"
-   Enduse2[11] = "--"
+   Enduse2[4] = "0.18"
+   Enduse2[5] = "1.0"
+   Enduse2[6] = "--"
+   Enduse2[7] = "0.26"
+   Enduse2[8] = "0.08"
+   Enduse2[9] = "0.0"
+   Enduse2[10] = "0.0"
+   Enduse2[11] = "0.03"
+   Enduse2[12] = "0.04"
+   Enduse2[13] = "0.01"
+   Enduse2[17] = "0.04"
+   Enduse2[19] = "0.04"
+   Enduse2[20] = "0.05"
+   Enduse2[22] = "0.05"
+   Enduse2[23] = "0.01"
    Enduse3[1] = "Indoor Fans"
-   Enduse3[2] = "--"
+   Enduse3[2] = "9.5"
    Enduse3[3] = "--"
-   Enduse3[4] = "--"
-   Enduse3[9] = "--"
-   Enduse3[11] = "--"
+   Enduse3[4] = "2.51"
+   Enduse3[5] = "9.7"
+   Enduse3[6] = "--"
+   Enduse3[7] = "2.56"
+   Enduse3[8] = "0.05"
+   Enduse3[9] = "1.2"
+   Enduse3[10] = "1.2"
+   Enduse3[11] = "0.65"
+   Enduse3[12] = "0.67"
+   Enduse3[13] = "0.02"
+   Enduse3[17] = "0.89"
+   Enduse3[19] = "0.89"
+   Enduse3[20] = "0.91"
+   Enduse3[22] = "0.91"
+   Enduse3[23] = "0.02"
    Enduse4[1] = "Heat Rejection"
    Enduse4[2] = "--"
    Enduse4[3] = "--"
    Enduse4[4] = "--"
+   Enduse4[5] = "--"
+   Enduse4[6] = "--"
+   Enduse4[7] = "--"
+   Enduse4[8] = "--"
    Enduse4[9] = "--"
+   Enduse4[10] = "--"
    Enduse4[11] = "--"
+   Enduse4[12] = "--"
+   Enduse4[13] = "--"
+   Enduse4[23] = "0.00"
    Enduse5[1] = "Pumps & Misc."
-   Enduse5[2] = "--"
+   Enduse5[2] = "1.5"
    Enduse5[3] = "--"
-   Enduse5[4] = "--"
-   Enduse5[9] = "--"
-   Enduse5[11] = "--"
+   Enduse5[4] = "0.51"
+   Enduse5[5] = "1.5"
+   Enduse5[6] = "--"
+   Enduse5[7] = "0.50"
+   Enduse5[8] = "-0.01"
+   Enduse5[9] = "0.5"
+   Enduse5[10] = "0.5"
+   Enduse5[11] = "0.19"
+   Enduse5[12] = "0.18"
+   Enduse5[13] = "-0.01"
+   Enduse5[17] = "0.25"
+   Enduse5[19] = "0.25"
+   Enduse5[20] = "0.25"
+   Enduse5[22] = "0.25"
+   Enduse5[23] = "0.00"
    Enduse6[1] = "Domestic Hot Water"
-   Enduse6[2] = "--"
+   Enduse6[2] = "24.0"
    Enduse6[3] = "--"
-   Enduse6[4] = "--"
-   Enduse6[9] = "--"
-   Enduse6[11] = "--"
+   Enduse6[4] = "5.81"
+   Enduse6[5] = "33.9"
+   Enduse6[6] = "--"
+   Enduse6[7] = "9.13"
+   Enduse6[8] = "3.32"
+   Enduse6[9] = "2.7"
+   Enduse6[10] = "3.5"
+   Enduse6[11] = "1.56"
+   Enduse6[12] = "2.39"
+   Enduse6[13] = "0.83"
+   Enduse6[17] = "2.12"
+   Enduse6[19] = "2.12"
+   Enduse6[20] = "3.25"
+   Enduse6[22] = "3.25"
+   Enduse6[23] = "1.13"
    Enduse7[1] = "Indoor Lighting"
    Enduse7[2] = "--"
    Enduse7[3] = "--"
    Enduse7[4] = "--"
+   Enduse7[5] = "--"
+   Enduse7[6] = "--"
+   Enduse7[7] = "--"
+   Enduse7[8] = "--"
    Enduse7[9] = "--"
+   Enduse7[10] = "--"
    Enduse7[11] = "--"
+   Enduse7[12] = "--"
+   Enduse7[13] = "--"
+   Enduse7[23] = "0.00"
    Enduse8[1] = "Total Compliance"
-   Enduse8[2] = "-139.9"
+   Enduse8[2] = "-101.8"
    Enduse8[3] = "0.0"
-   Enduse8[4] = "-29.63"
-   Enduse8[9] = "-0.6"
-   Enduse8[11] = "-3.60"
-   Enduse8[17] = "-4.89"
-   Enduse8[19] = "-4.89"
+   Enduse8[4] = "-19.80"
+   Enduse8[5] = "-23.4"
+   Enduse8[6] = "0.0"
+   Enduse8[7] = "-2.32"
+   Enduse8[8] = "17.48"
+   Enduse8[9] = "4.7"
+   Enduse8[10] = "6.0"
+   Enduse8[11] = "-0.82"
+   Enduse8[12] = "1.51"
+   Enduse8[13] = "2.33"
+   Enduse8[17] = "-1.13"
+   Enduse8[19] = "-1.13"
+   Enduse8[20] = "2.04"
+   Enduse8[22] = "2.04"
+   Enduse8[23] = "3.17"
    Enduse9[1] = "Receptacle"
-   Enduse9[2] = "--"
+   Enduse9[2] = "53.4"
    Enduse9[3] = "--"
-   Enduse9[4] = "--"
-   Enduse9[9] = "--"
-   Enduse9[11] = "--"
+   Enduse9[4] = "14.43"
+   Enduse9[5] = "53.4"
+   Enduse9[6] = "--"
+   Enduse9[7] = "14.43"
+   Enduse9[8] = "--"
+   Enduse9[9] = "6.5"
+   Enduse9[10] = "6.5"
+   Enduse9[11] = "3.79"
+   Enduse9[12] = "3.79"
+   Enduse9[13] = "--"
+   Enduse9[17] = "5.16"
+   Enduse9[19] = "5.16"
+   Enduse9[20] = "5.16"
+   Enduse9[22] = "5.16"
+   Enduse9[23] = "0.00"
    Enduse10[1] = "Process"
-   Enduse10[2] = "--"
+   Enduse10[2] = "27.6"
    Enduse10[3] = "--"
-   Enduse10[4] = "--"
-   Enduse10[9] = "--"
-   Enduse10[11] = "--"
-   Enduse11[1] = "Other Ltg"
-   Enduse11[2] = "--"
+   Enduse10[4] = "7.22"
+   Enduse10[5] = "27.6"
+   Enduse10[6] = "--"
+   Enduse10[7] = "7.23"
+   Enduse10[8] = "0.01"
+   Enduse10[9] = "2.2"
+   Enduse10[10] = "2.2"
+   Enduse10[11] = "1.77"
+   Enduse10[12] = "1.77"
+   Enduse10[13] = "--"
+   Enduse10[17] = "2.41"
+   Enduse10[19] = "2.41"
+   Enduse10[20] = "2.41"
+   Enduse10[22] = "2.41"
+   Enduse10[23] = "0.00"
+   Enduse11[1] = "Other Lighting"
+   Enduse11[2] = "7.9"
    Enduse11[3] = "--"
-   Enduse11[4] = "--"
-   Enduse11[9] = "--"
-   Enduse11[11] = "--"
+   Enduse11[4] = "2.27"
+   Enduse11[5] = "7.9"
+   Enduse11[6] = "--"
+   Enduse11[7] = "2.27"
+   Enduse11[8] = "--"
+   Enduse11[9] = "0.9"
+   Enduse11[10] = "0.9"
+   Enduse11[11] = "0.63"
+   Enduse11[12] = "0.63"
+   Enduse11[13] = "--"
+   Enduse11[17] = "0.86"
+   Enduse11[19] = "0.86"
+   Enduse11[20] = "0.86"
+   Enduse11[22] = "0.86"
+   Enduse11[23] = "0.00"
    Enduse12[1] = "Process Motors"
    Enduse12[2] = "--"
    Enduse12[3] = "--"
    Enduse12[4] = "--"
+   Enduse12[5] = "--"
+   Enduse12[6] = "--"
+   Enduse12[7] = "--"
+   Enduse12[8] = "--"
    Enduse12[9] = "--"
+   Enduse12[10] = "--"
    Enduse12[11] = "--"
+   Enduse12[12] = "--"
+   Enduse12[13] = "--"
+   Enduse12[23] = "0.00"
    Enduse13[1] = "Photovoltaics"
    Enduse13[2] = "-141.4"
    Enduse13[3] = "--"
    Enduse13[4] = "-28.40"
+   Enduse13[5] = "-73.9"
+   Enduse13[6] = "--"
+   Enduse13[7] = "-14.85"
+   Enduse13[8] = "13.55"
    Enduse13[9] = "-0.2"
+   Enduse13[10] = "-0.1"
    Enduse13[11] = "-2.67"
+   Enduse13[12] = "-1.38"
+   Enduse13[13] = "1.29"
    Enduse13[17] = "-3.63"
    Enduse13[19] = "-3.63"
-   Enduse14[1] = "Battery"
+   Enduse13[20] = "-1.88"
+   Enduse13[22] = "-1.88"
+   Enduse13[23] = "1.75"
+   Enduse14[1] = "Battery Storage"
    Enduse14[2] = "1.5"
    Enduse14[3] = "--"
-   Enduse14[4] = "-1.23"
+   Enduse14[4] = "-1.26"
+   Enduse14[5] = "1.3"
+   Enduse14[6] = "--"
+   Enduse14[7] = "-0.97"
+   Enduse14[8] = "0.29"
    Enduse14[9] = "-0.4"
-   Enduse14[11] = "-0.93"
-   Enduse14[17] = "-1.26"
-   Enduse14[19] = "-1.26"
-   Enduse15[1] = "TOTAL"
-   Enduse15[2] = "-139.9"
+   Enduse14[10] = "-0.3"
+   Enduse14[11] = "-0.94"
+   Enduse14[12] = "-0.83"
+   Enduse14[13] = "0.11"
+   Enduse14[17] = "-1.29"
+   Enduse14[19] = "-1.29"
+   Enduse14[20] = "-1.14"
+   Enduse14[22] = "-1.14"
+   Enduse14[23] = "0.15"
+   Enduse15[1] = "Project Total"
+   Enduse15[2] = "-12.9"
    Enduse15[3] = "0.0"
-   Enduse15[4] = "-29.63"
-   Enduse15[9] = "-0.6"
-   Enduse15[11] = "-3.60"
-   Enduse15[17] = "-4.89"
-   Enduse15[19] = "-4.89"
+   Enduse15[4] = "4.12"
+   Enduse15[5] = "65.5"
+   Enduse15[6] = "0.0"
+   Enduse15[7] = "21.61"
+   Enduse15[8] = "17.49"
+   Enduse15[9] = "14.3"
+   Enduse15[10] = "15.5"
+   Enduse15[11] = "5.37"
+   Enduse15[12] = "7.70"
+   Enduse15[13] = "2.33"
+   Enduse15[17] = "7.30"
+   Enduse15[19] = "7.30"
+   Enduse15[20] = "10.47"
+   Enduse15[22] = "10.47"
+   Enduse15[23] = "3.17"
    Enduse16[1] = "Efficiency Compliance"
-   Enduse16[2] = "0.0"
+   Enduse16[2] = "38.1"
    Enduse16[3] = "0.0"
-   Enduse16[4] = "0.00"
-   Enduse16[9] = "--"
-   Enduse16[11] = "0.00"
-   ZoneUMLHsLoaded[1] = 0
+   Enduse16[4] = "9.86"
+   Enduse16[5] = "49.2"
+   Enduse16[6] = "0.0"
+   Enduse16[7] = "13.50"
+   Enduse16[8] = "3.64"
+   Enduse16[9] = "5.4"
+   Enduse16[10] = "6.4"
+   Enduse16[11] = "2.79"
+   Enduse16[12] = "3.72"
+   Enduse16[13] = "0.93"
+   Enduse16[17] = "3.79"
+   Enduse16[19] = "3.79"
+   Enduse16[20] = "5.06"
+   Enduse16[22] = "5.06"
+   Enduse16[23] = "1.27"
+   ZoneUMLHsLoaded = ( 0, 0 )
    SimSummary[1] = "CSE Successful"
+   SimSummary[3] = "CSE Successful"
+   PassFail = "PASS"
+   MetricPassFail[1] = "Pass"
+   MetricPassFail[2] = "Pass"
+   MetricPassFail[3] = "Pass"
+   ComplyMessage = "COMPLIES"
+   StdPVBatteryMsg = "Standard Design PV Capacity: 46.8 kWdc  /  Battery System Capacity: 50.9 kWh  (power 12.72 kW)"
    AnalysisValid = 0
+   HideCompSmrySrc = 0
+   HideCompSmryTot = 0
+   PctSavingsSLCC = 80.9348
+   PctSavingsEffSLCC = 26.963
+   PctSavingsCmpSLCC = 0
+   PctSavSLCCLbl = "80.9"
+   PctSavEffSLCCLbl = "27.0"
+   PctSavCmpSLCCLbl = "-"
+   PctSavingsSrc = 30.2597
+   PctSavingsEffSrc = 25
+   PctSavingsCmpSrc = 154.305
+   PctSavSrcLbl = "30.3"
+   PctSavEffSrcLbl = "25.0"
+   PctSavCmpSrcLbl = "154.3"
+   MarginkW = 1.2
+   PVBattResultsValid = 1
+   PropPV_Size = 85
    PropPV_Total = 141389
-   PropPV_Export = 139877
-   PropPV_PctExport = 98.9303
+   PropPV_Export = 75625.6
+   PropPV_PctExport = 53.4875
+   PropBatt_Size = 50.7
+   PropBatt_Pwr = 12.17
+   PropBatt_Ctrl = "Time of Use"
+   StdPV_Size = 46.79
+   StdPV_Total = 73941
+   StdPV_Export = 15096.8
+   StdPV_PctExport = 20.4173
+   StdBatt_Size = 50.9
+   StdBatt_Pwr = 12.72
+   StdBatt_Ctrl = "Time of Use"
+   NRCCPRFPayldTransID = "4d7690aa-98b6-4a43-b821-5bb6a1d7d45e"
+   NRCCPRFPayldProcDate = "2025-10-13T15:23:17"
    ..
 
 ResConsAssm   "R-19 Wall"  
@@ -4980,8 +5217,9 @@ ResConsAssm   "R-21 Wall"
    FurringInsulLayerRVal = 0
    CavityLayer = "R 21"
    FrameLayer = "2x6 @ 16 in. O.C."
-   SheathInsulLayerRVal = 0
-   WallExtFinishLayer = "3 Coat Stucco"
+   SheathInsulLayer = "- specify R-value -"
+   SheathInsulLayerRVal = 4
+   WallExtFinishLayer = "Synthetic Stucco"
    NonStdSprayFoam = 0
    ..
 
@@ -5154,6 +5392,23 @@ ResMat   "FrameGap"
    RValPerInch = 0.000417
    ..
 
+ResMat   "Insul-R4-D1.5-SH0.35-C0.02083"  
+   Thickness = 1
+   Density = 1.5
+   SpecHeat = 0.35
+   Conductivity = 0.0208325
+   ConductivityQII = 0.0208325
+   ConductivityCT = 0.00175
+   ..
+
+ResMat   "Synthetic Stucco"  
+   Thickness = 0.375
+   Density = 58
+   SpecHeat = 0.2
+   Conductivity = 0.2
+   RValPerInch = 0.5333
+   ..
+
 DwellUnitType   "DU-1 "  
    NumBedrooms = 2
    CondFlrArea = 762
@@ -5166,6 +5421,7 @@ DwellUnitType   "DU-1 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5195,6 +5451,7 @@ DwellUnitType   "DU-2 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5224,6 +5481,7 @@ DwellUnitType   "DU-3 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5253,6 +5511,7 @@ DwellUnitType   "DU-4 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5282,6 +5541,7 @@ DwellUnitType   "DU-5 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5311,6 +5571,7 @@ DwellUnitType   "DU-6 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5340,6 +5601,7 @@ DwellUnitType   "DU-7 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5369,6 +5631,7 @@ DwellUnitType   "DU-8 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5398,6 +5661,7 @@ DwellUnitType   "DU-9 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5427,6 +5691,7 @@ DwellUnitType   "DU-10 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5456,6 +5721,7 @@ DwellUnitType   "DU-11 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5485,6 +5751,7 @@ DwellUnitType   "DU-12 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5514,6 +5781,7 @@ DwellUnitType   "DU-13 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5543,6 +5811,7 @@ DwellUnitType   "DU-14 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5572,6 +5841,7 @@ DwellUnitType   "DU-15 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5601,6 +5871,7 @@ DwellUnitType   "DU-16 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5630,6 +5901,7 @@ DwellUnitType   "DU-17 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5659,6 +5931,7 @@ DwellUnitType   "DU-18 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5688,6 +5961,7 @@ DwellUnitType   "DU-19 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5717,6 +5991,7 @@ DwellUnitType   "DU-20 "
    DryerFuel = "Electricity"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5746,6 +6021,7 @@ DwellUnitType   "DU-21 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5775,6 +6051,7 @@ DwellUnitType   "DU-22 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5804,6 +6081,7 @@ DwellUnitType   "DU-23 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5833,6 +6111,7 @@ DwellUnitType   "DU-24 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5862,6 +6141,7 @@ DwellUnitType   "DU-25 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5891,6 +6171,7 @@ DwellUnitType   "DU-26 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5920,6 +6201,7 @@ DwellUnitType   "DU-27 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5949,6 +6231,7 @@ DwellUnitType   "DU-28 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -5978,6 +6261,7 @@ DwellUnitType   "DU-29 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -6007,6 +6291,7 @@ DwellUnitType   "DU-30 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -6036,6 +6321,7 @@ DwellUnitType   "DU-31 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -6065,6 +6351,7 @@ DwellUnitType   "DU-32 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0
@@ -6094,6 +6381,7 @@ DwellUnitType   "DU-33 "
    DryerFuel = "Gas"
    HaveCook = 1
    CookFuel = "Electricity"
+   IAQSupInletsAccessible = 1
    IAQOption = "Default Minimum Balanced IAQ Fan"
    CentralSupplyCFM = 0
    CentralExhaustCFM = 0

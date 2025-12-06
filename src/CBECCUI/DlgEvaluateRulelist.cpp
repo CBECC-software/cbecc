@@ -157,7 +157,7 @@ void CDlgEvaluateRulelist::EvaluateSelectedRulelist()
 					// SAC 3/17/13 - added writing of file immediately following rule evaluation that includes ALL data and COULD be imported back into -Com/-Res program
 					   CString sProjExt = ReadProgString( "options", "ProjectFileExt", "" );		// SAC 3/8/20
 					   if (sProjExt.IsEmpty())
-							sDbgFileName.Format( "%s - %s.%s", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist, pszCUIFileExt[0] );
+							sDbgFileName.Format( "%s - %s.%s", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist, (ebUI_CARES ? pszSFamCUIFileExt[0] : pszNRMFCUIFileExt[0]) );
 						else
 							sDbgFileName.Format( "%s - %s.%s", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist, sProjExt );
 						BEMPX_WriteProjectFile( sDbgFileName, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, TRUE /*bWriteAllProperties*/ );

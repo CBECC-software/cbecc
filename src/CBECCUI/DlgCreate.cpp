@@ -562,13 +562,13 @@ void CDlgCreate::OnOK()
 			}
 		}
 
-#ifdef UI_CANRES
-// SAC 2/28/14 - for CANRES2013 - only allow creation of Proj objects w/ GeometryInpType = "Simplified"
-		if (m_i1Class == eiBDBCID_Proj)
+      //#ifdef UI_CANRES
+      // SAC 2/28/14 - for CANRES2013 - only allow creation of Proj objects w/ GeometryInpType = "Simplified"
+		if (m_i1Class == eiBDBCID_Proj && ebUI_CANRES)
 		{	VERIFY( BEMPX_SetBEMData( BEMPX_GetDatabaseID( "GeometryInpType", eiBDBCID_Proj ), BEMP_Str, (void*) "Simplified" ) >= 0 );
 			AdjustDataModelForGeometryInpType();  // AFTER setting GeometryInpType, revise data model settings to ensure that UI prevents access to certain objects and collects properties required for simplified geom projects
 		}
-#endif
+      //#endif
 
       // Gather primary parameter data
       if ( bOK && !bDataCopied && pNewObj )
@@ -584,7 +584,7 @@ void CDlgCreate::OnOK()
 
          if (iNumPrimProps > 0)
          {
-            int iError = 0;
+            iError = 0;
             int iObjIdx = BEMPX_GetObjectIndex(  BEMPX_GetClass( m_i1Class, iError ), pNewObj );
          
             // Create new building component

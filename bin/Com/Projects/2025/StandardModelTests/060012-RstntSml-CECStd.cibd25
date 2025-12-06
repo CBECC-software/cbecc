@@ -3,15 +3,15 @@ RulesetFilename   "T24_2025.bin"
 Proj   "060012-RstntSml-CECStd25"  
    BldgEngyModelVersion = 17
    CreateDate = 1414691411
-   ModDate = 1750732097
-   RunDate = 1750732098
+   ModDate = 1762523220
+   RunDate = 1762523221
    ZipCode = 95814
    AutoHardSize = 1
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    CompType = "NewComplete"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2025.1.0 (1381)"
+   SoftwareVersion = "CBECC 2025.2.0 (1394)"
    ResultsCurrentMessage = "(not current)"
    ..
 
@@ -1137,8 +1137,8 @@ clg: 0  htg: 0  'Kitchen Thermal Zone'",
                  "clg: 0  htg: 0  'Attic Zn'
 clg: 0  htg: 0  'Dining Thermal Zone'
 clg: 0  htg: 0  'Kitchen Thermal Zone'" )
-   SimSummary[1] = "CSE Successful, E+ Successful (97 warnings)"
-   SimSummary[3] = "CSE Successful, E+ Successful (97 warnings)"
+   SimSummary[1] = "CSE Successful, E+ Successful (102 warnings)"
+   SimSummary[3] = "CSE Successful, E+ Successful (102 warnings)"
    PassFail = "PASS"
    MetricPassFail[1] = "Pass"
    MetricPassFail[2] = "Pass"

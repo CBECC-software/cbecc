@@ -308,7 +308,9 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
 
    int iMtr, iFuel, iMo, iDay, iHr, i0YrDay, iTemp, iSpecVal, iErr, iStep = 1;
    long laNumUnitsByBedrms[NumDwellingMeters], lTemp, lNumUnitTypes=0;
+   double daHtgMultByBedrms[NumDwellingMeters], daClgMultByBedrms[NumDwellingMeters], daIAQMultByBedrms[NumDwellingMeters];   // SAC 11/04/25 (dev #583)
    bool bOldCUAC = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" ), lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0) ? true : false;
+   bool bPerformGasBillCalcs = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasUtility" ), lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp == 998) ? false : true;   // SAC 11/04/25 (dev #577)
 
    int iPrevRuleErrs = BEMPX_GetRulesetErrorCount();   // add eval of rules to setup utility rates - SAC 09/14/22
                   if (iBillCalcDetails > 0) 
@@ -342,17 +344,27 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                BEMPX_WriteHourlyResultsSummary( sDbgFN.toLocal8Bit().constData(), bSilent, iCUAC_BEMProcIdx );
             }
 
+   long lDBID_AffordableUnitsByBedrms   = BEMPX_GetDatabaseID( "AffordableUnitsByBedrms"  , iCID_CUAC );
+   long lDBID_IncludeHtgInBillsByBedrms = BEMPX_GetDatabaseID( "IncludeHtgInBillsByBedrms", iCID_CUAC );
+   long lDBID_IncludeClgInBillsByBedrms = BEMPX_GetDatabaseID( "IncludeClgInBillsByBedrms", iCID_CUAC );
+   long lDBID_IncludeIAQInBillsByBedrms = BEMPX_GetDatabaseID( "IncludeIAQInBillsByBedrms", iCID_CUAC );
    for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-   {  if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "AffordableUnitsByBedrms", iCID_CUAC )+iMtr, lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0)
+   {  if (BEMPX_GetInteger( lDBID_AffordableUnitsByBedrms+iMtr, lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0)
       {  if (iDataModel == 1)
             laNumUnitsByBedrms[iMtr] = (lTemp >= 1 ? 1 : 0);   // SFam analysis always models just a single dwelling - SAC 10/22/24
          else
             laNumUnitsByBedrms[iMtr] = lTemp;
          lNumUnitTypes++;
+         daHtgMultByBedrms[iMtr] = (BEMPX_GetInteger( lDBID_IncludeHtgInBillsByBedrms+iMtr, lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0) ? 1.0 : 0.0;      // SAC 11/04/25 (dev #583)
+         daClgMultByBedrms[iMtr] = (BEMPX_GetInteger( lDBID_IncludeClgInBillsByBedrms+iMtr, lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0) ? 1.0 : 0.0; 
+         daIAQMultByBedrms[iMtr] = (BEMPX_GetInteger( lDBID_IncludeIAQInBillsByBedrms+iMtr, lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0) ? 1.0 : 0.0; 
       }
       else
-         laNumUnitsByBedrms[iMtr] = 0;
-   }
+      {  laNumUnitsByBedrms[iMtr] = 0;
+         daHtgMultByBedrms[iMtr] = 0.0;
+         daClgMultByBedrms[iMtr] = 0.0;
+         daIAQMultByBedrms[iMtr] = 0.0;
+   }  }
    if (lNumUnitTypes < 1)  // abort analysis if no unit types specified - SAC 10/19/22
    {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
       sErrMsg = QString( "CUAC Error: No affordable units specified. Specify affordable units via checkboxes in residential zone dialog." );
@@ -366,6 +378,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
          iResFuelMtrIdx = 2;  // Other fuel
    }
 
+   //bool bAnalysisValid = true;
    bool bAnalysisValid = (pAnalysisInvalidMsg == NULL || strlen( pAnalysisInvalidMsg ) < 3);   // SAC 01/02/25
    if (!bAnalysisValid)
    {  long lDBID_CUAC_AnalysisInvalidMsg = BEMPX_GetDatabaseID( "CUAC:AnalysisInvalidMsg" );
@@ -400,7 +413,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    QString saFuelLabels[2] = { "Elec", "Gas" };
    QString saFuelUnitLabels[2] = { "kWh", "therms" };
    QString saFuelUnitLabels1[2] = { "kWh", "therm" };
-   for (iFuel=0; iFuel < 2; iFuel++)
+   for (iFuel=0; iFuel < (bPerformGasBillCalcs ? 2 : 1); iFuel++)
    { 
       long lUtilRateGen = BEMPX_GetInteger( laDBID_RateGen[iFuel], iSpecVal, iErr, -1, BEMO_User, iCUAC_BEMProcIdx );      //  2 => 2023+ CPR rates
       if (lUtilRateGen == 2)     // SAC 09/01/23
@@ -1275,7 +1288,21 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                int iMaxEnduse         = (iDataModel == 0 ? NumInitialEnduses : NumInitialResEnduses);
                for (iTemp=0; iTemp < iMaxEnduse; iTemp++)
                {  const char* pszCUACEnduse = (iDataModel == 0 ? pszInitialCUACEnduses[iTemp] : pszInitialCUACResEnduses[iTemp]);    // SAC 05/31/24
-                  BEMPX_ScaleHourlyResultArray( dMult, "Proposed", pszCUACMtr, pszCUACEnduse, iCUAC_BEMProcIdx );
+                  double dTempMult = dMult;
+                  // apply Htg/Clg/IAQ mults (enabling toggle off of these enduses) - SAC 11/04/25 (dev #583)
+                  if ( daHtgMultByBedrms[iMtr] < 1.0 && 
+                       ( (iDataModel == 0 &&  iTemp == 1  ) ||
+                         (iDataModel != 0 && (iTemp == 1 || iTemp == 2 || iTemp == 7) ) ) )
+                     dTempMult *= daHtgMultByBedrms[iMtr];
+                  else if ( daClgMultByBedrms[iMtr] < 1.0 && 
+                            ( (iDataModel == 0 &&  iTemp == 0  ) ||
+                              (iDataModel != 0 && (iTemp == 0 || iTemp == 6) ) ) )
+                     dTempMult *= daClgMultByBedrms[iMtr];
+                  else if ( daIAQMultByBedrms[iMtr] < 1.0 && 
+                            ( (iDataModel == 0 &&  iTemp == 3  ) ||
+                              (iDataModel != 0 && (iTemp == 8 || iTemp == 9) ) ) )
+                     dTempMult *= daIAQMultByBedrms[iMtr];
+                  BEMPX_ScaleHourlyResultArray( dTempMult, "Proposed", pszCUACMtr, pszCUACEnduse, iCUAC_BEMProcIdx );
             }  }
                                              iStep = 4;     sStep = "SingleDwelling";
             if (iBillCalcDetails > 0)
@@ -1486,7 +1513,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
             // Calculate utility bills
             QString sFuelCostPropName = (iFuel==0 ? "CUACResults:ElecCosts" : "CUACResults:GasCosts");
             long lDBID_FuelCostResult = BEMPX_GetDatabaseID( sFuelCostPropName );         assert( lDBID_FuelCostResult > 0 );
-            if (lDBID_FuelCostResult > 0)
+            if (lDBID_FuelCostResult > 0 && (iFuel==0 || bPerformGasBillCalcs))     // SAC 11/04/25 (dev #577)
             {  if (dTotAnnUse > 0.1 && iG2RateObjIdx[iFuel] < 0 && !utilRate[iFuel].bOK)
                {  // post error if energy use present but no rate assigned
                   sErrMsg = QString( "CUAC %1 Utility bill calc error:  energy use present but no rate assigned or rate data invalid" ).arg( saFuelLabels[iFuel] );
@@ -2553,7 +2580,8 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
          if (!OKToWriteOrDeleteFile( sSubmitPDFPathFile.toLocal8Bit().constData(), sMsg, bSilent ))
             BEMPX_WriteLogFile( QString( "Unable to write CUAC submittal report PDF file:  %1" ).arg( sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
          else
-         {
+         {     //BEMPX_WriteLogFile( QString( "attempting to generate CUAC submittal PDF:  %1" ).arg( sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            // Sleep( 10000 );
             iRptID = lRptOption;
             int iPDFGenRetVal = BEMPX_GeneratePDF( sSubmitPDFPathFile.toLocal8Bit().constData(), sRptGraphicsPath.toLocal8Bit().constData(), iRptID, iCUAC_BEMProcIdx, iDataModel );
             BEMPX_WriteLogFile( QString( "CUAC submittal report PDF generation returned %1:  %2" ).arg( QString::number(iPDFGenRetVal), sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -2564,8 +2592,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                if (sDetailsPDFPathFile.isEmpty())
                   BEMPX_WriteLogFile( QString( "CUAC:DetailsPDFPathFile undefined - needed for details report PDF generation" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                else
-               {  QString sMsg;
-                  sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+               {  sMsg = QString::asprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
                                "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
                                "(once the file is closed), or \n'Abort' to abort the %s.", "PDF", sDetailsPDFPathFile.toLocal8Bit().constData(), "PDF report generation" );
                   if (!OKToWriteOrDeleteFile( sDetailsPDFPathFile.toLocal8Bit().constData(), sMsg, bSilent ))
@@ -2577,8 +2604,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                      BEMPX_WriteLogFile( QString( "CUAC details report PDF generation returned %1:  %2" ).arg( QString::number(iPDFGenRetVal), sDetailsPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                }  }
             }
-
-            int iGotHere = 1;
+            //int iGotHere = 1;
       }  }
 
    }
@@ -4421,12 +4447,13 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
                         }  }
                      }
 
+                     double dOnSitePVServingAffordable = 0.0;     // used to calc indiv unit type PV kW details - SAC 08/25/25
                      getline( in, line );    // blank  -OR-  On-site PV inputs
                      ParseCSV( line, lines );      //assert( lines.size() > 0 );
                      if (lines.size() > 0 && lines[0].size() > 2)
                      {  if (lines[0].size() > 6 && lines[0][6].length() > 0)
                         {  // there IS an On-Site PV row w/ PV cap specified
-                           dTemp = std::stod( lines[0][6] );   // summed, not weighted  * dTotAffordableDwellingWeight;
+                           dTemp = dOnSitePVServingAffordable = std::stod( lines[0][6] );   // summed, not weighted  * dTotAffordableDwellingWeight;
                            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OnSitePVServingAffordable", iBDBCID_CUACCombine ), BEMP_Flt, (void*) &dTemp, 
                                              BEMO_User, iCombineObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
                         }
@@ -4440,6 +4467,9 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
                                                 BEMO_User, iCombineObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
                               getline( in, line );    // blank line following On-site Batt inputs
                      }  }  }
+
+                                 ////BEMPX_WriteLogFile( QString( "set PV system details - dOnSitePVServingAffordable = %1" ).arg( QString::number( dOnSitePVServingAffordable ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                 //BEMMessageBox( QString( "set PV system details - dOnSitePVServingAffordable = %1" ).arg( QString::number( dOnSitePVServingAffordable ) ) );
 
                      // create & setup CUACResults objects for each bedrm type dwelling set in this Combine file - SAC 10/30/24 (tic #1386)
                      long lCombineBdrmIdx;
@@ -4516,6 +4546,8 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
                         }  }
                      }
 
+                     double dTotPVGenerationKWH = 0.0;      // used to calc indiv unit type PV kW details - SAC 08/25/25
+                     double daIndivDwellUnitPVGenKWH[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
                      getline( in, line );    // blank
                      getline( in, line );    // Unit Type ... (& months/total) label row
                      const char* pszMoUsageByEUProps[7][13] =  { {  "ClgElecUse[1]", "ClgElecUse[2]", "ClgElecUse[3]", "ClgElecUse[4]", "ClgElecUse[5]", "ClgElecUse[6]", "ClgElecUse[7]",
@@ -4543,10 +4575,28 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
                            k = -1;
                            while (iaColIdx[++k] >= 0)
                            {  if (lines.size() > 0 && lines[0].size() > iaColIdx[k] && lines[0][iaColIdx[k]].length() > 0)
-                              {  dTemp = std::stod( lines[0][iaColIdx[k]] ) * dvDwellWeight[j] * daEnduseMult[iEU];
+                              {  dTemp = std::stod( lines[0][iaColIdx[k]] ) * daEnduseMult[iEU];
+                                 if (iEU == 5 && iaColIdx[k] == 17 && dTemp < -0.001 && dOnSitePVServingAffordable > 0.001)   // Annual PV generation
+                                 {  dTotPVGenerationKWH +=       (-1.0 * dTemp * (double) ivNumAffordableDwellingsBySize[lvDwellBdrmIdx[j]-1][iFileIdx]);
+                                    daIndivDwellUnitPVGenKWH[j] = -1.0 * dTemp * dvDwellWeight[j];
+                                             ////BEMPX_WriteLogFile( QString( "set PV system details 2 - dTotPVGenerationKWH = %1 / daIndivDwellUnitPVGenKWH[%2] = %3" ).arg( QString::number( dTotPVGenerationKWH ), QString::number( j ), QString::number( daIndivDwellUnitPVGenKWH[j] ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                             //BEMMessageBox( QString( "set PV system details 2 - dTotPVGenerationKWH = %1 / daIndivDwellUnitPVGenKWH[%2] = %3" ).arg( QString::number( dTotPVGenerationKWH ), QString::number( j ), QString::number( daIndivDwellUnitPVGenKWH[j] ) ) );
+                                 }
+                                 dTemp *= dvDwellWeight[j];
                                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( pszMoUsageByEUProps[iEU][k], iBDBCID_CUACResults ), BEMP_Flt, (void*) &dTemp, 
                                                    BEMO_User, ivDwellResultsObjIdx[j], BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
                         }  }  }
+                     }
+
+                     if (dTotPVGenerationKWH > 0.001)       // calc & store indiv unit type PV kW details - SAC 08/25/25
+                     {  for (j=0; j < iNumDwellTypes; j++)
+                           if (daIndivDwellUnitPVGenKWH[j] > 0.001)
+                           {  dTemp = dOnSitePVServingAffordable * daIndivDwellUnitPVGenKWH[j] / dTotPVGenerationKWH;
+                              BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PVSysCap", iBDBCID_CUACResults ), BEMP_Flt, (void*) &dTemp, 
+                                                BEMO_User, ivDwellResultsObjIdx[j], BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                                             ////BEMPX_WriteLogFile( QString( "set PV system details 3 - PVSysCap = %1" ).arg( QString::number( dTemp ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                             //BEMMessageBox( QString( "set PV system details 3 - PVSysCap = %1" ).arg( QString::number( dTemp ) ) );
+                           }
                      }
 
                      getline( in, line );    // blank                                                 - SAC 11/05/24
@@ -4834,10 +4884,10 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
 //      }
 
 
-      if (iTotNumInvalidAnalyses > 1)     // SAC 01/03/25
-         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:NumInvalidAnalyses" ), BEMP_Int, (void*) &iTotNumInvalidAnalyses,  BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE, iCUAC_BEMProcIdx );
-      if (sSingleInvalidAnalysisMsg.length() > 0)
-         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:AnalysisInvalidMsg" ), BEMP_Str, (void*) sSingleInvalidAnalysisMsg.c_str(),  BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+//      if (iTotNumInvalidAnalyses > 1)     // SAC 01/03/25
+//         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:NumInvalidAnalyses" ), BEMP_Int, (void*) &iTotNumInvalidAnalyses,  BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+//      if (sSingleInvalidAnalysisMsg.length() > 0)
+//         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:AnalysisInvalidMsg" ), BEMP_Str, (void*) sSingleInvalidAnalysisMsg.c_str(),  BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE, iCUAC_BEMProcIdx );
 
       if (sCommunitySolarProjRpt.length() > 0)
          BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CommunitySolarProjRpt" ), BEMP_Str, (void*) sCommunitySolarProjRpt.c_str(),  BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE, iCUAC_BEMProcIdx );

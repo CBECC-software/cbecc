@@ -144,8 +144,9 @@ static void InitHrlyRes( double* pRes )
 
 static double SumHrlyRes( double* pRes )
 {	double dRes=0.0;
-	for (int hr=0; hr<8760; hr++)
-		dRes += pRes[hr];
+   if (pRes != NULL)
+   	for (int hr=0; hr<8760; hr++)
+	   	dRes += pRes[hr];
 	return dRes;
 }
 
@@ -965,9 +966,33 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                            dSrcSum += dResSrcSum;
                         }
 							   else
-                     	{  dSrcSum       = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK    ? pdBEMHrlyRes    : dHrlyRes),    sSrcEnergyTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
-      							if (sResSrcEnergyTableName.length() > 1)
-      								dResSrcSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes), sResSrcEnergyTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+                     	{  dResSrcSum = 0.0;   // should already be 0
+                           bool bHaveResStdSrcDHWResults = false;
+                           if (iEUIdx == IDX_T24_NRES_EU_DHW && osRunInfo.IsStdRun())     // use std src DHW calced in prior run in place of this run's data for 2025+ - SAC 10/19/25 (dev #512)
+                           {  long lStdSrcDHWSimNeeded=0;   double dStdSrcDHWResults[2]={0.0,0.0};
+                              BEMPX_GetInteger( BEMPX_GetDatabaseID( "ResProj:StdSrcDHWSimNeeded" ), lStdSrcDHWSimNeeded, 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+                              if (lStdSrcDHWSimNeeded > 0)
+                              {  long lDBID_ResProj_StdSrcDHWResults = BEMPX_GetDatabaseID( "ResProj:StdSrcDHWResults" );
+                                 BEMPX_GetFloat( lDBID_ResProj_StdSrcDHWResults+2, dStdSrcDHWResults[0], 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );  // ElecSrc kBtu
+                                 BEMPX_GetFloat( lDBID_ResProj_StdSrcDHWResults+3, dStdSrcDHWResults[1], 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );  // GasSrc kBtu
+                                 if (dStdSrcDHWResults[0] > 0.001 || dStdSrcDHWResults[1] > 0.001)
+                                 {  bHaveResStdSrcDHWResults = true;
+                                    if (iFl == 0)
+                                    {  dResSrcSum = dStdSrcDHWResults[0] + dStdSrcDHWResults[1];  // assign ALL Res DHW src to Elec, since there may not be a Gas fuel loop
+                              BEMPX_WriteLogFile( QString( "    using standard DHW source simulated w/ individual gas systems: elec src %1 kBtu / gas src %2 kBtu" ).arg( QString::number( dStdSrcDHWResults[0] ), QString::number( dStdSrcDHWResults[1] ) ) );
+                           }  }  }  }
+                           dSrcSum       = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK    ? pdBEMHrlyRes    : dHrlyRes),    sSrcEnergyTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+      						   if (sResSrcEnergyTableName.length() > 1 && !bHaveResStdSrcDHWResults)    // else already set above
+         						   dResSrcSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes), sResSrcEnergyTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+                                    // // debugging
+                                    // if (iEUIdx == IDX_T24_NRES_EU_DHW)
+                                    // {  if (sResSrcEnergyTableName.length() > 1)
+                                    //       BEMPX_WriteLogFile( QString( "  ProcessNonresSimulationResults() %1 DHW Source:  fuel %2 / NR energy %3, Src %4 / RES energy %5, Src %6" ).arg( osRunInfo.RunID(), pszCSEMtrNames[iFl], 
+                                    //             QString::number( SumHrlyRes( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes) ) ), QString::number( dSrcSum ), QString::number( SumHrlyRes( (bBEMResHrlyResPtrOK ? pdBEMResHrlyRes : dHrlyRes) ) ), QString::number( dResSrcSum ) ) );
+                                    //    else
+                                    //       BEMPX_WriteLogFile( QString( "  ProcessNonresSimulationResults() %1 DHW Source:  fuel %2 / energy %3, Src %4" ).arg( osRunInfo.RunID(), pszCSEMtrNames[iFl], 
+                                    //             QString::number( SumHrlyRes( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes) ) ), QString::number( dSrcSum ) ) );
+                                    // }   
                            dSrcSum += dResSrcSum;
                      }  }
    						//	if (!sSrcEnergyPrmTableName.isEmpty())
@@ -3618,9 +3643,13 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
                QString sMkIDFFilenameNoExt   = sMkIDFPathFile.right( sMkIDFPathFile.length() - sModelkitProcpath.length() );
                QString sMkSupportCSVPathFile = sMkIDFPathFile + QString( " - HybridHVAC.csv" );
 					sMkIDFPathFile += ".idf";
+               QString sMkEPlusPath = pszEPlusPath;         // SAC 07/26/25
+               if (!sMkEPlusPath.isEmpty() && (sMkEPlusPath.lastIndexOf('/' ) == sMkEPlusPath.length()-1 ||
+                                               sMkEPlusPath.lastIndexOf('\\') == sMkEPlusPath.length()-1))
+                  sMkEPlusPath = sMkEPlusPath.left( sMkEPlusPath.length()-1 );
 
-                        //BEMPX_WriteLogFile( QString( "calling CMX_ExecuteModelkitBat:\n   sModelkitBatPathFile = %1\n   sModelkitRubyScriptPathFile = %2\n   sModelkitProcpath = %3\n   sMkIDFFilenameNoExt = %4\n   " ).arg(
-                        //            sModelkitBatPathFile, sModelkitRubyScriptPathFile, sModelkitProcpath, sMkIDFFilenameNoExt ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                        //BEMPX_WriteLogFile( QString( "calling CMX_ExecuteModelkitBat:\n   sModelkitBatPathFile = %1\n   sModelkitRubyScriptPathFile = %2\n   sModelkitProcpath = %3\n   sMkIDFFilenameNoExt = %4\n   sMkEPlusPath = %5" ).arg(
+                        //            sModelkitBatPathFile, sModelkitRubyScriptPathFile, sModelkitProcpath, sMkIDFFilenameNoExt, sMkEPlusPath ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
                lSimRetVal = 91;   // Modelkit processing called for but Modelkit not found
                if (!DirectoryExists( sModelkitPath ))
@@ -3642,8 +3671,10 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 
                   char pszModelkitBatRetString[1024] = "\0";
                   int iModelkitBatRetVal = CMX_ExecuteModelkitBat( sModelkitBatPathFile.toLocal8Bit().constData(), sModelkitRubyScriptPathFile.toLocal8Bit().constData(), 
-                                                sModelkitProcpath.toLocal8Bit().constData(), sMkIDFFilenameNoExt.toLocal8Bit().constData(), bVerbose /*bVerboseOutput*/,
-                                                pszModelkitBatRetString, 1023 );
+
+                                                sModelkitProcpath.toLocal8Bit().constData(), sMkIDFFilenameNoExt.toLocal8Bit().constData(), sMkEPlusPath.toLocal8Bit().constData(),
+
+                                                bVerbose /*bVerboseOutput*/, pszModelkitBatRetString, 1023 );
                   if (iModelkitBatRetVal > 0)
                   {  lSimRetVal = 92;     // Modelkit processing error encountered
                      if (strlen( pszModelkitBatRetString ) > 0)

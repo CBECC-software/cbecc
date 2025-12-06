@@ -363,7 +363,7 @@ BOOL CComplianceUIApp::InitInstance()
    TransferProxyINISettings();
 
 	// Initialize building database & other DLLs
-	CString sInitBDBFileName = ReadProgString( szFiles, "BEMFile", "", TRUE );
+   CString sInitBDBFileName = ReadProgString( szFiles, (ebUI_CARES ? "SFamBEMFile" : "BEMFile"), "", TRUE );      // SAC 09/09/25 (gh dev #433)
 	CString sInitLogFileName = ReadProgString( szPaths, "ProjectsPath", "", TRUE );
 	sInitLogFileName += "untitled.log";
 	if (!LoadDataModel( sInitBDBFileName, BEMT_CBECC, sInitLogFileName ))	// SAC 1/3/17
@@ -713,11 +713,11 @@ void CAboutDlg::OnPaint()
 			//"\\pard\\f0 <open source license text>\\f1\\par"
 			//"\\b0\\f2\\par"
 			//"}";
-#ifdef UI_CANRES     // updates for CPR utility tariff data - SAC 09/21/23
+// #ifdef UI_CANRES     // updates for CPR utility tariff data - SAC 09/21/23
 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC LICENSE AGREEMENT     (modified BSD)\\par "
 			"\\par "
-			"Copyright (c) 2012-2024, California Energy Commission\\par "
+			"Copyright (c) 2012-2025, California Energy Commission\\par "
 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
 			"All rights reserved.\\par "
 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
@@ -742,63 +742,63 @@ void CAboutDlg::OnPaint()
 			"* Utility tariff data may not be published in any form for mass distribution\\par "
 			"* Utility tariff data may not be sold/resold\\par "
 			"}";
-#elif UI_CARES
-			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
-			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC-Res LICENSE AGREEMENT     (modified BSD)\\par "
-			"\\par "
-			"Copyright (c) 2012-2024, California Energy Commission\\par "
-			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
-			"All rights reserved.\\par "
-			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
-			"* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\\par "
-			"* Redistributions in binary form must reproduce the above copyright notice, this list of conditions, the following disclaimer in the documentation and/or other materials provided with the distribution.\\par "
-			"* Neither the name of the California Energy Commission nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\\par "
-			"\\par "
-			"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A"
-			" PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION, WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF THIS SOFTWARE"
-			" (COLLECTIVELY, THE \"AUTHORS\") BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;"
-			" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY"
-			" WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING"
-			" TO THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES, STRICT LIABILITY OR OTHERWISE.\\par "
-			"}";
-		//	"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
-		//	"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sa200\\sl276\\slmult1\\lang9\\f0\\fs22 CBECC-Res 2013 LICENSE AGREEMENT   (modified BSD)\\par"
-		//	"\\par"
-      //   "Copyright (c) 2013, California Energy Commission\\par"
-      //   "Copyright (c) 2012 Wrightsoft Corporation\\par"
-      //   "All rights reserved.\\par"
-      //   "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par"
-      //   "* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\\par"
-      //   "* Redistributions in binary form must reproduce the above copyright notice, this list of conditions, the following disclaimer in the documentation and/or other materials provided with the distribution.\\par"
-      //   "* Neither the name of the California Energy Commission nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\\par"
-		//	"\\par"
-      //   "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A"
-		//	" PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION, WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF THIS SOFTWARE"
-		//	" (COLLECTIVELY, THE \"AUTHORS\") BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS"
-		//	" OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT"
-		//	" OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO THIS"
-		//	" SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES, STRICT LIABILITY OR OTHERWISE.\\par"
-		//	"}";
-#else
-			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
-			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC LICENSE AGREEMENT     (modified BSD)\\par "
-			"\\par "
-			"Copyright (c) 2012-2022, California Energy Commission\\par "
-			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
-			"All rights reserved.\\par "
-			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
-			"* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\\par "
-			"* Redistributions in binary form must reproduce the above copyright notice, this list of conditions, the following disclaimer in the documentation and/or other materials provided with the distribution.\\par "
-			"* Neither the name of the California Energy Commission nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\\par "
-			"\\par "
-			"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A"
-			" PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION, WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF THIS SOFTWARE"
-			" (COLLECTIVELY, THE \"AUTHORS\") BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;"
-			" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY"
-			" WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING"
-			" TO THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES, STRICT LIABILITY OR OTHERWISE.\\par "
-			"}";
-#endif   // UI_CARES
+// #elif UI_CARES
+// 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
+// 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC-Res LICENSE AGREEMENT     (modified BSD)\\par "
+// 			"\\par "
+// 			"Copyright (c) 2012-2024, California Energy Commission\\par "
+// 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
+// 			"All rights reserved.\\par "
+// 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
+// 			"* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\\par "
+// 			"* Redistributions in binary form must reproduce the above copyright notice, this list of conditions, the following disclaimer in the documentation and/or other materials provided with the distribution.\\par "
+// 			"* Neither the name of the California Energy Commission nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\\par "
+// 			"\\par "
+// 			"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A"
+// 			" PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION, WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF THIS SOFTWARE"
+// 			" (COLLECTIVELY, THE \"AUTHORS\") BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;"
+// 			" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY"
+// 			" WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING"
+// 			" TO THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES, STRICT LIABILITY OR OTHERWISE.\\par "
+// 			"}";
+// 		//	"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
+// 		//	"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sa200\\sl276\\slmult1\\lang9\\f0\\fs22 CBECC-Res 2013 LICENSE AGREEMENT   (modified BSD)\\par"
+// 		//	"\\par"
+//       //   "Copyright (c) 2013, California Energy Commission\\par"
+//       //   "Copyright (c) 2012 Wrightsoft Corporation\\par"
+//       //   "All rights reserved.\\par"
+//       //   "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par"
+//       //   "* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\\par"
+//       //   "* Redistributions in binary form must reproduce the above copyright notice, this list of conditions, the following disclaimer in the documentation and/or other materials provided with the distribution.\\par"
+//       //   "* Neither the name of the California Energy Commission nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\\par"
+// 		//	"\\par"
+//       //   "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A"
+// 		//	" PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION, WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF THIS SOFTWARE"
+// 		//	" (COLLECTIVELY, THE \"AUTHORS\") BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS"
+// 		//	" OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT"
+// 		//	" OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO THIS"
+// 		//	" SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES, STRICT LIABILITY OR OTHERWISE.\\par"
+// 		//	"}";
+// #else
+// 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
+// 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC LICENSE AGREEMENT     (modified BSD)\\par "
+// 			"\\par "
+// 			"Copyright (c) 2012-2022, California Energy Commission\\par "
+// 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
+// 			"All rights reserved.\\par "
+// 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "
+// 			"* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\\par "
+// 			"* Redistributions in binary form must reproduce the above copyright notice, this list of conditions, the following disclaimer in the documentation and/or other materials provided with the distribution.\\par "
+// 			"* Neither the name of the California Energy Commission nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\\par "
+// 			"\\par "
+// 			"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A"
+// 			" PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION, WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF THIS SOFTWARE"
+// 			" (COLLECTIVELY, THE \"AUTHORS\") BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;"
+// 			" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY"
+// 			" WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING"
+// 			" TO THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES, STRICT LIABILITY OR OTHERWISE.\\par "
+// 			"}";
+// #endif   // UI_CARES
 
       EDITSTREAM es = { (DWORD)&sLicText, 0, EditStreamCallBack };
       m_rtfLicense.StreamIn( SF_RTF | SFF_SELECTION, es );

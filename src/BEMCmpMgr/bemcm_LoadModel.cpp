@@ -37,6 +37,7 @@
 
 #include "BEMCmpMgr.h"
 #include "bemcm_I.h"
+#include "..\BEMProc\BEMProc.h"
 #include "..\BEMProc\BEMClass.h"
 #include "..\BEMProc\BEMPropertyType.h"
 //#ifdef OSWRAPPER
@@ -64,9 +65,9 @@ static char THIS_FILE[] = __FILE__;
 //	   BOOL    bPostMappedData;
 //	};
 
-#ifdef OSWRAPPER		// => CEC Non-Res ---------------------------
+//#ifdef OSWRAPPER		// => CEC Non-Res ---------------------------
 
-BEMStraightMap sbemStraightMap[] = {
+BEMStraightMap sbemStraightMap_NRMF[] = {
    // iVersionCutoff   szClassName          szOldPropType                        szNewPropType                       bPostMappedData
      {      1,         "ThrmlZn",           "PrimAirCondgSysRef",                "PriAirCondgSysRef",                  TRUE         },     // SAC 1/27/14
      {      1,         "SpcFuncDefaults",   "ElevEscalSchRef",                   "ElevSchRef",                         TRUE         },     // SAC 1/27/14
@@ -382,7 +383,7 @@ BEMStraightMap sbemStraightMap[] = {
      {     11,         "IntLtgSys",         "Status",                            "LumStatus[1]",                       TRUE         },     // SAC 6/1/16
                                                                   { 0, NULL, NULL, NULL, FALSE } };
 
-BEMStraightMap sbemIgnorNewlyNotInputProperties[] = {
+BEMStraightMap sbemIgnorNewlyNotInputProperties_NRMF[] = {
    // iVersionCutoff   szClassName          szOldPropType                        szNewPropType                       bPostMappedData - in this case used to indicate that a reset should be reported
      {      6,         "Proj",              "ExcptCondLtgCred",                  "none",                               TRUE         },     // SAC 8/7/14
      {      6,         "Proj",              "ExcptCondNoLtg",                    "none",                               TRUE         },     // SAC 8/7/14
@@ -545,7 +546,7 @@ BEMStraightMap sbemIgnorNewlyNotInputProperties[] = {
 
                                                                   { 0, NULL, NULL, NULL, FALSE } };
 
-BEMComponentMap sbemComponentMap[] = {
+BEMComponentMap sbemComponentMap_NRMF[] = {
 	// iVersionCutoff    iCompTypeID   szOldCompType               szNewCompType[5]
 		{      5,              1,       "DayltgCtrl",               { NULL, NULL, NULL, NULL, NULL } },
 		{     10,              2,       "RecircDHWSys",             { "ResDHWSys", NULL, NULL, NULL, NULL } },
@@ -556,7 +557,7 @@ BEMComponentMap sbemComponentMap[] = {
 	 // end of list
 		{ 0, 0, NULL, { NULL, NULL, NULL, NULL, NULL } } };
 
-BEMPropertyMap sbemPropertyMap[] = {
+BEMPropertyMap sbemPropertyMap_NRMF[] = {
 	// iVersionCutoff    iCompTypeID   szOldPropType                                   szNewCompType   szNewPropType                           bPostMappedData
 		{     10,              2,       "Status",                                       "ResDHWSys",    "Status",                                     TRUE  },
 		{     10,              2,       "Type",                                         "ResDHWSys",    "Type",                                       TRUE  },
@@ -855,9 +856,9 @@ BEMPropertyMap sbemPropertyMap[] = {
    // end of list
 		{ 0, 0, NULL, NULL, NULL } };
 
-#else						// => CEC Res -------------------------------
+//#else						// => CEC Res -------------------------------
 
-BEMStraightMap sbemStraightMap[] = {
+BEMStraightMap sbemStraightMap_SFam[] = {
 	// iVersionCutoff   szClassName          szOldPropType                        szNewPropType                       bPostMappedData
 		{      1,       "DHWSysRpt",         "DHWHeater",                         "DHWHeaterRef",                       TRUE         },     // SAC 4/9/14
 		{      1,       "IAQVentRpt",        "IAQFan",                            "IAQFanRef",                          TRUE         },     // SAC 4/9/14
@@ -873,7 +874,7 @@ BEMStraightMap sbemStraightMap[] = {
 	 // end of list
 		{ 0, NULL, NULL, NULL, FALSE } };
 
-BEMStraightMap sbemIgnorNewlyNotInputProperties[] = {
+BEMStraightMap sbemIgnorNewlyNotInputProperties_SFam[] = {
    // iVersionCutoff   szClassName          szOldPropType                        szNewPropType                       bPostMappedData - in this case used to indicate that a reset should be reported
      {      4,         "HVACFan",           "IsVerified",                        "none",                              FALSE        },     // SAC 8/24/14
      {      4,         "HVACFan",           "Status",                            "none",                              FALSE        },     // SAC 8/24/14
@@ -893,13 +894,13 @@ BEMStraightMap sbemIgnorNewlyNotInputProperties[] = {
      {      5,         "HVACSys",           "HPSysAuxHtgCap",                    "none",                              FALSE        },     // SAC 1/12/15
                                                                   { 0, NULL, NULL, NULL, FALSE } };
 
-BEMComponentMap sbemComponentMap[] = {
+BEMComponentMap sbemComponentMap_SFam[] = {
 	// iVersionCutoff    iCompTypeID   szOldCompType   szNewCompType[5]
 		{      1,              1,       "MECH1",        { "SCSysRpt", NULL, NULL, NULL, NULL } },
 	 // end of list
 		{ 0, 0, NULL, { NULL, NULL, NULL, NULL, NULL } } };
 
-BEMPropertyMap sbemPropertyMap[] = {
+BEMPropertyMap sbemPropertyMap_SFam[] = {
 	// iVersionCutoff    iCompTypeID   szOldPropType            szNewCompType   szNewPropType          bPostMappedData
 		{      1,              1,       "HVACSysName",           "SCSysRpt",     "SCSysName",               TRUE  },
 		{      1,              1,       "DwellingUnit",          "SCSysRpt",     "DwellingUnit",            TRUE  },
@@ -954,14 +955,15 @@ BEMPropertyMap sbemPropertyMap[] = {
 	 // end of list
 		{ 0, 0, NULL, NULL, NULL } };
 
-#endif
+//#endif
 
 
 // SAC 1/27/14 - 
 int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile, const char* pszModelPathFile, 
 										int iMaxDBIDSetFailures /*=0*/, int* piDBIDSetFailures /*=NULL*/, bool bSupressAllMsgBoxes /*=false*/,
 										int* piObjIdxSetFailures /*=NULL*/, QStringList* psaDataSetFailures /*=NULL*/, bool bLogDurations /*=false*/,
-										const char* pszLogPathFile /*=NULL*/, bool bKeepLogFileOpen /*=false*/, QStringList* psaWarningsForUser /*=NULL*/, bool bCalledFromUI /*=false*/ )
+										const char* pszLogPathFile /*=NULL*/, bool bKeepLogFileOpen /*=false*/, QStringList* psaWarningsForUser /*=NULL*/,
+                              bool bCalledFromUI /*=false*/, bool bLogNonInputProperties /*=false*/ )    // bLogNonInputProperties - SAC 10/24/25
 {
 	int iRetVal = 0;
 	QString sBEMBinFile  = pszBEMBinPathFile;
@@ -1035,9 +1037,11 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 		if (lDBID_Proj_BEMVersion < 1)
 			lDBID_Proj_BEMVersion = BEMPX_GetDatabaseID( "BldgEngyModelVersion", 1 /*eiBDBCID_Proj*/ );  // same property, but using std non-res SDD abbreviations
 		if (!BEMPX_ReadProjectFile( sInputFile.toLocal8Bit().constData(), BEMFM_INPUT /*iFileMode*/, false /*bRestore*/, false /*bResultsOnly*/,			// Load building model
-												pszLogPathFile /*pszLogFileExt*/, 0 /*iBEMProcIdx*/, lDBID_Proj_BEMVersion,
-												iMaxDBIDSetFailures, piDBIDSetFailures, sbemStraightMap /*BEMStraightMap* pStraightMap*/, sbemComponentMap /*BEMComponentMap* pCompMap*/,
-												sbemPropertyMap /*BEMPropertyMap* pPropMap*/, bSupressAllMsgBoxes, piObjIdxSetFailures, psaDataSetFailures, bLogDurations ) )
+												pszLogPathFile /*pszLogFileExt*/, 0 /*iBEMProcIdx*/, lDBID_Proj_BEMVersion, iMaxDBIDSetFailures, piDBIDSetFailures, 
+                                    (BEMPX_RulesetIsProcedural() ? sbemStraightMap_SFam  : sbemStraightMap_NRMF ) /*BEMStraightMap* pStraightMap*/, 
+                                    (BEMPX_RulesetIsProcedural() ? sbemComponentMap_SFam : sbemComponentMap_NRMF) /*BEMComponentMap* pCompMap*/,
+												(BEMPX_RulesetIsProcedural() ? sbemPropertyMap_SFam  : sbemPropertyMap_NRMF ) /*BEMPropertyMap* pPropMap*/,
+                                    bSupressAllMsgBoxes, piObjIdxSetFailures, psaDataSetFailures, bLogDurations ) )
 			iRetVal = 6;	// error loading building model file
 		else
 		{	int iError;		QString sWarnMsg, sWarnTmp;
@@ -1058,9 +1062,11 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 // ???
 				BEMPX_DeleteAllObjects( BEMO_User /*iOnlyTypeToDelete*/, FALSE /*bReInitSymbols*/ );		// SAC 1/30/20
 				if (!BEMPX_ReadProjectFile( sInputFile.toLocal8Bit().constData(), BEMFM_INPUT /*iFileMode*/, false /*bRestore*/, false /*bResultsOnly*/,			// Load building model
-														pszLogPathFile /*pszLogFileExt*/, 0 /*iBEMProcIdx*/, lDBID_Proj_BEMVersion,
-														iMaxDBIDSetFailures, piDBIDSetFailures, sbemStraightMap /*BEMStraightMap* pStraightMap*/, sbemComponentMap /*BEMComponentMap* pCompMap*/,
-														sbemPropertyMap /*BEMPropertyMap* pPropMap*/, bSupressAllMsgBoxes, piObjIdxSetFailures, psaDataSetFailures, bLogDurations ) )
+														pszLogPathFile /*pszLogFileExt*/, 0 /*iBEMProcIdx*/, lDBID_Proj_BEMVersion, iMaxDBIDSetFailures, piDBIDSetFailures,
+                                          (BEMPX_RulesetIsProcedural() ? sbemStraightMap_SFam  : sbemStraightMap_NRMF ) /*BEMStraightMap* pStraightMap*/, 
+                                          (BEMPX_RulesetIsProcedural() ? sbemComponentMap_SFam : sbemComponentMap_NRMF) /*BEMComponentMap* pCompMap*/,
+														(BEMPX_RulesetIsProcedural() ? sbemPropertyMap_SFam  : sbemPropertyMap_NRMF ) /*BEMPropertyMap* pPropMap*/,
+                                          bSupressAllMsgBoxes, piObjIdxSetFailures, psaDataSetFailures, bLogDurations ) )
 					iRetVal = 9;	// error loading building model file - 2nd round, following addition of new Ruleset Properties
 			}
 			if (iRetVal == 0)
@@ -1068,7 +1074,8 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 
 		// SAC 8/7/14 - added code to blast certain properties that are switched from some user input type to NotInput - in which case we simply blast the input
 			int iINNI = -1;
-			while (sbemIgnorNewlyNotInputProperties[++iINNI].szOldPropType != NULL)
+         BEMStraightMap* sbemIgnorNewlyNotInputProperties = (BEMPX_RulesetIsProcedural() ? sbemIgnorNewlyNotInputProperties_SFam : sbemIgnorNewlyNotInputProperties_NRMF);  // SAC 07/24/25
+         while (sbemIgnorNewlyNotInputProperties[++iINNI].szOldPropType != NULL)
 				if (sbemIgnorNewlyNotInputProperties[iINNI].iVersionCutoff >= lBEMVersion)
 				{	int iINNI_CID = BEMPX_GetDBComponentID( sbemIgnorNewlyNotInputProperties[iINNI].szClassName );
 					int iNumINNIObjs = BEMPX_GetNumObjects( iINNI_CID );
@@ -1115,7 +1122,176 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 				}	}	}
 
 
-#ifdef OSWRAPPER		// => CEC Non-Res ---------------------------
+            if (bLogNonInputProperties)      // bLogNonInputProperties - SAC 10/24/25
+            {  int iNumPropsLogged = 0;
+               // class IDs to ignore
+               int iEUseSummary_ClassID = BEMPX_GetClassIndexByLongName( "EUseSummary" );
+               int iEnergyUse_ClassID   = BEMPX_GetClassIndexByLongName( "EnergyUse" );
+               char* pszProjIgnoreProps[] = { "CreateDate", "ModDate", "RunDate", "ProjFileName", "ResultsCurrentMsg", NULL };
+               int iClassID, iNumObjs, iObjIdx, iNumProps, iPropIdx, iNumObjPropsLogged, i1ArrIdx, iPTIdx, iNumClasses = BEMPX_GetNumClasses();
+               QString qsPropToLog;
+               for (iClassID=1; iClassID <= iNumClasses; iClassID++)
+               {  if (iClassID == iEUseSummary_ClassID || iClassID == iEnergyUse_ClassID)
+                     iNumObjs = 0;   
+                  else
+                     iNumObjs = BEMPX_GetNumObjects( iClassID );
+                  BEMClass* pClass = BEMPX_GetClass( iClassID, iError );
+                  for (iObjIdx=0; iObjIdx < iNumObjs; iObjIdx++)
+                  {  BEMObject* pObj = BEMPX_GetObjectByClass( iClassID, iError, iObjIdx );
+                     if (pObj)
+                     {  iNumObjPropsLogged = 0;
+                        iNumProps = pObj->getPropertiesSize();
+                        for (iPropIdx=0; iPropIdx < iNumProps; iPropIdx++)
+                        {  BEMProperty* pProp = pObj->getProperty( iPropIdx );
+                           if (pProp && pProp->getDataStatus() > BEMS_UserDefault)
+                           {  BEMPropertyType* pPropType = pProp->getType();
+                              bool bProcessPropType = true;
+                              if (iClassID == 1)   // ignore certain Project properties
+                              {  iPTIdx = -1;
+                                 while (bProcessPropType && pszProjIgnoreProps[++iPTIdx])
+                                    bProcessPropType = ( pPropType->getShortName().compare( pszProjIgnoreProps[iPTIdx], Qt::CaseInsensitive ) != 0 );
+                              }
+                              i1ArrIdx = pProp->get1ArrayIdx();
+                              BEMPropTypeDetails* pPropTypeDetails = (pPropType ? pPropType->getPropTypeDetails( i1ArrIdx-1 ) : NULL );
+                              if (bProcessPropType && pPropTypeDetails && pPropTypeDetails->getCompDataType() > BEMD_CriticalDef)
+                              {  // log it!
+                                 iNumPropsLogged++;   iNumObjPropsLogged++;
+                                 if (iNumPropsLogged < 2)
+                                    BEMPX_WriteLogFile( "   Object properties listed in project file that are not valid compliance inputs:", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                 if (iNumObjPropsLogged < 2)
+                                    BEMPX_WriteLogFile( QString( "     %1 '%2'" ).arg( pClass->getShortName(), pObj->getName() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                 qsPropToLog = QString( "       %1" ).arg( pPropType->getShortName() );
+                                 if (pPropType->getNumValues() > 1)
+                                    qsPropToLog += QString( "[%1]" ).arg( QString::number( i1ArrIdx ) );
+                                 qsPropToLog += " = ";
+
+                                       // from:  void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, QString& sRefObjCSEComment, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet /*=TRUE*/ )
+                                       QString sData;
+                                       int iDataType = pProp->getType()->getPropType();
+                                       if ( (iDataType == BEMP_Int) || (iDataType == BEMP_Sym) )
+                                       {  // integer or symbolic data => stored in database as integer
+                                          if (iDataType == BEMP_Int)
+                                          {  long lTemp = pProp->getInt();
+                                             // Conversion of special DATE data from local time to GMT
+                                             if (pProp->getType()->getObjTypeValue(0) == 1)
+                                             {  // Get local delta from GMT
+                                                struct _timeb tstruct;
+                                       #pragma warning(disable : 4996)
+                                                _ftime( &tstruct );
+                                       #pragma warning(default : 4996)
+                                                lTemp -= (tstruct.timezone * 60);
+                                             }
+                                             // integer => simple format
+                                             sData = QString( "%1" ).arg( QString::number(lTemp) );
+                                          }
+                                          else // if (iDataType == BEMP_Sym)
+                                          {  // symbol => convert integer value to symbol string and enclose in double quotes
+                                    	      QString qsSym = BEMPX_GetSymbolStringFromPtrs( pProp->getInt(), pObj, pProp, -1 /*iBEMProcIdx*/, true /*bOnlyFromCurrentSymDepSet*/ );
+                                          	if (qsSym.isEmpty())
+                                          		qsSym = "(null)";
+                                             //if (m_bIsUserInputMode)
+                                             //   sData = QString( "\"%1\"" ).arg( qsSym );
+                                             //else
+                                                sData = QString( "\"%1\"  (%2)" ).arg( qsSym, QString::number(pProp->getInt()) );
+                                       }  }
+                                       else if (iDataType == BEMP_Flt)
+                                       {  // float => simple format
+                                    		//if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsNRCCXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType )) 
+                                    		//	FloatToString_NoExpNotation( sData, pProp->getDouble() );
+                                    		//else
+                                          	sData = QString( "%1" ).arg( QString::number(pProp->getDouble()) );
+                                       }
+                                       else if (iDataType == BEMP_Str)
+                                       {  // string => simply enclose in double quotes
+                                          sData = pProp->getString();
+                                    		if (/*m_iFileType != BEMFT_CSE ||*/ pProp->getType()->getShortName().right(2).compare("_x") != 0)
+                                          {	sData.remove( QChar('"') );
+                                          	sData = QString( "\"%1\"" ).arg( sData );
+                                       }  }
+                                       else if (iDataType == BEMP_Obj)
+                                       {  // object
+                                          BEMObject* pRefObj = pProp->getObj();
+                                          if (pRefObj != NULL)
+                                          {  // if object pointer valid, enclose referenced object in double quotes
+                                             sData = QString( "\"%1\"" ).arg( pRefObj->getName() );
+                                             //if (m_iFileType == BEMFT_CSE)       // enable writing of comments for any CSE objects via 'reserved' BEM property CSEComment - SAC 04/17/24
+                                             //{  long lDBID_CSEComment = (pRefObj->getClass() == NULL ?  0 : BEMPX_GetDatabaseID( "CSEComment", pRefObj->getClass()->get1BEMClassIdx() ));
+                                             //   int iRefObjIdx        = (pRefObj->getClass() == NULL ? -1 : BEMPX_GetObjectIndex( pRefObj->getClass(), pRefObj, -1 /*iBEMProcIdx*/ ));
+                                             //                                 assert( (lDBID_CSEComment < 1 || iRefObjIdx >= 0) );
+                                             //   if (lDBID_CSEComment > 0 && iRefObjIdx >= 0)
+                                             //      BEMPX_GetString( lDBID_CSEComment, sRefObjCSEComment, FALSE, 0, -1, iRefObjIdx, BEMO_User, NULL, 0, -1 /*iBEMProcIdx*/ );
+                                          }  //}
+                                          else // if (StatusRequiresWrite( pProp ))
+                                             // if object pointer NOT valid but we must output this property, then output "- none -"
+                                             sData = QString( "\"- none -\"" );  //.arg( szNone );
+                                          //else  // else don't output property
+                                          //   sData.clear();
+                                       }
+
+                                 qsPropToLog += sData;
+                                 switch (pPropTypeDetails->getCompDataType())
+                                 {  case BEMD_Prescribed : qsPropToLog += "   (prescribed)";   break;
+                                    case BEMD_NotInput   : qsPropToLog += "   (not input)";    break;
+                                 }
+                                 BEMPX_WriteLogFile( qsPropToLog, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                           }  }
+
+                                    // Object
+                                    // 	QString			getName()						{	return m_objectName;		}
+                                    // 	BEMClass*	getClass()								{	return m_class;	}
+                                    // 	int						getPropertiesSize()		{	return (int) m_properties.size();	}
+                                    // 	BEMProperty*			getProperty( int i )		{	return &m_properties.at(i);			}
+                                    // 
+                                    // class BEMPROC_API BEMProperty
+                                    // 	int		get1ArrayIdx()						{	return m_1ArrayIdx;		}
+                                    // 	BEMPropertyType* getType()		{	return m_type;			}
+                                    // 	int		getDataStatus()					{	return m_dataStatus;		}
+                                    //                enum BEM_PropertyStatus
+                                    //                   BEMS_Undefined,
+                                    //                   BEMS_ProgDefault,
+                                    //                   BEMS_RuleDefault,
+                                    //                   BEMS_RuleLibrary,
+                                    //                   BEMS_RuleDefined,
+                                    //                   BEMS_UserDefault,
+                                    //                   BEMS_UserLibrary,
+                                    //                   BEMS_UserDefined,
+                                    //                   BEMS_SimResult,
+                                    //                   BEMS_NumTypes
+                                    // 	QString	getString()					{	return m_strValue;	}
+                                    // 	long		getInt()					{	return m_intValue;	}
+                                    // 	double	getDouble()					{	return m_dblValue;	}
+                                    // 	BEMObject* getObj()				{	return m_obj;			}
+                                    // 
+                                    // class BEMPROC_API BEMPropertyType
+                                    // 	QString	getShortName()						{	return m_shortName;	}
+                                    // 	int	getPropType()				{	return m_propType;	}
+                                    //          	int		m_propType;       // => BEMP_Int / BEMP_Flt / BEMP_Sym / BEMP_Str / BEMP_Obj
+                                    //    int	getNumValues()				{	return m_numValues;	}
+                                    // 	BEMPropTypeDetails* getPropTypeDetails( int i0ArrIdx )	{	return ((i0ArrIdx >= 0 && i0ArrIdx < (int) m_details.size()) ?
+                                    // 
+                                    // class BEMPROC_API BEMPropTypeDetails
+                                    // 	int	getCompDataType()			{	return m_compDataType;		}
+                                    //          	int	m_compDataType;     // the compliance type/classification defined by the enums BEM_CompDataType (defined above)
+                                    //                      enum BEM_CompDataType
+                                    //                         BEMD_Compulsory,
+                                    //                         BEMD_Required,
+                                    //                         BEMD_CondRequired,
+                                    //                         BEMD_Optional,
+                                    //                         BEMD_Default,
+                                    //                         BEMD_CriticalDef,
+                                    //                         BEMD_Prescribed,
+                                    //                         BEMD_NotInput,
+                                    //    int	getNotInputMode()			{	return m_notInputMode;		}
+                                    // 	QString getNotInputMsg()		{	return m_notInputMsg;		}
+                                    //          	int	m_notInputMode;		// SAC 8/12/15 - added to facilitate ruleset-based data model backward compatible
+                                    //          	QString m_notInputMsg;		// SAC 8/12/15
+
+            }  }  }  }  }
+
+
+//#ifdef OSWRAPPER		// => CEC Non-Res ---------------------------
+         if (BEMPX_RulesetIsDataModel())     // SAC 07/24/25
+         {
 			double fData;		int iStatus, iSpecialVal;
 	// code to switch Spc:FlrArea -> Area  -- 3/15/14
 	// added code to copy user-defined values for Spc:xxxDayltgCtrlLtgPwr into new (somewhat redundent) Spc:xxxDayltgInstalledLtgPwr properties
@@ -1562,9 +1738,10 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 						psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
 					}
 			}	}
-#else
-			bCalledFromUI;
-#endif
+         }
+//#else
+//			bCalledFromUI;
+//#endif
 
 	// backward compatibility for CEC-Res multifamily dwelling units
 			bool bAbortMFamDUUpdate = false;
