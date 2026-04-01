@@ -30,7 +30,7 @@ Executable and library files for each of these tools can either be compiled by y
 *Boost v1.74.0*:  https://drive.google.com/file/d/1VRc5BLzsbdP94S6UoLPIQ3EQhz4TjrIv/view?usp=sharing (~46 MB, updated 1/30/25)  
 - Project site:  http://www.boost.org/
 
-*Qt v5.15.0*:  https://drive.google.com/file/d/1ee-VGrN_cErDbwlQSCueal43daXI1gQh/view?usp=sharing (~207 MB, updated 1/30/25)  
+*Qt v5.15.0*:  https://drive.google.com/file/d/1SAo-_pwd4WgzCDDzADsHc1x3wAgtqsP0/view?usp=sharing (~29 MB, updated 3/31/26)  
 - Project site:  https://www.qt.io/  
 
 *OpenSSL v1.1.1h*:  https://drive.google.com/file/d/1mdKTRPWu6_2h9GmF7V3bZX4c-4PXBXTR/view?usp=sharing (~24 MB, updated 1/30/25)  
