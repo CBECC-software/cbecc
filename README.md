@@ -19,7 +19,7 @@ We recommend that you read through and download (& unzip) the vendor binaries be
 # Vendor Binaries
 Executable and library files for each of these tools can either be compiled by you, the devloper, or downloaded via the following links. Each of these compressed files are designed to be unzipped into the root repository directory.
 
-*CSE v0.927.0*:  https://drive.google.com/file/d/1a3BCXN2W0py-yKveYXY1ukvnSAC04st_/view?usp=sharing (~3.5 MB, updated 11/4/25 for 2025.2.0 release)  
+*CSE v0.928.0*:  https://drive.google.com/file/d/1bmskv35vA8OYJEZUkEoLXPfmx0Nheq_S/view?usp=sharing (~9.3 MB, updated 4/2/26 for 2025.2.1 release)  
 - Project site:  https://github.com/cse-sim 
 
 *OpenStudio / EnergyPlus v25-1*:  https://drive.google.com/file/d/1pjbVf7rDkZ1AXBdzaJZ7mZcTTRDm8VBH/view?usp=sharing (~124 MB, updated 8/14/25)  

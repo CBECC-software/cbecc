@@ -1,5 +1,5 @@
-Copyright (c) 2012-2025, California Energy Commission  
-Copyright (c) 2017-2025, SAC Software Solutions  
+Copyright (c) 2012-2026, California Energy Commission  
+Copyright (c) 2017-2026, SAC Software Solutions  
 Copyright (c) 2012-2017, Wrightsoft Corporation  
 All rights reserved.  
 

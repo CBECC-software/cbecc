@@ -5,13 +5,13 @@ Other CEC staff instrumental in moving this project forward are Todd Ferris, Lar
 
 Also in terms of the most recent efforts - the CBECC & CBECC-Res teams -  
 CBECC-Res prime contractor Bruce Wilcox and his team including Traci Meyer-Jones, Peter Wilcox, Herinson Rodrigues, Robert Hitchcock, BigLadder Software, Proctor Engineering, Frontier Energy and Gabel Energy.  
-CBECC prime contractor NORESCO: Robert Guglielmetti, Frances Walsh, Ben Lalor and Joe Singer. 
+CBECC prime contractor NORESCO: Robert Guglielmetti, Joe Singer, Ben Lalor and Demian Vonder Kuhlen. 
 NREL / OpenStudio: Kyle Benne.  
 And those that were instrumental in both CBECC & CBECC-Res -  
 Data model design and rule development by O'Brien360: David Reddy, Lukas Hovee, Jireh Peng, Chuangye Guan and Ivan Jose  
 CEC Title-24 compliance report generator by RASENT Solutions LLC: Robert Scott and Herinson Rodrigues  
 Wrightsoft developers Chip Barnaby and Ethan Croteau with support from Bill Wright and Jane Schuler.  
-Assistance in producing this repository: Michael O'Keefe and Neal Kruise @ BigLadder Software.
+Assistance in producing this repository: Michael O'Keefe and Neal Kruis @ BigLadder Software.
   
 COMcheck-Plus credits (1994-2002) -  
 Pacific Northwest National Labs:  Rob Briggs, Krishnan Gowri, Jeff Johnson and Linda Connell  
