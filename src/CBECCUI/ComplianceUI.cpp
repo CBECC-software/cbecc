@@ -561,7 +561,9 @@ void CComplianceUIApp::OnFileNew()
 			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_PVOPTOUT, 0L );
 		else if (ebInitiateOldCUACImportViaStartDlg && m_pMainWnd && m_pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))    // import of old Access DB-based CUAC project via Start Dialog - SAC 09/18/23
 			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_OLDCUACIMPORT, 0L );
-	}
+		else if (ebInitiateCUACFromCSVViaStartDlg && m_pMainWnd && m_pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))    // create CUAC-only project from Detailed CSV - SAC 03/19/26 (dev #743)
+			m_pMainWnd->PostMessage( WM_COMMAND, IDM_TOOLS_CUACFROMCSV, 0L );
+   }
 }
 
 
@@ -717,7 +719,7 @@ void CAboutDlg::OnPaint()
 			"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}}"
 			"{\\*\\generator Msftedit 5.41.21.2510;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\lang9\\f0\\fs22 CBECC LICENSE AGREEMENT     (modified BSD)\\par "
 			"\\par "
-			"Copyright (c) 2012-2025, California Energy Commission\\par "
+			"Copyright (c) 2012-2026, California Energy Commission\\par "
 			"Copyright (c) 2012-2017, Wrightsoft Corporation\\par "
 			"All rights reserved.\\par "
 			"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\\par "

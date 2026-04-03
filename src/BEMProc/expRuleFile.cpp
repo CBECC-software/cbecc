@@ -329,10 +329,10 @@ void FormatMultilineString( QString& str )
 // Notes --------------------------------------------------------------------
 //   
 /////////////////////////////////////////////////////////////////////////////
-BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects )		// was RuleProcRead()
+BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects, LPCSTR bemBaseFileName /*=NULL*/ )   // added bemBaseFileName argument - SAC 12/19/25 (dev #524)   // was RuleProcRead()
 {	BOOL bRetVal = FALSE;
 	QString sRuleSetID, sRuleSetVersion, sRdStr;
-	int iStructVer, i, iRd;		long lRd;	bool bRulesSecure=false;
+	int iStructVer, i, iRd, iNumRuleSubsets=0;		long lRd;	bool bRulesSecure=false;
    // CryptoFile file( fileName, CFile::modeRead | CFile::shareDenyWrite );  // open file
    CryptoFile file( fileName );
    if (!file.open( QIODevice::ReadOnly ))
@@ -378,7 +378,7 @@ BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects )		// was RulePr
 
       ruleSet.readRuleLists( file, ruleSet.getFileStructVersion() );            // read rules
 
-	// Read ruleset variables (properties to be added to BEMBase)
+	   // Read ruleset variables (properties to be added to BEMBase)
 	   file.Read( &iRd, sizeof( int ) );			// SAC 7/6/12
 		for (i=0; i<iRd; i++)
 		{	RuleSetProperty* pRuleProp = new RuleSetProperty();			assert( pRuleProp );
@@ -386,9 +386,19 @@ BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects )		// was RulePr
 			{	pRuleProp->Read( file, ruleSet.getFileStructVersion() );
 				ruleSet.addRuleSetProperty( pRuleProp );
 		}	}
-	// ADD ruleset variables to BEMBase
+	   // ADD ruleset variables to BEMBase
 		QString sRulePropErrs;
 		ruleSet.PostRulePropsToDatabase( sRulePropErrs );
+
+      // read RuleSubsets
+      if (ruleSet.getFileStructVersion() >= 21)    // SAC 12/19/25 (dev #524)
+      {  file.Read( &iNumRuleSubsets, sizeof( int ) );
+         for (i=0; i<iNumRuleSubsets; i++)
+         {	RuleSubset* pRS = new RuleSubset();          assert( pRS );
+            if (pRS)
+            {  pRS->Read( file, ruleSet.getFileStructVersion() );
+               ruleSet.addRuleSubset( pRS );
+      }  }  }
 
       //ruleSet.m_tableList.Read( file ); 
 	   file.Read( &iRd, sizeof( int ) );			// read tables
@@ -476,6 +486,24 @@ BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects )		// was RulePr
 
       ReadRuleLibrary( file );                        // read rule library
       bRetVal = TRUE;
+
+      // read individual RuleSubset binaries, including calculating hashes and storing that info in each RuleSubset object - SAC 12/19/25 (dev #524)
+      if (iNumRuleSubsets > 0)
+      {  QString sBEMBasePath = bemBaseFileName;
+         sBEMBasePath.replace('\\', '/');
+         int iBEMBasePathLen = sBEMBasePath.lastIndexOf('/');
+         if (iBEMBasePathLen > 0)
+            sBEMBasePath = sBEMBasePath.left( iBEMBasePathLen+1 );
+         for (i=0; (i<iNumRuleSubsets && bRetVal); i++)
+         {  RuleSubset* pRS = ruleSet.getRuleSubset(i);          assert( pRS );
+            if (pRS)
+            {  QString sRuleSubsetFileName = QString( "%1%2.bin" ).arg( sBEMBasePath, pRS->getName() );
+               if (!pRS->ReadTablesFromBin( sRuleSubsetFileName ))
+               {  //QString sErrMsg = QString( "\n   Error reading RuleSubset #%1 from:  '%2'\n" ).arg( QString::number(i+1), sRuleSubsetFileName );
+                  //errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+                  bRetVal = FALSE;
+         }  }  }
+      }
    }
    return bRetVal;
 }
@@ -2493,6 +2521,7 @@ bool RuleFile::Read( QFile& errorFile )
 		}
 
       token = m_file.ReadToken();
+      int ruleSubsetIndex = 1;
 		if (ruleSet.IsDataModel())
 		{	// handle parsing of remainder of "master" data model ruleset file
 	      QString token2, token3, sTransRLName;
@@ -2600,7 +2629,7 @@ bool RuleFile::Read( QFile& errorFile )
 				else if (token == "TABLEFILES")
 				{	token = m_file.ReadCSVString();
 					while (token != "ENDTABLEFILES")
-					{	// parse LIBRARY file
+					{	// parse TABLE file
 						QString sTblFilePath = token;
 						EnsureValidPath_AltPaths( m_fileName, sTblFilePath );
                   if (!FileExists( sTblFilePath.toLocal8Bit().constData() ))
@@ -2703,7 +2732,11 @@ bool RuleFile::Read( QFile& errorFile )
 						token = m_file.ReadCSVString();
 					}
 				}
-				token = m_file.ReadToken();
+      	   else if ( token == "RULESUBSET" )      // SAC 12/19/25 (dev #524)
+      	      // read a RuleSubset
+      	      bRetVal = (ReadRuleSubset( ruleSubsetIndex++, errorFile, ruleSet.getFileStructVersion() ) && bRetVal);
+
+            token = m_file.ReadToken();
 			}
 
 			if (ruleSet.numRulesetProperties() > 0)		// => ADD "ruleset variables" (RULE NEW items) to BEMBase prior to overwriting Symbol/enumeration definitions
@@ -2753,11 +2786,11 @@ bool RuleFile::Read( QFile& errorFile )
       	   else if ( token == "TOOLTIPSFILE" )
       	      // read tooltips filename
       	      ruleSet.setToolTipsFile( m_file.ReadString() );
-      	
+
       	   else if ( token == "TABLELIST" )
       	      // read listing of look-up table definitions
       	      bRetVal = ((ReadTableList( errorFile )) && (bRetVal));
-      	
+
       	   else if ( token == "DATATYPES" )
       	      // read file containing data type definitions
       	      bRetVal = ((ReadListFile( m_file.ReadString(), errorFile, DataTypeList )) && (bRetVal));
@@ -2802,13 +2835,17 @@ bool RuleFile::Read( QFile& errorFile )
 					}
 					else if ( token == "LIBRARY" )
 	      	      bRetVal = ((ReadLibraryText( libFileStr.toLocal8Bit().constData(), BEMO_RuleLib, &errorFile )) && (bRetVal));
-	      	   else
+               else
 						bRetVal = ((ReadRuleFile( libFileStr.toLocal8Bit().constData(), i1RuleFileIdx++, ruleListIndex, errorFile, ruleSet.getFileStructVersion() )) && (bRetVal));	// SAC 9/23/14 - new
       	   }
 
       	   else if ( token == "RULELIST" )
       	      // read a compliance rulelist
       	      bRetVal = (ReadRuleList( ruleListIndex++, errorFile, ruleSet.getFileStructVersion() ) && bRetVal);
+
+      	   else if ( token == "RULESUBSET" )      // SAC 12/16/25 (dev #524)
+      	      // read a RuleSubset
+      	      bRetVal = (ReadRuleSubset( ruleSubsetIndex++, errorFile, ruleSet.getFileStructVersion() ) && bRetVal);
 
       	   else if ( token == "DATAMODELRULES" )		// SAC 3/24/20 - added ability to specify type of DataModelRule compatibility (initially just CA-HERS
       	   {	token = m_file.ReadToken();  // read next token
@@ -3168,6 +3205,107 @@ errorFile.write( sDbg.toLocal8Bit().constData(), sDbg.length() );
 		iRuleFileLineNum = pFile->GetLineCount();
       ruleIndex++;
    }
+
+   return bRetVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RuleFile Class Function:  ReadRuleSubset()
+//
+// Purpose ------------------------------------------------------------------
+//   Reads the contents of a single compliance ruleSubset from the main ASCII
+//   ruleset file into memory.
+//   
+// Arguments ----------------------------------------------------------------
+//   int  ruleSubsetIndex : integer index of this ruleSubset
+//   QFile& errorFile     : file where error messages are written
+//   
+// Return Value -------------------------------------------------------------
+//   FALSE if error creating RuleSubset or if one or more table files not found, else TRUE.
+//   
+// Notes --------------------------------------------------------------------
+//   RuleSubset Format:
+//      RULESUBSET "25NRMF_HourlyMultTables"
+//        TABLE "TableFilename.csv" 
+//        TABLE "TableFilename2.csv" 
+//        ...
+//      ENDRULESUBSET
+//
+//   Pseudo-code:
+//      Create new RuleSubset
+//      Read tables until ENDRULESUBSET found
+//   
+/////////////////////////////////////////////////////////////////////////////
+bool RuleFile::ReadRuleSubset( int ruleSubsetIndex, QFile& errorFile, int iFileStructVer, int i1RuleFileIndex /*=0*/,
+			  							 BEMTextIO* pFile /*=NULL*/, const char* pszFileName /*=NULL*/ )
+{
+   bool bRetVal = TRUE;
+   if (pFile == NULL)
+   	pFile = &m_file;
+   QString pnFileName;
+   if (pszFileName && strlen( pszFileName ) > 0)
+   	pnFileName = pszFileName;
+   else
+   	pnFileName = m_fileName;
+
+   QString ruleSubsetName = pFile->ReadCSVString();  // reads new RuleSubset's name
+	pnFileName.replace('\\','/');
+   QString sFN = (pnFileName.lastIndexOf('/') > 0 ? pnFileName.right( (pnFileName.length()-pnFileName.lastIndexOf('/')-1) ) : pnFileName);
+   RuleSubset* pRuleSubset = ruleSet.getRuleSubset( ruleSubsetName.toLocal8Bit().constData() );
+   if (pRuleSubset)
+   {  QString sErrMsg = QString( "   Error: Duplicate RuleSubset '%1' encountered on line #%2 of '%3' (names must be unique)\n\n" ).arg( ruleSubsetName, QString::number( pFile->GetLineCount() ), pnFileName );
+      errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+      bRetVal = FALSE;
+   }
+   else
+   {  pRuleSubset = ruleSet.addRuleSubset( ruleSubsetName.toLocal8Bit().constData(), pFile->GetLineCount(), (const char*) sFN.toLocal8Bit().constData() );        assert( pRuleSubset );
+      if (pRuleSubset == NULL)
+      {  QString sErrMsg = QString( "   Error: Unable to create RuleSubset '%1' on line #%2 of '%3'\n\n" ).arg( ruleSubsetName, QString::number( pFile->GetLineCount() ), pnFileName );
+         errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+         bRetVal = FALSE;
+   }  }
+
+   if (pRuleSubset && bRetVal)
+   {  pFile->Advance();  // advance past any spaces or comments in ASCII rule definition file
+      QString token = pFile->ReadToken(); 
+      while ( token != "ENDRULESUBSET" && !pFile->AtEOF() )		// SAC 1/23/20 - added check for EOF
+      {
+         pFile->Advance();  // advance past any spaces or comments in ASCII ruleset file
+         if (token == "TABLE")
+         {  token = pFile->ReadCSVString();
+            QString sTblFilePath = token;
+            EnsureValidPath_AltPaths( m_fileName, sTblFilePath );
+            if (!FileExists( sTblFilePath.toLocal8Bit().constData() ))
+            {  QString sErrMsg = QString( "   Error: Table file not found: %1\n\n" ).arg( sTblFilePath );
+               errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+               bRetVal = FALSE;
+            }
+            else
+            {  int iNumInitTables = ruleSet.numTables();
+               bRetVal = (ruleSet.addTable( sTblFilePath.toLocal8Bit().constData(), errorFile ) && bRetVal);
+               int iNumFinalTables = ruleSet.numTables();
+               for (int i=iNumInitTables+1; i<=iNumFinalTables; i++)
+                  pRuleSubset->addTableID( i );
+         }  }
+         else if ( token == "TABLELIST" )    // SAC 12/28/25 (dev #524)
+         {  int iNumInitTables = ruleSet.numTables();
+            // read listing of look-up table definitions
+            bRetVal = (ReadTableList( errorFile ) && bRetVal);
+            int iNumFinalTables = ruleSet.numTables();
+            for (int i=iNumInitTables+1; i<=iNumFinalTables; i++)
+               pRuleSubset->addTableID( i );
+         }
+         // add code here to handle other tokens...
+         else
+         {  int iRuleFileLineNum = pFile->GetLineCount();
+            QString sErrMsg = QString( "RuleSubset '%1' line# %2: Unrecognized token '%3'\n" ).arg( ruleSubsetName, QString::number(iRuleFileLineNum), token );
+            errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+            bRetVal = FALSE;
+         }
+         token = pFile->ReadToken(); 
+   }  }
 
    return bRetVal;
 }

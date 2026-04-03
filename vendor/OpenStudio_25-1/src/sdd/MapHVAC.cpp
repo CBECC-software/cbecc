@@ -7880,18 +7880,32 @@ boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateHX(
       double value = unitToUnit(_cWFluidFlowRtDsgn.get(),"gal/min","m^3/s").get();
       hx.setLoopSupplySideDesignFlowRate(value);
     }
-
-    auto uAElement = hxElement.child("UASim");
-    boost::optional<double> _uA = lexicalCastToDouble(uAElement);
-    if( _uA ) {
-      // sdd units = Btu/(hr*ft^2*F), os units = W/(m^2*K)
-      Quantity uaIP(_uA.get(), BTUUnit(BTUExpnt(1,-2,-1,-1)));
-      auto uaSI = QuantityConverter::instance().convert(uaIP, UnitSystem(UnitSystem::Wh));
-      OS_ASSERT(uaSI);
-      OS_ASSERT(uaSI->units() == WhUnit(WhExpnt(1,0,-2,-1)));
-      hx.setHeatExchangerUFactorTimesAreaValue(uaSI->value());
-    }
   }
+
+  auto uAElement = hxElement.child("UASim");
+  boost::optional<double> _uA = lexicalCastToDouble(uAElement);
+  if( _uA ) {
+    // sdd units = Btu/(hr*ft^2*F), os units = W/(m^2*K)
+    Quantity uaIP(_uA.get(), BTUUnit(BTUExpnt(1,-2,-1,-1)));
+    auto uaSI = QuantityConverter::instance().convert(uaIP, UnitSystem(UnitSystem::Wh));
+    OS_ASSERT(uaSI);
+    OS_ASSERT(uaSI->units() == WhUnit(WhExpnt(1,0,-2,-1)));
+    hx.setHeatExchangerUFactorTimesAreaValue(uaSI->value());
+  }
+
+  auto operMinTempLimit = lexicalCastToDouble(hxElement.child("OperMinTempLimit"));
+  if( operMinTempLimit ) {
+    hx.setOperationMinimumTemperatureLimit(unitToUnit(operMinTempLimit.get(),"F","C").get());
+  }
+  else
+    hx.setOperationMinimumTemperatureLimit(0.0);
+
+  auto operMaxTempLimit = lexicalCastToDouble(hxElement.child("OperMaxTempLimit"));
+  if( operMaxTempLimit ) {
+    hx.setOperationMaximumTemperatureLimit(unitToUnit(operMaxTempLimit.get(),"F","C").get());
+  }
+  else
+    hx.setOperationMaximumTemperatureLimit(100.0);
 
   std::string type = hxElement.child("Type").text().as_string();
   if( istringEqual("CrossFlowSupplyMixed",type) ) {
@@ -7902,6 +7916,10 @@ boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateHX(
     LOG(Warn,name + " Type field references an unsupported option " + type + ".");
   }
 
+  std::string ctrlType = hxElement.child("CtrlType").text().as_string();      // added for CBECC 2025.2.0.2 - SAC 02/23/26 (dev #476)
+  if ( ! hx.setControlType(ctrlType) )
+    LOG(Warn,name + " CtrlType field references an unsupported option " + ctrlType + ".");
+
   hx.setMinimumTemperatureDifferencetoActivateHeatExchanger(1.1);
 
   hx.setHeatTransferMeteringEndUseType("FreeCooling");
@@ -7910,9 +7928,9 @@ boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateHX(
 
   hx.setSizingFactor(1.0);
 
-  hx.setOperationMinimumTemperatureLimit(4.4);
-
-  hx.setOperationMinimumTemperatureLimit(21.1);
+//  hx.setOperationMinimumTemperatureLimit(4.4);
+//
+//  hx.setOperationMinimumTemperatureLimit(21.1);
 
   return result;
 }
@@ -10078,6 +10096,7 @@ boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateZnSy
 
       if( fanOperModeSch ) {
         fpfc.setSupplyAirFanOperatingModeSchedule(fanOperModeSch.get());
+        fpfc.setOutdoorAirSchedule(fanOperModeSch.get());      // SAC 02/04/26 (dev #701)
       }
 
       // pull the max air flow rate from the fan and set in the fpfc

@@ -198,6 +198,7 @@
 #define IDC_START_BLANK_SF              336
 #define IDC_START_BATCH_SF              337
 #define IDC_START_BLANK_LBL             338
+#define IDC_START_CUACCSV               339
 #define IDS_VER_INFO_LANG               999
 #define IDC_MAINTAB                     1000
 #define IDC_COMPTYPE                    1002
@@ -500,14 +501,15 @@
 #define IDM_TOOLS_OLDCUACIMPORT         33043
 #define IDM_DISPLAYCUACDLG              33044
 #define IDM_TOOLS_CSVRATETABLES         33045
+#define IDM_TOOLS_CUACFROMCSV           33046
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        339
-#define _APS_NEXT_COMMAND_VALUE         33046
+#define _APS_NEXT_RESOURCE_VALUE        340
+#define _APS_NEXT_COMMAND_VALUE         33047
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif

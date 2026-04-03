@@ -3,8 +3,8 @@ RulesetFilename   "T24_2025.bin"
 Proj   "010012-SchSml-CECStd25"  
    BldgEngyModelVersion = 17
    CreateDate = 1414609068
-   ModDate = 1762522534
-   RunDate = 1762522535
+   ModDate = 1774251910
+   RunDate = 1774251911
    ZipCode = 95814
    AutoHardSize = 1
    AutoEffInput = 1
@@ -14,7 +14,7 @@ Proj   "010012-SchSml-CECStd25"
    SimVarsHVACSecTempFlow = 0
    CompOptNew = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2025.2.0 (1394)"
+   SoftwareVersion = "CBECC 2025.2.1 (1407)"
    ProjFileName = "010012-SchSml-CECStd25.cibd"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
@@ -4882,7 +4882,7 @@ Batt   "T24 Batt"
    MaxDschrgPwr = 21.9132
    ..
 
-CrvQuad   "Constant1Quad"  
+CrvQuad   "Constant1Quad-user"  
    Coef1 = 1
    Coef2 = 0
    Coef3 = 0
@@ -4892,7 +4892,7 @@ CrvQuad   "Constant1Quad"
    MinVar1 = 0
    ..
 
-CrvCubic   "Constant1Cubic"  
+CrvCubic   "Constant1Cubic-user"  
    Coef1 = 1
    Coef2 = 0
    Coef3 = 0
@@ -4900,6 +4900,23 @@ CrvCubic   "Constant1Cubic"
    MaxOut = 1
    MaxVar1 = 1
    MinOut = 1
+   MinVar1 = 0
+   ..
+
+CrvQuad   "Constant1Quad"  
+   Coef1 = 1
+   Coef2 = 0
+   Coef3 = 0
+   MaxVar1 = 1
+   MinVar1 = 0
+   ..
+
+CrvCubic   "Constant1Cubic"  
+   Coef1 = 1
+   Coef2 = 0
+   Coef3 = 0
+   Coef4 = 0
+   MaxVar1 = 1
    MinVar1 = 0
    ..
 
@@ -5297,8 +5314,8 @@ clg: 0  htg: 0  'Common_Cafeteria_Zn'" )
    StdBatt_Size = 87.7
    StdBatt_Pwr = 21.915
    StdBatt_Ctrl = "Time of Use"
-   NRCCPRFPayldTransID = "921779ae-f859-4321-8a7f-04e71c2c2d78"
-   NRCCPRFPayldProcDate = "2025-11-07T05:33:51"
+   NRCCPRFPayldTransID = "a2d749d1-788d-415a-a16b-a552b9b19066"
+   NRCCPRFPayldProcDate = "2026-03-23T00:44:55"
    ..
 
 

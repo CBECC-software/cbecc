@@ -313,6 +313,7 @@ MAINSCREEN,  3
 	 CTRL, "ClimateZone",     1005, TDCT_Combo,  150, 145, 300, 200, 25, FNT_STD, "Climate Zone:",                      TA_LEFT,  -130, 4,     0, TA_LEFT, 0, 0, None,       None,       0,  0,  ""
 
     CTRL, "LAFirePVBattExcpt",3077, TDCT_Check, 150, 175,  22, 310,  0, FNT_STD, "Project subject to Executive Order N-29-25", TA_LEFT,  0, 4,   0, TA_LEFT, 0, 0,  None,   None,       0,  0,  ""  ; SAC 07/29/25 (com tic #3697)
+    CTRL, "MeetsPart7CBC",	  3080, TDCT_Check, 150, 205,  22, 550,  0, FNT_STD, "Building located in Fire Hazard Severity Zones / Wildland-Urban Interface (WUI) Fire Areas", TA_LEFT,  0, 4,   0, TA_LEFT, 0, 0,  None,   None,       0,  0,  ""  ; RJH 2/12/26 (CBECC-Dev Issue 666)
 
 	 CTRL, "SpecifyWeatherFN", 1021, TDCT_Check,  30, 207,  22, 150,  0, FNT_STD, "Specify Weather File",               TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0, None,                                           BypassRuleLimits > 0,    0,  0,  "Whether or not to specify the hourly simulation weather file"   ; SAC 5/17/19
 	 CTRL, "WeatherFileSet",   1023, TDCT_Combo, 150, 235, 300, 240, 25, FNT_STD, "Weather Set:",                       TA_LEFT,  -110, 4,     0, TA_LEFT, 0, 0, SpecifyWeatherFN = 0,                           EnableResearchMode > 0,  0,  0,  "Weather file set to perform analysis with"
@@ -1197,26 +1198,31 @@ MAINSCREEN,  3
 ;;    CTRL, "CUAC:AffordableBattMsg",     3088, TDCT_Label, 210, 499,  20, 245,  0, FNT_STD, "",                                    TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUAC:ShowPVBattInputs > 0 And BattSizeSum > 0,       0,  0,  ""
 
 
-    CTRL, "",                       101, TDCT_Label,   20, 146,  18,   0,  0, FNT_STD, "Electric Utility",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
-    CTRL, "",                       102, TDCT_Line,   112, 154, 445, 154, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
-	 CTRL, "CUAC:ElecUtility",      4801, TDCT_Combo,   95, 167, 400, 350, 12, FNT_STD, "Name:",                                   TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -62,  0,  "Electric utility name"
-	 CTRL, "CUAC:G2ElecTerritory",  4802, TDCT_Combo,   95, 195, 400, 125, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0,    -67,  0,  "Electric utility territory"
-	 CTRL, "CUAC:G2ElecTariff",     4803, TDCT_Combo,  275, 195, 400, 170, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0 And CUAC:G2ElecTerritory > 0,  -47,  0,  "Electric utility tariff"
-	 CTRL, "CUAC:ElecTariffType",   4810, TDCT_Combo,   95, 223, 400, 125, 12, FNT_STD, "Type:",                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0 And CUAC:G2ElecTerritory > 0 And CUAC:G2ElecTariff > 0,  -52,  0,  "electric utility tariff type"   ; SAC 01/24/24
-	 CTRL, "CUAC:ElecTariffAdj",    4805, TDCT_Combo,  275, 223, 400, 170, 12, FNT_STD, "Adjust.:",                                TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0 And CUAC:G2ElecTerritory > 0 And CUAC:G2ElecTariff > 0,  -53,  0,  "Adjustment to electric utility tariff"    ; SAC 01/10/24
-    CTRL, "CUAC:ElecTariffDescrip",4804, TDCT_Edit,    65, 252,  40, 377, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CUAC:HaveErrorInfo > 100,  CUACUIFlag > 10 And CUAC:ElecTariffGen > 1,         0,  0,  ""
+    CTRL, "",                      4701, TDCT_Button,  20, 155,  26, 250, 3086, FNT_STD, "Electric Utility and Tariff Selections",TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "View/select CUAC electric utility and tariff details"   ; SAC 02/18/26 (dev #689)
+;    CTRL, "",                       101, TDCT_Label,   20, 146,  18,   0,  0, FNT_STD, "Electric Utility",                        TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+;    CTRL, "",                       102, TDCT_Line,   112, 154, 445, 154, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+;	 CTRL, "CUAC:ElecUtility",      4801, TDCT_Combo,   95, 167, 400, 350, 12, FNT_STD, "Name:",                                   TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -62,  0,  "Electric utility name"
+;	 CTRL, "CUAC:G2ElecTerritory",  4802, TDCT_Combo,   95, 195, 400, 125, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0,    -67,  0,  "Electric utility territory"
+;	 CTRL, "CUAC:G2ElecTariff",     4803, TDCT_Combo,  275, 195, 400, 170, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0 And CUAC:G2ElecTerritory > 0,  -47,  0,  "Electric utility tariff"
+;	 CTRL, "CUAC:ElecTariffType",   4810, TDCT_Combo,   95, 223, 400, 125, 12, FNT_STD, "Type:",                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0 And CUAC:G2ElecTerritory > 0 And CUAC:G2ElecTariff > 0,  -52,  0,  "electric utility tariff type"   ; SAC 01/24/24
+;	 CTRL, "CUAC:ElecTariffAdj",    4805, TDCT_Combo,  275, 223, 400, 170, 12, FNT_STD, "Adjust.:",                                TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:ElecUtility > 0 And CUAC:G2ElecTerritory > 0 And CUAC:G2ElecTariff > 0,  -53,  0,  "Adjustment to electric utility tariff"    ; SAC 01/10/24
+    CTRL, "CUAC:ElecTariffDescrip",4804, TDCT_Edit,    50, 192,  78, 393, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CUAC:HaveErrorInfo > 100,  CUACUIFlag > 10,         0,  0,  ""
 
-    CTRL, "",                       106, TDCT_Label,   20, 299,  18,   0,  0, FNT_STD, "Gas Utility",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
-    CTRL, "",                       107, TDCT_Line,    95, 307, 445, 307, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
-	 CTRL, "CUAC:GasUtility",       4806, TDCT_Combo,   95, 320, 450, 350, 12, FNT_STD, "Name:",                                   TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -62,  0,  "Gas utility name"
-	 CTRL, "CUAC:G2GasTerritory",   4807, TDCT_Combo,   95, 348, 400, 125, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0,    -67,  0,  "Gas utility territory"
-	 CTRL, "CUAC:G2GasTariff",      4808, TDCT_Combo,  275, 348, 400, 170, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0 And CUAC:G2GasTerritory > 0,  -47,  0,  "Gas utility tariff"
-	 CTRL, "CUAC:GasTariffType",    4814, TDCT_Combo,   95, 376, 400, 125, 12, FNT_STD, "Type:",                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0 And CUAC:G2GasTerritory > 0 And CUAC:G2GasTariff > 0,  -52,  0,  "Gas utility tariff type"   ; SAC 01/25/24
-    CTRL, "CUAC:GasTariffDescrip", 4809, TDCT_Edit,    65, 405,  40, 377, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CUAC:HaveErrorInfo > 100,  CUACUIFlag > 10 And CUAC:GasTariffGen > 1,                 0,  0,  ""
+    CTRL, "",                      4702, TDCT_Button,  20, 290,  26, 250, 3088, FNT_STD, "Gas Utility and Tariff Selections",     TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  "View/select CUAC gas utility and tariff details"   ; SAC 02/18/26 (dev #689)
+;    CTRL, "",                       106, TDCT_Label,   20, 299,  18,   0,  0, FNT_STD, "Gas Utility",                             TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+;    CTRL, "",                       107, TDCT_Line,    95, 307, 445, 307, -1, FNT_STD, "",                                        TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,       0,  0,  ""
+;	 CTRL, "CUAC:GasUtility",       4806, TDCT_Combo,   95, 320, 450, 350, 12, FNT_STD, "Name:",                                   TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -62,  0,  "Gas utility name"
+;	 CTRL, "CUAC:G2GasTerritory",   4807, TDCT_Combo,   95, 348, 400, 125, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0,    -67,  0,  "Gas utility territory"
+;	 CTRL, "CUAC:G2GasTariff",      4808, TDCT_Combo,  275, 348, 400, 170, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0 And CUAC:G2GasTerritory > 0,  -47,  0,  "Gas utility tariff"
+;	 CTRL, "CUAC:GasTariffType",    4814, TDCT_Combo,   95, 376, 400, 125, 12, FNT_STD, "Type:",                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10 And CUAC:GasUtilitySelected > 0 And CUAC:G2GasTerritory > 0 And CUAC:G2GasTariff > 0,  -52,  0,  "Gas utility tariff type"   ; SAC 01/25/24
+    CTRL, "CUAC:GasTariffDescrip", 4809, TDCT_Edit,    50, 327,  78, 393, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  CUAC:HaveErrorInfo > 100,  CUACUIFlag > 10,                 0,  0,  ""
 
-	 CTRL, "CUAC:WaterRateType",    4811, TDCT_Combo,   95, 456, 200, 135, 12, FNT_STD, "Water Bill:",                             TA_LEFT,   -75, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -77,  0,  "Water billing type"
-	 CTRL, "CUAC:WaterMonthlyCost", 4812, TDCT_Edit,   245, 456,  25,  55, 11, FNT_STD, "",                                        TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:WaterRateType > 0,       0, 40,  "Water bill monthly charges"
-	 CTRL, "CUAC:WaterVolumeCost",  4813, TDCT_Edit,   350, 456,  25,  55, 11, FNT_STD, "",                                        TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:WaterRateType > 1,       0, 45,  "Water bill usage charges"
+	 CTRL, "CUAC:WaterRateType",    4811, TDCT_Combo,   95, 428, 200, 135, 12, FNT_STD, "Water Bill:",                             TA_LEFT,   -75, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -77,  0,  "Water billing type"
+	 CTRL, "CUAC:WaterMonthlyCost", 4812, TDCT_Edit,   245, 428,  25,  55, 11, FNT_STD, "",                                        TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:WaterRateType > 0,       0, 40,  "Water bill monthly charges"
+	 CTRL, "CUAC:WaterVolumeCost",  4813, TDCT_Edit,   350, 428,  25,  55, 11, FNT_STD, "",                                        TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:WaterRateType > 1,       0, 45,  "Water bill usage charges"
+
+	 CTRL, "CUAC:SewerRateType",    4826, TDCT_Combo,   95, 458, 200, 135, 12, FNT_STD, "Sewer Bill:",                             TA_LEFT,   -75, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -77,  0,  "Sewer billing type"     ; SAC 02/18/26 (dev #712)
+	 CTRL, "CUAC:SewerMonthlyCost", 4827, TDCT_Edit,   245, 458,  25,  55, 11, FNT_STD, "",                                        TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:SewerRateType > 0,       0, 40,  "Sewer bill monthly charges"
 
 	 CTRL, "CUAC:TrashRateType",    4816, TDCT_Combo,   95, 488, 200, 135, 12, FNT_STD, "Trash Bill:",                             TA_LEFT,   -75, 4,     0, TA_LEFT, 0, 0,  None,       CUACUIFlag > 10,     -77,  0,  "Trash billing type"
 	 CTRL, "CUAC:TrashMonthlyCost", 4817, TDCT_Edit,   245, 488,  25,  55, 11, FNT_STD, "",                                        TA_RIGHT,   -1, 4,     1, TA_LEFT, 4, 4,  None,       CUACUIFlag > 10 And CUAC:TrashRateType > 0,       0, 40,  "Trash bill monthly charges"
@@ -2160,6 +2166,83 @@ MAINSCREEN,  3
 
 	 CTRL, "",                             1106, TDCT_Label,   25, 480,  18, 400,     0, FNT_STD, "Notes/Errors resulting from CUAC report combining process:",  TA_LEFT,  0, 0,  0, TA_LEFT,  0, 0,  None,    ShowCombineResultsOutput > 0,   0,  390,  ""     ; SAC 10/26/24 (tic #1386)
     CTRL, "CombineResultsOutput",         1107, TDCT_Edit,    40, 502, 145, 711, 10000, FNT_STD, "",                                                            TA_LEFT,  0, 4,  0, TA_LEFT,  0, 0,  None,    ShowCombineResultsOutput > 0,   0,    0,  "Notes/Errors resulting from the last CUAC report combining process"
+
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+  ;----------------------------------------------------------------
+  ;      BDBase      Page
+  ;      Component    ID   Module(s)   Caption
+  ;----------------------------------------------------------------
+   TAB, "CUAC",      3086,      15,    " CUAC Electric Utility and Tariff (g2) "         ; SAC 01/19/26 (dev #689)
+                                                                                                                                                                                                                                                
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	 CTRL, "ElecUtility",               4801, TDCT_Combo,   95,  40, 400, 460, 12, FNT_STD, "Utility:",                                TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,                 None,               -62,  0,  "Electric utility name"
+	 CTRL, "G2ElecTerritory",           4802, TDCT_Combo,   95,  70, 400, 150, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,                 ElecUtility > 0,    -67,  0,  "Electric utility territory"
+	 CTRL, "G2ElecTariff",              4803, TDCT_Combo,  325,  70, 400, 410, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,                 ElecUtility > 0 And G2ElecTerritory > 0,                       -47,  0,  "Electric utility tariff"
+	 CTRL, "ElecTariffType",            4810, TDCT_Combo,   95, 100, 400, 150, 12, FNT_STD, "Type:",                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,                 ElecUtility > 0 And G2ElecTerritory > 0 And G2ElecTariff > 0,  -52,  0,  "Electric utility tariff type"   ; SAC 01/24/24
+	 CTRL, "ElecTariffAdj",             4805, TDCT_Combo,  325, 100, 400, 120, 12, FNT_STD, "Adjust.:",                                TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,                 ElecUtility > 0 And G2ElecTerritory > 0 And G2ElecTariff > 0,  -53,  0,  "Adjustment to electric utility tariff"    ; SAC 01/10/24
+    CTRL, "ElecTariffDescrip",         4804, TDCT_Edit,    65, 135, 100, 667, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  HaveErrorInfo > 100,  ElecTariffGen > 1,    0,  0,  ""
+
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+  ;----------------------------------------------------------------
+  ;      BDBase      Page
+  ;      Component    ID   Module(s)   Caption
+  ;----------------------------------------------------------------
+   TAB, "CUAC",      3087,      15,    " CUAC Electric Utility and Tariff (g3) "         ; SAC 02/18/26 (dev #689)
+                                                                                                                                                                                                                                                
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	 CTRL, "ElecUtility",               4801, TDCT_Combo,   95,  40, 400, 460, 12, FNT_STD, "Utility:",                                TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,                 None,               -62,  0,  "Electric utility name"
+
+    CTRL, "ElecTariffDescrip",         4804, TDCT_Edit,    65, 135, 100, 667, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  HaveErrorInfo > 100,  ElecTariffGen > 1,    0,  0,  ""
+
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+  ;----------------------------------------------------------------
+  ;      BDBase      Page
+  ;      Component    ID   Module(s)   Caption
+  ;----------------------------------------------------------------
+   TAB, "CUAC",      3088,      15,    " CUAC Gas Utility and Tariff (g2) "         ; SAC 02/18/26 (dev #689)
+                                                                                                                                                                                                                                                
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	 CTRL, "GasUtility",                4806, TDCT_Combo,   95,  40, 400, 460, 12, FNT_STD, "Utility:",                                TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,                 None,                    -62,  0,  "Gas utility name"
+	 CTRL, "G2GasTerritory",            4807, TDCT_Combo,   95,  70, 400, 150, 12, FNT_STD, "Territory:",                              TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,                 GasUtilitySelected > 0,  -67,  0,  "Gas utility territory"
+	 CTRL, "G2GasTariff",               4808, TDCT_Combo,  325,  70, 400, 410, 12, FNT_STD, "Tariff:",                                 TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,                 GasUtilitySelected > 0 And G2GasTerritory > 0,                      -47,  0,  "Gas utility tariff"
+	 CTRL, "GasTariffType",             4814, TDCT_Combo,   95, 100, 400, 150, 12, FNT_STD, "Type:",                                   TA_RIGHT,   -4, 4,     0, TA_LEFT, 0, 0,  None,                 GasUtilitySelected > 0 And G2GasTerritory > 0 And G2GasTariff > 0,  -52,  0,  "Gas utility tariff type"   ; SAC 01/25/24
+    CTRL, "GasTariffDescrip",          4809, TDCT_Edit,    65, 135, 100, 667, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  HaveErrorInfo > 100,  GasTariffGen > 1,          0,  0,  ""
+
+   ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+  ;----------------------------------------------------------------
+  ;      BDBase      Page
+  ;      Component    ID   Module(s)   Caption
+  ;----------------------------------------------------------------
+   TAB, "CUAC",      3089,      15,    " CUAC Gas Utility and Tariff (g3) "         ; SAC 02/18/26 (dev #689)
+                                                                                                                                                                                                                                                
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     ;       BDBase                    Ctrl                                             | Control Label                                                                | Units Label         | Editable  | Display     Erase X |
+     ;       Parameter                  ID   Ctrl Type     X    Y   Ht  Wd Val   Font   | Label                                                      Justif.    DX  DY | Disp     Just DX DY | Condition | Condition   Lft Rgt | Status Bar Msg
+     ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	 CTRL, "GasUtility",                4806, TDCT_Combo,   95,  40, 400, 460, 12, FNT_STD, "Utility:",                                TA_LEFT,   -60, 4,     0, TA_LEFT, 0, 0,  None,                 None,                    -62,  0,  "Gas utility name"
+
+    CTRL, "GasTariffDescrip",          4809, TDCT_Edit,    65, 135, 100, 667, 10001, FNT_STD, "",                                     TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  HaveErrorInfo > 100,  GasTariffGen > 1,          0,  0,  ""
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -6478,34 +6561,36 @@ MAINSCREEN,  3
 ;	mjb	mods for E+A+A	9/17/13
 	 CTRL, "Status",            10025, TDCT_Combo,  170, 120, 300, 100, 12, FNT_STD, "Surface Status:",                    TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None, Proj:RunScope = 2,     0,  0,  ""
 	 CTRL, "IsVerified",        10026, TDCT_Check,  300, 120,  22, 200,  0, FNT_STD, "Verify Existing Window",             TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None, Proj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered window has a verifiable existing window"  
-	 CTRL, "WinType",           10008, TDCT_Combo,  170, 150, 200, 250, 12, FNT_STD, "Window Type:",                       TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Assignment of WindowType object that facilitates Window property defaulting."
-	 CTRL, "SpecMethod",        10006, TDCT_Combo,  170, 180, 200, 250, 12, FNT_STD, "Specification Method:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Whether to input window area vs. dimensions (later required for fin/overhang modeling)."
-	 CTRL, "ModelFinsOverhang", 10007, TDCT_Check,   20, 210,  22, 240,  2,  FNT_STD, "Model Window Fins and/or Overhangs", TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  SpecMethod = 1,  None,  0,  0,  "Whether or not window fins and/or overhangs are to be modeled"  
+; RJH 2/12/26 - CBECC-Dev Issue 666
+	 CTRL, "UfactorExcept",     10040, TDCT_Combo,  170, 150, 200, 250, 12, FNT_STD, "U-factor Exception:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None, Status != 1,      0,  0,  "Exceptions to building-wide minimum fenestration performance requirements that apply to this window"
+	 CTRL, "WinType",           10008, TDCT_Combo,  170, 180, 200, 250, 12, FNT_STD, "Window Type:",                       TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Assignment of WindowType object that facilitates Window property defaulting."
+	 CTRL, "SpecMethod",        10006, TDCT_Combo,  170, 210, 200, 250, 12, FNT_STD, "Specification Method:",              TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  "Whether to input window area vs. dimensions (later required for fin/overhang modeling)."
+	 CTRL, "ModelFinsOverhang", 10007, TDCT_Check,   20, 240,  22, 240,  2,  FNT_STD, "Model Window Fins and/or Overhangs", TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  SpecMethod = 1,  None,  0,  0,  "Whether or not window fins and/or overhangs are to be modeled"  
 
-	 CTRL, "Area",              10010, TDCT_Edit,   150, 270,  25,  75, 11, FNT_STD, "Window Area:",                       TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  SpecMethod != 1,  None,     0,  0,  ""
-	 CTRL, "Width",             10012, TDCT_Edit,   150, 300,  25,  75, 11, FNT_STD, "Width:",                             TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1,  -117, 20,  ""
-	 CTRL, "Height",            10011, TDCT_Edit,   150, 330,  25,  75, 11, FNT_STD, "Height:",                            TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1,  -117, 20,  ""
-	 CTRL, "Multiplier",        10013, TDCT_Edit,   150, 360,  25,  75, 11, FNT_STD, "Multiplier:",                        TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1,  -117, 20,  ""
-	 CTRL, "NFRCUfactor",       10020, TDCT_Edit,   150, 390,  25,  75, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-	 CTRL, "NFRCSHGC",          10021, TDCT_Edit,   150, 420,  25,  75, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-	 CTRL, "UfactorSHGCSource", 10022, TDCT_Combo,  185, 450, 250, 115, 12, FNT_STD, "Source of Ufactor/SHGC:",            TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
-	 CTRL, "ExteriorShade",     10023, TDCT_Combo,  150, 480, 250, 150, 12, FNT_STD, "Exterior Shade:",                    TA_LEFT,  -115, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+	 CTRL, "Area",              10010, TDCT_Edit,   150, 300,  25,  75, 11, FNT_STD, "Window Area:",                       TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  SpecMethod != 1,  None,     0,  0,  ""
+	 CTRL, "Width",             10012, TDCT_Edit,   150, 330,  25,  75, 11, FNT_STD, "Width:",                             TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1,  -117, 20,  ""
+	 CTRL, "Height",            10011, TDCT_Edit,   150, 360,  25,  75, 11, FNT_STD, "Height:",                            TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1,  -117, 20,  ""
+	 CTRL, "Multiplier",        10013, TDCT_Edit,   150, 390,  25,  75, 11, FNT_STD, "Multiplier:",                        TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1,  -117, 20,  ""
+	 CTRL, "NFRCUfactor",       10020, TDCT_Edit,   150, 420,  25,  75, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+	 CTRL, "NFRCSHGC",          10021, TDCT_Edit,   150, 450,  25,  75, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+	 CTRL, "UfactorSHGCSource", 10022, TDCT_Combo,  185, 480, 250, 115, 12, FNT_STD, "Source of Ufactor/SHGC:",            TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+	 CTRL, "ExteriorShade",     10023, TDCT_Combo,  150, 510, 250, 150, 12, FNT_STD, "Exterior Shade:",                    TA_LEFT,  -115, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
 
 ;	mjb	new existing window properties	9/17/13
 ;	 CTRL, "",                  10027, TDCT_Line,   310, 240, 310,  460, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
-	 CTRL, "",           	    10037, TDCT_Label,   20, 250,  20,    0, 12, FNT_BOLD, "ALTERED",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -50, 80,  ""
-	 CTRL, "",                  10038, TDCT_Line,    85, 258, 300,  258, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
-	 CTRL, "",           	    10028, TDCT_Label,  335, 250,  20,    0, 12, FNT_BOLD, "EXISTING",                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -50, 80,  ""
-	 CTRL, "",                  10036, TDCT_Line,   405, 258, 615,  258, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
+	 CTRL, "",           	    10037, TDCT_Label,   20, 280,  20,    0, 12, FNT_BOLD, "ALTERED",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -50, 80,  ""
+	 CTRL, "",                  10038, TDCT_Line,    85, 288, 300,  258, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
+	 CTRL, "",           	    10028, TDCT_Label,  335, 280,  20,    0, 12, FNT_BOLD, "EXISTING",                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -50, 80,  ""
+	 CTRL, "",                  10036, TDCT_Line,   405, 288, 615,  258, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
 
-	 CTRL, "exArea",            10029, TDCT_Edit,   465, 270,  25,  75, 11, FNT_STD, "Window Area:",                       TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  SpecMethod !=1,	Status = 2 And IsVerified = 1,  -117, 80,  ""
-	 CTRL, "exWidth",           10030, TDCT_Edit,   465, 300,  25,  75, 11, FNT_STD, "Width:",                             TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1 And Status = 2 And IsVerified = 1,  -117, 20,  ""
-	 CTRL, "exHeight",          10031, TDCT_Edit,   465, 330,  25,  75, 11, FNT_STD, "Height:",                            TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1 And Status = 2 And IsVerified = 1,  -117, 20,  ""
-	 CTRL, "exMultiplier",      10032, TDCT_Edit,   465, 360,  25,  75, 11, FNT_STD, "Multiplier:",                        TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1 And Status = 2 And IsVerified = 1,  -117, 20,  ""
-	 CTRL, "exNFRCUfactor",     10033, TDCT_Edit,   465, 390,  25,  75, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -117, 80,  ""
-	 CTRL, "exNFRCSHGC",        10034, TDCT_Edit,   465, 420,  25,  75, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
-	 CTRL, "exUfactorSHGCSource", 10035, TDCT_Combo,  500, 450, 250, 115, 12, FNT_STD, "Source of Ufactor/SHGC:",          TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -147, 0,  ""
-	 CTRL, "exExteriorShade",   10036, TDCT_Combo,  465, 480, 250, 150, 12, FNT_STD, "Exterior Shade:",                    TA_LEFT,  -115, 4,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 0,  ""
+	 CTRL, "exArea",            10029, TDCT_Edit,   465, 300,  25,  75, 11, FNT_STD, "Window Area:",                       TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  SpecMethod !=1,	Status = 2 And IsVerified = 1,  -117, 80,  ""
+	 CTRL, "exWidth",           10030, TDCT_Edit,   465, 330,  25,  75, 11, FNT_STD, "Width:",                             TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1 And Status = 2 And IsVerified = 1,  -117, 20,  ""
+	 CTRL, "exHeight",          10031, TDCT_Edit,   465, 360,  25,  75, 11, FNT_STD, "Height:",                            TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1 And Status = 2 And IsVerified = 1,  -117, 20,  ""
+	 CTRL, "exMultiplier",      10032, TDCT_Edit,   465, 390,  25,  75, 11, FNT_STD, "Multiplier:",                        TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   SpecMethod = 1 And Status = 2 And IsVerified = 1,  -117, 20,  ""
+	 CTRL, "exNFRCUfactor",     10033, TDCT_Edit,   465, 420,  25,  75, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -117, 80,  ""
+	 CTRL, "exNFRCSHGC",        10034, TDCT_Edit,   465, 450,  25,  75, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
+	 CTRL, "exUfactorSHGCSource", 10035, TDCT_Combo,  500, 480, 250, 115, 12, FNT_STD, "Source of Ufactor/SHGC:",          TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -147, 0,  ""
+	 CTRL, "exExteriorShade",   10036, TDCT_Combo,  465, 510, 250, 150, 12, FNT_STD, "Exterior Shade:",                    TA_LEFT,  -115, 4,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 0,  ""
 
 ;	 CTRL, "wnModel",        10006, TDCT_Combo,  170, 120, 250, 250, 25, FNT_STD, "Window Model:",                      TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
 ;
@@ -6633,21 +6718,23 @@ MAINSCREEN,  3
 	 CTRL, "IsVerified",        10031, TDCT_Check,  230, 130,  22, 160,  0, FNT_STD, "Verify Existing Skylight",          TA_LEFT,     0, 4,     0, TA_LEFT, 0, 0,  None,  Proj:RunScope = 2 And Status = 2,   0,  0,  "Whether or not altered skylight has a verifiable existing skylight"  
 
 	 CTRL, "Multiplier",        10013, TDCT_Edit,   120, 160,  25,  75, 11, FNT_STD, "Multiplier:",                        TA_LEFT,  -100, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+; RJH 2/12/26 - CBECC-Dev Issue 666
+	 CTRL, "UfactorExcept",     10050, TDCT_Combo,  170, 190, 200, 200, 12, FNT_STD, "U-factor Exception:",                TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None, Status != 1,      0,  0,  "Exceptions to building-wide minimum fenestration performance requirements that apply to this skylight"
 
-	 CTRL, "",           	    10037, TDCT_Label,   20, 200,  20,    0, 12, FNT_BOLD, "ALTERED",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1,  -50, 80,  ""
-	 CTRL, "",                  10038, TDCT_Line,    85, 208, 285,  208, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
-	 CTRL, "",           	    10039, TDCT_Label,  320, 200,  20,    0, 12, FNT_BOLD, "EXISTING",                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1,  -50, 80,  ""
-	 CTRL, "",                  10040, TDCT_Line,   390, 208, 585,  208, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
+	 CTRL, "",           	    10037, TDCT_Label,   20, 230,  20,    0, 12, FNT_BOLD, "ALTERED",                          TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1,  -50, 80,  ""
+	 CTRL, "",                  10038, TDCT_Line,    85, 238, 285,  208, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
+	 CTRL, "",           	    10039, TDCT_Label,  320, 230,  20,    0, 12, FNT_BOLD, "EXISTING",                         TA_LEFT,     0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1,  -50, 80,  ""
+	 CTRL, "",                  10040, TDCT_Line,   390, 238, 585,  208, -1, FNT_STD, "",                                  TA_CENTER,   0, 0,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 20,  ""
 
-	 CTRL, "Area",              10010, TDCT_Edit,   150, 220,  25,  60, 11, FNT_STD, "Skylight Area:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-	 CTRL, "NFRCUfactor",       10020, TDCT_Edit,   150, 250,  25,  60, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-	 CTRL, "NFRCSHGC",          10021, TDCT_Edit,   150, 280,  25,  60, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
-	 CTRL, "UfactorSHGCSource", 10023, TDCT_Combo,  185, 310, 250, 100, 12, FNT_STD, "Source of Ufactor/SHGC:",            TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
+	 CTRL, "Area",              10010, TDCT_Edit,   150, 250,  25,  60, 11, FNT_STD, "Skylight Area:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+	 CTRL, "NFRCUfactor",       10020, TDCT_Edit,   150, 280,  25,  60, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+	 CTRL, "NFRCSHGC",          10021, TDCT_Edit,   150, 310,  25,  60, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,       None,       0,  0,  ""
+	 CTRL, "UfactorSHGCSource", 10023, TDCT_Combo,  185, 340, 250, 100, 12, FNT_STD, "Source of Ufactor/SHGC:",            TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,       None,       0,  0,  ""
 
-	 CTRL, "exArea",            10042, TDCT_Edit,   450, 220,  25,  60, 11, FNT_STD, "Skylight Area:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -120, 30,  ""
-	 CTRL, "exNFRCUfactor",     10043, TDCT_Edit,   450, 250,  25,  60, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -120, 70,  ""
-	 CTRL, "exNFRCSHGC",        10044, TDCT_Edit,   450, 280,  25,  60, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -120,  0,  ""
-	 CTRL, "exUfactorSHGCSource", 10045, TDCT_Combo,  485, 310, 250, 100, 12, FNT_STD, "Source of Ufactor/SHGC:",          TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 0,  ""
+	 CTRL, "exArea",            10042, TDCT_Edit,   450, 250,  25,  60, 11, FNT_STD, "Skylight Area:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -120, 30,  ""
+	 CTRL, "exNFRCUfactor",     10043, TDCT_Edit,   450, 280,  25,  60, 11, FNT_STD, "NFRC U-factor:",                     TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -120, 70,  ""
+	 CTRL, "exNFRCSHGC",        10044, TDCT_Edit,   450, 310,  25,  60, 11, FNT_STD, "Solar Ht Gain Coef:",                TA_LEFT,  -115, 4,     1, TA_LEFT, 4, 4,  None,   Status = 2 And IsVerified = 1, -120,  0,  ""
+	 CTRL, "exUfactorSHGCSource", 10045, TDCT_Combo,  485, 340, 250, 100, 12, FNT_STD, "Source of Ufactor/SHGC:",          TA_LEFT,  -150, 4,     0, TA_LEFT, 0, 0,  None,   Status = 2 And IsVerified = 1, -117, 0,  ""
 
    ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -3,8 +3,8 @@ RulesetFilename   "T24_2025.bin"
 Proj   "030012S-OffMed-CECStd25"  
    BldgEngyModelVersion = 17
    CreateDate = 1416416094
-   ModDate = 1762522864
-   RunDate = 1762522865
+   ModDate = 1774252116
+   RunDate = 1774252117
    GeometryInpType = "Simplified"
    ZipCode = 95814
    AutoHardSize = 1
@@ -15,7 +15,7 @@ Proj   "030012S-OffMed-CECStd25"
    SimVarsHVACPri = 0
    AnalysisType = "Title24Compliance"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2025.2.0 (1394)"
+   SoftwareVersion = "CBECC 2025.2.1 (1407)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    ..
@@ -1844,8 +1844,8 @@ clg: 0  htg: 0  'TopFloor_Plenum Thermal Zone'" )
    StdBatt_Size = 296.9
    StdBatt_Pwr = 74.23
    StdBatt_Ctrl = "Time of Use"
-   NRCCPRFPayldTransID = "3c998b35-d0c0-48f1-8d96-e038ee42716d"
-   NRCCPRFPayldProcDate = "2025-11-07T05:39:24"
+   NRCCPRFPayldTransID = "21fc8453-075b-48e6-bb54-7c63035ca0dc"
+   NRCCPRFPayldProcDate = "2026-03-23T00:48:23"
    ..
 
 BatchRuns   "BatchRuns"  

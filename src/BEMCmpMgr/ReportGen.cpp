@@ -1741,9 +1741,9 @@ void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtil
                         BEMPX_WriteLogFile( QString::asprintf( "          URL:   %s", sURL.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
                      }
 
-            int iRptIter=0;      // added mechanism to iterate up to 8 times if download fails due to connection/download issue - SAC 09/28/21
+            int iRptIter=0;      // added mechanism to iterate up to 8 times if download fails due to connection/download issue - SAC 09/28/21  // iterate 8->3 times - SAC 03/19/26
             iRetVal = 2;   // => error downloading data (probably negotiating proxy server)
-            while (++iRptIter <= 8 && iRetVal == 2)
+            while (++iRptIter <= 3 && iRetVal == 2)
             {  if (iRptIter > 1)
             		BEMPX_WriteLogFile( QString::asprintf( "  Retrieving %s utility rate (attempt #%d)", sRateType.toLocal8Bit().constData(), iRptIter ),
                                              NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -1753,6 +1753,8 @@ void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtil
                //      if (iRetVal == 2 && iRptIter >= 8)
                //     		BEMPX_WriteLogFile( "Report generation failures on large models can sometimes be addressed by activating increased INI/analysis options:  RptGenConnectTimeout and RptGenReadWriteTimeout",
                //                                 NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            if (iRetVal > 0)
+               sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  server not reachable", sRateType.toLocal8Bit().constData() );     // ensure sErrMsg returned for server connection error - SAC 03/18/26 (dev #742)
 
             if (iRetVal == 0)    // success, return value could however be reporting an error...
             {

@@ -1302,7 +1302,8 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                      iEUIdx = -1;
                      while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
                      {  if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_EffTot && iEUIdx != IDX_T24_NRES_EU_Total)
-                        {  if (fBldgNonResFlrArea > 0)   // sum in NonRes elec use
+                        {  if ( fBldgNonResFlrArea > 0 ||      // sum in NonRes elec use
+                                (fBldgNonResFlrArea < 0.5 && (iEUIdx == IDX_T24_NRES_EU_PV || iEUIdx == IDX_T24_NRES_EU_BT)) )   // add logic to ensure PV/Batt not overlooked for all-MFam models - SAC 02/27/26 (dev #752)
                            {  double* pdBEMHrlyRes = NULL;
                               int iBEMHrlyResPtrRV = BEMPX_GetHourlyResultArrayPtr( &pdBEMHrlyRes, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName,    osRunInfo.BEMProcIdx() );
                               if (pdBEMHrlyRes == NULL || iBEMHrlyResPtrRV != 0)
@@ -1385,7 +1386,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
                         if (daHrlyPVBatt_FracPV[hr] < 1.0)
                            esEUMap_CECNonRes[IDX_T24_NRES_EU_BT].daTDVTotal[0] += ((dDeltaPVBattTDV / fTotBldgFlrArea) * (1.0 - daHrlyPVBatt_FracPV[hr]));
                                           if (bHrlyDebugLogging)      // DEBUGGING
-                                             BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - hr %1 NEM LSC %2 / export %3 / orig export TDV %4 / NEMFactor %5 / LSCFactor %6 / GrossUp %7" ).arg( QString::number( hr ), QString::number( dHrNEMAdj ), QString::number( -daHrlyElecUse[hr] ), QString::number( dOriginalNegTDV ), QString::number( daHrlyNEMFactors[hr] ), QString::number( dHrTDVFactor ), QString::number( dNEMGrossUpFactor ) ) );
+                                             BEMPX_WriteLogFile( QString( "            ProcessNonresSimulationResults() - hr %1 NEM LSC %2 / export kWh %3 / orig export LSC %4 / Delta PV-Batt LSC %5 (frac PV %6) / NEMFactor %7 / LSCFactor %8 / GrossUp %9" ).arg( QString::number( hr ), QString::number( dHrNEMAdj ), QString::number( -daHrlyElecUse[hr] ), QString::number( dOriginalNegTDV ), QString::number( dDeltaPVBattTDV ), QString::number( daHrlyPVBatt_FracPV[hr] ), QString::number( daHrlyNEMFactors[hr] ), QString::number( dHrTDVFactor ), QString::number( dNEMGrossUpFactor ) ) );
                         dAnnDeltaPVBattTDV += (dDeltaPVBattTDV / fTotBldgFlrArea);
                      }
                                           if (dAnnDeltaPVBattTDV != 0.0 && bHrlyDebugLogging)      // DEBUGGING

@@ -118,8 +118,8 @@ void CMX_SetUIActiveFlag( bool bActiveUI )
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-BOOL CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects )
-{	return BEMPX_LoadRuleset( fileName, bDeleteAllObjects );		// was: RuleProcRead( fileName, bDeleteAllObjects );
+BOOL CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects, LPCSTR bemBaseFileName /*=NULL*/ )      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)
+{	return BEMPX_LoadRuleset( fileName, bDeleteAllObjects, bemBaseFileName );		// was: RuleProcRead( fileName, bDeleteAllObjects );
 }
 
 BOOL CMX_GetRulesetBEMBaseFile( LPCSTR fileName, QString& sBEMBaseFN )	// SAC 8/15/14 - added to facilitate dynamic ruleset switching (w/ BEMBase refresh)

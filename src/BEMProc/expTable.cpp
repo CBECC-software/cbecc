@@ -1336,7 +1336,7 @@ void BEMTable::Read( CryptoFile& file )
    //file.Read( (void*) m_name.toLocal8Bit().constData(), length ); // read table name
    file.ReadQString( m_name );
 
-   file.Read( &nRows,      sizeof( int ) );   // read # rows of data
+   file.Read( &nRows,     sizeof( int ) );   // read # rows of data
    file.Read( &m_nParams, sizeof( int ) );   // read # indep var columns
    file.Read( &m_nCols,   sizeof( int ) );   // read # dep var columns
 
@@ -1435,12 +1435,12 @@ void BEMTable::Read( CryptoFile& file )
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-#ifdef _DEBUG
+//#ifdef _DEBUG
 void BEMTable::Write( CryptoFile& file, QFile& errorFile )
-#else
-void BEMTable::Write( CryptoFile& file, QFile& /*errorFile*/ )
-#endif
-{
+//#else
+//void BEMTable::Write( CryptoFile& file, QFile& /*errorFile*/ )
+//#endif
+{  long iInitFileSize = file.m_lByteCount;    // SAC 12/28/25 (dev #524)
 //   int length = m_name.length();
 //   file.Write( &length, sizeof( int ) );              // write length of table name
 //   file.Write( m_name.toLocal8Bit().constData(), length ); // write table name
@@ -1451,10 +1451,12 @@ void BEMTable::Write( CryptoFile& file, QFile& /*errorFile*/ )
    file.Write( &m_nParams, sizeof( int ) );  // write # indep var columns
    file.Write( &m_nCols,   sizeof( int ) );  // write # dep var columns
 
-#ifdef _DEBUG
-   QString dbgMsg = QString( " - %1 rows of data.\n" ).arg( QString::number(nRows) );
-   errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
-#endif
+   // moved down so that we can also write table SIZE
+   // //#ifdef _DEBUG
+   // //   QString dbgMsg = QString( " - %1 rows of data.\n" ).arg( QString::number(nRows) );
+   //    QString dbgMsg = QString( "         writing table %1 w/ %2 rows of data\n" ).arg( m_name, QString::number(nRows) );
+   //    errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+   // //#endif
 
 	// reading of new column/row data
 	QString str;
@@ -1524,6 +1526,11 @@ void BEMTable::Write( CryptoFile& file, QFile& /*errorFile*/ )
 		   file.WriteQString( str );
 		}
    }
+
+//#ifdef _DEBUG
+   QString dbgMsg = QString( "         wrote table %1 w/ %2 rows of data, %3 kb\n" ).arg( m_name, QString::number(nRows), BEMPX_FloatToString( (file.m_lByteCount - iInitFileSize)*0.001, 0, TRUE /*bAddCommas*/, 0, TRUE /*bTrimTrailingDecZeroes*/ ) );
+   errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+//#endif
 }
 
 

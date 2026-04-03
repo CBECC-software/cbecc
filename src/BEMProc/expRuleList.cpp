@@ -810,6 +810,12 @@ void RuleSet::initMembers()
 /////////////////////////////////////////////////////////////////////////////
 void RuleSet::clear()
 {	int i;
+	for (i = (int) m_ruleSubsets.size()-1; i >= 0; i--)      // SAC 12/17/25 (dev #524)
+	{	assert( m_ruleSubsets.at(i) );
+		if (m_ruleSubsets.at(i))
+			delete m_ruleSubsets.at(i);
+	}
+	m_ruleSubsets.clear();
    m_ruleListList.RemoveAll();
 	for (i = (int) m_tables.size()-1; i >= 0; i--)		// replaces: m_tableList.RemoveAll();
 	{	assert( m_tables.at(i) );
@@ -958,6 +964,17 @@ BOOL RuleSet::PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultIn
 	return (sErrantRuleProps.isEmpty());
 }
 
+
+/////////////////////////////////////////////////////////////////////////////
+
+RuleSubset* RuleSet::addRuleSubset( LPCSTR name, int iLineNum /*=0*/, const char* pszFileName /*=NULL*/ )      // SAC 12/16/25 (dev #524)
+{  RuleSubset* pRSS = new RuleSubset( name, iLineNum, pszFileName );          assert( pRSS );
+   if (pRSS)
+   {  m_ruleSubsets.push_back( pRSS );
+      return pRSS;
+   }
+   return NULL;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1447,6 +1464,95 @@ void RuleSet::postDataTypesToDatabase()
 			}
 	}	}
 	return;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+//
+// class RuleSubset
+//
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+RuleSubset::RuleSubset()
+{
+   m_lineNumber = 0; 
+}
+
+RuleSubset::RuleSubset( LPCSTR name, int iLineNumber /*=0*/, const char* pszFileName /*=NULL*/ )
+{
+   m_name       = name;
+   m_lineNumber = iLineNumber; 
+   m_fileName   = pszFileName;
+}
+
+RuleSubset::~RuleSubset()
+{
+}
+
+bool RuleSubset::Write( CryptoFile& file )      // SAC 12/17/25 (dev #524)
+{
+   bool bRetVal = TRUE;
+
+   file.WriteQString( m_name );
+   file.Write( &m_lineNumber, sizeof( int ) );
+   file.WriteQString( m_fileName );
+
+   int iNumTables = getNumTables();
+   file.Write( &iNumTables, sizeof( int ) );
+
+   return bRetVal;
+}
+
+void RuleSubset::Read( CryptoFile& file, int iFileStructVer /*=1*/ )
+{
+   file.ReadQString( m_name ); 
+   file.Read( &m_lineNumber, sizeof( int ) );
+   file.ReadQString( m_fileName );
+
+   int iNumTables;
+   file.Read( &iNumTables, sizeof( int ) );     // not stored
+}
+
+bool RuleSubset::ReadTablesFromBin( QString sRuleSubsetPathFile )       // SAC 12/21/25 (dev #524)
+{
+   bool bRetVal = TRUE;
+   char pHashBuffer[65];
+   int iSHA256_RetVal = ComputeSHA256_File( sRuleSubsetPathFile.toLocal8Bit().constData(), pHashBuffer, 65 );
+   if (iSHA256_RetVal != 0)
+   {  //sLogMsg = boost::str( boost::format( ",\"%s\",ComputeSHA256_File() error: %d" ) % sChkFile.c_str() % iSHA256_RetVal );
+      bRetVal = FALSE;        assert( false );
+   }
+   else if (strlen( pHashBuffer ) != 64)
+   {  //sLogMsg = boost::str( boost::format( ",\"%s\",ComputeSHA256_File() error - return string too short: %d" ) % sChkFile.c_str() % strlen( pHashBuffer ) );
+      bRetVal = FALSE;        assert( false );
+   }
+   else
+   {  //sLogMsg = boost::str( boost::format( ",\"%s\",\"%s\"" ) % sChkFile.c_str() % pHashBuffer );
+      setFileHash( pHashBuffer );
+   }
+
+   CryptoFile file( sRuleSubsetPathFile.toLocal8Bit().constData() );
+   if (!file.open( QIODevice::ReadOnly ))
+	{	//sErrMsg = QString( "Error opening RuleSubset binary file:  '%s'" ).arg( sRuleSubsetPathFile );
+      bRetVal = FALSE;        assert( false );
+	}
+   else
+   {
+      int iNumRuleSubsetTables;
+      file.Read( &iNumRuleSubsetTables, sizeof( int ) ); 
+      for (int i=0; i<iNumRuleSubsetTables; i++)
+      {  BEMTable* pTable = new BEMTable();		assert( pTable );
+         if (pTable)
+         {  pTable->Read( file );
+            ruleSet.addTable( pTable );
+            addTableID( ruleSet.numTables() );
+      	}
+         else
+         {  bRetVal = FALSE;        assert( false );
+      }  }
+   }
+   return bRetVal;
 }
 
 

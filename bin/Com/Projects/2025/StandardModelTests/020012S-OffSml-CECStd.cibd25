@@ -3,15 +3,15 @@ RulesetFilename   "T24_2025.bin"
 Proj   "020012S-OffSml-CECStd25"  
    BldgEngyModelVersion = 17
    CreateDate = 1414975490
-   ModDate = 1762522640
-   RunDate = 1762522641
+   ModDate = 1774251981
+   RunDate = 1774251982
    GeometryInpType = "Simplified"
    ZipCode = 95814
    AutoHardSize = 1
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2025.2.0 (1394)"
+   SoftwareVersion = "CBECC 2025.2.1 (1407)"
    CompReportPDF = 1
    ResultsCurrentMessage = "(not current)"
    DebugScreen = 0
@@ -1199,8 +1199,8 @@ clg: 1  htg: 0  'Perimeter_ZN_4 Thermal Zone'" )
    StdBatt_Size = 30.5
    StdBatt_Pwr = 7.615
    StdBatt_Ctrl = "Time of Use"
-   NRCCPRFPayldTransID = "92f83bae-4d70-47b1-9ecc-d4c053df875d"
-   NRCCPRFPayldProcDate = "2025-11-07T05:35:41"
+   NRCCPRFPayldTransID = "ff156347-139c-4f84-9f3c-f008bad8db2c"
+   NRCCPRFPayldProcDate = "2026-03-23T00:46:09"
    ..
 
 

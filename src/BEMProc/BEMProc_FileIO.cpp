@@ -3124,14 +3124,14 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 	   			{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
                   qsWSCalcMode = BEMPX_GetString( BEMPX_GetDatabaseID( "cseDHWSYS:wsCalcMode" ), iCMSpecialVal, iCMError, ib, BEMO_User, iBEMProcIdx );
                   qsWSCalcMode = qsWSCalcMode.toUpper();
-            	   if (pObj != NULL && !qsWSCalcMode.compare( "PRERUN" ))
+                  bool bOKToWriteObj = (m_plaClsObjIndices ? ObjectToBeWritten( pClass->get1BEMClassIdx(), ib ) : true);      // before writing ALTER info, make sure this component logged for writing - SAC 03/16/26
+            	   if (pObj != NULL && bOKToWriteObj && !qsWSCalcMode.compare( "PRERUN" ))
                   {  qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pObj->getName() );
       					m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
 		      			m_file.WriteWholeRecord( "   wsCalcMode = PreRun" );
 				      	m_file.WriteWholeRecord( "endDHWSYS" );
                      iNumPreRunRestores++;
                }  }        assert( iNumPreRunRestores > 0 );
-
 	      		m_file.NewLine();
 					m_file.WriteWholeRecord( " RUN                   // prerun #2: Ecosizer load" );
 	      		m_file.NewLine();
@@ -3144,45 +3144,47 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
                int iSysClassID = pClass->get1BEMClassIdx();                            assert( iSysClassID > 0 );
    				for (ib=0; ib < (int) pClass->ObjectCount( BEMO_User ); ib++)
 	   			{	BEMObject* pDHWSysObj = pClass->GetObject( BEMO_User, ib );
-                  // check for and keep track of SOLARSYSTEM assignments left out of initial CSE object writing
-                  QString qsWSSolarSys = BEMPX_GetString( BEMPX_GetDatabaseID( "cseDHWSYS:wsSolarSys" ), iCMSpecialVal, iCMError, ib, BEMO_User, iBEMProcIdx );
-                  bool bFoundSzgHtr=false;
-        	         if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "cseDHWSYS:CSESizingRunRequired" ), lSysSzgReqd, 0, -1,	ib, BEMO_User, iBEMProcIdx ) && lSysSzgReqd > 0)
-                  {  
-                     int iNumChildHtrs = (int) BEMPX_GetNumChildren( iSysClassID, ib, BEMO_User, iHtrClassID, iBEMProcIdx );
-                     // loop over child DHWHEATERs searching for any requiring autosizing
-                     for (int iChild=0; (!bFoundSzgHtr && iChild<iNumChildHtrs); iChild++)
-                     {  BEM_ObjType eChildHtrObjType = BEMO_User;
-                        int i0ChildHtrObjIdx = BEMPX_GetChildObjectIndex( iSysClassID, iHtrClassID, iCMError, eChildHtrObjType, iChild+1, ib, BEMO_User, iBEMProcIdx );
-                        assert( i0ChildHtrObjIdx >= 0 );
-                        assert( eChildHtrObjType == BEMO_User );
-                        if (i0ChildHtrObjIdx >= 0)
-                        {  BEMObject* pDHWHtrObj = BEMPX_GetObjectByClass( iHtrClassID, iCMError, i0ChildHtrObjIdx, BEMO_User, iBEMProcIdx );      assert( pDHWHtrObj );
-                           if (pDHWHtrObj && BEMPX_GetInteger( BEMPX_GetDatabaseID( "cseDHWHEATER:CSESizingRunRequired" ), lHtrSzgReqd, 0, -1, i0ChildHtrObjIdx, BEMO_User, iBEMProcIdx ) && lHtrSzgReqd > 0)
-                           {  bFoundSzgHtr = true;
-                              // NOTE: THIS ASSUMES THERE IS ONLY 1 HEATER TO BE SIZED
-                              qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pDHWSysObj->getName() );           m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
-                              if (qsWSSolarSys.size() > 0)
-                              {  qsWSCalcMode = QString( "   wsSolarSys = \"%1\"" ).arg( qsWSSolarSys );                m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
-                              }
-                              qsWSCalcMode = QString( "   ALTER  DHWHEATER  \"%1\"" ).arg( pDHWHtrObj->getName() );     m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
-                              qsWSCalcMode = QString( "      whVolRunning = @DHWSYS[\"%1\"].volRunningDes" ).arg( pDHWSysObj->getName() );   m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
-                              qsWSCalcMode = QString( "      whHeatingCap = @DHWSYS[\"%1\"].heatingCapDes" ).arg( pDHWSysObj->getName() );   m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
-         				      	m_file.WriteWholeRecord( "endDHWSYS" );
-               	      		m_file.NewLine();
-                              iNumSzgSystems++;
-                     }  }  }
-                  }
-                  if (!bFoundSzgHtr && qsWSSolarSys.size() > 0)
-                  {  // write wsSolarSys ALTER for systems w/out auto-sized heater(s)
-                     qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pDHWSysObj->getName() );        m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
-                     qsWSCalcMode = QString( "   wsSolarSys = \"%1\"" ).arg( qsWSSolarSys );                m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
-         				m_file.WriteWholeRecord( "endDHWSYS" );
-               	   m_file.NewLine();
-                  }
-                  if (qsWSSolarSys.size() > 0)
-                     RemoveSpecificPropObject( pDHWSysObj );
-               }           assert( iNumSzgSystems > 0 );
+                  bool bOKToWriteObj = (m_plaClsObjIndices ? ObjectToBeWritten( pClass->get1BEMClassIdx(), ib ) : true);      // before writing ALTER info, make sure this component logged for writing - SAC 03/16/26
+                  if (pDHWSysObj && bOKToWriteObj)
+                  {  // check for and keep track of SOLARSYSTEM assignments left out of initial CSE object writing
+                     QString qsWSSolarSys = BEMPX_GetString( BEMPX_GetDatabaseID( "cseDHWSYS:wsSolarSys" ), iCMSpecialVal, iCMError, ib, BEMO_User, iBEMProcIdx );
+                     bool bFoundSzgHtr=false;
+        	            if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "cseDHWSYS:CSESizingRunRequired" ), lSysSzgReqd, 0, -1,	ib, BEMO_User, iBEMProcIdx ) && lSysSzgReqd > 0)
+                     {  
+                        int iNumChildHtrs = (int) BEMPX_GetNumChildren( iSysClassID, ib, BEMO_User, iHtrClassID, iBEMProcIdx );
+                        // loop over child DHWHEATERs searching for any requiring autosizing
+                        for (int iChild=0; (!bFoundSzgHtr && iChild<iNumChildHtrs); iChild++)
+                        {  BEM_ObjType eChildHtrObjType = BEMO_User;
+                           int i0ChildHtrObjIdx = BEMPX_GetChildObjectIndex( iSysClassID, iHtrClassID, iCMError, eChildHtrObjType, iChild+1, ib, BEMO_User, iBEMProcIdx );
+                           assert( i0ChildHtrObjIdx >= 0 );
+                           assert( eChildHtrObjType == BEMO_User );
+                           if (i0ChildHtrObjIdx >= 0)
+                           {  BEMObject* pDHWHtrObj = BEMPX_GetObjectByClass( iHtrClassID, iCMError, i0ChildHtrObjIdx, BEMO_User, iBEMProcIdx );      assert( pDHWHtrObj );
+                              if (pDHWHtrObj && BEMPX_GetInteger( BEMPX_GetDatabaseID( "cseDHWHEATER:CSESizingRunRequired" ), lHtrSzgReqd, 0, -1, i0ChildHtrObjIdx, BEMO_User, iBEMProcIdx ) && lHtrSzgReqd > 0)
+                              {  bFoundSzgHtr = true;
+                                 // NOTE: THIS ASSUMES THERE IS ONLY 1 HEATER TO BE SIZED
+                                 qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pDHWSysObj->getName() );           m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                                 if (qsWSSolarSys.size() > 0)
+                                 {  qsWSCalcMode = QString( "   wsSolarSys = \"%1\"" ).arg( qsWSSolarSys );                m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                                 }
+                                 qsWSCalcMode = QString( "   ALTER  DHWHEATER  \"%1\"" ).arg( pDHWHtrObj->getName() );     m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                                 qsWSCalcMode = QString( "      whVolRunning = @DHWSYS[\"%1\"].volRunningDes" ).arg( pDHWSysObj->getName() );   m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                                 qsWSCalcMode = QString( "      whHeatingCap = @DHWSYS[\"%1\"].heatingCapDes" ).arg( pDHWSysObj->getName() );   m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+         			   	      	m_file.WriteWholeRecord( "endDHWSYS" );
+               	         		m_file.NewLine();
+                                 iNumSzgSystems++;
+                        }  }  }
+                     }
+                     if (!bFoundSzgHtr && qsWSSolarSys.size() > 0)
+                     {  // write wsSolarSys ALTER for systems w/out auto-sized heater(s)
+                        qsWSCalcMode = QString( "ALTER  DHWSYS  \"%1\"" ).arg( pDHWSysObj->getName() );        m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+                        qsWSCalcMode = QString( "   wsSolarSys = \"%1\"" ).arg( qsWSSolarSys );                m_file.WriteWholeRecord( qsWSCalcMode.toLocal8Bit().constData() );
+         			   	m_file.WriteWholeRecord( "endDHWSYS" );
+               	      m_file.NewLine();
+                     }
+                     if (qsWSSolarSys.size() > 0)
+                        RemoveSpecificPropObject( pDHWSysObj );
+               }  }           assert( iNumSzgSystems > 0 );
   					m_file.WriteWholeRecord( " UNSET verbose         // re-enable progress messages" );
 	      		m_file.NewLine();
                RemoveFromSpecificProperties( "wsSolarSys" );
@@ -6531,7 +6533,8 @@ BEMObject* CreateJsonObject( int& iRetVal, int& iNewObjIdx, QString* psMsg, int 
 
 // recursive function to load BEM object from QJsonObject
 BEMObject* LoadComponentFromJsonObject( QJsonObject& obj, int& iRetVal, QString* psMsg, int iClassID, const char* objName, QString qsCompIdxPrefix,      // SAC 08/16/23
-                                          int iBEMProcIdx, const char* fileNamePropertyType, const char* fileName, const char* propertyToIncludeInObjName )
+                                          int iBEMProcIdx, const char* fileNamePropertyType, const char* fileName, const char* propertyToIncludeInObjName,
+                                          bool bRenameReservedBEMProperties )    // bRenameReservedBEMProperties - SAC 01/15/26
 {
    BEMObject* pBEMObj = NULL;
    int iError;
@@ -6597,6 +6600,14 @@ BEMObject* LoadComponentFromJsonObject( QJsonObject& obj, int& iRetVal, QString*
          }  }
          else
          {  QString qsJSONPropName = ( pPropType->getInputClassInfo().isEmpty() ? pPropType->getShortName() : pPropType->getInputClassInfo() );
+            if (bRenameReservedBEMProperties)
+            {  if ( qsJSONPropName.compare(      "name_alt", Qt::CaseInsensitive )==0 ||
+                    qsJSONPropName.compare( "undefined_alt", Qt::CaseInsensitive )==0 ||
+                    qsJSONPropName.compare( "unchanged_alt", Qt::CaseInsensitive )==0 ||
+                    qsJSONPropName.compare(   "default_alt", Qt::CaseInsensitive )==0 ||
+                    qsJSONPropName.compare(    "parent_alt", Qt::CaseInsensitive )==0 )
+                  qsJSONPropName = qsJSONPropName.left( qsJSONPropName.length()-4 );
+            }
             int iArrayLen = pPropType->getNumValues();
             if (iArrayLen > 1)
             {
@@ -6629,7 +6640,7 @@ BEMObject* LoadComponentFromJsonObject( QJsonObject& obj, int& iRetVal, QString*
                            {
                               int iArrObjClassID = pPropType->getObj1ClassIdx(0);      assert( iArrObjClassID > 0 );
                               BEMClass* pArrObjBEMClass = BEMPX_GetClass( iArrObjClassID, iError, iBEMProcIdx );        assert( pArrObjBEMClass != NULL );
-                              BEMObject* pArrBEMObj = LoadComponentFromJsonObject( arrObj, iRetVal, psMsg, iArrObjClassID, NULL /*objName*/, qsCompIdxPrefix, iBEMProcIdx, NULL, NULL, NULL );
+                              BEMObject* pArrBEMObj = LoadComponentFromJsonObject( arrObj, iRetVal, psMsg, iArrObjClassID, NULL /*objName*/, qsCompIdxPrefix, iBEMProcIdx, NULL, NULL, NULL, bRenameReservedBEMProperties );
                               if (pArrBEMObj && iRetVal >= 0)
                               {
                                  int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Obj, (void*) pArrBEMObj, BEMO_User, iNewObjIdx,
@@ -6782,7 +6793,7 @@ BEMObject* LoadComponentFromJsonObject( QJsonObject& obj, int& iRetVal, QString*
                         else
                         {  int iValObjClassID = pPropType->getObj1ClassIdx(0);      assert( iValObjClassID > 0 );
                            BEMClass* pValObjBEMClass = BEMPX_GetClass( iValObjClassID, iError, iBEMProcIdx );        assert( pValObjBEMClass != NULL );
-                           BEMObject* pValBEMObj = LoadComponentFromJsonObject( valObj, iRetVal, psMsg, iValObjClassID, NULL /*objName*/, qsCompIdxPrefix, iBEMProcIdx, NULL, NULL, NULL );
+                           BEMObject* pValBEMObj = LoadComponentFromJsonObject( valObj, iRetVal, psMsg, iValObjClassID, NULL /*objName*/, qsCompIdxPrefix, iBEMProcIdx, NULL, NULL, NULL, bRenameReservedBEMProperties );
                            if (pValBEMObj && iRetVal >= 0)
                            {
                               int iSetBEMObj = BEMPX_SetBEMData( lDBID, BEMP_Obj, (void*) pValBEMObj, BEMO_User, iNewObjIdx,
@@ -6811,7 +6822,7 @@ BEMObject* LoadComponentFromJsonObject( QJsonObject& obj, int& iRetVal, QString*
 // added fileNamePropertyType argument - SAC 08/28/23
 int BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
                                      int iBEMProcIdx, QString* psMsg /*=NULL*/, const char* fileNamePropertyType /*=NULL*/,       // SAC 08/15/23
-                                     const char* propertyToIncludeInObjName /*=NULL*/ )    // SAC 12/18/23
+                                     const char* propertyToIncludeInObjName /*=NULL*/, bool bRenameReservedBEMProperties /*=false*/ )    // SAC 12/18/23   // bRenameReservedBEMProperties - SAC 01/15/26 (dev #689)
 {	int iRetVal = 0;
 //	ptime t1(microsec_clock::local_time());  // SAC 10/24/13
 	QString sFileName = fileName;
@@ -6840,7 +6851,7 @@ int BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, 
          {  int iNumClassObjs = BEMPX_GetNumObjects( iClassID, BEMO_User, iBEMProcIdx );
             QString qsCompIdxPrefix;
             BEMObject* pMainBEMObj = LoadComponentFromJsonObject( obj, iRetVal, psMsg, iClassID, objName, qsCompIdxPrefix /*QString("%1").arg(QString::number(iNumClassObjs+1))*/,
-                                                                  iBEMProcIdx, fileNamePropertyType, fileName, propertyToIncludeInObjName );
+                                                                  iBEMProcIdx, fileNamePropertyType, fileName, propertyToIncludeInObjName, bRenameReservedBEMProperties );
             if (pMainBEMObj && iRetVal >= 0)
                iRetVal = iNumClassObjs;
             else if (pMainBEMObj == NULL)

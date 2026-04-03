@@ -749,8 +749,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION    2028,16,0,1395	// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2028,16,0,1395	//   examples:  2028,1007,0,### => 2028.1.0 RC (###) / 2028,1010,0,### => 2028.1.1 (###) / 2028,1024,0,### => 2028.1.2 Beta (###)
+ FILEVERSION    2028,26,0,1408	// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2028,26,0,1408	//   examples:  2028,1007,0,### => 2028.1.0 RC (###) / 2028,1010,0,### => 2028.1.1 (###) / 2028,1024,0,### => 2028.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -768,15 +768,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (2028)\0"
-            VALUE "FileVersion", "2028.0.1 RV (1395)\0"
+            VALUE "FileVersion", "2028.0.2 RV (1408)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
-            VALUE "LegalCopyright", "Copyright (C) 2012-2025, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2026, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-28.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (2028)\0"
-            VALUE "ProductVersion", "2028.0.1 RV\0"
-            VALUE "SpecialBuild", "build 1395\0"
+            VALUE "ProductVersion", "2028.0.2 RV\0"
+            VALUE "SpecialBuild", "build 1408\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -910,13 +910,13 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAME           "CBECC 2028\n\nCBECC 2028\nCBECC-28 Files (*.cibd28, *.ribd28)\n.cibd28\nCBECC-28.Document\nCBECC-28 Document"
+    IDR_MAINFRAME           "CBECC 2028\n\nCBECC 2028\nCBECC-28 Files (*.cibd28)\n.cibd28\nCBECC-28.Document\nCBECC-28 Document"
     IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAMEDEV        "CBECC 2028\n\nCBECC 2028\nCBECC-28 Files (*.cibd28, *.ribd28)\n.cibd28\nCBECC-28.Document\nCBECC-28 Document"
+    IDR_MAINFRAMEDEV        "CBECC 2028\n\nCBECC 2028\nCBECC-28 Files (*.cibd28)\n.cibd28\nCBECC-28.Document\nCBECC-28 Document"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

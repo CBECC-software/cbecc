@@ -293,10 +293,12 @@ bool IsXMLFileExt( CString sExt )	// SAC 10/29/15
    if (ebUI_CANRES)        // #ifdef UI_CANRES
 	   bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .cibd##x
 	   			  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".cibd") && !sExt.Right(1).CompareNoCase("x")));
+#ifndef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
    else if (ebUI_CARES)    // #elif UI_CARES
 	   bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .ribd##x
 	   			  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".ribd") && !sExt.Right(1).CompareNoCase("x")));
-	bRetVal = (bRetVal || !sExt.CompareNoCase(".xml"));
+#endif
+   bRetVal = (bRetVal || !sExt.CompareNoCase(".xml"));
 	return bRetVal;
 }
 
@@ -304,8 +306,10 @@ bool IsRecognizedFileExt( CString sExt )	// SAC 10/29/15
 {  bool bRetVal = false;
    if (ebUI_CANRES)        // #ifdef UI_CANRES
 	   bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".cibd"));  // || !sExt.CompareNoCase(".cibd16x") || !sExt.CompareNoCase(".cibd16"));
+#ifndef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
    else if (ebUI_CARES)    // #elif UI_CARES
 	   bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".ribd"));  // || !sExt.CompareNoCase(".ribd16x") || !sExt.CompareNoCase(".ribd16"));
+#endif
    else
 	   bRetVal = (!sExt.CompareNoCase(".ibd"));
 	return bRetVal;
@@ -315,8 +319,10 @@ void BaseFileExt( CString& sExt )	// SAC 10/29/15
 {
    if (ebUI_CANRES)        // #ifdef UI_CANRES
 	   sExt = "cibd";
+#ifndef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
    else if (ebUI_CARES)    // #elif UI_CARES
 	   sExt = "ribd";
+#endif
    else
 	   sExt = "ibd";
 	return;
@@ -399,43 +405,58 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 		{	// SAC 2/8/17 - code to cause *.ribd* to be initial file option when opening files and ruleset switching allowed
 			//sFirstFileType.Format( "%sProject Files (*.cibd*)|*.cibd*|", sNRMFFileDescrip );
 			//sFirstFileType.Format( "%sProject Files (*.ribd*)|*.ribd*|", sSFamFileDescrip );
+#ifdef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
+			sFirstFileType = "SDD Project Files (*.cibd*)|*.cibd*|";      // SAC 09/04/25 (gh dev #433)
+#else
 			sFirstFileType = "SDD Project Files (*.ribd*;*.cibd*)|*.ribd*;*.cibd*|";      // SAC 09/04/25 (gh dev #433)
+#endif
       }
 
 		if (iProgYear > 2022 || (iProgYear < 2022 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2022", false /*bSFamRes*/ )))	// SAC 6/19/19
 		{	sFTTemp.Format( "2022 %sProject Files (*.cibd22)|*.cibd22|2022 %sXML Project Files (*.cibd22x)|*.cibd22x|", sNRMFFileDescrip, sNRMFFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
+#ifndef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
 		if (iProgYear > 2022 || (iProgYear < 2022 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2022", true /*bSFamRes*/ )))	// SAC 6/19/19
 		{	sFTTemp.Format( "2022 %sProject Files (*.ribd22)|*.ribd22|2022 %sXML Project Files (*.ribd22x)|*.ribd22x|", sSFamFileDescrip, sSFamFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
+#endif
 
 		if (iProgYear > 2025 || (iProgYear < 2025 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2025", false /*bSFamRes*/ )))	// SAC 10/23/22
 		{	sFTTemp.Format( "2025 %sProject Files (*.cibd25)|*.cibd25|2025 %sXML Project Files (*.cibd25x)|*.cibd25x|", sNRMFFileDescrip, sNRMFFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
+#ifndef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
 		if (iProgYear > 2025 || (iProgYear < 2025 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2025", true /*bSFamRes*/ )))	
 		{	sFTTemp.Format( "2025 %sProject Files (*.ribd25)|*.ribd25|2025 %sXML Project Files (*.ribd25x)|*.ribd25x|", sSFamFileDescrip, sSFamFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
+#endif
 
 		if (iProgYear > 2028 || (iProgYear < 2028 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2028", false /*bSFamRes*/ )))	// SAC 08/21/25
 		{	sFTTemp.Format( "2028 %sProject Files (*.cibd28)|*.cibd28|2028 %sXML Project Files (*.cibd28x)|*.cibd28x|", sNRMFFileDescrip, sNRMFFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
+#ifndef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
 		if (iProgYear > 2028 || (iProgYear < 2028 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2028", true /*bSFamRes*/ )))	
 		{	sFTTemp.Format( "2028 %sProject Files (*.ribd28)|*.ribd28|2028 %sXML Project Files (*.ribd28x)|*.ribd28x|", sSFamFileDescrip, sSFamFileDescrip );
 			sInsertFileType += sFTTemp;
 		}
-	}
+#endif
+   }
 
 	if (bUseProjectData)  // SAC 08/21/25
       sSaveAs.Format( "%sProject Files (*.%s%s)|*.%s%s|%sXML Project Files (*.%s%sx)|*.%s%sx|XML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
 	   						sProjFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sProjFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr );
    else
+#ifdef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
+      sSaveAs.Format( "%s%sProject Files (*.cibd%s)|*.cibd%s|%sXML Project Files (*.cibd%sx)|*.cibd%sx|%sXML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
+	   						sFirstFileType, sNRMFFileDescrip, sCodeYr, sCodeYr, sNRMFFileDescrip, sCodeYr, sCodeYr, /*sSFamFileDescrip, sCodeYr, sCodeYr, sSFamFileDescrip, sCodeYr, sCodeYr,*/ sInsertFileType );
+#else
       sSaveAs.Format( "%s%sProject Files (*.cibd%s)|*.cibd%s|%sXML Project Files (*.cibd%sx)|*.cibd%sx|%sProject Files (*.ribd%s)|*.ribd%s|%sXML Project Files (*.ribd%sx)|*.ribd%sx|%sXML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
 	   						sFirstFileType, sNRMFFileDescrip, sCodeYr, sCodeYr, sNRMFFileDescrip, sCodeYr, sCodeYr, sSFamFileDescrip, sCodeYr, sCodeYr, sSFamFileDescrip, sCodeYr, sCodeYr, sInsertFileType );
+#endif
 }
 
 void CodeYearAbbrev( CString& sCodeYearAbbrev, bool bForFileExtension /*=true*/ )		// SAC 10/29/15
@@ -487,6 +508,14 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
    {	CString sBadExtMsg;		sBadExtMsg.Format( "Unrecognized file extension '%s'", sExt );
       AfxMessageBox( sBadExtMsg );
    }
+
+#ifdef  UI_PROGYEAR2028       // SAC 12/11/25 (dev #523)
+   if (sExt.Find( ".RIBD" ) == 0)
+   {  CString sBadExtMsg;		sBadExtMsg.Format( "Single family/duplex project files can't be opened in CBECC 2028.", sExt );
+      AfxMessageBox( sBadExtMsg );
+      return FALSE;
+   }
+#endif
 
    // added code to ensure ebUI_CA* flag is consistent w/ the project file extension - SAC 11/10/25
    if ( sExt.Find( ".C" ) == 0 && ebUI_CARES )
@@ -574,11 +603,22 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 		}
 		else	// happens when the ruleset referenced in the project file doesn't exist (in the proper location) on the user's machine
 		{	if (bDefaultRulesetExists)
-			{	if (sRulesetFN.IsEmpty())
-					sRuleFNGetError.Format( "There is no compliance ruleset referenced by this project.\n\nPress OK to use the default ruleset '%s' in its place, or\nCancel to abort the file load.", sDefaultRulesetFN );
-				else
-					sRuleFNGetError.Format( "The ruleset referenced by this project '%s' was not found.\n\nPress OK to use the default ruleset '%s' in its place, or\nCancel to abort the file load.", sRulesetFN, sDefaultRulesetFN );
-				sRulesetFN = sDefaultRulesetFN;
+			{  // handle case where OpenStudio SDD XML files reference old 2013 NonRes ruleset name to avoid mapping this to the SFamRulesetFile - SAC 03/18/26 (dev #761)
+            if (ebUI_CARES && sRulesetFN.Find("NonRes") > 0)
+            {  // switch from default ruleset of SFam to NRMF
+               sDefaultRulesetFN = ReadProgString( "files", "RulesetFile", NULL );
+               sDefaultRulesetPathFile = sRulesetPath + sDefaultRulesetFN;
+               bDefaultRulesetExists = (!sDefaultRulesetFN.IsEmpty() && FileExists( sDefaultRulesetPathFile ));      assert( bDefaultRulesetExists );
+            }
+            if (bDefaultRulesetExists)
+            {  if (sRulesetFN.IsEmpty())
+					   sRuleFNGetError.Format( "There is no compliance ruleset referenced by this project.\n\nPress OK to use the default ruleset '%s' in its place, or\nCancel to abort the file load.", sDefaultRulesetFN );
+				   else
+					   sRuleFNGetError.Format( "The ruleset referenced by this project '%s' was not found.\n\nPress OK to use the default ruleset '%s' in its place, or\nCancel to abort the file load.", sRulesetFN, sDefaultRulesetFN );
+				   sRulesetFN = sDefaultRulesetFN;
+            }
+            else
+   				sRuleFNGetError.Format( "Cannot load project:  Neither the ruleset referenced by this project '%s' nor the default ruleset '%s' was found.", sRulesetFN, sDefaultRulesetFN );
 			}
 			else
 				sRuleFNGetError.Format( "Cannot load project:  Neither the ruleset referenced by this project '%s' nor the default ruleset '%s' was found.", sRulesetFN, sDefaultRulesetFN );
@@ -824,7 +864,15 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
       if (lDBID_Proj_CUAC_OldAccessDB > 0)
       {  long lCUAC_OldAccessDB=0;
 		   BEMPX_SetDataInteger( lDBID_Proj_CUAC_OldAccessDB, lCUAC_OldAccessDB );
-         if (lCUAC_OldAccessDB > 0)
+
+         long lCalcBillsFromHrlyCSV=0;  CString sHrlyCSVPathFile;      // SAC 03/23/26 (dev #743)
+         long lDBID_CalcBillsFromHrlyCSV = BEMPX_GetDatabaseID( "CUAC:CalcBillsFromHrlyCSV" );
+         long lDBID_HrlyCSVPathFile      = BEMPX_GetDatabaseID( "CUAC:HrlyCSVPathFile" );
+         if ( lDBID_CalcBillsFromHrlyCSV > 0 && lDBID_HrlyCSVPathFile > 0 )
+         {  BEMPX_SetDataInteger( lDBID_CalcBillsFromHrlyCSV, lCalcBillsFromHrlyCSV );
+            BEMPX_SetDataString(  lDBID_HrlyCSVPathFile     , sHrlyCSVPathFile );
+         }
+         if (lCUAC_OldAccessDB > 0 || (lCalcBillsFromHrlyCSV > 0 && !sHrlyCSVPathFile.IsEmpty()))
             pMainWnd->PostMessage( WM_COMMAND, IDM_DISPLAYCUACDLG, 0L );
       }
 //#endif

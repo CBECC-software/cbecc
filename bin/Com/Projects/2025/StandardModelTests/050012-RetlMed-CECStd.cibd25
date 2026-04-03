@@ -3,14 +3,14 @@ RulesetFilename   "T24_2025.bin"
 Proj   "050012-RetlMed-CECStd25"  
    BldgEngyModelVersion = 17
    CreateDate = 1414952024
-   ModDate = 1762523198
-   RunDate = 1762523199
+   ModDate = 1774252298
+   RunDate = 1774252299
    ZipCode = 95814
    AutoHardSize = 1
    AutoEffInput = 1
    DefaultDayltgCtrls = 1
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2025.2.0 (1394)"
+   SoftwareVersion = "CBECC 2025.2.1 (1407)"
    ResultsCurrentMessage = "(not current)"
    ..
 

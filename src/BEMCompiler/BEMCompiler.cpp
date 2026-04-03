@@ -646,11 +646,17 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 				if (!BEMPX_LoadDataModel( fileDMCmpld.toLocal8Bit().constData(), BEMT_CBECC ))
 				{	assert( false );	// initialization of BEM failed
 				}
-				else if (!BEMPX_LoadRuleset( fileCmpld.toLocal8Bit().constData(), TRUE /*bDeleteAllObjects*/ ))
+				else if (!BEMPX_LoadRuleset( fileCmpld.toLocal8Bit().constData(), TRUE /*bDeleteAllObjects*/, fileDMCmpld.toLocal8Bit().constData() ))
 				{	assert( false );	// error loading (newly compiled) ruleset binary file
 				}
 				else
-				{	BEMPX_WriteDataModelExport( BEMDMX_INPMP, sInpDataModelOutFile.toLocal8Bit().constData(), bWritePrevNamesToIDMTxt );
+				{
+               // testing - SAC 12/22/25 (dev #524)
+               if( !sDetails.isEmpty() )
+                  sDetails += "\n\n\n";
+               BEMPX_SummarizeRuleSubsets( sDetails );     // SAC 12/22/25 (dev #524)
+
+               BEMPX_WriteDataModelExport( BEMDMX_INPMP, sInpDataModelOutFile.toLocal8Bit().constData(), bWritePrevNamesToIDMTxt );
 					BEMPX_WriteDataModelExport( BEMDMX_SIM  , sSimDataModelOutFile.toLocal8Bit().constData(), bWritePrevNamesToIDMTxt );
 
                // added additional info to sRuleDetails documenting # of properties per class INCLUDING RULE NEWs - SAC 06/09/25

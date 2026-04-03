@@ -439,7 +439,7 @@ BEGIN
             MENUITEM "&Annual Simulation",          IDM_WRITEANNSIMINP
             MENUITEM "&HVAC Sizing Simulation",     IDM_WRITEDDSIMINP
         END
-        MENUITEM "Write &Input Details File (.ribd*-detail)", IDM_WRITEINPDETAILS
+        MENUITEM "Write &Input Details File (.cibd*-detail)", IDM_WRITEINPDETAILS
         MENUITEM "Export &HPXML File (single)", IDM_EXPORTHPXML_SGL
         MENUITEM "Rewrite Input File (no Ver or Mod updates)", IDM_REWRITEINPUT
         MENUITEM "Reload &Screen Data",         IDM_RELOADSCREENS

@@ -251,6 +251,9 @@ public:
 
 	int		getNParams()				{	return m_nParams;	}
 	int		getNCols()					{	return m_nCols;	}
+	int		getNRecords()				{	return (int) m_data.size();	}
+
+   void  addRecord( BEMTableCell* pRecordCells )   {  m_data.push_back( pRecordCells );  return;  }      // SAC 12/21/25 (dev #524)
 
 	int	AddOrReturnLabelIndex( int iLabelType, const char* szLabel );
 	bool	SetMessage( int iLabelType, int iMsgIdx, const char* szMessage );

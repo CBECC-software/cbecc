@@ -65,6 +65,8 @@ public:
    bool Read( QFile& errorFile );
    bool ReadRuleList( int ruleListIndex, QFile& errorFile, int iFileStructVer, int i1RuleFileIndex=0,
    							BEMTextIO* pFile=NULL, const char* pszFileName=NULL, int iHardwireEnumStrVal=-1 );
+   bool ReadRuleSubset( int ruleSubsetIndex, QFile& errorFile, int iFileStructVer, int i1RuleFileIndex=0,
+   							BEMTextIO* pFile=NULL, const char* pszFileName=NULL );
    bool ReadTableList( QFile& errorFile );
    bool ReadListFile( QString sFileName, QFile& errorFile, int iListType );
 	bool ReadRuleFile( const char* pszRulePathFile, QStringList& saReservedStrs,

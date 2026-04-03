@@ -315,6 +315,47 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////
+//	RuleSubset
+//    An instance of this class is created for each rule subset
+/////////////////////////////////////////////////////////////////////////////
+
+class RuleSubset
+{
+public: 
+   RuleSubset();
+   RuleSubset( LPCSTR name, int iLineNumber=0, const char* pszFileName=NULL ); 
+   ~RuleSubset();
+
+   bool Write( CryptoFile& file );
+   void Read( CryptoFile& file, int iFileStructVer=1 );
+
+   bool ReadTablesFromBin( QString sRuleSubsetPathFile );      // SAC 12/21/25 (dev #524)
+
+   void     addTableID( int i )                 {	m_tableIDs.push_back( i );  return;  }
+   void     setFileHash( const char* pszFH )    {  m_fileHash = pszFH;  return;  }
+
+   QString  getName()               {  return m_name;  }
+
+   int      getNumTables()          {  return (int) m_tableIDs.size();  }
+   long     getTableID( int i )     {  if (i >= 0 && i < (int) m_tableIDs.size())
+                                          return m_tableIDs[i];
+                                       return -1;  }
+
+   QString  getFileHash()           {  return m_fileHash;  }
+   int      getLineNumber()         {  return m_lineNumber;   }
+   QString  getFileName()           {  return m_fileName;   }
+
+private:
+   QString     m_name;  // name of this RuleSubset
+   std::vector<int>  m_tableIDs;
+   QString     m_fileHash;    // empty in main ruleset binary, populated when reading binaries back in - to be checked against table of hash values - SAC 12/17/25 (dev #524)
+
+   int         m_lineNumber; 
+   QString     m_fileName;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
 //	RuleSetTransformation
 //    An instance of this class is created for each building model transformation associated w/ a ruleset.
 /////////////////////////////////////////////////////////////////////////////
@@ -764,6 +805,18 @@ public:
 																					m_iaTransformBEMProcMap_BEMProcIdx.push_back(i0B);
 																					return;  }
 
+   int         numRuleSubsets()                             {  return (int) m_ruleSubsets.size();  }     // SAC 12/17/25 (dev #524)
+   void        addRuleSubset( RuleSubset* pRS )             {  m_ruleSubsets.push_back(pRS);  return;  }
+   RuleSubset* addRuleSubset( LPCSTR name, int iLineNum=0, const char* pszFileName=NULL );      // SAC 12/16/25 (dev #524)
+   RuleSubset* getRuleSubset( LPCSTR name )                       // SAC 12/17/25 (dev #524)
+               {  for (int i=0; i<(int) m_ruleSubsets.size(); i++)
+                  {  if (m_ruleSubsets[i]->getName().compare( name )==0)
+                        return m_ruleSubsets[i];
+                  }
+                  return NULL;  }
+   RuleSubset* getRuleSubset( int idx )                           // SAC 12/17/25 (dev #524)
+               {  return (idx >= 0 && idx < (int) m_ruleSubsets.size()) ? m_ruleSubsets[idx] : NULL;  }
+
 	BEMTable* getTablePtr( const char* tableName );
 	BEMTable* getTablePtr( int idx );		// SAC 12/14/20
 	bool  getTableValue( int tableID, double* paramArray, int col, double* pfValue, BOOL bVerboseOutput=FALSE );
@@ -908,9 +961,11 @@ public:
 													m_pLogMsgCallbackFunc( iClassification, pszErrorMsg, pszHelpKey );
 												return;  }
 
-	bool  writeCompiledRuleset( LPCSTR fileName, QFile& errorFile );
+   bool  writeCompiledRuleSubset( LPCSTR fileName, QFile& errorFile, int iSubsetIdx );
+	bool  writeCompiledRuleset( LPCSTR fileName, QFile& errorFile, LPCSTR pszBEMBasePath );
 
 private:
+	std::vector<RuleSubset*>  m_ruleSubsets;   // SAC 12/16/25 (dev #524)
    RuleListList    m_ruleListList;     // all the compliance rules, organized into lists
 	std::vector<BEMTable*>	m_tables;   // look-up tables
    std::vector<BEMPropertyDataType*>   m_dataTypes;     // data type assignments

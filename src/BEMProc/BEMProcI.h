@@ -76,4 +76,6 @@ extern void ExpCryptEncode( char* lpBuf, int length );
 
 extern void ResetConsDBIDs();		// SAC 9/29/20 - ensure DBIDs reset between each model (re-)load
 
+extern int ComputeSHA256_File( const char* pszPathFile, char* pResultBuffer, int iResultBufferLen );     // SAC 12/21/25 (dev #524)
+
 #endif // __BEMPROCI_H__

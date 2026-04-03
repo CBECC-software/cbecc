@@ -38,14 +38,14 @@ static int ProcessCommandLineArgs( int &iPrimaryFunction, QString &qsBEMTxtFileN
                                    QString &qsBEMBinFileName, QStringList &qslAltPaths, QString &qsRuleTxtFileName,
                                    QString &qsRuleBinFileName, QString &qsLogFileName, QString &qsWeatherPath,
                                    QString &qsProcessingPath, QString &qsModelInput, QString &qsOptionsCSV,
-                                   QString &qsModelInputPath, QString &qsBatchRunDefsFile );
+                                   QString &qsModelInputPath, QString &qsBatchRunDefsFile, int &iIncludeSubdirs );
 
 static BOOL FileExists( const char* pszFileName );
 static BOOL OKToWriteOrDeleteFile( const char* pszFileName );  // , const char* pszUserMsg, bool bSilent /*=false*/ )
 
 static BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile, // ported to CBECC-CLI - SAc 02/12/25
                                  QString& qsErrMsg, QString qsLogFileName, QString qsProcessingPath, QString qsOptionsCSV,
-                                 QString qsModelInputPath, QString qsBatchRunDefsFile, bool bSFam, long lRunsSpanClimates );
+                                 QString qsModelInputPath, QString qsBatchRunDefsFile, bool bSFam, long lRunsSpanClimates, int iIncludeSubdirs );
 
 static int ParseCSVRecord( const char* pszParseStr, QVector<QString>* psaCSVFields );      // SAC 11/13/25
 static int GetCSVOptionValue( const char* pszOptName, int iDefault, QVector<QString>& saCSVOptions );
@@ -98,9 +98,10 @@ int main()
                  qsProcessingPath, qsModelInput, qsOptionsCSV, qsModelInputPath, qsBatchRunDefsFile;
          QStringList qslAltPaths;
          int iPrimaryFunction=0;  // 1:CompileDataModel / 2:CompileRuleset / 3:Compliance / 4:BatchRuns / 5:SFamCompliance / 6:SFamBatchRuns
-         ProcessCommandLineArgs( iPrimaryFunction, qsBEMTxtFileName, qsEnumsTxtFileName, qsBEMBinFileName,
-                                 qslAltPaths, qsRuleTxtFileName, qsRuleBinFileName, qsLogFileName, qsWeatherPath,
-                                 qsProcessingPath, qsModelInput, qsOptionsCSV, qsModelInputPath, qsBatchRunDefsFile );
+         int iIncludeSubdirs=1;
+         ProcessCommandLineArgs( iPrimaryFunction, qsBEMTxtFileName, qsEnumsTxtFileName, qsBEMBinFileName, qslAltPaths,
+                                 qsRuleTxtFileName, qsRuleBinFileName, qsLogFileName, qsWeatherPath, qsProcessingPath,
+                                 qsModelInput, qsOptionsCSV, qsModelInputPath, qsBatchRunDefsFile, iIncludeSubdirs );
 
          printf("    processing...\n");
 //         BEMPX_SetAllowWindowsUIFlag( false /*bFlagVal*/ );
@@ -327,8 +328,8 @@ int main()
                               //                      processes all files based on contents of qsModelInput (an old-style batch CSV file)
                         CString sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile;      QString qsErrMsg;
                         bool bSFam = (iPrimaryFunction == 5);
-                        if ( !GenerateBatchInput( sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, qsErrMsg, qsLogFileName,
-                                                  qsProcessingPath, qsOptionsCSV, qsModelInputPath, qsBatchRunDefsFile, bSFam, lRunsSpanClimates ) ||
+                        if ( !GenerateBatchInput( sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, qsErrMsg, qsLogFileName, qsProcessingPath,
+                                                  qsOptionsCSV, qsModelInputPath, qsBatchRunDefsFile, bSFam, lRunsSpanClimates, iIncludeSubdirs ) ||
                              sBatchPathFile.IsEmpty() || !FileExists( sBatchPathFile ) )
                         {  nRetCode = 6;
                            printf("Error generating %s batch input/directives file\n", (bSFam ? "SFam" : "NRMF") );
@@ -351,7 +352,7 @@ int main()
                      
                               //long lEnergyCodeYearNum=0;
                               //BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEnergyCodeYearNum );      // SAC 10/24/22
-                              //CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : "EPW\\" );    // SAC 10/24/22
+                              //CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : (lEnergyCodeYearNum == 2028 ? "EPW28\\" : "EPW\\" ));    // SAC 10/24/22
                               CString sWthrPath = qsWeatherPath.toLatin1().constData();      // ReadProgString( "paths", "WeatherPath", sDefaultEPWSubdir /*"EPW\\"*/, TRUE );
                               //// SAC 1/29/14 - consolidated all options string population into single routine shared by live & batch analyses functions
                               //VERIFY( PopulateAnalysisOptionsString( sOptionsCSVString, true /*bBatchMode*/ ) );		// SAC 1/29/14
@@ -452,7 +453,7 @@ int ProcessCommandLineArgs( int &iPrimaryFunction, QString &qsBEMTxtFileName, QS
                                  QString &qsBEMBinFileName, QStringList &qslAltPaths, QString &qsRuleTxtFileName,
                                  QString &qsRuleBinFileName, QString &qsLogFileName, QString &qsWeatherPath,
                                  QString &qsProcessingPath, QString &qsModelInput, QString &qsOptionsCSV, 
-                                 QString &qsModelInputPath, QString &qsBatchRunDefsFile )
+                                 QString &qsModelInputPath, QString &qsBatchRunDefsFile, int &iIncludeSubdirs )
 {  int iNumArgs = 0;
 
          //wprintf(L"command line:  %hs\n", cmdLine );
@@ -511,6 +512,9 @@ int ProcessCommandLineArgs( int &iPrimaryFunction, QString &qsBEMTxtFileName, QS
             }
             else if (boost::iequals( argv[n], "-BatchRunDefs" ) && n < (argc-1))       // for BatchRuns - SAC 02/12/25
             {  qsBatchRunDefsFile = argv[n+1];                 iArgsToPrint = 2;
+            }
+            else if (boost::iequals( argv[n], "-IncludeSubdirs" ) && n < (argc-1))     // SAC 01/09/26
+            {  iIncludeSubdirs = stoi( argv[n+1] );            iArgsToPrint = 2;
             }
             else
                iArgsToPrint = 0;
@@ -861,7 +865,7 @@ long ParseBatchRunSetDescription( CString &sRunSetPathFile, QString qsModelInput
 
 BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile,  	// SAC 11/10/17  // ported to CBECC-CLI - SAc 02/12/25
                            QString& qsErrMsg, QString qsLogFileName, QString qsProcessingPath, QString qsOptionsCSV,
-                           QString qsModelInputPath, QString qsBatchRunDefsFile, bool bSFam, long lRunsSpanClimates )      // added bSFam - SAC 11/14/25
+                           QString qsModelInputPath, QString qsBatchRunDefsFile, bool bSFam, long lRunsSpanClimates, int iIncludeSubdirs )   // added bSFam - SAC 11/14/25  // iIncludeSubdirs - SAC 01/09/26
 {  int iBatchDefsFileVer=0;
    std::string sBatchDefsColLabel2, sBatchDefsColLabel22, sBatchDefsColLabel3, sBatchDefsColLabel32, sCZs[16];
    if (bSFam)         // single Res/Com app - SAC 08/31/25 (gh dev #433)
@@ -1177,7 +1181,7 @@ BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile
 				}
 
 				QString qsProjFileNames = (bSFam ? "*.ribd*" : "*.cibd*");   // BEMPX_GetString(   elDBID_BatchRuns_ProjFileNames       , iSV, iErr );
-				long lIncludeSubdirs    = 1;           // BEMPX_GetInteger(  elDBID_BatchRuns_IncludeSubdirs       , iSV, iErr );
+				long lIncludeSubdirs    = iIncludeSubdirs;           // BEMPX_GetInteger(  elDBID_BatchRuns_IncludeSubdirs       , iSV, iErr );
 				bool bOutDirSameAsIn = (qsFullProjDir.compare( qsOutputProjDir, Qt::CaseInsensitive ) == 0);
 		      CStdioFile defsFile;
 		      // open file
@@ -1217,9 +1221,9 @@ BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile
 					defsFile.WriteString( ";\n" );
 					defsFile.WriteString( ";\n" );
 					//defsFile.WriteString( pszBatchDefsColLabel1 );
-					str.Format( "%s%s%s", sBatchDefsColLabel2, sRunSetColLbls2, sBatchDefsColLabel22 );
+					str.Format( "%s%s%s", sBatchDefsColLabel2.c_str(), sRunSetColLbls2, sBatchDefsColLabel22.c_str() );    // switched from string to string.c_str() - SAC 01/03/26 (dev #664)
 					defsFile.WriteString( str );
-					str.Format( "%s%s%s", sBatchDefsColLabel3, sRunSetColLbls3, sBatchDefsColLabel32 );
+					str.Format( "%s%s%s", sBatchDefsColLabel3.c_str(), sRunSetColLbls3, sBatchDefsColLabel32.c_str() );
 					defsFile.WriteString( str );
 
 					int iRunNum=0;

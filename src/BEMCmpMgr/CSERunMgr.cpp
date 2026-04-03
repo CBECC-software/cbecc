@@ -130,7 +130,8 @@ CSERunMgr::CSERunMgr(
 	int iNumRuns,
 	const char* pszCodeYear2Digit,
 	std::vector<long>* plaRIBDIClsObjIndices,
-	const char* pszAltWthrPathFile ) :
+	const char* pszAltWthrPathFile,
+   bool bWriteMidAnalysisInputs ) :
 
 	m_sCSEexe( sCSEexe),
 	m_sCSEWthr( sCSEWthr),
@@ -145,6 +146,7 @@ CSERunMgr::CSERunMgr(
 	m_lDesignRatingRunID( lDesignRatingRunID),
 	m_bVerbose( bVerbose),
 	m_bStoreBEMProcDetails( bStoreBEMProcDetails),
+   m_bWriteMidAnalysisInputs( bWriteMidAnalysisInputs),
 	m_bPerformSimulations( bPerformSimulations),
 	m_bBypassCSE( bBypassCSE),
 	m_bSilent( bSilent),
@@ -2948,13 +2950,14 @@ int CSERunMgr::SetupRunFinish(
 					{	QString sDbgFileName = sLpCSEFile.left( sLpCSEFile.length()-3 );
 						sDbgFileName += "ibd-Detail";
 						BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
-						if (!m_sCodeYear2Digit.isEmpty())
-						{	sDbgFileName = QString( "%1ribd%2i" ).arg( sLpCSEFile.left( sLpCSEFile.length()-3 ) ).arg( m_sCodeYear2Digit );	// SAC 5/17/19 - added export of 'input' version of each analysis model
-			      		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_INPUT, false /*bUseLogFileName*/, false /*bWriteAllProperties*/,
-            								FALSE /*bSupressAllMessageBoxes*/, 0 /*iFileType*/, false /*bAppend*/, NULL /*pszModelName*/,
-            								true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lModDate*/, false /*bOnlyValidInputs*/,
-												true /*bAllowCreateDateReset*/, 0 /*iPropertyCommentOption*/, m_plaRIBDIClsObjIndices, false /*bReportInvalidEnums*/ );	// SAC 5/20/19
-					}	}
+               }
+               if (m_bWriteMidAnalysisInputs && !m_sCodeYear2Digit.isEmpty())    // replaced m_bStoreBEMProcDetails w/ new m_bWriteMidAnalysisInputs - SAC 01/09/26
+               {  QString sDbgFileName = QString( "%1ribd%2i" ).arg( sLpCSEFile.left( sLpCSEFile.length()-3 ) ).arg( m_sCodeYear2Digit );	// SAC 5/17/19 - added export of 'input' version of each analysis model
+		      		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_INPUT, false /*bUseLogFileName*/, false /*bWriteAllProperties*/,
+           								FALSE /*bSupressAllMessageBoxes*/, 0 /*iFileType*/, false /*bAppend*/, NULL /*pszModelName*/,
+           								true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lModDate*/, false /*bOnlyValidInputs*/,
+											true /*bAllowCreateDateReset*/, 0 /*iPropertyCommentOption*/, m_plaRIBDIClsObjIndices, false /*bReportInvalidEnums*/ );	// SAC 5/20/19
+					}
 				}
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
 			}	// end of iFLp loop

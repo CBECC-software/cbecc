@@ -709,37 +709,39 @@ BEGIN
                     WS_BORDER | WS_VSCROLL | WS_TABSTOP,5,5,255,115
 END
 
-IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 326, 155
+IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 326, 174
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CBECC 2025 Startup Options"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,156,132,35,16
-    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,200,132,76,16
-    PUSHBUTTON      "E&xit",IDCANCEL,284,132,35,16
+    DEFPUSHBUTTON   "OK",IDOK,156,151,35,16
+    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,200,151,76,16
+    PUSHBUTTON      "E&xit",IDCANCEL,284,151,35,16
     CONTROL         "Open &Recent Project:",IDC_START_RECENT,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,12,9,125,8
     COMBOBOX        IDC_START_FILELIST,34,20,273,116,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "&Select an Existing Project to Open",IDC_START_EXISTING,
                     "Button",BS_AUTORADIOBUTTON,12,42,125,8
+    CONTROL         "Create CUAC-only Project from &Details CSV",
+                    IDC_START_CUACCSV,"Button",BS_AUTORADIOBUTTON,12,61,150,8
     CONTROL         "&Import old Access DB CUAC Project",IDC_START_OLDCUAC,
-                    "Button",BS_AUTORADIOBUTTON,12,60,150,8
+                    "Button",BS_AUTORADIOBUTTON,12,78,150,8
     CONTROL         "Single-Family",IDC_START_NEW_SF,
-                    "Button",BS_AUTORADIOBUTTON,90,78,65,8
+                    "Button",BS_AUTORADIOBUTTON,90,97,65,8
     CONTROL         "Nonres / MultiFamily",IDC_START_NEW,
-                    "Button",BS_AUTORADIOBUTTON,162,78,80,8
+                    "Button",BS_AUTORADIOBUTTON,162,97,80,8
     CONTROL         "Single-Family",IDC_START_BATCH_SF,"Button",
-                    BS_AUTORADIOBUTTON,90,96,65,8
+                    BS_AUTORADIOBUTTON,90,115,65,8
     CONTROL         "Nonres / MultiFamily",IDC_START_BATCH,"Button",
-                    BS_AUTORADIOBUTTON,162,96,80,8
+                    BS_AUTORADIOBUTTON,162,115,80,8
     CONTROL         "Single-Family",IDC_START_BLANK_SF,"Button",
-                    BS_AUTORADIOBUTTON,90,114,65,8
+                    BS_AUTORADIOBUTTON,90,133,65,8
     CONTROL         "Nonres / MultiFamily",IDC_START_BLANK,"Button",
-                    BS_AUTORADIOBUTTON,162,114,80,8
-    LTEXT           "Create New Project",IDC_STATIC,12,78,75,10
-    LTEXT           "Batch Processing",IDC_STATIC,12,96,75,10
-    LTEXT           "Blank Slate",IDC_START_BLANK_LBL,12,114,75,10
+                    BS_AUTORADIOBUTTON,162,133,80,8
+    LTEXT           "Create New Project",IDC_STATIC,12,97,75,10
+    LTEXT           "Batch Processing",IDC_STATIC,12,115,75,10
+    LTEXT           "Blank Slate",IDC_START_BLANK_LBL,12,133,75,10
 END
 
 #ifndef _MAC
@@ -749,8 +751,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION    2025,2000,1,1395	// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2025,2000,1,1395	//   examples:  2025,1007,0,### => 2025.1.0 RC (###) / 2025,1010,0,### => 2025.1.1 (###) / 2025,1024,0,### => 2025.1.2 Beta (###)
+ FILEVERSION    2025,2010,0,1408	// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2025,2010,0,1408	//   examples:  2025,1007,0,### => 2025.1.0 RC (###) / 2025,1010,0,### => 2025.1.1 (###) / 2025,1024,0,### => 2025.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -768,15 +770,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (2025)\0"
-            VALUE "FileVersion", "2025.2.0.1 (1395)\0"
+            VALUE "FileVersion", "2025.2.1 (1408)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
-            VALUE "LegalCopyright", "Copyright (C) 2012-2025, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2026, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-25.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (2025)\0"
-            VALUE "ProductVersion", "2025.2.0.1\0"
-            VALUE "SpecialBuild", "build 1395\0"
+            VALUE "ProductVersion", "2025.2.1\0"
+            VALUE "SpecialBuild", "build 1408\0"
         END
     END
     BLOCK "VarFileInfo"

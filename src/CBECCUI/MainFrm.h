@@ -245,7 +245,9 @@ protected:
 	afx_msg void OnToolsCommSlrOptOut();
 	afx_msg void OnUpdateToolsOldCUACImport(CCmdUI* pCmdUI);
 	afx_msg void OnToolsOldCUACImport();
-	afx_msg void OnUpdateDisplayCUACDialog(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateToolsCUACFromCSV(CCmdUI* pCmdUI);
+	afx_msg void OnToolsCUACFromCSV();
+   afx_msg void OnUpdateDisplayCUACDialog(CCmdUI* pCmdUI);
 	afx_msg void OnDisplayCUACDialog();
 	afx_msg void OnUpdateToolsProcessJSONUtilityRateFiles(CCmdUI* pCmdUI);
 	afx_msg void OnToolsProcessJSONUtilityRateFiles();
@@ -585,6 +587,7 @@ protected:
 	BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile  );		// SAC 11/10/17
    void CommunitySolarOptOut();		// SAC 03/28/23
    void OldCUACImport();            // SAC 09/18/23
+   void CUACFromCSV();              // SAC 03/19/26 (dev #743)
    void CUACPostAnalysisPrompt( CString sOriginalFileName );   // SAC 09/19/23
 	BOOL GetLogPathFile( CString& sLPF );
 	BOOL LogFileExists();

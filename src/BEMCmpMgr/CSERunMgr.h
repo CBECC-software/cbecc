@@ -161,7 +161,7 @@ public:
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
 		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lStdMixedFuelRunReqd=0,
 		long lPrelimPropRunReqd=0, long lPropFlexRunReqd=0, int iNumRuns=-1, const char* pszCodeYear2Digit=NULL, std::vector<long>* plaRIBDIClsObjIndices=NULL,
-		const char* pszAltWthrPathFile=NULL );
+		const char* pszAltWthrPathFile=NULL, bool bWriteMidAnalysisInputs=false );
 	~CSERunMgr();
 	void DeleteRuns();
 	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
@@ -216,6 +216,7 @@ private:
 	long m_lPropFlexRunReqd;
 	bool m_bVerbose;
 	bool m_bStoreBEMProcDetails;
+   bool m_bWriteMidAnalysisInputs;     // SAC 01/09/26
 	bool m_bPerformSimulations;
 	bool m_bBypassCSE;
 	bool m_bSilent;

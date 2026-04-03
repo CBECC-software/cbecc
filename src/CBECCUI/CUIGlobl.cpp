@@ -99,6 +99,7 @@ BOOL ebInitiateProjectCreation = TRUE;
 BOOL ebInitiateBatchProcViaStartDlg = FALSE;	// SAC 11/14/17
 BOOL ebInitiateCommSlrOptOutViaStartDlg = FALSE;  // SAC 03/28/23
 BOOL ebInitiateOldCUACImportViaStartDlg = FALSE;  // SAC 09/18/23
+BOOL ebInitiateCUACFromCSVViaStartDlg = FALSE;     // SAC 03/19/26 (dev #743)
 BOOL ebDisplayAllUIControls = FALSE;
 BOOL ebAnalysisRangeChecks = TRUE;
 BOOL ebShowHelpFollowingWizard = TRUE;  // SAC 2/14/01
@@ -678,7 +679,11 @@ void GetProgramPath()
 	esOverviewPDF   = esProgramPath + esProgramFName + "_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + esProgramFName + "_UserManual.pdf";			// SAC 7/8/13
    esUserManualPDF_SFam = esProgramPath + esProgramFName + "_UserManual_SFam.pdf";   // SAC 09/25/25
+#ifdef  UI_PROGYEAR2028    // SAC 12/11/25 (dev #523)
+   esUserManualPDF_NRMF = esProgramPath + esProgramFName + "_UserManual_NR.pdf";   // SAC 12/11/25
+#else
    esUserManualPDF_NRMF = esProgramPath + esProgramFName + "_UserManual_NRMF.pdf";   // SAC 09/25/25
+#endif
 // #endif
 
 //   return (drive + dir);
@@ -2181,7 +2186,7 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 			if (!LoadDataModel(	sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName ))
 //			BEMPX_LoadDataModel( sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName );
       	   iError = 4;
-      	else if (!CMX_LoadRuleset( sRuleName, bDeleteAllObjects ))  // ruleset file exists, so now try to load it
+      	else if (!CMX_LoadRuleset( sRuleName, bDeleteAllObjects, sInitBDBFileName.toLatin1().constData() ))  // ruleset file exists, so now try to load it
       	   iError = 2;
       	else
       	{           //BEMMessageBox( QString( "ruleset loaded:  %1" ).arg( (const char*) sRuleName ) );
@@ -2816,7 +2821,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
    	else if (iBDBClass == eiBDBCID_ResIntFlr)     	   {  iTabCtrlWd = 500;    iTabCtrlHt = 510;   }
    	else if (iBDBClass == eiBDBCID_ResUndgrFlr)     	{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
    	else if (iBDBClass == eiBDBCID_ResOpening)       	{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }	// SAC 7/30/20 - MFamProto
-   	else if (iBDBClass == eiBDBCID_ResWin)     	      {	iTabCtrlWd = 650;		iTabCtrlHt = 610;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
+   	else if (iBDBClass == eiBDBCID_ResWin)     	      {	iTabCtrlWd = 650;		iTabCtrlHt = 670;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 510;   }  // Ht 610->670 - SAC 02/24/26 (dev #666)
    	else if (iBDBClass == eiBDBCID_ResSkylt)     	   {  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }
    	else if (iBDBClass == eiBDBCID_ResDr)     	      {  iTabCtrlWd = 550;    iTabCtrlHt = 360;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 300;   }
    	else if (iBDBClass == eiBDBCID_ResHVACSys)			{	iTabCtrlWd = 900;		iTabCtrlHt = 540;   }   // wd 750->900 - SAC 10/10/22
@@ -3027,11 +3032,16 @@ void SetUICodeTypeBools_NRMF()      // single Res/Com app - SAC 09/09/25 (gh dev
             //BEMMessageBox( QString( "UI Code Type set to NRMF" ) );
 }
 void SetUICodeTypeBools_SFam() 
-{  ebUI_CARES  = true;
+{
+#ifdef  UI_PROGYEAR2028    // SAC 12/10/25 (dev #523)
+   SetUICodeTypeBools_NRMF();
+#else
+   ebUI_CARES  = true;
    ebUI_CANRES = false;
    pcCharsNotAllowedInObjNames = &pcCharsNotAllowedInObjNames_SFam[0];
    esDataModRulelist = "ProposedInput";
             //BEMMessageBox( QString( "UI Code Type set to SFam" ) );
+#endif
 }
 
 void SetUICodeTypeBools()        // single Res/Com app - SAC 08/21/25 (gh dev #433)

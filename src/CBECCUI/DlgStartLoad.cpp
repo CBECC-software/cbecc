@@ -146,6 +146,7 @@ BEGIN_MESSAGE_MAP(CDlgStartLoad, CDialog)
 	ON_BN_CLICKED(IDC_START_PVOPTOUT, OnStartCommunitySolarOptOut)
 	ON_BN_CLICKED(IDC_START_BLANK, OnStartBlankSlate)
 	ON_BN_CLICKED(IDC_START_EXISTING, OnStartExistingProject)
+	ON_BN_CLICKED(IDC_START_CUACCSV, OnStartCUACFromCSV)
 	ON_BN_CLICKED(IDC_START_OLDCUAC, OnStartOldCUAC)
 //#ifdef UI_CANRES
 	ON_BN_CLICKED(IDC_START_NEW, OnStartNewProject)
@@ -290,6 +291,7 @@ BOOL CDlgStartLoad::OnInitDialog()
       case -4 : uiSelRadioID = IDC_START_BATCH;      break;
       case -5 : uiSelRadioID = IDC_START_PVOPTOUT;   break;
       case -6 : uiSelRadioID = IDC_START_OLDCUAC;    break;
+      case -7 : uiSelRadioID = IDC_START_CUACCSV;    break;    // SAC 03/19/26 (dev #743)
       default : uiSelRadioID = IDC_START_RECENT;     break;
    }
    CButton* pBtn = (CButton*) GetDlgItem( uiSelRadioID );
@@ -348,6 +350,10 @@ void CDlgStartLoad::OnStartOldCUAC()   // SAC 09/18/23
    m_iSector = 0;
    // m_cmbbSector.ShowWindow( SW_HIDE );  // only show if Batch Processing or Blank Slate is selected - SAC 09/05/25 (gh dev #433)
 }
+void CDlgStartLoad::OnStartCUACFromCSV()   // SAC 03/19/26 (dev #743)
+{  m_iOption = -7;
+   m_iSector = 0;
+}
 
 void CDlgStartLoad::OnSelChangeStartFilelist() 
 {
@@ -362,6 +368,7 @@ void CDlgStartLoad::OnSelChangeStartFilelist()
          case -4 : uiSelRadioID = IDC_START_BATCH;      break;
          case -5 : uiSelRadioID = IDC_START_PVOPTOUT;   break;
          case -6 : uiSelRadioID = IDC_START_OLDCUAC;    break;
+         case -7 : uiSelRadioID = IDC_START_CUACCSV;    break;    // SAC 03/19/26 (dev #743)
          default : uiSelRadioID = 0;                    break;
       }
       CButton* pBtn = (CButton*) GetDlgItem( uiSelRadioID );
@@ -395,7 +402,8 @@ void CDlgStartLoad::OnOK()
         m_iOption == -3 ||    // BlankSlate
         m_iOption == -4 ||    // BatchProcessing
         m_iOption == -5 ||    // CommunitySolarOptOut
-        m_iOption == -6 )     // OldCUAC
+        m_iOption == -6 ||    // OldCUAC
+        m_iOption == -7 )     // CUACFromCSV
    {  if (m_iSector == 1)        // SAC 09/09/25 (gh dev #433)
          SetUICodeTypeBools_SFam();
       else 

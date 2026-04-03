@@ -64,7 +64,8 @@ static char szBEMRulPrcVersion[]      = "BEMRulPrc-3.00";
 // SAC 8/5/16  - Struct Version 17 -> 18:  no structural change, just migration to open source dependent executables
 // SAC 12/29/16- Struct Version 18 -> 19:  addition of flag near beginning of file documenting whether ruleset was compiled by a "secure" version of code
 // SAC 09/24/21- Struct Version 19 -> 20:  addition to class RuleList of m_hardwireEnumStrVal (-1 ruleset default / 0 Value / 1 String) (MFam)
-static int  siCurBEMRulPrcFileStructVersion = 20;  // this is what always gets written to newly created ruleset bin files
+// SAC 12/17/25- Struct Version 20 -> 21:  added to CRuleSet std::vector<RuleSubset*> m_ruleSubsets - to enable splitting of ruleset binary into pieces w/ collections of tables (dev #524)
+static int  siCurBEMRulPrcFileStructVersion = 21;  // this is what always gets written to newly created ruleset bin files
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -2521,7 +2522,7 @@ void WriteSymbolsToText( QString sFileName, std::vector<CASymLst*>& aSymLists )
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-static bool WriteCompiledRuleset( LPCSTR fileName, QFile& errorFile );
+static bool WriteCompiledRuleset( LPCSTR fileName, QFile& errorFile, LPCSTR pszBEMBasePath );
 
 BOOL BEMPX_CompileRuleset(	const char* sBEMBinFileName, const char* sPrimRuleFileName, const char* sCompiledRuleFileName,
 									const char* sLogFileName /*=NULL*/, QString* psRuleCompileMsg /*=NULL*/,
@@ -2552,10 +2553,16 @@ BOOL BEMPX_CompileRuleset(	const char* sBEMBinFileName, const char* sPrimRuleFil
 			{	bool bCurPathOK = QDir::setCurrent( fileNameString.left(iPathLen) );		assert( bCurPathOK );
 			}
 
+			QString sBEMBaseFileNameString = sBEMBinFileName;     // SAC 12/18/25 (dev #524)
+			sBEMBaseFileNameString.replace('\\', '/');
+			int iBEMBasePathLen = sBEMBaseFileNameString.lastIndexOf('/');
+			if (iBEMBasePathLen > 0)
+            sBEMBaseFileNameString = sBEMBaseFileNameString.left( iBEMBasePathLen+1 );
+
 			bRetVal = file.Read( fileLog );   // read ASCII rules into memory
 
 			if (bRetVal)
-				bRetVal = WriteCompiledRuleset( sCompiledRuleFileName, fileLog );
+				bRetVal = WriteCompiledRuleset( sCompiledRuleFileName, fileLog, sBEMBaseFileNameString.toLocal8Bit().constData() );
 
 			fileLog.close();                  // close log file
 		}
@@ -2732,21 +2739,74 @@ bool CheckRulesetFileVerAndReadID( CryptoFile& file, QString& sRuleSetID, QStrin
 /////////////////////////////////////////////////////////////////////////////
 // Exported Function:  WriteCompiledRuleset()
 /////////////////////////////////////////////////////////////////////////////
-bool WriteCompiledRuleset( LPCSTR fileName, QFile& errorFile )
-{	return ruleSet.writeCompiledRuleset( fileName, errorFile );
+bool WriteCompiledRuleset( LPCSTR fileName, QFile& errorFile, LPCSTR pszBEMBasePath )
+{	return ruleSet.writeCompiledRuleset( fileName, errorFile, pszBEMBasePath );
 }
 
-bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
-{ 
+bool RuleSet::writeCompiledRuleSubset( LPCSTR fileName, QFile& errorFile, int iSubsetIdx )
+{
+   bool bRetVal = TRUE;
+   RuleSubset* pRS = getRuleSubset(iSubsetIdx);          assert( pRS );
+   if (pRS && pRS->getNumTables() > 0)
+   {  try
+      {  QString dbgMsg;
+         CryptoFile file( fileName );
+         if (!file.open( QIODevice::WriteOnly | QIODevice::Truncate ))
+            BEMMessageBox( QString( "Unable to open output RuleSubset binary file:\n  %1" ).arg( fileName ), "", 3 /*error*/ );
+         else
+         {
+            int iNumRuleSubsetTables = pRS->getNumTables();
+            file.Write( &iNumRuleSubsetTables, sizeof( int ) ); 
+
+            int iTableID = pRS->getTableID( 0 );    assert( iTableID > 0 );
+//#ifdef _DEBUG
+            dbgMsg = QString( "\n   Writing list of %1 tables, starting w/ #%2, from RuleSubset '%3'.\n" ).arg( QString::number(iNumRuleSubsetTables), QString::number(iTableID), pRS->getName() );
+            errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+//#endif
+            int iLastTableIDToWrite = iTableID + iNumRuleSubsetTables - 1;
+            for (; iTableID <= iLastTableIDToWrite; iTableID++)
+            {  // get next table
+               BEMTable *table = m_tables.at(iTableID-1);         assert( table );
+               if (table)
+               {
+//#ifdef _DEBUG
+                  dbgMsg = QString( "      Table: %1 '%2'" ).arg( QString::number(iTableID), table->getName() );
+                  errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+//#endif
+                  // write table data to file
+                  table->Write( file, errorFile );
+               }
+            }   
+
+      }  }
+      catch (std::exception& e)
+      {  bRetVal = FALSE;
+         QString sErrMsg = QString( "Error writing binary compiled ruleset file: %1\n\t - cause: %2\n" ).arg( fileName, e.what() );
+         std::cout << sErrMsg.toLocal8Bit().constData();
+         BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+      }
+      catch (...)
+      {  bRetVal = FALSE;
+         QString sErrMsg = QString( "Error writing binary compiled ruleset file: %1\n" ).arg( fileName );
+         std::cout << sErrMsg.toLocal8Bit().constData();
+         BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+      }
+   }
+   return bRetVal;
+}
+
+bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile, LPCSTR pszBEMBasePath )
+{
    bool bRetVal = FALSE;
+   int i, nTables=0, iFirstRuleSubsetTableID = 0, iLastRuleSubsetTableID = 0, iNumRuleSubsetTables, iNumRuleSubsets = 0;
+   QString dbgMsg;
 	try
 	{
       CryptoFile file( fileName );
 		if (!file.open( QIODevice::WriteOnly | QIODevice::Truncate ))
 			BEMMessageBox( QString( "Unable to open output binary compiled ruleset:\n  %1" ).arg( fileName ), "", 3 /*error*/ );
 		else
-      {	QString dbgMsg;
-         // write RulPrc file version info to file
+      {	// write RulPrc file version info to file
          QString sRP32Ver = szBEMRulPrcVersion;
          file.WriteQString( sRP32Ver );
 
@@ -2768,7 +2828,7 @@ bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
 
          file.Write( &m_iRulesetOrganization, sizeof( int ) );  // SAC 10/18/12
 
-			int i, iRd = (int) m_saLabels.size();		// SAC 9/8/14 - labels used to facilitate ruleset source shared by multiple standards/versions
+			int iRd = (int) m_saLabels.size();		// SAC 9/8/14 - labels used to facilitate ruleset source shared by multiple standards/versions
 			file.Write( &iRd, sizeof( int ) );
 			for (i=0; i<iRd; i++)
 	         file.WriteQString( m_saLabels.at(i) );
@@ -2776,12 +2836,12 @@ bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
          file.Write( &m_lSimulateDBID, sizeof( long ) );  // SAC 3/18/14
 
          // now write rest of ruleset file
-         long	lRuleBytes, lTableBytes, lDTBytes, lRangeBytes, lSymbolBytes, lMaxChildBytes,
-					lResetBytes, lUnqAssBytes, lPropTypeModBytes, lLibBytes, lTransformBytes, lRulePropBytes, lToolTipBytes;
+         long	lRuleBytes, lTableBytes, lDTBytes, lRangeBytes, lSymbolBytes, lMaxChildBytes, lResetBytes, lUnqAssBytes, lPropTypeModBytes,
+					lLibBytes, lTransformBytes, lRulePropBytes, lToolTipBytes, lRuleSubsetBytes;
          bRetVal = m_ruleListList.Write( file, errorFile );  // write rules to output file
          lRuleBytes = file.m_lByteCount;
 
-		// SAC 7/11/12 - moved RulesetProperties up to first thing written/read so that they can be processed PRIOR to their dependencies (data types & symbols)
+		   // SAC 7/11/12 - moved RulesetProperties up to first thing written/read so that they can be processed PRIOR to their dependencies (data types & symbols)
 			iRd = numRulesetProperties();		// SAC 7/6/12
 			file.Write( &iRd, sizeof( int ) );
 			for (i=0; i<iRd; i++)
@@ -2789,15 +2849,32 @@ bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
 			}
 			lRulePropBytes = file.m_lByteCount;
 
+         // write RuleSubset names and basic info (table(s) written to separate bin files) 
+         iNumRuleSubsets = numRuleSubsets();
+			file.Write( &iNumRuleSubsets, sizeof( int ) );
+			for (i=0; i<iNumRuleSubsets; i++)
+			{	RuleSubset* pRS = getRuleSubset(i);          assert( pRS );
+            if (pRS)
+            {  iNumRuleSubsetTables = pRS->getNumTables();
+               if (iFirstRuleSubsetTableID < 1 && iNumRuleSubsetTables > 0 && pRS->getTableID(0) > 1)
+                  iFirstRuleSubsetTableID = pRS->getTableID(0);
+               if (iLastRuleSubsetTableID < pRS->getTableID( (iNumRuleSubsetTables-1) ))
+                  iLastRuleSubsetTableID = pRS->getTableID( (iNumRuleSubsetTables-1) );
+               pRS->Write( file );
+			}  }
+			lRuleSubsetBytes = file.m_lByteCount;
+
          // write tables to output file
-			   int nTables = (int) m_tables.size();
-			   file.Write( &nTables, sizeof( int ) );  // write number of tables to file
+			   nTables = (int) m_tables.size();
+			   //file.Write( &nTables, sizeof( int ) );  // write number of tables to file
+            int iLastTableIDToWrite = ((iFirstRuleSubsetTableID > 0 && iFirstRuleSubsetTableID-1 < nTables) ? iFirstRuleSubsetTableID-1 : nTables );
+			   file.Write( &iLastTableIDToWrite, sizeof( int ) );  // write number of tables to file   // reduce to only the tables outside of RuleSubsets - SAC 12/25/25 (dev #524)
 #ifdef _DEBUG
-				dbgMsg = QString( "\n   Writing list of %1 tables.\n" ).arg( QString::number(nTables) );
+				dbgMsg = QString( "\n   Writing list of %1 (of %2 total) tables.\n" ).arg( QString::number(iLastTableIDToWrite), QString::number(nTables) );
 			   errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
 #endif
 			   int iTableIdx = 1;
-			   for (; iTableIdx <= nTables; iTableIdx++)
+			   for (; iTableIdx <= iLastTableIDToWrite; iTableIdx++)
 			   {  // get next table
 			      BEMTable *table = m_tables.at(iTableIdx-1);			assert( table );
 			      if (table)
@@ -2935,37 +3012,102 @@ bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
          //tempStr.Format( "%ld", lTransformBytes - lToolTipBytes   );   dbgMsg += "\n   Transforms: " + tempStr;
          //tempStr.Format( "%ld", lLibBytes       - lTransformBytes );   dbgMsg += "\n   Library:    " + tempStr;
          //dbgMsg += "\n";
-         dbgMsg  = QString( "\n\nBinary Ruleset Writing Summary (bytes written):\n   Rules:      %1" ).arg( QString::number(lRuleBytes) );
-         dbgMsg += QString( "\n   Rule Props: %1"   ).arg( QString::number( lRulePropBytes  - lRuleBytes      ) );
-         dbgMsg += QString( "\n   Tables:     %1"   ).arg( QString::number( lTableBytes     - lRulePropBytes  ) );
-         dbgMsg += QString( "\n   DataTypes:  %1"   ).arg( QString::number( lDTBytes        - lTableBytes     ) );
-         dbgMsg += QString( "\n   Ranges:     %1"   ).arg( QString::number( lRangeBytes     - lDTBytes        ) );
-         dbgMsg += QString( "\n   Symbols:    %1"   ).arg( QString::number( lSymbolBytes    - lRangeBytes     ) );
-         dbgMsg += QString( "\n   MaxChild:   %1"   ).arg( QString::number( lMaxChildBytes  - lSymbolBytes    ) );
-         dbgMsg += QString( "\n   Resets:     %1"   ).arg( QString::number( lResetBytes     - lMaxChildBytes  ) );
-         dbgMsg += QString( "\n   UnqAssign:  %1"   ).arg( QString::number( lUnqAssBytes    - lResetBytes     ) );
-         dbgMsg += QString( "\n   PropTypMod: %1"   ).arg( QString::number( lPropTypeModBytes - lUnqAssBytes  ) );
-         dbgMsg += QString( "\n   ToolTips:   %1"   ).arg( QString::number( lToolTipBytes - lPropTypeModBytes ) );
-         dbgMsg += QString( "\n   Transforms: %1"   ).arg( QString::number( lTransformBytes - lToolTipBytes   ) );
-         dbgMsg += QString( "\n   Library:    %1\n" ).arg( QString::number( lLibBytes       - lTransformBytes ) );
+         dbgMsg  = QString( "\n\nBinary Ruleset Writing Summary (bytes written):\n   Rules:       %1" ).arg( QString::number(lRuleBytes) );
+         dbgMsg += QString( "\n   Rule Props:  %1"   ).arg( QString::number( lRulePropBytes   - lRuleBytes      ) );
+         dbgMsg += QString( "\n   RuleSubsets: %1"   ).arg( QString::number( lRuleSubsetBytes - lRulePropBytes  ) );
+         dbgMsg += QString( "\n   Tables:      %1"   ).arg( QString::number( lTableBytes      - lRuleSubsetBytes ) );
+         dbgMsg += QString( "\n   DataTypes:   %1"   ).arg( QString::number( lDTBytes         - lTableBytes     ) );
+         dbgMsg += QString( "\n   Ranges:      %1"   ).arg( QString::number( lRangeBytes      - lDTBytes        ) );
+         dbgMsg += QString( "\n   Symbols:     %1"   ).arg( QString::number( lSymbolBytes     - lRangeBytes     ) );
+         dbgMsg += QString( "\n   MaxChild:    %1"   ).arg( QString::number( lMaxChildBytes   - lSymbolBytes    ) );
+         dbgMsg += QString( "\n   Resets:      %1"   ).arg( QString::number( lResetBytes      - lMaxChildBytes  ) );
+         dbgMsg += QString( "\n   UnqAssign:   %1"   ).arg( QString::number( lUnqAssBytes     - lResetBytes     ) );
+         dbgMsg += QString( "\n   PropTypMod:  %1"   ).arg( QString::number( lPropTypeModBytes - lUnqAssBytes   ) );
+         dbgMsg += QString( "\n   ToolTips:    %1"   ).arg( QString::number( lToolTipBytes    - lPropTypeModBytes ) );
+         dbgMsg += QString( "\n   Transforms:  %1"   ).arg( QString::number( lTransformBytes  - lToolTipBytes   ) );
+         dbgMsg += QString( "\n   Library:     %1\n" ).arg( QString::number( lLibBytes        - lTransformBytes ) );
          errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
       }
 //      else
 //         BEMMessageBox( "Unable to open output file.", NULL, 3 /*error*/ );
       //errorFile.Close();        // close error file
-	}
-	catch (std::exception& e)
-	{
-		QString sErrMsg = QString( "Error writing binary compiled ruleset file: %1\n\t - cause: %2\n" ).arg( fileName, e.what() );
-		std::cout << sErrMsg.toLocal8Bit().constData();
-		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
-	}
- 	catch (...)
-  	{
-		QString sErrMsg = QString( "Error writing binary compiled ruleset file: %1\n" ).arg( fileName );
-		std::cout << sErrMsg.toLocal8Bit().constData();
-		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
-  	}
+   }
+   catch (std::exception& e)
+   {
+      QString sErrMsg = QString( "Error writing binary compiled ruleset file: %1\n\t - cause: %2\n" ).arg( fileName, e.what() );
+      std::cout << sErrMsg.toLocal8Bit().constData();
+      BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+   }
+   catch (...)
+   {
+      QString sErrMsg = QString( "Error writing binary compiled ruleset file: %1\n" ).arg( fileName );
+      std::cout << sErrMsg.toLocal8Bit().constData();
+      BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+   }
+
+   // write individual RuleSubset binaries, including calculating hashes and storing that info in the final RlSbst table - SAC 12/17/25 (dev #524)
+   if (bRetVal && iNumRuleSubsets > 0 && nTables > 0)
+   {  BEMTable *hashTable = m_tables.at( nTables-1 );       assert( hashTable );
+      //if (hashTable)
+      //{  dbgMsg = QString( "      Hash table %1  #ColTitles: %2  #Params: %3  #Cols: %4\n" ).arg( hashTable->getName(), QString::number( hashTable->getColumnTitleCount() ), QString::number( hashTable->getNParams() ), QString::number( hashTable->getNCols() ) );
+      //   errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+      //   dbgMsg = QString( "         hash table col titles:  %1  %2\n" ).arg( hashTable->GetColumnName(1).c_str(), hashTable->GetColumnName(2).c_str() );
+      //   errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+      //}
+
+      for (i=0; (i<iNumRuleSubsets && hashTable && bRetVal); i++)
+      {  RuleSubset* pRS = getRuleSubset(i);          assert( pRS );
+         if (pRS)
+         {  iNumRuleSubsetTables = pRS->getNumTables();
+            if (iNumRuleSubsetTables > 0)
+            {  QString sRuleSubsetFileName = QString( "%1%2.bin" ).arg( pszBEMBasePath, pRS->getName() );
+//#ifdef _DEBUG
+                     dbgMsg = QString( "      writing RuleSubset #%1 '%2' to file: '%3'\n" ).arg( QString::number(i+1), pRS->getName(), sRuleSubsetFileName );
+                     errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+//#endif
+               if (!writeCompiledRuleSubset( sRuleSubsetFileName.toLocal8Bit().constData(), errorFile, i ))
+               {  QString sErrMsg = QString( "\n   Error writing RuleSubset #%1 to:  '%2'\n" ).arg( QString::number(i+1), sRuleSubsetFileName );
+                  errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+                  bRetVal = FALSE;
+               }
+               else if (i < (iNumRuleSubsets-1))
+               {  // calculate hash of the newly written RuleSubset file and add a corresponding record to the hashTable - SAC 12/18/25 (dev #524)
+                  char pHashBuffer[65];
+                  int iSHA256_RetVal = ComputeSHA256_File( sRuleSubsetFileName.toLocal8Bit().constData(), pHashBuffer, 65 );
+                  if (iSHA256_RetVal != 0)
+                  {  QString sErrMsg = QString( "\n   Error (%1) computing RuleSubset #%2 hash on:  '%3'\n" ).arg( QString::number(iSHA256_RetVal), QString::number(i+1), sRuleSubsetFileName );
+                     errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+                     bRetVal = FALSE;        assert( false );
+                  }
+                  else if (strlen( pHashBuffer ) != 64)
+                  {  QString sErrMsg = QString( "\n   Error (return string too short (%1)) computing RuleSubset #%2 hash on:  '%3'\n" ).arg( QString::number(strlen( pHashBuffer )), QString::number(i+1), sRuleSubsetFileName );
+                     errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+                     bRetVal = FALSE;        assert( false );
+                  }
+                  else
+                  {  int iNumRecsB4 = hashTable->getNRecords();
+//#ifdef _DEBUG
+                     dbgMsg = QString( "      RuleSubset #%1 hash '%2' file: '%3'\n" ).arg( QString::number(i+1), pHashBuffer, sRuleSubsetFileName );
+                     errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+//#endif
+                     BEMTableCell* pTblCell = new BEMTableCell[2];
+                     pTblCell[0].setString( pRS->getName().toLocal8Bit().constData() );
+                     pTblCell[1].setString( pHashBuffer );
+                     hashTable->addRecord( pTblCell );
+
+                     int iNumRecsAft = hashTable->getNRecords();
+                     dbgMsg = QString( "      RuleSubset hash table '%1' records: %2 before & %3 after\n" ).arg( hashTable->getName(), QString::number(iNumRecsB4), QString::number(iNumRecsAft) );
+                     errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+               }  }
+      }  }  }
+      // add one final record as catch-all (to prevent table look-up errors) - SAC 12/30/25 (dev #524)
+      if (hashTable)
+      {  BEMTableCell* pTblCell = new BEMTableCell[2];
+         pTblCell[0].setString( "*" );
+         pTblCell[1].setString( "not found" );
+         hashTable->addRecord( pTblCell );
+      }
+   }
 
    return bRetVal;
 }

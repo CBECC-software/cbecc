@@ -64,6 +64,9 @@ b. Local building code requirements if local building code requirements are conf
 ; SAC 10/19/25 (dev #240)
 Proj:LAFirePVBattExcpt, "Executive Order N-29-25 applies to projects to repair, restore, demolish, or replace residential structures and associated facilities, accessory structures, and supportive infrastructure substantially damaged / destroyed as a result of the emergency caused by the 2025 fires in the Greater Los Angeles Area"
 
+; RJH 2/12/26 (CBECC-Dev Issue 666)
+Proj:MeetsPart7CBC, "Mandatory minimum fenestration performance not enforced for buildings meeting Part 7 of the California Building Code, California Wildland-Urban Interface Code, where the building is located in Fire Hazard Severity Zones or Wildland-Urban Interface (WUI) Fire Areas as designated by the local enforcement agency"
+
 ; tooltip updated for clarity - SAC 11/03/25 (dev #417)
 Proj:DefaultReducedPVReq, "‘Default PV Exceptions’ automatically applies applicable PV exceptions and adjusts PV requirements based on proposed building data.
 When enabled, manual selection of ‘Reduced PV Requirement’ and PV exceptions is disabled.

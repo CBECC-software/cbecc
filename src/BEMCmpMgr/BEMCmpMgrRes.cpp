@@ -263,7 +263,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bFullComplianceAnalysis	= (GetCSVOptionValue( "FullComplianceAnalysis",   1,  saCSVOptions ) > 0);
 	bool bFullCompAnalSpecified	= (GetCSVOptionValue( "FullComplianceAnalysis", -10,  saCSVOptions ) != -10);
 	bool bInitHourlyResults			= (GetCSVOptionValue( "InitHourlyResults"     ,   1,  saCSVOptions ) > 0);
-	bool bStoreBEMProcDetails		= (GetCSVOptionValue( "StoreBEMProcDetails"   ,   0,  saCSVOptions ) > 0);
+	bool bStoreBEMProcDetails		= ((GetCSVOptionValue( "StoreBEMProcDetails"  ,   0,  saCSVOptions ) > 0) ||
+                                    (GetCSVOptionValue( "StoreBEMDetails"      ,   0,  saCSVOptions ) > 0));      // support either StoreBEMProcDetails or StoreBEMDetails - SAC 01/09/26
 	bool bPerformRangeChecks		= (GetCSVOptionValue( "PerformRangeChecks"    ,   1,  saCSVOptions ) > 0);
 	bool bPerformDupObjNameCheck	= (GetCSVOptionValue( "PerformDupObjNameCheck",   1,  saCSVOptions ) > 0); // SAC 2/23/15
 	bool bPerformSimulations		= (GetCSVOptionValue( "PerformSimulations"    ,   1,  saCSVOptions ) > 0);
@@ -308,6 +309,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	int  iRptGenReadWriteTimeout	=	 GetCSVOptionValue( "RptGenReadWriteTimeout"     , CECRptGenDefaultReadWriteTimeoutSecs,  saCSVOptions );		// SAC 11/02/22
 
 	int  iDownloadVerbose      	=	 GetCSVOptionValue( "DownloadVerbose"            , -1,  saCSVOptions );		// SAC 09/03/24
+   bool bWriteMidAnalysisInputs	=	(GetCSVOptionValue( "WriteMidAnalysisInputs"     ,  (bStoreBEMProcDetails ? 1 : 0),  saCSVOptions ) > 0);    // SAC 01/09/26
 
 	bool bCSEIncludeFileUsed = false;	// SAC 12/23/14
 	bool bClassifyEditableDefaultsAsUserData = (GetCSVOptionValue( "ClassifyEditableDefaultsAsUserData", 0, saCSVOptions ) > 0);	// SAC 4/1/20
@@ -645,7 +647,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		{	sErrorMsg = QString( "ERROR:  BEM ruleset file not found:  %1" ).arg( sRulesetPathFile );
 			iRetVal = BEMAnal_CECRes_RulesetNotFound;
 		}
-		else if (!CMX_LoadRuleset( sRulesetPathFile.toLocal8Bit().constData() ))
+		else if (!CMX_LoadRuleset( sRulesetPathFile.toLocal8Bit().constData(), TRUE /*bDeleteAllObjects*/, sBEMBasePathFile.toLocal8Bit().constData() ))
 		{	sErrorMsg = QString( "ERROR:  Ruleset loading error encountered:  %1" ).arg( sRulesetPathFile );
 			iRetVal = BEMAnal_CECRes_RulesetInitError;
 		}
@@ -678,6 +680,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	QString sCodeYear2Digit = "xx";		// SAC 5/17/19
 	QString sResTemp1, sResTemp2, sResTemp3;	// SAC 2/7/17
 	bool bHaveResult = false, bResultIsPass = false;
+   bool bCUACElecRateDownldFailed=false, bCUACGasRateDownldFailed=false;         // used to enable CUAC regardless of rate download success - SAC 03/19/26 (dev #742)
+   QString qsCUACElecRateDownldErrMsg, qsCUACGasRateDownldErrMsg;  int iNumCUACRateDownldErrors=0;    // SAC 03/19/26 (dev #742)
 	if (ResRetVal_ContinueProcessing( iRetVal ))
 	{
 	   //
@@ -791,6 +795,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					else if (lERM < -0.5)	// SAC 2/4/16 - only reset EnableResearchMode to INI setting if NOT specified in input file
 				      BEMPX_SetBEMData( lDBID_Proj_EnableResearchMode, BEMP_Int, (void*) &lEnableResearchMode, BEMO_User, -1, BEMS_ProgDefault );
 				}
+
+            // storage of CUACReportID to enable ruleset access of CUAC analysis indicator - SAC 05/30/24   // moved up from below, before defaulting - SAC 03/11/26 (dev #741)
+            //if (ResRetVal_ContinueProcessing( iRetVal ) && iCUACReportID > 0)
+            //{
+               long lDBID_CUACReportID = BEMPX_GetDatabaseID( "CUACReportID", iCID_Proj );
+               if (lDBID_CUACReportID > 0)
+                  BEMPX_SetBEMData( lDBID_CUACReportID, BEMP_Int, (void*) &iCUACReportID, BEMO_User, 0, BEMS_ProgDefault ); 
+            //}
 
       		long lDBID_Proj_EnableMixedFuelCompare = BEMPX_GetDatabaseID( "EnableMixedFuelCompare", iCID_Proj );      // SAC 12/28/21 (MxdFuel)
       		if (lDBID_Proj_EnableMixedFuelCompare > 0)
@@ -1047,11 +1059,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					return BEMAnal_CECRes_BatchLoadAndSaveOnly;
 		}
 
-      // storage of CUACReportID to enable ruleset access of CUAC analysis indicator - SAC 05/30/24
-   	if (ResRetVal_ContinueProcessing( iRetVal ) && iCUACReportID > 0)
+      // storage of CUACReportID to enable ruleset access of CUAC analysis indicator - SAC 05/30/24   // moved up from below, before defaulting - SAC 03/11/26 (dev #741)
+      if (ResRetVal_ContinueProcessing( iRetVal ) && iCUACReportID > 0 && !bLoadModelFile)
       {  long lDBID_CUACReportID = BEMPX_GetDatabaseID( "CUACReportID", iCID_Proj );
          if (lDBID_CUACReportID > 0)
-      	   BEMPX_SetBEMData( lDBID_CUACReportID, BEMP_Int, (void*) &iCUACReportID, BEMO_User, 0, BEMS_ProgDefault ); 
+            BEMPX_SetBEMData( lDBID_CUACReportID, BEMP_Int, (void*) &iCUACReportID, BEMO_User, 0, BEMS_ProgDefault ); 
       }
 
       // be able to identify RuleRepoRev - initially to distinguish use of CSE19 vs. CSE(.exe) - SAC 12/18/24
@@ -1156,7 +1168,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			{	QString sFHPathFile, sFHErrMsg; 
 				int iNumFileHashErrs = 0;
 				bool bRequiredForCodeYear = true;	// SAC 11/19/15
-				for (long iFHID=101; (ResRetVal_ContinueProcessing( iRetVal ) && iFHID <= 118); iFHID++)		// SAC 3/17/16 - removed T24DHW DLLs and revised numbering   // revised for VS19 2019 & 22 files - SAC 03/01/21
+            long iFHID;
+				for (iFHID=101; (ResRetVal_ContinueProcessing( iRetVal ) && iFHID <= 118); iFHID++)		// SAC 3/17/16 - removed T24DHW DLLs and revised numbering   // revised for VS19 2019 & 22 files - SAC 03/01/21
 				{	bRequiredForCodeYear = true;
 					switch (iFHID)
 					{	case 101 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2025);	break;      // updated for 2025/22 analysis - SAC 05/27/25
@@ -1228,7 +1241,37 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							}	}
 					}	}
 				}
-				if (iNumFileHashErrs > 0 && !bLogEachFileHashError)
+
+            // now loop over any/all RuleSubsets to check their file hashes - SAC 12/30/25 (dev #524)
+            int iLastRuleSubsetChkIdx = BEMPX_GetNumRuleSubsets()-2;    // no need to check final RuleSubset, as it contains only the RuleSubset hash table
+            QString qsRuleSubsetName, qsRuleSubsetFileHash;
+            for (iFHID=0; (ResRetVal_ContinueProcessing( iRetVal ) && iFHID <= iLastRuleSubsetChkIdx); iFHID++)
+               if ( BEMPX_GetRuleSubsetData( iFHID, qsRuleSubsetName, qsRuleSubsetFileHash ) && !qsRuleSubsetName.isEmpty() && !qsRuleSubsetFileHash.isEmpty() &&
+                    (iCUACReportID > 0 || qsRuleSubsetName.lastIndexOf( "CUAC" ) < 0) )
+               {  long lFileHashStatus = 0;
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RuleSubsetName" , iCID_Proj ), BEMP_QStr, (void*) &qsRuleSubsetName    , BEMO_User, 0, BEMS_ProgDefault );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "FileHashToCheck", iCID_Proj ), BEMP_QStr, (void*) &qsRuleSubsetFileHash, BEMO_User, 0, BEMS_ProgDefault );
+                  int iFHRetVal = LocalEvaluateRuleset( sFHErrMsg, 48 /*value doesn't matter - not returned*/, "CheckSubsetFileHashes", bVerbose, pCompRuleDebugInfo );      // file hash checking
+                  if (iFHRetVal > 0)
+                  {  bSendRptSignature = false;         iNumFileHashErrs++;
+                     if (bLogEachFileHashError)
+                        BEMPX_WriteLogFile( QString::asprintf( "Error evaluating RuleSubset file hash checking rules (analysis continuing w/ report signature disabled) - for subset:  %s", qsRuleSubsetName.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  }
+                  else if (iFHRetVal == 0 && !BEMPX_GetInteger( BEMPX_GetDatabaseID( "FileHashStatus", iCID_Proj ), lFileHashStatus ))
+                  {  bSendRptSignature = false;         iNumFileHashErrs++;
+                     if (bLogEachFileHashError)
+                        BEMPX_WriteLogFile( QString::asprintf( "    File hash check error - invalid Proj:FileHashStatus (%ld) (analysis continuing w/ report signature disabled) - for subset:  %s", lFileHashStatus, qsRuleSubsetName.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  }
+                  else if (iFHRetVal == 0 && lFileHashStatus != 0)
+                  {  bSendRptSignature = false;         iNumFileHashErrs++;
+                     if (bLogEachFileHashError)
+                        BEMPX_WriteLogFile( QString::asprintf( "    File hash check error - failed consistency check (%ld) (analysis continuing w/ report signature disabled) - for subset:  %s", lFileHashStatus, qsRuleSubsetName.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  }
+                  else if (bVerbose)
+                     BEMPX_WriteLogFile( QString::asprintf( "    File hash check passed for RuleSubset:  %s", qsRuleSubsetName.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               }
+
+            if (iNumFileHashErrs > 0 && !bLogEachFileHashError)
 				{	sLogMsg = QString( "    %1 file hash check(s) failed on executable and/or analysis support files (analysis continuing w/ report signature disabled)" ).arg( QString::number(iNumFileHashErrs) );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
@@ -1671,7 +1714,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			if (bStoreBEMProcDetails)	// SAC 1/20/13 - added export of additional "detail" file to help isolate unnecessary object creation issues
 			{	QString sDbgFileName = QString( "%1%2 - Report.ibd-Detail" ).arg( sProcessPath, sModelFileOnlyNoExt );
 	      	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
-				sDbgFileName = QString( "%1%2 - Report.ribd%3i" ).arg( sProcessPath, sModelFileOnlyNoExt, sCodeYear2Digit );	// SAC 5/17/19 - added export of 'input' version of each analysis model
+			}
+			if (bWriteMidAnalysisInputs)	// SAC 5/17/19 - added export of 'input' version of each analysis model  // replace bStoreBEMProcDetails w/ bWriteMidAnalysisInputs - SAC 01/09/26
+			{	QString sDbgFileName = QString( "%1%2 - Report.ribd%3i" ).arg( sProcessPath, sModelFileOnlyNoExt, sCodeYear2Digit );	
 	      	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_INPUT, false /*bUseLogFileName*/, false /*bWriteAllProperties*/,
             								FALSE /*bSupressAllMessageBoxes*/, 0 /*iFileType*/, false /*bAppend*/, NULL /*pszModelName*/,
             								true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lModDate*/, false /*bOnlyValidInputs*/,
@@ -1927,39 +1972,55 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
             // ---- Testing ----   END OF
             // -----------------
 
-         long lElecTariffGen=0, lGasTariffGen=0;
+         long lElecTariffGen=0, lGasTariffGen=0;   int iRateDnldRetVal=0;
          if (!bG2ElecRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lElecTariffGen ) && lElecTariffGen > 1)
          {  CUAC_RateDownload( "Electric", 94, "CUAC:CPR_ElecUtilityRateRef", sProcessPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMProcDetails, bSilent, bVerbose,
                                (lEnableResearchMode > 0), pCompRuleDebugInfo, iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
                                (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
                                (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrorMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRateDnldRetVal /*iRetVal*/, qsCUACElecRateDownldErrMsg /*sErrMsg*/, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
                                (sCUACElecTariffFile.isEmpty()     ? NULL : (const char*) sCUACElecTariffFile.toLocal8Bit().constData()), iDownloadVerbose );
                //											94 : Error downloading CUAC electric tariff schedule
-            if (iRetVal > 0)
-            {  sErrorMsg = "Error downloading CUAC electric tariff schedule: " + sErrorMsg;
-				   iRetVal = BEMAnal_CECRes_DwnldTariffElec;
-            }  // ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 94 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            //if (iRetVal > 0)
+            //{  sErrorMsg = "Error downloading CUAC electric tariff schedule: " + sErrorMsg;
+				//   iRetVal = BEMAnal_CECRes_DwnldTariffElec;
+            //}  // ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 94 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            if (iRateDnldRetVal > 0)      // replaced above w/ following to enable processing to continue despite rate download errors - SAC 03/19/26 (dev #742)
+            {  bCUACElecRateDownldFailed = true;
+               iNumCUACRateDownldErrors++;
+               if (qsCUACElecRateDownldErrMsg.isEmpty())
+                  qsCUACElecRateDownldErrMsg = QString::asprintf( "Electric Utility Rate Download ERROR (returned %d)", iRateDnldRetVal );
+            }
             else if (!bStoreBEMProcDetails) // iAnalysisStorage < 3)
                svUtilRatesToDelete.push_back( ((std::string) sProcessPath.toLocal8Bit().constData()) + ((std::string) "er.json") );
          }
          if (iRetVal == 0 && !bAbort && !bG2GasRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lGasTariffGen  ) && lGasTariffGen > 1)
-         {  CUAC_RateDownload( "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sProcessPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMProcDetails, bSilent, bVerbose,
+         {  iRateDnldRetVal = 0;
+            CUAC_RateDownload( "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sProcessPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMProcDetails, bSilent, bVerbose,
                                (lEnableResearchMode > 0), pCompRuleDebugInfo, iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
                                (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
                                (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrorMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRateDnldRetVal /*iRetVal*/, qsCUACGasRateDownldErrMsg /*sErrMsg*/, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout,
                                (sCUACGasTariffFile.isEmpty()      ? NULL : (const char*) sCUACGasTariffFile.toLocal8Bit().constData()), iDownloadVerbose );
                //											95 : Error downloading CUAC gas tariff schedule
-            if (iRetVal > 0)
-				{  sErrorMsg = "Error downloading CUAC gas tariff schedule: " + sErrorMsg;
-				   iRetVal = BEMAnal_CECRes_DwnldTariffGas;
-            }  // ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 95 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            //if (iRetVal > 0)
+				//{  sErrorMsg = "Error downloading CUAC gas tariff schedule: " + sErrorMsg;
+				//   iRetVal = BEMAnal_CECRes_DwnldTariffGas;
+            //}  // ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 95 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            if (iRateDnldRetVal > 0)      // replaced above w/ following to enable processing to continue despite rate download errors - SAC 03/19/26 (dev #742)
+            {  bCUACGasRateDownldFailed = true;
+               iNumCUACRateDownldErrors++;
+               if (qsCUACGasRateDownldErrMsg.isEmpty())
+                  qsCUACGasRateDownldErrMsg = QString::asprintf( "Gas Utility Rate Download ERROR (returned %d)", iRateDnldRetVal );
+            }
             else if (!bStoreBEMProcDetails) // iAnalysisStorage < 3)
                svUtilRatesToDelete.push_back( ((std::string) sProcessPath.toLocal8Bit().constData()) + ((std::string) "gr.json") );
-      }  }
+         }
+         if (bCUACElecRateDownldFailed || bCUACGasRateDownldFailed)
+            sCUACInvalidMsg = "Utility rate download(s) failed";        // this failure msg subercedes prior ones - SAC 03/19/26 (dev #742)
+      }
 
 		long lProjRunScope = 1;		// 1 => "Newly Constructed" / 2 => "Addition and/or Alteration"		// SAC 12/2/13
 		if (ResRetVal_ContinueProcessing( iRetVal ))
@@ -2126,7 +2187,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			bStoreBEMProcDetails, bPerformSimulations, bBypassCSE, bSilent, pCompRuleDebugInfo, pszUIVersionString,
 			iSimReportDetailsOption, iSimErrorDetailsOption, lStdMixedFuelRunReqd, lPrelimPropRunReqd, lPropFlexRunReqd,			// SAC 11/7/16 - added sim report/error option arguments
 			(iNumPrelimRuns > 0 ? iNumPrelimRuns : iNumRuns), sCodeYear2Digit.toLocal8Bit().constData(), &laRIBDIClsObjIndices,  // SAC 8/14/17 - added iNumRuns arg   // SAC 5/17/19 - added sCodeYear2Digit   // SAC 5/20/19 - &laRIBDIClsObjIndices
-			sRESNETWthr.toLocal8Bit().constData() );		// SAC 6/4/20
+			sRESNETWthr.toLocal8Bit().constData(), bWriteMidAnalysisInputs );		// SAC 6/4/20  // bWriteMidAnalysisInputs - SAC 01/09/26
 #endif
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
@@ -3296,7 +3357,8 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
                {  CUAC_AnalysisProcessing( sProcessPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMProcDetails, bSilent, bVerbose,
                                            (lEnableResearchMode > 0), pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrorMsg, iCUACReportID, iCUAC_BEMProcIdx, 1 /*res*/,
                                            iLogCUACBillCalcDetails, iDownloadVerbose, true /*bWritePDF*/, true /*bWriteCSV*/, 0 /*iBatchRunIdx*/, 
-                                           (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()) );   // SAC 01/02/25 );
+                                           (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()),     // SAC 01/02/25
+                                           bCUACElecRateDownldFailed, bCUACGasRateDownldFailed );
                               //   CSERunLoop( iSimRunIdx, posSimInfo, pqsCSESimStatusMsg, bStoreHourlyResults, sProcessingPath, sModelPathOnly, sModelFileOnly, bSecureT24NRptGenActivated,
                               //                  bPerformFullCSESim, bBypassRecircDHW, lNumPVArraysChk, bEnablePVBattSim, pszUIVersionString,
                               //                  sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,
@@ -5468,6 +5530,23 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 		{
 //			BEMPX_WriteHourlyResultsSummary( pszHourlyResultsPathFile, bSilent, iBEMProcIdx );
 
+			int iYrHr=0;
+			double daZero[8760];
+			for (; iYrHr<8760; iYrHr++)
+				daZero[iYrHr] = 0.0;
+
+         bool bExportPeakClgMults = false;      // to facilitate export of hourly peak cooling multipliers - SAC 02/26/26 (dev #750)
+         double daPeakClgMults[8760], dStdPeakCoolElecLimitMult = 0.0;
+         double* daPeakClgMultsData = &daPeakClgMults[0];
+         if (bExportSrcMults)
+         {  if (BEMPX_GetTableColumn( daPeakClgMultsData, 8760, "PeakCoolingElecEnergyTable", 1 /*col*/, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+            {  assert( FALSE );
+               daPeakClgMultsData = &daZero[0];
+            }
+            else
+               bExportPeakClgMults = BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:StdPeakCoolElecLimitMult" ), dStdPeakCoolElecLimitMult );
+         }
+
 			iErrorCode = fopen_s( &fp_CSV, pszHourlyResultsPathFile, "wb" );
 			if (iErrorCode != 0 || fp_CSV == NULL)
 			{	iRetVal = 3;
@@ -5475,7 +5554,8 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 			}
 			else
 			{  int iFirstDataCol = (bExportDSTCol ?  5 :  4);      // insert DST column (#4) - SAC 11/13/22
-            fprintf( fp_CSV, "16,%d,\"Row/Col hourly results data begin\"\n", iFirstDataCol );
+            int iFirstDataRow = (bExportPeakClgMults ? 17 : 16);     // SAC 02/26/26 (dev #750)
+            fprintf( fp_CSV, "%d,%d,\"Row/Col hourly results data begin\"\n", iFirstDataRow, iFirstDataCol );
 				fprintf( fp_CSV, "\"Hourly Results of CEC Compliance Manager\"\n" );
 				fprintf( fp_CSV, ",Ruleset:,,\"%s\"\n", sRuleVer.toLocal8Bit().constData() );
 				fprintf( fp_CSV, ",%s:,,\"%s\"\n",      qsCSEName.toLocal8Bit().constData(), sPrimVer.toLocal8Bit().constData() );
@@ -5486,10 +5566,21 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 				fprintf( fp_CSV,    "Cond. Area:,,,%.0f\n",   fCondFloorArea   );
 				fprintf( fp_CSV,         "Model:,,,\"%s\"\n", pszModelName     );
 				fprintf( fp_CSV,   "Fuel %s Set:,,,\"%s\"\n", sTDV.toLocal8Bit().constData(), sFuelTDVLabel.toLocal8Bit().constData()    );
+            if (bExportPeakClgMults)
+   				fprintf( fp_CSV, "Std Peak Cooling Mult:,,,%g\n", dStdPeakCoolElecLimitMult );      // SAC 02/26/26 (dev #750)
 				fprintf( fp_CSV,    "Model File:,,,\"%s\"\n", pszModelPathFile );
 				fprintf( fp_CSV, "\n" );
 
-            if (bExportSrcMults)    // SAC 10/05/23
+            if (bExportPeakClgMults)    // to facilitate export of hourly peak cooling multipliers - SAC 02/26/26 (dev #750)
+            {	fprintf( fp_CSV,  ",,,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,Site Other Fuel Use,,,,,,,,,,,%s Multipliers,,Elec Demand,CO2 Emissions,,Source Energy,,Peak Cooling,\n", sTDV.toLocal8Bit().constData() );		// INCLUDING PV
+	            fprintf( fp_CSV,  ",,,Local Time,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,PV,Battery,TOTAL,"
+												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,"
+												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Electric,Fuel,Multipliers,Electric,Fuel,Electric,Fuel,Multipliers,\n" );
+         	   fprintf( fp_CSV,  "Mo,Da,Hr,(%s),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+														"(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),"
+														"(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(%s),(%s),(frac),(ton/MWh),(ton/therm),(kBtu/kWh),(kBtu/therm),(frac),\n", sTimeType.toLocal8Bit().constData(), sKTDVElec.toLocal8Bit().constData(), sKTDVFuel.toLocal8Bit().constData() );  // SAC 10/05/23 (tic #1366)
+            }
+            else if (bExportSrcMults)    // SAC 10/05/23
             {	fprintf( fp_CSV,  ",,,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,Site Other Fuel Use,,,,,,,,,,,%s Multipliers,,Elec Demand,CO2 Emissions,,Source Energy,,\n", sTDV.toLocal8Bit().constData() );		// INCLUDING PV
 	            fprintf( fp_CSV,  ",,,Local Time,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,PV,Battery,TOTAL,"
 												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,"
@@ -5546,11 +5637,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 				}
 
 			// SETUP hourly results arrays for export...
-				int iYrHr=0;
-				double daZero[8760];
-				double daMtrTotals[HrlyExport_NumMeters][8760];
-				for (; iYrHr<8760; iYrHr++)
-					daZero[iYrHr] = 0.0;
+				double  daMtrTotals[HrlyExport_NumMeters][8760];
 				double* daMtrEUData[HrlyExport_NumMeters][HrlyExport_NumEnduses][HrlyExport_NumEUGroups];
 				int iMtr=0, iEU, iEU2;
 				for (; iMtr < HrlyExport_NumMeters; iMtr++)
@@ -5669,7 +5756,45 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
                         {  iLocTmMo = iMo+1;  iLocTmDa = 1;  iLocTmHr = 1;   
                         }
 
-                        if (bExportSrcMults)    // SAC 10/05/23
+                        if (bExportPeakClgMults)    // to facilitate export of hourly peak cooling multipliers - SAC 02/26/26 (dev #750)
+                        {  fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
+					(daMtrEUData[0][0][0][iYrHr] + daMtrEUData[0][0][1][iYrHr] + daMtrEUData[0][0][2][iYrHr] + daMtrEUData[0][0][3][iYrHr] + daMtrEUData[0][0][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][1][0][iYrHr] + daMtrEUData[0][1][1][iYrHr] + daMtrEUData[0][1][2][iYrHr] + daMtrEUData[0][1][3][iYrHr] + daMtrEUData[0][1][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][2][0][iYrHr] + daMtrEUData[0][2][1][iYrHr] + daMtrEUData[0][2][2][iYrHr] + daMtrEUData[0][2][3][iYrHr] + daMtrEUData[0][2][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][3][0][iYrHr] + daMtrEUData[0][3][1][iYrHr] + daMtrEUData[0][3][2][iYrHr] + daMtrEUData[0][3][3][iYrHr] + daMtrEUData[0][3][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][4][0][iYrHr] + daMtrEUData[0][4][1][iYrHr] + daMtrEUData[0][4][2][iYrHr] + daMtrEUData[0][4][3][iYrHr] + daMtrEUData[0][4][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][5][0][iYrHr] + daMtrEUData[0][5][1][iYrHr] + daMtrEUData[0][5][2][iYrHr] + daMtrEUData[0][5][3][iYrHr] + daMtrEUData[0][5][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][6][0][iYrHr] + daMtrEUData[0][6][1][iYrHr] + daMtrEUData[0][6][2][iYrHr] + daMtrEUData[0][6][3][iYrHr] + daMtrEUData[0][6][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][7][0][iYrHr] + daMtrEUData[0][7][1][iYrHr] + daMtrEUData[0][7][2][iYrHr] + daMtrEUData[0][7][3][iYrHr] + daMtrEUData[0][7][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][8][0][iYrHr] + daMtrEUData[0][8][1][iYrHr] + daMtrEUData[0][8][2][iYrHr] + daMtrEUData[0][8][3][iYrHr] + daMtrEUData[0][8][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][9][0][iYrHr] + daMtrEUData[0][9][1][iYrHr] + daMtrEUData[0][9][2][iYrHr] + daMtrEUData[0][9][3][iYrHr] + daMtrEUData[0][9][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][10][0][iYrHr] + daMtrEUData[0][10][1][iYrHr] + daMtrEUData[0][10][2][iYrHr] + daMtrEUData[0][10][3][iYrHr] + daMtrEUData[0][10][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][11][0][iYrHr] + daMtrEUData[0][11][1][iYrHr] + daMtrEUData[0][11][2][iYrHr] + daMtrEUData[0][11][3][iYrHr] + daMtrEUData[0][11][4][iYrHr]) / 3.412, daMtrTotals[0][iYrHr] / 3.412,
+					(daMtrEUData[1][0][0][iYrHr] + daMtrEUData[1][0][1][iYrHr] + daMtrEUData[1][0][2][iYrHr] + daMtrEUData[1][0][3][iYrHr] + daMtrEUData[1][0][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][1][0][iYrHr] + daMtrEUData[1][1][1][iYrHr] + daMtrEUData[1][1][2][iYrHr] + daMtrEUData[1][1][3][iYrHr] + daMtrEUData[1][1][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][2][0][iYrHr] + daMtrEUData[1][2][1][iYrHr] + daMtrEUData[1][2][2][iYrHr] + daMtrEUData[1][2][3][iYrHr] + daMtrEUData[1][2][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][3][0][iYrHr] + daMtrEUData[1][3][1][iYrHr] + daMtrEUData[1][3][2][iYrHr] + daMtrEUData[1][3][3][iYrHr] + daMtrEUData[1][3][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][4][0][iYrHr] + daMtrEUData[1][4][1][iYrHr] + daMtrEUData[1][4][2][iYrHr] + daMtrEUData[1][4][3][iYrHr] + daMtrEUData[1][4][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][5][0][iYrHr] + daMtrEUData[1][5][1][iYrHr] + daMtrEUData[1][5][2][iYrHr] + daMtrEUData[1][5][3][iYrHr] + daMtrEUData[1][5][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][6][0][iYrHr] + daMtrEUData[1][6][1][iYrHr] + daMtrEUData[1][6][2][iYrHr] + daMtrEUData[1][6][3][iYrHr] + daMtrEUData[1][6][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][7][0][iYrHr] + daMtrEUData[1][7][1][iYrHr] + daMtrEUData[1][7][2][iYrHr] + daMtrEUData[1][7][3][iYrHr] + daMtrEUData[1][7][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][8][0][iYrHr] + daMtrEUData[1][8][1][iYrHr] + daMtrEUData[1][8][2][iYrHr] + daMtrEUData[1][8][3][iYrHr] + daMtrEUData[1][8][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][9][0][iYrHr] + daMtrEUData[1][9][1][iYrHr] + daMtrEUData[1][9][2][iYrHr] + daMtrEUData[1][9][3][iYrHr] + daMtrEUData[1][9][4][iYrHr]) / 100.0, daMtrTotals[1][iYrHr] / 100.0,
+					(daMtrEUData[2][0][0][iYrHr] + daMtrEUData[2][0][1][iYrHr] + daMtrEUData[2][0][2][iYrHr] + daMtrEUData[2][0][3][iYrHr] + daMtrEUData[2][0][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][1][0][iYrHr] + daMtrEUData[2][1][1][iYrHr] + daMtrEUData[2][1][2][iYrHr] + daMtrEUData[2][1][3][iYrHr] + daMtrEUData[2][1][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][2][0][iYrHr] + daMtrEUData[2][2][1][iYrHr] + daMtrEUData[2][2][2][iYrHr] + daMtrEUData[2][2][3][iYrHr] + daMtrEUData[2][2][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][3][0][iYrHr] + daMtrEUData[2][3][1][iYrHr] + daMtrEUData[2][3][2][iYrHr] + daMtrEUData[2][3][3][iYrHr] + daMtrEUData[2][3][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][4][0][iYrHr] + daMtrEUData[2][4][1][iYrHr] + daMtrEUData[2][4][2][iYrHr] + daMtrEUData[2][4][3][iYrHr] + daMtrEUData[2][4][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][5][0][iYrHr] + daMtrEUData[2][5][1][iYrHr] + daMtrEUData[2][5][2][iYrHr] + daMtrEUData[2][5][3][iYrHr] + daMtrEUData[2][5][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][6][0][iYrHr] + daMtrEUData[2][6][1][iYrHr] + daMtrEUData[2][6][2][iYrHr] + daMtrEUData[2][6][3][iYrHr] + daMtrEUData[2][6][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][7][0][iYrHr] + daMtrEUData[2][7][1][iYrHr] + daMtrEUData[2][7][2][iYrHr] + daMtrEUData[2][7][3][iYrHr] + daMtrEUData[2][7][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][8][0][iYrHr] + daMtrEUData[2][8][1][iYrHr] + daMtrEUData[2][8][2][iYrHr] + daMtrEUData[2][8][3][iYrHr] + daMtrEUData[2][8][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][9][0][iYrHr] + daMtrEUData[2][9][1][iYrHr] + daMtrEUData[2][9][2][iYrHr] + daMtrEUData[2][9][3][iYrHr] + daMtrEUData[2][9][4][iYrHr]) / 1000.0, daMtrTotals[2][iYrHr] / 1000.0,
+					daTDVData[0][iYrHr], daTDVData[1][iYrHr], daElDmndData[iYrHr], daElecCO2Data[iYrHr], dFuelCO2Emis, daSrcData[0][iYrHr], daSrcData[1][iYrHr], daPeakClgMultsData[iYrHr] );
+                        }
+                        else if (bExportSrcMults)    // SAC 10/05/23
                         {  fprintf( fp_CSV,  "%d,%d,%d, %02d/%02d %02d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr, iLocTmMo, iLocTmDa, iLocTmHr,
@@ -6776,7 +6901,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 							   {	// WRITE HEADER RECORDS
                            //csvFile.write( ",,,,,,,,,,,,,,,,,,Unit Type Results,,\n" );
                            csvFile.write( ",,,,Electric,,,Gas,,,Unit,Utility Allowances ($),,,,,Num Units,\n" );
-                           csvFile.write( "Start Date & Time,Filename (saved to),Run Title,Weather Station,Utility,Territory,Tariff,Utility,Territory,Tariff,Type,Electric,Gas,Water,Trash,Total,Total,\n" );
+                           csvFile.write( "Start Date & Time,Filename (saved to),Run Title,Weather Station,Utility,Territory,Tariff,Utility,Territory,Tariff,Type,Electric,Gas,Water,Sewer,Trash,Total,Total,\n" );
                         }
                         int iCSVRetVal = CUAC_WriteCSVSummary( csvFile, sProjPathFile.c_str(), pszCSEWeatherPath, 1 /*SFam*/ );
                      }

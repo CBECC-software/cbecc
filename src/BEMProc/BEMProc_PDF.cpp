@@ -516,7 +516,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    //image = HPDF_LoadJpegImageFromFile (pdf, "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC_CUAC\\CBECC-Com64\\Data\\Rulesets\\T24N_2022\\RTF\\CEC.jpg");
    image = HPDF_LoadJpegImageFromFile (pdf, qsLogoPathFN.toLocal8Bit().constData());
 //   HPDF_Page_DrawImage (page, image, 240, iPgTop-91, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));
-   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo - SAC 01/13/23
+   HPDF_Page_DrawImage (page, image, 242, iPgTop-72, 53, 53 );  // raised logo by 15 - SAC 01/13/23  // raised another 4 & rect (58x53) to square (53x53) - SAC 02/24/26
 
    // add 'DRAFT' watermark when analysis is invalid for any reason - SAC 01/03/25 - SAC 01/04/25
    long lNumInvalidAnalyses=0;   QString qsAnalysisInvalidMsg;
@@ -669,66 +669,92 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
          laNumMktRateUnitsByBedrms[iMtr] = 0;
    }  }
 
-   int iRectHt = 45;     // SAC 12/05/22
+   int iRectHt = 55;     // SAC 12/05/22  // 45->54 - SAC 02/18/26 (dev #712)
    iCurY -= iRectHt;
-   int iTableColWd  = (iPgRight-iPgLeft - 190) / 8;
-   int iTableColMid =  iTableColWd / 2;
-   int iTableLeft   =  iPgRight - (iTableColWd * 8);
+
+   int iaTableColWds[] = { 62, 50, 61, 50, 52, 45, 52, 45, 52, 45 };    // SAC 02/18/26 (dev #712)
+   int iaTableColLeft[10];   iaTableColLeft[0] = iPgLeft + 186;
+   for (iMtr=1; iMtr < 10; iMtr++)
+      iaTableColLeft[iMtr] = iaTableColLeft[iMtr-1] + iaTableColWds[iMtr-1];
+
+   //int iTableColWd  = (iPgRight-iPgLeft - 190) / 8;
+   //int iTableColMid =  iTableColWd / 2;
+   //int iTableLeft   =  iPgRight - (iTableColWd * 8);
    HPDF_Page_SetGrayFill (page, (HPDF_REAL) 0.9);
    HPDF_Page_Rectangle (page, iPgLeft, iCurY, (iPgRight-iPgLeft), iRectHt );
    HPDF_Page_FillStroke (page);
 
-   HPDF_Page_Rectangle (page, iTableLeft - 66     , iCurY   ,       66         ,         28 );   // Tot Avg Mo Cost
-   HPDF_Page_Rectangle (page, iTableLeft - 66 - 54, iCurY   ,       54         ,         28 );   // Tot Ann Cost
-   HPDF_Page_Rectangle (page, iTableLeft          , iCurY+28, (iTableColWd * 8), iRectHt-28 );   // Project Details
+   HPDF_Page_Rectangle (page, iaTableColLeft[0] - 52     , iCurY   ,       52                                                ,         38 );   // Tot Avg Mo Cost   // 28->38 - SAC 02/18/26 (dev #712)
+   HPDF_Page_Rectangle (page, iaTableColLeft[0] - 52 - 64, iCurY   ,       64                                                ,         38 );   // Tot Ann Cost
+   HPDF_Page_Rectangle (page, iaTableColLeft[0]          , iCurY+38, iaTableColLeft[9] + iaTableColWds[9] - iaTableColLeft[0], iRectHt-38 );   // Project Details
 
-   HPDF_Page_Rectangle (page, iTableLeft                , iCurY, iTableColWd, 28 );
-   HPDF_Page_Rectangle (page, iTableLeft+ iTableColWd   , iCurY, iTableColWd, 28 );
-   HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*2), iCurY, iTableColWd, 28 );
-   HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*3), iCurY, iTableColWd, 28 );
-   HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*4), iCurY, iTableColWd, 28 );
-   HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*5), iCurY, iTableColWd, 28 );
-   HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*6), iCurY, iTableColWd, 28 );
-   HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*7), iCurY, iTableColWd, 28 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[0], iCurY, iaTableColWds[0], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[1], iCurY, iaTableColWds[1], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[2], iCurY, iaTableColWds[2], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[3], iCurY, iaTableColWds[3], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[4], iCurY, iaTableColWds[4], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[5], iCurY, iaTableColWds[5], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[6], iCurY, iaTableColWds[6], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[7], iCurY, iaTableColWds[7], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[8], iCurY, iaTableColWds[8], 38 );
+   HPDF_Page_Rectangle (page, iaTableColLeft[9], iCurY, iaTableColWds[9], 38 );
    HPDF_Page_Stroke (page);
 
    HPDF_Page_SetGrayFill (page, 0);  // 0.5);
    HPDF_Page_SetFontAndSize (page, fontBold, 10);
    HPDF_Page_BeginText (page);
 //   HPDF_Page_TextOut (page, iPgLeft+3  , iCurY+10, "Apartment Type" );
-   HPDF_Page_TextOut (page, iPgLeft+ 93, iCurY+33, "Project Summary" );
-   HPDF_Page_TextOut (page, iPgLeft+415, iCurY+33, "Project Details" );
+   HPDF_Page_TextOut (page, iPgLeft+ 79, iCurY+43, "Project Summary" );
+   HPDF_Page_TextOut (page, iPgLeft+407, iCurY+43, "Project Details" );
    HPDF_Page_EndText (page);
 
    HPDF_Page_SetFontAndSize (page, font, 8);
    HPDF_Page_BeginText (page);
-   HPDF_Page_TextOut (page, iPgLeft    + 35 - (HPDF_Page_TextWidth (page, "Apartment"       )/2), iCurY + 16, "Apartment"        );
-   HPDF_Page_TextOut (page, iPgLeft    + 35 - (HPDF_Page_TextWidth (page, "Type"            )/2), iCurY +  5, "Type"             );
-   HPDF_Page_TextOut (page, iTableLeft - 93 - (HPDF_Page_TextWidth (page, "Total Annual"    )/2), iCurY + 16, "Total Annual"     );
-   HPDF_Page_TextOut (page, iTableLeft - 93 - (HPDF_Page_TextWidth (page, "Cost ($)"        )/2), iCurY +  5, "Cost ($)"         );
-   HPDF_Page_TextOut (page, iTableLeft - 33 - (HPDF_Page_TextWidth (page, "Average Monthly" )/2), iCurY + 16, "Average Monthly"  );
-   HPDF_Page_TextOut (page, iTableLeft - 33 - (HPDF_Page_TextWidth (page, "Cost ($)"        )/2), iCurY +  5, "Cost ($)"         );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 0) + iTableColMid - (HPDF_Page_TextWidth (page, "Electric"         )/2), iCurY + 16, "Electric"         );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 0) + iTableColMid - (HPDF_Page_TextWidth (page, "Annual Cost ($)"  )/2), iCurY +  5, "Annual Cost ($)"  );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 1) + iTableColMid - (HPDF_Page_TextWidth (page, "Electric"         )/2), iCurY + 16, "Electric"         );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 1) + iTableColMid - (HPDF_Page_TextWidth (page, "Monthly Cost ($)" )/2), iCurY +  5, "Monthly Cost ($)" );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 2) + iTableColMid - (HPDF_Page_TextWidth (page, "Gas"              )/2), iCurY + 16, "Gas"              );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 2) + iTableColMid - (HPDF_Page_TextWidth (page, "Annual Cost ($)"  )/2), iCurY +  5, "Annual Cost ($)"  );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 3) + iTableColMid - (HPDF_Page_TextWidth (page, "Gas"              )/2), iCurY + 16, "Gas"              );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 3) + iTableColMid - (HPDF_Page_TextWidth (page, "Monthly Cost ($)" )/2), iCurY +  5, "Monthly Cost ($)" );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 4) + iTableColMid - (HPDF_Page_TextWidth (page, "Water"            )/2), iCurY + 16, "Water"            );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 4) + iTableColMid - (HPDF_Page_TextWidth (page, "Annual Cost ($)"  )/2), iCurY +  5, "Annual Cost ($)"  );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 5) + iTableColMid - (HPDF_Page_TextWidth (page, "Water"            )/2), iCurY + 16, "Water"            );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 5) + iTableColMid - (HPDF_Page_TextWidth (page, "Monthly Cost ($)" )/2), iCurY +  5, "Monthly Cost ($)" );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 6) + iTableColMid - (HPDF_Page_TextWidth (page, "Trash"            )/2), iCurY + 16, "Trash"            );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 6) + iTableColMid - (HPDF_Page_TextWidth (page, "Annual Cost ($)"  )/2), iCurY +  5, "Annual Cost ($)"  );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 7) + iTableColMid - (HPDF_Page_TextWidth (page, "Trash"            )/2), iCurY + 16, "Trash"            );
-   HPDF_Page_TextOut (page, iTableLeft + (iTableColWd * 7) + iTableColMid - (HPDF_Page_TextWidth (page, "Monthly Cost ($)" )/2), iCurY +  5, "Monthly Cost ($)" );
+   HPDF_Page_TextOut (page, iPgLeft           + 35 - (HPDF_Page_TextWidth (page, "Apartment"  )/2), iCurY + 16, "Apartment"  );
+   HPDF_Page_TextOut (page, iPgLeft           + 35 - (HPDF_Page_TextWidth (page, "Type"       )/2), iCurY +  5, "Type"       );
+   HPDF_Page_TextOut (page, iaTableColLeft[0] - 84 - (HPDF_Page_TextWidth (page, "Total"      )/2), iCurY + 27, "Total"      );
+   HPDF_Page_TextOut (page, iaTableColLeft[0] - 84 - (HPDF_Page_TextWidth (page, "Annual"     )/2), iCurY + 16, "Annual"     );
+   HPDF_Page_TextOut (page, iaTableColLeft[0] - 84 - (HPDF_Page_TextWidth (page, "Cost ($)"   )/2), iCurY +  5, "Cost ($)"   );
+
+   HPDF_Page_TextOut (page, iaTableColLeft[0] - 26 - (HPDF_Page_TextWidth (page, "Average"    )/2), iCurY + 27, "Average"    );
+   HPDF_Page_TextOut (page, iaTableColLeft[0] - 26 - (HPDF_Page_TextWidth (page, "Monthly"    )/2), iCurY + 16, "Monthly"    );
+   HPDF_Page_TextOut (page, iaTableColLeft[0] - 26 - (HPDF_Page_TextWidth (page, "Cost ($)"   )/2), iCurY +  5, "Cost ($)"   );
+
+   HPDF_Page_TextOut (page, iaTableColLeft[0] + (iaTableColWds[0]/2) - (HPDF_Page_TextWidth (page, "Electric" )/2), iCurY + 27, "Electric"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[0] + (iaTableColWds[0]/2) - (HPDF_Page_TextWidth (page, "Annual"   )/2), iCurY + 16, "Annual"    );
+   HPDF_Page_TextOut (page, iaTableColLeft[0] + (iaTableColWds[0]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[1] + (iaTableColWds[1]/2) - (HPDF_Page_TextWidth (page, "Electric" )/2), iCurY + 27, "Electric"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[1] + (iaTableColWds[1]/2) - (HPDF_Page_TextWidth (page, "Monthly"  )/2), iCurY + 16, "Monthly"   );
+   HPDF_Page_TextOut (page, iaTableColLeft[1] + (iaTableColWds[1]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[2] + (iaTableColWds[2]/2) - (HPDF_Page_TextWidth (page, "Gas"      )/2), iCurY + 27, "Gas"       );
+   HPDF_Page_TextOut (page, iaTableColLeft[2] + (iaTableColWds[2]/2) - (HPDF_Page_TextWidth (page, "Annual"   )/2), iCurY + 16, "Annual"    );
+   HPDF_Page_TextOut (page, iaTableColLeft[2] + (iaTableColWds[2]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[3] + (iaTableColWds[3]/2) - (HPDF_Page_TextWidth (page, "Gas"      )/2), iCurY + 27, "Gas"       );
+   HPDF_Page_TextOut (page, iaTableColLeft[3] + (iaTableColWds[3]/2) - (HPDF_Page_TextWidth (page, "Monthly"  )/2), iCurY + 16, "Monthly"   );
+   HPDF_Page_TextOut (page, iaTableColLeft[3] + (iaTableColWds[3]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[4] + (iaTableColWds[4]/2) - (HPDF_Page_TextWidth (page, "Water"    )/2), iCurY + 27, "Water"     );
+   HPDF_Page_TextOut (page, iaTableColLeft[4] + (iaTableColWds[4]/2) - (HPDF_Page_TextWidth (page, "Annual"   )/2), iCurY + 16, "Annual"    );
+   HPDF_Page_TextOut (page, iaTableColLeft[4] + (iaTableColWds[4]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[5] + (iaTableColWds[5]/2) - (HPDF_Page_TextWidth (page, "Water"    )/2), iCurY + 27, "Water"     );
+   HPDF_Page_TextOut (page, iaTableColLeft[5] + (iaTableColWds[5]/2) - (HPDF_Page_TextWidth (page, "Monthly"  )/2), iCurY + 16, "Monthly"   );
+   HPDF_Page_TextOut (page, iaTableColLeft[5] + (iaTableColWds[5]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[6] + (iaTableColWds[6]/2) - (HPDF_Page_TextWidth (page, "Sewer"    )/2), iCurY + 27, "Sewer"     );
+   HPDF_Page_TextOut (page, iaTableColLeft[6] + (iaTableColWds[6]/2) - (HPDF_Page_TextWidth (page, "Annual"   )/2), iCurY + 16, "Annual"    );
+   HPDF_Page_TextOut (page, iaTableColLeft[6] + (iaTableColWds[6]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[7] + (iaTableColWds[7]/2) - (HPDF_Page_TextWidth (page, "Sewer"    )/2), iCurY + 27, "Sewer"     );     // SAC 02/18/26 (dev #712)
+   HPDF_Page_TextOut (page, iaTableColLeft[7] + (iaTableColWds[7]/2) - (HPDF_Page_TextWidth (page, "Monthly"  )/2), iCurY + 16, "Monthly"   );
+   HPDF_Page_TextOut (page, iaTableColLeft[7] + (iaTableColWds[7]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[8] + (iaTableColWds[8]/2) - (HPDF_Page_TextWidth (page, "Trash"    )/2), iCurY + 27, "Trash"     );
+   HPDF_Page_TextOut (page, iaTableColLeft[8] + (iaTableColWds[8]/2) - (HPDF_Page_TextWidth (page, "Annual"   )/2), iCurY + 16, "Annual"    );
+   HPDF_Page_TextOut (page, iaTableColLeft[8] + (iaTableColWds[8]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
+   HPDF_Page_TextOut (page, iaTableColLeft[9] + (iaTableColWds[9]/2) - (HPDF_Page_TextWidth (page, "Trash"    )/2), iCurY + 27, "Trash"     );
+   HPDF_Page_TextOut (page, iaTableColLeft[9] + (iaTableColWds[9]/2) - (HPDF_Page_TextWidth (page, "Monthly"  )/2), iCurY + 16, "Monthly"   );
+   HPDF_Page_TextOut (page, iaTableColLeft[9] + (iaTableColWds[9]/2) - (HPDF_Page_TextWidth (page, "Cost ($)" )/2), iCurY +  5, "Cost ($)"  );
    HPDF_Page_EndText (page);
 
    HPDF_Page_SetFontAndSize (page, font, 10);     // SAC 01/05/23
    iRectHt = 15;
-   int iUnitTypeColWd = iTableLeft - iPgLeft - 120;
+   int iUnitTypeColWd = iaTableColLeft[0] - iPgLeft - 116;
    double dVal;
    long lDBID_ResRef = BEMPX_GetDatabaseID( "CUAC:CUACResultsRef" );       assert( lDBID_ResRef > 0 );
    for (iMtr=0; iMtr < lNumUnitTypes; iMtr++)
@@ -739,16 +765,18 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
          {  iCurY -= iRectHt;
             int iMtrIdx = iaPosUnitTypeIdxs[iMtr];
             HPDF_Page_Rectangle (page, iPgLeft                   , iCurY, iUnitTypeColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iPgLeft+iUnitTypeColWd    , iCurY, 54, iRectHt );  
-            HPDF_Page_Rectangle (page, iPgLeft+iUnitTypeColWd+54 , iCurY, 66, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft                , iCurY, iTableColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft+ iTableColWd   , iCurY, iTableColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*2), iCurY, iTableColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*3), iCurY, iTableColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*4), iCurY, iTableColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*5), iCurY, iTableColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*6), iCurY, iTableColWd, iRectHt );  
-            HPDF_Page_Rectangle (page, iTableLeft+(iTableColWd*7), iCurY, iTableColWd, iRectHt );  
+            HPDF_Page_Rectangle (page, iPgLeft+iUnitTypeColWd    , iCurY, 64, iRectHt );  
+            HPDF_Page_Rectangle (page, iPgLeft+iUnitTypeColWd+64 , iCurY, 52, iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[0]         , iCurY, iaTableColWds[0], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[1]         , iCurY, iaTableColWds[1], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[2]         , iCurY, iaTableColWds[2], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[3]         , iCurY, iaTableColWds[3], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[4]         , iCurY, iaTableColWds[4], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[5]         , iCurY, iaTableColWds[5], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[6]         , iCurY, iaTableColWds[6], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[7]         , iCurY, iaTableColWds[7], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[8]         , iCurY, iaTableColWds[8], iRectHt );  
+            HPDF_Page_Rectangle (page, iaTableColLeft[9]         , iCurY, iaTableColWds[9], iRectHt );  
             HPDF_Page_Stroke (page);
 
             HPDF_Page_BeginText (page);
@@ -756,13 +784,15 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
             HPDF_Page_TextOut (page, iPgLeft+3, iCurY+4, qsLabel.toLocal8Bit().constData() );
 
             const char* pszaColVars[] = { "CUACResults:TotCosts[1]", "CUACResults:TotCosts[2]", "CUACResults:ElecCosts[1]", "CUACResults:ElecCosts[2]", "CUACResults:GasCosts[1]",
-                                          "CUACResults:GasCosts[2]", "CUACResults:WaterCosts[1]", "CUACResults:WaterCosts[2]", NULL, "CUACResults:TrashMonthlyCost" };
-            int iaColMidX[] = {  iTableLeft - 93, iTableLeft - 33, iTableLeft+iTableColMid, iTableLeft+iTableColMid+iTableColWd,
-                                 iTableLeft+iTableColMid+(iTableColWd*2), iTableLeft+iTableColMid+(iTableColWd*3), iTableLeft+iTableColMid+(iTableColWd*4),
-                                 iTableLeft+iTableColMid+(iTableColWd*5), iTableLeft+iTableColMid+(iTableColWd*6), iTableLeft+iTableColMid+(iTableColWd*7) };
-            for (iCol=0; iCol<10; iCol++)
-            {  if (iCol == 8)
-               {  dVal = BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUACResults:TrashMonthlyCost" ), iSpecVal, iErr, iResObjIdx, BEMO_User, iBEMProcIdx );
+                                          "CUACResults:GasCosts[2]", "CUACResults:WaterCosts[1]", "CUACResults:WaterCosts[2]", NULL, "CUACResults:SewerMonthlyCost", NULL, "CUACResults:TrashMonthlyCost" };
+            int iaColMidX[] = {  iaTableColLeft[0] - 84, iaTableColLeft[0] - 26, iaTableColLeft[0]+(iaTableColWds[0]/2), iaTableColLeft[1]+(iaTableColWds[1]/2),
+                                         iaTableColLeft[2]+(iaTableColWds[2]/2), iaTableColLeft[3]+(iaTableColWds[3]/2), iaTableColLeft[4]+(iaTableColWds[4]/2),
+                                         iaTableColLeft[5]+(iaTableColWds[5]/2), iaTableColLeft[6]+(iaTableColWds[6]/2), iaTableColLeft[7]+(iaTableColWds[7]/2),
+                                         iaTableColLeft[8]+(iaTableColWds[8]/2), iaTableColLeft[9]+(iaTableColWds[9]/2)  };
+            for (iCol=0; iCol<12; iCol++)
+            {  if (iCol == 8 || iCol == 10)
+               {  dVal = (iCol == 8 ?  BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUACResults:SewerMonthlyCost" ), iSpecVal, iErr, iResObjIdx, BEMO_User, iBEMProcIdx ) :
+                                       BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUACResults:TrashMonthlyCost" ), iSpecVal, iErr, iResObjIdx, BEMO_User, iBEMProcIdx ) );
                   if (dVal > 0)
                      qsLabel = BEMPX_FloatToString( (dVal * 12.0), 2 );
                   else
@@ -835,7 +865,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    }
 
 //   image = HPDF_LoadJpegImageFromFile (pdf, qsLogoPathFN.toLocal8Bit().constData());
-   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+   HPDF_Page_DrawImage (page, image, 242, iPgTop-72, 53, 53 );  // raised logo by 15 - SAC 01/13/23  // raised another 4 & rect (58x53) to square (53x53) - SAC 02/24/26
 
    if (!qsRunDateFmt.isEmpty())
    {  iCurY = iPgTop - 56;
@@ -874,11 +904,12 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_BeginText (page);
    HPDF_Page_TextOut (page, iPgLeft, iCurY                           , "Electric" );
    HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt *  3) -3, "Gas"      );
-   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt *  6) -6, "Trash"    );
-   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt *  7) -9, "Water"    );
-   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt *  9)-13, "Tenant PV Size" );       // SAC 12/14/24
-   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt * 10)-16, "Community Solar" );      // SAC 10/03/23
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tenant Battery Cap" ), iCurY - (iProjInfoRowHt *  9)-13, "Tenant Battery Cap" );    // SAC 12/14/24
+   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt *  6) -6, "Sewer"    );      // SAC 02/18/26 (dev #712)
+   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt *  7) -9, "Trash"    );
+   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt *  8)-12, "Water"    );
+   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt * 10)-16, "Tenant PV Size" );       // SAC 12/14/24
+   HPDF_Page_TextOut (page, iPgLeft, iCurY - (iProjInfoRowHt * 11)-19, "Community Solar" );      // SAC 10/03/23
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tenant Battery Cap" ), iCurY - (iProjInfoRowHt * 10)-16, "Tenant Battery Cap" );    // SAC 12/14/24
    HPDF_Page_EndText (page);
 
    HPDF_Page_SetFontAndSize (page, font, 8); 
@@ -892,12 +923,14 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Territory"          ), iCurY - (iProjInfoRowHt *  4)-3, "Territory"           );
    HPDF_Page_TextOut (page, iProjInfoLeftX3 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tariff"             ), iCurY - (iProjInfoRowHt *  4)-3, "Tariff"              );
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Tariff Type"        ), iCurY - (iProjInfoRowHt *  5)-3, "Tariff Type"         );    // SAC 01/25/24
-   HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Rate Type"          ), iCurY - (iProjInfoRowHt *  6)-6, "Rate Type"           );
+   HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Rate Type"          ), iCurY - (iProjInfoRowHt *  6)-6, "Rate Type"           );    // SAC 02/18/26 (dev #712)
    HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Monthly Charge"     ), iCurY - (iProjInfoRowHt *  6)-6, "Monthly Charge"      );
    HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Rate Type"          ), iCurY - (iProjInfoRowHt *  7)-9, "Rate Type"           );
    HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Monthly Charge"     ), iCurY - (iProjInfoRowHt *  7)-9, "Monthly Charge"      );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Water $/Gallon"     ), iCurY - (iProjInfoRowHt *  8)-9, "Water $/Gallon"      );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2+70 - iProjInfoMarginX - HPDF_Page_TextWidth(page, "Total Allocation" ), iCurY - (iProjInfoRowHt * 10)-16, "Total Allocation"   );    // SAC 10/03/23
+   HPDF_Page_TextOut (page, iProjInfoLeftX  - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Rate Type"          ), iCurY - (iProjInfoRowHt *  8)-12, "Rate Type"           );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Monthly Charge"     ), iCurY - (iProjInfoRowHt *  8)-12, "Monthly Charge"      );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Water $/Gallon"     ), iCurY - (iProjInfoRowHt *  9)-12, "Water $/Gallon"      );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2+70 - iProjInfoMarginX - HPDF_Page_TextWidth(page, "Total Allocation" ), iCurY - (iProjInfoRowHt * 11)-19, "Total Allocation"   );    // SAC 10/03/23
    HPDF_Page_TextOut (page, iProjInfoRightX - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Space Heating"      ), iCurY                          , "Space Heating"       );
    HPDF_Page_TextOut (page, iProjInfoRightX - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Water Heating"      ), iCurY - (iProjInfoRowHt *  1)  , "Water Heating"       );
    HPDF_Page_TextOut (page, iProjInfoRightX - iProjInfoMarginX - HPDF_Page_TextWidth (page, "Cooking"            ), iCurY - (iProjInfoRowHt *  2)  , "Cooking"             );
@@ -914,17 +947,19 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*4) -3-3 );   HPDF_Page_LineTo  (page, iProjInfoLeftX3-50, iCurY - (iProjInfoRowHt*4) -3-3 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX3-3,    iCurY - (iProjInfoRowHt*4) -3-3 );   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*4) -3-3 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*5) -3-3 );   HPDF_Page_LineTo  (page, iProjInfoLeftX3-50, iCurY - (iProjInfoRowHt*5) -3-3 );     // SAC 01/25/24
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*6) -3-6 );   HPDF_Page_LineTo  (page, 280,                iCurY - (iProjInfoRowHt*6) -3-6 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*6) -3-6 );   HPDF_Page_LineTo  (page, 280,                iCurY - (iProjInfoRowHt*6) -3-6 );     // SAC 02/18/26 (dev #712)
    HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3,    iCurY - (iProjInfoRowHt*6) -3-6 );   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*6) -3-6 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*7) -3-9 );   HPDF_Page_LineTo  (page, 280,                iCurY - (iProjInfoRowHt*7) -3-9 );
    HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3,    iCurY - (iProjInfoRowHt*7) -3-9 );   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*7) -3-9 );
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3,    iCurY - (iProjInfoRowHt*8) -3-9 );   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*8) -3-9 );
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*8) -3-12);   HPDF_Page_LineTo  (page, 280,                iCurY - (iProjInfoRowHt*8) -3-12);
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3,    iCurY - (iProjInfoRowHt*8) -3-12);   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*8) -3-12);
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3,    iCurY - (iProjInfoRowHt*9) -3-12);   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*9) -3-12);
 
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*9) -3-13);   HPDF_Page_LineTo  (page, iProjInfoLeftX3-50, iCurY - (iProjInfoRowHt*9) -3-13);     // SAC 12/14/24
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3,    iCurY - (iProjInfoRowHt*9) -3-13);   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*9) -3-13);
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*10)-3-16);   HPDF_Page_LineTo  (page, iProjInfoLeftX3-50, iCurY - (iProjInfoRowHt*10)-3-16);     // SAC 12/14/24
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3,    iCurY - (iProjInfoRowHt*10)-3-16);   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*10)-3-16);
 
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*10)-3-16);   HPDF_Page_LineTo  (page, 280+70,             iCurY - (iProjInfoRowHt*10)-3-16);     // SAC 10/03/23
-   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3+70, iCurY - (iProjInfoRowHt*10)-3-16);   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*10)-3-16);
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX -3,    iCurY - (iProjInfoRowHt*11)-3-19);   HPDF_Page_LineTo  (page, 280+70,             iCurY - (iProjInfoRowHt*11)-3-19);     // SAC 10/03/23
+   HPDF_Page_MoveTo  (page, iProjInfoLeftX2-3+70, iCurY - (iProjInfoRowHt*11)-3-19);   HPDF_Page_LineTo  (page, 480,                iCurY - (iProjInfoRowHt*11)-3-19);
    HPDF_Page_MoveTo  (page, iProjInfoRightX-3,    iCurY                      -3 );     HPDF_Page_LineTo  (page, 720,                iCurY                      -3 );                     
    HPDF_Page_MoveTo  (page, iProjInfoRightX-3,    iCurY -  iProjInfoRowHt    -3 );     HPDF_Page_LineTo  (page, 720,                iCurY -  iProjInfoRowHt    -3 );
    HPDF_Page_MoveTo  (page, iProjInfoRightX-3,    iCurY - (iProjInfoRowHt*2) -3 );     HPDF_Page_LineTo  (page, 720,                iCurY - (iProjInfoRowHt*2) -3 );
@@ -952,15 +987,26 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  4)-3, qsLabel2.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iProjInfoLeftX3 , iCurY - (iProjInfoRowHt *  4)-3, qsLabel3.toLocal8Bit().constData() );
    HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  5)-3, qsLabel4.toLocal8Bit().constData() );    // SAC 01/25/24
+
    long lRateType;
+   BEMPX_GetString(      BEMPX_GetDatabaseID( "CUAC:SewerRateTypeRpt"    ), qsLabel  , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );      // Sewer bill - SAC 02/17/26 (dev #712)
+   if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:SewerRateTypeRptInt" ), lRateType,        0, -1, 0, BEMO_User, iBEMProcIdx ) && lRateType > 0) 
+      BEMPX_GetString(   BEMPX_GetDatabaseID( "CUAC:SewerMonthlyCostRpt" ), qsTemp   ,  TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+   else
+      qsTemp = "0.00";
+   qsLabel2 = QString( "$ %1" ).arg( qsTemp );
+   HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  6)-6,  qsLabel.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  6)-6, qsLabel2.toLocal8Bit().constData() );
+
+
    BEMPX_GetString(      BEMPX_GetDatabaseID( "CUAC:TrashRateTypeRpt"    ), qsLabel  , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
    if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:TrashRateTypeRptInt" ), lRateType,        0, -1, 0, BEMO_User, iBEMProcIdx ) && lRateType > 0)  // prevent reporting invalid trash costs - SAC 09/14/23
       BEMPX_GetString(   BEMPX_GetDatabaseID( "CUAC:TrashMonthlyCostRpt" ), qsTemp   ,  TRUE, 2, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
    else
       qsTemp = "0.00";
    qsLabel2 = QString( "$ %1" ).arg( qsTemp );
-   HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  6)-6,  qsLabel.toLocal8Bit().constData() );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  6)-6, qsLabel2.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  7)-9,  qsLabel.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  7)-9, qsLabel2.toLocal8Bit().constData() );
 
    BEMPX_GetString(      BEMPX_GetDatabaseID( "CUAC:WaterRateTypeRpt"    ), qsLabel  , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
    if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:WaterRateTypeRptInt" ), lRateType,        0, -1, 0, BEMO_User, iBEMProcIdx ) && lRateType > 0)  // prevent reporting invalid water costs - SAC 09/14/23
@@ -973,9 +1019,9 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    }
    else
       qsLabel3.clear();
-   HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  7)-9,  qsLabel.toLocal8Bit().constData() );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  7)-9, qsLabel2.toLocal8Bit().constData() );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  8)-9, qsLabel3.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  8)-12,  qsLabel.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  8)-12, qsLabel2.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  9)-12, qsLabel3.toLocal8Bit().constData() );
 
    bool bHaveComunitySolar = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:RptCommunitySolar" ), lTemp, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lTemp > 0);    // SAC 10/03/23
 
@@ -983,12 +1029,12 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    if (!bHaveComunitySolar)      // SAC 12/14/24
    {  if (BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:AffordablePVDCSysSize" ), qsTemp, TRUE, 11, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ))
       {  qsLabel = QString( "%1 kW" ).arg( qsTemp );
-         HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt *  9)-13,  qsLabel.toLocal8Bit().constData() );
+         HPDF_Page_TextOut (page, iProjInfoLeftX  , iCurY - (iProjInfoRowHt * 10)-16,  qsLabel.toLocal8Bit().constData() );
       }
            BEMPX_GetFloat( BEMPX_GetDatabaseID( "CUAC:AffordableBattMaxCap"  ), dTenantBattCap, 0, -1, 0, BEMO_User, iBEMProcIdx );
       if (BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:AffordableBattMaxCap"  ), qsTemp , TRUE, 11, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ))
       {  qsLabel = QString( "%1 kWh" ).arg( qsTemp );
-         HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt *  9)-13,  qsLabel.toLocal8Bit().constData() );
+         HPDF_Page_TextOut (page, iProjInfoLeftX2 , iCurY - (iProjInfoRowHt * 10)-16,  qsLabel.toLocal8Bit().constData() );
    }  }
 
    if (bHaveComunitySolar)    // SAC 10/03/23
@@ -999,9 +1045,10 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    {  qsLabel.clear();
       qsLabel2.clear();
    }
-   HPDF_Page_TextOut (page, iProjInfoLeftX     , iCurY - (iProjInfoRowHt * 10)-16,  qsLabel.toLocal8Bit().constData() );
-   HPDF_Page_TextOut (page, iProjInfoLeftX2 +70, iCurY - (iProjInfoRowHt * 10)-16, qsLabel2.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX     , iCurY - (iProjInfoRowHt * 11)-19,  qsLabel.toLocal8Bit().constData() );
+   HPDF_Page_TextOut (page, iProjInfoLeftX2 +70, iCurY - (iProjInfoRowHt * 11)-19, qsLabel2.toLocal8Bit().constData() );
    HPDF_Page_EndText (page);
+
 
    BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:ProjGasTypeRpt" ), qsTemp, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
    QString qsFuelType;
@@ -1102,7 +1149,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
 
 
 
-   iCurY -= 37;  // was: 18;
+   iCurY -= 53;  // was: 18;
    HPDF_Page_SetFontAndSize (page, fontBold, 10); 
    HPDF_Page_BeginText (page);
    if (bHaveComunitySolar)
@@ -1187,7 +1234,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
       iTblColLeftX[1] = iTblColLeftX[0] + iTblColWds[0];
       iTblColLeftX[2] = iTblColLeftX[1] + iTblColWds[1];
       iTblColLeftX[3] = iTblColLeftX[2] + iTblColWds[2];
-      iTableColMid =  iTblColWds[3] / 2;
+      int iTableColMid =  iTblColWds[3] / 2;
       int iTextDY = 3;
       HPDF_Page_SetLineWidth (page, 0.25);
       HPDF_Page_SetGrayFill (page, (HPDF_REAL) 0.9);
@@ -1384,7 +1431,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    }
 
 //   image = HPDF_LoadJpegImageFromFile (pdf, qsLogoPathFN.toLocal8Bit().constData());
-   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+   HPDF_Page_DrawImage (page, image, 242, iPgTop-72, 53, 53 );  // raised logo by 15 - SAC 01/13/23  // raised another 4 & rect (58x53) to square (53x53) - SAC 02/24/26
 
    if (!qsRunDateFmt.isEmpty())
    {  iCurY = iPgTop - 56;
@@ -1531,7 +1578,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
    }
 
 //   image = HPDF_LoadJpegImageFromFile (pdf, qsLogoPathFN.toLocal8Bit().constData());
-   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+   HPDF_Page_DrawImage (page, image, 242, iPgTop-72, 53, 53 );  // raised logo by 15 - SAC 01/13/23  // raised another 4 & rect (58x53) to square (53x53) - SAC 02/24/26
 
    if (!qsRunDateFmt.isEmpty())
    {  iCurY = iPgTop - 56;
@@ -1616,7 +1663,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
       HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
       HPDF_Page_EndText (page);
    }
-   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+   HPDF_Page_DrawImage (page, image, 242, iPgTop-72, 53, 53 );  // raised logo by 15 - SAC 01/13/23  // raised another 4 & rect (58x53) to square (53x53) - SAC 02/24/26
 
    qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
    if (!qsRunDateFmt.isEmpty())
@@ -1693,7 +1740,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
          HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
          HPDF_Page_EndText (page);
       }
-      HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+      HPDF_Page_DrawImage (page, image, 242, iPgTop-72, 53, 53 );  // raised logo by 15 - SAC 01/13/23  // raised another 4 & rect (58x53) to square (53x53) - SAC 02/24/26
 
       qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
       if (!qsRunDateFmt.isEmpty())
@@ -1776,7 +1823,7 @@ int GeneratePDF_CUACDetails(   const char* pszPDFPathFile, const char* pszRptGra
       HPDF_Page_TextOut (page, iCurX, iCurY, qsProjID.toLocal8Bit().constData() );   
       HPDF_Page_EndText (page);
    }
-   HPDF_Page_DrawImage (page, image, 240, iPgTop-76, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));   - raised logo by 15 - SAC 01/13/23
+   HPDF_Page_DrawImage (page, image, 242, iPgTop-72, 53, 53 );  // raised logo by 15 - SAC 01/13/23  // raised another 4 & rect (58x53) to square (53x53) - SAC 02/24/26
 
    qsPgNumLabel = QString("Page %1").arg(QString::number(++iPgNum));
    if (!qsRunDateFmt.isEmpty())
@@ -1930,7 +1977,7 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
    QString qsLogoPathFN = pszRptGraphicsPath;   qsLogoPathFN += "CEC.jpg";
    //image = HPDF_LoadJpegImageFromFile (pdf, "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC_CUAC\\CBECC-Com64\\Data\\Rulesets\\T24N_2022\\RTF\\CEC.jpg");
    image = HPDF_LoadJpegImageFromFile (pdf, qsLogoPathFN.toLocal8Bit().constData());
-   HPDF_Page_DrawImage (page[0], image, 240, iPgTop-91, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));
+   HPDF_Page_DrawImage (page[0], image, 242, iPgTop-91, 53, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));  // rect (58x53) to square (53x53) - SAC 02/24/26
 
 
    // add 'DRAFT' watermark when analysis is invalid for any reason - SAC 01/03/25 - SAC 01/04/25
@@ -2380,7 +2427,7 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
 
    //HPDF_Image image2;  - bailing on unique images by page - makes PDF too large - SAC 10/23/25
    //image2 = HPDF_LoadJpegImageFromFile (pdf, qsLogoPathFN.toLocal8Bit().constData());
-   HPDF_Page_DrawImage (page[1], image, 240, iPgTop-91, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));
+   HPDF_Page_DrawImage (page[1], image, 242, iPgTop-91, 53, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));  // rect (58x53) to square (53x53) - SAC 02/24/26
    ////QString qsLogoPathFN = pszRptGraphicsPath;   qsLogoPathFN += "CEC.jpg";
    ////image = HPDF_LoadJpegImageFromFile (pdf, qsLogoPathFN.toLocal8Bit().constData());
    //HPDF_Page_DrawImage (page[1], image, 240, iPgTop-91, 58, 53 );  // HPDF_Image_GetWidth (image), HPDF_Image_GetHeight (image));
@@ -2495,9 +2542,9 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
 
    iRectHt = 45;     // SAC 12/05/22
    iCurY -= iRectHt;
-   int iTableColWd  = (iPgRight-iPgLeft - 190) / 5;
+   int iTableColWd  = (iPgRight-iPgLeft - 190) / 6;      // 5->6 for Sewer bills - SAC 02/16/26 (dev #712)
    int iTableColMid =  iTableColWd / 2;
-   int iTableLeft   =  iPgRight - (iTableColWd * 5);
+   int iTableLeft   =  iPgRight - (iTableColWd * 6);
    HPDF_Page_SetGrayFill (page[1], (HPDF_REAL) 0.9);
    HPDF_Page_Rectangle (page[1], iPgLeft, iCurY, (iPgRight-iPgLeft), iRectHt );
    HPDF_Page_FillStroke (page[1]);
@@ -2510,6 +2557,7 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
    HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*2), iCurY, iTableColWd, iRectHt );
    HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*3), iCurY, iTableColWd, iRectHt );
    HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*4), iCurY, iTableColWd, iRectHt );
+   HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*5), iCurY, iTableColWd, iRectHt );
    HPDF_Page_Stroke (page[1]);
 
    HPDF_Page_SetGrayFill (page[1], 0);  // 0.5);
@@ -2520,8 +2568,9 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
    tw1 = HPDF_Page_TextWidth (page[1], "Electric");   HPDF_Page_TextOut (page[1], iTableLeft                +iTableColMid-(tw1/2), iCurY+10, "Electric" );
    tw1 = HPDF_Page_TextWidth (page[1], "Gas"     );   HPDF_Page_TextOut (page[1], iTableLeft+ iTableColWd   +iTableColMid-(tw1/2), iCurY+10, "Gas"      );
    tw1 = HPDF_Page_TextWidth (page[1], "Water"   );   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*2)+iTableColMid-(tw1/2), iCurY+10, "Water"    );
-   tw1 = HPDF_Page_TextWidth (page[1], "Trash"   );   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*3)+iTableColMid-(tw1/2), iCurY+10, "Trash"    );
-   tw1 = HPDF_Page_TextWidth (page[1], "Total"   );   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*4)+iTableColMid-(tw1/2), iCurY+10, "Total"    );
+   tw1 = HPDF_Page_TextWidth (page[1], "Sewer"   );   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*3)+iTableColMid-(tw1/2), iCurY+10, "Sewer"    );
+   tw1 = HPDF_Page_TextWidth (page[1], "Trash"   );   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*4)+iTableColMid-(tw1/2), iCurY+10, "Trash"    );
+   tw1 = HPDF_Page_TextWidth (page[1], "Total"   );   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*5)+iTableColMid-(tw1/2), iCurY+10, "Total"    );
    HPDF_Page_EndText (page[1]);
 
    HPDF_Page_SetFontAndSize (page[1], font, 9);
@@ -2551,6 +2600,7 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
             HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*2), iCurY, iTableColWd, iRectHt );  
             HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*3), iCurY, iTableColWd, iRectHt );  
             HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*4), iCurY, iTableColWd, iRectHt );  
+            HPDF_Page_Rectangle (page[1], iTableLeft+(iTableColWd*5), iCurY, iTableColWd, iRectHt );  
             HPDF_Page_Stroke (page[1]);
 
             HPDF_Page_BeginText (page[1]);
@@ -2563,15 +2613,17 @@ int GeneratePDF_CUACSubmittal( const char* pszPDFPathFile, const char* pszRptGra
             tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iPgLeft+iUnitTypeColWd+56+29-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
 
             BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:ElecCosts[2]"     ), qsLabel2, TRUE, 2, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );   qsLabel = QString("$ %1").arg(qsLabel2);
-            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+ iTableColWd   -15-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
+            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+ iTableColWd   -5-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
             BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:GasCosts[2]"      ), qsLabel2, TRUE, 2, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );   qsLabel = QString("$ %1").arg(qsLabel2);
-            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*2)-15-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
+            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*2)-5-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
             BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:WaterCosts[2]"    ), qsLabel2, TRUE, 2, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );   qsLabel = QString("$ %1").arg(qsLabel2);
-            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*3)-15-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
+            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*3)-5-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
+            BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:SewerMonthlyCost" ), qsLabel2, TRUE, 2, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );   qsLabel = QString("$ %1").arg(qsLabel2);     // SAC 02/16/26 (dev #712)
+            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*4)-5-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
             BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:TrashMonthlyCost" ), qsLabel2, TRUE, 2, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );   qsLabel = QString("$ %1").arg(qsLabel2);
-            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*4)-15-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
+            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*5)-5-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
             BEMPX_GetString( BEMPX_GetDatabaseID( "CUACResults:TotCosts[2]"      ), qsLabel2, TRUE, 2, -1, iResObjIdx, BEMO_User, NULL, 0, iBEMProcIdx );   qsLabel = QString("$ %1").arg(qsLabel2);
-            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*5)-15-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
+            tw1 = HPDF_Page_TextWidth (page[1], qsLabel.toLocal8Bit().constData());   HPDF_Page_TextOut (page[1], iTableLeft+(iTableColWd*6)-5-tw1, iCurY+4, qsLabel.toLocal8Bit().constData() );
             HPDF_Page_EndText (page[1]);
          }
       }
@@ -2656,8 +2708,8 @@ int Sample( const char* pszPDFPathFile, int iPDFID, int iBEMProcIdx )
     HPDF_Font font;
     float angle1;
     float angle2;
-    float rad1;
-    float rad2;
+    float rad1loc;
+    float rad2loc;
     HPDF_REAL page_height;
     HPDF_Rect rect;
     int i;
@@ -2748,9 +2800,9 @@ int Sample( const char* pszPDFPathFile, int iPDFID, int iBEMProcIdx )
    HPDF_Page_GSave (page);
    angle1 = 5;
    angle2 = 10;
-   rad1 = angle1 / 180 * 3.141592;
-   rad2 = angle2 / 180 * 3.141592;
-   HPDF_Page_Concat (page, 1, tan(rad1), tan(rad2), 1, 25, 350);
+   rad1loc = angle1 / 180 * 3.141592;
+   rad2loc = angle2 / 180 * 3.141592;
+   HPDF_Page_Concat (page, 1, tan(rad1loc), tan(rad2loc), 1, 25, 350);
    rect.left = 0;
    rect.top = 40;
    rect.right = 175;
@@ -2769,8 +2821,8 @@ int Sample( const char* pszPDFPathFile, int iPDFID, int iBEMProcIdx )
    /* Rotated coordinate system */
    HPDF_Page_GSave (page);
    angle1 = 5;
-   rad1 = angle1 / 180 * 3.141592;
-   HPDF_Page_Concat (page, cos(rad1), sin(rad1), -sin(rad1), cos(rad1), 220, 350);
+   rad1loc = angle1 / 180 * 3.141592;
+   HPDF_Page_Concat (page, cos(rad1loc), sin(rad1loc), -sin(rad1loc), cos(rad1loc), 220, 350);
    rect.left = 0;
    rect.top = 40;
    rect.right = 175;
@@ -2800,11 +2852,11 @@ int Sample( const char* pszPDFPathFile, int iPDFID, int iBEMProcIdx )
        char buf[2];
        float x;
        float y;
-       rad1 = (angle2 - 90) / 180 * 3.141592;
-       rad2 = angle2 / 180 * 3.141592;
-       x = 210 + cos(rad2) * 122;
-       y = 190 + sin(rad2) * 122;
-       HPDF_Page_SetTextMatrix(page, cos(rad1), sin(rad1), -sin(rad1), cos(rad1), x, y);
+       rad1loc = (angle2 - 90) / 180 * 3.141592;
+       rad2loc = angle2 / 180 * 3.141592;
+       x = 210 + cos(rad2loc) * 122;
+       y = 190 + sin(rad2loc) * 122;
+       HPDF_Page_SetTextMatrix(page, cos(rad1loc), sin(rad1loc), -sin(rad1loc), cos(rad1loc), x, y);
        buf[0] = SAMP_TXT[i];
        buf[1] = 0;
        HPDF_Page_ShowText (page, buf);

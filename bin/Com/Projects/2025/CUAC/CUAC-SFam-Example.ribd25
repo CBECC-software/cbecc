@@ -3,10 +3,10 @@ RulesetFilename   "CA Res 2025.bin"
 Proj   "CUAC Example Model"  
    BEMVersion = 12
    CreateDate = 1748562935
-   ModDate = 1762537765
+   ModDate = 1774385712
    RunDate = 1472838107
-   SoftwareVersion = "CBECC 2025.2.0"
-   SoftwareVersionDetail = "CBECC 2025.2.0 (1394)"
+   SoftwareVersion = "CBECC 2025.2.1"
+   SoftwareVersionDetail = "CBECC 2025.2.1 (1408)"
    ProjFileName = "CUACExample.ribd25"
    RunTitle = "CUAC Example"
    AnalysisType = "Proposed and Standard"
@@ -15,6 +15,7 @@ Proj   "CUAC Example Model"
    ComplianceReportPDF = 1
    ComplianceReportXML = 1
    LAFirePVBattExcpt = 0
+   MeetsPart7CBC = 0
    CommunitySolarProject = "- select CS project -"
    InCmntySlrProjTerritory = 0
    SMUDSlrSharesReserved = 0
@@ -947,6 +948,8 @@ CUAC   "CUAC Inputs"
    WaterRateType = "Flat Monthly Rate"
    WaterMonthlyCost = 0
    WaterVolumeCost = 0
+   SewerRateType = "Flat Monthly Rate"
+   SewerMonthlyCost = 0
    TrashRateType = "Flat Monthly Rate"
    TrashMonthlyCost = 0
    OwnerName = "Building Owner"
@@ -980,7 +983,7 @@ Attic   "Attic "
    ..
 
 EUseSummary   "EUSummary"  
-   ResultsAnalysisVer = 250200
+   ResultsAnalysisVer = 250201
    AllOrientations = 0
    Title1[2] = "Proposed Design"
    Title1[10] = "Proposed"
@@ -1058,18 +1061,18 @@ EUseSummary   "EUSummary"
    PropDesignBattCap = 5
    PropDesignBattPwr = 1.78571
    PropDesignBattCtl = "Time of Use"
-   UnscaledPropPVRatio = 1.56404
+   UnscaledPropPVRatio = 1.56406
    PropPV_Total = 16031.5
-   PropPV_Export = 10291.9
-   PropPV_PctExport = 64.198
+   PropPV_Export = 10292
+   PropPV_PctExport = 64.1985
    ResultsNotes[6] = "Proposed PV kWh output exceeds proposed electricity use by 56% which may violate NEM rules. Contact local utility."
    HaveResultsNotesPV[6] = 1
-   PropElecCarbon[1] = 0.538433
+   PropElecCarbon[1] = 0.538426
    PropFuelCarbon[1] = 0
-   PropFinalCarbon[1] = 0.538433
-   PropExclExpCarbon[1] = 0.707219
-   PropExportCarbon[1] = 0.168786
-   PropSelfConsCarbon[1] = 0.330975
+   PropFinalCarbon[1] = 0.538426
+   PropExclExpCarbon[1] = 0.707213
+   PropExportCarbon[1] = 0.168787
+   PropSelfConsCarbon[1] = 0.330974
    PropNoSolFlxCarbon[1] = 1.03819
    HideCompSummary = 0
    HideEDRs = 1

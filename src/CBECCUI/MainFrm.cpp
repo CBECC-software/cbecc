@@ -206,7 +206,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_TOOLS_PVOPTOUT, OnToolsCommSlrOptOut)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_OLDCUACIMPORT, OnUpdateToolsOldCUACImport)
 	ON_COMMAND(IDM_TOOLS_OLDCUACIMPORT, OnToolsOldCUACImport)
-	ON_UPDATE_COMMAND_UI(IDM_DISPLAYCUACDLG, OnUpdateDisplayCUACDialog)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_CUACFROMCSV, OnUpdateToolsCUACFromCSV)
+	ON_COMMAND(IDM_TOOLS_CUACFROMCSV, OnToolsCUACFromCSV)
+   ON_UPDATE_COMMAND_UI(IDM_DISPLAYCUACDLG, OnUpdateDisplayCUACDialog)
 	ON_COMMAND(IDM_DISPLAYCUACDLG, OnDisplayCUACDialog)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_CSVRATETABLES, OnUpdateToolsProcessJSONUtilityRateFiles)
 	ON_COMMAND(IDM_TOOLS_CSVRATETABLES, OnToolsProcessJSONUtilityRateFiles)
@@ -928,6 +930,11 @@ void CMainFrame::OnPaint()
          }
          else if (startDlg.m_iOption == -6)    // Old CUAC project import - SAC 09/18/23
          {	ebInitiateOldCUACImportViaStartDlg = TRUE;
+				ebInitiateProjectCreation = FALSE;
+				PostMessage( WM_COMMAND, ID_FILE_NEW, 0L );
+         }
+         else if (startDlg.m_iOption == -7)    // Create CUAC project from CSV - SAC 03/19/26 (dev #743)
+         {	ebInitiateCUACFromCSVViaStartDlg = TRUE;
 				ebInitiateProjectCreation = FALSE;
 				PostMessage( WM_COMMAND, ID_FILE_NEW, 0L );
          }
@@ -2055,7 +2062,14 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 		else if (wAction == 3068)		// button to initiate CUAC analysis and/or reporting - SAC 08/19/22 (CUAC)  // moved OUTSIDE Com/Res-specific - SAC 05/30/24
       {	long lCUAC_OldAccessDB=0; 
 			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" ), lCUAC_OldAccessDB );
-         if (lCUAC_OldAccessDB > 0)
+         long lCalcBillsFromHrlyCSV=0;  CString sHrlyCSVPathFile;      // SAC 03/22/26 (dev #743)
+         long lDBID_CalcBillsFromHrlyCSV = BEMPX_GetDatabaseID( "CUAC:CalcBillsFromHrlyCSV" );
+         long lDBID_HrlyCSVPathFile      = BEMPX_GetDatabaseID( "CUAC:HrlyCSVPathFile" );
+         if ( lDBID_CalcBillsFromHrlyCSV > 0 && lDBID_HrlyCSVPathFile > 0 )
+         {  BEMPX_SetDataInteger( lDBID_CalcBillsFromHrlyCSV, lCalcBillsFromHrlyCSV );
+            BEMPX_SetDataString(  lDBID_HrlyCSVPathFile     , sHrlyCSVPathFile );
+         }
+         if (lCUAC_OldAccessDB > 0 || (lCalcBillsFromHrlyCSV > 0 && !sHrlyCSVPathFile.IsEmpty()))
          {  // calculate utility bills & print reports
             QString qsCUACErrMsg;   int iCUACRetVal=0;   bool bCUACAbort=false;   int iCUAC_BEMProcIdx = -1;
             long lTemp, lCUAC_RptOption=0, lDBID_CUAC_RptOption = BEMPX_GetDatabaseID( "CUAC:RptOption" );	
@@ -2098,6 +2112,26 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 
                BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelPath" ), BEMP_Str, (void*) ((const char*) sCurrentProjPath),  BEMO_User, 0, BEMS_ProgDefault );  // SAC 09/19/23
                BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelFile" ), BEMP_Str, (void*) ((const char*) sModelFileOnly  ),  BEMO_User, 0, BEMS_ProgDefault );
+
+               // Set last run date parameter - 
+               if (lCalcBillsFromHrlyCSV > 0 && !sHrlyCSVPathFile.IsEmpty())  // SAC 03/23/26 (dev #743)
+               {  //CTime time = CTime::GetCurrentTime();
+                  //long lTime = (long) time.GetTime();
+                  QDateTime current = QDateTime::currentDateTime();
+                  long lTime = (long) current.toTime_t();   // seconds since 1970-Jan-01 / valid as long int until 2038-Jan-19 / switching to uint extends valid date range to 2106-Feb-07
+                  long lDBID_RunDate = BEMPX_GetDatabaseID( "Proj:RunDate" );
+                  BEMPX_SetBEMData( lDBID_RunDate, BEMP_Int, (void*) &lTime );
+                  // add formatted RunDate string -> RunDateFormatted property
+                  QString sRunDateFmt;
+                  BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -1 /*iPrecision*/ );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunDateFmt" ), BEMP_QStr, (void*) &sRunDateFmt );  // was: Proj:RunDateFormatted - SAC 10/28/21
+                  BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -3 /*iPrecision*/ );   // SAC 5/16/18 - added new '-3' format to handle output as ISO (xsd:datetime) string  // SAC 9/10/18 - ported from Res
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunDateISO" ), BEMP_QStr, (void*) &sRunDateFmt );
+                  if (TRUE)  // iCUACReportID > 0)
+                  {  BEMPX_GetString( lDBID_RunDate, sRunDateFmt, FALSE, -4 /*iPrecision*/ );      // new format: "M/d/yyyy h:m:s ap" - SAC 10/28/22 (CUAC)
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:RunDateFmt" ), BEMP_QStr, (void*) &sRunDateFmt ); 
+                  }
+               }
 
                UpdateSoftwareVersionString();
                VERIFY( ((CComplianceUIDoc*) pDoc)->CheckAndDefaultModel( TRUE, TRUE, FALSE ) );    // revise call to prevent reset of Screen data - SAC 10/13/23
@@ -2263,10 +2297,18 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                }
          }  }
 		}
-      else if (wAction >= 3080 && wAction <= 3084)    // CUAC details subordinate dialogs - SAC 11/21/22 (CUAC)
-      {  int iDlgHt = 260, iDlgWd = 400;     
+      else if ( (wAction >= 3080 && wAction <= 3084) ||     // CUAC details subordinate dialogs - SAC 11/21/22 (CUAC)
+                (wAction >= 3086 && wAction <= 3089) )      // CUAC gen 2-3 utility tariff dialogs - SAC 01/19/26 (dev #689)
+      {  int iDlgHt = 260, iDlgWd = 400;
+         long lDlgID = (long) wAction;
          if (wAction == 3083)    // SAC 12/08/22
          {  iDlgHt = 610;   iDlgWd = 930;    // Ht+30 & Wd+180 to support Battery allocation - SAC 11/12/24 (tic #3641)
+         }
+         else if (wAction >= 3086 && wAction <= 3089)
+         {  long lUtilityRateGen;
+            if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:UtilityRateGen" ), lUtilityRateGen ) && lUtilityRateGen > 2)
+               lDlgID += (lUtilityRateGen-2);
+            iDlgWd = 750;
          }
          //GetDialogTabDimensions( eiBDBCID_CUAC, iDlgWd, iDlgHt );
          // adjustments consistent w/ those made for tabbed dialogs in BEMProcUI - SAC 08/18/22 (CUAC)
@@ -2276,7 +2318,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          iDlgHt = FontY(iDlgHt) + /*(eiTabDlgCtrlMarg * 3) +*/ (iPaddedBorderWd * 2) + GetSystemMetrics(SM_CYCAPTION) + iDoneBtnHt + 8;
 			CString sDialogCaption;
 			GetDialogCaption( eiBDBCID_CUAC, sDialogCaption );
-         CSACDlg dlgCUAC( pDlg, eiBDBCID_CUAC, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+         CSACDlg dlgCUAC( pDlg, eiBDBCID_CUAC, 0 /* lDBID_ScreenIdx */, lDlgID /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
                            0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
@@ -3110,7 +3152,7 @@ void CMainFrame::OnFileSave()
          AfxMessageBox ( szRestoreInp );
       }
       else
-		{	BOOL bWriteUserModel = (BEMPX_GetActiveModel() == 0);		// SAC 3/24/13 - prevent storage of non-User model as normap project input file
+		{	BOOL bWriteUserModel = (BEMPX_GetActiveModel() == 0);		// SAC 3/24/13 - prevent storage of non-User model as normal project input file
 			if (!bWriteUserModel)
 			{	if (MessageBox( "The active building description is not the user input model, probably due to partial analysis being performed.\n\n"
 										"Press 'OK' to save (and switch to) the user input model, or 'Cancel' to abort the save action.", NULL, MB_OKCANCEL ) == IDOK)
@@ -3709,6 +3751,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		int iLogAnalysisMsgs = ReadProgInt( sOptsSec, "LogAnalysisMsgs", -1 );     // SAC 06/26/23
 		if (iLogAnalysisMsgs > -1)
 		{	sOptTemp.Format( "LogAnalysisMsgs,%d,", iLogAnalysisMsgs );
+			sOptionsCSVString += sOptTemp;
+		}
+
+		int iWriteMidAnalysisInputs = ReadProgInt( sOptsSec, "WriteMidAnalysisInputs", -1 );      // SAC 01/10/26 (dev #674)
+		if (iWriteMidAnalysisInputs > -1)
+		{	sOptTemp.Format( "WriteMidAnalysisInputs,%d,", iWriteMidAnalysisInputs );
 			sOptionsCSVString += sOptTemp;
 		}
 
@@ -4423,7 +4471,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 
       	long lEnergyCodeYearNum=0;
          BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEnergyCodeYearNum );      // SAC 10/24/22
-         CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : "EPW\\" );    // SAC 10/24/22
+         CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : (lEnergyCodeYearNum == 2028 ? "EPW28\\" : "EPW\\" ));    // SAC 10/24/22
 		   CString sWthrPath = ReadProgString( "paths", "WeatherPath", sDefaultEPWSubdir /*"EPW\\"*/, TRUE );
 	// SAC 1/29/14 - consolidated all options string population into single routine shared by live & batch analyses functions
 			VERIFY( PopulateAnalysisOptionsString( sOptionsCSVString, true /*bBatchMode*/ ) );		// SAC 1/29/14
@@ -4893,6 +4941,76 @@ void CMainFrame::OldCUACImport()		// SAC 09/18/23
 }
 
 
+void CMainFrame::OnUpdateToolsCUACFromCSV(CCmdUI* pCmdUI)		// SAC 03/19/26 (dev #743)
+{
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+}
+
+void CMainFrame::OnToolsCUACFromCSV()		// SAC 03/19/26 (dev #743)
+{
+	CUACFromCSV();
+}
+
+void CMainFrame::CUACFromCSV()		// SAC 03/19/26 (dev #743)
+{
+   bool bSuccess = false;
+   CDocument* pDoc = GetActiveDocument();	
+   if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
+        ((CComplianceUIDoc*) pDoc)->GetPathName().IsEmpty() )
+   {
+   	int iCID_CUAC = BEMPX_GetDBComponentID( "CUAC" );
+		if (iCID_CUAC < 1)
+		{	// must load ruleset 
+		   LoadRuleset();
+	   	iCID_CUAC = BEMPX_GetDBComponentID( "CUAC" );
+	   }
+		if (iCID_CUAC > 0)
+      {  int iCID_Proj    = BEMPX_GetDBComponentID( "Proj" );        assert( iCID_Proj > 0 );
+         int iCID_ResProj = BEMPX_GetDBComponentID( "ResProj" );     assert( iCID_ResProj > 0 );
+         if (iCID_Proj && BEMPX_GetNumObjects( iCID_Proj ) < 1)
+            BEMPX_CreateObject( iCID_Proj );
+         if (iCID_ResProj && BEMPX_GetNumObjects( iCID_ResProj ) < 1)
+            BEMPX_CreateObject( iCID_ResProj );
+         if (BEMPX_GetNumObjects( iCID_CUAC ) < 1)
+            BEMPX_CreateObject( iCID_CUAC );
+
+         //ChangeProgDir( szPaths, szProjPath );
+         CFileDialog dlg( TRUE, _T("csv"), NULL, OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST, // | OFN_HIDEREADONLY,
+                           _T("CUAC Details CSV Files (*.csv)|*.csv||"), this );
+         if (dlg.DoModal()==IDOK)
+         {
+            char pszOutputMsg[2048] = "\0";
+            int iReadRetVal = CUAC_PopulateFromDetailsCSV( (const char*) dlg.GetPathName(), true /*bVerbose*/,
+                                                            pszOutputMsg, 2048, /*iCUAC_BEMProcIdx*/ -1 );      // SAC 03/20/26 (dev #743)
+            if (iReadRetVal > 0)
+            {  if (strlen( pszOutputMsg ) > 0)
+                  BEMMessageBox( QString( "Error encountered importing data from CUAC details CSV file (%1): %2" ).arg( QString::number(iReadRetVal), pszOutputMsg ) );
+               else
+                  BEMMessageBox( QString( "Error encountered importing data from CUAC details CSV file (%1)" ).arg( QString::number(iReadRetVal) ) );
+            }
+            else
+            {  bSuccess = true;
+               pDoc->SetModifiedFlag( TRUE );
+               long lOne = 1;
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ResDwellUnits" ), BEMP_Int, (void*) &lOne );  //, BEMO_User, 0, BEMS_RuleDefault );
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:CUACReport"    ), BEMP_Int, (void*) &lOne );  //, BEMO_User, 0, BEMS_RuleDefault );
+
+               // SAC 6/28/18 - added evaluation of generic rulelist to perform checks/warnings and/or changes specific to use of the CBECC interface
+               if (BEMPX_RulelistExists( "CBECCInterfacePrep" ))
+                  CMX_EvaluateRuleset(   "CBECCInterfacePrep", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo ); 
+
+               VERIFY( ((CComplianceUIDoc*) pDoc)->CheckAndDefaultModel() );
+
+               PostMessage( WM_COMMAND, IDM_DISPLAYCUACDLG, 0L );
+            }
+         }
+   }  }
+
+   if (!bSuccess)
+      PostMessage( WM_COMMAND, ID_APP_EXIT, 0L );
+}
+
+
 void CMainFrame::OnUpdateDisplayCUACDialog(CCmdUI* pCmdUI)		// SAC 09/18/23
 {
    int iNumCUACObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "CUAC" ) );
@@ -4915,9 +5033,22 @@ void CMainFrame::OnDisplayCUACDialog()		// SAC 09/18/23
 		int iTabCtrlWd = 1030, iTabCtrlHt = 665;
       bool bExitProgramFollowing = (BEMPX_GetNumObjects( iZoneCID ) < 1);
       CString sFinishButtonText = (bExitProgramFollowing ? "&Exit" : "&Done");
-		CWnd* pWnd = this;  // GetFocus();    // currently focus control invalid before CUAC dialog is closed - SAC 10/13/23
+
+      long lCalcBillsFromHrlyCSV=0;  CString sHrlyCSVPathFile;      // SAC 03/22/26 (dev #743)
+      long lDBID_CalcBillsFromHrlyCSV = BEMPX_GetDatabaseID( "CUAC:CalcBillsFromHrlyCSV" );
+      long lDBID_HrlyCSVPathFile      = BEMPX_GetDatabaseID( "CUAC:HrlyCSVPathFile" );
+      int iDlgID = (( lDBID_CalcBillsFromHrlyCSV > 0 && lDBID_HrlyCSVPathFile > 0 &&
+                      BEMPX_SetDataInteger( lDBID_CalcBillsFromHrlyCSV, lCalcBillsFromHrlyCSV ) && lCalcBillsFromHrlyCSV > 0 &&
+                      BEMPX_SetDataString(  lDBID_HrlyCSVPathFile, sHrlyCSVPathFile ) && !sHrlyCSVPathFile.IsEmpty()          ) ? 5029 : 5019);
+
+            // // debugging -
+      		// CString sDbgFileName = "C:\\CBECC\\tickets\\0743 - CUAC run from details CSV\\0\\CalcBillsFromHrlyCSV.ibd-Detail";
+		      // BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
+				// 								false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
+
+      CWnd* pWnd = this;  // GetFocus();    // currently focus control invalid before CUAC dialog is closed - SAC 10/13/23
 		//CWnd* pWnd = GetTopLevelParent();
-      CSACDlg dlgImportOldCUAC( pWnd /*this*/, iCID_CUAC, 0 /* lDBID_ScreenIdx */, 5019 /*iDlgID*/, 0, 0, 0,
+      CSACDlg dlgImportOldCUAC( pWnd /*this*/, iCID_CUAC, 0 /* lDBID_ScreenIdx */, iDlgID, 0, 0, 0,
 						esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "California Utility Allowance Calculator",
 						iTabCtrlHt, iTabCtrlWd, 10 /*iBaseMarg*/, 0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
 						0 /*lDBID_CtrlDBIDOffset*/, sFinishButtonText /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
@@ -5886,34 +6017,60 @@ void CMainFrame::OnToolsRunTest()		// SAC 06/16/22
 // switch from CMX_ExecuteModelkitBat() above to BEMPX_ReadComponentFromJSONFile() below - SAC 08/15/23
 
 
+// removed - SAC 01/14/26
+// //      QString qsMsg;
+// //      std::vector<std::string> vsProjects;
+// //      std::vector<int> viProjectIDs;
+// //   //   int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev2-0-0.accdb", vsProjects, viProjectIDs );
+// //      int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev32-0.mdb", vsProjects, viProjectIDs );
+// //      qsMsg = QString( "CMX_GetCUACDBProjectList() returned %1, %2 projects" ).arg( QString::number( iGetCUACProjListRetVal ), QString::number( vsProjects.size() ) );
+// //      if (vsProjects.size() > 0)
+// //      {  for (int i=0; i < vsProjects.size(); i++)
+// //         {  qsMsg += QString( "\n   %1" ).arg( vsProjects[i].c_str() );
+// //            std::string sOutputPath = "C:/Dev/CUAC-testing/CUAC/54-CUACToolMiner-b/";
+//             std::string sOutputPath = "C:/CUAC/exportedTables/";
+// //            sOutputPath += vsProjects[i];
+// //
+// //            int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i] );  //, const std::vector<std::string>& sTable_names)
+//             int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev32-0.mdb", sOutputPath, "proj name" );  //, const std::vector<std::string>& sTable_names)
+// //            qsMsg += QString( "\n      export retval: %1" ).arg( QString::number( iExportRetVal ) );
+// //
+// //            int iElecSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], true );
+// //            qsMsg += QString( "\n      export Elec summary table retval: %1" ).arg( QString::number( iElecSummaryTableRetVal ) );
+// //
+// //            int iGasSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], false );
+// //            qsMsg += QString( "\n      export Gas summary table retval: %1" ).arg( QString::number( iGasSummaryTableRetVal ) );
+// //         }
+// //      }
+// //      BEMMessageBox( qsMsg );
 
-//      QString qsMsg;
-//      std::vector<std::string> vsProjects;
-//      std::vector<int> viProjectIDs;
-//   //   int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev2-0-0.accdb", vsProjects, viProjectIDs );
-//      int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev32-0.mdb", vsProjects, viProjectIDs );
-//      qsMsg = QString( "CMX_GetCUACDBProjectList() returned %1, %2 projects" ).arg( QString::number( iGetCUACProjListRetVal ), QString::number( vsProjects.size() ) );
-//      if (vsProjects.size() > 0)
-//      {  for (int i=0; i < vsProjects.size(); i++)
-//         {  qsMsg += QString( "\n   %1" ).arg( vsProjects[i].c_str() );
-//            std::string sOutputPath = "C:/Dev/CUAC-testing/CUAC/54-CUACToolMiner-b/";
-            std::string sOutputPath = "C:/CUAC/exportedTables/";
-//            sOutputPath += vsProjects[i];
-//
-//            int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i] );  //, const std::vector<std::string>& sTable_names)
-            int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev32-0.mdb", sOutputPath, "proj name" );  //, const std::vector<std::string>& sTable_names)
-//            qsMsg += QString( "\n      export retval: %1" ).arg( QString::number( iExportRetVal ) );
-//
-//            int iElecSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], true );
-//            qsMsg += QString( "\n      export Elec summary table retval: %1" ).arg( QString::number( iElecSummaryTableRetVal ) );
-//
-//            int iGasSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], false );
-//            qsMsg += QString( "\n      export Gas summary table retval: %1" ).arg( QString::number( iGasSummaryTableRetVal ) );
-//         }
-//      }
-//      BEMMessageBox( qsMsg );
+
+// SAC 01/14/26 (dev #689)
+   CDocument* pDoc = GetActiveDocument();
+   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))   // SAC 08/16/23
+   {	CString sInputFile = pDoc->GetPathName();
+      CString sDbgFileNameRoot = sInputFile.Left( sInputFile.ReverseFind('.') );
+            CString sDbgFileName = sDbgFileNameRoot + CString(" - b4 XH rate.ibd-Detail");
+            BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
+                                    false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
 
 
+            QString qsErrMsg;
+            CString sRateName = "XH Rate";
+            //iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\Dev\\CUAC-testing\\CUAC\\45-CPRrates\\rate.json", "CPR_UtilityRate", (const char*) sRateName, -1, &qsErrMsg );
+            int iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\sce-schedule-tou-d-4-9pm.json", "XH_UtilityRate", (const char*) sRateName, -1, &qsErrMsg,
+                                                                   NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 01/15/26 (dev #689)
+                                                               //  , "PathFileLoadedFrom", (iRateProcGen > 1 ? "EncodedRateName" : NULL) );
+//int  BEMPROC_API __cdecl BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
+//                                                          int iBEMProcIdx=-1, QString* psMsg=NULL, const char* fileNamePropertyType=NULL,       // SAC 08/15/23
+//                                                          const char* propertyToIncludeInObjName=NULL, bool bRenameReservedBEMProperties=false );    // SAC 12/18/23  // bRenameReservedBEMProperties - SAC 01/15/26 (dev #689)
+            BEMMessageBox( QString( "BEMPX_ReadComponentFromJSONFile() returned: %1 - error msg: %2" ).arg( QString::number( iReadJSONRetVal ), qsErrMsg ) );
+
+
+            sDbgFileName = sDbgFileNameRoot + CString(" - aft XH rate.ibd-Detail");
+            BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
+                                    false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
+   }
 
 // 	CDocument* pDoc = GetActiveDocument();
 // 	if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))   // SAC 08/16/23
@@ -7597,7 +7754,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 	// SAC 1/29/14 - consolidated all options string population into single routine shared by live & batch analyses functions
 		VERIFY( PopulateAnalysisOptionsString( sOptionsCSVString ) );		// SAC 1/29/14
 
-      CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : "EPW\\" );    // SAC 09/25/25
+      CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : (lEnergyCodeYearNum == 2028 ? "EPW28\\" : "EPW\\" ));    // SAC 09/25/25
       CString sWthrPath = ReadProgString( "paths", "WeatherPath", sDefaultEPWSubdir /*"EPW\\"*/, TRUE );    // single Res/Com app - SAC 09/04/25 (gh dev #433)
       if (!DirectoryExists( sWthrPath ))
       {  sDefaultEPWSubdir = "CSE\\";
@@ -7977,7 +8134,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 		sProcessingPath += " - run\\";
 		CString sUIVersionString;
 		GetProgramVersion( sUIVersionString );																													ASSERT( !sUIVersionString.IsEmpty() );
-      CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : "EPW\\" );    // SAC 10/24/22
+      CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : (lEnergyCodeYearNum == 2028 ? "EPW28\\" : "EPW\\" ));    // SAC 10/24/22
 	   CString sWthrPath = ReadProgString( "paths", "WeatherPath", sDefaultEPWSubdir /*"EPW\\"*/, TRUE );
 	// SAC 1/29/14 - consolidated all options string population into single routine shared by live & batch analyses functions
 		VERIFY( PopulateAnalysisOptionsString( sOptionsCSVString ) );		// SAC 1/29/14
@@ -8414,7 +8571,7 @@ void CMainFrame::OnPerformAPIAnalysis()
    		CString sT24DHWPath = esProgramPath + "T24DHW\\";
    		sT24DHWPath = ReadProgString( szPaths, "T24DHWPath", sT24DHWPath, TRUE );  // in case there is one in the INI to override the default
 
-         //CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : "EPW\\" );    // SAC 09/25/25
+         //CString sDefaultEPWSubdir = (lEnergyCodeYearNum == 2025 ? "EPW25\\" : (lEnergyCodeYearNum == 2028 ? "EPW28\\" : "EPW\\" ));    // SAC 09/25/25
          //CString sWthrPath = ReadProgString( "paths", "WeatherPath", sDefaultEPWSubdir /*"EPW\\"*/, TRUE );    // single Res/Com app - SAC 09/04/25 (gh dev #433)
          if (!DirectoryExists( sWthrPath ))
             sWthrPath = ReadProgString( "paths", "WeatherPath", "CSE\\", TRUE );

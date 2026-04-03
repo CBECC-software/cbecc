@@ -296,7 +296,8 @@ double AdjustJA13HPWHDayUseProfile( double* pdHrlyUse, int iFirstPeakHr, int iPe
 void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, char* pszErrorMsg, int iErrorMsgLen,
                               bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx, int iDataModel /*=0*/, int iBillCalcDetails /*=-1*/,
-                              int iDownloadVerbose /*=-1*/, bool bWritePDF /*=true*/, bool bWriteCSV /*=true*/, int iBatchRunIdx /*=0*/, const char* pAnalysisInvalidMsg /*=NULL*/ )
+                              int iDownloadVerbose /*=-1*/, bool bWritePDF /*=true*/, bool bWriteCSV /*=true*/, int iBatchRunIdx /*=0*/, const char* pAnalysisInvalidMsg /*=NULL*/,
+                              bool bBypassElecBillCalcs /*=false*/, bool bBypassGasBillCalcs /*=false*/ )      // added bBypass*BillCalcs args - SAC 03/18/26 (dev #742)
 {  // at this point, ruleset object is loaded w/ all hourly results read directly from CSE run(s)
 // TEMPORARY
 //bVerbose = true;
@@ -330,14 +331,41 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
       return;
    }
 
+   int iCID_CUAC    = BEMPX_GetDBComponentID( "CUAC" );
+   int iCID_OldCUAC = BEMPX_GetDBComponentID( "OldCUAC" );
+   int iCID_OldCUACApt = BEMPX_GetDBComponentID( "OldCUACApt" );
+
+   QString qsHrlyCSVPathFile;       // SAC 03/23/26 (dev #743)
+   bool bCalcFromDetailsCSVSimResults = ( BEMPX_GetInteger( BEMPX_GetDatabaseID( "CalcBillsFromHrlyCSV", iCID_CUAC ), lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0 &&
+                                          BEMPX_GetString(  BEMPX_GetDatabaseID( "HrlyCSVPathFile"     , iCID_CUAC ), qsHrlyCSVPathFile, FALSE, 0, -1, 0, BEMO_User, "??", 0, iCUAC_BEMProcIdx ) &&
+                                          qsHrlyCSVPathFile.length() > 2 ) ? true : false;
+   if (bCalcFromDetailsCSVSimResults && !FileExists( qsHrlyCSVPathFile.toLocal8Bit().constData() ))
+   {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - details CSV file (containing hourly simulation results to base utility bill calcs on) not found:  %1" ).arg( qsHrlyCSVPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+      return;
+   }
+   else if (bCalcFromDetailsCSVSimResults)
+   {  // blast any current hourly sim results and import those from qsHrlyCSVPathFile - SAC 03/23/26 (dev #743)
+      char pszHrlyResOutputMsg[2048] = "\0";
+      int iReadHrlyResRetVal = CUAC_ImportDetailsCSVHourlyResults( qsHrlyCSVPathFile.toLocal8Bit().constData(), false /*bVerbose*/,
+                                                                   pszHrlyResOutputMsg, 2048, iCUAC_BEMProcIdx );      // SAC 03/20/26 (dev #743)
+      if (iReadHrlyResRetVal > 0)
+      {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+         if (strlen( pszHrlyResOutputMsg ) > 0)
+            BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - error encountered importing hourly results from CUAC details CSV file (%1): %2" ).arg( QString::number(iReadHrlyResRetVal), pszHrlyResOutputMsg ) );
+         else
+            BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - error encountered importing hourly results from CUAC details CSV file (%1)" ).arg( QString::number(iReadHrlyResRetVal) ) );
+   }  }
+
+            // // testing
+            // QString qsDbgHrlyResInfo = sModelPathOnly + sModelFileOnly + " - hrly res.txt";
+            // BEMPX_WriteHourlyResultsSummary( qsDbgHrlyResInfo.toLocal8Bit().constData(), false, iCUAC_BEMProcIdx );
+
    long lDBID_CUAC_IncludeDHWInUtilityBills = BEMPX_GetDatabaseID( "CUAC:IncludeDHWInUtilityBills" );    // SAC 09/03/24
    bool bExcludeDHW = false;
    if ( lDBID_CUAC_IncludeDHWInUtilityBills > 0 && BEMPX_GetInteger( lDBID_CUAC_IncludeDHWInUtilityBills, lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp < 1)
       bExcludeDHW = true;
 
-   int iCID_CUAC    = BEMPX_GetDBComponentID( "CUAC" );
-   int iCID_OldCUAC = BEMPX_GetDBComponentID( "OldCUAC" );
-   int iCID_OldCUACApt = BEMPX_GetDBComponentID( "OldCUACApt" );
    QString sStep = "Init";
             if (iBillCalcDetails > 0)
             {  QString sDbgFN = sProcessingPath + sModelFileOnly + QString(" - CUAC use totals %1-%2.txt").arg( QString::number(iStep), sStep );
@@ -414,28 +442,29 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    QString saFuelUnitLabels[2] = { "kWh", "therms" };
    QString saFuelUnitLabels1[2] = { "kWh", "therm" };
    for (iFuel=0; iFuel < (bPerformGasBillCalcs ? 2 : 1); iFuel++)
-   { 
-      long lUtilRateGen = BEMPX_GetInteger( laDBID_RateGen[iFuel], iSpecVal, iErr, -1, BEMO_User, iCUAC_BEMProcIdx );      //  2 => 2023+ CPR rates
-      if (lUtilRateGen == 2)     // SAC 09/01/23
-      {  BEMObject* pG2RateObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( (iFuel==0 ? "CPR_ElecUtilityRateRef" : "CPR_GasUtilityRateRef"), iCID_CUAC ), iSpecVal, iErr, -1 /*occur*/, BEMO_User, iCUAC_BEMProcIdx );
-         iG2RateObjIdx[iFuel]  = (pG2RateObj == NULL ? -1 : BEMPX_GetObjectIndex( pG2RateObj->getClass(), pG2RateObj, iCUAC_BEMProcIdx ));
-         if (iG2RateObjIdx[iFuel] < 0)
-         {  sErrMsg = QString( "CUAC Gen2 %1 Utility Rate not found" ).arg( saFuelLabels[iFuel] );
-            BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   {  if ( (iFuel == 0 && !bBypassElecBillCalcs) ||
+           (iFuel == 1 && !bBypassGasBillCalcs ) )       // bypass utility bill processing for those not downloaded or otherwise invalid - SAC 03/19/26 (dev #742)
+      {  long lUtilRateGen = BEMPX_GetInteger( laDBID_RateGen[iFuel], iSpecVal, iErr, -1, BEMO_User, iCUAC_BEMProcIdx );      //  2 => 2023+ CPR rates
+         if (lUtilRateGen == 2)     // SAC 09/01/23
+         {  BEMObject* pG2RateObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( (iFuel==0 ? "CPR_ElecUtilityRateRef" : "CPR_GasUtilityRateRef"), iCID_CUAC ), iSpecVal, iErr, -1 /*occur*/, BEMO_User, iCUAC_BEMProcIdx );
+            iG2RateObjIdx[iFuel]  = (pG2RateObj == NULL ? -1 : BEMPX_GetObjectIndex( pG2RateObj->getClass(), pG2RateObj, iCUAC_BEMProcIdx ));
+            if (iG2RateObjIdx[iFuel] < 0)
+            {  sErrMsg = QString( "CUAC Gen2 %1 Utility Rate not found" ).arg( saFuelLabels[iFuel] );
+               BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            }
+            else if (iBillCalcDetails > 0)
+               BEMPX_WriteLogFile( QString( "CUAC Gen2 %1 Utility Rate '%2' in use" ).arg( saFuelLabels[iFuel], pG2RateObj->getName() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
          }
-         else if (iBillCalcDetails > 0)
-            BEMPX_WriteLogFile( QString( "CUAC Gen2 %1 Utility Rate '%2' in use" ).arg( saFuelLabels[iFuel], pG2RateObj->getName() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-      }
-      if (iG2RateObjIdx[iFuel] < 0)
-      {  BEMObject* pRate = BEMPX_GetObjectPtr( laDBID_RateRef[iFuel], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-         int iRateObjIdx = (pRate == NULL ? -1 : BEMPX_GetObjectIndex( pRate->getClass(), pRate, iCUAC_BEMProcIdx ));
-         if (iRateObjIdx >= 0 && !LoadCUACUtilityRate( utilRate[iFuel], iRateObjIdx, iCUAC_BEMProcIdx, sErrMsg ))
-         {  if (sErrMsg.isEmpty())
-               sErrMsg = QString( "CUAC %1 Utility Rate Initialization Error" ).arg( saFuelLabels[iFuel] );
-            else
-               sErrMsg = QString( "CUAC %1 Utility Rate Initialization Error:  " ).arg( saFuelLabels[iFuel] ) + sErrMsg;
-            BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-   }  }  }
+         if (iG2RateObjIdx[iFuel] < 0)
+         {  BEMObject* pRate = BEMPX_GetObjectPtr( laDBID_RateRef[iFuel], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+            int iRateObjIdx = (pRate == NULL ? -1 : BEMPX_GetObjectIndex( pRate->getClass(), pRate, iCUAC_BEMProcIdx ));
+            if (iRateObjIdx >= 0 && !LoadCUACUtilityRate( utilRate[iFuel], iRateObjIdx, iCUAC_BEMProcIdx, sErrMsg ))
+            {  if (sErrMsg.isEmpty())
+                  sErrMsg = QString( "CUAC %1 Utility Rate Initialization Error" ).arg( saFuelLabels[iFuel] );
+               else
+                  sErrMsg = QString( "CUAC %1 Utility Rate Initialization Error:  " ).arg( saFuelLabels[iFuel] ) + sErrMsg;
+               BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   }  }  }  }
 
    int iCID_EnergyCost  = BEMPX_GetDBComponentID( "CPR_EnergyCost" );
    long lDBID_EnergyCost_CostName         = BEMPX_GetDatabaseID( "CostName",          iCID_EnergyCost );
@@ -1052,119 +1081,121 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
 
 
       // Divvy PV & Batt based on PVAllocMethod - SAC 11/21/22
-      double dPVAnnual = BEMPX_GetHourlyResultSum(   NULL, 0, "Proposed", "Electricity", "Photovoltaics", NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
-      if (dPVAnnual == -99999.0)
-         dPVAnnual = 0.0;
-      double dBattAnnual = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", "Electricity", "Battery",       NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
-      if (dBattAnnual == -99999.0)
-         dBattAnnual = 0.0;
-      BEMPX_GetFloat( BEMPX_GetDatabaseID( "AffordablePVDCSysSizeFrac", iCID_CUAC ), dAffordablePVDCSysSizeFrac, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
-      BEMPX_GetFloat( BEMPX_GetDatabaseID( "AffordableBattMaxCapFrac",  iCID_CUAC ), dAffordableBattMaxCapFrac , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
-      if ( (dPVAnnual != 0.0 || dBattAnnual != 0.0) && (dAffordablePVDCSysSizeFrac > 0 || dAffordableBattMaxCapFrac > 0) )
+      if (!bCalcFromDetailsCSVSimResults)    // SAC 03/23/26 (dev #743)
       {
-         double daDwellingPVFrac[NumDwellingMeters], daDwellingBattFrac[NumDwellingMeters];
-         long lPVAllocMethod=0;     // 0: Num Residents / 1: Electricity Use / 2: User Allocation
-         if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "PVAllocMethod", iCID_CUAC ), lPVAllocMethod, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) || lPVAllocMethod == 2)
-         {  // Divvy PV/Batt into affordable housing meters by user specified allocation percentages - SAC 12/09/22
-            long lNumUnits;
-            double dPctIndivPV, dPctIndivPVSum, dPctIndivBatt;
-            if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "PctIndivUnitPVSum", iCID_CUAC ), dPctIndivPVSum, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) ||
-                  dPctIndivPVSum < 99.96 || dPctIndivPVSum > 100.04)
-            {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
-               sErrMsg = QString( "CUAC Error: Invalid or missing PV allocation by unit type data. Access these inputs via PV Allocation button in CUAC dialog tab." );
-               BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-               return;
-            }
-            else
-            {  for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-               {  BEMPX_GetInteger( BEMPX_GetDatabaseID( "AffordableUnitsByBedrms", iCID_CUAC )+iMtr, lNumUnits  , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
-                  if (lNumUnits > 0 && BEMPX_GetFloat( BEMPX_GetDatabaseID( "PctIndivUnitPVByBedrms" , iCID_CUAC )+iMtr, dPctIndivPV, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && dPctIndivPV > 0)
-                     daDwellingPVFrac[iMtr] = (dPctIndivPV * (iDataModel == 1 ? 1 : lNumUnits)) / 100.0;   // SFam analysis always models just a single dwelling - SAC 10/22/24
-                  else
-                     daDwellingPVFrac[iMtr] = 0.0;
-                  if (lNumUnits > 0 && BEMPX_GetFloat( BEMPX_GetDatabaseID( "PctIndivUnitBattByBedrms" , iCID_CUAC )+iMtr, dPctIndivBatt, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && dPctIndivBatt > 0)
-                     daDwellingBattFrac[iMtr] = (dPctIndivBatt * (iDataModel == 1 ? 1 : lNumUnits)) / 100.0;   // support separate Battery allocation data - SAC 11/14/25 (tic #3641)
-                  else
-                     daDwellingBattFrac[iMtr] = 0.0;
-            }  }
-         }
-         else if (lPVAllocMethod == 0)
-         {  // Divvy PV/Batt into affordable housing meters by number of residents - SAC 11/21/22
-            for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-            {  BEMPX_GetFloat( BEMPX_GetDatabaseID( "ResidentFracByBedrms", iCID_CUAC )+iMtr, daDwellingPVFrac[iMtr], 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
-               daDwellingBattFrac[iMtr] = daDwellingPVFrac[iMtr];
-         }  }
-         else
-         {  // Divvy PV/Batt into affordable housing meters by annual dwelling electric use - SAC 09/10/22
-            double dTotalAllDwellingElecUse = 0.0;
-            for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-            {
-               const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[0][iMtr] : pszCUACResMeters[0]);      // SAC 05/31/24
-               if (laNumUnitsByBedrms[iMtr] < 1)
-               {  daDwellingPVFrac[iMtr] = daDwellingBattFrac[iMtr] = 0.0;
+         double dPVAnnual = BEMPX_GetHourlyResultSum(   NULL, 0, "Proposed", "Electricity", "Photovoltaics", NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
+         if (dPVAnnual == -99999.0)
+            dPVAnnual = 0.0;
+         double dBattAnnual = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", "Electricity", "Battery",       NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
+         if (dBattAnnual == -99999.0)
+            dBattAnnual = 0.0;
+         BEMPX_GetFloat( BEMPX_GetDatabaseID( "AffordablePVDCSysSizeFrac", iCID_CUAC ), dAffordablePVDCSysSizeFrac, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
+         BEMPX_GetFloat( BEMPX_GetDatabaseID( "AffordableBattMaxCapFrac",  iCID_CUAC ), dAffordableBattMaxCapFrac , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
+         if ( (dPVAnnual != 0.0 || dBattAnnual != 0.0) && (dAffordablePVDCSysSizeFrac > 0 || dAffordableBattMaxCapFrac > 0) )
+         {
+            double daDwellingPVFrac[NumDwellingMeters], daDwellingBattFrac[NumDwellingMeters];
+            long lPVAllocMethod=0;     // 0: Num Residents / 1: Electricity Use / 2: User Allocation
+            if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "PVAllocMethod", iCID_CUAC ), lPVAllocMethod, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) || lPVAllocMethod == 2)
+            {  // Divvy PV/Batt into affordable housing meters by user specified allocation percentages - SAC 12/09/22
+               long lNumUnits;
+               double dPctIndivPV, dPctIndivPVSum, dPctIndivBatt;
+               if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "PctIndivUnitPVSum", iCID_CUAC ), dPctIndivPVSum, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) ||
+                     dPctIndivPVSum < 99.96 || dPctIndivPVSum > 100.04)
+               {  bAbort = true;   iRetVal = 96;  // Error calculating CUAC utility bill(s)
+                  sErrMsg = QString( "CUAC Error: Invalid or missing PV allocation by unit type data. Access these inputs via PV Allocation button in CUAC dialog tab." );
+                  BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                  return;
                }
                else
-               {  if (iDataModel == 1)       // Res - SAC 06/02/24 (res tic #1378)
-                  {  daDwellingPVFrac[iMtr] = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[0], pszInitialCUACResEnduses[1], pszInitialCUACResEnduses[2], pszInitialCUACResEnduses[3],
-                                                                                                             pszInitialCUACResEnduses[4], pszInitialCUACResEnduses[5], pszInitialCUACResEnduses[6], pszInitialCUACResEnduses[7], iCUAC_BEMProcIdx );
-                     if (daDwellingPVFrac[iMtr] == -99999.0)
+               {  for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+                  {  BEMPX_GetInteger( BEMPX_GetDatabaseID( "AffordableUnitsByBedrms", iCID_CUAC )+iMtr, lNumUnits  , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
+                     if (lNumUnits > 0 && BEMPX_GetFloat( BEMPX_GetDatabaseID( "PctIndivUnitPVByBedrms" , iCID_CUAC )+iMtr, dPctIndivPV, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && dPctIndivPV > 0)
+                        daDwellingPVFrac[iMtr] = (dPctIndivPV * (iDataModel == 1 ? 1 : lNumUnits)) / 100.0;   // SFam analysis always models just a single dwelling - SAC 10/22/24
+                     else
                         daDwellingPVFrac[iMtr] = 0.0;
-                     double dTemp = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 8], pszInitialCUACResEnduses[ 9], pszInitialCUACResEnduses[10], pszInitialCUACResEnduses[11],
-                                                                                               pszInitialCUACResEnduses[12], pszInitialCUACResEnduses[13], pszInitialCUACResEnduses[14], pszInitialCUACResEnduses[15], iCUAC_BEMProcIdx );
-                     if (dTemp != -99999.0)
-                        daDwellingPVFrac[iMtr] += dTemp;
-
-                     dTemp        = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[16], pszInitialCUACResEnduses[17], pszInitialCUACResEnduses[18], pszInitialCUACResEnduses[19],
-                                                                                               pszInitialCUACResEnduses[20], pszInitialCUACResEnduses[21], pszInitialCUACResEnduses[22], pszInitialCUACResEnduses[23], iCUAC_BEMProcIdx );
-                     if (dTemp != -99999.0)
-                        daDwellingPVFrac[iMtr] += dTemp;
-                  }
-                  else 
-                  {  daDwellingPVFrac[iMtr] = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACEnduses[0], pszInitialCUACEnduses[1], pszInitialCUACEnduses[2], pszInitialCUACEnduses[3],
-                                                                                                             pszInitialCUACEnduses[4], pszInitialCUACEnduses[5], pszInitialCUACEnduses[6], pszInitialCUACEnduses[7], iCUAC_BEMProcIdx );
-                     if (daDwellingPVFrac[iMtr] == -99999.0)
-                        daDwellingPVFrac[iMtr] = 0.0;
-                     double dTemp = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACEnduses[8], pszInitialCUACEnduses[9], pszInitialCUACEnduses[10], pszInitialCUACEnduses[11],
-                                                                                               pszInitialCUACEnduses[12], pszInitialCUACEnduses[13], NULL, NULL, iCUAC_BEMProcIdx );
-                     if (dTemp != -99999.0)
-                        daDwellingPVFrac[iMtr] += dTemp;
-                  }
-                  dTotalAllDwellingElecUse += daDwellingPVFrac[iMtr];
-            }  }
-
-            assert( dTotalAllDwellingElecUse > 0 );
-            if (dTotalAllDwellingElecUse > 0)
-               for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-               {  if (daDwellingPVFrac[iMtr] > 0)
-                     daDwellingPVFrac[iMtr] = daDwellingPVFrac[iMtr] / dTotalAllDwellingElecUse;
-                  daDwellingBattFrac[iMtr] = daDwellingPVFrac[iMtr];
-               }
-         }
-               if (iBillCalcDetails > 0)
-                  BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - PV allocation fracs:  %1 | %2 | %3 | %4 | %5 | %6 | %7" ).arg( QString::number( daDwellingPVFrac[0] ), QString::number( daDwellingPVFrac[1] ), QString::number( daDwellingPVFrac[2] ), QString::number( daDwellingPVFrac[3] ),
-                                       QString::number( daDwellingPVFrac[4] ), QString::number( daDwellingPVFrac[5] ), QString::number( daDwellingPVFrac[6] ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-
-         double *pdPVHrlyData=NULL, *pdBattHrlyData=NULL;
-         if (dPVAnnual != 0.0)
-            BEMPX_GetHourlyResultArrayPtr( &pdPVHrlyData  , NULL, 0, "Proposed", "Electricity", "Photovoltaics", iCUAC_BEMProcIdx );
-         if (dBattAnnual != 0.0)
-            BEMPX_GetHourlyResultArrayPtr( &pdBattHrlyData, NULL, 0, "Proposed", "Electricity", "Battery"      , iCUAC_BEMProcIdx );
-
-         for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-         {  const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[0][iMtr] : pszCUACResMeters[0]);      // SAC 05/31/24
-            if (daDwellingPVFrac[iMtr] > 0)
-            {  // PV
-               if (pdPVHrlyData && dAffordablePVDCSysSizeFrac > 0)
-                  BEMPX_SumIntoHourlyResultArray( pdPVHrlyData, "Proposed", pszCUACMtr, "Photovoltaics", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
-                                                  (dAffordablePVDCSysSizeFrac * daDwellingPVFrac[iMtr]) );
+                     if (lNumUnits > 0 && BEMPX_GetFloat( BEMPX_GetDatabaseID( "PctIndivUnitBattByBedrms" , iCID_CUAC )+iMtr, dPctIndivBatt, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && dPctIndivBatt > 0)
+                        daDwellingBattFrac[iMtr] = (dPctIndivBatt * (iDataModel == 1 ? 1 : lNumUnits)) / 100.0;   // support separate Battery allocation data - SAC 11/14/25 (tic #3641)
+                     else
+                        daDwellingBattFrac[iMtr] = 0.0;
+               }  }
             }
-            if (daDwellingBattFrac[iMtr] > 0)      // SAC 11/14/24 (tic #3641)
-            {  // Battery
-               if (pdBattHrlyData && dAffordableBattMaxCapFrac > 0)
-                  BEMPX_SumIntoHourlyResultArray( pdBattHrlyData, "Proposed", pszCUACMtr, "Battery", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
-                                                  (dAffordableBattMaxCapFrac * daDwellingBattFrac[iMtr]) );
-         }  }
-      }
+            else if (lPVAllocMethod == 0)
+            {  // Divvy PV/Batt into affordable housing meters by number of residents - SAC 11/21/22
+               for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+               {  BEMPX_GetFloat( BEMPX_GetDatabaseID( "ResidentFracByBedrms", iCID_CUAC )+iMtr, daDwellingPVFrac[iMtr], 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
+                  daDwellingBattFrac[iMtr] = daDwellingPVFrac[iMtr];
+            }  }
+            else
+            {  // Divvy PV/Batt into affordable housing meters by annual dwelling electric use - SAC 09/10/22
+               double dTotalAllDwellingElecUse = 0.0;
+               for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+               {
+                  const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[0][iMtr] : pszCUACResMeters[0]);      // SAC 05/31/24
+                  if (laNumUnitsByBedrms[iMtr] < 1)
+                  {  daDwellingPVFrac[iMtr] = daDwellingBattFrac[iMtr] = 0.0;
+                  }
+                  else
+                  {  if (iDataModel == 1)       // Res - SAC 06/02/24 (res tic #1378)
+                     {  daDwellingPVFrac[iMtr] = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[0], pszInitialCUACResEnduses[1], pszInitialCUACResEnduses[2], pszInitialCUACResEnduses[3],
+                                                                                                                pszInitialCUACResEnduses[4], pszInitialCUACResEnduses[5], pszInitialCUACResEnduses[6], pszInitialCUACResEnduses[7], iCUAC_BEMProcIdx );
+                        if (daDwellingPVFrac[iMtr] == -99999.0)
+                           daDwellingPVFrac[iMtr] = 0.0;
+                        double dTemp = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 8], pszInitialCUACResEnduses[ 9], pszInitialCUACResEnduses[10], pszInitialCUACResEnduses[11],
+                                                                                                  pszInitialCUACResEnduses[12], pszInitialCUACResEnduses[13], pszInitialCUACResEnduses[14], pszInitialCUACResEnduses[15], iCUAC_BEMProcIdx );
+                        if (dTemp != -99999.0)
+                           daDwellingPVFrac[iMtr] += dTemp;
+
+                        dTemp        = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[16], pszInitialCUACResEnduses[17], pszInitialCUACResEnduses[18], pszInitialCUACResEnduses[19],
+                                                                                                  pszInitialCUACResEnduses[20], pszInitialCUACResEnduses[21], pszInitialCUACResEnduses[22], pszInitialCUACResEnduses[23], iCUAC_BEMProcIdx );
+                        if (dTemp != -99999.0)
+                           daDwellingPVFrac[iMtr] += dTemp;
+                     }
+                     else 
+                     {  daDwellingPVFrac[iMtr] = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACEnduses[0], pszInitialCUACEnduses[1], pszInitialCUACEnduses[2], pszInitialCUACEnduses[3],
+                                                                                                                pszInitialCUACEnduses[4], pszInitialCUACEnduses[5], pszInitialCUACEnduses[6], pszInitialCUACEnduses[7], iCUAC_BEMProcIdx );
+                        if (daDwellingPVFrac[iMtr] == -99999.0)
+                           daDwellingPVFrac[iMtr] = 0.0;
+                        double dTemp = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACEnduses[8], pszInitialCUACEnduses[9], pszInitialCUACEnduses[10], pszInitialCUACEnduses[11],
+                                                                                                  pszInitialCUACEnduses[12], pszInitialCUACEnduses[13], NULL, NULL, iCUAC_BEMProcIdx );
+                        if (dTemp != -99999.0)
+                           daDwellingPVFrac[iMtr] += dTemp;
+                     }
+                     dTotalAllDwellingElecUse += daDwellingPVFrac[iMtr];
+               }  }
+
+               assert( dTotalAllDwellingElecUse > 0 );
+               if (dTotalAllDwellingElecUse > 0)
+                  for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+                  {  if (daDwellingPVFrac[iMtr] > 0)
+                        daDwellingPVFrac[iMtr] = daDwellingPVFrac[iMtr] / dTotalAllDwellingElecUse;
+                     daDwellingBattFrac[iMtr] = daDwellingPVFrac[iMtr];
+                  }
+            }
+                  if (iBillCalcDetails > 0)
+                     BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - PV allocation fracs:  %1 | %2 | %3 | %4 | %5 | %6 | %7" ).arg( QString::number( daDwellingPVFrac[0] ), QString::number( daDwellingPVFrac[1] ), QString::number( daDwellingPVFrac[2] ), QString::number( daDwellingPVFrac[3] ),
+                                          QString::number( daDwellingPVFrac[4] ), QString::number( daDwellingPVFrac[5] ), QString::number( daDwellingPVFrac[6] ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+            double *pdPVHrlyData=NULL, *pdBattHrlyData=NULL;
+            if (dPVAnnual != 0.0)
+               BEMPX_GetHourlyResultArrayPtr( &pdPVHrlyData  , NULL, 0, "Proposed", "Electricity", "Photovoltaics", iCUAC_BEMProcIdx );
+            if (dBattAnnual != 0.0)
+               BEMPX_GetHourlyResultArrayPtr( &pdBattHrlyData, NULL, 0, "Proposed", "Electricity", "Battery"      , iCUAC_BEMProcIdx );
+
+            for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+            {  const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[0][iMtr] : pszCUACResMeters[0]);      // SAC 05/31/24
+               if (daDwellingPVFrac[iMtr] > 0)
+               {  // PV
+                  if (pdPVHrlyData && dAffordablePVDCSysSizeFrac > 0)
+                     BEMPX_SumIntoHourlyResultArray( pdPVHrlyData, "Proposed", pszCUACMtr, "Photovoltaics", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
+                                                     (dAffordablePVDCSysSizeFrac * daDwellingPVFrac[iMtr]) );
+               }
+               if (daDwellingBattFrac[iMtr] > 0)      // SAC 11/14/24 (tic #3641)
+               {  // Battery
+                  if (pdBattHrlyData && dAffordableBattMaxCapFrac > 0)
+                     BEMPX_SumIntoHourlyResultArray( pdBattHrlyData, "Proposed", pszCUACMtr, "Battery", iCUAC_BEMProcIdx, FALSE /*bAddIfNotExist*/,
+                                                     (dAffordableBattMaxCapFrac * daDwellingBattFrac[iMtr]) );
+            }  }
+      }  }
                                              iStep = 2;     sStep = "PV-Batt";
             if (iBillCalcDetails > 0)
             {  QString sDbgFN = sProcessingPath + sModelFileOnly + QString(" - CUAC use totals %1-%2.txt").arg( QString::number(iStep), sStep );
@@ -1175,140 +1206,143 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
       // TO DO - DIVVY UP ACROSS ALL FUELS, not BY INDIVIDUAL FUEL
 
       // Merge enduses into final reporting set - SAC 09/10/22
-      for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-         if (laNumUnitsByBedrms[iMtr] > 0)
-            for (iFuel=0; iFuel < 2; iFuel++)
-            {
-               int iResMtrIdx = (iFuel == 0 ? 0 : iResFuelMtrIdx);      // SAC 09/11/24 (res tic #1378)
-               const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[iFuel][iMtr] : pszCUACResMeters[iResMtrIdx]);    // SAC 05/31/24
-               // Com - split Other HVAC into Cooling & Heating
-               if (iDataModel == 0)
-               {  double dHVACOthrUse = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, "HVAC Other", NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
-                  if (dHVACOthrUse > 0)
-                  {  double dCoolAdd[8760], dHeatAdd[8760];
-                     double *pdCool=NULL, *pdHeat=NULL, *pdHVACOthr=NULL;
-                     BEMPX_GetHourlyResultArrayPtr( &pdCool    , NULL, 0, "Proposed", pszCUACMtr, "Cooling"   , iCUAC_BEMProcIdx );
-                     BEMPX_GetHourlyResultArrayPtr( &pdHeat    , NULL, 0, "Proposed", pszCUACMtr, "Heating"   , iCUAC_BEMProcIdx );
-                     BEMPX_GetHourlyResultArrayPtr( &pdHVACOthr, NULL, 0, "Proposed", pszCUACMtr, "HVAC Other", iCUAC_BEMProcIdx );
-                     iHr = 0;
-                     for (iMo=0; iMo<12; iMo++)
-                        for (iDay=0; iDay<iNumDaysInMonth[iMo]; iDay++)
-                        {  double dCoolDay=0.0, dHeatDay=0.0;
-                           int iEndDayHr = iHr+24;
-                           for (iTemp=iHr; iTemp < iEndDayHr; iTemp++)
-                           {  dCoolDay += (pdCool ? pdCool[iTemp] : 0.0);
-                              dHeatDay += (pdHeat ? pdHeat[iTemp] : 0.0);
+      if (!bCalcFromDetailsCSVSimResults)    // SAC 03/23/26 (dev #743)
+      {  for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+            if (laNumUnitsByBedrms[iMtr] > 0)
+               for (iFuel=0; iFuel < 2; iFuel++)
+               {
+                  int iResMtrIdx = (iFuel == 0 ? 0 : iResFuelMtrIdx);      // SAC 09/11/24 (res tic #1378)
+                  const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[iFuel][iMtr] : pszCUACResMeters[iResMtrIdx]);    // SAC 05/31/24
+                  // Com - split Other HVAC into Cooling & Heating
+                  if (iDataModel == 0)
+                  {  double dHVACOthrUse = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, "HVAC Other", NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
+                     if (dHVACOthrUse > 0)
+                     {  double dCoolAdd[8760], dHeatAdd[8760];
+                        double *pdCool=NULL, *pdHeat=NULL, *pdHVACOthr=NULL;
+                        BEMPX_GetHourlyResultArrayPtr( &pdCool    , NULL, 0, "Proposed", pszCUACMtr, "Cooling"   , iCUAC_BEMProcIdx );
+                        BEMPX_GetHourlyResultArrayPtr( &pdHeat    , NULL, 0, "Proposed", pszCUACMtr, "Heating"   , iCUAC_BEMProcIdx );
+                        BEMPX_GetHourlyResultArrayPtr( &pdHVACOthr, NULL, 0, "Proposed", pszCUACMtr, "HVAC Other", iCUAC_BEMProcIdx );
+                        iHr = 0;
+                        for (iMo=0; iMo<12; iMo++)
+                           for (iDay=0; iDay<iNumDaysInMonth[iMo]; iDay++)
+                           {  double dCoolDay=0.0, dHeatDay=0.0;
+                              int iEndDayHr = iHr+24;
+                              for (iTemp=iHr; iTemp < iEndDayHr; iTemp++)
+                              {  dCoolDay += (pdCool ? pdCool[iTemp] : 0.0);
+                                 dHeatDay += (pdHeat ? pdHeat[iTemp] : 0.0);
+                              }
+                              bool bAllCool = ( (dCoolDay > 0 && dHeatDay < 0.0001) || (dCoolDay < 0.0001 && dHeatDay < 0.0001 &&  bCoolingMonth[iMo]) );
+                              bool bAllHeat = ( (dHeatDay > 0 && dCoolDay < 0.0001) || (dCoolDay < 0.0001 && dHeatDay < 0.0001 && !bCoolingMonth[iMo]) );
+                              assert( bAllCool || bAllHeat || (dCoolDay > 0.0001 && dHeatDay > 0.0001) );
+                              for (iTemp=iHr; (pdHVACOthr && iTemp < iEndDayHr); iTemp++)
+                              {  if (pdHVACOthr[iTemp] <= 0.0)
+                                 {  dCoolAdd[iTemp] = 0.0;
+                                    dHeatAdd[iTemp] = 0.0;
+                                 }
+                                 else if (bAllCool)
+                                 {  dCoolAdd[iTemp] = pdHVACOthr[iTemp];
+                                    dHeatAdd[iTemp] = 0.0;
+                                 }
+                                 else if (bAllHeat)
+                                 {  dCoolAdd[iTemp] = 0.0;
+                                    dHeatAdd[iTemp] = pdHVACOthr[iTemp];
+                                 }
+                                 else if (dCoolDay > 0.0001 && dHeatDay > 0.0001)
+                                 {  dCoolAdd[iTemp] = pdHVACOthr[iTemp] * (dCoolDay / (dCoolDay + dHeatDay));
+                                    dHeatAdd[iTemp] = (pdHVACOthr[iTemp] - dCoolAdd[iTemp]);
+                                 }
+                                 else
+                                 {  assert( false );
+                                    dCoolAdd[iTemp] = 0.0;
+                                    dHeatAdd[iTemp] = 0.0;
+                              }  }
+                              iHr += 24;
                            }
-                           bool bAllCool = ( (dCoolDay > 0 && dHeatDay < 0.0001) || (dCoolDay < 0.0001 && dHeatDay < 0.0001 &&  bCoolingMonth[iMo]) );
-                           bool bAllHeat = ( (dHeatDay > 0 && dCoolDay < 0.0001) || (dCoolDay < 0.0001 && dHeatDay < 0.0001 && !bCoolingMonth[iMo]) );
-                           assert( bAllCool || bAllHeat || (dCoolDay > 0.0001 && dHeatDay > 0.0001) );
-                           for (iTemp=iHr; (pdHVACOthr && iTemp < iEndDayHr); iTemp++)
-                           {  if (pdHVACOthr[iTemp] <= 0.0)
-                              {  dCoolAdd[iTemp] = 0.0;
-                                 dHeatAdd[iTemp] = 0.0;
-                              }
-                              else if (bAllCool)
-                              {  dCoolAdd[iTemp] = pdHVACOthr[iTemp];
-                                 dHeatAdd[iTemp] = 0.0;
-                              }
-                              else if (bAllHeat)
-                              {  dCoolAdd[iTemp] = 0.0;
-                                 dHeatAdd[iTemp] = pdHVACOthr[iTemp];
-                              }
-                              else if (dCoolDay > 0.0001 && dHeatDay > 0.0001)
-                              {  dCoolAdd[iTemp] = pdHVACOthr[iTemp] * (dCoolDay / (dCoolDay + dHeatDay));
-                                 dHeatAdd[iTemp] = (pdHVACOthr[iTemp] - dCoolAdd[iTemp]);
-                              }
-                              else
-                              {  assert( false );
-                                 dCoolAdd[iTemp] = 0.0;
-                                 dHeatAdd[iTemp] = 0.0;
-                           }  }
-                           iHr += 24;
-                        }
 
-                     BEMPX_AddHourlyResultArray(     NULL,     "Proposed", pszCUACMtr, "HVAC Other", iCUAC_BEMProcIdx );   // zero out "HVAC Other" enduse
-                     BEMPX_SumIntoHourlyResultArray( dCoolAdd, "Proposed", pszCUACMtr, "Cooling"   , iCUAC_BEMProcIdx );
-                     BEMPX_SumIntoHourlyResultArray( dHeatAdd, "Proposed", pszCUACMtr, "Heating"   , iCUAC_BEMProcIdx );
+                        BEMPX_AddHourlyResultArray(     NULL,     "Proposed", pszCUACMtr, "HVAC Other", iCUAC_BEMProcIdx );   // zero out "HVAC Other" enduse
+                        BEMPX_SumIntoHourlyResultArray( dCoolAdd, "Proposed", pszCUACMtr, "Cooling"   , iCUAC_BEMProcIdx );
+                        BEMPX_SumIntoHourlyResultArray( dHeatAdd, "Proposed", pszCUACMtr, "Heating"   , iCUAC_BEMProcIdx );
+                     }
+                     // removed merging of Batt into PV, now that we are tracking batt separately - SAC 12/12/24
+                     // if (dAffordableBattMaxCapFrac > 0.0001)      // add logic to sum Batt into PV (following scaling) - SAC 11/12/24 (tic #3641)
+                     // {  double *pdAdd=NULL;
+                     //    BEMPX_GetHourlyResultArrayPtr(    &pdAdd, NULL, 0, "Proposed", pszCUACMtr, "Battery"      , iCUAC_BEMProcIdx );       assert(pdAdd);
+                     //    if (pdAdd)
+                     //    {  BEMPX_SumIntoHourlyResultArray( pdAdd, "Proposed", pszCUACMtr,          "Photovoltaics", iCUAC_BEMProcIdx );
+                     //       BEMPX_AddHourlyResultArray(      NULL, "Proposed", pszCUACMtr,          "Battery"      , iCUAC_BEMProcIdx );   // zero out enduse summed into another
+                     // }  }
                   }
-                  // removed merging of Batt into PV, now that we are tracking batt separately - SAC 12/12/24
-                  // if (dAffordableBattMaxCapFrac > 0.0001)      // add logic to sum Batt into PV (following scaling) - SAC 11/12/24 (tic #3641)
-                  // {  double *pdAdd=NULL;
-                  //    BEMPX_GetHourlyResultArrayPtr(    &pdAdd, NULL, 0, "Proposed", pszCUACMtr, "Battery"      , iCUAC_BEMProcIdx );       assert(pdAdd);
-                  //    if (pdAdd)
-                  //    {  BEMPX_SumIntoHourlyResultArray( pdAdd, "Proposed", pszCUACMtr,          "Photovoltaics", iCUAC_BEMProcIdx );
-                  //       BEMPX_AddHourlyResultArray(      NULL, "Proposed", pszCUACMtr,          "Battery"      , iCUAC_BEMProcIdx );   // zero out enduse summed into another
-                  // }  }
+                  // Res - merge CSE enduses into CUAC reporting group - SAC 06/02/24 (res tic #1378)
+                  if (iDataModel == 1)
+                  {  for (int iEU=0; iEU < NumInitialResEnduses; iEU++)
+                        if (iaCUACResEnduseActions[iEU] >= 0 && iaCUACResEnduseActions[iEU] < NumInitialResEnduses)
+                        {  assert( iaCUACResEnduseActions[iEU] != iEU );  // shouldn't ever copy enduse onto itself
+                           double dEUEnergyUse = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[iEU], NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
+                           if (dEUEnergyUse != 0 && dEUEnergyUse > -99998.0)
+                           {  double *pdAdd=NULL;
+                              BEMPX_GetHourlyResultArrayPtr(    &pdAdd, NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[              iEU ], iCUAC_BEMProcIdx );       assert(pdAdd);
+                              if (pdAdd)
+                              {  BEMPX_SumIntoHourlyResultArray( pdAdd, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[iaCUACResEnduseActions[iEU]], iCUAC_BEMProcIdx );
+                                 BEMPX_AddHourlyResultArray(      NULL, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[                       iEU ], iCUAC_BEMProcIdx );   // zero out enduse summed into another
+                        }  }  }
+                     if (bExcludeDHW)     // SAC 09/04/24
+                        BEMPX_AddHourlyResultArray( NULL, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 3 /*DHW*/ ], iCUAC_BEMProcIdx );   // zero out DHW enduse if analysis to exclude it
+                     if (dAffordablePVDCSysSizeFrac < 1.0)     // SAC 09/07/24
+                        BEMPX_ScaleHourlyResultArray( dAffordablePVDCSysSizeFrac, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 23 /*PV*/   ], iCUAC_BEMProcIdx );
+                     if (dAffordableBattMaxCapFrac < 1.0)
+                        BEMPX_ScaleHourlyResultArray( dAffordableBattMaxCapFrac,  "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 22 /*Batt*/ ], iCUAC_BEMProcIdx );
+                  // restore if/when Battery enduse allowed in Res CUAC analysis - SAC 11/12/24 (tic #3641)
+                  //   if (dAffordableBattMaxCapFrac > 0.0001)      // add logic to sum Batt into PV (following scaling) - SAC 11/12/24 (tic #3641)
+                  //   {  double *pdAdd=NULL;
+                  //      BEMPX_GetHourlyResultArrayPtr(    &pdAdd, NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 22 /*Batt*/ ], iCUAC_BEMProcIdx );       assert(pdAdd);
+                  //      if (pdAdd)
+                  //      {  BEMPX_SumIntoHourlyResultArray( pdAdd, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[          23 /*PV*/   ], iCUAC_BEMProcIdx );
+                  //         BEMPX_AddHourlyResultArray(      NULL, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[          22 /*Batt*/ ], iCUAC_BEMProcIdx );   // zero out enduse summed into another
+                  //   }  }
+                  }
                }
-               // Res - merge CSE enduses into CUAC reporting group - SAC 06/02/24 (res tic #1378)
-               if (iDataModel == 1)
-               {  for (int iEU=0; iEU < NumInitialResEnduses; iEU++)
-                     if (iaCUACResEnduseActions[iEU] >= 0 && iaCUACResEnduseActions[iEU] < NumInitialResEnduses)
-                     {  assert( iaCUACResEnduseActions[iEU] != iEU );  // shouldn't ever copy enduse onto itself
-                        double dEUEnergyUse = BEMPX_GetHourlyResultSum( NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[iEU], NULL, NULL, NULL, NULL, NULL, NULL, NULL, iCUAC_BEMProcIdx );
-                        if (dEUEnergyUse != 0 && dEUEnergyUse > -99998.0)
-                        {  double *pdAdd=NULL;
-                           BEMPX_GetHourlyResultArrayPtr(    &pdAdd, NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[              iEU ], iCUAC_BEMProcIdx );       assert(pdAdd);
-                           if (pdAdd)
-                           {  BEMPX_SumIntoHourlyResultArray( pdAdd, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[iaCUACResEnduseActions[iEU]], iCUAC_BEMProcIdx );
-                              BEMPX_AddHourlyResultArray(      NULL, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[                       iEU ], iCUAC_BEMProcIdx );   // zero out enduse summed into another
-                     }  }  }
-                  if (bExcludeDHW)     // SAC 09/04/24
-                     BEMPX_AddHourlyResultArray( NULL, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 3 /*DHW*/ ], iCUAC_BEMProcIdx );   // zero out DHW enduse if analysis to exclude it
-                  if (dAffordablePVDCSysSizeFrac < 1.0)     // SAC 09/07/24
-                     BEMPX_ScaleHourlyResultArray( dAffordablePVDCSysSizeFrac, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 23 /*PV*/   ], iCUAC_BEMProcIdx );
-                  if (dAffordableBattMaxCapFrac < 1.0)
-                     BEMPX_ScaleHourlyResultArray( dAffordableBattMaxCapFrac,  "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 22 /*Batt*/ ], iCUAC_BEMProcIdx );
-               // restore if/when Battery enduse allowed in Res CUAC analysis - SAC 11/12/24 (tic #3641)
-               //   if (dAffordableBattMaxCapFrac > 0.0001)      // add logic to sum Batt into PV (following scaling) - SAC 11/12/24 (tic #3641)
-               //   {  double *pdAdd=NULL;
-               //      BEMPX_GetHourlyResultArrayPtr(    &pdAdd, NULL, 0, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[ 22 /*Batt*/ ], iCUAC_BEMProcIdx );       assert(pdAdd);
-               //      if (pdAdd)
-               //      {  BEMPX_SumIntoHourlyResultArray( pdAdd, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[          23 /*PV*/   ], iCUAC_BEMProcIdx );
-               //         BEMPX_AddHourlyResultArray(      NULL, "Proposed", pszCUACMtr, pszInitialCUACResEnduses[          22 /*Batt*/ ], iCUAC_BEMProcIdx );   // zero out enduse summed into another
-               //   }  }
+                                                iStep = 3;     sStep = "DistribEnduses";
+               if (iBillCalcDetails > 0)
+               {  QString sDbgFN = sProcessingPath + sModelFileOnly + QString(" - CUAC use totals %1-%2.txt").arg( QString::number(iStep), sStep );
+                  BEMPX_WriteHourlyResultsSummary( sDbgFN.toLocal8Bit().constData(), bSilent, iCUAC_BEMProcIdx );
                }
-            }
-                                             iStep = 3;     sStep = "DistribEnduses";
-            if (iBillCalcDetails > 0)
-            {  QString sDbgFN = sProcessingPath + sModelFileOnly + QString(" - CUAC use totals %1-%2.txt").arg( QString::number(iStep), sStep );
-               BEMPX_WriteHourlyResultsSummary( sDbgFN.toLocal8Bit().constData(), bSilent, iCUAC_BEMProcIdx );
-            }
+      }
 
       // Reduce meters to energy use by dwelling unit - SAC 09/10/22
-      for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
-         if (laNumUnitsByBedrms[iMtr] > 1 || (laNumUnitsByBedrms[iMtr] > 0 && iDataModel == 1))
-            for (iFuel=0; iFuel < 2; iFuel++)
-            {  double dFuelMult = 1.0;
-               if (iDataModel == 1)
-                  dFuelMult = (iFuel==0 ? 0.29307 : 0.01);    // Elec kBtu->kWh / Gas kBtu->therms - SAC 06/03/24 (res tic #1378)
-               double dMult = dFuelMult / (double) laNumUnitsByBedrms[iMtr];
-               int iResMtrIdx = (iFuel == 0 ? 0 : iResFuelMtrIdx);      // SAC 09/11/24 (res tic #1378)
-               const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[iFuel][iMtr] : pszCUACResMeters[iResMtrIdx]);    // SAC 05/31/24
-               int iMaxEnduse         = (iDataModel == 0 ? NumInitialEnduses : NumInitialResEnduses);
-               for (iTemp=0; iTemp < iMaxEnduse; iTemp++)
-               {  const char* pszCUACEnduse = (iDataModel == 0 ? pszInitialCUACEnduses[iTemp] : pszInitialCUACResEnduses[iTemp]);    // SAC 05/31/24
-                  double dTempMult = dMult;
-                  // apply Htg/Clg/IAQ mults (enabling toggle off of these enduses) - SAC 11/04/25 (dev #583)
-                  if ( daHtgMultByBedrms[iMtr] < 1.0 && 
-                       ( (iDataModel == 0 &&  iTemp == 1  ) ||
-                         (iDataModel != 0 && (iTemp == 1 || iTemp == 2 || iTemp == 7) ) ) )
-                     dTempMult *= daHtgMultByBedrms[iMtr];
-                  else if ( daClgMultByBedrms[iMtr] < 1.0 && 
-                            ( (iDataModel == 0 &&  iTemp == 0  ) ||
-                              (iDataModel != 0 && (iTemp == 0 || iTemp == 6) ) ) )
-                     dTempMult *= daClgMultByBedrms[iMtr];
-                  else if ( daIAQMultByBedrms[iMtr] < 1.0 && 
-                            ( (iDataModel == 0 &&  iTemp == 3  ) ||
-                              (iDataModel != 0 && (iTemp == 8 || iTemp == 9) ) ) )
-                     dTempMult *= daIAQMultByBedrms[iMtr];
-                  BEMPX_ScaleHourlyResultArray( dTempMult, "Proposed", pszCUACMtr, pszCUACEnduse, iCUAC_BEMProcIdx );
-            }  }
-                                             iStep = 4;     sStep = "SingleDwelling";
-            if (iBillCalcDetails > 0)
-            {  QString sDbgFN = sProcessingPath + sModelFileOnly + QString(" - CUAC use totals %1-%2.txt").arg( QString::number(iStep), sStep );
-               BEMPX_WriteHourlyResultsSummary( sDbgFN.toLocal8Bit().constData(), bSilent, iCUAC_BEMProcIdx );
-            }
+      if (!bCalcFromDetailsCSVSimResults)    // SAC 03/23/26 (dev #743)
+         for (iMtr=0; iMtr < NumDwellingMeters; iMtr++)
+            if (laNumUnitsByBedrms[iMtr] > 1 || (laNumUnitsByBedrms[iMtr] > 0 && iDataModel == 1))
+               for (iFuel=0; iFuel < 2; iFuel++)
+               {  double dFuelMult = 1.0;
+                  if (iDataModel == 1)
+                     dFuelMult = (iFuel==0 ? 0.29307 : 0.01);    // Elec kBtu->kWh / Gas kBtu->therms - SAC 06/03/24 (res tic #1378)
+                  double dMult = dFuelMult / (double) laNumUnitsByBedrms[iMtr];
+                  int iResMtrIdx = (iFuel == 0 ? 0 : iResFuelMtrIdx);      // SAC 09/11/24 (res tic #1378)
+                  const char* pszCUACMtr = (iDataModel == 0 ? pszCUACMeters[iFuel][iMtr] : pszCUACResMeters[iResMtrIdx]);    // SAC 05/31/24
+                  int iMaxEnduse         = (iDataModel == 0 ? NumInitialEnduses : NumInitialResEnduses);
+                  for (iTemp=0; iTemp < iMaxEnduse; iTemp++)
+                  {  const char* pszCUACEnduse = (iDataModel == 0 ? pszInitialCUACEnduses[iTemp] : pszInitialCUACResEnduses[iTemp]);    // SAC 05/31/24
+                     double dTempMult = dMult;
+                     // apply Htg/Clg/IAQ mults (enabling toggle off of these enduses) - SAC 11/04/25 (dev #583)
+                     if ( daHtgMultByBedrms[iMtr] < 1.0 && 
+                          ( (iDataModel == 0 &&  iTemp == 1  ) ||
+                            (iDataModel != 0 && (iTemp == 1 || iTemp == 2 || iTemp == 7) ) ) )
+                        dTempMult *= daHtgMultByBedrms[iMtr];
+                     else if ( daClgMultByBedrms[iMtr] < 1.0 && 
+                               ( (iDataModel == 0 &&  iTemp == 0  ) ||
+                                 (iDataModel != 0 && (iTemp == 0 || iTemp == 6) ) ) )
+                        dTempMult *= daClgMultByBedrms[iMtr];
+                     else if ( daIAQMultByBedrms[iMtr] < 1.0 && 
+                               ( (iDataModel == 0 &&  iTemp == 3  ) ||
+                                 (iDataModel != 0 && (iTemp == 8 || iTemp == 9) ) ) )
+                        dTempMult *= daIAQMultByBedrms[iMtr];
+                     BEMPX_ScaleHourlyResultArray( dTempMult, "Proposed", pszCUACMtr, pszCUACEnduse, iCUAC_BEMProcIdx );
+               }  }
+                                                iStep = 4;     sStep = "SingleDwelling";
+               if (iBillCalcDetails > 0)
+               {  QString sDbgFN = sProcessingPath + sModelFileOnly + QString(" - CUAC use totals %1-%2.txt").arg( QString::number(iStep), sStep );
+                  BEMPX_WriteHourlyResultsSummary( sDbgFN.toLocal8Bit().constData(), bSilent, iCUAC_BEMProcIdx );
+               }
 
    }  // end of if (!bOldCUAC)  --  done prepping & loading hourly energy use data
 
@@ -1495,7 +1529,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
             bool bIgnoreNetExcesCredits=false, bIgnoreHourlyTOU=false;
             long lElecBillReconBeginMo=1, lElecTariffAdj=0;
             double dElecBillMinMoCharge=-999.0, dElecBillMinAnnCharge=-999.0;
-            if (iFuel == 0)  // Electric processing
+            if (iFuel == 0 && !bBypassElecBillCalcs)        // Electric processing
             {
                lElecBillReconBeginMo = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecBillReconBeginMo" ), iSpecVal, iErr, 0 /*ObjIdx*/, BEMO_User, iCUAC_BEMProcIdx );      // SAC 12/10/23 (CUAC)
                BEMPX_GetInteger( BEMPX_GetDatabaseID( "ElecTariffAdj", iCID_CUAC ), lElecTariffAdj, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );       // SAC 12/13/23
@@ -1513,7 +1547,15 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
             // Calculate utility bills
             QString sFuelCostPropName = (iFuel==0 ? "CUACResults:ElecCosts" : "CUACResults:GasCosts");
             long lDBID_FuelCostResult = BEMPX_GetDatabaseID( sFuelCostPropName );         assert( lDBID_FuelCostResult > 0 );
-            if (lDBID_FuelCostResult > 0 && (iFuel==0 || bPerformGasBillCalcs))     // SAC 11/04/25 (dev #577)
+            if ( (iFuel == 0 && bBypassElecBillCalcs) ||
+                 (iFuel == 1 && bBypassGasBillCalcs ) )     // bypass utility bill processing for those not downloaded or otherwise invalid - SAC 03/18/26 (dev #742)
+            {  // bypass utility bill
+               BEMPX_WriteLogFile( QString( "  bypassing %1 utility bill calc" ).arg( (iFuel == 0 ? "electric" : "gas") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+               long lDBID_BillCalcBypassed = BEMPX_GetDatabaseID( (iFuel==0 ? "CUACResults:ElecBillCalcBypassed" : "CUACResults:GasBillCalcBypassed") ), lOne = 1; 
+               if (lDBID_BillCalcBypassed > 0)
+                  BEMPX_SetBEMData( lDBID_BillCalcBypassed, BEMP_Int, (void*) &lOne, BEMO_User, iResObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }
+            else if (lDBID_FuelCostResult > 0 && (iFuel==0 || bPerformGasBillCalcs))     // SAC 11/04/25 (dev #577)
             {  if (dTotAnnUse > 0.1 && iG2RateObjIdx[iFuel] < 0 && !utilRate[iFuel].bOK)
                {  // post error if energy use present but no rate assigned
                   sErrMsg = QString( "CUAC %1 Utility bill calc error:  energy use present but no rate assigned or rate data invalid" ).arg( saFuelLabels[iFuel] );
@@ -2583,8 +2625,13 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
          {     //BEMPX_WriteLogFile( QString( "attempting to generate CUAC submittal PDF:  %1" ).arg( sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
             // Sleep( 10000 );
             iRptID = lRptOption;
-            int iPDFGenRetVal = BEMPX_GeneratePDF( sSubmitPDFPathFile.toLocal8Bit().constData(), sRptGraphicsPath.toLocal8Bit().constData(), iRptID, iCUAC_BEMProcIdx, iDataModel );
-            BEMPX_WriteLogFile( QString( "CUAC submittal report PDF generation returned %1:  %2" ).arg( QString::number(iPDFGenRetVal), sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            int iPDFGenRetVal = 0;
+            if (bBypassElecBillCalcs || bBypassGasBillCalcs)      // SAC 03/18/26 (dev #742)
+               BEMPX_WriteLogFile( QString( "   CUAC submittal report generation skipped due to bypassing of elec and/or gas bill calcs" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            else
+            {  iPDFGenRetVal = BEMPX_GeneratePDF( sSubmitPDFPathFile.toLocal8Bit().constData(), sRptGraphicsPath.toLocal8Bit().constData(), iRptID, iCUAC_BEMProcIdx, iDataModel );
+               BEMPX_WriteLogFile( QString( "CUAC submittal report PDF generation returned %1:  %2" ).arg( QString::number(iPDFGenRetVal), sSubmitPDFPathFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            }
 
             if (iPDFGenRetVal == 0)    // details report - SAC 01/03/23
             {  // same here for Details report
@@ -2674,25 +2721,29 @@ void CUAC_AnalysisProcessing_BatchRates( QString sProcessingPath, QString sModel
 		BEMPX_WriteLogFile( "-------------------------------------------------", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		BEMPX_WriteLogFile( QString( "CUAC batch rate run #%1   elec: %2  /  gas: %3" ).arg( QString::number( lBatchRateIdx ), sElecERN, sGasERN ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
+      bool bCUACElecRateDownldFailed=false, bCUACGasRateDownldFailed=false;  int iRateDnldRetVal=0;         // used to enable CUAC regardless of rate download success - SAC 03/16/26 (dev #742)
       if (iRetVal == 0)
       {  long lElecTariffGen=0, lGasTariffGen=0;
          if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lElecTariffGen, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lElecTariffGen > 1)
          {  CUAC_RateDownload( "Electric", 94, "CUAC:CPR_ElecUtilityRateRef", sProcessingPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMDetails, bSilent, bVerbose,
                                bResearchMode, pCompRuleDebugInfo, iSecurityKeyIndex, pszSecurityKey, pszProxyServerAddress, pszProxyServerCredentials, pszProxyServerType,
-                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout, NULL, iDownloadVerbose );
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRateDnldRetVal /*iRetVal*/, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout, NULL, iDownloadVerbose );
                //											94 : Error downloading CUAC electric tariff schedule
-            if (iRetVal > 0)
-				   ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 94 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            if (iRateDnldRetVal > 0)
+				   //ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 94 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+               bCUACElecRateDownldFailed = true;
             else //if (iAnalysisStorage < 3)
                svUtilRatesToDelete.push_back( ((std::string) sProcessingPath.toLocal8Bit().constData()) + ((std::string) "er.json") );
          }
          if (iRetVal == 0 && !bAbort && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lGasTariffGen, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lGasTariffGen > 1)
-         {  CUAC_RateDownload( "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sProcessingPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMDetails, bSilent, bVerbose,
+         {  iRateDnldRetVal = 0;
+            CUAC_RateDownload( "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sProcessingPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMDetails, bSilent, bVerbose,
                                bResearchMode, pCompRuleDebugInfo, iSecurityKeyIndex, pszSecurityKey, pszProxyServerAddress, pszProxyServerCredentials, pszProxyServerType,
-                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRetVal, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout, NULL, iDownloadVerbose );
+                               /*pszErrorMsg, iErrorMsgLen,*/ bAbort, iRateDnldRetVal /*iRetVal*/, sErrMsg, /*iCUACReportID,*/ iCUAC_BEMProcIdx, iRptGenConnectTimeout, iRptGenReadWriteTimeout, NULL, iDownloadVerbose );
                //											95 : Error downloading CUAC gas tariff schedule
-            if (iRetVal > 0)
-				   ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 95 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+            if (iRateDnldRetVal > 0)
+				   //ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 95 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+               bCUACGasRateDownldFailed = true;
             else //if (iAnalysisStorage < 3)
                svUtilRatesToDelete.push_back( ((std::string) sProcessingPath.toLocal8Bit().constData()) + ((std::string) "gr.json") );
          }
@@ -2703,7 +2754,8 @@ void CUAC_AnalysisProcessing_BatchRates( QString sProcessingPath, QString sModel
          CUAC_AnalysisProcessing( sProcessingPath, sModelPathOnly, sModelFileOnly, sRptGraphicsPath, iRulesetCodeYear,
                               bStoreBEMDetails, bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen,
                               bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx, iDataModel, iBillCalcDetails /*=-1*/,
-                              iDownloadVerbose, false /*bWritePDF*/, false /*bWriteCSV*/, lBatchRateIdx, pAnalysisInvalidMsg );
+                              iDownloadVerbose, false /*bWritePDF*/, false /*bWriteCSV*/, lBatchRateIdx, pAnalysisInvalidMsg,
+                              bCUACElecRateDownldFailed, bCUACGasRateDownldFailed );
          for (auto& dnldRateFile : svUtilRatesToDelete)     // delete downloaded rate file(s)
          //   DeleteFile( dnldRateFile.c_str() );
          {  std::string sNewName = dnldRateFile;
@@ -2775,9 +2827,9 @@ int CUAC_WriteCSVSummary( QFile& csvFile, const char* pszProjectPathFileName, co
    long lDBID_CUAC_CUACResultsRef = BEMPX_GetDatabaseID( "CUACResultsRef", iCID_CUAC );
    long lDBID_CUAC_UnitTypeLabels = BEMPX_GetDatabaseID( "UnitTypeLabels", iCID_CUAC );
    long lAffordableUnitsByBedrms[8], lAffordableUnitsByBedrmsSum=0, lNumAffordableDwellingUnits=0, lCUACResNumUnits[8];
-   long lDBID_CUACResults_AvgCosts[5] = { BEMPX_GetDatabaseID( "CUACResults:ElecCosts[2]"     ), BEMPX_GetDatabaseID( "CUACResults:GasCosts[2]" ), BEMPX_GetDatabaseID( "CUACResults:WaterCosts[2]" ),
-                                          BEMPX_GetDatabaseID( "CUACResults:TrashMonthlyCost" ), BEMPX_GetDatabaseID( "CUACResults:TotCosts[2]" ) };
-   double dCost, dUnitWghtAvgCosts[5] = {0.0,0.0,0.0,0.0,0.0};
+   long lDBID_CUACResults_AvgCosts[6] = { BEMPX_GetDatabaseID( "CUACResults:ElecCosts[2]"     ), BEMPX_GetDatabaseID( "CUACResults:GasCosts[2]"      ), BEMPX_GetDatabaseID( "CUACResults:WaterCosts[2]" ),
+                                          BEMPX_GetDatabaseID( "CUACResults:SewerMonthlyCost" ), BEMPX_GetDatabaseID( "CUACResults:TrashMonthlyCost" ), BEMPX_GetDatabaseID( "CUACResults:TotCosts[2]"   ) };     // added Sewer - SAC 02/17/26 (dev #712)
+   double dCost, dUnitWghtAvgCosts[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
    int iCUACResultsIdx[8];
    QString sUnitTypeLabels[8];
    int iMostCommonUnitNum = 0, iMostCommonUnitIdx = 0;     // SFam - SAC 01/22/25
@@ -2794,7 +2846,7 @@ int CUAC_WriteCSVSummary( QFile& csvFile, const char* pszProjectPathFileName, co
          {  iCUACResultsIdx[ iResIdx] = BEMPX_GetObjectIndex( pResObj->getClass(), pResObj );         assert( iCUACResultsIdx[iResIdx] >= 0 );
             lCUACResNumUnits[iResIdx] = lAffordableUnitsByBedrms[i];
             BEMPX_GetString( lDBID_CUAC_UnitTypeLabels+i, sUnitTypeLabels[iResIdx] );
-            for (iCost=0; iCost<5; iCost++)
+            for (iCost=0; iCost<6; iCost++)
             {  if (BEMPX_GetFloat( lDBID_CUACResults_AvgCosts[iCost], dCost, 0, -1, iCUACResultsIdx[iResIdx] ))
                   dUnitWghtAvgCosts[iCost] += (dCost * lCUACResNumUnits[iResIdx]);
             }
@@ -2807,7 +2859,7 @@ int CUAC_WriteCSVSummary( QFile& csvFile, const char* pszProjectPathFileName, co
    BEMPX_GetInteger( lDBID_CUAC_NumAffordableDwellingUnits, lNumAffordableDwellingUnits, 0, -1 );
    assert( lNumAffordableDwellingUnits == lAffordableUnitsByBedrmsSum );
    if (lNumAffordableDwellingUnits > 0)
-   {  for (iCost=0; iCost<5; iCost++)
+   {  for (iCost=0; iCost<6; iCost++)
          dUnitWghtAvgCosts[iCost] /= lNumAffordableDwellingUnits;
    }
 
@@ -2823,16 +2875,16 @@ int CUAC_WriteCSVSummary( QFile& csvFile, const char* pszProjectPathFileName, co
 
    QString sResults;
    if (iDataModel == 1)    // SFam                 // SAC 01/22/25
-      sResults = QString::asprintf( "%s,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,%.2f,%.2f,%.2f,%.2f,%.2f,%ld\n", 
+      sResults = QString::asprintf( "%s,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%ld\n", 
                sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(), 
                sElecUtil.toLocal8Bit().constData(), sElecTerr.toLocal8Bit().constData(), sElecTariff.toLocal8Bit().constData(), sGasUtil.toLocal8Bit().constData(), sGasTerr.toLocal8Bit().constData(), sGasTariff.toLocal8Bit().constData(),
-               pszCUACCSVUnitTypeLabels[iMostCommonUnitIdx], dUnitWghtAvgCosts[0], dUnitWghtAvgCosts[1], dUnitWghtAvgCosts[2], dUnitWghtAvgCosts[3], dUnitWghtAvgCosts[4], lNumAffordableDwellingUnits );
+               pszCUACCSVUnitTypeLabels[iMostCommonUnitIdx], dUnitWghtAvgCosts[0], dUnitWghtAvgCosts[1], dUnitWghtAvgCosts[2], dUnitWghtAvgCosts[3], dUnitWghtAvgCosts[4], dUnitWghtAvgCosts[5], lNumAffordableDwellingUnits );
                // sUnitTypeLabels[iMostCommonUnitIdx].toLocal8Bit().constData(), dUnitWghtAvgCosts[0], dUnitWghtAvgCosts[1], dUnitWghtAvgCosts[2], dUnitWghtAvgCosts[3], dUnitWghtAvgCosts[4], lNumAffordableDwellingUnits );
    else  // MFam
-      sResults = QString::asprintf( "%s,\"%s\",\"%s\",\"%s\",%d:%.2d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.2f,%.2f,%.2f,%.2f,%.2f,%ld\n", 
+      sResults = QString::asprintf( "%s,\"%s\",\"%s\",\"%s\",%d:%.2d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%ld\n", 
                sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(), int(dTimeOverall/60), int(fmod(dTimeOverall, 60.0)),
                sElecUtil.toLocal8Bit().constData(), sElecTerr.toLocal8Bit().constData(), sElecTariff.toLocal8Bit().constData(), sGasUtil.toLocal8Bit().constData(), sGasTerr.toLocal8Bit().constData(), sGasTariff.toLocal8Bit().constData(),
-               dUnitWghtAvgCosts[0], dUnitWghtAvgCosts[1], dUnitWghtAvgCosts[2], dUnitWghtAvgCosts[3], dUnitWghtAvgCosts[4], lNumAffordableDwellingUnits );
+               dUnitWghtAvgCosts[0], dUnitWghtAvgCosts[1], dUnitWghtAvgCosts[2], dUnitWghtAvgCosts[3], dUnitWghtAvgCosts[4], dUnitWghtAvgCosts[5], lNumAffordableDwellingUnits );
    csvFile.write( sResults.toLocal8Bit().constData() );
 
    return iRetVal;
@@ -3272,6 +3324,10 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
          iLocRes = db.get_key_value("tProjects", "ProjectID", "WaterUsageRate",       projectID, dVal); 
          if (iLocRes == 0)
             BEMPX_SetBEMData( BEMPX_GetDatabaseID(               "WaterVolumeCost",      iCID_CUAC ), BEMP_Flt, (void*) &dVal );
+
+         double dRtZero = 0.0;      std::string sRtType = "Not Paid by Tenant";     // SAC 02/17/26 (dev #712)
+         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SewerRateType"   , iCID_CUAC ), BEMP_Str, (void*)  sRtType.c_str() );
+         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SewerMonthlyCost", iCID_CUAC ), BEMP_Flt, (void*) &dRtZero );
 
          iLocRes = db.get_key_value("tProjects", "ProjectID", "TrashRateType", projectID, sVal);
          if (iLocRes == 0 && sVal.length() > 0)
@@ -3747,6 +3803,585 @@ int CMX_PortOldCUACToCBECC( std::string sCUACPathFilename, long projectID, std::
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+#define  MAX_CUAC_DETAILS_FORMAT_ID  8       // SAC 03/20/26 (dev #743)
+
+// return value:  = 0  =>  Success, no errors encountered
+//                > 0  =>  error code - combining process aborted
+//                         1 : Details CSV file to process not specified
+//                         2 : Details CSV file not found
+//                         3 : Unable to open CUAC Details CSV file
+//                         4 : Missing or invalid Details CSV Format version ID
+//                         5 : Details CSV Format version ID incompatible with this software
+//                         6 : Unrecognized dwelling unit type
+//                         7 : Total dwelling unit type counts not found
+//                         8 : Hourly Simulation Results not found in CSV file
+int CUAC_PopulateFromDetailsCSV( const char* pszDetailsCSVPathFile, bool bVerbose,
+                                 char* pszOutputMsg, int iOutputMsgLen, int iCUAC_BEMProcIdx /*=-1*/ )      // SAC 03/20/26 (dev #743)
+{  int iRetVal = 0;
+
+   if (pszDetailsCSVPathFile == NULL || strlen( pszDetailsCSVPathFile ) < 3)
+   {  iRetVal = 1;
+      if (pszOutputMsg && iOutputMsgLen > 0)
+         sprintf_s( pszOutputMsg, iOutputMsgLen, "CUAC Details CSV file to process not specified." );
+   }
+   else if (!FileExists( pszDetailsCSVPathFile ))
+   {  iRetVal = 2;
+      if (pszOutputMsg && iOutputMsgLen > 0)
+         sprintf_s( pszOutputMsg, iOutputMsgLen, "CUAC Details CSV file not found:  %s", pszDetailsCSVPathFile );
+   }
+   else
+   {  std::string sThisPathFile = pszDetailsCSVPathFile;
+      std::ifstream in( sThisPathFile );
+      if (!in.is_open())
+      {  // error - opening file
+         iRetVal = 3;
+         if (pszOutputMsg && iOutputMsgLen > 0)
+            sprintf_s( pszOutputMsg, iOutputMsgLen, "Unable to open CUAC Details CSV file:  %s", pszDetailsCSVPathFile );
+      }
+      else
+      {  long iTotNumAffordableDwellingsThisFile=0, iaNumAffordableDwellingsByBdrm[8] = {0,0,0,0,0,0,0,0};
+         long iTotNumMarketRateDwellingsThisFile=0, iaNumMarketRateDwellingsByBdrm[8] = {0,0,0,0,0,0,0,0};
+         int iFileFormatVer=-1;   long lData;   QString sData;   double dData;
+         std::string line, sTemp;  //, sThisFileWthr, sThisElecRate, sThisGasRate;
+         std::vector<std::vector<std::string> > lines;
+
+         getline( in, line );    // format ver #
+         ParseCSV( line, lines );      assert( lines.size() > 0 );
+         if (lines[0].size() > 0 && lines[0][0].length() > 0)
+            iFileFormatVer = std::stoi( lines[0][0] );
+         if (iFileFormatVer > MAX_CUAC_DETAILS_FORMAT_ID)
+         {  iRetVal = 5;
+            if (pszOutputMsg && iOutputMsgLen > 0)
+               sprintf_s( pszOutputMsg, iOutputMsgLen, "Details CSV Format version ID incompatible with this software (max compatible %d, this file %d)", MAX_CUAC_DETAILS_FORMAT_ID, iFileFormatVer );
+         }
+         else if (iFileFormatVer < 1)
+         {  iRetVal = 4;
+            if (pszOutputMsg && iOutputMsgLen > 0)
+               sprintf_s( pszOutputMsg, iOutputMsgLen, "Missing or invalid Details CSV Format version ID (%d)", iFileFormatVer );
+         }
+         else
+         {  // read in details CSV starting w/ 2nd line -
+            getline( in, line );    // CUAC Analysis Inputs and Results Report		
+            getline( in, line );    // 	Software:	CBECC 2022.3.1 (1357)
+            getline( in, line );    // 	Ruleset:	BEMCmpMgr 2022.3.1 (8625)
+            getline( in, line );    // 	CSE:	CSE19 0.922.1 EXE
+            getline( in, line );    // 	Tariff Date:	12/18/2023
+            getline( in, line );    // Run Title:		MF8 Restructure Prototype
+            ParseCSV( line, lines );      assert( lines.size() > 0 );
+            if (lines[0].size() > 2 && lines[0][2].length() > 0)
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunTitle" ), BEMP_Str, (void*) lines[0][2].c_str(), 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+            getline( in, line );    // Run Date/Time:		2024-10-24T17:32:47-07:00
+            getline( in, line );    // Model File:		C:/CBECC-Res/CUAC/Support/24-10-24 RedwdDA PVInBillCalcs/1-NEM2Adj/CUAC-MF8Unit_2Story_ELEC-CZ12
+            getline( in, line );    // Weather File:		SACRAMENTO-EXECUTIVE_STYP20.epw
+            ParseCSV( line, lines );      assert( lines.size() > 0 );
+            if (lines[0].size() > 2 && lines[0][2].length() > 0)
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:AnnualWeatherFileNoPath" ), BEMP_Str, (void*) lines[0][2].c_str(), 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+            lData = 1;
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CalcBillsFromHrlyCSV" ), BEMP_Int, (void*) &lData,       // SAC 03/22/26 (dev #743)
+                              BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:HrlyCSVPathFile" ), BEMP_Str, (void*) pszDetailsCSVPathFile, 
+                              BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+            if (iFileFormatVer >= 7)   // SAC 01/03/25
+            {  getline( in, line );    // Valid/Invalid analysis msg
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0].size() > 2 && lines[0][2].length() > 0)
+               {  if (lines[0][2].find("Invalid") != std::string::npos)
+                  {  lData = 1;
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:NumInvalidAnalyses" ), BEMP_Int, (void*) &lData, 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                     if (lines[0][2].find("Invalid") == 0 && lines[0][2].length() > 10)
+                        sData = lines[0][2].substr( 10 ).c_str();
+                     else
+                        sData = lines[0][2].c_str();
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:AnalysisInvalidMsg" ), BEMP_QStr, (void*) &sData, 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  }
+
+            }  }
+
+            getline( in, line );       // blank    - SAC 03/21/26 (dev #743)
+            getline( in, line );       // Analysis Inputs:	
+            if (iFileFormatVer >= 4)         // SAC 11/06/24
+            {  getline( in, line );    // Site Address: ...
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0].size() > 7 && lines[0][7].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:OwnerName" ), BEMP_Str, (void*) lines[0][7].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 13 && lines[0][13].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ContactName" ), BEMP_Str, (void*) lines[0][13].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+               getline( in, line );    //    Address: ...
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0].size() > 2 && lines[0][2].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:StAddress" ), BEMP_Str, (void*) lines[0][2].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 7 && lines[0][7].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:OwnerAddress" ), BEMP_Str, (void*) lines[0][7].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 13 && lines[0][13].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ContactEMail" ), BEMP_Str, (void*) lines[0][13].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+               getline( in, line );    //    City / St / Zip ...
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0].size() > 2 && lines[0][2].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:City" ), BEMP_Str, (void*) lines[0][2].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 4 && lines[0][4].length() > 0)
+               {  lData = std::stoi( lines[0][4] );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ZipCode" ), BEMP_Int, (void*) &lData, 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               }
+               if (lines[0].size() > 7 && lines[0][7].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:OwnerCity" ), BEMP_Str, (void*) lines[0][7].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 8 && lines[0][8].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:OwnerState" ), BEMP_Str, (void*) lines[0][8].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 9 && lines[0][9].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:OwnerZIPCode" ), BEMP_Str, (void*) lines[0][9].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 13 && lines[0][13].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ContactPhone" ), BEMP_Str, (void*) lines[0][13].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+               getline( in, line );    // blank
+               getline( in, line );    //  Locality ...
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0].size() > 2 && lines[0][2].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:Locality" ), BEMP_Str, (void*) lines[0][2].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 5 && lines[0][5].length() > 0)
+               {  dData = std::stod( lines[0][5] );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ProjectID" ), BEMP_Flt, (void*) &dData, 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               }
+               if (lines[0].size() > 8 && lines[0][8].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:OtherProjectID" ), BEMP_Str, (void*) lines[0][8].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (iFileFormatVer >= 5 && lines[0].size() > 13 && lines[0][13].length() > 0) 
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:RptOption" ), BEMP_Str, (void*) lines[0][13].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+               getline( in, line );    //  Unit Type ...
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0].size() > 2 && lines[0][2].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:UnitType" ), BEMP_Str, (void*) lines[0][2].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 5 && lines[0][5].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:APN" ), BEMP_Str, (void*) lines[0][5].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+               getline( in, line );    //  Project Name ...
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0].size() > 2 && lines[0][2].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:Name" ), BEMP_Str, (void*) lines[0][2].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 8 && lines[0][8].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:GasType" ), BEMP_Str, (void*) lines[0][8].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }
+
+            getline( in, line );       // 	# Affordable Units by Type:
+            bool bTotalRowFound = false;
+            for (int j=0; (j<10 && !bTotalRowFound && iRetVal==0); j++)
+            {  getline( in, line );    // ,,<bedroom size>,
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines[0][2].find( "Total" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iTotNumAffordableDwellingsThisFile = std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iTotNumMarketRateDwellingsThisFile = std::stoi( lines[0][5] );
+                  bTotalRowFound = true;
+               }
+               else if (lines[0][2].find( "Studio" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iaNumAffordableDwellingsByBdrm[0] += std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iaNumMarketRateDwellingsByBdrm[0] += std::stoi( lines[0][5] );
+               }
+               else if (lines[0][2].find( "1 Bed" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iaNumAffordableDwellingsByBdrm[1] += std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iaNumMarketRateDwellingsByBdrm[1] += std::stoi( lines[0][5] );
+               }
+               else if (lines[0][2].find( "2 Bed" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iaNumAffordableDwellingsByBdrm[2] += std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iaNumMarketRateDwellingsByBdrm[2] += std::stoi( lines[0][5] );
+               }
+               else if (lines[0][2].find( "3 Bed" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iaNumAffordableDwellingsByBdrm[3] += std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iaNumMarketRateDwellingsByBdrm[3] += std::stoi( lines[0][5] );
+               }
+               else if (lines[0][2].find( "4 Bed" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iaNumAffordableDwellingsByBdrm[4] += std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iaNumMarketRateDwellingsByBdrm[4] += std::stoi( lines[0][5] );
+               }
+               else if (lines[0][2].find( "5 Bed" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iaNumAffordableDwellingsByBdrm[5] += std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iaNumMarketRateDwellingsByBdrm[5] += std::stoi( lines[0][5] );
+               }
+               else if (lines[0][2].find( "6 Bed" ) != std::string::npos && lines[0][4].length() > 0)
+               {  iaNumAffordableDwellingsByBdrm[6] += std::stoi( lines[0][4] );
+                  if (iFileFormatVer > 2 && lines[0][5].length() > 0)
+                     iaNumMarketRateDwellingsByBdrm[6] += std::stoi( lines[0][5] );
+               }
+               else
+               {  iRetVal = 6;      // error - unrecognized # units record
+                  if (pszOutputMsg && iOutputMsgLen > 0)
+                     sprintf_s( pszOutputMsg, iOutputMsgLen, "Unrecognized unit type (%s)", lines[0][2] );
+            }  }
+            if (!bTotalRowFound)
+            {  iRetVal = 7;      // error - missing Total units record
+               if (pszOutputMsg && iOutputMsgLen > 0)
+                  sprintf_s( pszOutputMsg, iOutputMsgLen, "Total dwelling unit type counts recoerd not found" );
+            }
+            else
+            {  long lDBID_AffordableUnitsByBedrms = BEMPX_GetDatabaseID( "CUAC:AffordableUnitsByBedrms" );
+               long lDBID_MktRateUnitsByBedrms    = BEMPX_GetDatabaseID( "CUAC:MktRateUnitsByBedrms" );
+               for (int j=0; j<8; j++)
+               {  BEMPX_SetBEMData( lDBID_AffordableUnitsByBedrms+j, BEMP_Int, (void*) &iaNumAffordableDwellingsByBdrm[j], 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  if (iFileFormatVer > 2)
+                     BEMPX_SetBEMData( lDBID_MktRateUnitsByBedrms+j, BEMP_Int, (void*) &iaNumMarketRateDwellingsByBdrm[j], 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               }
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:NumAffordableDwellingUnits" ), BEMP_Int, (void*) &iTotNumAffordableDwellingsThisFile, 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (iFileFormatVer > 2)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:NumMktRateDwellingUnits" ), BEMP_Int, (void*) &iTotNumMarketRateDwellingsThisFile, 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }
+
+            if (iRetVal == 0)
+            {
+               getline( in, line );       // elec utility
+               ParseCSV( line, lines );      assert( lines.size() > 0 && lines[0].size() > 23 );
+               //sThisElecRate = boost::str( boost::format( "%s  /  %s  /  %s  /  %s  /  %s" ) % lines[0][3] % lines[0][10] % lines[0][14] % lines[0][20] % lines[0][23] );
+               //sElecUtilTerrRate = sThisElecRate;
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ElecUtility" ), BEMP_Str, (void*) lines[0][3].c_str(), 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0][10].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:G2ElecTerritory" ), BEMP_Str, (void*) lines[0][10].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0][14].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:G2ElecTariff" ), BEMP_Str, (void*) lines[0][14].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0][20].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ElecTariffType" ), BEMP_Str, (void*) lines[0][20].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0][23].length() > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:ElecTariffAdj" ), BEMP_Str, (void*) lines[0][23].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+               getline( in, line );       // gas utility
+               ParseCSV( line, lines );      assert( lines.size() > 0 && lines[0].size() > 3 );
+               //sThisGasRate = lines[0][3];
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:GasUtility" ), BEMP_Str, (void*) lines[0][3].c_str(), 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0][3].find( "no gas" ) == std::string::npos) // 'no gas' rate files
+               {  //if (lines[0].size() > 20)     // fix bug where 'no gas' not properly flagged - SAC 11/07/24
+                  //   sThisGasRate = boost::str( boost::format( "%s  /  %s  /  %s  /  %s" ) % lines[0][3] % lines[0][10] % lines[0][14] % lines[0][20] );
+                  if (lines[0].size() > 10 && lines[0][10].length() > 0)
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:G2GasTerritory" ), BEMP_Str, (void*) lines[0][10].c_str(), 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  if (lines[0].size() > 14 && lines[0][14].length() > 0)
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:G2GasTariff" ), BEMP_Str, (void*) lines[0][14].c_str(), 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  if (lines[0].size() > 20 && lines[0][20].length() > 0)
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:GasTariffType" ), BEMP_Str, (void*) lines[0][20].c_str(), 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               }
+            }
+
+            getline( in, line );    // Water bill inputs
+            ParseCSV( line, lines );      assert( lines.size() > 0 );
+            if (lines.size() > 0 && lines[0].size() > 3)
+            {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:WaterRateType" ), BEMP_Str, (void*) lines[0][3].c_str(), 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 7 && lines[0][7].length() > 0)
+               {  dData = std::stod( lines[0][7] );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:WaterMonthlyCost" ), BEMP_Flt, (void*) &dData, 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  if (lines[0].size() > 11 && lines[0][11].length() > 0)
+                  {  dData = std::stod( lines[0][11] );
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:WaterVolumeCost" ), BEMP_Flt, (void*) &dData, 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }  }  }
+
+            if (iFileFormatVer >= 8) 
+            {  getline( in, line );       // Sewer bill inputs
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               if (lines.size() > 0 && lines[0].size() > 3)
+               {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerRateType" ), BEMP_Str, (void*) lines[0][3].c_str(), 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  if (lines[0].size() > 7 && lines[0][7].length() > 0)
+                  {  dData = std::stod( lines[0][7] );
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerMonthlyCost" ), BEMP_Flt, (void*) &dData, 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }  }  }
+            else
+            {  dData = 0.0;      std::string sRtType = "Not Paid by Tenant";
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerRateType"    ), BEMP_Str, (void*) sRtType.c_str(), 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerMonthlyCost" ), BEMP_Flt, (void*) &dData, 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }
+
+            getline( in, line );    // Trash bill inputs
+            ParseCSV( line, lines );      assert( lines.size() > 0 );
+            if (lines.size() > 0 && lines[0].size() > 3)
+            {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:TrashRateType" ), BEMP_Str, (void*) lines[0][3].c_str(), 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 7 && lines[0][7].length() > 0)
+               {  dData = std::stod( lines[0][7] );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:TrashMonthlyCost" ), BEMP_Flt, (void*) &dData, 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }  }
+
+            getline( in, line );    // Community Solar inputs
+            ParseCSV( line, lines );      assert( lines.size() > 0 );
+            if (lines.size() > 0 && (lines[0].size() < 4 || lines[0][3].find( "none" ) == 0))
+            {  lData = 0;
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:UseCommunitySolar" ), BEMP_Int, (void*) &lData, 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }
+            else
+            {  lData = 1;
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:UseCommunitySolar" ), BEMP_Int, (void*) &lData, 
+                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               if (lines[0].size() > 6 && lines[0][6].length() > 0)
+               {  dData = std::stod( lines[0][6] );      // Community Solar allocated to Affordable Units
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:TotCommunitySolarSize" ), BEMP_Flt, (void*) &dData, 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                  if (lines[0].size() > 10)
+                  {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CommunitySolarProject" ), BEMP_Str, (void*) lines[0][10].c_str(), 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               }  }
+            }
+
+            getline( in, line );    // blank  -OR-  On-site PV inputs
+            ParseCSV( line, lines );  
+            if (lines.size() > 0 && lines[0].size() > 2)
+            {  if (lines[0].size() > 6 && lines[0][6].length() > 0 && lines[0][6].find( "overridden" ) == std::string::npos)
+               {  // there IS an On-Site PV row w/ PV cap is specified
+                  dData = std::stod( lines[0][6] ); 
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:AffordablePVDCSysSize" ), BEMP_Flt, (void*) &dData, 
+                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+               }
+               if (iFileFormatVer >= 5)
+               {  getline( in, line );    // blank -or- Battery Inputs - line following On-site PV inputs
+                  ParseCSV( line, lines ); 
+                  if (lines[0].size() > 6 && lines[0][6].length() > 0 && lines[0][1].find( "Battery" ) != std::string::npos)
+                  {  // there IS an On-Site Battery row w/ Batt cap specified
+                     dData = std::stod( lines[0][6] ); 
+                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:AffordableBattMaxCap" ), BEMP_Flt, (void*) &dData, 
+                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            }  }  }
+
+            bool bFoundHourlyResults = false;
+            while (!bFoundHourlyResults && getline( in, line ))
+            {  ParseCSV( line, lines );
+               bFoundHourlyResults = (lines.size() > 0 && lines[0].size() > 0 && lines[0][0].find( "Hourly Simulation Results:" ) == 0);
+            }
+            if (!bFoundHourlyResults)
+            {  iRetVal = 8;      // Hourly Simulation Results not found in CSV file
+               if (pszOutputMsg && iOutputMsgLen > 0)
+                  sprintf_s( pszOutputMsg, iOutputMsgLen, "Hourly Simulation Results not found in CSV file" );
+            }
+         }
+      }
+   }
+   return iRetVal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// return value:  = 0  =>  Success, no errors encountered
+//                > 0  =>  error code - combining process aborted
+//                          1 : Details CSV file to process not specified
+//                          2 : Details CSV file not found
+//                          3 : Unable to open CUAC Details CSV file
+//                          4 : Missing or invalid Details CSV Format version ID
+//                          5 : Details CSV Format version ID incompatible with this software
+//                          6 : 
+//                          7 : 
+//                          8 : Hourly Simulation Results not found in CSV file
+//                         21 : Error allocating arrays of 8760 doubles to store simulation results read in from CSV
+//                         22 : Error reading row of hourly simulation results from CSV
+//                         23 : Error adding array of 8760 simulation results to BEM run
+int CUAC_ImportDetailsCSVHourlyResults( const char* pszDetailsCSVPathFile, bool bVerbose,
+                                        char* pszOutputMsg, int iOutputMsgLen, int iCUAC_BEMProcIdx /*=-1*/ )     // SAC 03/23/26 (dev #743)
+{  int iRetVal = 0;
+   if (pszDetailsCSVPathFile == NULL || strlen( pszDetailsCSVPathFile ) < 3)
+   {  iRetVal = 1;
+      if (pszOutputMsg && iOutputMsgLen > 0)
+         sprintf_s( pszOutputMsg, iOutputMsgLen, "CUAC Details CSV file to process not specified." );
+   }
+   else if (!FileExists( pszDetailsCSVPathFile ))
+   {  iRetVal = 2;
+      if (pszOutputMsg && iOutputMsgLen > 0)
+         sprintf_s( pszOutputMsg, iOutputMsgLen, "CUAC Details CSV file not found:  %s", pszDetailsCSVPathFile );
+   }
+   else
+   {  std::string sThisPathFile = pszDetailsCSVPathFile;
+      std::ifstream in( sThisPathFile );
+      if (!in.is_open())
+      {  // error - opening file
+         iRetVal = 3;
+         if (pszOutputMsg && iOutputMsgLen > 0)
+            sprintf_s( pszOutputMsg, iOutputMsgLen, "Unable to open CUAC Details CSV file:  %s", pszDetailsCSVPathFile );
+      }
+      else
+      {  long iTotNumAffordableDwellingsThisFile=0, iaNumAffordableDwellingsByBdrm[8] = {0,0,0,0,0,0,0,0};
+         long iTotNumMarketRateDwellingsThisFile=0, iaNumMarketRateDwellingsByBdrm[8] = {0,0,0,0,0,0,0,0};
+         int iFileFormatVer=-1;   long lData;   QString sData;   double dData;
+         std::string line, sTemp;  //, sThisFileWthr, sThisElecRate, sThisGasRate;
+         std::vector<std::vector<std::string> > lines;
+
+         getline( in, line );    // format ver #
+         ParseCSV( line, lines );      assert( lines.size() > 0 );
+         if (lines[0].size() > 0 && lines[0][0].length() > 0)
+            iFileFormatVer = std::stoi( lines[0][0] );
+         if (iFileFormatVer > MAX_CUAC_DETAILS_FORMAT_ID)
+         {  iRetVal = 5;
+            if (pszOutputMsg && iOutputMsgLen > 0)
+               sprintf_s( pszOutputMsg, iOutputMsgLen, "Details CSV Format version ID incompatible with this software (max compatible %d, this file %d)", MAX_CUAC_DETAILS_FORMAT_ID, iFileFormatVer );
+         }
+         else if (iFileFormatVer < 1)
+         {  iRetVal = 4;
+            if (pszOutputMsg && iOutputMsgLen > 0)
+               sprintf_s( pszOutputMsg, iOutputMsgLen, "Missing or invalid Details CSV Format version ID (%d)", iFileFormatVer );
+         }
+         else
+         {  // skip through inputs and non-hourly results until we get to Hourly results
+            bool bFoundHourlyResults = false;
+            while (!bFoundHourlyResults && getline( in, line ))
+            {  ParseCSV( line, lines );
+               bFoundHourlyResults = (lines.size() > 0 && lines[0].size() > 0 && lines[0][0].find( "Hourly Simulation Results:" ) == 0);
+            }
+            if (!bFoundHourlyResults)
+            {  iRetVal = 8;      // Hourly Simulation Results not found in CSV file
+               if (pszOutputMsg && iOutputMsgLen > 0)
+                  sprintf_s( pszOutputMsg, iOutputMsgLen, "Hourly Simulation Results not found in CSV file" );
+            }
+            else
+            {  // blast any current hourly sim results and import those from qsHrlyCSVPathFile - SAC 03/23/26 (dev #743)
+               BEMPX_InitializeHourlyResults( iCUAC_BEMProcIdx );
+
+               getline( in, line );    // sim results header w/ bedroom types & fuel labels
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+               int iHr, iHrCol, iColIdx, iBdrmIdx, iNumBdrmTypes=0, i1stCol;
+               std::string saBdrmMtrNames[7];
+               for (iBdrmIdx=0; iBdrmIdx < 7 /*Studio-6bdrm*/; iBdrmIdx++)
+               {  iColIdx = (17 * iBdrmIdx) + 3;
+                  if (lines[0].size() > (iColIdx + 12))
+                  {
+                     if (     lines[0][iColIdx].find( "Studio" ) == 0)    saBdrmMtrNames[iNumBdrmTypes] = "0bedrm";
+                     else if (lines[0][iColIdx].find( "1 Bedr" ) == 0)    saBdrmMtrNames[iNumBdrmTypes] = "1bedrm";
+                     else if (lines[0][iColIdx].find( "2 Bedr" ) == 0)    saBdrmMtrNames[iNumBdrmTypes] = "2bedrm";
+                     else if (lines[0][iColIdx].find( "3 Bedr" ) == 0)    saBdrmMtrNames[iNumBdrmTypes] = "3bedrm";
+                     else if (lines[0][iColIdx].find( "4 Bedr" ) == 0)    saBdrmMtrNames[iNumBdrmTypes] = "4bedrm";
+                     else if (lines[0][iColIdx].find( "5 Bedr" ) == 0)    saBdrmMtrNames[iNumBdrmTypes] = "5bedrm";
+                     else if (lines[0][iColIdx].find( "6 Bedr" ) == 0)    saBdrmMtrNames[iNumBdrmTypes] = "6bedrm";
+                     iNumBdrmTypes++;
+                  }
+                  else
+                     iBdrmIdx = 7;
+               }
+               int iNumHrlyResCols = (17 * iNumBdrmTypes) + 3;
+               double *pdVals[7][17] = {  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+                                          { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+                                          { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+                                          { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+                                          { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+                                          { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+                                          { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }  };
+               bool bMemAllocFailure = false;
+               // allocate arrays of 8760 doubles to hold sim results read in from CSV file
+               for (iBdrmIdx=0; (!bMemAllocFailure && iBdrmIdx < iNumBdrmTypes); iBdrmIdx++)
+                  for (iColIdx=0; (!bMemAllocFailure && iColIdx < 17); iColIdx++)
+                  {  pdVals[iBdrmIdx][iColIdx] = (double*) malloc( sizeof(double) * 8760 );
+                     bMemAllocFailure = (pdVals[iBdrmIdx][iColIdx] == NULL);
+                  }
+               if (bMemAllocFailure)
+               {  iRetVal = 21;      // Error allocating arrays of 8760 doubles to store simulation results read in from CSV
+                  if (pszOutputMsg && iOutputMsgLen > 0)
+                     sprintf_s( pszOutputMsg, iOutputMsgLen, "Error allocating memory to store simulation results read in from CSV file" );
+               }
+               else
+               {  getline( in, line );    // enduse labels row
+                  getline( in, line );    // mo/da/hr & units labels row
+                  int iErrantHrlyResRecord = -1, iErrMo=-1, iErrDa=-1, iErrHr=-1, iFuel, iEU;
+                  for (iHr=0; (iErrantHrlyResRecord < 0 && iHr<8760); iHr++)
+                  {  getline( in, line );    // row of sim results
+                     ParseCSV( line, lines );      assert( lines.size() > 0 );
+                     if (lines.size() < 1 || lines[0].size() < iNumHrlyResCols)
+                     {  iErrantHrlyResRecord = iHr;
+                        if (lines.size() > 0 && lines[0].size() > 0)   iErrMo = std::stoi( lines[0][0] );
+                        if (lines.size() > 0 && lines[0].size() > 1)   iErrDa = std::stoi( lines[0][1] );
+                        if (lines.size() > 0 && lines[0].size() > 2)   iErrHr = std::stoi( lines[0][2] );
+                     }
+                     else
+                        for (iBdrmIdx=0; iBdrmIdx < iNumBdrmTypes; iBdrmIdx++)
+                        {  i1stCol = (17 * iBdrmIdx) + 3;
+                           for (iColIdx=0; iColIdx < 17; iColIdx++)
+                              pdVals[iBdrmIdx][iColIdx][iHr] = std::stod( lines[0][i1stCol+iColIdx] );
+                        }
+                  }
+
+                  if (iErrantHrlyResRecord > -1)
+                  {  iRetVal = 22;      // Error reading row of hourly simulation results from CSV
+                     if (pszOutputMsg && iOutputMsgLen > 0)
+                     {  if (iErrMo >= 1 && iErrDa >= 1 && iErrHr >= 1)
+                           sprintf_s( pszOutputMsg, iOutputMsgLen, "Error reading row of hourly simulation results from CSV file (hr %d)", iErrantHrlyResRecord+1 );
+                        else
+                           sprintf_s( pszOutputMsg, iOutputMsgLen, "Error reading row of hourly simulation results from CSV file (hr %d (mo %d, da %d, hr %d))", iErrantHrlyResRecord+1, iErrMo, iErrDa, iErrHr );
+                  }  }
+                  else
+                  {  // all hourly results read in - now post to BEMRun data
+                     BEMPX_SetupResultRun( 0 /*iRunIdx*/, "Proposed", "ap", iCUAC_BEMProcIdx );
+                     std::string saRunEULabels[14] = {  "Cooling", "Heating", "DHW", "Ventilation", "HVAC Other", "Plug Loads", "Lighting", "Refrigerator", "Dishwasher", "Dryer", "Washer", "Cooking", "Battery", "Photovoltaics"  };
+                     int iFuelEUIdx[2][14] = {  /*elec*/ {   1,         5,       2,        6,           -1,             8,           7,            9,             3,          4,       10,        0,        12,         11   },
+                                                /* gas*/ {  -1,        16,      14,       -1,           -1,            -1,          -1,           -1,            -1,         15,       -1,       13,        -1,         -1   }  };
+                     bool bErrAddingArray = false;   double dArrayRetVal;   std::string sMtrName;
+                     for (iFuel=0; (!bErrAddingArray && iFuel < 2); iFuel++)
+                        for (iBdrmIdx=0; (!bErrAddingArray && iBdrmIdx < iNumBdrmTypes); iBdrmIdx++)
+                        {  sMtrName  = (iFuel == 0 ? "Elec_" : "Gas_");
+                           sMtrName += saBdrmMtrNames[iBdrmIdx];
+                           for (iEU=0; (!bErrAddingArray && iEU < 14); iEU++)
+                           {  dArrayRetVal = BEMPX_AddHourlyResultArray( (iFuelEUIdx[iFuel][iEU] >= 0 ? pdVals[iBdrmIdx][ iFuelEUIdx[iFuel][iEU] ] : NULL), "Proposed",
+                                                                         sMtrName.c_str(), saRunEULabels[iEU].c_str(), iCUAC_BEMProcIdx, TRUE /*bAddIfNotExist*/ );
+                              if (dArrayRetVal < -99998.9 && dArrayRetVal > -99999.1)
+                              {  bErrAddingArray = true;
+                                 iRetVal = 23;      // Error adding array of 8760 simulation results to BEM run
+                                 if (pszOutputMsg && iOutputMsgLen > 0)
+                                    sprintf_s( pszOutputMsg, iOutputMsgLen, "Error adding array of 8760 simulation results to BEM run (fuel %d, dwelling type %d, enduse %d)", iFuel, iBdrmIdx, iEU );
+                              }
+                  }     }  }
+               }
+
+               // free up arrays of 8760 doubles holding sim results read in from CSV file
+               for (iBdrmIdx=0; iBdrmIdx < iNumBdrmTypes; iBdrmIdx++)
+                  for (iColIdx=0; iColIdx < 17; iColIdx++)
+                     if (pdVals[iBdrmIdx][iColIdx] != NULL)
+                        free( pdVals[iBdrmIdx][iColIdx] );
+            }
+      }  }
+   }
+   return iRetVal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::string LatestDateString( int& iYr, int& iMo, int& iDay, std::string prevDateStr, std::string chkDateStr )    // SAC 11/12/24
 {  bool bReturnNew = false;
    size_t lastSlash  = chkDateStr.rfind('/');
@@ -3851,6 +4486,11 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
                if (i > 0)
                   sOutputMsg += "\r\n";
                sOutputMsg += boost::str( boost::format( "Processing file #%d:  %s  (format %d)\r\n" ) % (i+1) % sThisPathFile % iFileFormatVer );
+
+               if (iFileFormatVer > MAX_CUAC_DETAILS_FORMAT_ID)      // add error message if Details CSV too high for this version of software - SAC 03/20/26
+               {  iRetVal = (iRetVal < 0 ? iRetVal-1 : -1);
+                  sErrorMsg += boost::str( boost::format( "Error: Combine CSV file #%d format ID (%d) incompatible with this software (max allowed %d)\r\n" ) % (i+1) % iFileFormatVer % MAX_CUAC_DETAILS_FORMAT_ID );
+               }
 
                getline( in, line );    // CUAC Analysis Inputs and Results Report		
                getline( in, line );    // 	Software:	CBECC 2022.3.1 (1357)
@@ -4416,6 +5056,25 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
                                                 BEMO_User, iCombineObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
                      }  }  }
 
+                     if (iFileFormatVer >= 8)      // SAC 02/17/26 (dev #712)
+                     {  getline( in, line );       // Sewer bill inputs
+                        ParseCSV( line, lines );      assert( lines.size() > 0 );
+                        if (lines.size() > 0 && lines[0].size() > 3)
+                        {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SewerRateType", iBDBCID_CUACCombine ), BEMP_Str, (void*) lines[0][3].c_str(), 
+                                             BEMO_User, iCombineObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                           if (lines[0].size() > 7 && lines[0][7].length() > 0)
+                           {  dTemp = std::stod( lines[0][7] ) * dTotAffordableDwellingWeight;
+                              BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SewerMonthlyCost", iBDBCID_CUACCombine ), BEMP_Flt, (void*) &dTemp, 
+                                                BEMO_User, iCombineObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                     }  }  }
+                     else
+                     {  dTemp = 0.0;      std::string sRtType = "Not Paid by Tenant";
+                        BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SewerRateType"   , iBDBCID_CUACCombine ), BEMP_Str, (void*) sRtType.c_str(), 
+                                          BEMO_User, iCombineObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                        BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SewerMonthlyCost", iBDBCID_CUACCombine ), BEMP_Flt, (void*) &dTemp, 
+                                          BEMO_User, iCombineObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                     }
+
                      getline( in, line );    // Trash bill inputs
                      ParseCSV( line, lines );      assert( lines.size() > 0 );
                      if (lines.size() > 0 && lines[0].size() > 3)
@@ -4514,19 +5173,34 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
                      for (j=0; j < iNumDwellTypes; j++)
                      {  getline( in, line );    // total usage by utility / comm solar PV & credit
                         ParseCSV( line, lines );      assert( lines.size() > 0 );
-                        const char* pszMoUsageCostProps[] = {  "ElecCosts[2]", "GasCosts[2]", "WaterCosts[2]", "TrashMonthlyCost",
-                                                               "TotCosts[2]",  "CommunitySolarSizePerUnit", "CommunitySolarCreditPerUnit" };
-                        double dMult[]  = {  dvDwellWeight[j], dvDwellWeight[j], dvDwellWeight[j], dvDwellWeight[j],
-                                             dvDwellWeight[j], dvDwellWeight[j], (dvDwellWeight[j] * 12.0) };
-                        int iaColIdx[]  = {  4, 5, 6, 7, 8, 14, 15, -1 };
-                        k = -1;
-                        while (iaColIdx[++k] >= 0)
-                        {  if (lines.size() > 0 && lines[0].size() > iaColIdx[k] && lines[0][iaColIdx[k]].length() > 0)
-                           {  dTemp = std::stod( lines[0][iaColIdx[k]] ) * dMult[k];
-                              BEMPX_SetBEMData( BEMPX_GetDatabaseID( pszMoUsageCostProps[k], iBDBCID_CUACResults ), BEMP_Flt, (void*) &dTemp, 
-                                                BEMO_User, ivDwellResultsObjIdx[j], BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
-                        }  }
-                     }
+                        if (iFileFormatVer < 8)    // SAC 02/17/26 (dev #712)
+                        {  const char* pszMoUsageCostProps[] = {  "ElecCosts[2]", "GasCosts[2]", "WaterCosts[2]", "TrashMonthlyCost",
+                                                                  "TotCosts[2]",  "CommunitySolarSizePerUnit", "CommunitySolarCreditPerUnit" };
+                           double dMult[]  = {  dvDwellWeight[j], dvDwellWeight[j], dvDwellWeight[j], dvDwellWeight[j],
+                                                dvDwellWeight[j], dvDwellWeight[j], (dvDwellWeight[j] * 12.0) };
+                           int iaColIdx[]  = {  4, 5, 6, 7, 8, 14, 15, -1 };
+                           k = -1;
+                           while (iaColIdx[++k] >= 0)
+                           {  if (lines.size() > 0 && lines[0].size() > iaColIdx[k] && lines[0][iaColIdx[k]].length() > 0)
+                              {  dTemp = std::stod( lines[0][iaColIdx[k]] ) * dMult[k];
+                                 BEMPX_SetBEMData( BEMPX_GetDatabaseID( pszMoUsageCostProps[k], iBDBCID_CUACResults ), BEMP_Flt, (void*) &dTemp, 
+                                                   BEMO_User, ivDwellResultsObjIdx[j], BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                           }  }
+                        }
+                        else
+                        {  const char* pszMoUsageCostProps[] = {  "ElecCosts[2]", "GasCosts[2]", "WaterCosts[2]", "SewerMonthlyCost", "TrashMonthlyCost",
+                                                                  "TotCosts[2]",  "CommunitySolarSizePerUnit", "CommunitySolarCreditPerUnit" };
+                           double dMult[]  = {  dvDwellWeight[j], dvDwellWeight[j], dvDwellWeight[j], dvDwellWeight[j], dvDwellWeight[j],
+                                                dvDwellWeight[j], dvDwellWeight[j], (dvDwellWeight[j] * 12.0) };
+                           int iaColIdx[]  = {  4, 5, 6, 7, 8, 9, 14, 15, -1 };
+                           k = -1;
+                           while (iaColIdx[++k] >= 0)
+                           {  if (lines.size() > 0 && lines[0].size() > iaColIdx[k] && lines[0][iaColIdx[k]].length() > 0)
+                              {  dTemp = std::stod( lines[0][iaColIdx[k]] ) * dMult[k];
+                                 BEMPX_SetBEMData( BEMPX_GetDatabaseID( pszMoUsageCostProps[k], iBDBCID_CUACResults ), BEMP_Flt, (void*) &dTemp, 
+                                                   BEMO_User, ivDwellResultsObjIdx[j], BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+                           }  }
+                     }  }
 
                      getline( in, line );    // blank
                      getline( in, line );    // Unit Type ... (& enduse) label row

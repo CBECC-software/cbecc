@@ -75,6 +75,8 @@
 #include <sdd/ReverseTranslator.hpp>
 #include <sdd/ForwardTranslator.hpp>
 
+#include <epjson/epJSONTranslator.hpp>       // SAC 02/05/26 (dev #188)
+
 //#include <runmanager/lib/JobFactory.hpp>
 //#include <runmanager/lib/RunManager.hpp>
 //#include <runmanager/lib/Workflow.hpp>
@@ -1714,7 +1716,8 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										}	}	}
 										pOSWrap->SetBlrData(     iRunIdx, iObj, 0, (dPkVal > -99999. ? dPkVal : 0.0) );		// pRunData->daBlr_CapRtd[iObj] = (dPkVal > -99999. ? dPkVal : 0.0);
                                     if (dbgSzgFile)      // SAC 04/09/25
-                                    {	snprintf( sDbgSzg, 512, "Boiler:  timeSeries( eachPeriod, Hourly, %s, %s ) -->> %g\n", sVarName.c_str(), s.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
+                                    //{	snprintf( sDbgSzg, 512, "Boiler:  timeSeries( eachPeriod, Hourly, %s, %s ) -->> %g\n", sVarName.c_str(), s.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
+                                    {	snprintf( sDbgSzg, 512, "Boiler:  timeSeries( %s, %s, %s, %s ) -->> %g\n", saEnvPeriods[0].c_str(), sHrly.c_str(), sVarName.c_str(), sObj.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );   // fix dbg output string - SAC 01/22/26 (support #383)
                                        fprintf( dbgSzgFile, sDbgSzg );
                                     }
                            }
@@ -1748,7 +1751,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										}	}	}
 										pOSWrap->SetChlrData(    iRunIdx, iObj, 0, (dPkVal > -99999. ? dPkVal : 0.0) );		// pRunData->daChlr_CapRtd[iObj] = (dPkVal > -99999. ? dPkVal : 0.0);
                                     if (dbgSzgFile)      // SAC 04/09/25
-                                    {	snprintf( sDbgSzg, 512, "Chiller:  timeSeries( eachPeriod, Hourly, %s, %s ) -->> %g\n", sVarName.c_str(), s.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
+                                    {	snprintf( sDbgSzg, 512, "Chiller:  timeSeries( %s, %s, %s, %s ) -->> %g\n", saEnvPeriods[0].c_str(), sHrly.c_str(), sVarName.c_str(), sObj.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
                                        fprintf( dbgSzgFile, sDbgSzg );
                                     }
                            }
@@ -1782,7 +1785,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										}	}	}
 										pOSWrap->SetHtRejData(   iRunIdx, iObj, 0, (dPkVal > -99999. ? dPkVal : 0.0) );		// pRunData->daHtRej_CapRtd[iObj] = (dPkVal > -99999. ? dPkVal : 0.0);
                                     if (dbgSzgFile)      // SAC 04/09/25
-                                    {	snprintf( sDbgSzg, 512, "HtReject:  timeSeries( eachPeriod, Hourly, %s, %s ) -->> %g\n", sVarName.c_str(), s.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
+                                    {	snprintf( sDbgSzg, 512, "HtReject:  timeSeries( %s, %s, %s, %s ) -->> %g\n", saEnvPeriods[0].c_str(), sHrly.c_str(), sVarName.c_str(), sObj.c_str(), (dPkVal > -99999. ? dPkVal : 0.0) );
                                        fprintf( dbgSzgFile, sDbgSzg );
                                     }
                            }
@@ -2256,7 +2259,72 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 						{	strErrMsg = boost::str( boost::format("openstudio::Workspace::save() failed on%sfile:  %s" ) % sRunName % inputPathString );
 							lRetVal = (iRun == 0 ? OSWrap_SimSDD_OSSaveIDFError : OSWrap_SimSDD_OSSaveIDF2Error);
 						}
-						iNumEPSims++;
+
+                  // added storage of JSON file for each IDF - SAC 02/05/26 (dev #188)
+                  FILE *jsonFile = NULL;     // SAC 02/09/26 (dev #188)
+                  openstudio::path epJSONSchemaPath = openstudio::toPath( boost::str( boost::format("%sEnergy+.schema.epJSON") % pszEPlusPath ) );
+                  try
+                  {  
+                     std::string jsonidfstr = openstudio::epJSON::toJSONString( workspace, epJSONSchemaPath );    // SAC 02/05/26 (dev #188)
+                     if (jsonidfstr.length() > 0)
+                     {  jsonFile = fopen( boost::str( boost::format("%s.json") % sIDFBasePath ).c_str(), "wt" );     // SAC 02/09/26 (dev #188)
+                        if (jsonFile)
+                        {  fprintf( jsonFile, jsonidfstr.c_str() );
+                           fflush( jsonFile );
+                           fclose( jsonFile );
+                     }  }
+
+                     // also works -
+                     // openstudio::OptionalIdfFile optionalIdfFile = openstudio::IdfFile::load( idfPath[m_iNumEPSims] );     // SAC 02/09/26 (dev #188)
+                     // if (!optionalIdfFile)
+                     // {  strErrMsg = boost::str( boost::format("openstudio::IdfFile::load() failed on%sfile:  %s" ) % sRunName % inputPathString );
+                     //    // std::cerr << "Error: Could not load IDF file at " << openstudio::toString( idfPath[m_iNumEPSims] ) << std::endl;
+                     //    lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     //    paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                     // }
+                     // else
+                     // {  openstudio::IdfFile idfJsonFile = optionalIdfFile.get();
+                     //    std::string epJsonString = openstudio::epJSON::toJSONString( idfJsonFile, epJSONSchemaPath );
+                     //    // // Convert to epJSON - The convert function handles the internal logic
+                     //    // openstudio::OptionalString optionalEpJsonString = openstudio::epJSON::convert( idfJsonFile );
+                     //    // if (!optionalEpJsonString)
+                     //    // {  strErrMsg = boost::str( boost::format("openstudio::epJSON::convert() failed on%sfile:  %s" ) % sRunName % inputPathString );
+                     //    //    // std::cerr << "Error: Conversion to epJSON failed." << std::endl;
+                     //    //    lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     //    //    paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                     //    // }
+                     //    // else
+                     //    // {  std::string epJsonString = optionalEpJsonString.get();
+                     //       if (epJsonString.length() < 5)
+                     //       {  strErrMsg = boost::str( boost::format("openstudio conversion of JSON OptionalString to string failed on%sfile:  %s" ) % sRunName % inputPathString );
+                     //          lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     //          paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                     //       }
+                     //       else
+                     //       {  jsonFile = fopen( boost::str( boost::format("%s.json") % sIDFBasePath ).c_str(), "wt" );     // SAC 02/09/26 (dev #188)
+                     //          if (jsonFile)
+                     //          {  fprintf( jsonFile, epJsonString.c_str() );
+                     //             fflush( jsonFile );
+                     //             fclose( jsonFile );
+                     //          }
+                     //    // }
+                     // }  }
+
+                     // this one requires presence of another JSON CPP DLL -
+                     // Json::Value jsonidf = openstudio::epJSON::toJSONString( workspace );    // SAC 02/05/26 (dev #188)
+                     // std::string sjsonfn = boost::str( boost::format("%s.json") % sIDFBasePath );
+                     // std::ofstream o( sjsonfn );
+                     // o << std::setw(4) << jsonidf << std::endl;
+                  }
+                  catch (std::exception& e)
+                  {  strErrMsg = boost::str( boost::format("openstudio::epJSON::toJSONString( workspace ) failed%sbecause '%s' on file:  %s" ) % sRunName % e.what() % inputPathString );
+							lRetVal = (iRun == 0 ? OSWrap_SimSDD_OSSaveIDFError : OSWrap_SimSDD_OSSaveIDF2Error);
+                  }
+                  catch (...)
+                  {  strErrMsg = boost::str( boost::format("openstudio::epJSON::toJSONString( workspace ) failed on%sfile:  %s" ) % sRunName % inputPathString );
+							lRetVal = (iRun == 0 ? OSWrap_SimSDD_OSSaveIDFError : OSWrap_SimSDD_OSSaveIDF2Error);
+                  }
+                  iNumEPSims++;
 					}
 					catch (std::exception& e)
 					{	strErrMsg = boost::str( boost::format("openstudio::model::Model::save() failed%sbecause '%s' on file:  %s" ) % sRunName % e.what() % inputPathString );
@@ -2776,7 +2844,7 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 #endif 
 						openstudio::Workspace workspace = forwardTranslator.translateModel( *model[iRun] );
 
-						if (bOutputDiagnostics)		// SAC 4/2/15
+                  if (bOutputDiagnostics)		// SAC 4/2/15
 						{	openstudio::IdfObject idfOutDiag( openstudio::IddObjectType::Output_Diagnostics );
 							idfOutDiag.setString( 0, "DisplayExtraWarnings" );
 							workspace.addObject( idfOutDiag );
@@ -2990,8 +3058,75 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 							lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
 							paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
 						}
+
+                  // added storage of JSON file for each IDF - SAC 02/05/26 (dev #188)
+                  FILE *jsonFile = NULL;     // SAC 02/09/26 (dev #188)
+                  openstudio::path epJSONSchemaPath = openstudio::toPath( boost::str( boost::format("%sEnergy+.schema.epJSON") % pszEPlusPath ) );
+                  try
+                  {  
+                     std::string jsonidfstr = openstudio::epJSON::toJSONString( workspace, epJSONSchemaPath );    // SAC 02/05/26 (dev #188)
+                     if (jsonidfstr.length() > 0)
+                     {  jsonFile = fopen( boost::str( boost::format("%s.json") % sIDFBasePath ).c_str(), "wt" );     // SAC 02/09/26 (dev #188)
+                        if (jsonFile)
+                        {  fprintf( jsonFile, jsonidfstr.c_str() );
+                           fflush( jsonFile );
+                           fclose( jsonFile );
+                     }  }
+
+                     // also works -
+                     // openstudio::OptionalIdfFile optionalIdfFile = openstudio::IdfFile::load( idfPath[m_iNumEPSims] );     // SAC 02/09/26 (dev #188)
+                     // if (!optionalIdfFile)
+                     // {  strErrMsg = boost::str( boost::format("openstudio::IdfFile::load() failed on%sfile:  %s" ) % sRunName % inputPathString );
+                     //    // std::cerr << "Error: Could not load IDF file at " << openstudio::toString( idfPath[m_iNumEPSims] ) << std::endl;
+                     //    lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     //    paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                     // }
+                     // else
+                     // {  openstudio::IdfFile idfJsonFile = optionalIdfFile.get();
+                     //    std::string epJsonString = openstudio::epJSON::toJSONString( idfJsonFile, epJSONSchemaPath );
+                     //    // // Convert to epJSON - The convert function handles the internal logic
+                     //    // openstudio::OptionalString optionalEpJsonString = openstudio::epJSON::convert( idfJsonFile );
+                     //    // if (!optionalEpJsonString)
+                     //    // {  strErrMsg = boost::str( boost::format("openstudio::epJSON::convert() failed on%sfile:  %s" ) % sRunName % inputPathString );
+                     //    //    // std::cerr << "Error: Conversion to epJSON failed." << std::endl;
+                     //    //    lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     //    //    paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                     //    // }
+                     //    // else
+                     //    // {  std::string epJsonString = optionalEpJsonString.get();
+                     //       if (epJsonString.length() < 5)
+                     //       {  strErrMsg = boost::str( boost::format("openstudio conversion of JSON OptionalString to string failed on%sfile:  %s" ) % sRunName % inputPathString );
+                     //          lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     //          paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                     //       }
+                     //       else
+                     //       {  jsonFile = fopen( boost::str( boost::format("%s.json") % sIDFBasePath ).c_str(), "wt" );     // SAC 02/09/26 (dev #188)
+                     //          if (jsonFile)
+                     //          {  fprintf( jsonFile, epJsonString.c_str() );
+                     //             fflush( jsonFile );
+                     //             fclose( jsonFile );
+                     //          }
+                     //    // }
+                     // }  }
+
+                     // this one requires presence of another JSON CPP DLL -
+                     // Json::Value jsonidf = openstudio::epJSON::toJSONString( workspace );    // SAC 02/05/26 (dev #188)
+                     // std::string sjsonfn = boost::str( boost::format("%s.json") % sIDFBasePath );
+                     // std::ofstream o( sjsonfn );
+                     // o << std::setw(4) << jsonidf << std::endl;
+                  }
+                  catch (std::exception& e)
+                  {  strErrMsg = boost::str( boost::format("openstudio::epJSON::toJSONString( workspace ) failed%sbecause '%s' on file:  %s" ) % sRunName % e.what() % inputPathString );
+                     lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                  }
+                  catch (...)
+                  {  strErrMsg = boost::str( boost::format("openstudio::epJSON::toJSONString( workspace ) failed on%sfile:  %s" ) % sRunName % inputPathString );
+                     lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
+                     paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
+                  }
 						m_iNumEPSims++;
-					}
+               }
 					catch (std::exception& e)
 					{	strErrMsg = boost::str( boost::format("openstudio::model::Model::save() failed%sbecause '%s' on file:  %s" ) % sRunName % e.what() % inputPathString );
 						lRetVal = OSWrap_SimSDD_OSSaveOSMError + (iRun * 10);
@@ -3001,7 +3136,7 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 					{	strErrMsg = boost::str( boost::format("openstudio::model::Model::save() failed on%sfile:  %s" ) % sRunName % inputPathString );
 						lRetVal = OSWrap_SimSDD_OSSaveOSMError + (iRun * 10);
 						paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveOSMError;
-				}	}
+            }  }
 				else if (!bAbort && lRetVal < 1)
 				{	lRetVal = OSWrap_SimSDD_OSModelCreateError + (iRun * 10);  // failure to create OSM (model)
 					paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSModelCreateError;

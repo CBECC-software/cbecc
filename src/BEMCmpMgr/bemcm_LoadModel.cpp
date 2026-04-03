@@ -993,7 +993,7 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 				iRetVal = 4;	// initialization of BEM failed
 	}	}
 
-	if (iRetVal == 0 && !sRulesetFile.isEmpty() && !CMX_LoadRuleset( sRulesetFile.toLocal8Bit().constData(), TRUE /*bDeleteAllObjects*/ ))
+	if (iRetVal == 0 && !sRulesetFile.isEmpty() && !CMX_LoadRuleset( sRulesetFile.toLocal8Bit().constData(), TRUE /*bDeleteAllObjects*/, sBEMBinFile.toLocal8Bit().constData() ))
 		iRetVal = 5;	// error loading ruleset file
 
 	if (iRetVal == 0)

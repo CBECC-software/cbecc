@@ -4241,6 +4241,35 @@ int BEMPX_GetParentComponentTypeForProperty( int i1Class, const char* pszPropNam
 
 /////////////////////////////////////////////////////////////////////////////
 
+int BEMPX_SummarizeRuleSubsets( QString& qsSummary )     // SAC 12/22/25 (dev #524)
+{  int iRetVal = 0;
+   int iNumRuleSubsets = ruleSet.numRuleSubsets();
+   for (int i=0; i<iNumRuleSubsets; i++)
+   {  RuleSubset* pRS = ruleSet.getRuleSubset( i );
+      if (pRS)
+      {  qsSummary += QString( "   RuleSubset #%1 '%2': %3 tables, beginning #%4, hash: %5\n" ).arg( QString::number(i+1), pRS->getName(), QString::number( pRS->getNumTables() ), QString::number( pRS->getTableID(0) ), pRS->getFileHash() );
+         iRetVal++;
+   }  }
+   return iRetVal;
+}
+
+int  BEMPX_GetNumRuleSubsets()      // SAC 12/30/25 (dev #524)
+{  return ruleSet.numRuleSubsets();
+}
+
+bool BEMPX_GetRuleSubsetData( int idx, QString& qsName, QString& qsFileHash )     // SAC 12/30/25 (dev #524)
+{  if (idx >= 0 && idx < ruleSet.numRuleSubsets())
+   {  RuleSubset* pRS = ruleSet.getRuleSubset( idx );
+      if (pRS)
+      {  qsName     = pRS->getName();
+         qsFileHash = pRS->getFileHash();
+         return true;
+   }  }
+   return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 static BEMObject* CheckForReplacementParent( int iChildClass, int iCurParObjClass, int iRepObjIdx, int iBEMProcIdx )
 {
    int iError;

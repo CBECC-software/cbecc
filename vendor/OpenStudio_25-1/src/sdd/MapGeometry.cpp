@@ -1018,7 +1018,7 @@ namespace sdd {
         openstudio::model::ElectricEquipment electricEquipment(electricEquipmentDefinition);
         electricEquipment.setName(name + " Process Electric Loads");
         electricEquipment.setSpace(space);
-        electricEquipment.setEndUseSubcategory("Receptacle");
+        electricEquipment.setEndUseSubcategory("Process");        // revert KB 5/20/25 mod to restore Process enduse - SAC 02/23/26 (dev #724)
 
         if (procElecSchRefElement) {
           std::string scheduleName = escapeName(procElecSchRefElement.text().as_string());

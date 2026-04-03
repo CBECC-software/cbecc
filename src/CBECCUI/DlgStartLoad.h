@@ -78,7 +78,8 @@ protected:
 	//{{AFX_MSG(CDlgStartLoad)
 	afx_msg void OnStartBatchProcessing();
 	afx_msg void OnStartCommunitySolarOptOut();  // SAC 03/28/23
-	afx_msg void OnStartOldCUAC();      // SAC 09/18/23
+	afx_msg void OnStartOldCUAC();               // SAC 09/18/23
+	afx_msg void OnStartCUACFromCSV();           // SAC 03/19/26 (dev #743)
 	afx_msg void OnStartBlankSlate();
 	afx_msg void OnStartExistingProject();
 	afx_msg void OnStartNewProject();

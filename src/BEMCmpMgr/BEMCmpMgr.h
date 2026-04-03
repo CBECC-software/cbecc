@@ -78,7 +78,7 @@ void BEMCMPMGR_API __cdecl CMX_ExitBEMCmpMgrDLL();
 bool BEMCMPMGR_API __cdecl CMX_GetUIActiveFlag();
 void BEMCMPMGR_API __cdecl CMX_SetUIActiveFlag( bool bActiveUI );
 
-BOOL BEMCMPMGR_API __cdecl CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE );
+BOOL BEMCMPMGR_API __cdecl CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE, LPCSTR bemBaseFileName=NULL );      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)
 BOOL BEMCMPMGR_API __cdecl CMX_GetRulesetID( QString& sRuleSetID, QString& sRuleSetVer );
 BOOL BEMCMPMGR_API __cdecl CMX_ReadRulesetID( LPCSTR fileName, QString& sRuleSetID, QString& sRuleSetVer );
 
@@ -293,7 +293,8 @@ int  BEMCMPMGR_API __cdecl CMX_ExportCUACDBProjectTables( std::string sCUACPathF
 void  BEMCMPMGR_API __cdecl CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, char* pszErrorMsg, int iErrorMsgLen,
                               bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx, int iDataModel=0, int iBillCalcDetails=-1,
-                              int iDownloadVerbose=-1, bool bWritePDF=true, bool bWriteCSV=true, int iBatchRunIdx=0, const char* pAnalysisInvalidMsg=NULL );
+                              int iDownloadVerbose=-1, bool bWritePDF=true, bool bWriteCSV=true, int iBatchRunIdx=0, const char* pAnalysisInvalidMsg=NULL,
+                              bool bBypassElecBillCalcs=false, bool bBypassGasBillCalcs=false );
 
 void  BEMCMPMGR_API __cdecl CUAC_AnalysisProcessing_BatchRates( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, char* pszErrorMsg, int iErrorMsgLen,
@@ -303,6 +304,11 @@ void  BEMCMPMGR_API __cdecl CUAC_AnalysisProcessing_BatchRates( QString sProcess
 
 int   BEMCMPMGR_API __cdecl CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, char* pszOutputMsg, int iOutputMsgLen,
                                                  const char* pszRptGraphicsPath, int iCUAC_BEMProcIdx=-1, int iDataModel=0 );   // iDataModel: 0-CBECC / 1-SFam Res
+
+int   BEMCMPMGR_API __cdecl CUAC_PopulateFromDetailsCSV( const char* pszDetailsCSVPathFile, bool bVerbose,
+                                                         char* pszOutputMsg, int iOutputMsgLen, int iCUAC_BEMProcIdx=-1 );       // SAC 03/20/26 (dev #743)
+int   BEMCMPMGR_API __cdecl CUAC_ImportDetailsCSVHourlyResults( const char* pszDetailsCSVPathFile, bool bVerbose,
+                                                                char* pszOutputMsg, int iOutputMsgLen, int iCUAC_BEMProcIdx=-1 );   // SAC 03/23/26 (dev #743)
 
 #ifdef __cplusplus
 }

@@ -66,6 +66,7 @@ extern BOOL ebInitiateProjectCreation;
 extern BOOL ebInitiateBatchProcViaStartDlg;	// SAC 11/14/17
 extern BOOL ebInitiateCommSlrOptOutViaStartDlg;  // SAC 03/28/23
 extern BOOL ebInitiateOldCUACImportViaStartDlg;	 // SAC 09/18/23
+extern BOOL ebInitiateCUACFromCSVViaStartDlg;      // SAC 03/19/26 (dev #743)
 extern BOOL ebDisplayAllUIControls;
 extern BOOL ebAnalysisRangeChecks;
 extern BOOL ebShowHelpFollowingWizard;  // SAC 2/14/01

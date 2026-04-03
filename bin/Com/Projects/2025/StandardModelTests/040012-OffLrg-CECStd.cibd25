@@ -3,8 +3,8 @@ RulesetFilename   "T24_2025.bin"
 Proj   "040012-OffLrg-CECStd25"  
    BldgEngyModelVersion = 17
    CreateDate = 1414971672
-   ModDate = 1762523141
-   RunDate = 1762523142
+   ModDate = 1774252266
+   RunDate = 1774252267
    ZipCode = 95814
    AutoHardSize = 1
    AutoEffInput = 1
@@ -13,7 +13,7 @@ Proj   "040012-OffLrg-CECStd25"
    SimVarsHVACSecTempFlow = 0
    AnalysisType = "Title24Compliance"
    AirBarrier = "Air barrier - not verified"
-   SoftwareVersion = "CBECC 2025.2.0 (1394)"
+   SoftwareVersion = "CBECC 2025.2.1 (1407)"
    ResultsCurrentMessage = "(not current)"
    ..
 

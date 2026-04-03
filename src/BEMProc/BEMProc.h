@@ -312,7 +312,7 @@ int  BEMPROC_API __cdecl BEMPX_CheckDataModelBin( const char* pszBinFileName );	
 BOOL BEMPROC_API __cdecl BEMPX_LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,		// was: BEMPX_InitBEMProc()
 																const char* psInitLogFileName = NULL );
 
-BOOL BEMPROC_API __cdecl BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE );							// was: RuleProcRead()
+BOOL BEMPROC_API __cdecl BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE, LPCSTR bemBaseFileName=NULL );      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)   // was: RuleProcRead()
 BOOL BEMPROC_API __cdecl BEMPX_ReadRulesetID( LPCSTR fileName, QString& sRuleSetID, QString& sRuleSetVer );		// was: RuleProcReadRulesetID()
 BOOL BEMPROC_API __cdecl BEMPX_ReadBEMBaseFile( LPCSTR fileName, QString& sBEMBaseFile );								// was: RuleProcReadBEMBaseFile()
 void BEMPROC_API __cdecl BEMPX_GetBEMBaseFile( QString& sBEMBaseFile, int iBEMProcIdx=-1 );	// was: BEMPX_GetBEMProcPathFile()
@@ -387,10 +387,14 @@ bool BEMPROC_API __cdecl BEMPX_WriteProjectComponent( const char* fileName, BEMO
 
 int  BEMPROC_API __cdecl BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
                                                           int iBEMProcIdx=-1, QString* psMsg=NULL, const char* fileNamePropertyType=NULL,       // SAC 08/15/23
-                                                          const char* propertyToIncludeInObjName=NULL );    // SAC 12/18/23
+                                                          const char* propertyToIncludeInObjName=NULL, bool bRenameReservedBEMProperties=false );    // SAC 12/18/23  // bRenameReservedBEMProperties - SAC 01/15/26 (dev #689)
 int  BEMPROC_API __cdecl BEMPX_GetJSONFileErrorCode( const char* fileName, QString* psMsg=NULL, const char* pszReqdElement=NULL, long lMinFileSize=0 );     // SAC 09/04/23
 
 int  BEMPROC_API __cdecl BEMPX_WriteComponentsToCSVFile( const char* fileName, const char* objType, int iBEMProcIdx=-1 );   // SAC 08/16/23
+
+int  BEMPROC_API __cdecl BEMPX_SummarizeRuleSubsets( QString& qsSummary );   // SAC 12/22/25 (dev #524)
+int  BEMPROC_API __cdecl BEMPX_GetNumRuleSubsets();                                             // SAC 12/30/25 (dev #524)
+bool BEMPROC_API __cdecl BEMPX_GetRuleSubsetData( int idx, QString& qsName, QString& qsFileHash ); 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Access to CBEMClasses
