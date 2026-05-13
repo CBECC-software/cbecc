@@ -244,7 +244,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_TOOLS_PURGEUNREFOBJ, OnToolsPurgeUnreferencedObjects)
 	ON_COMMAND(IDM_ANALRANGECHECKS, OnAnalysisRangeChecks)
 	ON_UPDATE_COMMAND_UI(IDM_ANALRANGECHECKS, OnUpdateAnalysisRangeChecks)
-	ON_COMMAND(IDM_HELP_OVERVIEW, OnHelpOverview)
+   ON_COMMAND(IDM_HELP_RELEASENOTES, OnHelpReleaseNotes)
+	ON_UPDATE_COMMAND_UI(IDM_HELP_RELEASENOTES, OnUpdateHelpReleaseNotes)
+   ON_COMMAND(IDM_HELP_OVERVIEW, OnHelpOverview)
 	ON_UPDATE_COMMAND_UI(IDM_HELP_OVERVIEW, OnUpdateHelpOverview)
 	ON_COMMAND(IDM_HELP_USERMANUAL, OnHelpUserManual)
 	ON_UPDATE_COMMAND_UI(IDM_HELP_USERMANUAL, OnUpdateHelpUserManual)
@@ -1777,12 +1779,12 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgProj.DoModal();
       }
-      else if (ebUI_CARES && wAction == 3030)	// SAC 2/22/17 - updated from 3008->3030 due to overlap in range used to present PolyLp dialog (now shared between NRes & Res)
-      {
-			CString sDialogCaption;
-			GetDialogCaption( eiBDBCID_HVACSys, sDialogCaption );
+      else if (/*ebUI_CARES &&*/ wAction == 3030)	// SAC 2/22/17 - updated from 3008->3030 due to overlap in range used to present PolyLp dialog (now shared between NRes & Res)  // enable for both SFam & NRMF - SAC 05/05/26 (dev #861)
+      {  int iCID_ResHVACSys = (ebUI_CANRES ? eiBDBCID_ResHVACSys : eiBDBCID_HVACSys);  // SAC 05/05/26
+         CString sDialogCaption;
+			GetDialogCaption( iCID_ResHVACSys, sDialogCaption );
          // Present dialog to collect Multifamily Dwelling Unit data
-         CSACDlg dlgDwlgUnit( pDlg, eiBDBCID_HVACSys, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+         CSACDlg dlgDwlgUnit( pDlg, iCID_ResHVACSys, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									270 /*Ht*/, 470 /*Wd*/, 10 /*iBaseMarg*/,
                            0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
@@ -1982,7 +1984,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 							lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}	}
 		}
-		else if (ebUI_CANRES && wAction == 3030)		// present website w/ UMLH info - SAC 7/28/20
+		else if (ebUI_CANRES && wAction == 3029)		// present website w/ UMLH info - SAC 7/28/20  // 3030 -> 3029 to avoid overlap w/ Res dlg now available in NRMF models - SAC 05/05/26 (dev #861)
 		{	QString qsUMLHsite;
 			BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:ZoneUMLHsLink" ), qsUMLHsite );
 			if (qsUMLHsite.isEmpty())
@@ -2145,6 +2147,9 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 		         }
                bool bDoingBatch = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:BatchRateIdx" ), lTemp ) && lTemp > 0);    // SAC 09/29/23
 
+               CString sUtilityRatePath = esDataPath + "UtilityRates\\G3\\";     // SAC 04/15/26 (dev #689)
+               sUtilityRatePath = ReadProgString( "paths", "UtilityRatesPath", (const char*) sUtilityRatePath, TRUE );
+
                long lElecTariffGen=0, lGasTariffGen=0;
                if (!bDoingBatch && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lElecTariffGen ) && lElecTariffGen > 1)
                {  iCUACRetVal = CMX_RateDownload(  "Electric", 94, "CUAC:CPR_ElecUtilityRateRef", sCurrentProjPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/
@@ -2196,12 +2201,13 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                                  (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress), 
                                  (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials), 
                                  (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType), 
-                                 iConnectTimeoutSecs, iReadWriteTimeoutSecs, iDownloadVerbose, NULL );
+                                 iConnectTimeoutSecs, iReadWriteTimeoutSecs, iDownloadVerbose, NULL /*pAnalysisInvalidMsg*/, (const char*) sUtilityRatePath );
                   else
                      CUAC_AnalysisProcessing( (const char*) sCurrentProjPath, (const char*) sCurrentProjPath, (const char*) sModelFileOnly, (const char*) esBEMBasePath,
                                  elRulesetCodeYear, bStoreBEMDetails, bSilent, bCUACVerbose, bEnableResearchMode, NULL /*pCompRuleDebugInfo*/,
                                  NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bCUACAbort, iCUACRetVal, qsCUACErrMsg, lCUAC_RptOption, iCUAC_BEMProcIdx, iCUACDataModelID,
-                                 iLogCUACBillCalcDetails, iDownloadVerbose );
+                                 iLogCUACBillCalcDetails, iDownloadVerbose, true /*bWritePDF*/, true /*bWriteCSV*/, 0 /*iBatchRunIdx*/, NULL /*pAnalysisInvalidMsg*/,
+                                 false /*bBypassElecBillCalcs*/, false /*bBypassGasBillCalcs*/, (const char*) sUtilityRatePath );
                }
 
                if (!bDoingBatch && lElecTariffGen > 1)
@@ -2308,6 +2314,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          {  long lUtilityRateGen;
             if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:UtilityRateGen" ), lUtilityRateGen ) && lUtilityRateGen > 2)
                lDlgID += (lUtilityRateGen-2);
+            iDlgHt = 290;
             iDlgWd = 750;
          }
          //GetDialogTabDimensions( eiBDBCID_CUAC, iDlgWd, iDlgHt );
@@ -5214,7 +5221,7 @@ void CMainFrame::OnToolsProcessJSONUtilityRateFiles()		// SAC 12/18/23
       {	CWaitCursor wait;
 
          // default CPR utility rate objects
-         CMX_EvaluateRuleset( "CUAC_DefaultGen2Rates", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
+         CMX_EvaluateRuleset( "CUAC_DefaultGenXRates", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
 
       	   sDbgFileName = sDbgFileNameRoot + CString(" - aft rate read.ibd-Detail");
 		      BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
@@ -6055,17 +6062,21 @@ void CMainFrame::OnToolsRunTest()		// SAC 06/16/22
                                     false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
 
 
-            QString qsErrMsg;
-            CString sRateName = "XH Rate";
+            QString qsElecErrMsg, qsGasErrMsg;
+            CString sElecRateName = "XH Elec Rate", sGasRateName = "XH Gas Rate";
             //iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\Dev\\CUAC-testing\\CUAC\\45-CPRrates\\rate.json", "CPR_UtilityRate", (const char*) sRateName, -1, &qsErrMsg );
-            int iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\sce-schedule-tou-d-4-9pm.json", "XH_UtilityRate", (const char*) sRateName, -1, &qsErrMsg,
+            int iReadElecJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\sce-schedule-tou-d-4-9pm.json", "XH_UtilityRate", (const char*) sElecRateName, -1, &qsElecErrMsg,
                                                                    NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 01/15/26 (dev #689)
                                                                //  , "PathFileLoadedFrom", (iRateProcGen > 1 ? "EncodedRateName" : NULL) );
 //int  BEMPROC_API __cdecl BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
 //                                                          int iBEMProcIdx=-1, QString* psMsg=NULL, const char* fileNamePropertyType=NULL,       // SAC 08/15/23
 //                                                          const char* propertyToIncludeInObjName=NULL, bool bRenameReservedBEMProperties=false );    // SAC 12/18/23  // bRenameReservedBEMProperties - SAC 01/15/26 (dev #689)
-            BEMMessageBox( QString( "BEMPX_ReadComponentFromJSONFile() returned: %1 - error msg: %2" ).arg( QString::number( iReadJSONRetVal ), qsErrMsg ) );
+            int iReadGasJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\pge-gas-schedule-g-1.json", "XH_UtilityRate", (const char*) sGasRateName, -1, &qsGasErrMsg,
+                                                                   NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 05/12/26 (dev #689)
+            BEMMessageBox( QString( "BEMPX_ReadComponentFromJSONFile() -\n  Elec returned: %1 - error msg: %2\n  Gas  returned: %3 - error msg: %4" ).arg( QString::number( iReadElecJSONRetVal ), qsElecErrMsg, QString::number( iReadGasJSONRetVal ), qsGasErrMsg ) );
 
+            // default utility rate objects
+            CMX_EvaluateRuleset( "CUAC_DefaultGenXRates", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
 
             sDbgFileName = sDbgFileNameRoot + CString(" - aft XH rate.ibd-Detail");
             BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
@@ -10880,6 +10891,18 @@ void CMainFrame::OnUpdateAnalysisRangeChecks(CCmdUI* pCmdUI)
 
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame - Help - view misc. documentation
+
+void CMainFrame::OnHelpReleaseNotes()        // SAC 04/30/26 (dev #847)
+{  CString sReleaseNotesURL;
+   if (BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:ReleaseNotesURL" ), sReleaseNotesURL ) && !sReleaseNotesURL.IsEmpty())
+   {  HINSTANCE hinstShellExec = ShellExecute( GetSafeHwnd(), "open", (const char*) sReleaseNotesURL, NULL, "" /*sFilePath*/, SW_SHOWNORMAL );
+      hinstShellExec;
+   }
+}
+void CMainFrame::OnUpdateHelpReleaseNotes(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable( TRUE );
+}
 
 void CMainFrame::OnHelpOverview() 
 {

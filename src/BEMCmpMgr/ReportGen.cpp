@@ -1777,7 +1777,7 @@ void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtil
                      if (pUtilRateObj)
                      {  BEMPX_SetBEMData( lDBID_ObjAssignRef, BEMP_Obj, (void*) pUtilRateObj, BEMO_User, 0, BEMS_ProgDefault );     // set as ProgDflt so won't save w/ proj data - SAC 09/20/23
                         // default CPR utility rate objects
-                        CMX_EvaluateRuleset( "CUAC_DefaultGen2Rates", bVerbose, /*bTagDataAsUserDefined*/ TRUE, bVerbose, NULL, NULL, NULL, /*epInpRuleDebugInfo*/ NULL ); 
+                        CMX_EvaluateRuleset( "CUAC_DefaultGenXRates", bVerbose, /*bTagDataAsUserDefined*/ TRUE, bVerbose, NULL, NULL, NULL, /*epInpRuleDebugInfo*/ NULL ); 
                            if (bVerbose)
                               BEMPX_WriteLogFile( QString("Success downloading & parsing utility rate %1 to '%2'").arg( sEncodedRateName, pUtilRateObj->getName() ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
                               //BEMPX_WriteLogFile( QString("Success downloading & parsing JSON utility rate '%1' / file: %2").arg( pUtilRateObj->getName(), FileOutName ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
@@ -1813,7 +1813,7 @@ void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtil
          if (pUtilRateObj)
          {  BEMPX_SetBEMData( lDBID_ObjAssignRef, BEMP_Obj, (void*) pUtilRateObj, BEMO_User, 0, BEMS_ProgDefault );     // set as ProgDflt so won't save w/ proj data - SAC 09/20/23
             // default CPR utility rate objects
-            CMX_EvaluateRuleset( "CUAC_DefaultGen2Rates", bVerbose, /*bTagDataAsUserDefined*/ TRUE, bVerbose, NULL, NULL, NULL, /*epInpRuleDebugInfo*/ NULL ); 
+            CMX_EvaluateRuleset( "CUAC_DefaultGenXRates", bVerbose, /*bTagDataAsUserDefined*/ TRUE, bVerbose, NULL, NULL, NULL, /*epInpRuleDebugInfo*/ NULL ); 
                if (bVerbose)
                   BEMPX_WriteLogFile( QString("Success downloading & parsing utility rate %1 to '%2'").arg( sEncodedRateName, pUtilRateObj->getName() ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
                   //BEMPX_WriteLogFile( QString("Success downloading & parsing JSON utility rate '%1' / file: %2").arg( pUtilRateObj->getName(), FileOutName ).toLatin1().constData(), NULL, false /*bBlankFile*/ );

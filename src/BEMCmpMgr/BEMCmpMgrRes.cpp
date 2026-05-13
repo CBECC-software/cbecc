@@ -3344,6 +3344,15 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
       					}
      				}  }
 
+               QString sUtilityRatePath;        // SAC 04/15/26 (dev #689)
+               if (GetCSVOptionString( "AltWeatherPath", sUtilityRatePath, saCSVOptions ) < 1)
+                  sUtilityRatePath.clear();
+               else
+               {  sUtilityRatePath.replace( '/', '\\' );		// ensure all backslash paths
+                  if (sUtilityRatePath.lastIndexOf('\\') != sUtilityRatePath.length()-1)
+                     sUtilityRatePath += '\\';	// make sure there is a trailing '\'
+               }
+
                if (lBatchRateIdx > 0)
                   CUAC_AnalysisProcessing_BatchRates( sProcessPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMProcDetails, bSilent, bVerbose,
                                            (lEnableResearchMode > 0), pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrorMsg, iCUACReportID, iCUAC_BEMProcIdx, 1 /*res*/, iLogCUACBillCalcDetails,
@@ -3352,13 +3361,15 @@ BEMPX_WriteLogFile( QString( "    CopyResResultsObjectsAcrossRuns( %1, %2->%3 ) 
                                            (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                            (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
                                            iRptGenConnectTimeout, iRptGenReadWriteTimeout, iDownloadVerbose, 
-                                           (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()) );   // SAC 01/02/25 );
+                                           (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()),         // SAC 01/02/25 );
+                                           (sUtilityRatePath.isEmpty()        ? NULL : (const char*) sUtilityRatePath.toLocal8Bit().constData()) );      // SAC 04/15/26 (dev #689)
                else
                {  CUAC_AnalysisProcessing( sProcessPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMProcDetails, bSilent, bVerbose,
                                            (lEnableResearchMode > 0), pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrorMsg, iCUACReportID, iCUAC_BEMProcIdx, 1 /*res*/,
                                            iLogCUACBillCalcDetails, iDownloadVerbose, true /*bWritePDF*/, true /*bWriteCSV*/, 0 /*iBatchRunIdx*/, 
                                            (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()),     // SAC 01/02/25
-                                           bCUACElecRateDownldFailed, bCUACGasRateDownldFailed );
+                                           bCUACElecRateDownldFailed, bCUACGasRateDownldFailed, 
+                                           (sUtilityRatePath.isEmpty()        ? NULL : (const char*) sUtilityRatePath.toLocal8Bit().constData()) );      // SAC 04/15/26 (dev #689)
                               //   CSERunLoop( iSimRunIdx, posSimInfo, pqsCSESimStatusMsg, bStoreHourlyResults, sProcessingPath, sModelPathOnly, sModelFileOnly, bSecureT24NRptGenActivated,
                               //                  bPerformFullCSESim, bBypassRecircDHW, lNumPVArraysChk, bEnablePVBattSim, pszUIVersionString,
                               //                  sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,

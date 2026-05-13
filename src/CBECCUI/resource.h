@@ -502,6 +502,7 @@
 #define IDM_DISPLAYCUACDLG              33044
 #define IDM_TOOLS_CSVRATETABLES         33045
 #define IDM_TOOLS_CUACFROMCSV           33046
+#define IDM_HELP_RELEASENOTES           33047
 
 // Next default values for new objects
 // 
@@ -509,7 +510,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        340
-#define _APS_NEXT_COMMAND_VALUE         33047
+#define _APS_NEXT_COMMAND_VALUE         33048
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif

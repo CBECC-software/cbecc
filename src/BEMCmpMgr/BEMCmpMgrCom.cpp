@@ -2069,6 +2069,7 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 
                            // process CSE results - SAC 11/18/21
                            int iCSESimErrCode = 0;  // SAC 05/18/22
+                           QString qsErrantCSERunNames;     // improve error message when CSE simulations error out - SAC 04/21/26
                            for (iCSR=0; (iCSR < iNumCSERuns && iRetVal /*iCSESimRetVal*/ == 0); iCSR++)
                            {
                               iSR = iRunSimRunIdx[iCSR];
@@ -2101,6 +2102,10 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 																iRetVal /*iCSESimRetVal*/ = BEMAnal_CECRes_CSESimError;
                                                 iCSESimErrCode = iCSERetVal;
 																BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+                                                if (!qsErrantCSERunNames.isEmpty())    // improve error message when CSE simulations error out - SAC 04/21/26
+                                                   qsErrantCSERunNames += QString( " + %1 (#%2)" ).arg( sRunAbbrev, QString::number( lRunNumber ) );
+                                                else
+                                                   qsErrantCSERunNames =  QString(    "%1 (#%2)" ).arg( sRunAbbrev, QString::number( lRunNumber ) );
 															}
 									                  //	if (iRetVal == 0 /*&& iCSESimRetVal == 0*/ && BEMPX_AbortRuleEvaluation())
 									                  //		iRetVal /*iCSESimRetVal*/ = BEMAnal_CECRes_RuleProcAbort;
@@ -2234,7 +2239,10 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 													sCSEErrMsg = QString::asprintf( "error code %d", iCSESimErrCode /*iCSESimRetVal*/ );
 
 											if (!bCSESimOK)
-											{	sErrMsg = QString::asprintf( "CSE (Residential/PV/Battery) simulation not successful:  %s", sCSEErrMsg.toLocal8Bit().constData() );
+											{	if (!qsErrantCSERunNames.isEmpty())    // improve error message when CSE simulations error out - SAC 04/21/26
+                                       sErrMsg = QString::asprintf( "CSE (%s) simulation(s) not successful:  %s", qsErrantCSERunNames.toLocal8Bit().constData(), sCSEErrMsg.toLocal8Bit().constData() );
+                                    else
+                                       sErrMsg = QString::asprintf( "CSE (Residential/PV/Battery) simulation not successful:  %s", sCSEErrMsg.toLocal8Bit().constData() );
                                     //				41 : CSE (Residential/PV/Battery) simulation not successful
 												ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 41 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 											}
@@ -4206,7 +4214,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
       {  long lDbgElecTariffGen=0, lDbgGasTariffGen=0;
          BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lDbgElecTariffGen );
          BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lDbgGasTariffGen  );
-         if (lDbgElecTariffGen > 0 || lDbgGasTariffGen > 0)
+         if ( (lDbgElecTariffGen > 0 && lDbgElecTariffGen < 3) ||
+              (lDbgGasTariffGen  > 0 && lDbgGasTariffGen  < 3) )   // no rate download for gen3 rates - SAC 04/13/26 (dev #689)
             BEMPX_WriteLogFile( QString( "CUAC utility rate download Not performed due to analysis return code = %1" ).arg( QString::number(iRetVal) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
       }
       if (iRetVal == 0 && iCUACReportID > 0)    // SAC 08/30/23 (CUAC)
@@ -4265,7 +4274,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
             // -----------------
 
          long lElecTariffGen=0, lGasTariffGen=0;   int iRateDnldRetVal=0;
-         if (!bG2ElecRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lElecTariffGen ) && lElecTariffGen > 1)
+         if (!bG2ElecRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffGen" ), lElecTariffGen ) && lElecTariffGen > 1 && lElecTariffGen < 3)
          {  CUAC_RateDownload( "Electric", 94, "CUAC:CPR_ElecUtilityRateRef", sProcessingPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMDetails, bSilent, bVerbose,
                                bResearchMode, pCompRuleDebugInfo, iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
                                (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
@@ -4285,7 +4294,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
             else if (iAnalysisStorage < 3)
                svUtilRatesToDelete.push_back( ((std::string) sProcessingPath.toLocal8Bit().constData()) + ((std::string) "er.json") );
          }
-         if (iRetVal == 0 && !bAbort && !bG2GasRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lGasTariffGen  ) && lGasTariffGen > 1)
+         if (iRetVal == 0 && !bAbort && !bG2GasRateLoaded && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lGasTariffGen  ) && lGasTariffGen > 1 && lGasTariffGen < 3)
          {  iRateDnldRetVal = 0;
             CUAC_RateDownload( "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sProcessingPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/ bStoreBEMDetails, bSilent, bVerbose,
                                bResearchMode, pCompRuleDebugInfo, iSecurityKeyIndex, (pszSecurityKey ? pszSecurityKey : NULL),
@@ -6524,6 +6533,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                sCUACInvalidMsg = "CustomMeterOption specified";
          }
 
+         QString sUtilityRatePath;        // SAC 04/15/26 (dev #689)
+         if (GetCSVOptionString( "AltWeatherPath", sUtilityRatePath, saCSVOptions ) < 1)
+            sUtilityRatePath.clear();
+         else
+         {  sUtilityRatePath.replace( '/', '\\' );		// ensure all backslash paths
+            if (sUtilityRatePath.lastIndexOf('\\') != sUtilityRatePath.length()-1)
+               sUtilityRatePath += '\\';	// make sure there is a trailing '\'
+         }
+
          long lBatchRateIdx=0;
          BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:BatchRateIdx" ), lBatchRateIdx );
          if (lBatchRateIdx > 0)
@@ -6534,13 +6552,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                      (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
                                      (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
                                      iRptGenConnectTimeout, iRptGenReadWriteTimeout, iDownloadVerbose, 
-                                     (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()) );   // SAC 01/02/25
+                                     (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()),         // SAC 01/02/25
+                                     (sUtilityRatePath.isEmpty()        ? NULL : (const char*) sUtilityRatePath.toLocal8Bit().constData()) );      // SAC 04/15/26 (dev #689)
          else
          {  CUAC_AnalysisProcessing( sProcessingPath, sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear, bStoreBEMDetails, bSilent, bVerbose,
                                      bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen, bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx, 0 /*com*/,
                                      iLogCUACBillCalcDetails, iDownloadVerbose, true /*bWritePDF*/, true /*bWriteCSV*/, 0 /*iBatchRunIdx*/,
-                                     (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()),     // SAC 01/02/25
-                                     bCUACElecRateDownldFailed, bCUACGasRateDownldFailed );
+                                     (sCUACInvalidMsg.isEmpty()         ? NULL : (const char*) sCUACInvalidMsg.toLocal8Bit().constData()),         // SAC 01/02/25
+                                     bCUACElecRateDownldFailed, bCUACGasRateDownldFailed,
+                                     (sUtilityRatePath.isEmpty()        ? NULL : (const char*) sUtilityRatePath.toLocal8Bit().constData()) );      // SAC 04/15/26 (dev #689)
                         //   CSERunLoop( iSimRunIdx, posSimInfo, pqsCSESimStatusMsg, bStoreHourlyResults, sProcessingPath, sModelPathOnly, sModelFileOnly, bSecureT24NRptGenActivated,
                         //                  bPerformFullCSESim, bBypassRecircDHW, lNumPVArraysChk, bEnablePVBattSim, pszUIVersionString,
                         //                  sCSEexe, sCSEEXEPath, qsCSEName, sAnnualWeatherFile,

@@ -292,12 +292,41 @@ double AdjustJA13HPWHDayUseProfile( double* pdHrlyUse, int iFirstPeakHr, int iPe
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// based on what CSE simulates as Holidays - SAC 4/27/26 (dev #689)
+static bool IsHoliday( int i1Mon, int i1Day )
+{  bool bIsHol = false;
+   switch (i1Mon)                                                 // inconsistencies w/ CSE documentation
+   {  case  1 :   if (i1Day ==  1 ||         // new year
+                      i1Day == 19)           // MLK               - should be following Mon, not just when 1/15 on WE ??
+                     bIsHol = true;   break;
+      case  2 :   if (i1Day == 16)           // presidents
+                     bIsHol = true;   break;
+      case  3 :   if (i1Day == 31)           // easter              ???
+                     bIsHol = true;   break;
+      case  5 :   if (i1Day == 25)           // memorial
+                     bIsHol = true;   break;
+      case  7 :   if (i1Day ==  3)           // independence      - Fri BEFORE when 7/4 a Sat
+                     bIsHol = true;   break;
+      case  9 :   if (i1Day ==  7)           // labor
+                     bIsHol = true;   break;
+                                                                  // No Columbus - 2nd Mon in Oct
+      case 11 :   if (i1Day == 11 ||         // veterans
+                      i1Day == 26 ||         // thanksgiving
+                      i1Day == 27)           // black friday         ???
+                     bIsHol = true;   break;
+      case 12 :   if (i1Day == 25)           // xmas
+                     bIsHol = true;   break;
+   }
+   return bIsHol;
+}
+
 //											96 : Error calculating CUAC utility bill(s)
+// added bBypass*BillCalcs args - SAC 03/18/26 (dev #742)
 void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, QString sModelFileOnly, QString sRptGraphicsPath, int iRulesetCodeYear,
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, char* pszErrorMsg, int iErrorMsgLen,
                               bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx, int iDataModel /*=0*/, int iBillCalcDetails /*=-1*/,
                               int iDownloadVerbose /*=-1*/, bool bWritePDF /*=true*/, bool bWriteCSV /*=true*/, int iBatchRunIdx /*=0*/, const char* pAnalysisInvalidMsg /*=NULL*/,
-                              bool bBypassElecBillCalcs /*=false*/, bool bBypassGasBillCalcs /*=false*/ )      // added bBypass*BillCalcs args - SAC 03/18/26 (dev #742)
+                              bool bBypassElecBillCalcs /*=false*/, bool bBypassGasBillCalcs /*=false*/, const char* pszUtilityRatePath /*=NULL*/ )      // added pszUtilityRatePath - SAC 04/15/26 (dev #689)
 {  // at this point, ruleset object is loaded w/ all hourly results read directly from CSE run(s)
 // TEMPORARY
 //bVerbose = true;
@@ -311,7 +340,16 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    long laNumUnitsByBedrms[NumDwellingMeters], lTemp, lNumUnitTypes=0;
    double daHtgMultByBedrms[NumDwellingMeters], daClgMultByBedrms[NumDwellingMeters], daIAQMultByBedrms[NumDwellingMeters];   // SAC 11/04/25 (dev #583)
    bool bOldCUAC = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CUAC_OldAccessDB" ), lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0) ? true : false;
-   bool bPerformGasBillCalcs = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasUtility" ), lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp == 998) ? false : true;   // SAC 11/04/25 (dev #577)
+   int iCID_CUAC    = BEMPX_GetDBComponentID( "CUAC" );
+   int iCID_OldCUAC = BEMPX_GetDBComponentID( "OldCUAC" );
+   int iCID_OldCUACApt = BEMPX_GetDBComponentID( "OldCUACApt" );
+
+   long lUtilityRateGen;
+   if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "UtilityRateGen", iCID_CUAC ), lUtilityRateGen, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ))      // SAC 04/13/26 (dev #689)
+      lUtilityRateGen = 2;  // default to 2 (CPR) if undefined
+   long lDBID_CUAC_GasUtility = (lUtilityRateGen < 3 ? BEMPX_GetDatabaseID( "GasUtility", iCID_CUAC ) : BEMPX_GetDatabaseID( "G3GasUtility", iCID_CUAC ));
+
+   bool bPerformGasBillCalcs = (BEMPX_GetInteger( lDBID_CUAC_GasUtility, lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp == 998) ? false : true;   // SAC 11/04/25 (dev #577)
 
    int iPrevRuleErrs = BEMPX_GetRulesetErrorCount();   // add eval of rules to setup utility rates - SAC 09/14/22
                   if (iBillCalcDetails > 0) 
@@ -330,10 +368,6 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                      BEMPX_WriteLogFile( QString( "  CUAC_AnalysisProcessing - errors encountered evaluating CUAC_SetupGen1GasRate rules" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
       return;
    }
-
-   int iCID_CUAC    = BEMPX_GetDBComponentID( "CUAC" );
-   int iCID_OldCUAC = BEMPX_GetDBComponentID( "OldCUAC" );
-   int iCID_OldCUACApt = BEMPX_GetDBComponentID( "OldCUACApt" );
 
    QString qsHrlyCSVPathFile;       // SAC 03/23/26 (dev #743)
    bool bCalcFromDetailsCSVSimResults = ( BEMPX_GetInteger( BEMPX_GetDatabaseID( "CalcBillsFromHrlyCSV", iCID_CUAC ), lTemp, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ) && lTemp > 0 &&
@@ -432,30 +466,90 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
 
    // Retrieve & Load utility rate data  - SAC 10/19/22
          // moved up from below - SAC 01/12/25 (tic #1388)
-   int iCID_UtilityRate = BEMPX_GetDBComponentID( "CPR_UtilityRate" );
+   int iCID_UtilityRate = (lUtilityRateGen < 3 ? BEMPX_GetDBComponentID( "CPR_UtilityRate" ) : BEMPX_GetDBComponentID( "XH_UtilityRate" ));     // SAC 04/14/26 (dev #689)
    CUACUtilityRate utilRate[2];
    utilRate[0].bOK = utilRate[1].bOK = false;
-   int iG2RateObjIdx[2] = { -1, -1 };
-   long laDBID_RateGen[2] = { BEMPX_GetDatabaseID( "ElecTariffGen"     , iCID_CUAC ), BEMPX_GetDatabaseID( "GasTariffGen"     , iCID_CUAC ) };     // SAC 09/01/23
-   long laDBID_RateRef[2] = { BEMPX_GetDatabaseID( "ElecUtilityRateRef", iCID_CUAC ), BEMPX_GetDatabaseID( "GasUtilityRateRef", iCID_CUAC ) };     // loop to include Gas rate - SAC 10/25/22
-   QString saFuelLabels[2] = { "Elec", "Gas" };
+   int iG23RateObjIdx[2]    = { -1, -1 };
+   long laDBID_RateGen[2]   = { BEMPX_GetDatabaseID( "ElecTariffGen"     , iCID_CUAC ), BEMPX_GetDatabaseID( "GasTariffGen"     , iCID_CUAC ) };     // SAC 09/01/23
+   long laDBID_RateRef[2]   = { BEMPX_GetDatabaseID( "ElecUtilityRateRef", iCID_CUAC ), BEMPX_GetDatabaseID( "GasUtilityRateRef", iCID_CUAC ) };     // loop to include Gas rate - SAC 10/25/22
+   long laDBID_RateFile[2]  = { BEMPX_GetDatabaseID( "ElecTariffFile"    , iCID_CUAC ), BEMPX_GetDatabaseID( "GasTariffFile"    , iCID_CUAC ) };     // SAC 04/16/26 (dev #689)
+   long laDBID_G3RateRef[2] = { BEMPX_GetDatabaseID( "XH_ElecUtilityRateRef", iCID_CUAC ), BEMPX_GetDatabaseID( "XH_GasUtilityRateRef", iCID_CUAC ) }; 
+   QString saFuelLabels[2]  = { "Elec", "Gas" };
    QString saFuelUnitLabels[2] = { "kWh", "therms" };
    QString saFuelUnitLabels1[2] = { "kWh", "therm" };
    for (iFuel=0; iFuel < (bPerformGasBillCalcs ? 2 : 1); iFuel++)
-   {  if ( (iFuel == 0 && !bBypassElecBillCalcs) ||
+   {
+      if ( lUtilityRateGen >= 3 && ( (iFuel == 0 && !bBypassElecBillCalcs) ||    // read in G3 utility rate file
+                                     (iFuel == 1 && !bBypassGasBillCalcs ) ) ) 
+      {  QString sRateFileReadErr, sRateFilename;
+         BEMPX_GetString( laDBID_RateFile[iFuel], sRateFilename, FALSE, 0, -1, 0, BEMO_User, "??", 0, iCUAC_BEMProcIdx ); 
+         if (sRateFilename.length() < 3)
+            sRateFileReadErr = QString( "%1TariffFile property not defined" ).arg( saFuelLabels[iFuel] );
+         else
+         {  if (pszUtilityRatePath && strlen( pszUtilityRatePath ) > 0)
+               sRateFilename = QString( pszUtilityRatePath ) + sRateFilename;
+            if (!FileExists( sRateFilename ))
+               sRateFileReadErr = QString( "RateFile not found:  %1" ).arg( sRateFilename );
+            else
+            {
+      // TO DO 
+      // TO DO  - add hash check of RateFile and continue but invalidate analysis if hash check fails
+      // TO DO 
+               QString qsRateImportErrMsg, sRateName = QString( "g3 %1 Rate" ).arg( saFuelLabels[iFuel] );
+               int iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( sRateFilename.toLocal8Bit().constData(), "XH_UtilityRate", sRateName.toLocal8Bit().constData(), -1, &qsRateImportErrMsg,
+                                                                      NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 04/16/26 (dev #689)
+                     //BEMMessageBox( QString( "BEMPX_ReadComponentFromJSONFile() returned: %1 - error msg: %2" ).arg( QString::number( iReadJSONRetVal ), qsErrMsg ) );
+               if (iReadJSONRetVal < 0)
+               {  sRateFileReadErr = QString("Unable to parse JSON utility rate file (code %1): %2").arg( QString::number( iReadJSONRetVal ), qsRateImportErrMsg );
+                  if (sRateFileReadErr.indexOf( sRateFilename ) < 0)
+                     sRateFileReadErr += QString( "  file: %1" ).arg( sRateFilename );
+               }
+               else
+               {  BEMObject* pUtilRateObj = BEMPX_GetObjectByClass( iCID_UtilityRate, iErr, iReadJSONRetVal );
+                  if (pUtilRateObj == NULL)
+                     sRateFileReadErr = QString("Unable to retrieve XH_UtilityRate imported from file:  %1").arg( sRateFilename );
+                  else
+                  {  BEMPX_SetBEMData( laDBID_G3RateRef[iFuel], BEMP_Obj, (void*) pUtilRateObj, BEMO_User, 0, BEMS_ProgDefault );     // set as ProgDflt so won't save w/ proj data
+                     // default CPR utility rate objects
+                     CMX_EvaluateRuleset( "CUAC_DefaultGenXRates", bVerbose, /*bTagDataAsUserDefined*/ TRUE, bVerbose, NULL, NULL, NULL, /*epInpRuleDebugInfo*/ NULL ); 
+                        if (bVerbose)
+                           BEMPX_WriteLogFile( QString("Success importing utility rate file '%1' to '%2'").arg( sRateFilename, pUtilRateObj->getName() ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+                           //BEMPX_WriteLogFile( QString("Success downloading & parsing JSON utility rate '%1' / file: %2").arg( pUtilRateObj->getName(), FileOutName ).toLatin1().constData(), NULL, false /*bBlankFile*/ );
+         }  }  }  }
+         if (sRateFileReadErr.length() > 0)
+         {  sRateFileReadErr = QString( "Skipping CUAC %1 bill calcs due to: " ).arg( saFuelLabels[iFuel] ) + sRateFileReadErr;
+            BEMPX_WriteLogFile( sRateFileReadErr, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            switch (iFuel)
+            {  case  0 :  bBypassElecBillCalcs = true;  break;
+               case  1 :  bBypassGasBillCalcs  = true;  break;
+               default :  break;
+         }  }
+      }
+
+      if ( (iFuel == 0 && !bBypassElecBillCalcs) ||
            (iFuel == 1 && !bBypassGasBillCalcs ) )       // bypass utility bill processing for those not downloaded or otherwise invalid - SAC 03/19/26 (dev #742)
       {  long lUtilRateGen = BEMPX_GetInteger( laDBID_RateGen[iFuel], iSpecVal, iErr, -1, BEMO_User, iCUAC_BEMProcIdx );      //  2 => 2023+ CPR rates
-         if (lUtilRateGen == 2)     // SAC 09/01/23
+         if (lUtilRateGen == 3)     // SAC 04/14/26 (dev #689)
+         {  BEMObject* pG3RateObj = BEMPX_GetObjectPtr( laDBID_G3RateRef[iFuel], iSpecVal, iErr, -1 /*occur*/, BEMO_User, iCUAC_BEMProcIdx );
+            iG23RateObjIdx[iFuel]  = (pG3RateObj == NULL ? -1 : BEMPX_GetObjectIndex( pG3RateObj->getClass(), pG3RateObj, iCUAC_BEMProcIdx ));
+            if (iG23RateObjIdx[iFuel] < 0)
+            {  sErrMsg = QString( "CUAC Gen3 %1 Utility Rate not found" ).arg( saFuelLabels[iFuel] );
+               BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            }
+            else if (iBillCalcDetails > 0)
+               BEMPX_WriteLogFile( QString( "CUAC Gen3 %1 Utility Rate '%2' in use" ).arg( saFuelLabels[iFuel], pG3RateObj->getName() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         }
+         else if (lUtilRateGen == 2)     // SAC 09/01/23
          {  BEMObject* pG2RateObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( (iFuel==0 ? "CPR_ElecUtilityRateRef" : "CPR_GasUtilityRateRef"), iCID_CUAC ), iSpecVal, iErr, -1 /*occur*/, BEMO_User, iCUAC_BEMProcIdx );
-            iG2RateObjIdx[iFuel]  = (pG2RateObj == NULL ? -1 : BEMPX_GetObjectIndex( pG2RateObj->getClass(), pG2RateObj, iCUAC_BEMProcIdx ));
-            if (iG2RateObjIdx[iFuel] < 0)
+            iG23RateObjIdx[iFuel]  = (pG2RateObj == NULL ? -1 : BEMPX_GetObjectIndex( pG2RateObj->getClass(), pG2RateObj, iCUAC_BEMProcIdx ));
+            if (iG23RateObjIdx[iFuel] < 0)
             {  sErrMsg = QString( "CUAC Gen2 %1 Utility Rate not found" ).arg( saFuelLabels[iFuel] );
                BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
             }
             else if (iBillCalcDetails > 0)
                BEMPX_WriteLogFile( QString( "CUAC Gen2 %1 Utility Rate '%2' in use" ).arg( saFuelLabels[iFuel], pG2RateObj->getName() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
          }
-         if (iG2RateObjIdx[iFuel] < 0)
+         if (iG23RateObjIdx[iFuel] < 0)
          {  BEMObject* pRate = BEMPX_GetObjectPtr( laDBID_RateRef[iFuel], iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
             int iRateObjIdx = (pRate == NULL ? -1 : BEMPX_GetObjectIndex( pRate->getClass(), pRate, iCUAC_BEMProcIdx ));
             if (iRateObjIdx >= 0 && !LoadCUACUtilityRate( utilRate[iFuel], iRateObjIdx, iCUAC_BEMProcIdx, sErrMsg ))
@@ -466,35 +560,119 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
    }  }  }  }
 
-   int iCID_EnergyCost  = BEMPX_GetDBComponentID( "CPR_EnergyCost" );
-   long lDBID_EnergyCost_CostName         = BEMPX_GetDatabaseID( "CostName",          iCID_EnergyCost );
-   long lDBID_EnergyCost_PeriodType       = BEMPX_GetDatabaseID( "PeriodType",        iCID_EnergyCost );
-   long lDBID_EnergyCost_Delivery         = BEMPX_GetDatabaseID( "Delivery",          iCID_EnergyCost );
-   long lDBID_EnergyCost_NonBypassable    = BEMPX_GetDatabaseID( "NonBypassable",     iCID_EnergyCost );
-   long lDBID_EnergyCost_TotalConsumption = BEMPX_GetDatabaseID( "TotalConsumption",  iCID_EnergyCost );
-   long lDBID_EnergyCost_NumTiers         = BEMPX_GetDatabaseID( "NumTiers",          iCID_EnergyCost );
-   long lDBID_EnergyCost_Tiers            = BEMPX_GetDatabaseID( "Tiers",             iCID_EnergyCost );
+   // Gen2 utility rate BEMBase objects & properties
+   int iCID_EnergyCost, iCID_NetExcessCreditCost, iCID_HourlyTOUCost, iCID_HourlyTOUMonth, iCID_Tier;
+   long lDBID_EnergyCost_CostName, lDBID_EnergyCost_PeriodType, lDBID_EnergyCost_Delivery, lDBID_EnergyCost_NonBypassable,
+        lDBID_EnergyCost_TotalConsumption, lDBID_EnergyCost_NumTiers, lDBID_EnergyCost_Tiers,
+        lDBID_NetExcessCreditCost_CostName, lDBID_NetExcessCreditCost_CostPeriodType, lDBID_NetExcessCreditCost_NumTiers, lDBID_NetExcessCreditCost_Tiers,
+        lDBID_HourlyTOUCost_CostName, lDBID_HourlyTOUCost_ApplicableDays, lDBID_HourlyTOUCost_NumHourlyTimeOfUseMonths, lDBID_HourlyTOUCost_HourlyTimeOfUseMonths,
+        lDBID_HourlyTOUMonth_MonthName, lDBID_HourlyTOUMonth_Prices,
+        lDBID_Tier_TierNumber, lDBID_Tier_Price, lDBID_Tier_Quantity;
+   if (lUtilityRateGen == 2)
+   {  iCID_EnergyCost  = BEMPX_GetDBComponentID( "CPR_EnergyCost" );
+      lDBID_EnergyCost_CostName         = BEMPX_GetDatabaseID( "CostName",          iCID_EnergyCost );
+      lDBID_EnergyCost_PeriodType       = BEMPX_GetDatabaseID( "PeriodType",        iCID_EnergyCost );
+      lDBID_EnergyCost_Delivery         = BEMPX_GetDatabaseID( "Delivery",          iCID_EnergyCost );
+      lDBID_EnergyCost_NonBypassable    = BEMPX_GetDatabaseID( "NonBypassable",     iCID_EnergyCost );
+      lDBID_EnergyCost_TotalConsumption = BEMPX_GetDatabaseID( "TotalConsumption",  iCID_EnergyCost );
+      lDBID_EnergyCost_NumTiers         = BEMPX_GetDatabaseID( "NumTiers",          iCID_EnergyCost );
+      lDBID_EnergyCost_Tiers            = BEMPX_GetDatabaseID( "Tiers",             iCID_EnergyCost );
+      iCID_NetExcessCreditCost = BEMPX_GetDBComponentID( "CPR_NetExcessCreditCost" );
+      lDBID_NetExcessCreditCost_CostName       = BEMPX_GetDatabaseID( "CostName",       iCID_NetExcessCreditCost );
+      lDBID_NetExcessCreditCost_CostPeriodType = BEMPX_GetDatabaseID( "CostPeriodType", iCID_NetExcessCreditCost );
+      lDBID_NetExcessCreditCost_NumTiers       = BEMPX_GetDatabaseID( "NumTiers",       iCID_NetExcessCreditCost );
+      lDBID_NetExcessCreditCost_Tiers          = BEMPX_GetDatabaseID( "Tiers",          iCID_NetExcessCreditCost );
+      iCID_HourlyTOUCost = BEMPX_GetDBComponentID( "CPR_HourlyTOUCost" );
+      lDBID_HourlyTOUCost_CostName                 = BEMPX_GetDatabaseID( "CostName",                 iCID_HourlyTOUCost );
+      lDBID_HourlyTOUCost_ApplicableDays           = BEMPX_GetDatabaseID( "ApplicableDays",           iCID_HourlyTOUCost );
+      lDBID_HourlyTOUCost_NumHourlyTimeOfUseMonths = BEMPX_GetDatabaseID( "NumHourlyTimeOfUseMonths", iCID_HourlyTOUCost );
+      lDBID_HourlyTOUCost_HourlyTimeOfUseMonths    = BEMPX_GetDatabaseID( "HourlyTimeOfUseMonths",    iCID_HourlyTOUCost );
+      iCID_HourlyTOUMonth = BEMPX_GetDBComponentID( "CPR_HourlyTOUMonth" );
+      lDBID_HourlyTOUMonth_MonthName = BEMPX_GetDatabaseID( "MonthName", iCID_HourlyTOUMonth );
+      lDBID_HourlyTOUMonth_Prices    = BEMPX_GetDatabaseID( "Prices",    iCID_HourlyTOUMonth );
+      iCID_Tier = BEMPX_GetDBComponentID( "CPR_Tier" );
+      lDBID_Tier_TierNumber = BEMPX_GetDatabaseID( "TierNumber",  iCID_Tier );
+      lDBID_Tier_Price      = BEMPX_GetDatabaseID( "Price",       iCID_Tier );
+      lDBID_Tier_Quantity   = BEMPX_GetDatabaseID( "Quantity",    iCID_Tier );
+   }
 
-   int iCID_NetExcessCreditCost = BEMPX_GetDBComponentID( "CPR_NetExcessCreditCost" );
-   long lDBID_NetExcessCreditCost_CostName       = BEMPX_GetDatabaseID( "CostName",       iCID_NetExcessCreditCost );
-   long lDBID_NetExcessCreditCost_CostPeriodType = BEMPX_GetDatabaseID( "CostPeriodType", iCID_NetExcessCreditCost );
-   long lDBID_NetExcessCreditCost_NumTiers       = BEMPX_GetDatabaseID( "NumTiers",       iCID_NetExcessCreditCost );
-   long lDBID_NetExcessCreditCost_Tiers          = BEMPX_GetDatabaseID( "Tiers",          iCID_NetExcessCreditCost );
-
-   int iCID_HourlyTOUCost = BEMPX_GetDBComponentID( "CPR_HourlyTOUCost" );
-   long lDBID_HourlyTOUCost_CostName                 = BEMPX_GetDatabaseID( "CostName",                 iCID_HourlyTOUCost );
-   long lDBID_HourlyTOUCost_ApplicableDays           = BEMPX_GetDatabaseID( "ApplicableDays",           iCID_HourlyTOUCost );
-   long lDBID_HourlyTOUCost_NumHourlyTimeOfUseMonths = BEMPX_GetDatabaseID( "NumHourlyTimeOfUseMonths", iCID_HourlyTOUCost );
-   long lDBID_HourlyTOUCost_HourlyTimeOfUseMonths    = BEMPX_GetDatabaseID( "HourlyTimeOfUseMonths",    iCID_HourlyTOUCost );
-
-   int iCID_HourlyTOUMonth = BEMPX_GetDBComponentID( "CPR_HourlyTOUMonth" );
-   long lDBID_HourlyTOUMonth_MonthName = BEMPX_GetDatabaseID( "MonthName", iCID_HourlyTOUMonth );
-   long lDBID_HourlyTOUMonth_Prices    = BEMPX_GetDatabaseID( "Prices",    iCID_HourlyTOUMonth );
-
-   int iCID_Tier = BEMPX_GetDBComponentID( "CPR_Tier" );
-   long lDBID_Tier_TierNumber = BEMPX_GetDatabaseID( "TierNumber",  iCID_Tier );
-   long lDBID_Tier_Price      = BEMPX_GetDatabaseID( "Price",       iCID_Tier );
-   long lDBID_Tier_Quantity   = BEMPX_GetDatabaseID( "Quantity",    iCID_Tier );
+   // Gen3 utility rate BEMBase objects & properties - SAC 06/16/26 (dev #689)
+   long lDBID_G3ElecRegion, lDBID_G3ElecDiscount, lDBID_G3ElecDwellType, lDBID_G3ElecHouseType, lDBID_G3ElecNEMType, lDBID_G3ElecShowRegion,
+        lDBID_G3ElecShowDiscount, lDBID_G3ElecShowDwellType, lDBID_G3ElecShowHouseType, lDBID_G3ElecShowNEMType,
+        lDBID_G3UtilRate_FuelType, lDBID_G3UtilRate_FuelUnit, lDBID_G3UtilRate_RateType, lDBID_G3UtilRate_Weekday, lDBID_G3UtilRate_Weekend,    // filled out remaining G3 rate props- SAC 04/28/26 (dev #689)
+        lDBID_G3UtilRate_OtherDay, lDBID_G3UtilRate_NumDwellTypes, lDBID_G3UtilRate_DwellType, lDBID_G3UtilRate_NumDiscounts, lDBID_G3UtilRate_Discount,
+        lDBID_G3UtilRate_NumSeasons, lDBID_G3UtilRate_Season,
+        lDBID_G3Discount_Name, lDBID_G3Discount_DiscountFrac, lDBID_G3Discount_AddtnlBaselnDailyAlloc, lDBID_G3Discount_RateDiscount,
+        lDBID_G3Discount_NumDwellTypes, lDBID_G3Discount_DwellType,
+        lDBID_G3DwellTyp_Name, lDBID_G3DwellTyp_BasicDailyCharge, lDBID_G3DwellTyp_MinDailyCharge,
+        lDBID_G3Season_Name, lDBID_G3Season_MonthInSeason, lDBID_G3Season_NumBaselnRgns, lDBID_G3Season_BaselnRgn, lDBID_G3Season_NumDayTypes, lDBID_G3Season_DayType,
+        lDBID_G3BaslnRgn_Name, lDBID_G3BaslnRgn_NumHouseTypes, lDBID_G3BaslnRgn_HouseType,
+        lDBID_G3HouseTyp_Name, lDBID_G3HouseTyp_BaselnDailyAlloc,
+        lDBID_G3DayType_Name, lDBID_G3DayType_NumPeriods, lDBID_G3DayType_Period,
+        lDBID_G3Period_Name, lDBID_G3Period_HourInPeriod, lDBID_G3Period_NumTiers, lDBID_G3Period_Tier,
+        lDBID_G3Tier_Name, lDBID_G3Tier_Rate;
+   int iCID_G3Discount, iCID_G3DwellingType, iCID_G3Season, iCID_G3BaselineRegion, iCID_G3HouseholdType, iCID_G3DayType, iCID_G3Period, iCID_G3Tier;
+   if (lUtilityRateGen == 3)
+   {  lDBID_G3ElecRegion          = BEMPX_GetDatabaseID( "G3ElecRegion",           iCID_CUAC );
+      lDBID_G3ElecDiscount        = BEMPX_GetDatabaseID( "G3ElecDiscount",         iCID_CUAC );
+      lDBID_G3ElecDwellType       = BEMPX_GetDatabaseID( "G3ElecDwellType",        iCID_CUAC );
+      lDBID_G3ElecHouseType       = BEMPX_GetDatabaseID( "G3ElecHouseType",        iCID_CUAC );
+      lDBID_G3ElecNEMType         = BEMPX_GetDatabaseID( "G3ElecNEMType",          iCID_CUAC );
+      lDBID_G3ElecShowRegion      = BEMPX_GetDatabaseID( "G3ElecShowRegion",       iCID_CUAC );
+      lDBID_G3ElecShowDiscount    = BEMPX_GetDatabaseID( "G3ElecShowDiscount",     iCID_CUAC );
+      lDBID_G3ElecShowDwellType   = BEMPX_GetDatabaseID( "G3ElecShowDwellType",    iCID_CUAC );
+      lDBID_G3ElecShowHouseType   = BEMPX_GetDatabaseID( "G3ElecShowHouseType",    iCID_CUAC );
+      lDBID_G3ElecShowNEMType     = BEMPX_GetDatabaseID( "G3ElecShowNEMType",      iCID_CUAC );
+        lDBID_G3UtilRate_FuelType      = BEMPX_GetDatabaseID( "fuel_type",         iCID_UtilityRate );
+        lDBID_G3UtilRate_FuelUnit      = BEMPX_GetDatabaseID( "fuel_unit",         iCID_UtilityRate );
+        lDBID_G3UtilRate_RateType      = BEMPX_GetDatabaseID( "rate_type",         iCID_UtilityRate );
+        lDBID_G3UtilRate_Weekday       = BEMPX_GetDatabaseID( "weekday",           iCID_UtilityRate );  // 8
+        lDBID_G3UtilRate_Weekend       = BEMPX_GetDatabaseID( "weekend",           iCID_UtilityRate );  // 8
+        lDBID_G3UtilRate_OtherDay      = BEMPX_GetDatabaseID( "otherday",          iCID_UtilityRate );  // 8
+        lDBID_G3UtilRate_NumDwellTypes = BEMPX_GetDatabaseID( "n_dwelling_types",  iCID_UtilityRate );
+        lDBID_G3UtilRate_DwellType     = BEMPX_GetDatabaseID( "dwelling_types",    iCID_UtilityRate );  // 10
+        lDBID_G3UtilRate_NumDiscounts  = BEMPX_GetDatabaseID( "n_discounts",       iCID_UtilityRate );
+        lDBID_G3UtilRate_Discount      = BEMPX_GetDatabaseID( "discounts",         iCID_UtilityRate );  // 20
+        lDBID_G3UtilRate_NumSeasons    = BEMPX_GetDatabaseID( "n_seasons",         iCID_UtilityRate );
+        lDBID_G3UtilRate_Season        = BEMPX_GetDatabaseID( "seasons",           iCID_UtilityRate );  // 12
+      iCID_G3Discount       = BEMPX_GetDBComponentID( "XH_discount" );
+        lDBID_G3Discount_Name                   = BEMPX_GetDatabaseID( "name_alt",                                  iCID_G3Discount );
+        lDBID_G3Discount_DiscountFrac           = BEMPX_GetDatabaseID( "bill_discount_pct",                         iCID_G3Discount );
+        lDBID_G3Discount_AddtnlBaselnDailyAlloc = BEMPX_GetDatabaseID( "baseline_additional_allocation_kwh_daily",  iCID_G3Discount );
+        lDBID_G3Discount_RateDiscount           = BEMPX_GetDatabaseID( "rate_discount",                             iCID_G3Discount );
+        lDBID_G3Discount_NumDwellTypes          = BEMPX_GetDatabaseID( "n_dwelling_types",                          iCID_G3Discount );
+        lDBID_G3Discount_DwellType              = BEMPX_GetDatabaseID( "dwelling_types",                            iCID_G3Discount );  // 
+      iCID_G3DwellingType   = BEMPX_GetDBComponentID( "XH_dwelling_type" );
+        lDBID_G3DwellTyp_Name             = BEMPX_GetDatabaseID( "name_alt",            iCID_G3DwellingType );
+        lDBID_G3DwellTyp_BasicDailyCharge = BEMPX_GetDatabaseID( "basic_charge_daily",  iCID_G3DwellingType );
+        lDBID_G3DwellTyp_MinDailyCharge   = BEMPX_GetDatabaseID( "min_charge_daily",    iCID_G3DwellingType );
+      iCID_G3Season         = BEMPX_GetDBComponentID( "XH_season" );
+        lDBID_G3Season_Name            = BEMPX_GetDatabaseID( "name_alt",            iCID_G3Season );
+        lDBID_G3Season_MonthInSeason   = BEMPX_GetDatabaseID( "MonthInSeason",       iCID_G3Season );  // 12
+        lDBID_G3Season_NumBaselnRgns   = BEMPX_GetDatabaseID( "n_baseline_regions",  iCID_G3Season );
+        lDBID_G3Season_BaselnRgn       = BEMPX_GetDatabaseID( "baseline_regions",    iCID_G3Season );  // 
+        lDBID_G3Season_NumDayTypes     = BEMPX_GetDatabaseID( "n_daytypes",          iCID_G3Season );
+        lDBID_G3Season_DayType         = BEMPX_GetDatabaseID( "daytypes",            iCID_G3Season );  // 
+      iCID_G3BaselineRegion = BEMPX_GetDBComponentID( "XH_baseline_region" );
+        lDBID_G3BaslnRgn_Name          = BEMPX_GetDatabaseID( "name_alt",           iCID_G3BaselineRegion );
+        lDBID_G3BaslnRgn_NumHouseTypes = BEMPX_GetDatabaseID( "n_household_types",  iCID_G3BaselineRegion );
+        lDBID_G3BaslnRgn_HouseType     = BEMPX_GetDatabaseID( "household_types",    iCID_G3BaselineRegion );  // 
+      iCID_G3HouseholdType  = BEMPX_GetDBComponentID( "XH_household_type" );
+        lDBID_G3HouseTyp_Name             = BEMPX_GetDatabaseID( "name_alt",                       iCID_G3HouseholdType );
+        lDBID_G3HouseTyp_BaselnDailyAlloc = BEMPX_GetDatabaseID( "baseline_allocation_kwh_daily",  iCID_G3HouseholdType );
+      iCID_G3DayType        = BEMPX_GetDBComponentID( "XH_daytype" );
+        lDBID_G3DayType_Name        = BEMPX_GetDatabaseID( "name_alt",   iCID_G3DayType );
+        lDBID_G3DayType_NumPeriods  = BEMPX_GetDatabaseID( "n_periods",  iCID_G3DayType );
+        lDBID_G3DayType_Period      = BEMPX_GetDatabaseID( "periods",    iCID_G3DayType );  // 
+      iCID_G3Period         = BEMPX_GetDBComponentID( "XH_period" );
+        lDBID_G3Period_Name         = BEMPX_GetDatabaseID( "name_alt",      iCID_G3Period );
+        lDBID_G3Period_HourInPeriod = BEMPX_GetDatabaseID( "HourInPeriod",  iCID_G3Period );  // 24
+        lDBID_G3Period_NumTiers     = BEMPX_GetDatabaseID( "n_tiers",       iCID_G3Period );
+        lDBID_G3Period_Tier         = BEMPX_GetDatabaseID( "tiers",         iCID_G3Period );  // 
+      iCID_G3Tier           = BEMPX_GetDBComponentID( "XH_tier" );
+        lDBID_G3Tier_Name  = BEMPX_GetDatabaseID( "name_alt",  iCID_G3Tier );
+        lDBID_G3Tier_Rate  = BEMPX_GetDatabaseID( "rate",      iCID_G3Tier );
+   }
 
    long lPVBillingOption=0, lPVCarryoverOption=-1;    // SAC 12/10/22
    BEMPX_GetInteger( BEMPX_GetDatabaseID( "PVBillingOption"  , iCID_CUAC ), lPVBillingOption  , 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
@@ -522,57 +700,55 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
    BEMPX_GetInteger( BEMPX_GetDatabaseID( "PerformJA13DHWBillAdj", iCID_CUAC ), lPerformJA13DHWBillAdjustments, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );
    if (bExcludeDHW)
    {  }     // ignore all JA13 HPWH adjustments if we are excluding DHW all together
-   else if (lPerformJA13DHWBillAdjustments > 0 && !bOldCUAC && iG2RateObjIdx[iFuel] < 0)
+   else if (lPerformJA13DHWBillAdjustments > 0 && !bOldCUAC && iG23RateObjIdx[iFuel] < 0)
       sErrMsg = QString( "CUAC %1 Utility bill calc error:  no Electric rate assigned or rate data invalid - needed for DHW HPWH JA13 credit calcs" ).arg( saFuelLabels[iFuel] );
    else if (lPerformJA13DHWBillAdjustments > 0)
-   {  long lNumRateSeasons    = BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumRateSeasons"   , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-      long lNumHourlyTOUCosts = BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumHourlyTOUCosts", iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+   {  long lNumRateSeasons    = BEMPX_GetInteger( BEMPX_GetDatabaseID( (lUtilityRateGen == 3 ? "n_seasons" : "NumRateSeasons"), iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+      long lNumHourlyTOUCosts = (lUtilityRateGen == 3 ? 0 : BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumHourlyTOUCosts", iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx ));
       if (lNumRateSeasons < 1)
-         sErrMsg = QString( "CUAC %1 Utility bill calc error:  rate must include at least one RateSeason" ).arg( saFuelLabels[iFuel] );
+         sErrMsg = QString( "CUAC %1 Utility bill calc error:  rate must include at least one %2" ).arg( saFuelLabels[iFuel], (lUtilityRateGen == 3 ? "season" : "RateSeason") );
       else
       {
-            bool bIgnoreNetExcesCredits=false, bIgnoreHourlyTOU=false;
-            long lElecTariffAdj=0;
-            //double dElecBillMinMoCharge=-999.0, dElecBillMinAnnCharge=-999.0;
-            //if (iFuel == 0)  // Electric processing
-            //{
-            //   lElecBillReconBeginMo = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecBillReconBeginMo" ), iSpecVal, iErr, 0 /*ObjIdx*/, BEMO_User, iCUAC_BEMProcIdx );      // SAC 12/10/23 (CUAC)
-               BEMPX_GetInteger( BEMPX_GetDatabaseID( "ElecTariffAdj", iCID_CUAC ), lElecTariffAdj, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );       // SAC 12/13/23
-               if (lElecTariffAdj == 2)   // hardwiring VNEM2 - SAC 12/13/23
-               {  bIgnoreNetExcesCredits = true;
-                  bIgnoreHourlyTOU       = true;
-                  QString qsElecTariffAdj;
-                  BEMPX_GetString( BEMPX_GetDatabaseID( "ElecTariffAdj", iCID_CUAC ), qsElecTariffAdj, FALSE, 0, -1, 0, BEMO_User, "??", 0, iCUAC_BEMProcIdx ); 
-                  BEMPX_WriteLogFile( QString( "  applying user-specified utility bill adjustment '%1' to utility bill calc" ).arg( qsElecTariffAdj ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-               }
-            //   BEMPX_GetFloat( BEMPX_GetDatabaseID( "ElecBillMinMoCharge" , iCID_CUAC ), dElecBillMinMoCharge , -999.0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );    // SAC 12/14/23
-            //   BEMPX_GetFloat( BEMPX_GetDatabaseID( "ElecBillMinAnnCharge", iCID_CUAC ), dElecBillMinAnnCharge, -999.0, -1, 0, BEMO_User, iCUAC_BEMProcIdx ); 
-            //}
+            // only used in following bill calc code
+            // // bool bIgnoreNetExcesCredits=false, bIgnoreHourlyTOU=false;
+            // long lElecTariffAdj=0;
+            // bool bFullRetailReimbForExports = false;
+            // if (lUtilityRateGen == 2)
+            // {  BEMPX_GetInteger( BEMPX_GetDatabaseID( "ElecTariffAdj", iCID_CUAC ), lElecTariffAdj, 0, -1, 0, BEMO_User, iCUAC_BEMProcIdx );       // SAC 12/13/23
+            //    if (lElecTariffAdj == 2)   // hardwiring VNEM2 - SAC 12/13/23
+            //    {  bIgnoreNetExcesCredits = true;
+            //       bIgnoreHourlyTOU       = true;
+            //       QString qsElecTariffAdj;
+            //       BEMPX_GetString( BEMPX_GetDatabaseID( "ElecTariffAdj", iCID_CUAC ), qsElecTariffAdj, FALSE, 0, -1, 0, BEMO_User, "??", 0, iCUAC_BEMProcIdx ); 
+            //       BEMPX_WriteLogFile( QString( "  applying user-specified utility bill adjustment '%1' to utility bill calc" ).arg( qsElecTariffAdj ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            //    }
+            //       //QString qsEncodedRateName       = BEMPX_GetString( BEMPX_GetDatabaseID( "EncodedRateName"      , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+            //       QString qsMeteringType          = BEMPX_GetString( BEMPX_GetDatabaseID( "MeteringType"         , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+            //       //QString qsReconciliationPeriod  = BEMPX_GetString( BEMPX_GetDatabaseID( "ReconciliationPeriod" , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+            //       //QString qsNettingPeriodInterval = BEMPX_GetString( BEMPX_GetDatabaseID( "NettingPeriodInterval", iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+            //       //QString qsDemandInterval        = BEMPX_GetString( BEMPX_GetDatabaseID( "DemandInterval"       , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+            //       //long lAnnualBilling     = BEMPX_GetInteger( BEMPX_GetDatabaseID( "AnnualBilling"    , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+            //       if ( (iFuel == 0 && lElecTariffAdj == 2) ||                                      // SAC 12/13/23
+            //            !qsMeteringType.compare( "NetMetering",         Qt::CaseInsensitive ) ||    // SAC 12/04/23
+            //            !qsMeteringType.compare( "OptionalNetMetering", Qt::CaseInsensitive ) )
+            //          bFullRetailReimbForExports = true;
+            // }
+            // else if (lUtilityRateGen == 3)      // similar settings for Gen3 XH rates - SAC 04/27/26 (dev #689)
+            // {
+            // }
 
-
-                  //QString qsEncodedRateName       = BEMPX_GetString( BEMPX_GetDatabaseID( "EncodedRateName"      , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  QString qsMeteringType          = BEMPX_GetString( BEMPX_GetDatabaseID( "MeteringType"         , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  //QString qsReconciliationPeriod  = BEMPX_GetString( BEMPX_GetDatabaseID( "ReconciliationPeriod" , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  //QString qsNettingPeriodInterval = BEMPX_GetString( BEMPX_GetDatabaseID( "NettingPeriodInterval", iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  //QString qsDemandInterval        = BEMPX_GetString( BEMPX_GetDatabaseID( "DemandInterval"       , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  //long lAnnualBilling     = BEMPX_GetInteger( BEMPX_GetDatabaseID( "AnnualBilling"    , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-
-                  bool bFullRetailReimbForExports = false;
-                  if ( (iFuel == 0 && lElecTariffAdj == 2) ||                                      // SAC 12/13/23
-                       !qsMeteringType.compare( "NetMetering",         Qt::CaseInsensitive ) ||    // SAC 12/04/23
-                       !qsMeteringType.compare( "OptionalNetMetering", Qt::CaseInsensitive ) )
-                     bFullRetailReimbForExports = true;
-
-
+            if (lUtilityRateGen == 2)
+            {
                      for (iMo=0; (iMo<12 && sErrMsg.isEmpty()); iMo++)
                      {  //double dMonBypassableCost = 0.0, dMonNonBypassableCost = 0.0, dMonMinCost = 0.0;
                         for (int iSeas=0; (iSeas < lNumRateSeasons && sErrMsg.isEmpty()); iSeas++)
-                        {  BEMObject* pSeasObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "RateSeasons", iCID_UtilityRate )+iSeas, iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                        {  BEMObject* pSeasObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( (lUtilityRateGen == 3 ? "seasons" : "RateSeasons"), iCID_UtilityRate )+iSeas, iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
                            int iSeasObjIdx     = (pSeasObj == NULL ? -1 : BEMPX_GetObjectIndex( pSeasObj->getClass(), pSeasObj, iCUAC_BEMProcIdx ));
                            if (iSeasObjIdx < 0)
-                              sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve RateSeasons #%2" ).arg( saFuelLabels[iFuel], QString::number( iSeas+1 ) );
+                              sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve %2 #%3" ).arg( saFuelLabels[iFuel], (lUtilityRateGen == 3 ? "season" : "RateSeason"), QString::number( iSeas+1 ) );
                            else
-                           {  QString qsSeasName     = BEMPX_GetString(  BEMPX_GetDatabaseID( "CPR_RateSeason:Name"             ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+                           {
+                              QString qsSeasName     = BEMPX_GetString(  BEMPX_GetDatabaseID( "CPR_RateSeason:Name"             ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
                               QString qsSeasJSONName = BEMPX_GetString(  BEMPX_GetDatabaseID( "CPR_RateSeason:SeasonName"       ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
                               long lNumSeasonPeriods = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CPR_RateSeason:NumSeasonPeriods" ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
                               int iSeasMoHrStart=-1, iSeasMoHrEnd=-1;
@@ -776,6 +952,239 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                         }  // end of loop over seasons (overlapping w/ month)
                      }  // end of loop over months
 
+            }  // end of check for lUtilityRateGen = 2 - loop over months...
+            else if (lUtilityRateGen == 3)
+            {
+               // set G3 elec rate data
+               QString sG3Region, sG3Discount, sG3DwellType, sG3HouseType, sG3NEMType;
+               long lShow = BEMPX_GetInteger(    lDBID_G3ElecShowRegion, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               if (lShow)
+                  sG3Region    = BEMPX_GetString(    lDBID_G3ElecRegion, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               lShow = BEMPX_GetInteger(       lDBID_G3ElecShowDiscount, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               if (lShow)
+                  sG3Discount  = BEMPX_GetString(  lDBID_G3ElecDiscount, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               lShow = BEMPX_GetInteger(      lDBID_G3ElecShowDwellType, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               if (lShow)
+                  sG3DwellType = BEMPX_GetString( lDBID_G3ElecDwellType, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               lShow = BEMPX_GetInteger(      lDBID_G3ElecShowHouseType, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               if (lShow)
+                  sG3HouseType = BEMPX_GetString( lDBID_G3ElecHouseType, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               lShow = BEMPX_GetInteger(        lDBID_G3ElecShowNEMType, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+               if (lShow)
+                  sG3NEMType   = BEMPX_GetString(   lDBID_G3ElecNEMType, iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+
+
+                     // lDBID_G3UtilRate_Weekday       = BEMPX_GetDatabaseID( "weekday",           iCID_UtilityRate );  // 8
+                     // lDBID_G3UtilRate_Weekend       = BEMPX_GetDatabaseID( "weekend",           iCID_UtilityRate );  // 8
+                     // lDBID_G3UtilRate_OtherDay      = BEMPX_GetDatabaseID( "otherday",          iCID_UtilityRate );  // 8
+        
+       
+                     // static bool IsHoliday( int i1Mon, int i1Day )
+
+
+                     // long lNumRateSeasons    = BEMPX_GetInteger( BEMPX_GetDatabaseID( (lUtilityRateGen == 3 ? "n_seasons" : "NumRateSeasons"), iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+
+
+                     for (iMo=0; (iMo<12 && sErrMsg.isEmpty()); iMo++)
+                     {  for (int iSeas=0; (iSeas < lNumRateSeasons && sErrMsg.isEmpty()); iSeas++)
+                        {  BEMObject* pSeasObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( (lUtilityRateGen == 3 ? "seasons" : "RateSeasons"), iCID_UtilityRate )+iSeas, iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                           int iSeasObjIdx     = (pSeasObj == NULL ? -1 : BEMPX_GetObjectIndex( pSeasObj->getClass(), pSeasObj, iCUAC_BEMProcIdx ));
+                           if (iSeasObjIdx < 0)
+                              sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve %2 #%3" ).arg( saFuelLabels[iFuel], (lUtilityRateGen == 3 ? "season" : "RateSeason"), QString::number( iSeas+1 ) );
+                           else
+                           {
+
+
+// TO DO !!
+
+
+                           }
+                        }
+                     }
+
+
+                     // int iYrHr=0, iDOW;
+                     // i0YrDay = 0;
+                     // for (iMo=1; iMo<=12; iMo++)
+                     //    for (iDay=1; iDay<=iNumDaysInMonth[iMo-1]; iDay++)
+                     //    {
+                     //       iDOW = i0YrDay + 3 - ( ((int) ((i0YrDay+3)/7)) * 7 );    assert( (iDOW>=0 && iDOW<7) );      // 0-Mon  1-Tue  2-Wed  3-Thu  4-Fri  5-Sat  6-Sun
+                     //       qsHrlyVals = QString( "%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15,%16,%17,%18,%19,%20,%21,%22,%23,%24," ).arg( 
+                     //             QString::number( daHrlyElecCost[iYrHr   ] ), QString::number( daHrlyElecCost[iYrHr+ 1] ), QString::number( daHrlyElecCost[iYrHr+ 2] ), QString::number( daHrlyElecCost[iYrHr+ 3] ),
+                     //             QString::number( daHrlyElecCost[iYrHr+ 4] ), QString::number( daHrlyElecCost[iYrHr+ 5] ), QString::number( daHrlyElecCost[iYrHr+ 6] ), QString::number( daHrlyElecCost[iYrHr+ 7] ), 
+                     //             QString::number( daHrlyElecCost[iYrHr+ 8] ), QString::number( daHrlyElecCost[iYrHr+ 9] ), QString::number( daHrlyElecCost[iYrHr+10] ), QString::number( daHrlyElecCost[iYrHr+11] ), 
+                     //             QString::number( daHrlyElecCost[iYrHr+12] ), QString::number( daHrlyElecCost[iYrHr+13] ), QString::number( daHrlyElecCost[iYrHr+14] ), QString::number( daHrlyElecCost[iYrHr+15] ), 
+                     //             QString::number( daHrlyElecCost[iYrHr+16] ), QString::number( daHrlyElecCost[iYrHr+17] ), QString::number( daHrlyElecCost[iYrHr+18] ), QString::number( daHrlyElecCost[iYrHr+19] ), 
+                     //             QString::number( daHrlyElecCost[iYrHr+20] ), QString::number( daHrlyElecCost[iYrHr+21] ), QString::number( daHrlyElecCost[iYrHr+22] ), QString::number( daHrlyElecCost[iYrHr+23] )  );
+                     //       fprintf( fp_CSV,  "%d,%d,%s,%d,%d,%d,%d,$/kWh,%s\n",  iMo, iDay, pszDOWLbls[iDOW],
+                     //                               iDayFirstPeakHr[0][i0YrDay], iDayPeakDuration[0][i0YrDay],
+                     //                               iDayFirstPeakHr[1][i0YrDay], iDayPeakDuration[1][i0YrDay], qsHrlyVals.toLocal8Bit().constData() );
+                     //       iYrHr += 24;
+                     //       i0YrDay++;
+                     //    }
+
+
+
+//                     for (iMo=0; (iMo<12 && sErrMsg.isEmpty()); iMo++)
+//                     {  //double dMonBypassableCost = 0.0, dMonNonBypassableCost = 0.0, dMonMinCost = 0.0;
+//                        for (int iSeas=0; (iSeas < lNumRateSeasons && sErrMsg.isEmpty()); iSeas++)
+//                        {  BEMObject* pSeasObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( (lUtilityRateGen == 3 ? "seasons" : "RateSeasons"), iCID_UtilityRate )+iSeas, iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+//                           int iSeasObjIdx     = (pSeasObj == NULL ? -1 : BEMPX_GetObjectIndex( pSeasObj->getClass(), pSeasObj, iCUAC_BEMProcIdx ));
+//                           if (iSeasObjIdx < 0)
+//                              sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve %2 #%3" ).arg( saFuelLabels[iFuel], (lUtilityRateGen == 3 ? "season" : "RateSeason"), QString::number( iSeas+1 ) );
+//                           else
+//                           {
+//                              QString qsSeasName     = BEMPX_GetString(  BEMPX_GetDatabaseID( "CPR_RateSeason:Name"             ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                              QString qsSeasJSONName = BEMPX_GetString(  BEMPX_GetDatabaseID( "CPR_RateSeason:SeasonName"       ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                              long lNumSeasonPeriods = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CPR_RateSeason:NumSeasonPeriods" ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                              int iSeasMoHrStart=-1, iSeasMoHrEnd=-1;
+//                              for (int iSeasPer=0; (iSeasPer < lNumSeasonPeriods && sErrMsg.isEmpty() && (iSeasMoHrStart < 0 || iSeasMoHrEnd < 0)); iSeasPer++)
+//                              {  BEMObject* pSeasPerObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "CPR_RateSeason:SeasonPeriods" )+iSeasPer, iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                 int iSeasPerObjIdx     = (pSeasPerObj == NULL ? -1 : BEMPX_GetObjectIndex( pSeasPerObj->getClass(), pSeasPerObj, iCUAC_BEMProcIdx ));
+//                                 if (iSeasPerObjIdx < 0)
+//                                    sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve SeasonTimePeriod #%2 for RateSeasons #%3" ).arg( saFuelLabels[iFuel], QString::number( iSeasPer+1 ), QString::number( iSeas+1 ) );
+//                                 else
+//                                    G2MonthSeasonPeriodOverlap( iSeasPerObjIdx, iMo+1, iMoHrStart[iMo], iMoHrEnd[iMo], iSeasMoHrStart, iSeasMoHrEnd, iCUAC_BEMProcIdx, sErrMsg );
+//                              }
+//
+//
+//                              if (sErrMsg.isEmpty() && iSeasMoHrStart >= 0 && iSeasMoHrEnd > 0)
+//                              {                       if (iBillCalcDetails > 0)
+//                                                         BEMPX_WriteLogFile( QString( "            %1 - Seas #%2, %3 / %4, yr hrs %5-%6:" ).arg( pszMoLabels[iMo], QString::number( iSeas+1 ), qsSeasName, qsSeasJSONName, QString::number( iSeasMoHrStart ), QString::number( iSeasMoHrEnd ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//
+//                                 long lNumTOUPeriods = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CPR_RateSeason:NumTimeOfUsePeriods" ), iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                 for (int iTOUPer=0; (iTOUPer < lNumTOUPeriods && sErrMsg.isEmpty()); iTOUPer++)
+//                                 {  BEMObject* pTOUPerObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "CPR_RateSeason:TimeOfUsePeriods" )+iTOUPer, iSpecVal, iErr, iSeasObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                    int iTOUPerObjIdx     = (pTOUPerObj == NULL ? -1 : BEMPX_GetObjectIndex( pTOUPerObj->getClass(), pTOUPerObj, iCUAC_BEMProcIdx ));
+//                                    if (iTOUPerObjIdx < 0)
+//                                       sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve TOUPeriod #%2 for RateSeasons #%3" ).arg( saFuelLabels[iFuel], QString::number( iTOUPer+1 ), QString::number( iSeas+1 ) );
+//                                    else
+//                                    {                 if (iBillCalcDetails > 0)
+//                                                         BEMPX_WriteLogFile( QString( "               TOUPeriod #%1, %2 / %3:" ).arg( QString::number( iTOUPerObjIdx+1 ), 
+//                                                                                                            BEMPX_GetString( BEMPX_GetDatabaseID( "CPR_TOUPeriod:Name"    ), iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx ),
+//                                                                                                            BEMPX_GetString( BEMPX_GetDatabaseID( "CPR_TOUPeriod:TOUName" ), iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//                                       long lNumDailyTimePeriods = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CPR_TOUPeriod:NumTimePeriods" ), iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                       BEMObject* pCostCompObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "CPR_TOUPeriod:CostComponents" ), iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                       int iCostCompObjIdx     = (pCostCompObj == NULL ? -1 : BEMPX_GetObjectIndex( pCostCompObj->getClass(), pCostCompObj, iCUAC_BEMProcIdx ));
+//                                       if (iCostCompObjIdx < 0)
+//                                          sErrMsg = QString( "CUAC %1 Utility bill calc error:  CostComponents not defined for TOUPeriod #%2 %3, RateSeasons #%4" ).arg( saFuelLabels[iFuel], QString::number( iTOUPer+1 ), 
+//                                                               BEMPX_GetString( BEMPX_GetDatabaseID( "CPR_TOUPeriod:TOUName" ), iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx ), QString::number( iSeas+1 ) );
+//                                       else
+//                                       {  // Days:   0-Mon  1-Tue  2-Wed  3-Thu  4-Fri  5-Sat  6-Sun
+//                                          double dDayHrMult[7][24] = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+//                                                                       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+//                                                                       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+//                                                                       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+//                                                                       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+//                                                                       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+//                                                                       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+//                                          int iNumTimePeriodHrsInWk = 0;      // SAC 09/18/23
+//                                          for (int iDailyTimePer=0; (iDailyTimePer < lNumDailyTimePeriods && sErrMsg.isEmpty()); iDailyTimePer++)
+//                                          {  BEMObject* pDailyTimePerObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "CPR_TOUPeriod:TimePeriods" )+iDailyTimePer, iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                             int iDailyTimePerObjIdx     = (pDailyTimePerObj == NULL ? -1 : BEMPX_GetObjectIndex( pDailyTimePerObj->getClass(), pDailyTimePerObj, iCUAC_BEMProcIdx ));
+//                                             if (iDailyTimePerObjIdx < 0)
+//                                                sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve DailyTimePeriod #%2 for RateSeasons #%3, TOUPeriod #%4" ).arg( saFuelLabels[iFuel], QString::number( iDailyTimePer+1 ), QString::number( iSeas+1 ), QString::number( iTOUPer+1 ) );
+//                                             else
+//                                             {  int iCID_DailyTimePeriod = BEMPX_GetDBComponentID( "CPR_DailyTimePeriod" );
+//                                                double dStartTime    = BEMPX_GetFloat(  BEMPX_GetDatabaseID( "StartTime",      iCID_DailyTimePeriod ), iSpecVal, iErr, iDailyTimePerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                double dEndTime      = BEMPX_GetFloat(  BEMPX_GetDatabaseID( "EndTime",        iCID_DailyTimePeriod ), iSpecVal, iErr, iDailyTimePerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                QString sWhichDays   = BEMPX_GetString( BEMPX_GetDatabaseID( "ApplicableDays", iCID_DailyTimePeriod ), iSpecVal, iErr, iDailyTimePerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                // mods to accommodate valid scenario where dEndTime < dStartTime - meaning period turns corner over midnight - SAC 12/04/23
+//                                                if (dStartTime < 0 || dEndTime < 0 || dEndTime == dStartTime /*|| dEndTime < dStartTime*/ || sWhichDays.isEmpty())
+//                                                   sErrMsg = QString( "CUAC %1 Utility bill calc error:  invalid data describing DailyTimePeriod #%2 (occur %3) (RateSeasons #%4, TOUPeriod #%5)" ).arg( saFuelLabels[iFuel], QString::number( iDailyTimePer+1 ), QString::number( iDailyTimePerObjIdx ), QString::number( iSeas+1 ), QString::number( iTOUPer+1 ) );
+//                                                else
+//                                                {  QString sDTPName  = BEMPX_GetString( BEMPX_GetDatabaseID( "Name",           iCID_DailyTimePeriod ), iSpecVal, iErr, iDailyTimePerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                               if (iBillCalcDetails > 0)
+//                                                                  BEMPX_WriteLogFile( QString( "                  DlyTimePeriod #%1, %2 - days: %3, hrs %4-%5:" ).arg( QString::number( iDailyTimePer+1 ), sDTPName, sWhichDays, QString::number( dStartTime ), QString::number( dEndTime ) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//                                                   double dStartTm[] = {  dStartTime                              , (dStartTime < dEndTime ? 100.0 : 0.0) };      // SAC 12/04/23
+//                                                   double dEndTm[]   = { (dStartTime < dEndTime ? dEndTime : 24.0),  dEndTime   };
+//                                                   // intialize dDayHrMult[][] arrays to keep track of days & hours this TOU period enforced
+//                                                   for (iDay=0; iDay < 7; iDay++)                                 //0, CPR_DailyTimePeriod:ApplicableDays,   -1
+//                                                      if (  !sWhichDays.compare( "All"      ) ||                  //2,              1,    "All" 
+//                                                           (!sWhichDays.compare( "Weekdays" ) && iDay < 5) ||     //2,              0,    "Weekdays" 
+//                                                           (!sWhichDays.compare( "Weekends" ) && iDay > 4) )      //2,              2,    "Weekends" 
+//                                                         for (iHr=0; iHr < 24; iHr++)
+//                                                         {  if ( (iHr >= (dStartTm[0]-0.1) && iHr < (dEndTm[0]-0.1)) ||
+//                                                                 (iHr >= (dStartTm[1]-0.1) && iHr < (dEndTm[1]-0.1)) )
+//                                                            {  dDayHrMult[iDay][iHr] = 1.0;
+//                                                               iNumTimePeriodHrsInWk++;
+//                                                         }  }
+//                                          }  }  }
+//                                                                     assert( (!bOldCUAC || iNumTimePeriodHrsInWk == 0 || iNumTimePeriodHrsInWk == 168) );      // if OldCUAC, TOU period should cover ALL or NONE of the week - SAC 09/18/23
+//                                          // CPR_TOUPeriod TimePeriods loaded - now move on to CostComponent
+//                                          // sum use and find peak demand during month within TOU period
+//                                          int iHrInDay;
+//                                          //double dMoTOUUse = 0.0, dMoTOUPeakDem = 0.0, dMonBypassableTOUCost = 0.0, dMonNonBypassableTOUCost = 0.0, dMoTOUDailyUse[31];
+//                                          //for (iDay=0; iDay<31; iDay++)
+//                                          //   dMoTOUDailyUse[iDay] = 0.0;
+//                                          if (TRUE)  // !bOldCUAC)
+//                                          {  // HOURLY simulation results
+//
+//                                             // CPR_PeriodCost:EnergyCosts
+//                                             int iCostIdx, iTierIdx;
+//                                             long lNumEnergyCosts   = BEMPX_GetInteger(   BEMPX_GetDatabaseID( "CPR_PeriodCost:NumEnergyCosts" ), iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                             for (iCostIdx = 0; (iCostIdx < lNumEnergyCosts && sErrMsg.isEmpty()); iCostIdx++)
+//                                             {  BEMObject* pEnergyCostObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "CPR_PeriodCost:EnergyCosts" )+iCostIdx, iSpecVal, iErr, iTOUPerObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                int iEnergyCostObjIdx     = (pEnergyCostObj == NULL ? -1 : BEMPX_GetObjectIndex( pEnergyCostObj->getClass(), pEnergyCostObj, iCUAC_BEMProcIdx ));
+//                                                if (iEnergyCostObjIdx < 0)
+//                                                   sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve EnergyCost #%2 for RateSeasons #%3, TOUPeriod #%4" ).arg( saFuelLabels[iFuel], QString::number( iCostIdx+1 ), QString::number( iSeas+1 ), QString::number( iTOUPer+1 ) );
+//                                                else
+//                                                {  QString sPeriodType    = BEMPX_GetString(  lDBID_EnergyCost_PeriodType,       iSpecVal, iErr, iEnergyCostObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                   long lNumTiers         = BEMPX_GetInteger( lDBID_EnergyCost_NumTiers,         iSpecVal, iErr, iEnergyCostObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                   long lTotalConsumption = BEMPX_GetInteger( lDBID_EnergyCost_TotalConsumption, iSpecVal, iErr, iEnergyCostObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                   long lNonBypassable    = BEMPX_GetInteger( lDBID_EnergyCost_NonBypassable,    iSpecVal, iErr, iEnergyCostObjIdx, BEMO_User, iCUAC_BEMProcIdx );    // SAC 09/11/23
+//                                                            //  "CostName",                 BEMP_Str,  1,  0,  0,  Pres,  "",                 0,  0,                                 1005, "Name of the cost component",    "Name" 
+//                                                            //  "Delivery",                 BEMP_Int,  1,  0,  0,  Pres,  "",                 0,  0,                                 1005, "Boolean indicating if this is a delivery charge or not",  "" 
+//                                                   if (lNumTiers < 1 || sPeriodType.isEmpty())
+//                                                      sErrMsg = QString( "CUAC %1 Utility bill calc error:  invalid data describing EnergyCosts #%2 (occur %3) (RateSeasons #%4, TOUPeriod #%5)" ).arg( saFuelLabels[iFuel], QString::number( iCostIdx+1 ), QString::number( iEnergyCostObjIdx ), QString::number( iSeas+1 ), QString::number( iTOUPer+1 ) );
+//                                                   else if (lTotalConsumption > 0)
+//                                                      sErrMsg = QString( "CUAC %1 Utility bill calc error:  TotalConsumption not yet implemented for EnergyCosts #%2 (occur %3) (RateSeasons #%4, TOUPeriod #%5)" ).arg( saFuelLabels[iFuel], QString::number( iCostIdx+1 ), QString::number( iEnergyCostObjIdx ), QString::number( iSeas+1 ), QString::number( iTOUPer+1 ) );
+//                                                   else
+//                                                   {
+//                                                      for (iTierIdx = 0; (iTierIdx < lNumTiers && sErrMsg.isEmpty()); iTierIdx++)
+//                                                      {  BEMObject* pTierObj = BEMPX_GetObjectPtr( lDBID_EnergyCost_Tiers+iTierIdx, iSpecVal, iErr, iEnergyCostObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                         int iTierObjIdx     = (pTierObj == NULL ? -1 : BEMPX_GetObjectIndex( pTierObj->getClass(), pTierObj, iCUAC_BEMProcIdx ));
+//                                                         if (iTierObjIdx < 0)
+//                                                            sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve Tier #%2 for RateSeasons #%3, TOUPeriod #%4, EnergyCosts #%5" ).arg( saFuelLabels[iFuel], QString::number( iTierIdx+1 ), QString::number( iSeas+1 ), QString::number( iTOUPer+1 ), QString::number( iCostIdx+1 ) );
+//                                                         else
+//                                                         {  long lTierNumber  = BEMPX_GetInteger( lDBID_Tier_TierNumber, iSpecVal, iErr, iTierObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                            double dPrice     = BEMPX_GetFloat(   lDBID_Tier_Price,      iSpecVal, iErr, iTierObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//                                                            double dQuantity  = BEMPX_GetFloat(   lDBID_Tier_Quantity,   iSpecVal, iErr, iTierObjIdx, BEMO_User, iCUAC_BEMProcIdx );
+//
+//                                                            // when accumulating 8760 of TOU prices, only track the FIRST tier cost > 0 - SAC 01/15/25
+//                                                            if (dPrice > 0 && iTierIdx < (lNumTiers-1))
+//                                                               lNumTiers = iTierIdx+1;
+//
+//                                                            if (dPrice > 0)
+//                                                            {  bTOUPricesFound = true;
+//                                                               for (iHr = iSeasMoHrStart; iHr <= iSeasMoHrEnd; iHr++)
+//                                                               {  i0YrDay  = (int) (iHr/24);
+//                                                                  iHrInDay = iHr - (i0YrDay*24);
+//                                                                  iDay = i0YrDay + 3 - ( ((int) ((i0YrDay+3)/7)) * 7 );    assert( (iDay>=0 && iDay<7) );
+//                                                                  if (dDayHrMult[iDay][iHrInDay] > 0.1)
+//                                                                  {
+//                                                                     daHrlyElecCost[iHr] += dPrice;
+//                                                            }  }  }
+//
+//                                                      }  }
+//                                             }  }  }
+//
+//                                          }  // if (TRUE)  // !bOldCUAC) - hourly sim results
+//
+//                                       }
+//                                 }  }  // end of loop over TOU periods of Season
+//
+//                              }  // end of if this season overlaps w/ iMo
+//                           }
+//                        }  // end of loop over seasons (overlapping w/ month)
+//                     }  // end of loop over months
+
+
+
+            }  // end of check for lUtilityRateGen = 3 - loop over months...
+
+
+
       }  // end of processing of rate data into costs by hour
 
 
@@ -860,9 +1269,9 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                      QString sElecTariffType     = BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:ElecTariffType"  ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
                      QString sElecTariffAdj      = BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:ElecTariffAdj"   ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
                      QString sG2ElecTariffERN    = BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:G2ElecTariffERN" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-                     long lG2ElecTariffUpdMonth  = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:G2ElecTariffUpdMonth" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-                     long lG2ElecTariffUpdDay    = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:G2ElecTariffUpdDay"   ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-                     long lG2ElecTariffUpdYear   = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:G2ElecTariffUpdYear"  ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+                     long lElecTariffUpdMonth  = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffUpdMonth" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+                     long lElecTariffUpdDay    = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffUpdDay"   ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+                     long lElecTariffUpdYear   = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffUpdYear"  ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
                      fprintf( fp_CSV,  "1,format ID,\n" );
                      fprintf( fp_CSV,  "Electric Utility:,\n" );
                      fprintf( fp_CSV,  ",Name,,\"%s\",\n",            sElecUtility.toLocal8Bit().constData()     );
@@ -871,7 +1280,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                      fprintf( fp_CSV,  ",Type,,\"%s\",\n",            sElecTariffType.toLocal8Bit().constData()  );
                      fprintf( fp_CSV,  ",Adjustment,,\"%s\",\n",      sElecTariffAdj.toLocal8Bit().constData()   );
                      fprintf( fp_CSV,  ",EncodedRateName,,\"%s\",\n", sG2ElecTariffERN.toLocal8Bit().constData() );
-                     fprintf( fp_CSV,  ",Date,,%d/%d/%d,\n",          lG2ElecTariffUpdMonth, lG2ElecTariffUpdDay, lG2ElecTariffUpdYear );
+                     fprintf( fp_CSV,  ",Date,,%d/%d/%d,\n",          lElecTariffUpdMonth, lElecTariffUpdDay, lElecTariffUpdYear );
                      fprintf( fp_CSV,  ",,,,,,,,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,\n" );
                      fprintf( fp_CSV,  "Mo,Da,DOW,1Start,1Hrs,2Start,2Hrs,,'12-1,,'2-3,,'4-5,,'6-7,,'8-9,,'10-11,,noon-1,,'2-3,,'4-5,,'6-7,,'8-9,,'10-11,,\n" );
                      QString qsHrlyVals;
@@ -977,9 +1386,9 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                         QString sElecTariffType     = BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:ElecTariffType"  ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
                         QString sElecTariffAdj      = BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:ElecTariffAdj"   ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
                         QString sG2ElecTariffERN    = BEMPX_GetString(  BEMPX_GetDatabaseID( "CUAC:G2ElecTariffERN" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-                        long lG2ElecTariffUpdMonth  = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:G2ElecTariffUpdMonth" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-                        long lG2ElecTariffUpdDay    = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:G2ElecTariffUpdDay"   ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
-                        long lG2ElecTariffUpdYear   = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:G2ElecTariffUpdYear"  ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+                        long lElecTariffUpdMonth  = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffUpdMonth" ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+                        long lElecTariffUpdDay    = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffUpdDay"   ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
+                        long lElecTariffUpdYear   = BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:ElecTariffUpdYear"  ), iSpecVal, iErr, 0, BEMO_User, iCUAC_BEMProcIdx );
                         fprintf( fp_CSV,  "1,format ID,\n" );
                         fprintf( fp_CSV,  "Electric Utility:,\n" );
                         fprintf( fp_CSV,  ",Name,,\"%s\",\n",            sElecUtility.toLocal8Bit().constData()     );
@@ -988,7 +1397,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                         fprintf( fp_CSV,  ",Type,,\"%s\",\n",            sElecTariffType.toLocal8Bit().constData()  );
                         fprintf( fp_CSV,  ",Adjustment,,\"%s\",\n",      sElecTariffAdj.toLocal8Bit().constData()   );
                         fprintf( fp_CSV,  ",EncodedRateName,,\"%s\",\n", sG2ElecTariffERN.toLocal8Bit().constData() );
-                        fprintf( fp_CSV,  ",Date,,%d/%d/%d,\n",          lG2ElecTariffUpdMonth, lG2ElecTariffUpdDay, lG2ElecTariffUpdYear );
+                        fprintf( fp_CSV,  ",Date,,%d/%d/%d,\n",          lElecTariffUpdMonth, lElecTariffUpdDay, lElecTariffUpdYear );
                         fprintf( fp_CSV,  ",Dwelling Type,,\"%s\",\n",   pszCUACCSVUnitTypeLabels[iMtr] );
 
                         fprintf( fp_CSV,  ",,,,,,,,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,\n" );
@@ -1556,22 +1965,22 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                   BEMPX_SetBEMData( lDBID_BillCalcBypassed, BEMP_Int, (void*) &lOne, BEMO_User, iResObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
             }
             else if (lDBID_FuelCostResult > 0 && (iFuel==0 || bPerformGasBillCalcs))     // SAC 11/04/25 (dev #577)
-            {  if (dTotAnnUse > 0.1 && iG2RateObjIdx[iFuel] < 0 && !utilRate[iFuel].bOK)
+            {  if (dTotAnnUse > 0.1 && iG23RateObjIdx[iFuel] < 0 && !utilRate[iFuel].bOK)
                {  // post error if energy use present but no rate assigned
                   sErrMsg = QString( "CUAC %1 Utility bill calc error:  energy use present but no rate assigned or rate data invalid" ).arg( saFuelLabels[iFuel] );
                }
-               else if (iG2RateObjIdx[iFuel] >= 0)
+               else if (iG23RateObjIdx[iFuel] >= 0)
                {  // ---------------------------------------------------------
                   // ---  Calculate utility bill based on 2023+ CPR rates  ---
                   // ---------------------------------------------------------
-                  QString qsEncodedRateName       = BEMPX_GetString( BEMPX_GetDatabaseID( "EncodedRateName"      , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  QString qsMeteringType          = BEMPX_GetString( BEMPX_GetDatabaseID( "MeteringType"         , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  QString qsReconciliationPeriod  = BEMPX_GetString( BEMPX_GetDatabaseID( "ReconciliationPeriod" , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  QString qsNettingPeriodInterval = BEMPX_GetString( BEMPX_GetDatabaseID( "NettingPeriodInterval", iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  QString qsDemandInterval        = BEMPX_GetString( BEMPX_GetDatabaseID( "DemandInterval"       , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  long lAnnualBilling     = BEMPX_GetInteger( BEMPX_GetDatabaseID( "AnnualBilling"    , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  long lNumRateSeasons    = BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumRateSeasons"   , iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
-                  long lNumHourlyTOUCosts = BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumHourlyTOUCosts", iCID_UtilityRate ), iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  QString qsEncodedRateName       = BEMPX_GetString( BEMPX_GetDatabaseID( "EncodedRateName"      , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  QString qsMeteringType          = BEMPX_GetString( BEMPX_GetDatabaseID( "MeteringType"         , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  QString qsReconciliationPeriod  = BEMPX_GetString( BEMPX_GetDatabaseID( "ReconciliationPeriod" , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  QString qsNettingPeriodInterval = BEMPX_GetString( BEMPX_GetDatabaseID( "NettingPeriodInterval", iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  QString qsDemandInterval        = BEMPX_GetString( BEMPX_GetDatabaseID( "DemandInterval"       , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  long lAnnualBilling     = BEMPX_GetInteger( BEMPX_GetDatabaseID( "AnnualBilling"    , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  long lNumRateSeasons    = BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumRateSeasons"   , iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                  long lNumHourlyTOUCosts = BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumHourlyTOUCosts", iCID_UtilityRate ), iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
 
                   bool bFullRetailReimbForExports = false;
                   if ( (iFuel == 0 && lElecTariffAdj == 2) ||                                      // SAC 12/13/23
@@ -1660,7 +2069,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                      //for (iMo=0; (iMo<12 && sErrMsg.isEmpty()); iMo++)
                      {  double dMonBypassableCost = 0.0, dMonNonBypassableCost = 0.0, dMonMinCost = 0.0;
                         for (int iSeas=0; (iSeas < lNumRateSeasons && sErrMsg.isEmpty()); iSeas++)
-                        {  BEMObject* pSeasObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "RateSeasons", iCID_UtilityRate )+iSeas, iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                        {  BEMObject* pSeasObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "RateSeasons", iCID_UtilityRate )+iSeas, iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
                            int iSeasObjIdx     = (pSeasObj == NULL ? -1 : BEMPX_GetObjectIndex( pSeasObj->getClass(), pSeasObj, iCUAC_BEMProcIdx ));
                            if (iSeasObjIdx < 0)
                               sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve RateSeasons #%2" ).arg( saFuelLabels[iFuel], QString::number( iSeas+1 ) );
@@ -2179,7 +2588,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                               double dDayHrMult[2][24] = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
                                                            { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
                               for (int iHrlyTOUCost=0; (iHrlyTOUCost < lNumHourlyTOUCosts && sErrMsg.isEmpty()); iHrlyTOUCost++)
-                              {  BEMObject* pHrlyTOUCostObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "HourlyTOUCosts", iCID_UtilityRate )+iHrlyTOUCost, iSpecVal, iErr, iG2RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
+                              {  BEMObject* pHrlyTOUCostObj = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "HourlyTOUCosts", iCID_UtilityRate )+iHrlyTOUCost, iSpecVal, iErr, iG23RateObjIdx[iFuel], BEMO_User, iCUAC_BEMProcIdx );
                                  int iHrlyTOUCostObjIdx     = (pHrlyTOUCostObj == NULL ? -1 : BEMPX_GetObjectIndex( pHrlyTOUCostObj->getClass(), pHrlyTOUCostObj, iCUAC_BEMProcIdx ));
                                  if (iHrlyTOUCostObjIdx < 0)
                                     sErrMsg = QString( "CUAC %1 Utility bill calc error:  unable to retrieve HourlyTOUCosts #%2" ).arg( saFuelLabels[iFuel], QString::number( iHrlyTOUCost+1 ) );
@@ -2372,7 +2781,7 @@ void CUAC_AnalysisProcessing( QString sProcessingPath, QString sModelPathOnly, Q
                      dAnnCost /= 12;
                      BEMPX_SetBEMData( lDBID_FuelCostResult+1, BEMP_Flt, (void*) &dAnnCost, BEMO_User, iResObjIdx, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );  // monthly avg cost
                   }
-               }  // END OF  if (iG2RateObjIdx[iFuel] >= 0) - calc utility bill based on 2023+ CPR rates (above)
+               }  // END OF  if (iG23RateObjIdx[iFuel] >= 0) - calc utility bill based on 2023+ CPR rates (above)
                else if (utilRate[iFuel].bOK)
                {  double dFuelRateMult = 1.0;
                   if (iFuel == 0 && utilRate[iFuel].sUnits.compare( "kWh", Qt::CaseInsensitive ))
@@ -2703,7 +3112,8 @@ void CUAC_AnalysisProcessing_BatchRates( QString sProcessingPath, QString sModel
                               bool bStoreBEMDetails, bool bSilent, bool bVerbose, bool bResearchMode, void* pCompRuleDebugInfo, char* pszErrorMsg, int iErrorMsgLen,
                               bool& bAbort, int& iRetVal, QString& sErrMsg, long iCUACReportID, int iCUAC_BEMProcIdx, int iDataModel /*=0*/, int iBillCalcDetails /*=-1*/,
                               int iSecurityKeyIndex, const char* pszSecurityKey, const char* pszProxyServerAddress, const char* pszProxyServerCredentials,
-                              const char* pszProxyServerType, int iRptGenConnectTimeout, int iRptGenReadWriteTimeout, int iDownloadVerbose, const char* pAnalysisInvalidMsg )
+                              const char* pszProxyServerType, int iRptGenConnectTimeout, int iRptGenReadWriteTimeout, int iDownloadVerbose, const char* pAnalysisInvalidMsg,
+                              const char* pszUtilityRatePath /*=NULL*/ )
 {  // at this point, ruleset object is loaded w/ all hourly results read directly from CSE run(s)
    std::vector<std::string> svUtilRatesToDelete;      // SAC 09/27/23 (CUAC)
    QString sElecERN, sGasERN;
@@ -2755,7 +3165,7 @@ void CUAC_AnalysisProcessing_BatchRates( QString sProcessingPath, QString sModel
                               bStoreBEMDetails, bSilent, bVerbose, bResearchMode, pCompRuleDebugInfo, pszErrorMsg, iErrorMsgLen,
                               bAbort, iRetVal, sErrMsg, iCUACReportID, iCUAC_BEMProcIdx, iDataModel, iBillCalcDetails /*=-1*/,
                               iDownloadVerbose, false /*bWritePDF*/, false /*bWriteCSV*/, lBatchRateIdx, pAnalysisInvalidMsg,
-                              bCUACElecRateDownldFailed, bCUACGasRateDownldFailed );
+                              bCUACElecRateDownldFailed, bCUACGasRateDownldFailed, pszUtilityRatePath );
          for (auto& dnldRateFile : svUtilRatesToDelete)     // delete downloaded rate file(s)
          //   DeleteFile( dnldRateFile.c_str() );
          {  std::string sNewName = dnldRateFile;
@@ -4037,7 +4447,7 @@ int CUAC_PopulateFromDetailsCSV( const char* pszDetailsCSVPathFile, bool bVerbos
                else
                {  iRetVal = 6;      // error - unrecognized # units record
                   if (pszOutputMsg && iOutputMsgLen > 0)
-                     sprintf_s( pszOutputMsg, iOutputMsgLen, "Unrecognized unit type (%s)", lines[0][2] );
+                     sprintf_s( pszOutputMsg, iOutputMsgLen, "Unrecognized unit type (%s)", lines[0][2].c_str() );
             }  }
             if (!bTotalRowFound)
             {  iRetVal = 7;      // error - missing Total units record
@@ -4243,7 +4653,7 @@ int CUAC_ImportDetailsCSVHourlyResults( const char* pszDetailsCSVPathFile, bool 
       else
       {  long iTotNumAffordableDwellingsThisFile=0, iaNumAffordableDwellingsByBdrm[8] = {0,0,0,0,0,0,0,0};
          long iTotNumMarketRateDwellingsThisFile=0, iaNumMarketRateDwellingsByBdrm[8] = {0,0,0,0,0,0,0,0};
-         int iFileFormatVer=-1;   long lData;   QString sData;   double dData;
+         int iFileFormatVer=-1;   QString sData;
          std::string line, sTemp;  //, sThisFileWthr, sThisElecRate, sThisGasRate;
          std::vector<std::vector<std::string> > lines;
 
@@ -4279,7 +4689,7 @@ int CUAC_ImportDetailsCSVHourlyResults( const char* pszDetailsCSVPathFile, bool 
 
                getline( in, line );    // sim results header w/ bedroom types & fuel labels
                ParseCSV( line, lines );      assert( lines.size() > 0 );
-               int iHr, iHrCol, iColIdx, iBdrmIdx, iNumBdrmTypes=0, i1stCol;
+               int iHr, iColIdx, iBdrmIdx, iNumBdrmTypes=0, i1stCol;
                std::string saBdrmMtrNames[7];
                for (iBdrmIdx=0; iBdrmIdx < 7 /*Studio-6bdrm*/; iBdrmIdx++)
                {  iColIdx = (17 * iBdrmIdx) + 3;

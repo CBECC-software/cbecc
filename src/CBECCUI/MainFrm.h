@@ -202,6 +202,8 @@ protected:
 	afx_msg void OnToolsEvalRulelist();
 	afx_msg void OnAnalysisRangeChecks();
 	afx_msg void OnUpdateAnalysisRangeChecks(CCmdUI* pCmdUI);
+   afx_msg void OnHelpReleaseNotes(); 
+	afx_msg void OnUpdateHelpReleaseNotes(CCmdUI* pCmdUI);
    afx_msg void OnHelpOverview(); 
    afx_msg void OnUpdateHelpOverview(CCmdUI* pCmdUI);
    afx_msg void OnHelpUserManual(); 

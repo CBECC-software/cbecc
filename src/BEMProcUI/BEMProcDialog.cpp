@@ -645,7 +645,8 @@ BOOL CSACBEMProcDialog::InitControls()
             else if (pCtrl->m_uiCtrlType == TDCT_WMF)
             {
                CWMFCtl* pWMF = new CWMFCtl();
-               pWMF->Create( this, pCtrl, 0, m_iTabCtrlHt /*m_iFrmHeight*/, m_iTabCtrlWd /*m_iFrmWidth*/, ::GetSysColor( COLOR_WINDOW ), TRUE );
+               pWMF->Create( this, pCtrl, 0, FontY(m_iTabCtrlHt) /*m_iFrmHeight*/, FontX(m_iTabCtrlWd) /*m_iFrmWidth*/, ::GetSysColor( COLOR_WINDOW ), TRUE );    // ensure resource scaling for win ht/wd - SAC 05/01/26
+               //pWMF->Create( this, pCtrl, 0, m_iTabCtrlHt /*m_iFrmHeight*/, m_iTabCtrlWd /*m_iFrmWidth*/, ::GetSysColor( COLOR_WINDOW ), TRUE );
             }
 //            else if (pCtrl->m_uiCtrlType == TDCT_Floor)
 //            {

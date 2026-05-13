@@ -13716,19 +13716,23 @@ int GetObjectMatchingData( int iObjClassIdx, std::string& sObjName, int iObjCrea
 // SAC 3/10/14 - routine to create objects in order to facilitate SCSysRpt report population
 int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error )
 {	int iNumObjsCreated = 0;
-	long lIsMultiFamily, lProj_RunScope;
+	long lIsMultiFamily, lProj_RunScope, lProj_IsAddAlone;
    long lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "ResProj:IsMultiFamily" );    // SAC 11/17/21
    if (lDBID_IsMultiFamily < 1)
       lDBID_IsMultiFamily = BEMPX_GetDatabaseID( "Proj:IsMultiFamily" );
    long lDBID_RunScope = BEMPX_GetDatabaseID( "ResProj:RunScope" );
    if (lDBID_RunScope < 1)
       lDBID_RunScope = BEMPX_GetDatabaseID( "Proj:RunScope" );
-	if (!BEMPX_GetInteger( lDBID_IsMultiFamily, lIsMultiFamily ))
+   long lDBID_IsAddAlone = BEMPX_GetDatabaseID( "ResProj:IsAddAlone" );       // SAC 04/23/26 (dev #855)
+   if (lDBID_IsAddAlone < 1)
+      lDBID_IsAddAlone = BEMPX_GetDatabaseID( "Proj:IsAddAlone" );
+   if (!BEMPX_GetInteger( lDBID_IsMultiFamily, lIsMultiFamily ))
 		sErrMsg = QString( "CreateSCSysRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:IsMultiFamily" );
 	else if (!BEMPX_GetInteger( lDBID_RunScope, lProj_RunScope ))
 		sErrMsg = QString( "CreateSCSysRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:RunScope" );
 	else
-	{
+	{  if (!BEMPX_GetInteger( lDBID_IsAddAlone, lProj_IsAddAlone ))
+         lProj_IsAddAlone = 0;
 		int iNumErrors = 0, iError;		QString sTmp, sSCSysRptName;
 		int iCID_HVACSys       = GetObjectID_LogError( "HVACSys",       iNumErrors, sTmp );
 		int iCID_HVACDist      = GetObjectID_LogError( "HVACDist",      iNumErrors, sTmp );
@@ -13966,7 +13970,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 			   								iaDataTypes.push_back( BEMP_Int );
 			   								saData.push_back( "" );
 			   								faData.push_back( -1 );
-			   								if (lProj_RunScope == 1)
+			   								if (lProj_RunScope == 1 && lProj_IsAddAlone == 0)     // SAC 04/23/26 (dev #855)
 			   									laData.push_back( 3 );	// 3-"New"
 			   								else if (lSCSysStatus > 0)
 			   									laData.push_back( lSCSysStatus );
@@ -14219,7 +14223,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 			   								iaDataTypes.push_back( BEMP_Int );
 			   								saData.push_back( "" );
 			   								faData.push_back( -1 );
-			   								if (lProj_RunScope == 1)
+			   								if (lProj_RunScope == 1 && lProj_IsAddAlone == 0)     // SAC 04/23/26 (dev #855)
 			   									laData.push_back( 3 );	// 3-"New"
 			   								else if (lSCSysStatus > 0)
 			   									laData.push_back( lSCSysStatus );
@@ -14499,7 +14503,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 									iaDataTypes.push_back( BEMP_Int );
 									saData.push_back( "" );
 									faData.push_back( -1 );
-									if (lProj_RunScope == 1)
+									if (lProj_RunScope == 1 && lProj_IsAddAlone == 0)     // SAC 04/23/26 (dev #855)
 										laData.push_back( 3 );	// 3-"New"
 									else if (lSCSysStatus > 0)
 										laData.push_back( lSCSysStatus );
