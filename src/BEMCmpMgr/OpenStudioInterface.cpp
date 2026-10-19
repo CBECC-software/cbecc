@@ -647,7 +647,8 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir,
 													BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath,
 													QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/, bool bReportAllUMLHZones, 		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
-													QString* sStdDsgnCSEResultsPathFile /*=NULL*/, bool bRptMissingEPFiles )		// SAC 10/8/20 (tic #3218)
+													QString* sStdDsgnCSEResultsPathFile /*=NULL*/, bool bRptMissingEPFiles, 		// SAC 10/8/20 (tic #3218)
+                                       QString* psEUseSumResultSetName /*=NULL*/ )    // SAC 06/02/26 (dev #903)
 {
 	BOOL bRetVal = TRUE;
 	QString sLogMsg, sTemp;
@@ -725,7 +726,10 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 					//  "CO2EmissionsOtherMult",   BEMP_Flt, 10,  1,  0,  NInp,  "ton/MBtuh",    "CO2EmissionsOtherMultiplier",       "" 
 					//  "SrcEngyMultTableName",    BEMP_Str, 10,  1,  0,  NInp,  "",             "SourceEnergyMultiplierTableName",   "" 
 			QString sResultSetName;		// SAC 11/3/19
-			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResultSetName" )+iResSet, sResultSetName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+         if (psEUseSumResultSetName && !psEUseSumResultSetName->isEmpty())    // SAC 06/02/26 (dev #903)
+            sResultSetName = *psEUseSumResultSetName;
+         else
+			   BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResultSetName" )+iResSet, sResultSetName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
 
 			QString sTDVMultTableName, sResTDVMultTableName;		// SAC 11/3/19
 			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" )+iResSet, sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
@@ -3928,7 +3932,8 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
 															QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/, bool bReportAllUMLHZones /*=false*/, 		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
 															QString* sStdDsgnCSEResultsPathFile /*=NULL*/, QVector<QString>* psaCopyAcrossModelClassPrefixes /*=NULL*/, 		// SAC 10/8/20 (tic #3218)   // SAC 11/24/20
-                                             void* pCompRuleDebugInfo /*=NULL*/, bool bRptMissingEPFiles /*=true*/ )      // SAC 04/14/21
+                                             void* pCompRuleDebugInfo /*=NULL*/, bool bRptMissingEPFiles /*=true*/,       // SAC 04/14/21
+                                             QString* psEUseSumResultSetName /*=NULL*/ )     // SAC 06/02/26 (dev #903)
 {
 	int iRetVal = 0;
 	QString sTempErr;
@@ -3963,7 +3968,7 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 		{
 //BEMPX_WriteLogFile( QString( "   in ProcessSimulationResults_Multiple(), about to call ProcessNonresSimulationResults() on run %1" ).arg( osRunInfo[iRun].RunID() ), NULL, FALSE, TRUE, FALSE );
 			ProcessNonresSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath, 	// SAC 4/17/14 - moved ALL results processing to subordinate routine
-														psaEPlusProcDirsToBeRemoved, bReportAllUMLHZones, sStdDsgnCSEResultsPathFile, bRptMissingEPFiles );		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
+														psaEPlusProcDirsToBeRemoved, bReportAllUMLHZones, sStdDsgnCSEResultsPathFile, bRptMissingEPFiles, psEUseSumResultSetName );		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
 
       // call *_PostSim rulelist, if exists, to enable reporting of either hourly or non-hourly sim results - SAC 04/14/21
          QString sPostSimRulelistName = QString( "%1_PostSim" ).arg( osRunInfo[iRun].RunID() );

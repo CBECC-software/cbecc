@@ -77,11 +77,19 @@ int  BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBase
 		                    			//	bool bStoreBEMDetails=false, bool bVerbose=false, int iAnalysisThruStep=100, bool bBypassInputChecks=false, bool bBypassUMLHChecks=false,
 											//	bool* pbBypassOpenStudio=NULL, bool* pbBypassSimulation=NULL, int iNumBypassItems=0, bool bDurationStats=false );
 
+// new export enabling population of multiple ResultsSummary strings (in support of new multi-orientation analysis methods) - SAC 06/10/26 (dev #903)
+int  BEMCMPMGR_API __cdecl CMX_PerformAnalysisCB_CECNRMF(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
+												const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath,
+												const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString, bool bLoadModelFile=true,
+												const char* pszOptionsCSV=NULL, char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL,
+												char** pszaResultsSummaryArray=NULL, int iResultsSummaryLen=0, int iNumResultsSummaryStrings=0,
+                                    int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL, PAnalysisProgressCallbackFunc pAnalProgCallbackFunc=NULL );	
+
 int  BEMCMPMGR_API __cdecl CMX_PopulateResultsHeader_NonRes(		char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len, int iCodeType=0 );	// SAC 12/3/14
 int  BEMCMPMGR_API __cdecl CMX_PopulateResultsHeader_CECNonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len );	// SAC 5/16/14
 
 int  BEMCMPMGR_API __cdecl CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStringLength, const char* pszProjectPathFileName=NULL,
-																						const char* pszSimWeatherPath=NULL, int iEUseSummaryIdx=0 );	// SAC 11/04/19
+																						const char* pszSimWeatherPath=NULL, int iEUseSummaryIdx=0, int iEnergyUseArrayIdx=0 );	// SAC 11/04/19  // iEnergyUseArrayIdx - SAC 06/10/26 (dev #903)
 
 int  BEMCMPMGR_API __cdecl CMX_PopulateCustomMeterCSVResultSummary_NonRes(	       char* pszResultsString, int iResultsStringLength, const char* pszProjectPathFileName,
 														                                        int i0EUseSummaryIdx=0 );

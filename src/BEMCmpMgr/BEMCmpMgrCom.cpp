@@ -2425,11 +2425,13 @@ void CSERunLoop( int iSimRunIdx, OS_SimInfo** posSimInfo, QString** pqsCSESimSta
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
 												const char* pszLogPathFile, const char* pszUIVersionString, bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/,
-												char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND /*hWnd=NULL*/,
+												char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND hWnd /*=NULL*/,
 												char* pszResultsSummary /*=NULL*/, int iResultsSummaryLen /*=0*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/ )		// SAC 5/16/14   // SAC 1/10/17
-{	return CMX_PerformAnalysisCB_NonRes(	pszBEMBasePathFile, pszRulesetPathFile, pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, pszProcessingPath, pszModelPathFile,
+{	char* pszaResultsSummaryArray[] = { pszResultsSummary, NULL };
+   return CMX_PerformAnalysisCB_CECNRMF(	pszBEMBasePathFile, pszRulesetPathFile, pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, pszProcessingPath, pszModelPathFile,
 														pszLogPathFile, pszUIVersionString, bLoadModelFile /*=true*/, pszOptionsCSV /*=NULL*/, pszErrorMsg /*=NULL*/, iErrorMsgLen /*=0*/,
-														bDisplayProgress /*=false*/, pszResultsSummary /*=NULL*/, iResultsSummaryLen /*=0*/, iSecurityKeyIndex, pszSecurityKey, NULL /*pAnalProgCallbackFunc*/ );
+														bDisplayProgress /*=false*/, hWnd, pszaResultsSummaryArray /*=NULL*/, iResultsSummaryLen /*=0*/, (pszResultsSummary == NULL ? 0 : 1) /*iNumResultsSummaryStrings*/,
+                                          iSecurityKeyIndex, pszSecurityKey, NULL /*pAnalProgCallbackFunc*/ );
 }
 
 int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
@@ -2438,6 +2440,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/,
 												char* pszResultsSummary /*=NULL*/, int iResultsSummaryLen /*=0*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/,		// SAC 5/16/14   // SAC 1/10/17
 												PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )		// SAC 5/28/15
+{	char* pszaResultsSummaryArray[] = { pszResultsSummary, NULL };
+   return CMX_PerformAnalysisCB_CECNRMF( pszBEMBasePathFile, pszRulesetPathFile, pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, pszProcessingPath, pszModelPathFile,
+												      pszLogPathFile, pszUIVersionString, bLoadModelFile, pszOptionsCSV, pszErrorMsg, iErrorMsgLen, bDisplayProgress, NULL /*hWnd*/,
+												      pszaResultsSummaryArray, iResultsSummaryLen, (pszResultsSummary == NULL ? 0 : 1) /*iNumResultsSummaryStrings*/, iSecurityKeyIndex, pszSecurityKey, pAnalProgCallbackFunc );
+}
+
+// new export enabling population of multiple ResultsSummary strings (in support of new multi-orientation analysis methods) - SAC 06/10/26 (dev #903)
+int CMX_PerformAnalysisCB_CECNRMF(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath, const char* pszCompMgrDLLPath,
+                                    const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile, const char* pszLogPathFile,
+                                    const char* pszUIVersionString, bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/, char* pszErrorMsg /*=NULL*/,
+                                    int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND hWnd /*=NULL*/, char** pszaResultsSummaryArray /*=NULL*/,
+                                    int iResultsSummaryLen /*=0*/, int iNumResultsSummaryStrings /*=0*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/,
+                                    PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )
 {	int iRetVal = 0;
 	bool bAbort = false;
 	QString sUIVersionString = pszUIVersionString;
@@ -2449,10 +2464,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 // SAC 1/23/14 - added duration logic and corresponding logging (above & beyond DurationStats option)
 	boost::posix_time::ptime	tmAnalStartTime = boost::posix_time::microsec_clock::local_time();
 	boost::posix_time::ptime	tmAnalOther = tmAnalStartTime, tmMark;
-#define  MAX_TimeArray  6
-	double dTimeToTranslate[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
-	double dTimeToSimDsgn[  ] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
-	double dTimeToSimAnn[   ] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
+   boost::posix_time::ptime	tmLastOrientRunTime;
+#define  MAX_TimeArray  24
+	double dTimeToTranslate[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
+	double dTimeToSimDsgn[  ] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
+	double dTimeToSimAnn[   ] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
 	double dTimeToReport = 0.0, dTimeToOther = 0.0, dTimeOverall = 0.0; 
 	int iNumTimeToTranslate=0, iNumTimeToSimDsgn=0, iNumTimeToSimAnn=0, iNumTimeToReport=0, iNumDsgnSims=0, iNumAnnSims=0; 
 
@@ -2523,6 +2539,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 	int  iDownloadVerbose         	=	 GetCSVOptionValue( "DownloadVerbose"            ,  -1,  saCSVOptions );		// SAC 09/03/24
    bool bWriteMidAnalysisInputs		=	(GetCSVOptionValue( "WriteMidAnalysisInputs"     ,  (bStoreBEMDetails ? 1 : 0),  saCSVOptions ) > 0);    // SAC 01/09/26
+
+   int iMultiOrientationAnalysis    =   GetCSVOptionValue( "MultiOrientationAnalysis"   ,   0,  saCSVOptions );		// SAC 05/28/26 (dev #903)
 
 	long plExportHourlyResults[4]		={	                                                     0                      ,		// SAC 8/21/14
 													                                                     0                      ,		// SAC 8/21/14
@@ -2710,6 +2728,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	RelativeToCompletePath_IfNeeded( sLogPathFile     );
 	RelativeToCompletePath_IfNeeded( sEPlusPath       );  // SAC 12/30/13
 
+   if (bVerbose || ebLogAnalysisMsgs)
+      BEMPX_WriteLogFile( QString( "    sBEMBasePathFile: %1  |  sRulesetPathFile: %2" ).arg( sBEMBasePathFile, sRulesetPathFile ) );  // , sLogPathFile.toLocal8Bit().constData(), FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // SAC 06/01/26 (dev #903)
    QString qsBEMBaseDir;      // SAC 10/28/22 (CUAC)
    QString qsBEMBaseExtension = sBEMBasePathFile.right(4);
    if (!qsBEMBaseExtension.isEmpty() && qsBEMBaseExtension.compare(".bin", Qt::CaseInsensitive))
@@ -2764,8 +2784,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		BEMPX_EnableLogTimeStamps( (iVerbose != 2) );
 	}
 
-	// SAC 3/6/14 - setup log filename in the case where we will be loading the project file during analysis
-	if (bLoadModelFile && FileExists( sModelPathFile.toLocal8Bit().constData() ) && sLogPathFile.isEmpty())
+//   if (!bLoadModelFile && iMultiOrientationAnalysis > 0)    // SAC 05/28/26 (dev #903)
+//      bLoadModelFile = true;
+	// SAC 3/6/14 - setup log filename in the case where we will be loading the project file during analysis   // SAC 05/31/26 (dev #903)
+	if ((bLoadModelFile || iMultiOrientationAnalysis > 0) && FileExists( sModelPathFile.toLocal8Bit().constData() ) && sLogPathFile.isEmpty())
 	{	if (sModelPathFile.lastIndexOf('.') > 0)
 			sLogPathFile = sModelPathFile.left( sModelPathFile.lastIndexOf('.') );
 		else
@@ -2836,23 +2858,24 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 									for (int iArg=0; iArg<17; iArg++)
 									{	switch (iArg)
-										{	case  0 :	sLogMsg = QString::asprintf( "       BEMBasePathFile    = %s", (pszBEMBasePathFile == NULL ? "(null)" : (strlen( pszBEMBasePathFile ) < 1 ? "(empty)" : pszBEMBasePathFile)) );	  break;
-											case  1 :	sLogMsg = QString::asprintf( "       RulesetPathFile    = %s", (pszRulesetPathFile == NULL ? "(null)" : (strlen( pszRulesetPathFile ) < 1 ? "(empty)" : pszRulesetPathFile)) );     break;
-											case  2 :	sLogMsg = QString::asprintf( "       SimWeatherPath     = %s", (pszSimWeatherPath  == NULL ? "(null)" : (strlen( pszSimWeatherPath  ) < 1 ? "(empty)" : pszSimWeatherPath )) );     break;
-											case  3 :	sLogMsg = QString::asprintf( "       CompMgrDLLPath     = %s", (pszCompMgrDLLPath  == NULL ? "(null)" : (strlen( pszCompMgrDLLPath  ) < 1 ? "(empty)" : pszCompMgrDLLPath )) );     break;
-											case  4 :	sLogMsg = QString::asprintf( "       DHWWeatherPath     = %s", (pszDHWWeatherPath  == NULL ? "(null)" : (strlen( pszDHWWeatherPath  ) < 1 ? "(empty)" : pszDHWWeatherPath )) );     break;
-											case  5 :	sLogMsg = QString::asprintf( "       ProcessingPath     = %s", (pszProcessingPath  == NULL ? "(null)" : (strlen( pszProcessingPath  ) < 1 ? "(empty)" : pszProcessingPath )) );     break;
-											case  6 :	sLogMsg = QString::asprintf( "       ModelPathFile      = %s", (pszModelPathFile   == NULL ? "(null)" : (strlen( pszModelPathFile   ) < 1 ? "(empty)" : pszModelPathFile  )) );     break;
-											case  7 :	sLogMsg = QString::asprintf( "       LogPathFile        = %s", (pszLogPathFile     == NULL ? "(null)" : (strlen( pszLogPathFile     ) < 1 ? "(empty)" : pszLogPathFile    )) );     break;
-											case  8 :	sLogMsg = QString::asprintf( "       UIVersionString    = %s", (pszUIVersionString == NULL ? "(null)" : (strlen( pszUIVersionString ) < 1 ? "(empty)" : pszUIVersionString)) );     break;
-											case  9 :	sLogMsg = QString::asprintf( "       LoadModelFile      = %s", (bLoadModelFile   ? "true" : "false") );		break;
-											case 10 :	sLogMsg = QString::asprintf( "       OptionsCSV         = %s", (pszOptionsCSV      == NULL ? "(null)" : (strlen( pszOptionsCSV      ) < 1 ? "(empty)" : sOptsCSV.toLocal8Bit().constData() )) );     break;
-											case 11 :	sLogMsg = QString::asprintf( "       ErrorMsg           = %s", (pszErrorMsg        == NULL ? "(null)" : (iErrorMsgLen > 0 ? "(assumed to be initialized)" : "(unused)"    )) );     break;
-											case 12 :	sLogMsg = QString::asprintf( "       ErrorMsgLen        = %d", iErrorMsgLen );										break;
-											case 13 :	sLogMsg = QString::asprintf( "       DisplayProgress    = %s", (bDisplayProgress ? "true" : "false") );     break;
-											case 14 :	sLogMsg = QString::asprintf( "       ResultsSummary     = %s", (pszResultsSummary  == NULL ? "(null)" : (strlen( pszResultsSummary  ) < 1 ? "(empty)" : pszResultsSummary )) );     break;
-											case 15 :	sLogMsg = QString::asprintf( "       ResultsSummaryLen  = %d", iResultsSummaryLen );     break;
-											case 16 :	sLogMsg = QString::asprintf( "       pProgCallbackFunc  = %s", (pAnalProgCallbackFunc == NULL ? "(null)" : "(assumed to be initialized)") );     break;
+										{	case  0 :	sLogMsg = QString::asprintf( "       BEMBasePathFile           = %s", (pszBEMBasePathFile == NULL ? "(null)" : (strlen( pszBEMBasePathFile ) < 1 ? "(empty)" : pszBEMBasePathFile)) );	  break;
+											case  1 :	sLogMsg = QString::asprintf( "       RulesetPathFile           = %s", (pszRulesetPathFile == NULL ? "(null)" : (strlen( pszRulesetPathFile ) < 1 ? "(empty)" : pszRulesetPathFile)) );     break;
+											case  2 :	sLogMsg = QString::asprintf( "       SimWeatherPath            = %s", (pszSimWeatherPath  == NULL ? "(null)" : (strlen( pszSimWeatherPath  ) < 1 ? "(empty)" : pszSimWeatherPath )) );     break;
+											case  3 :	sLogMsg = QString::asprintf( "       CompMgrDLLPath            = %s", (pszCompMgrDLLPath  == NULL ? "(null)" : (strlen( pszCompMgrDLLPath  ) < 1 ? "(empty)" : pszCompMgrDLLPath )) );     break;
+											case  4 :	sLogMsg = QString::asprintf( "       DHWWeatherPath            = %s", (pszDHWWeatherPath  == NULL ? "(null)" : (strlen( pszDHWWeatherPath  ) < 1 ? "(empty)" : pszDHWWeatherPath )) );     break;
+											case  5 :	sLogMsg = QString::asprintf( "       ProcessingPath            = %s", (pszProcessingPath  == NULL ? "(null)" : (strlen( pszProcessingPath  ) < 1 ? "(empty)" : pszProcessingPath )) );     break;
+											case  6 :	sLogMsg = QString::asprintf( "       ModelPathFile             = %s", (pszModelPathFile   == NULL ? "(null)" : (strlen( pszModelPathFile   ) < 1 ? "(empty)" : pszModelPathFile  )) );     break;
+											case  7 :	sLogMsg = QString::asprintf( "       LogPathFile               = %s", (pszLogPathFile     == NULL ? "(null)" : (strlen( pszLogPathFile     ) < 1 ? "(empty)" : pszLogPathFile    )) );     break;
+											case  8 :	sLogMsg = QString::asprintf( "       UIVersionString           = %s", (pszUIVersionString == NULL ? "(null)" : (strlen( pszUIVersionString ) < 1 ? "(empty)" : pszUIVersionString)) );     break;
+											case  9 :	sLogMsg = QString::asprintf( "       LoadModelFile             = %s", (bLoadModelFile   ? "true" : "false") );		break;
+											case 10 :	sLogMsg = QString::asprintf( "       OptionsCSV                = %s", (pszOptionsCSV      == NULL ? "(null)" : (strlen( pszOptionsCSV      ) < 1 ? "(empty)" : sOptsCSV.toLocal8Bit().constData() )) );     break;
+											case 11 :	sLogMsg = QString::asprintf( "       ErrorMsg                  = %s", (pszErrorMsg        == NULL ? "(null)" : (iErrorMsgLen > 0 ? "(assumed to be initialized)" : "(unused)"    )) );     break;
+											case 12 :	sLogMsg = QString::asprintf( "       ErrorMsgLen               = %d", iErrorMsgLen );										break;
+											case 13 :	sLogMsg = QString::asprintf( "       DisplayProgress           = %s", (bDisplayProgress ? "true" : "false") );     break;
+											case 14 :	sLogMsg = QString::asprintf( "       pszaResultsSummaryArray   = %s", (pszaResultsSummaryArray == NULL ? "(null)" : (iNumResultsSummaryStrings < 1 ? "(none)" : "(array of results strings)" )) );     break;
+											case 15 :	sLogMsg = QString::asprintf( "       ResultsSummaryLen         = %d", iResultsSummaryLen );     break;
+											case 16 :	sLogMsg = QString::asprintf( "       iNumResultsSummaryStrings = %d", iNumResultsSummaryStrings );     break;
+											case 17 :	sLogMsg = QString::asprintf( "       pProgCallbackFunc         = %s", (pAnalProgCallbackFunc == NULL ? "(null)" : "(assumed to be initialized)") );     break;
 											default :	sLogMsg.clear();		break;
 										}
 										if (!sLogMsg.isEmpty())
@@ -2944,6 +2967,95 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							}
 #endif
 
+   // retrieve CliZnGrouping (relocatable classroom) info here if model already loaded - SAC 06/17/26 (dev #903)
+   long lCliZnGrouping = 0;
+   if (!bLoadModelFile)
+   {  long lCliZnGroupingActive;
+      if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnGroupingActive" ), lCliZnGroupingActive, -1 ) && lCliZnGroupingActive > 0)
+         BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnGrouping" ), lCliZnGrouping, 0 );
+   }
+
+   QString sAnnualWeatherFile;  // moved up outside of orientaiton run loop - SAC 06/01/26 (dev #903)
+   bool bHaveResult=false;
+	QString sResTemp1, sResTemp2;
+   QString qsCompMetricLbl_Short = "TDV";
+   int iNumAnalysisActionObjects = 0;        // SAC 08/05/26 (dev #903)
+
+   double daBldgOrientation[] = { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 };    // SAC 05/28/26 (dev #903)
+   QString saResultSetName[10], saResultSetAbbrev[10];
+   QVector<QString> saOrientProjEUseSumObjs[10], saOrientUniqEUseSumObjs[10], saOrientTempEUseSumPathFiles[10], saMultiOrientFilesToDelete;
+
+   long laProj_NumZnsExceedClgUnmetLdHrs[10], laProj_NumZnsExceedHtgUnmetLdHrs[10];    // storage & tracking of Proj & ThrmlZn UMLH results by orientation - SAC 08/18/26 (dev #903)
+   double daProj_MaxZnClgUnmetLdHrs[10], daProj_MaxZnHtgUnmetLdHrs[10];
+   QString qsaProj_MaxZnClgUnmetLdHrsName[10], qsaProj_MaxZnHtgUnmetLdHrsName[10];
+   std::vector<double> daThrmlZn_ClgUnmetLdHrs[10], daThrmlZn_HtgUnmetLdHrs[10];
+
+   int iBldgOrientIdx, iNumBldgOrientations = 1;
+   int iInitial1ProgressRunNum = si1ProgressRunNum;      // SAC 06/02/26 (dev #903)
+   int iInitialNumProgressRuns = siNumProgressRuns;
+   double dWorstOrientCompMargin = 9999.0;   int iWorstOrientIdx = -1, iWorstOrientNumFails = 0;     // SAC 06/02/26 (dev #903)
+   if (lCliZnGrouping > 0 || iMultiOrientationAnalysis == 1)
+   {  iNumBldgOrientations = 4;
+      daBldgOrientation[0] = 0.0;            daBldgOrientation[1] = 90.0;           daBldgOrientation[2] = 180.0;          daBldgOrientation[3] = 270.0;
+      saResultSetName[0] = "North Facing";   saResultSetName[1] = "East Facing";    saResultSetName[2] = "South Facing";   saResultSetName[3] = "West Facing";    // SAC 06/02/26 (dev #903)
+      saResultSetAbbrev[0] = "N";            saResultSetAbbrev[1] = "E";            saResultSetAbbrev[2] = "S";            saResultSetAbbrev[3] = "W";
+      siNumProgressRuns += 3;    // SAC 06/02/26 (dev #903)
+   }
+   for (iBldgOrientIdx = 0; (!bAbort && iBldgOrientIdx < iNumBldgOrientations); iBldgOrientIdx++)
+   {  // BEGIN loop over bldg orientations - SAC 05/28/26 (dev #903)
+
+      if (iBldgOrientIdx > 0)    // revise various paths to incorporate orientation value and prevent overwrite of last round's processing files - SAC 05/29/26 (dev #903)
+      {  si1ProgressRunNum++;          // SAC 06/02/26 (dev #903)
+         QString sNewModelPathFile = pszModelPathFile;
+         int iLenMinusExt = sNewModelPathFile.lastIndexOf('.');               assert( iLenMinusExt > 0 );
+         if (iLenMinusExt > 0)
+         {  QString sModelPathFileExt = sNewModelPathFile.right( sNewModelPathFile.length() - iLenMinusExt-1 );
+            sNewModelPathFile = sNewModelPathFile.left( iLenMinusExt );
+            sNewModelPathFile += QString( "-%1.%2" ).arg( QString::number( daBldgOrientation[iBldgOrientIdx] ), sModelPathFileExt );
+         }
+         RelativeToCompletePath_IfNeeded( sNewModelPathFile );
+
+         // COPY previous run's project file to New file
+         QString sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+                      "application before analysis processing can overwrite it.\n\nSelect 'Retry' to overwrite the file "
+                      "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CBECC input", sNewModelPathFile );
+         if (!OKToWriteOrDeleteFile( sNewModelPathFile.toLocal8Bit().constData(), sMsg, bSilent ))
+         {   if (bSilent)
+               sErrMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "CBECC input", sNewModelPathFile );
+            else
+               sErrMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "CBECC input", sNewModelPathFile );
+            //											 8 : Error reading/initializing model input/project file
+            ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 8 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+         }
+         else if (!CopyFile( sModelPathFile.toLocal8Bit().constData(), sNewModelPathFile.toLocal8Bit().constData(), FALSE ))
+         {  sErrMsg = QString( "Error:  Unable to copy %1 file:  '%2'  to:  '%3'" ).arg( "CBECC input", sModelPathFile, sNewModelPathFile );
+            //											 8 : Error reading/initializing model input/project file
+            ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 8 /*iErrID*/, true /*bErrCausesAbort*/, false /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+         }
+         else
+            saMultiOrientFilesToDelete.append( sNewModelPathFile );     // SAC 06/05/26 (dev #903)
+
+         // then continue setting up filenames for this next orientation run
+         if (!bAbort)
+         {  sModelPathFile = sNewModelPathFile;
+            iLenMinusExt = sModelPathFile.lastIndexOf('.');                   assert( iLenMinusExt > 0 );
+
+            sModelPathOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.left(                            sModelPathFile.lastIndexOf('\\') + 1 ) : "");
+            sModelFileOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.right( sModelPathFile.length() - sModelPathFile.lastIndexOf('\\') - 1 ) : "");		assert( !sModelFileOnly.isEmpty() );
+            sModelFileOnlyWithExt = sModelFileOnly;
+            if (sModelFileOnly.lastIndexOf('.') > 0)
+               sModelFileOnly = sModelFileOnly.left( sModelFileOnly.lastIndexOf('.') );
+
+            sXMLResultsFileName = (sModelPathFile.lastIndexOf('.') > 0 ? sModelPathFile.left( sModelPathFile.lastIndexOf('.') ) : sModelPathFile);
+            // sNRCCXMLFileName    = sXMLResultsFileName;      // appended to below   - remove reset of sNRCCXMLFileName, keeping original project filename - SAC 08/12/26 (dev #903)
+            sXMLResultsFileName += " - AnalysisResults.xml";
+
+            sUMLHTextFileName = (sModelPathFile.lastIndexOf('.') > 0 ? sModelPathFile.left( sModelPathFile.lastIndexOf('.') ) : sModelPathFile);
+            sUMLHTextFileName += " - UMLH Zones.txt";
+            if (FileExists( sUMLHTextFileName.toLocal8Bit().constData() ))	// if UMLH Zones text file already exists (from previous run), delete it before continuing processing
+               DeleteFile( sUMLHTextFileName.toLocal8Bit().constData() );
+      }  }
+
 
 	// Misc checks
 
@@ -2955,7 +3067,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	int iPrevRuleErrs = 0;
 	bool bExpectValidResults = true;
    long lRuleRepoRev = 0;     // SAC 12/18/24
-	if (bLoadModelFile && !bAbort)
+   //if (iBldgOrientIdx > 0 && !bAbort)
+   //{  // delete all objects & re-load project file for iBldgOrientIdx > 0 - SAC 05/29/26 (dev #903)
+	//	BEMPX_DeleteModels( false /*bIncludingUserModel*/ );   // SAC 3/24/13
+	//	BEMPX_SetActiveModel( 0 );
+	//	//BEMPX_ClearRulesetErrors();
+	//	BEMPX_ClearTransformBEMProcMap();	// SAC 3/27/20
+   //   BEMPX_DeleteAllObjects( -1, FALSE );    // int iOnlyTypeToDelete=-1, BOOL bReInitSymbols=TRUE );
+   //}
+	//else if (bLoadModelFile && iBldgOrientIdx == 0 && !bAbort)
+	if ((bLoadModelFile || iBldgOrientIdx > 0) && !bAbort)      // SAC 06/01/26 (dev #903)
 	{
 		if (!sBEMBasePathFile.isEmpty())
 		{	assert( !sRulesetPathFile.isEmpty() );  // if (re)loading BEMBase, we must also reload ruleset
@@ -3009,9 +3130,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		else
 		{	assert( FALSE );	// no valid ruleset ID found ?
 		}
+   }
 
-		if (iRetVal == 0)
-		{
+   if ((iBldgOrientIdx > 0 || bLoadModelFile) && !bAbort && iRetVal == 0)
+   {
+      //if (iRetVal == 0)
+		//{
 			iCID_Proj = BEMPX_GetDBComponentID( "Proj" );
 			//
 			//	-----  BEMBase & ruleset loaded/initialized  -----
@@ -3071,7 +3195,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					}
 				// SAC 1/28/14 - call local CMX_LoadModel routine to incorporate backward compatibility features
 					QStringList saWarningsForUser;	// SAC 7/8/14 - added to track issues (not designated as read failures, but worthy of logging)
-					if (CMX_LoadModel( NULL, NULL, sModelPathFile.toLocal8Bit().constData(), MAX_BEMBASE_DATA_SET_ERRORS, iaFailedBEMBaseDBIDs, true /*bSupressAllMsgBoxes*/,	// SAC 5/1/14 - supress msgboxes
+
+                     // BEMPX_WriteLogFile( QString( "  CMX_LoadModel():  model file: %1  |  log file: %2  |  keep log file open: %3" ).arg( sModelPathFile, sLogPathFile, (bKeepLogFileOpen ? "true" : "false") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // dbg - SAC 05/31/26 (dev #903)
+               if (CMX_LoadModel( NULL, NULL, sModelPathFile.toLocal8Bit().constData(), MAX_BEMBASE_DATA_SET_ERRORS, iaFailedBEMBaseDBIDs, true /*bSupressAllMsgBoxes*/,	// SAC 5/1/14 - supress msgboxes
 												iaFailedBEMBaseObjIdxs, &saFailedBEMBaseData, false /*bLogDurations*/, sLogPathFile.toLocal8Bit().constData(), bKeepLogFileOpen, &saWarningsForUser ) != 0)
 					{	// deal with or simply report failure of model file open
 						sErrMsg = QString::asprintf( "ERROR:  Error encountered reading building model (project) file:  %s", sModelPathFile.toLocal8Bit().constData() );
@@ -3133,7 +3259,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				//	}
 				}
 			}
-		}
+		//}
 
 		if (!sErrMsg.isEmpty())
 		{
@@ -3175,6 +3301,27 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
             BEMPX_SetBEMData( lDBID_CUACReportID, BEMP_Int, (void*) &iCUACReportID, BEMO_User, 0, BEMS_ProgDefault ); 
       //}
    }
+
+	if (!bAbort && bLoadModelFile && iBldgOrientIdx == 0)
+   {  // retrieve CliZnGrouping (relocatable classroom) info here if loading initial model from file - SAC 06/17/26 (dev #903)  // updated FacilityType value check from =3 to >=10 - SAC 07/31/26
+      long lFacilityType, lMultiOrientation;
+      if ( BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:FacilityType"     ), lFacilityType,     -1 ) && lFacilityType >= 10 &&
+           BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:MultiOrientation" ), lMultiOrientation, -1 ) && lMultiOrientation > 0 )
+         BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnGrouping" ), lCliZnGrouping, 0 );
+
+      if (lCliZnGrouping > 0)
+      {  if (iMultiOrientationAnalysis == 1 && iNumBldgOrientations == 4)
+            // toggle OFF iMultiOrientationAnalysis which invalidates analysis
+            iMultiOrientationAnalysis = 0;
+            // rest of orientation run data should be OK as is
+         else
+         {  // same orientation run defaulting as iMultiOrientationAnalysis
+            iNumBldgOrientations = 4;
+            daBldgOrientation[0] = 0.0;            daBldgOrientation[1] = 90.0;           daBldgOrientation[2] = 180.0;          daBldgOrientation[3] = 270.0;
+            saResultSetName[0] = "North Facing";   saResultSetName[1] = "East Facing";    saResultSetName[2] = "South Facing";   saResultSetName[3] = "West Facing";    // SAC 06/02/26 (dev #903)
+            saResultSetAbbrev[0] = "N";            saResultSetAbbrev[1] = "E";            saResultSetAbbrev[2] = "S";            saResultSetAbbrev[3] = "W";
+            siNumProgressRuns += 3;    // SAC 06/02/26 (dev #903)
+   }  }  }
 
 	if (!bAbort)
 	{  long lDBID_Proj_AllowPropPVBatt = BEMPX_GetDatabaseID( "AllowPropPVBatt", BEMPX_GetDBComponentID( "Proj" ) );  // Use OptionsCSV if defined and not -1, else load from file - SAC 10/25/23
@@ -3242,6 +3389,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												!pbBypassOpenStudio[8] && !pbBypassOpenStudio[9] && iAnalysisThruStep >= 7);
 			}
 
+         // check for presence of AnalysisAction objects - SAC 08/05/26 (dev #903)
+         int iCID_AnalysisAction = BEMPX_GetDBComponentID( "AnalysisAction" );
+         int iTempNumAnalActs = (iCID_AnalysisAction < 1 ? 0 : BEMPX_GetNumObjects( iCID_AnalysisAction ));
+         if (iTempNumAnalActs > iNumAnalysisActionObjects)
+            iNumAnalysisActionObjects = iTempNumAnalActs;
+
          // be able to identify RuleRepoRev - initially to distinguish use of CSE19 vs. CSE(.exe) - SAC 12/18/24
          if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RuleRepoRev" ), lRuleRepoRev ))
             lRuleRepoRev = 0;
@@ -3304,8 +3457,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
          BEMPX_GetInteger( lDBID_CustomMeterOption, iCustomMeterOption, -1 );
    }
 
-  // SAC 8/23/18 - moved up from below initial defaulting for newly opened model to ensure certain properties (CSE_Name) are defauted before being retrieved/referenced
-	if (!bAbort && !BEMPX_AbortRuleEvaluation() && bLoadModelFile)
+   // SET Bldg:BldgAz for this orientation run (if any) - SAC 05/29/26 (dev #903)
+   if (!bAbort && !BEMPX_AbortRuleEvaluation() && daBldgOrientation[iBldgOrientIdx] > -0.5)
+   {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Bldg:BldgAz" ), BEMP_Flt, (void*) &daBldgOrientation[iBldgOrientIdx], BEMO_User, 0, BEMS_UserDefined ); 
+      BEMPX_WriteLogFile( QString::asprintf( "     setting BldgAz for orientation run %d of %d to:  %g", iBldgOrientIdx+1, iNumBldgOrientations, daBldgOrientation[iBldgOrientIdx] ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   }
+
+   // SAC 8/23/18 - moved up from below initial defaulting for newly opened model to ensure certain properties (CSE_Name) are defauted before being retrieved/referenced
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && (bLoadModelFile || daBldgOrientation[iBldgOrientIdx] > -0.5))    // SAC 05/29/26 (dev #903)
    	// SAC 4/4/14 - added call to defaulting stuff for models just loaded to ensure all defaults present prior to PolyLp generation
 		DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep, iNumFileOpenDefaultingRounds );
 
@@ -3331,7 +3490,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
    BEMPX_GetString( BEMPX_GetDatabaseID( "BypassCompRptMsg", iCID_Proj ), sBypassCompRptMsg );
 
 // SAC 6/12/15 - added new check for duplicate object names
-	if (!bAbort && !BEMPX_AbortRuleEvaluation() && bPerformDupObjNameCheck)
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && bPerformDupObjNameCheck && iBldgOrientIdx == 0)
 	{	if (BEMPX_CheckForDuplicateObjectNames( pszAnalErrMsg, NRES_AnalErrMsg_Len, TRUE /*bWriteErrorsToLog*/, TRUE /*bSupressAllMessageBoxes*/ ) > 0)
 		{	sErrMsg = pszAnalErrMsg;
 //											53 : Input model contains one or more objects with the same name
@@ -3339,7 +3498,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	}	}
 
   // SAC 3/22/14 - added check for all compulsory inputs PRIOR to any/all other processing
-	if (!bAbort && !BEMPX_AbortRuleEvaluation())
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iBldgOrientIdx == 0)
 	{	CMX_AdjustDataModelForGeometryInpType_CECNonRes();	// SAC 3/23/14 - ported from UI - ensures InputClass for each property associated w/ geometry input is properly defined
 		iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
 		BOOL bCompulsoryCheckOK;
@@ -3366,7 +3525,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunTitle", iCID_Proj ), BEMP_QStr, (void*) &sRunTitle, BEMO_User );
 
   // SAC 12/19/13 - added mechanism to ensure report watermarked for non-compliance when certain developer options flags are set by user (not defaulted)
-	if (!bAbort && !BEMPX_AbortRuleEvaluation())
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iBldgOrientIdx == 0)
 	{	int iDOOPIdx = -1;		double fDOOPVal;		int iLastDevOptClassIdx = -1;
 		while (saDevOptsObjProps[++iDOOPIdx].length() > 1)
 		{	long lDBID = BEMPX_GetDatabaseID( saDevOptsObjProps[iDOOPIdx] );
@@ -3444,7 +3603,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
       }  }  }  }
    }
 
-   if (!bAbort && !BEMPX_AbortRuleEvaluation())
+   if (!bAbort && !BEMPX_AbortRuleEvaluation() && iBldgOrientIdx == 0)
    {  // Update sEPlusPath to account for research mode and SVN (non-research mode) substitution - SAC 02/20/25
       if (!sEPlusPath.isEmpty())
       {  QString sEngyPlusPathSub;
@@ -3526,7 +3685,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	int iNumFileHashErrs = 0;
 	if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
 		bBypassValidFileChecks = true;	// SAC 12/23/14 - turn OFF file hash checks for S901G analyses
-	if (!bAbort && !BEMPX_AbortRuleEvaluation())
+	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iBldgOrientIdx == 0)
 	{	if (bBypassValidFileChecks)
 			BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing file validity checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		else
@@ -3862,7 +4021,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
    {	// moved defaulting stuff to subordinate routine to enable multiple calls
 		DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep, iNumFileOpenDefaultingRounds );
 
-	// SAC 10/3/14 - mod to delete any EUseSummary objects from user model to avoid having them written to the results' user model
+	   // SAC 10/3/14 - mod to delete any EUseSummary objects from user model to avoid having them written to the results' user model
 		int iNumEUseSUmObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "EUseSummary" ) );
 		for (int iEUSidx=iNumEUseSUmObjs-1; iEUSidx >= 0; iEUSidx--)
 		{	BEMObject* pEUSObj = BEMPX_GetObjectByClass( BEMPX_GetDBComponentID( "EUseSummary" ), iError, iEUSidx );			assert( pEUSObj );
@@ -3907,25 +4066,26 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
    // finish defining output NRCC/LMCC XML report filename - SAC 08/24/22 (LMCC)
    long lIsLowRiseMFam=0, lDBID_IsLowRiseMFam = BEMPX_GetDatabaseID( "IsLowRiseMFam", iCID_Proj );
    QString qsSchemaXMLFileDescrip;
-   if (iRulesetCodeYear >= 2022 && lDBID_IsLowRiseMFam > 0 && BEMPX_GetInteger( lDBID_IsLowRiseMFam, lIsLowRiseMFam ) && lIsLowRiseMFam > 0)
-   {  sNRCCXMLFileName   += " - LMCCPRF.xml";     // replaced NRCC w/ " - LMCCPRF.xml";  - SAC 10/17/22
-      qsSchemaXMLFileDescrip = "LMCCPRF report XML";
-   }
-   else
-   {  sNRCCXMLFileName   += " - NRCCPRF.xml";
-      qsSchemaXMLFileDescrip = "NRCCPRF report XML";
-   }
-	iNRCCXMLClassID = (iCodeType != CT_T24N ? 0 : BEMPX_GetDBComponentID("nrccComplianceDocumentPackage"));
-	if (!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && FileExists( sNRCCXMLFileName ) && iCUACReportID < 1)	// SAC 11/26/20
-	{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
-	  	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-						 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( qsSchemaXMLFileDescrip.toLocal8Bit().constData(), sNRCCXMLFileName.toLocal8Bit().constData(), "analysis" );
-		if (!OKToWriteOrDeleteFile( sNRCCXMLFileName.toLocal8Bit().constData(), sLogMsg, bSilent ))
-		{	sErrMsg = QString( "ERROR:  Analysis aborting - user chose not to overwrite the %1 file:  %2" ).arg( qsSchemaXMLFileDescrip, sNRCCXMLFileName );
+   if (iBldgOrientIdx == (iNumBldgOrientations-1))       // don't setup schema-based XML filename unless this is the final run - SAC 08/12/26 (dev #903)
+   {  if (iRulesetCodeYear >= 2022 && lDBID_IsLowRiseMFam > 0 && BEMPX_GetInteger( lDBID_IsLowRiseMFam, lIsLowRiseMFam ) && lIsLowRiseMFam > 0)
+      {  sNRCCXMLFileName   += " - LMCCPRF.xml";     // replaced NRCC w/ " - LMCCPRF.xml";  - SAC 10/17/22
+         qsSchemaXMLFileDescrip = "LMCCPRF report XML";
+      }
+      else
+      {  sNRCCXMLFileName   += " - NRCCPRF.xml";
+         qsSchemaXMLFileDescrip = "NRCCPRF report XML";
+      }
+	   iNRCCXMLClassID = (iCodeType != CT_T24N ? 0 : BEMPX_GetDBComponentID("nrccComplianceDocumentPackage"));
+	   if (!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && FileExists( sNRCCXMLFileName ) && iCUACReportID < 1)	// SAC 11/26/20
+	   {	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+	     	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+	   					 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( qsSchemaXMLFileDescrip.toLocal8Bit().constData(), sNRCCXMLFileName.toLocal8Bit().constData(), "analysis" );
+	   	if (!OKToWriteOrDeleteFile( sNRCCXMLFileName.toLocal8Bit().constData(), sLogMsg, bSilent ))
+	   	{	sErrMsg = QString( "ERROR:  Analysis aborting - user chose not to overwrite the %1 file:  %2" ).arg( qsSchemaXMLFileDescrip, sNRCCXMLFileName );
 //											80 : Analysis aborted - user chose not to overwrite NRCCPRF XML reporting file
-			ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 80 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
-	}	}
-	BEMXMLWriter xmlNRCCPRFFile( ((!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && iCUACReportID < 1) ? sNRCCXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_NRCCXML );
+	   		ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 80 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+   }  }	}
+	BEMXMLWriter xmlNRCCPRFFile( ((!bAbort && !BEMPX_AbortRuleEvaluation() && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && iCUACReportID < 1 && iBldgOrientIdx == (iNumBldgOrientations-1)) ? sNRCCXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_NRCCXML );
 
 
 	// SAC 9/9/18 - store certain path and filenames to BEMBase for reference during analysis (ported from Res analysis)
@@ -3950,7 +4110,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ProcessingPath" ), BEMP_QStr, (void*) &sProcessingPath, BEMO_User, 0, BEMS_ProgDefault );
 	}
 
-   if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())      // SAC 09/06/22
+   if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())  // && iBldgOrientIdx == 0)      // SAC 09/06/22
    {  long lGenerateWthrLocDDY=0, lDBID_GenerateWthrLocDDY = BEMPX_GetDatabaseID( "Proj:GenerateWeatherLocationDDY" );
       if (lDBID_GenerateWthrLocDDY > 0 && BEMPX_GetInteger( lDBID_GenerateWthrLocDDY, lGenerateWthrLocDDY ) && lGenerateWthrLocDDY > 0)
       {  int iGenDDYRetVal = LocalEvaluateRuleset( sErrMsg, 93, "GenerateDDYFromWeatherData", bVerbose, pCompRuleDebugInfo );   // sets up MFam HVACSys objects based on DwellUnitType equipment assignments
@@ -3959,7 +4119,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
             iRetVal = iGenDDYRetVal;
    }  }
 
-   QString qsCompMetricLbl_Short = "TDV";
    if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation()) 
       BEMPX_GetString( BEMPX_GetDatabaseID( "CompMetricLbl_Short", iCID_Proj ), qsCompMetricLbl_Short, FALSE, 0, -1, 0, BEMO_User, "TDV" );   // base metric label on new ruleset var - SAC 01/26/23
 
@@ -3976,7 +4135,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	long lNumResVCHP2HtPumps = 0;       // SAC 10/15/22
 	QString sReadVarsESOexe, sReadVarsESOrvi;		// SAC 4/11/16
 	QString sExcptDsgnModelFile;	// SAC 12/19/14
-	QString sAnnualWeatherFile;
 	long lNumSpaceWithDefaultedDwellingUnitArea = 0;	// SAC 6/1/16
 	QString sCACertPath;
 	GetDLLPath( sCACertPath );
@@ -4157,6 +4315,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{	//const char* pszProxyServerAddress     = (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()    );
 			//const char* pszProxyServerCredentials = (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData());
 			//const char* pszProxyServerType        = (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()       );
+                           // BEMPX_WriteLogFile( QString( "  CMX_SetupAnalysisWeatherPaths():  sSimWeatherPath: %1" ).arg( sSimWeatherPath ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );  // dbg - SAC 05/31/26 (dev #903)
+																			if (true)      // dbg - SAC 05/31/26 (dev #903)
+																			{	sDbgFileName = sProcessingPath + sModelFileOnly + QString(" - PreWthrPathSetup.ibd-Detail");
+   																			BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+																			}
 			if (CMX_SetupAnalysisWeatherPaths( sSimWeatherPath.toLocal8Bit().constData(), true /*bAnnual*/, true /*bDDY*/, sErrMsg, true /*bAllowWthrDownload*/, 
 										(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()),
 										(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
@@ -4173,7 +4336,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 	// SAC 9/3/13 - added weather file hash check logic
 		BOOL bWthrHashesSet = FALSE;
-		if (bChkCode && iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())  // only perform weather file hash checks if user performing some sort of compliance analysis	// SAC 10/30/14 - prevent hash checks if errors already occurred
+		if (bChkCode && iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation() && iBldgOrientIdx == 0)  // only perform weather file hash checks if user performing some sort of compliance analysis	// SAC 10/30/14 - prevent hash checks if errors already occurred
 		{	BOOL bWthrHashError = FALSE;
 			int iSHA256_AnnWthr_RetVal=0, iSHA256_DDYWthr_RetVal=0;
 			QString sDDWeatherFile, sWthrFileEPWHash, sWthrFileDDYHash;
@@ -4218,7 +4381,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
               (lDbgGasTariffGen  > 0 && lDbgGasTariffGen  < 3) )   // no rate download for gen3 rates - SAC 04/13/26 (dev #689)
             BEMPX_WriteLogFile( QString( "CUAC utility rate download Not performed due to analysis return code = %1" ).arg( QString::number(iRetVal) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
       }
-      if (iRetVal == 0 && iCUACReportID > 0)    // SAC 08/30/23 (CUAC)
+      if (iRetVal == 0 && iCUACReportID > 0 && iBldgOrientIdx == 0)    // SAC 08/30/23 (CUAC)
       {  bool bG2ElecRateLoaded=false, bG2GasRateLoaded=false;
 
             // -----------------
@@ -4290,6 +4453,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                iNumCUACRateDownldErrors++;
                if (qsCUACElecRateDownldErrMsg.isEmpty())
                   qsCUACElecRateDownldErrMsg = QString::asprintf( "Electric Utility Rate Download ERROR (returned %d)", iRateDnldRetVal );
+               if (qsCUACElecRateDownldErrMsg.indexOf( "rate license to" ) > 0)     // SAC 09/10/26 (dev #713)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CPR_ElecUtilityRateExpMsg" ), BEMP_QStr, (void*) &qsCUACElecRateDownldErrMsg, BEMO_User, -1, BEMS_ProgDefault );
             }
             else if (iAnalysisStorage < 3)
                svUtilRatesToDelete.push_back( ((std::string) sProcessingPath.toLocal8Bit().constData()) + ((std::string) "er.json") );
@@ -4311,6 +4476,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                iNumCUACRateDownldErrors++;
                if (qsCUACGasRateDownldErrMsg.isEmpty())
                   qsCUACGasRateDownldErrMsg = QString::asprintf( "Gas Utility Rate Download ERROR (returned %d)", iRateDnldRetVal );
+               if (qsCUACGasRateDownldErrMsg.indexOf( "rate license to" ) > 0)      // SAC 09/10/26 (dev #713)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CPR_GasUtilityRateExpMsg" ), BEMP_QStr, (void*) &qsCUACGasRateDownldErrMsg, BEMO_User, -1, BEMS_ProgDefault );
             }
             else if (iAnalysisStorage < 3)
                svUtilRatesToDelete.push_back( ((std::string) sProcessingPath.toLocal8Bit().constData()) + ((std::string) "gr.json") );
@@ -4438,7 +4605,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 			QString qsRptIssueDescrip, qsRptIssuePrompt, qsRptIssueListing;
 			int iNumRptSecOffTRUE = 0;
-			if (iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML) && !sXMLResultsFileName.isEmpty())
+			if (iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML) && !sXMLResultsFileName.isEmpty() && iBldgOrientIdx == 0)
 			{	// SAC 7/5/16 - added code to check for any/all conditions where report generation will be prevented or not secure and prompt user of this condition before proceeding with analysis
 			#define  NumCantGenRpts  6
 				int iCantGenRptIdx[NumCantGenRpts];
@@ -4514,7 +4681,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					long lDisableMandOccSensorCtrl;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandOccSensorCtrl", iCID_Proj ), lDisableMandOccSensorCtrl ))		// SAC 11/1/19 - new cause for disabling report security
 						lDisableMandOccSensorCtrl = 0;
-			#define  NumRptSecOff  31
+			#define  NumRptSecOff  33
 					int iRptSecOffIdx[NumRptSecOff];
 					bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
 													(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
@@ -4547,6 +4714,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                        (lAllowStdBatt    != -1),              // AllowStdBatt    activated - SAC 10/25/23
                                        (iCustomMeterOption > 0),              // CustomMeterOption - SAC 11/02/23
                                        (lIntSurfModelMthd  > 0),              // IntSurfModelMthd - SAC 07/23/25
+                                       (iMultiOrientationAnalysis > 0),       // iMultiOrientationAnalysis - SAC 05/28/26 (dev #903)
+                                       (iNumAnalysisActionObjects > 0),       // iNumAnalysisActionObjects - SAC 08/05/26 (dev #903)
                                        false  };
 
 					for (iRF=0; iRF < NumRptSecOff; iRF++)
@@ -4605,7 +4774,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									case 28 :	sLogMsg =        "      AllowStandardBattery flag activated";		break;	// SAC 10/25/23
 									case 29 :	sLogMsg =        "      CustomMeterOption activated";		break;	// SAC 11/02/23
 									case 30 :	sLogMsg =        "      Interior surface modeling method (IntSurfModelMthd) activated";		break;	// SAC 07/23/25
-									default :	sLogMsg.clear();		break;
+									case 31 :	sLogMsg =        "      Multiple Orientation Analysis method (MultiOrientationAnalysis) activated";   break;	// SAC 05/28/26 (dev #903)
+									case 33 :	sLogMsg = QString::asprintf( "      Presence of %d AnalysisAction (batch processing) object(s) in model inputs", iNumAnalysisActionObjects );   break;	// SAC 08/05/26 (dev #903)
+                           default :	sLogMsg.clear();		break;
 								}
 								if (!sLogMsg.isEmpty())
 								{	if (iRF == 0)	// hash check failures already reported to log above
@@ -4930,8 +5101,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	char pszEPlusVerStr[60] = "\0";
 	char pszOpenStudioVerStr[60] = "\0";
 	QString sCSEVersion;  // SAC 10/10/16
-	bool bHaveResult=false, bResultIsPass=false;
-	QString sResTemp1, sResTemp2;
+	bool bResultIsPass=false;
 	int iAnalStep=-1;		//, iProgressModel2=0;
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && !bCompletedAnalysisSteps)
 	{
@@ -5536,8 +5706,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                         if (bPerformFullCSESim && lDBID_Proj_ExcludePVBattFromSim > 0 && lDBID_Proj_SimPVBattOnly > 0 &&
                             (bStoreHourlyResults || lDBID_ResProj_HVACSizingNeeded > 0))
                         {  bool bPerformSimLoop1 = bStoreHourlyResults;
+                           QString qsRunIDCollection;   // fix bug in log output when no sizing done for this batch of runs - SAC 06/10/26
                            for (iSR=0; (iSR <= iSimRunIdx && !bPerformSimLoop1); iSR++)	// loop over runs in search for any requiring HVAC sizing runs
-                           {  if (posSimInfo[iSR]->bSimulateModel)
+                           {  if (!qsRunIDCollection.isEmpty())   // SAC 06/10/26
+                                 qsRunIDCollection += ",";
+                              qsRunIDCollection += posSimInfo[iSR]->pszRunID;
+                              if (posSimInfo[iSR]->bSimulateModel)
                               {  long lCSEHVACSizingReqd = 0;
                                  if (BEMPX_GetInteger( lDBID_ResProj_HVACSizingNeeded, lCSEHVACSizingReqd, 0, -1, 0, BEMO_User, posSimInfo[iSR]->iBEMProcIdx ) &&
                                      lCSEHVACSizingReqd > 0)
@@ -5575,7 +5749,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
                                              bAbort, iRetVal, sErrMsg, sStdDsgnCSEResultsPathFile, iCUACReportID, iCustomMeterOption, bWriteMidAnalysisInputs );
                            }
                            else if (bLogCSERunLoopDetails)    // SAC 06/26/23
-                                             BEMPX_WriteLogFile( QString::asprintf( "    CSE run loop 1 - CSE sizing not performed for '%s' model (bStoreHourlyResults %s, bPerformSimLoop1 %s)", posSimInfo[iSR]->pszRunID, (bStoreHourlyResults ? "true" : "false"), (bPerformSimLoop1 ? "true" : "false") ) );
+                                             //BEMPX_WriteLogFile( QString::asprintf( "    CSE run loop 1 - CSE sizing not performed for '%s' model (bStoreHourlyResults %s, bPerformSimLoop1 %s)", posSimInfo[iSR]->pszRunID, (bStoreHourlyResults ? "true" : "false"), (bPerformSimLoop1 ? "true" : "false") ) );
+                                             BEMPX_WriteLogFile( QString::asprintf( "    CSE run loop 1 - CSE sizing not performed for model(s) [%s] (bStoreHourlyResults %s, bPerformSimLoop1 %s)", qsRunIDCollection, (bStoreHourlyResults ? "true" : "false"), (bPerformSimLoop1 ? "true" : "false") ) );
                         }
 
                            //BEMMessageBox( QString::asprintf( "Pause following first CSE run loop:  bPerformFullCSESim %s / bStoreHourlyResults %s / lDBID_Proj_ExcludePVBattFromSim %ld / lDBID_Proj_SimPVBattOnly %ld",
@@ -5680,6 +5855,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							   // processing of analysis results following ALL simulations - SAC 7/23/18
 								if (iSimRetVal == 0 && !bSimulateCSEOnly)
 								{
+                           //if (!saResultSetName[iBldgOrientIdx].isEmpty())    // SAC 06/02/26 (dev #903)
+                           //   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ResultSetName", iCID_Proj ), BEMP_QStr, (void*) &saResultSetName[iBldgOrientIdx], BEMO_User, -1, BEMS_SimResult );  // , BEMO_User, TRUE, iCurActiveBEMProcIdx /*osRunInfo[iR].BEMProcIdx()*/ );
+
                               // debugging PV-solar
                               //BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call ProcessSimulationResults_Multiple() for %1 run(s)" ).arg( QString::number( iSimRunIdx ) ), NULL, FALSE, TRUE, FALSE );
                               //BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call ProcessSimulationResults_Multiple()" ), NULL, FALSE, TRUE, FALSE );
@@ -5691,7 +5869,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
 																				false /*bIncludeOutputDiagnostics*/, iProgressType, &saEPlusProcDirsToBeRemoved, bReportAllUMLHZones,		// SAC 5/22/19   // SAC 11/11/19
 																				&sStdDsgnCSEResultsPathFile, &saCopyAcrossModelClassPrefixes, pCompRuleDebugInfo, 	// SAC 10/8/20 (tic #3218)   // SAC 11/24/20   // SAC 04/14/21
-                                                            bPerformComSim /*bRptMissingEPFiles*/ );    // SAC 10/29/21 (MFam)
+                                                            bPerformComSim /*bRptMissingEPFiles*/, (!saResultSetName[iBldgOrientIdx].isEmpty() ? &saResultSetName[iBldgOrientIdx] : NULL) );    // SAC 10/29/21 (MFam)  // SAC 06/02/26 (dev #903)
 
                               //// debugging copying of results & NRCC objects from model to model
                               //	for (int iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
@@ -6027,6 +6205,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																			lConstantClgUMLHLimit = -2;  // => no constant UMLH limit
 																	}
 																}
+                                                if (bIsPropModel)
+                                                {  if (lBypassClgUMLHLimit > 0 || fNumZoneClgUMLHs < 0.01)     // SAC 08/18/26 (dev #903)
+                                                      daThrmlZn_ClgUnmetLdHrs[iBldgOrientIdx].push_back( 0.0 );
+                                                   else
+                                                      daThrmlZn_ClgUnmetLdHrs[iBldgOrientIdx].push_back( fNumZoneClgUMLHs );
+                                                }
 
 																if (fMaxUnmetHtgLdHrs > -0.5 && BEMPX_GetFloat( lDBID_ThrmlZn_HtgUnmetLdHrs, fNumZoneHtgUMLHs, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ) &&
 																	 fNumZoneHtgUMLHs > 0 /*&& lBypassHtgUMLHLimit == 0*/)		// SAC 5/13/19 (tic #2680)
@@ -6045,6 +6229,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																			lConstantHtgUMLHLimit = -2;  // => no constant UMLH limit
 																	}
 																}
+                                                if (bIsPropModel)
+                                                {  if (lBypassHtgUMLHLimit > 0 || fNumZoneHtgUMLHs < 0.01)     // SAC 08/18/26 (dev #903)
+                                                      daThrmlZn_HtgUnmetLdHrs[iBldgOrientIdx].push_back( 0.0 );
+                                                   else
+                                                      daThrmlZn_HtgUnmetLdHrs[iBldgOrientIdx].push_back( fNumZoneHtgUMLHs );
+                                                }
 
 																if ((bVerbose || bReportAllUMLHZones) && (bReportStandardUMLHs || !osRunInfo[iR].IsStdRun()))	// SAC 11/11/19 - bReportAllUMLHZones
 																{	QString sUMLHZoneName, sUMLHZoneLog;
@@ -6101,23 +6291,35 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 															BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumZnsExceedHtgUnmetLdHrs", iCID_Proj ), BEMP_Int, &iNumZonesExceedHtgUMLHs, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
 															BEMPX_SetBEMData( BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ), BEMP_Flt, &fMaxZoneClgUMLHs       , BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
 															BEMPX_SetBEMData( BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ), BEMP_Flt, &fMaxZoneHtgUMLHs       , BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
-                     		
+                                             if (bIsPropModel)
+                                             {  laProj_NumZnsExceedClgUnmetLdHrs[iBldgOrientIdx] = iNumZonesExceedClgUMLHs;    // storage & tracking of Proj & ThrmlZn UMLH results by orientation - SAC 08/18/26 (dev #903)
+                                                laProj_NumZnsExceedHtgUnmetLdHrs[iBldgOrientIdx] = iNumZonesExceedHtgUMLHs;
+                                                daProj_MaxZnClgUnmetLdHrs[       iBldgOrientIdx] = fMaxZoneClgUMLHs       ;
+                                                daProj_MaxZnHtgUnmetLdHrs[       iBldgOrientIdx] = fMaxZoneHtgUMLHs       ;
+                                             }
+
 															if (iMaxZoneExceedClgUMLHsIdx >= 0)
 															{	BEMPX_GetString( lDBID_ThrmlZn_Name, sMaxZoneClgUMLHsName, FALSE /*bAddCommas*/, 0 /*iPrecision*/, -1 /*iDispDataType*/, iMaxZoneExceedClgUMLHsIdx, BEMO_User, NULL, 0, osRunInfo[iR].BEMProcIdx() );		assert( !sMaxZoneClgUMLHsName.isEmpty() );
 															}
 															if (sMaxZoneClgUMLHsName.isEmpty())
 																BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName", iCID_Proj ), iError, 0, BEMO_User, osRunInfo[iR].BEMProcIdx() );
 															else
-																BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName", iCID_Proj ), BEMP_QStr, (void*) &sMaxZoneClgUMLHsName, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
-                     		
+															{	BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName", iCID_Proj ), BEMP_QStr, (void*) &sMaxZoneClgUMLHsName, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
+                                                if (bIsPropModel)
+                                                   qsaProj_MaxZnClgUnmetLdHrsName[iBldgOrientIdx] = sMaxZoneClgUMLHsName;     // SAC 08/18/26 (dev #903)
+                                             }
+
 															if (iMaxZoneExceedHtgUMLHsIdx >= 0)
 															{	BEMPX_GetString( lDBID_ThrmlZn_Name, sMaxZoneHtgUMLHsName, FALSE /*bAddCommas*/, 0 /*iPrecision*/, -1 /*iDispDataType*/, iMaxZoneExceedHtgUMLHsIdx, BEMO_User, NULL, 0, osRunInfo[iR].BEMProcIdx() );		assert( !sMaxZoneHtgUMLHsName.isEmpty() );
 															}
 															if (sMaxZoneHtgUMLHsName.isEmpty())
 																BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName", iCID_Proj ), iError, 0, BEMO_User, osRunInfo[iR].BEMProcIdx() );
 															else
-																BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName", iCID_Proj ), BEMP_QStr, (void*) &sMaxZoneHtgUMLHsName, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
-                     		
+															{	BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName", iCID_Proj ), BEMP_QStr, (void*) &sMaxZoneHtgUMLHsName, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
+                                                if (bIsPropModel)
+                                                   qsaProj_MaxZnHtgUnmetLdHrsName[iBldgOrientIdx] = sMaxZoneHtgUMLHsName;     // SAC 08/18/26 (dev #903)
+                                             }
+
 															if (iNumZonesExceedClgUMLHs > 0 || iNumZonesExceedHtgUMLHs > 0)
 															{
 																if (!osRunInfo[iR].IsStdRun())
@@ -6426,11 +6628,174 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (iRetVal == 0)
 			xmlResultsFile.Close();
 
+      if (iNumBldgOrientations > 1)       // SAC 06/02/26 (dev #903)   // moved this code up above evaluation of rl_NRCCPRF to enable multi-orientation reporting - SAC 08/12/26 (dev #903)
+      {  QString qsEffLSCMarg, qsTotLSCMarg, qsTotSrcMarg;   double dMarg, dMargSum = 0.0;   int iNumFails = 0;
+         if (BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:Enduse16[8]" ), qsEffLSCMarg ) && qsEffLSCMarg.length() > 2)  // could be "--" (for 0)
+         {  dMarg = strtof( qsEffLSCMarg.toLocal8Bit().constData(), NULL );
+            iNumFails += (dMarg < 0.0 ? 1 : 0);
+            dMargSum += dMarg;
+         }
+         if (BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:Enduse8[8]"  ), qsTotLSCMarg ) && qsTotLSCMarg.length() > 2)
+         {  dMarg = strtof( qsTotLSCMarg.toLocal8Bit().constData(), NULL );
+            iNumFails += (dMarg < 0.0 ? 1 : 0);
+            dMargSum += dMarg;
+         }
+         if (BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:Enduse8[13]" ), qsTotSrcMarg ) && qsTotSrcMarg.length() > 2)
+         {  dMarg = strtof( qsTotSrcMarg.toLocal8Bit().constData(), NULL );
+            iNumFails += (dMarg < 0.0 ? 1 : 0);
+            dMargSum += dMarg;
+         }
+
+         // what if all passing but one due to UMLHs - gotta FIRST check for Failing compliance result
+            //       PassFail = UVal: "PASS"
+            //       MetricPassFail[1] = UVal: "Pass"
+            //       MetricPassFail[2] = UVal: "Pass"
+            //       MetricPassFail[3] = UVal: "Pass"
+            //       ComplyMessage = UVal: "COMPLIES"
+            //									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "EUseSummary:PassFail"      ), BEMP_QStr, (void*) &sPassFailResult,         BEMO_User, iEUS, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo[iR].BEMProcIdx() );
+            //      							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "EUseSummary:ComplyMessage" ), BEMP_Str , (void*) "DOES NOT COMPLY (UMLH)", BEMO_User, iEUS, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo[iR].BEMProcIdx() );   // SAC 12/13/21
+
+         if (iWorstOrientIdx < 0 || iNumFails > iWorstOrientNumFails ||
+             (iNumFails == iWorstOrientNumFails && dMargSum < dWorstOrientCompMargin))
+         {  iWorstOrientIdx = iBldgOrientIdx;
+            iWorstOrientNumFails   = iNumFails;
+            dWorstOrientCompMargin = dMargSum;
+            if (iNumFails < 1)
+               BEMPX_WriteLogFile( QString::asprintf( "   Orientation run %d-%s: all metrics pass, %g margin sum (worst thus far)", (iBldgOrientIdx+1), saResultSetAbbrev[iBldgOrientIdx].toLocal8Bit().constData(), dMargSum ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            else
+               BEMPX_WriteLogFile( QString::asprintf( "   Orientation run %d-%s: %d metric(s) fail, %g margin sum (worst thus far)", (iBldgOrientIdx+1), saResultSetAbbrev[iBldgOrientIdx].toLocal8Bit().constData(), iNumFails, dMargSum ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         }
+         else
+         {  if (iNumFails < 1)
+               BEMPX_WriteLogFile( QString::asprintf( "   Orientation run %d-%s: all metrics pass, %g margin sum", (iBldgOrientIdx+1), saResultSetAbbrev[iBldgOrientIdx].toLocal8Bit().constData(), dMargSum ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            else
+               BEMPX_WriteLogFile( QString::asprintf( "   Orientation run %d-%s: %d metric(s) fail, %g margin sum", (iBldgOrientIdx+1), saResultSetAbbrev[iBldgOrientIdx].toLocal8Bit().constData(), iNumFails, dMargSum ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         }
+
+         CMX_SaveAnalysisResultsToTempFiles( saOrientProjEUseSumObjs[iBldgOrientIdx], saOrientUniqEUseSumObjs[iBldgOrientIdx], saOrientTempEUseSumPathFiles[iBldgOrientIdx] );  // store THIS run's EUseSummary to a tempfile - SAC 06/02/26 (dev #903)
+         if (iBldgOrientIdx == (iNumBldgOrientations-1))
+         {  // blast this orientation's EUseSummary and restore ALL EUseSummaries from each run + 'Worst' up front - THEN reset compliance result - SAC 06/02/26 (dev #903)
+            int iEUseSumClsID = BEMPX_GetDBComponentID( "EUseSummary" );
+            int iNumEUseSumObjsToDel = BEMPX_GetNumObjects( iEUseSumClsID, BEMO_User /*, iCurActiveBEMProcIdx*/ );
+            for (int iDelObjIdx = iNumEUseSumObjsToDel-1; iDelObjIdx >= 0; iDelObjIdx--)
+            {  BEMObject* pDelObj = BEMPX_GetObjectByClass( iEUseSumClsID, iError, iDelObjIdx, BEMO_User /*, iCurActiveBEMProcIdx*/ );		assert( pDelObj );
+               if (pDelObj)
+                  BEMPX_DeleteObject( pDelObj /*, iCurActiveBEMProcIdx*/ );
+            }
+
+            if (iWorstOrientIdx >= 0 && saOrientUniqEUseSumObjs[iWorstOrientIdx].size())
+            {  int iRestoreRetVal = CMX_RestoreAnalysisResultsFromTempFiles( saOrientUniqEUseSumObjs[iWorstOrientIdx], saOrientTempEUseSumPathFiles[iWorstOrientIdx], false /*bDelFilesFollowingRead*/, false /*bDelSummaryResultsBeforeRead*/ );   assert( iRestoreRetVal==0 );
+               // rename this first 
+               QString qsWorstEUseSummaryName = QString( "Worst Case (%1)" ).arg( saResultSetAbbrev[iWorstOrientIdx] );
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Name", iEUseSumClsID ), BEMP_QStr, (void*) &qsWorstEUseSummaryName, BEMO_User, 0, BEMS_UserDefined, BEMO_User );  //, TRUE /*bPerfResets*/, osRunInfo[iR].BEMProcIdx() );
+            }
+            // then restore each fo the orientation results sets from temp files - SAC 06/03/26 (dev #903)
+            int iEUseSumOrientIdx;
+            for (iEUseSumOrientIdx = 0; iEUseSumOrientIdx < iNumBldgOrientations; iEUseSumOrientIdx++)
+            {  int iRestoreRetVal = CMX_RestoreAnalysisResultsFromTempFiles( saOrientUniqEUseSumObjs[iEUseSumOrientIdx], saOrientTempEUseSumPathFiles[iEUseSumOrientIdx], true /*bDelFilesFollowingRead*/, false /*bDelSummaryResultsBeforeRead*/ );   assert( iRestoreRetVal==0 );
+            }
+            int iEUseSumObj, iNumEUseSumObjs = BEMPX_GetNumObjects( iEUseSumClsID /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );    // SAC 06/04/26 (dev #903)
+            long lDBID_Proj_EUseSummaryRef = BEMPX_GetDatabaseID( "Proj:EUseSummaryRef" );
+            for (iEUseSumObj=0; iEUseSumObj < iNumEUseSumObjs; iEUseSumObj++)
+            {  BEMObject* pEUseSumObj = BEMPX_GetObjectByClass( iEUseSumClsID, iError, iEUseSumObj );  // , BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+               assert( pEUseSumObj );
+               if (pEUseSumObj && lDBID_Proj_EUseSummaryRef > 0)
+                  BEMPX_SetBEMData( lDBID_Proj_EUseSummaryRef + iEUseSumObj, BEMP_Obj, pEUseSumObj );  // , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+            }
+            // then delete misc MultiOrientation files flagged for deletion - SAC 06/05/26 (dev #903)
+            for (int iMODels=0; iMODels < saMultiOrientFilesToDelete.size(); iMODels++)
+               DeleteFile( saMultiOrientFilesToDelete.at(iMODels).toLocal8Bit().constData() );
+
+            long lNumResultsSets=0;
+            BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), lNumResultsSets );
+            if (lNumResultsSets != iNumEUseSumObjs)         // iNumBldgOrientations -> iNumEUseSumObjs (4->5) - SAC 08/19/26 (dev #903)
+            {  lNumResultsSets = iNumEUseSumObjs;           // (re)set Proj:NumResultsSets to ensure ALL orientation run results summaries are written to CSV following aanlysis - SAC 06/05/26 (dev #903)
+               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), BEMP_Int, &lNumResultsSets, BEMO_User, 0, BEMS_ProgDefault );
+            }
+
+            // Store orientation-specific summary results from each of the orientation EUseSummaries into ALL EUseSummaries - SAC 06/11/26
+            int iSpecVal;   long lNumEUseSumDlgTabs=5;
+            QString sComplyMessage = BEMPX_GetString( BEMPX_GetDatabaseID( "ComplyMessage", iEUseSumClsID ), iSpecVal, iError, 0 /*iOccur*/ );  // grab overall ComplyMessage from first (worst case) orientation
+            QString saLCCEffStd[10], saLCCTotStd[10], saSrcStd[10], saLCCEffProp[10], saLCCTotProp[10], saSrcProp[10],
+                    saLCCEffMarg[10], saLCCTotMarg[10], saSrcMarg[10], saLCCEffPsFl[10], saLCCTotPsFl[10], saSrcPsFl[10], saOrientLabel[10];
+            for (iEUseSumOrientIdx = 1; iEUseSumOrientIdx <= iNumBldgOrientations; iEUseSumOrientIdx++)
+            {  saOrientLabel[iEUseSumOrientIdx-1]  = QString::number( daBldgOrientation[iEUseSumOrientIdx-1] );
+               saLCCEffStd[  iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse16[7]"      , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saLCCEffProp[ iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse16[4]"      , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saLCCEffMarg[ iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse16[8]"      , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saLCCEffPsFl[ iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "MetricPassFail[1]", iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saLCCTotStd[  iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse8[7]"       , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saLCCTotProp[ iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse8[4]"       , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saLCCTotMarg[ iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse8[8]"       , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saLCCTotPsFl[ iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "MetricPassFail[2]", iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saSrcStd[     iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse8[12]"      , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saSrcProp[    iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse8[11]"      , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saSrcMarg[    iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "Enduse8[13]"      , iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+               saSrcPsFl[    iEUseSumOrientIdx-1]  = BEMPX_GetString( BEMPX_GetDatabaseID( "MetricPassFail[3]", iEUseSumClsID ), iSpecVal, iError, iEUseSumOrientIdx );
+            }
+            for (iEUseSumObj=0; iEUseSumObj < iNumEUseSumObjs; iEUseSumObj++)
+            {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumUIDialogTabs", iEUseSumClsID ), BEMP_Int, &lNumEUseSumDlgTabs, BEMO_User, iEUseSumObj, BEMS_ProgDefault );
+               if (iEUseSumObj > 0)
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ComplyMessage", iEUseSumClsID ), BEMP_QStr, &sComplyMessage, BEMO_User, iEUseSumObj );
+               for (iEUseSumOrientIdx = 0; iEUseSumOrientIdx < iNumBldgOrientations; iEUseSumOrientIdx++)
+               {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientLabel",       iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saOrientLabel[iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric1Std",  iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCEffStd[  iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric1Prop", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCEffProp[ iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric1Marg", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCEffMarg[ iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric1PsFl", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCEffPsFl[ iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric2Std",  iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCTotStd[  iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric2Prop", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCTotProp[ iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric2Marg", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCTotMarg[ iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric2PsFl", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saLCCTotPsFl[ iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric3Std",  iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saSrcStd[     iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric3Prop", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saSrcProp[    iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric3Marg", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saSrcMarg[    iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "OrientMetric3PsFl", iEUseSumClsID ) + iEUseSumOrientIdx, BEMP_QStr, &saSrcPsFl[    iEUseSumOrientIdx], BEMO_User, iEUseSumObj );
+            }  }
+      }  }
+
       // implemented final NRCCPRF XML output code based on Res analysis - SAC 11/26/20
 		//if (iRunIdx == iRunIdxFinalNRCC && ResRetVal_ContinueProcessing( iRetVal ) && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && lAnalysisType > 0)		// SAC 3/5/18 - NRCCPRF01E Final results storage  // SAC 4/15/20 - revise to use Std design for EAA runs
-		if (iRetVal == 0 && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && iCUACReportID < 1)  // && lAnalysisType > 0)	
+		if (iRetVal == 0 && iNRCCXMLClassID > 0 && !sNRCCXMLFileName.isEmpty() && iCUACReportID < 1 && iBldgOrientIdx == (iNumBldgOrientations-1))  // && lAnalysisType > 0)	  // don't evaluate rl_NRCCPRF rules & write schema XML results file unless this is the final run - SAC 08/12/26 (dev #903)
 		{
-			iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
+         // Install Proposed run UMLH data to Proj and ThrmlZn objects - SAC 08/18/26 (dev #903)  // debug - 08/19/26 (dev #903)
+         for (int iTempBldgOrientIdx=0; iTempBldgOrientIdx < iNumBldgOrientations; iTempBldgOrientIdx++)
+         {  long   lNumZnsExceedClgUnmetLdHrs = laProj_NumZnsExceedClgUnmetLdHrs[ iTempBldgOrientIdx];
+            long   lNumZnsExceedHtgUnmetLdHrs = laProj_NumZnsExceedHtgUnmetLdHrs[ iTempBldgOrientIdx];
+            double dMaxZnClgUnmetLdHrs        = daProj_MaxZnClgUnmetLdHrs[        iTempBldgOrientIdx];
+            double dMaxZnHtgUnmetLdHrs        = daProj_MaxZnHtgUnmetLdHrs[        iTempBldgOrientIdx];
+            QString sProj_MaxZnClgUnmetLdHrsName = qsaProj_MaxZnClgUnmetLdHrsName[iTempBldgOrientIdx];
+            QString sProj_MaxZnHtgUnmetLdHrsName = qsaProj_MaxZnHtgUnmetLdHrsName[iTempBldgOrientIdx];
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumZnsExceedClgUnmetLdHrs", iCID_Proj ) + iTempBldgOrientIdx+1, BEMP_Int, &lNumZnsExceedClgUnmetLdHrs, BEMO_User, -1, BEMS_SimResult );  // [1] remain Std Design, [2-N] become Proposed design results
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumZnsExceedHtgUnmetLdHrs", iCID_Proj ) + iTempBldgOrientIdx+1, BEMP_Int, &lNumZnsExceedHtgUnmetLdHrs, BEMO_User, -1, BEMS_SimResult );
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ) + iTempBldgOrientIdx+1, BEMP_Flt, &dMaxZnClgUnmetLdHrs       , BEMO_User, -1, BEMS_SimResult );
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ) + iTempBldgOrientIdx+1, BEMP_Flt, &dMaxZnHtgUnmetLdHrs       , BEMO_User, -1, BEMS_SimResult );
+            if (sProj_MaxZnClgUnmetLdHrsName.isEmpty())
+               BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName", iCID_Proj ) + iTempBldgOrientIdx+1, iError, 0 );
+            else
+               BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName", iCID_Proj ) + iTempBldgOrientIdx+1, BEMP_QStr, (void*) &sProj_MaxZnClgUnmetLdHrsName, BEMO_User, -1, BEMS_SimResult );
+            if (sProj_MaxZnHtgUnmetLdHrsName.isEmpty())
+               BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName", iCID_Proj ) + iTempBldgOrientIdx+1, iError, 0 );
+            else
+               BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName", iCID_Proj ) + iTempBldgOrientIdx+1, BEMP_QStr, (void*) &sProj_MaxZnHtgUnmetLdHrsName, BEMO_User, -1, BEMS_SimResult );
+
+            int iCID_ThrmlZn = BEMPX_GetDBComponentID( "ThrmlZn" );
+            int iNumZones = (iCID_ThrmlZn < 1 ? 0 : BEMPX_GetNumObjects( iCID_ThrmlZn ));
+            long lDBID_ThrmlZn_ClgUnmetLdHrs = BEMPX_GetDatabaseID( "ClgUnmetLdHrs", iCID_ThrmlZn );			assert( lDBID_ThrmlZn_ClgUnmetLdHrs > 0 );
+            long lDBID_ThrmlZn_HtgUnmetLdHrs = BEMPX_GetDatabaseID( "HtgUnmetLdHrs", iCID_ThrmlZn );			assert( lDBID_ThrmlZn_HtgUnmetLdHrs > 0 );
+            for (int iZn=0; iZn < iNumZones; iZn++)
+            {  double dThrmlZn_ClgUnmetLdHrs = daThrmlZn_ClgUnmetLdHrs[iTempBldgOrientIdx][iZn],
+                      dThrmlZn_HtgUnmetLdHrs = daThrmlZn_HtgUnmetLdHrs[iTempBldgOrientIdx][iZn];
+               BEMPX_SetBEMData( lDBID_ThrmlZn_ClgUnmetLdHrs + iTempBldgOrientIdx+1, BEMP_Flt, &dThrmlZn_ClgUnmetLdHrs, BEMO_User, iZn, BEMS_SimResult );
+               BEMPX_SetBEMData( lDBID_ThrmlZn_HtgUnmetLdHrs + iTempBldgOrientIdx+1, BEMP_Flt, &dThrmlZn_HtgUnmetLdHrs, BEMO_User, iZn, BEMS_SimResult );
+            }
+																		if (bStoreBEMDetails && (bVerbose || ebLogAnalysisMsgs))
+																		{	sDbgFileName = sProcessingPath + sModelFileOnly + QString(".ibd-Detail-ZnUMLHs");
+   																		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+																		}
+         }
+
+         iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
    							if (bVerbose || ebLogAnalysisMsgs)    // SAC 10/22/21
 									BEMPX_WriteLogFile( QString( "  PerfAnal_NRes - %1 prep rules" ).arg( qsSchemaXMLFileDescrip ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
    		BOOL bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_NRCCPRF" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );     // SAC 11/27/20    //, &saPreAnalChkWarningMsgs );
@@ -6588,7 +6953,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 	// ----------
 	// COMPLIANCE REPORT GENERATION   - SAC 9/14/13
-		if (iRetVal == 0 && iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) && !sXMLResultsFileName.isEmpty())		// SAC 10/7/14 - added check to require iCodeType == CT_T24N (no rpt gen reports for 90.1 analysis)
+		if (iRetVal == 0 && iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) && !sXMLResultsFileName.isEmpty() &&		// SAC 10/7/14 - added check to require iCodeType == CT_T24N (no rpt gen reports for 90.1 analysis)
+          iBldgOrientIdx == (iNumBldgOrientations-1))    // don't generate compliance report unless this is the final run - SAC 08/12/26 (dev #903)
 		{	if (sXMLResultsFileName.isEmpty() || !FileExists( sXMLResultsFileName.toLocal8Bit().constData() ) || iAnalysisThruStep < 8 || !sIDFToSimulate.isEmpty() ||
 					pbBypassOpenStudio[0] || pbBypassOpenStudio[1] || pbBypassOpenStudio[2] || pbBypassOpenStudio[3] ) // ||
 			//		pbBypassSimulation[0] || pbBypassSimulation[1] || pbBypassSimulation[2] || pbBypassSimulation[3] )
@@ -7054,6 +7420,57 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}	}	}
 	}
 
+   long lNumEUseSummaryDlgTabs=0;      // ensure proper # of EUseSummary UI dialog tabs - SAC 06/12/26 (dev #903)
+   if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumEUseSummaryDlgTabs", iCID_Proj ), lNumEUseSummaryDlgTabs, 0, -1,  0 /*iOccur*/ ) && lNumEUseSummaryDlgTabs > 0)
+   {  int iEUseSumClsID = BEMPX_GetDBComponentID( "EUseSummary" );
+      int iNumEUseSumObjs = BEMPX_GetNumObjects( iEUseSumClsID /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );
+      for (int iEUseSumObj=0; iEUseSumObj < iNumEUseSumObjs; iEUseSumObj++)
+         BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumUIDialogTabs", iEUseSumClsID ), BEMP_Int, &lNumEUseSummaryDlgTabs, BEMO_User, iEUseSumObj, BEMS_ProgDefault );
+   }
+
+   // moved overall time accounting up here to enable inclusion in summary results CSV (by run) - SAC 06/10/26 (dev #903)
+   dTimeOverall += DeltaTime( (iBldgOrientIdx == 0 ? tmAnalStartTime : tmLastOrientRunTime) );	// log time spent over the entire analysis
+   tmLastOrientRunTime = boost::posix_time::microsec_clock::local_time();
+	if (!bAbort && !BEMPX_AbortRuleEvaluation())		// SAC 11/04/19 - separated out storage of CSV log formatted timestamp from pszResultsSummary population
+	{	//CTime locTime = CTime::GetCurrentTime();
+		QDateTime locTime = QDateTime::currentDateTime();
+		QString sTimeStamp = locTime.toString("yyyy-MM-dd HH:mm:ss");
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunDateLog",       iCID_Proj ), BEMP_QStr, (void*) &sTimeStamp, BEMO_User, -1, BEMS_ProgDefault );
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "AnalysisDuration", iCID_Proj ), BEMP_Flt,        &dTimeOverall, BEMO_User, -1, BEMS_ProgDefault );
+	}
+
+   // moved ResultsSummary population up here, inside multiple run loop - SAC 06/10/26 (dev #903)
+   if (iNumResultsSummaryStrings > 0 && iResultsSummaryLen > 0)
+   {  int iResultsSummaryIdx = -1;
+      if (iNumBldgOrientations < 2)
+         iResultsSummaryIdx = 0;  // only 1 set of results calculated
+      else if (iNumResultsSummaryStrings < iNumBldgOrientations && iBldgOrientIdx == iWorstOrientIdx)
+         // if fewer ResultsSummary strings than orientations, only store/restore worst case
+         iResultsSummaryIdx = 0;
+      else if (iNumResultsSummaryStrings > iBldgOrientIdx)
+         // if enough results strings to store this run, then do so
+         iResultsSummaryIdx = iBldgOrientIdx;
+      int iEUseSummaryIdx = 0;
+      if (iNumBldgOrientations > 1 && iBldgOrientIdx == (iNumBldgOrientations-1))
+         // following processing of the last orientation, there are iNumBldgOrientations+1 EUseSummary objects, w/ the latest run stored @ idx = iNumBldgOrientations - SAC 06/10/26 (dev #903)
+         iEUseSummaryIdx = iNumBldgOrientations;
+
+      if (iResultsSummaryIdx >= 0 && pszaResultsSummaryArray[iResultsSummaryIdx] != NULL)
+      {  pszaResultsSummaryArray[iResultsSummaryIdx][0] = '\0';
+         // SAC 5/5/15 - ResultSummary Logging
+   		sLogMsg = QString::asprintf( "      ResultsSummary population:  bAbort = (%s) / RuleProcAbort = (%s) / iRetVal = %d / iResultsSummaryIdx = %d / iResultsSummaryLen = %d", (bAbort ? "true" : "false"),
+   				                        (BEMPX_AbortRuleEvaluation() ? "true" : "false"), iRetVal, iResultsSummaryIdx, iResultsSummaryLen );
+   		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         // SAC 5/16/14 - added code to populate record of analysis results
+         if (!bAbort && !BEMPX_AbortRuleEvaluation())
+         {
+            int iCSVRes_RetVal = CMX_PopulateCSVResultSummary_NonRes( pszaResultsSummaryArray[iResultsSummaryIdx], iResultsSummaryLen, pszModelPathFile, pszSimWeatherPath, iEUseSummaryIdx );	// SAC 11/04/19
+            // SAC 5/5/15 - ResultSummary Logging
+            BEMPX_WriteLogFile( QString::asprintf( "      ResultsSummary[%d]:  %s", iResultsSummaryIdx, pszaResultsSummaryArray[iResultsSummaryIdx] ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+         }
+   }  }
+
+   }     // END loop over bldg orientations - SAC 05/28/26 (dev #903)
 
 // SAC 1/23/14 - added code to setup FINAL result log message (including analysis duration stats)
 	QString sAnalResLogMsg, sAnalTimeStats, sCUACResultsSummary;
@@ -7080,7 +7497,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	}	}
 
 	dTimeToOther += DeltaTime( tmAnalOther );			// log time spent prior to this point to "other" bucket
-	dTimeOverall += DeltaTime( tmAnalStartTime );	// log time spent over the entire analysis
+	//dTimeOverall += DeltaTime( tmAnalStartTime );	// log time spent over the entire analysis
 	double dTimeTotTrans = 0.0, dTimeTotDsgn = 0.0, dTimeTotAnn = 0.0; 
 	for (int itm=0; itm < MAX_TimeArray; itm++)
 	{	dTimeTotTrans += dTimeToTranslate[itm];
@@ -7106,35 +7523,26 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	BEMPX_WriteLogFile( sAnalResLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	BEMPX_WriteLogFile( sAnalTimeStats, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );     // separate results from time logging messages to better highlight results diffs between batches of runs - SAC 11/30/23
 
-	if (!bAbort && !BEMPX_AbortRuleEvaluation())		// SAC 11/04/19 - separated out storage of CSV log formatted timestamp from pszResultsSummary population
-	{	//CTime locTime = CTime::GetCurrentTime();
-		QDateTime locTime = QDateTime::currentDateTime();
-		QString sTimeStamp = locTime.toString("yyyy-MM-dd HH:mm:ss");
-		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunDateLog", iCID_Proj ), BEMP_QStr, (void*) &sTimeStamp, BEMO_User, -1, BEMS_ProgDefault );
-		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "AnalysisDuration", iCID_Proj ), BEMP_Flt, &dTimeOverall, BEMO_User, -1, BEMS_ProgDefault );
-	}
-
 	if (bVerbose)
-		BEMPX_WriteLogFile( QString::asprintf( "      Final return value from CMX_PerformAnalysis_CECNonRes():  %d", iRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		BEMPX_WriteLogFile( QString::asprintf( "      Final return value from CMX_PerformAnalysisCB_CECNRMF():  %d", iRetVal ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 	if (bRestoreBEMProcLogTimeStampSetting)		// SAC 11/17/13 - restore BEMProc log timestamp setting (if it was toggled during analysis)
 		BEMPX_EnableLogTimeStamps( bInitialBEMProcLogTimeStamp );
 
-
-// SAC 5/5/15 - ResultSummary Logging
-		sLogMsg = QString::asprintf( "      ResultsSummary population:  bAbort = (%s) / RuleProcAbort = (%s) / iRetVal = %d / pszResultsSummary = %s / iResultsSummaryLen = %d", (bAbort ? "true" : "false"),
-				(BEMPX_AbortRuleEvaluation() ? "true" : "false"), iRetVal, (pszResultsSummary  == NULL ? "(null)" : (strlen( pszResultsSummary  ) < 1 ? "(empty)" : pszResultsSummary )), iResultsSummaryLen );
-		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-
-// SAC 5/16/14 - added code to populate record of analysis results
-	if (!bAbort && !BEMPX_AbortRuleEvaluation() && pszResultsSummary && iResultsSummaryLen > 1)
-	{
-		int iCSVRes_RetVal = CMX_PopulateCSVResultSummary_NonRes( pszResultsSummary, iResultsSummaryLen, pszModelPathFile, pszSimWeatherPath /*, int iEUseSummaryIdx=0*/ );	// SAC 11/04/19
-
-// SAC 5/5/15 - ResultSummary Logging
-		BEMPX_WriteLogFile( QString::asprintf( "      ResultsSummary:  %s", pszResultsSummary ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-
-	}
+   // // SAC 5/5/15 - ResultSummary Logging
+   // 		sLogMsg = QString::asprintf( "      ResultsSummary population:  bAbort = (%s) / RuleProcAbort = (%s) / iRetVal = %d / pszResultsSummary = %s / iResultsSummaryLen = %d", (bAbort ? "true" : "false"),
+   // 				(BEMPX_AbortRuleEvaluation() ? "true" : "false"), iRetVal, (pszResultsSummary  == NULL ? "(null)" : (strlen( pszResultsSummary  ) < 1 ? "(empty)" : pszResultsSummary )), iResultsSummaryLen );
+   // 		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   // 
+   // // SAC 5/16/14 - added code to populate record of analysis results
+   // 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && pszResultsSummary && iResultsSummaryLen > 1)
+   // 	{
+   // 		int iCSVRes_RetVal = CMX_PopulateCSVResultSummary_NonRes( pszResultsSummary, iResultsSummaryLen, pszModelPathFile, pszSimWeatherPath /*, int iEUseSummaryIdx=0*/ );	// SAC 11/04/19
+   // 
+   // // SAC 5/5/15 - ResultSummary Logging
+   // 		BEMPX_WriteLogFile( QString::asprintf( "      ResultsSummary:  %s", pszResultsSummary ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   // 
+   // 	}
 	BEMPX_RefreshLogFile();	// SAC 5/19/14
 
 // final analysis progress and callback calls...
@@ -7167,6 +7575,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		sqt_win->repaint();
 	}
 #endif
+
+   if (iNumBldgOrientations > 0)       // restore original batch run # settings - SAC 06/02/26 (dev #903)
+   {  si1ProgressRunNum = iInitial1ProgressRunNum;
+      siNumProgressRuns = iInitialNumProgressRuns;
+   }
 
 // QT Progress Dialog stuff
 #ifdef CM_QTGUI
@@ -7226,7 +7639,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 //											 1 : Error - Results string length insufficient to store entire CSV record
 //											 2 : Error - Results string empty
 int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStringLength, const char* pszProjectPathFileName /*=NULL*/,
-														const char* pszSimWeatherPath /*=NULL*/, int iEUseSummaryIdx /*=0*/ )	// SAC 11/04/19
+														const char* pszSimWeatherPath /*=NULL*/, int iEUseSummaryIdx /*=0*/, int iEnergyUseArrayIdx /*=0*/ )	// SAC 11/04/19  // iEnergyUseArrayIdx - SAC 06/10/26 (dev #903)
 {	int iRetVal = 0;
 
 	QString sModelPathFile		= pszProjectPathFileName;
@@ -7307,15 +7720,15 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 		double fEnergyCosts[2][4] = { {0,0,0,0}, {0,0,0,0} };	// Prop/Std -- Elec/NGas/Othr/TOTAL
 		long lDBID_Res[2][9]		= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:ProposedTDV" ), BEMPX_GetDatabaseID( "EnergyUse:PropElecDemand" ), BEMPX_GetDatabaseID( "EnergyUse:PropElecC02" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasC02" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherC02" ), BEMPX_GetDatabaseID( "EnergyUse:ProposedSrc" ) },
 											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StandardTDV" ), BEMPX_GetDatabaseID( "EnergyUse:StdElecDemand"  ), BEMPX_GetDatabaseID( "EnergyUse:StdElecC02"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasC02"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherC02"  ), BEMPX_GetDatabaseID( "EnergyUse:StandardSrc" ) } };
-		int iResArrayIdx[2][9]	= { {	                                   0             ,                                    0               ,                                    0              ,                             iEUseSummaryIdx   ,                                    0             ,                             iEUseSummaryIdx   ,                             iEUseSummaryIdx     ,                             iEUseSummaryIdx    ,                             iEUseSummaryIdx    },		// SAC 11/4/19
-											 {                                    0             ,                                    0               ,                                    0              ,                             iEUseSummaryIdx   ,                                    0             ,                             iEUseSummaryIdx   ,                             iEUseSummaryIdx     ,                             iEUseSummaryIdx    ,                             iEUseSummaryIdx    } };
+		int iResArrayIdx[2][9]	= { {	                                   0             ,                                    0               ,                                    0              ,                          iEnergyUseArrayIdx   ,                                    0             ,                          iEnergyUseArrayIdx   ,                          iEnergyUseArrayIdx     ,                          iEnergyUseArrayIdx    ,                          iEnergyUseArrayIdx    },		// SAC 11/4/19
+											 {                                    0             ,                                    0               ,                                    0              ,                          iEnergyUseArrayIdx   ,                                    0             ,                          iEnergyUseArrayIdx   ,                          iEnergyUseArrayIdx     ,                          iEnergyUseArrayIdx    ,                          iEnergyUseArrayIdx    } };
 		long lDBID_Costs[2][4]	= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecCost" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasCost" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherCost" ), BEMPX_GetDatabaseID( "EnergyUse:PropTotalCost" ) },
 											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecCost"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasCost"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherCost"  ), BEMPX_GetDatabaseID( "EnergyUse:StdTotalCost"  ) } };
 		double fTDVbyFuel[2][3] = { {0,0,0}, {0,0,0} };	// TDV results: Prop/Std - Elec/NGas/Othr  - SAC 2/19/17
 		long lDBID_TDVbF[2][3]	= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecTDV" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasTDV" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherTDV" ) },
 											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecTDV"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasTDV"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherTDV"  ) } };
-		int iTDVbFArrIdx[2][3]	= { {	                             iEUseSummaryIdx  ,                              iEUseSummaryIdx    ,                              iEUseSummaryIdx    },		// SAC 11/4/19
-											 {                              iEUseSummaryIdx  ,                              iEUseSummaryIdx    ,                              iEUseSummaryIdx    } };
+		int iTDVbFArrIdx[2][3]	= { {	                          iEnergyUseArrayIdx  ,                           iEnergyUseArrayIdx    ,                           iEnergyUseArrayIdx    },		// SAC 11/4/19
+											 {                           iEnergyUseArrayIdx  ,                           iEnergyUseArrayIdx    ,                           iEnergyUseArrayIdx    } };
 
 //           "PropElecSupEnergy", BEMP_Flt,  1,  0,  0,  Pres,  "kWh",              0,  0,                39110, "Proposed run Electric energy SUPPLY for this enduse (negative value)",  ""  ; SAC 9/7/18
 //           "PropElecSupTDV",    BEMP_Flt,  1,  0,  0,  Pres,  "kTDV/ft2-yr",      0,  0,                39110, "Proposed run Electric SUPPLY TDV for this enduse (negative value)",  "" 
@@ -8456,12 +8869,21 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
             bool bRulesetNameIncl25 = (saRulesetFN[iRun].find("25") != std::string::npos ? true : false);     // SAC 10/25/22
 				assert( !bOLDRules );
 				char pszResultsRecord[3200] = "\0";       // increased length from 2056->3200 - SAC 05/25/22
-					iAnalRetVal = CMX_PerformAnalysis_CECNonRes( saBEMBaseFN[iRun].c_str() /*pszBEMBasePathFile*/, saRulesetFN[iRun].c_str() /*pszRulesetPathFile*/,
+					//iAnalRetVal = CMX_PerformAnalysis_CECNonRes( saBEMBaseFN[iRun].c_str() /*pszBEMBasePathFile*/, saRulesetFN[iRun].c_str() /*pszRulesetPathFile*/,
+					//							pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, sProcessingPath.c_str(), sProjPathFile.c_str(),
+					//							sBatchLogPathFile.c_str() /* ??? use overall batch OR individual Project Log File ??? */,
+					//							pszUIVersionString, true /*bLoadModelFile*/, saOptionCSV[iRun].c_str(), pszRuleErr, 1024,
+					//							/*true*/ bDisplayProgress, hWnd, pszResultsRecord, 3200, iSecurityKeyIndex, pszSecurityKey );   // SAC 1/10/17
+   				char pszResultsRecord2[3200] = "\0", pszResultsRecord3[3200] = "\0", pszResultsRecord4[3200] = "\0", pszResultsRecord5[3200] = "\0";  
+               char* pszaResultsRecordArray[] = { pszResultsRecord, pszResultsRecord2, pszResultsRecord3, pszResultsRecord4, pszResultsRecord5 };
+               // new export enabling population of multiple ResultsSummary strings (in support of new multi-orientation analysis methods) - SAC 06/10/26 (dev #903)
+					iAnalRetVal = CMX_PerformAnalysisCB_CECNRMF( saBEMBaseFN[iRun].c_str() /*pszBEMBasePathFile*/, saRulesetFN[iRun].c_str() /*pszRulesetPathFile*/,
 												pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, sProcessingPath.c_str(), sProjPathFile.c_str(),
 												sBatchLogPathFile.c_str() /* ??? use overall batch OR individual Project Log File ??? */,
 												pszUIVersionString, true /*bLoadModelFile*/, saOptionCSV[iRun].c_str(), pszRuleErr, 1024,
-												/*true*/ bDisplayProgress, hWnd, pszResultsRecord, 3200, iSecurityKeyIndex, pszSecurityKey );   // SAC 1/10/17
-				if (iAnalRetVal == 33)
+												/*true*/ bDisplayProgress, hWnd, pszaResultsRecordArray, 3200, 5, iSecurityKeyIndex, pszSecurityKey );   // SAC 1/10/17  // SAC 06/10/26
+
+            if (iAnalRetVal == 33)
 				{	// User aborted individual run, so ask if they want to abort ALL remaining runs
 									sErrMsg = boost::str( boost::format( "User aborted batch run %d (record %d)..." ) % (iRun+1) % iaBatchRecNums[iRun] );
 					if (iRun < (iRunsToPerform - 1))
@@ -8585,18 +9007,23 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
                            csvFile.write( GetResultsCSVHeader_NonRes( 3, iCodeType ) );
 							   }
 
-			         	   csvFile.write( pszResultsRecord );
+                        if (strlen( pszaResultsRecordArray[0] ) > 0)
+			         	      csvFile.write( pszaResultsRecordArray[0] );
 
 							   // export CSV results for subsequent results sets (when multiple EUseSummary objects present)
 							   int iCSVRetVal = 0;
 							   long lNumResultsSets=0;
 							   BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), lNumResultsSets );		// SAC 11/04/19
 							   // check for consistency between lNumResultsSets & number of EUseSummary objects??
-							   for (int iResSet = 1; (iResSet < lNumResultsSets && iCSVRetVal < 1); iResSet++)
-							   {	iCSVRetVal = CMX_PopulateCSVResultSummary_NonRes( pszResultsRecord, 2056, sProjPathFile.c_str(), pszSimWeatherPath, iResSet );		// SAC 11/04/19
-							   	if (iCSVRetVal < 1)
-					            	csvFile.write( pszResultsRecord );
-							   }
+							   for (int iResSet = 1; (iResSet < 5 && iResSet < lNumResultsSets && iCSVRetVal < 1); iResSet++)
+                        {  if (strlen( pszaResultsRecordArray[iResSet] ) > 0)
+                              csvFile.write( pszaResultsRecordArray[iResSet] );
+                        }
+                        // prev ver below replaced w/ above since full population of CSVResultSummary not compatible w/ new NRMF multiple-orientation analysis - SAC 06/10/26 (dev #903)
+							   //{	iCSVRetVal = CMX_PopulateCSVResultSummary_NonRes( pszResultsRecord, 2056, sProjPathFile.c_str(), pszSimWeatherPath, iResSet );		// SAC 11/04/19
+							   //	if (iCSVRetVal < 1)
+					         //   	csvFile.write( pszResultsRecord );
+							   //}
                      }
 
 							csvFile.flush();

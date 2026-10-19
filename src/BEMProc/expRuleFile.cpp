@@ -329,14 +329,15 @@ void FormatMultilineString( QString& str )
 // Notes --------------------------------------------------------------------
 //   
 /////////////////////////////////////////////////////////////////////////////
-BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects, LPCSTR bemBaseFileName /*=NULL*/ )   // added bemBaseFileName argument - SAC 12/19/25 (dev #524)   // was RuleProcRead()
+BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects, LPCSTR bemBaseFileName /*=NULL*/, QString* psErrMsg /*=NULL*/ )   // added bemBaseFileName argument - SAC 12/19/25 (dev #524)   // was RuleProcRead()
 {	BOOL bRetVal = FALSE;
 	QString sRuleSetID, sRuleSetVersion, sRdStr;
 	int iStructVer, i, iRd, iNumRuleSubsets=0;		long lRd;	bool bRulesSecure=false;
    // CryptoFile file( fileName, CFile::modeRead | CFile::shareDenyWrite );  // open file
    CryptoFile file( fileName );
    if (!file.open( QIODevice::ReadOnly ))
-	{	//sErrMsg = QString( "Error opening BEMProc ruleset file:  '%s'" ).arg( fileName );
+	{	if (psErrMsg)
+         *psErrMsg = QString( "Error opening BEMProc ruleset file:  '%s'" ).arg( fileName );
 	}
    // confirm RulPrc version match and read in ruleset ID & version strings
    else if (CheckRulesetFileVerAndReadID( file, sRuleSetID, sRuleSetVersion, iStructVer, bRulesSecure ))
@@ -499,7 +500,8 @@ BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects, LPCSTR bemBaseF
             if (pRS)
             {  QString sRuleSubsetFileName = QString( "%1%2.bin" ).arg( sBEMBasePath, pRS->getName() );
                if (!pRS->ReadTablesFromBin( sRuleSubsetFileName ))
-               {  //QString sErrMsg = QString( "\n   Error reading RuleSubset #%1 from:  '%2'\n" ).arg( QString::number(i+1), sRuleSubsetFileName );
+               {  if (psErrMsg)
+                     *psErrMsg = QString( "Error reading RuleSubset #%1 of %2:  '%3'\n" ).arg( QString::number(i+1), QString::number(iNumRuleSubsets), sRuleSubsetFileName );
                   //errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
                   bRetVal = FALSE;
          }  }  }

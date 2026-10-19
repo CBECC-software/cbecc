@@ -1112,7 +1112,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 			{	int iTabCtrlWd, iTabCtrlHt;
 				VERIFY( GetDialogTabDimensions( i1ClassToEdit, iTabCtrlWd, iTabCtrlHt ) );
 				CString sDialogCaption;
-				GetDialogCaption( i1ClassToEdit, sDialogCaption );
+				GetDialogCaption( i1ClassToEdit, sDialogCaption, iTabCtrlWd );
 							int iMaxTabs = 0;
 							long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
 							if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", i1ClassToEdit ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
@@ -1120,12 +1120,14 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 							else
 								iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( i1ClassToEdit, 0 /*iUIMode*/ );
 				siSubordTabbedDlgsDisplayed++;
+            int iSwapFirstTabID = GetReplacementFirstDlgTabID( i1ClassToEdit );   // SAC 06/11/26 (dev #903)
             CSACBEMProcDialog td( i1ClassToEdit, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
                               0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, iMaxTabs,
                               (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip, 
+                              FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
             if (td.DoModal() == IDOK)
             {}
             siSubordTabbedDlgsDisplayed--;
@@ -1298,13 +1300,15 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				int iTabCtrlWd, iTabCtrlHt;
 				VERIFY( GetDialogTabDimensions( eiBDBCID_PolyLp, iTabCtrlWd, iTabCtrlHt ) );
 				CString sDialogCaption;
-				GetDialogCaption( eiBDBCID_PolyLp, sDialogCaption );
+				GetDialogCaption( eiBDBCID_PolyLp, sDialogCaption, iTabCtrlWd );
+            int iSwapFirstTabID = GetReplacementFirstDlgTabID( eiBDBCID_PolyLp );   // SAC 06/11/26 (dev #903)
 				CSACBEMProcDialog td( eiBDBCID_PolyLp, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
 										0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( eiBDBCID_PolyLp, 0 /*iUIMode*/ ) /*iMaxTabs*/,
 										(sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip, 
+                              FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
 				if (td.DoModal() == IDOK)
 				{}
 			}
@@ -1766,7 +1770,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
       		iDlgClassID = eiBDBCID_DwellUnitType;
       	}
 			CString sDialogCaption;
-			GetDialogCaption( iDlgClassID, sDialogCaption );
+			GetDialogCaption( iDlgClassID, sDialogCaption, iDlgWd );
          CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -1782,7 +1786,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
       else if (/*ebUI_CARES &&*/ wAction == 3030)	// SAC 2/22/17 - updated from 3008->3030 due to overlap in range used to present PolyLp dialog (now shared between NRes & Res)  // enable for both SFam & NRMF - SAC 05/05/26 (dev #861)
       {  int iCID_ResHVACSys = (ebUI_CANRES ? eiBDBCID_ResHVACSys : eiBDBCID_HVACSys);  // SAC 05/05/26
          CString sDialogCaption;
-			GetDialogCaption( iCID_ResHVACSys, sDialogCaption );
+			GetDialogCaption( iCID_ResHVACSys, sDialogCaption, 470 );
          // Present dialog to collect Multifamily Dwelling Unit data
          CSACDlg dlgDwlgUnit( pDlg, iCID_ResHVACSys, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
@@ -1800,7 +1804,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 		{
 			int iDlgHt = 600, iDlgWd = 770;
 			CString sDialogCaption;
-			GetDialogCaption( eiBDBCID_Proj, sDialogCaption );
+			GetDialogCaption( eiBDBCID_Proj, sDialogCaption, iDlgWd );
          CSACDlg dlgProj( pDlg, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -1902,7 +1906,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
       		iDlgWd = 500;		//					  was: 400;
       	}
 			CString sDialogCaption;
-			GetDialogCaption( iDlgClassID, sDialogCaption );
+			GetDialogCaption( iDlgClassID, sDialogCaption, iDlgWd );
          CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -1927,7 +1931,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				if (iRSDFObjIdx >= 0)
 				{	BEMPX_SetActiveObjectIndex( pRSDF->getClass()->get1BEMClassIdx(), iRSDFObjIdx );
 					CString sDialogCaption;
-					GetDialogCaption( iDlgClassID, sDialogCaption );
+					GetDialogCaption( iDlgClassID, sDialogCaption, iDlgWd );
 		         CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, 190 /* lDBID_ScreenID */, 0, 0, 0,
             		               esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 											iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -1949,7 +1953,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
       {	int iDlgHt = 710, iDlgWd = 600;  // Present dialog to collect Multifamily Dwelling Unit data
       	int iDlgClassID = eiBDBCID_DwellUnitType;
 			CString sDialogCaption;
-			GetDialogCaption( iDlgClassID, sDialogCaption );
+			GetDialogCaption( iDlgClassID, sDialogCaption, iDlgWd );
          CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -2003,7 +2007,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          iDlgWd = FontX(iDlgWd) +   (eiTabDlgCtrlMarg * 2) +   (iPaddedBorderWd * 2) + 8;
          iDlgHt = FontY(iDlgHt) + /*(eiTabDlgCtrlMarg * 3) +*/ (iPaddedBorderWd * 2) + GetSystemMetrics(SM_CYCAPTION) + iDoneBtnHt + 8;
 			CString sDialogCaption;
-			GetDialogCaption( eiBDBCID_Proj, sDialogCaption );
+			GetDialogCaption( eiBDBCID_Proj, sDialogCaption, iDlgWd );
          CSACDlg dlgProjSub( pDlg, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -2019,7 +2023,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
       else if (ebUI_CANRES && wAction == 3050)
       {
 			CString sDialogCaption;
-			GetDialogCaption( eiBDBCID_Window, sDialogCaption );
+			GetDialogCaption( eiBDBCID_Window, sDialogCaption, 900 );
          // Present dialog to collect Multifamily Dwelling Unit data
          CSACDlg dlgWinShadesDiagram( pDlg, eiBDBCID_Window, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
@@ -2040,7 +2044,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
       	int iDlgClassID = eiBDBCID_ResOtherZn;
          lRetVal = 0;	// no data modified by this call (yet), so don't perform Data Modified stuff
 			CString sDialogCaption;
-			GetDialogCaption( iDlgClassID, sDialogCaption );
+			GetDialogCaption( iDlgClassID, sDialogCaption, iDlgWd );
          CSACDlg dlgAS( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -2166,10 +2170,13 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                         qsCUACErrMsg = pszCUACErrMsg;
                      else
                         qsCUACErrMsg = QString( "CUAC analysis setup error - unable to download electric utility rate (code %1)" ).arg( QString::number( iCUACRetVal ) );
+                     if (qsCUACErrMsg.indexOf( "rate license to" ) > 0)       // SAC 09/10/26 (dev #713)
+                        BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CPR_ElecUtilityRateExpMsg" ), BEMP_QStr, (void*) &qsCUACErrMsg, BEMO_User, -1, BEMS_ProgDefault );
                }  }
 
                if (!bDoingBatch && iCUACRetVal == 0 && BEMPX_GetInteger( BEMPX_GetDatabaseID( "CUAC:GasTariffGen"  ), lGasTariffGen  ) && lGasTariffGen > 1)
-               {  iCUACRetVal = CMX_RateDownload(  "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sCurrentProjPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/
+               {  qsCUACErrMsg.clear();
+                  iCUACRetVal = CMX_RateDownload(  "Gas", 95, "CUAC:CPR_GasUtilityRateRef", sCurrentProjPath, /*sModelPathOnly, sModelFileOnly, qsBEMBaseDir, iRulesetCodeYear,*/
                                      bStoreBEMDetails, bSilent, bCUACVerbose,
                                      bEnableResearchMode, NULL /*pCompRuleDebugInfo*/, 1 /*SecKeyIndex*/, (ebUI_CANRES ? esSecurityKey : esResSecurityKey),    // SAC 11/09/25 (dev #433)
                                      (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress), 
@@ -2182,7 +2189,9 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
                   {  if (strlen( pszCUACErrMsg ) > 0)
                         qsCUACErrMsg = pszCUACErrMsg;
                      else
-                        qsCUACErrMsg = QString( "CUAC analysis setup error - unable to download electric utility rate (code %1)" ).arg( QString::number( iCUACRetVal ) );
+                        qsCUACErrMsg = QString( "CUAC analysis setup error - unable to download gas utility rate (code %1)" ).arg( QString::number( iCUACRetVal ) );
+                     if (qsCUACErrMsg.indexOf( "rate license to" ) > 0)       // SAC 09/10/26 (dev #713)
+                        BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:CPR_ElecUtilityRateExpMsg" ), BEMP_QStr, (void*) &qsCUACErrMsg, BEMO_User, -1, BEMS_ProgDefault );
                }  }
 
                if (iCUACRetVal == 0)
@@ -2324,7 +2333,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          iDlgWd = FontX(iDlgWd) +   (eiTabDlgCtrlMarg * 2) +   (iPaddedBorderWd * 2) + 8;
          iDlgHt = FontY(iDlgHt) + /*(eiTabDlgCtrlMarg * 3) +*/ (iPaddedBorderWd * 2) + GetSystemMetrics(SM_CYCAPTION) + iDoneBtnHt + 8;
 			CString sDialogCaption;
-			GetDialogCaption( eiBDBCID_CUAC, sDialogCaption );
+			GetDialogCaption( eiBDBCID_CUAC, sDialogCaption, iDlgWd );
          CSACDlg dlgCUAC( pDlg, eiBDBCID_CUAC, 0 /* lDBID_ScreenIdx */, lDlgID /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
@@ -2755,7 +2764,7 @@ void CMainFrame::OnQuickEdit()
 		int iTabCtrlWd, iTabCtrlHt;
 		VERIFY( GetDialogTabDimensions( siQuickCr8Class, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 		CString sDialogCaption;
-		GetDialogCaption( siQuickCr8Class, sDialogCaption );   // SAC 1/8/12
+		GetDialogCaption( siQuickCr8Class, sDialogCaption, iTabCtrlWd );   // SAC 1/8/12
 							int iMaxTabs = 0;
 							long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
 							if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", siQuickCr8Class ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
@@ -2766,6 +2775,7 @@ void CMainFrame::OnQuickEdit()
 		if (siQuickCr8Class == eiBDBCID_Proj)
 			AutoSaveAsPrecheck( siQuickCr8Class );		// SAC 9/30/20
 
+      int iSwapFirstTabID = GetReplacementFirstDlgTabID( siQuickCr8Class );   // SAC 06/11/26 (dev #903)
       CWnd* pWnd = GetFocus();
 //      CBEMDialog td( siQuickCr8Class, pWnd );
             //AfxMessageBox ( "accessing dialog from MainFrm" );
@@ -2775,7 +2785,8 @@ void CMainFrame::OnQuickEdit()
                         (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );   // SAC 1/19/12
+								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,    // SAC 1/19/12
+                        FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
       if (td.DoModal() == IDOK)
       {}
 
@@ -4102,6 +4113,16 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "DownloadVerbose,%d,", iDownloadVerbose );
 			sOptionsCSVString += sOptTemp;
 		}
+      int iSFamStdPropOrient = ReadProgInt( sOptsSec, "SFamStdPropOrient", 0 /*default*/ );	// SAC 06/30/26 (dev #983)
+		if (iSFamStdPropOrient > 0)
+		{	sOptTemp.Format( "SFamStdPropOrient,%d,", iSFamStdPropOrient );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iSFamPropOrientStdPeakCooling = ReadProgInt( sOptsSec, "SFamPropOrientStdPeakCooling", 0 /*default*/ );	   // SAC 07/07/26 (dev #983)
+		if (iSFamPropOrientStdPeakCooling > 0)
+		{	sOptTemp.Format( "SFamPropOrientStdPeakCooling,%d,", iSFamPropOrientStdPeakCooling );
+			sOptionsCSVString += sOptTemp;
+		}
    }
    //#endif
 
@@ -4125,6 +4146,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       int iLogCSESimulation = ReadProgInt( sOptsSec, "LogCSESimulation", 0 /*default*/ );	// SAC 1/12/15  // was: SimLoggingOption - SAC 09/22/25
 		if (iLogCSESimulation > 0)
 		{	sOptTemp.Format( "LogCSESimulation,%d,", iLogCSESimulation );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iMultiOrientationAnalysis = ReadProgInt( sOptsSec, "MultiOrientationAnalysis", 0 /*default*/ );	// SAC 05/28/26 (dev #903)
+		if (iMultiOrientationAnalysis > 0)
+		{	sOptTemp.Format( "MultiOrientationAnalysis,%d,", iMultiOrientationAnalysis );
 			sOptionsCSVString += sOptTemp;
 		}
 
@@ -4379,16 +4405,19 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 		sProxyINIOptions += sProxyTemp;
 	}
 	CString sTemp, sOptionsCSVString;
+   CString sCurrentProjFileName;
+   CDocument* pDoc = GetActiveDocument();
 
    //#ifdef UI_CANRES
    if (ebUI_CANRES)        // single Res/Com app - SAC 09/01/25 (gh dev #433)
    {
 #ifndef UI_SFAMONLY
-   CDocument* pDoc = GetActiveDocument();			bOLDRules;
+   		bOLDRules;
    if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
         ( ((CComplianceUIDoc*) pDoc)->GetPathName().IsEmpty() ||
           ((CComplianceUIDoc*) pDoc)->CUISaveModified( "batch processing" ) ) )
    {
+      sCurrentProjFileName = pDoc->GetPathName();
 		CString sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, sCompareCommandLine;		bool bBRObjCreated = false;
    	int iCID_BatchRuns = 0;
    	iCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
@@ -4558,12 +4587,12 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
    }
    //#elif UI_CARES
    else if (ebUI_CARES)         // single Res/Com app - SAC 09/01/25 (gh dev #433)
-   {
-   CDocument* pDoc = GetActiveDocument();			bOLDRules;
+   {		bOLDRules;
    if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
         ( ((CComplianceUIDoc*) pDoc)->GetPathName().IsEmpty() ||
           ((CComplianceUIDoc*) pDoc)->CUISaveModified( "batch processing" ) ) )
    {
+      sCurrentProjFileName = pDoc->GetPathName();
 		CString sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, sCompareCommandLine;		bool bBRObjCreated = false;
    	int iCID_BatchRuns = 0;
    	iCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
@@ -4576,7 +4605,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 		{ // typical scenario where we need to create a BatchRuns object
 			if (BEMPX_CreateObject( iCID_BatchRuns ) != NULL)
 				bBRObjCreated = true;
-// ?? delete BatchRuns following batch analysis (or keep around for subsequent batch runs) ??
+               // ?? delete BatchRuns following batch analysis (or keep around for subsequent batch runs) ??
 		}
 
 		if (iCID_BatchRuns < 1 || BEMPX_GetNumObjects( iCID_BatchRuns ) < 1)
@@ -4749,6 +4778,11 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
    //#else
 	   AfxMessageBox( "Batch processing not available in this UI mode." );
    //#endif
+
+   // added code to RE-load the project file loaded prior to batch analysis - SAC 09/18/26 (dev #1132)
+   if ( (ebUI_CANRES || ebUI_CARES) && FileExists( sCurrentProjFileName ) )
+		((CComplianceUIDoc*) pDoc)->OpenTheFile( sCurrentProjFileName, TRUE /*bWriteToLog*/, FALSE /*bRestore*/, NULL /*pszNewRuleFile*/,
+            													-1 /*lRulesetSymVal*/, FALSE /*bNormalRulesetUpdates*/ );
 }
 
 
@@ -6009,79 +6043,91 @@ void CMainFrame::OnUpdateToolsRunTest(CCmdUI* pCmdUI)		// SAC 06/16/22
 
 void CMainFrame::OnToolsRunTest()		// SAC 06/16/22
 {
-//   std::string sModelkitBatPathFile        = "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC-Com_MFamRestructure\\CBECC-Com64\\Modelkit\\modelkit-catalyst\\bin\\modelkit.bat";
-//   std::string sModelkitRubyScriptPathFile = "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC-Com_MFamRestructure\\CBECC-Com64\\Modelkit\\hybrid-hvac.rb";
-//   std::string sIDFPath          = "D:\\Dev\\CBECC-VS19\\bin\\Com\\Projects\\test\\2022\\ModelkitHybridHVAC\\1\\";
-//   std::string sIDFFilenameNoExt = "020012-OffSml-CECStd - ap";
-//   char pszModelkitBatRetString[1024] = "\0";
-//   int iModelkitBatRetVal = CMX_ExecuteModelkitBat( sModelkitBatPathFile.c_str(), sModelkitRubyScriptPathFile.c_str(), 
-//                        sIDFPath.c_str(), sIDFFilenameNoExt.c_str(), true /*bVerboseOutput*/,
-//                        pszModelkitBatRetString, 1023 );
-//   if (strlen( pszModelkitBatRetString ) > 0)
-//      BEMMessageBox( QString( "Modelkit test returned %1:  %2" ).arg( QString::number( iModelkitBatRetVal ), pszModelkitBatRetString ) );  
-//   else
-//      BEMMessageBox( QString( "Modelkit test returned %1:  (no message)" ).arg( QString::number( iModelkitBatRetVal ) ) );  
-// switch from CMX_ExecuteModelkitBat() above to BEMPX_ReadComponentFromJSONFile() below - SAC 08/15/23
+      //   std::string sModelkitBatPathFile        = "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC-Com_MFamRestructure\\CBECC-Com64\\Modelkit\\modelkit-catalyst\\bin\\modelkit.bat";
+      //   std::string sModelkitRubyScriptPathFile = "D:\\Dev\\svn-CEC\\SF_CBECC-Com\\branches\\CBECC-Com_MFamRestructure\\CBECC-Com64\\Modelkit\\hybrid-hvac.rb";
+      //   std::string sIDFPath          = "D:\\Dev\\CBECC-VS19\\bin\\Com\\Projects\\test\\2022\\ModelkitHybridHVAC\\1\\";
+      //   std::string sIDFFilenameNoExt = "020012-OffSml-CECStd - ap";
+      //   char pszModelkitBatRetString[1024] = "\0";
+      //   int iModelkitBatRetVal = CMX_ExecuteModelkitBat( sModelkitBatPathFile.c_str(), sModelkitRubyScriptPathFile.c_str(), 
+      //                        sIDFPath.c_str(), sIDFFilenameNoExt.c_str(), true /*bVerboseOutput*/,
+      //                        pszModelkitBatRetString, 1023 );
+      //   if (strlen( pszModelkitBatRetString ) > 0)
+      //      BEMMessageBox( QString( "Modelkit test returned %1:  %2" ).arg( QString::number( iModelkitBatRetVal ), pszModelkitBatRetString ) );  
+      //   else
+      //      BEMMessageBox( QString( "Modelkit test returned %1:  (no message)" ).arg( QString::number( iModelkitBatRetVal ) ) );  
+      // switch from CMX_ExecuteModelkitBat() above to BEMPX_ReadComponentFromJSONFile() below - SAC 08/15/23
 
 
-// removed - SAC 01/14/26
-// //      QString qsMsg;
-// //      std::vector<std::string> vsProjects;
-// //      std::vector<int> viProjectIDs;
-// //   //   int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev2-0-0.accdb", vsProjects, viProjectIDs );
-// //      int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev32-0.mdb", vsProjects, viProjectIDs );
-// //      qsMsg = QString( "CMX_GetCUACDBProjectList() returned %1, %2 projects" ).arg( QString::number( iGetCUACProjListRetVal ), QString::number( vsProjects.size() ) );
-// //      if (vsProjects.size() > 0)
-// //      {  for (int i=0; i < vsProjects.size(); i++)
-// //         {  qsMsg += QString( "\n   %1" ).arg( vsProjects[i].c_str() );
-// //            std::string sOutputPath = "C:/Dev/CUAC-testing/CUAC/54-CUACToolMiner-b/";
-//             std::string sOutputPath = "C:/CUAC/exportedTables/";
-// //            sOutputPath += vsProjects[i];
-// //
-// //            int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i] );  //, const std::vector<std::string>& sTable_names)
-//             int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev32-0.mdb", sOutputPath, "proj name" );  //, const std::vector<std::string>& sTable_names)
-// //            qsMsg += QString( "\n      export retval: %1" ).arg( QString::number( iExportRetVal ) );
-// //
-// //            int iElecSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], true );
-// //            qsMsg += QString( "\n      export Elec summary table retval: %1" ).arg( QString::number( iElecSummaryTableRetVal ) );
-// //
-// //            int iGasSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], false );
-// //            qsMsg += QString( "\n      export Gas summary table retval: %1" ).arg( QString::number( iGasSummaryTableRetVal ) );
-// //         }
-// //      }
-// //      BEMMessageBox( qsMsg );
+      // removed - SAC 01/14/26
+      // //      QString qsMsg;
+      // //      std::vector<std::string> vsProjects;
+      // //      std::vector<int> viProjectIDs;
+      // //   //   int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev2-0-0.accdb", vsProjects, viProjectIDs );
+      // //      int iGetCUACProjListRetVal = CMX_GetCUACDBProjectList( "C:/CUAC/CUACTool-Rev32-0.mdb", vsProjects, viProjectIDs );
+      // //      qsMsg = QString( "CMX_GetCUACDBProjectList() returned %1, %2 projects" ).arg( QString::number( iGetCUACProjListRetVal ), QString::number( vsProjects.size() ) );
+      // //      if (vsProjects.size() > 0)
+      // //      {  for (int i=0; i < vsProjects.size(); i++)
+      // //         {  qsMsg += QString( "\n   %1" ).arg( vsProjects[i].c_str() );
+      // //            std::string sOutputPath = "C:/Dev/CUAC-testing/CUAC/54-CUACToolMiner-b/";
+      //             std::string sOutputPath = "C:/CUAC/exportedTables/";
+      // //            sOutputPath += vsProjects[i];
+      // //
+      // //            int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i] );  //, const std::vector<std::string>& sTable_names)
+      //             int iExportRetVal = CMX_ExportCUACDBProjectTables( "C:/CUAC/CUACTool-Rev32-0.mdb", sOutputPath, "proj name" );  //, const std::vector<std::string>& sTable_names)
+      // //            qsMsg += QString( "\n      export retval: %1" ).arg( QString::number( iExportRetVal ) );
+      // //
+      // //            int iElecSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], true );
+      // //            qsMsg += QString( "\n      export Elec summary table retval: %1" ).arg( QString::number( iElecSummaryTableRetVal ) );
+      // //
+      // //            int iGasSummaryTableRetVal = CMX_ExportCUACDBSummaryTable( "C:/CUAC/CUACTool-Rev2-0-0.accdb", sOutputPath, vsProjects[i], false );
+      // //            qsMsg += QString( "\n      export Gas summary table retval: %1" ).arg( QString::number( iGasSummaryTableRetVal ) );
+      // //         }
+      // //      }
+      // //      BEMMessageBox( qsMsg );
 
 
-// SAC 01/14/26 (dev #689)
-   CDocument* pDoc = GetActiveDocument();
-   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))   // SAC 08/16/23
-   {	CString sInputFile = pDoc->GetPathName();
-      CString sDbgFileNameRoot = sInputFile.Left( sInputFile.ReverseFind('.') );
-            CString sDbgFileName = sDbgFileNameRoot + CString(" - b4 XH rate.ibd-Detail");
-            BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
-                                    false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
+      //    // SAC 01/14/26 (dev #689)
+      //    CDocument* pDoc = GetActiveDocument();
+      //    if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))   // SAC 08/16/23
+      //    {	CString sInputFile = pDoc->GetPathName();
+      //       CString sDbgFileNameRoot = sInputFile.Left( sInputFile.ReverseFind('.') );
+      //             CString sDbgFileName = sDbgFileNameRoot + CString(" - b4 XH rate.ibd-Detail");
+      //             BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
+      //                                     false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
+      // 
+      // 
+      //             QString qsElecErrMsg, qsGasErrMsg;
+      //             CString sElecRateName = "XH Elec Rate", sGasRateName = "XH Gas Rate";
+      //             //iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\Dev\\CUAC-testing\\CUAC\\45-CPRrates\\rate.json", "CPR_UtilityRate", (const char*) sRateName, -1, &qsErrMsg );
+      //             int iReadElecJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\sce-schedule-tou-d-4-9pm.json", "XH_UtilityRate", (const char*) sElecRateName, -1, &qsElecErrMsg,
+      //                                                                    NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 01/15/26 (dev #689)
+      //                                                                //  , "PathFileLoadedFrom", (iRateProcGen > 1 ? "EncodedRateName" : NULL) );
+      //                      //int  BEMPROC_API __cdecl BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
+      //                      //                                                          int iBEMProcIdx=-1, QString* psMsg=NULL, const char* fileNamePropertyType=NULL,       // SAC 08/15/23
+      //                      //                                                          const char* propertyToIncludeInObjName=NULL, bool bRenameReservedBEMProperties=false );    // SAC 12/18/23  // bRenameReservedBEMProperties - SAC 01/15/26 (dev #689)
+      //             // int iReadGasJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\pge-gas-schedule-g-1.json", "XH_UtilityRate", (const char*) sGasRateName, -1, &qsGasErrMsg,
+      //             //                                                        NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 05/12/26 (dev #689)
+      //             // BEMMessageBox( QString( "BEMPX_ReadComponentFromJSONFile() -\n  Elec returned: %1 - error msg: %2\n  Gas  returned: %3 - error msg: %4" ).arg( QString::number( iReadElecJSONRetVal ), qsElecErrMsg, QString::number( iReadGasJSONRetVal ), qsGasErrMsg ) );
+      //             BEMMessageBox( QString( "BEMPX_ReadComponentFromJSONFile() -\n  Elec returned: %1 - error msg: %2" ).arg( QString::number( iReadElecJSONRetVal ), qsElecErrMsg ) );
+      // 
+      //             // default utility rate objects
+      //             CMX_EvaluateRuleset( "CUAC_DefaultGenXRates", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
+      // 
+      //             sDbgFileName = sDbgFileNameRoot + CString(" - aft XH rate.ibd-Detail");
+      //             BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
+      //                                     false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
+      //    }
 
+   // // SAC 10/08/26 (dev #689)
+   // std::vector<std::string> vsUtilRateParseErrors;
+   // int iRateEnumsFromFiles = CMX_DefineUtilityRateEnumsFromFiles( "C:\\CBECC\\git-vscode\\CBECC-Dev\\CBECC\\Data\\UtilityRates\\G3\\", vsUtilRateParseErrors, 0 /*iRateGenID*/ );   // SAC 10/08/26 (dev #689)
+   // if (iRateEnumsFromFiles > 0)
+   //    BEMMessageBox( QString( "CMX_DefineUtilityRateEnumsFromFiles() success - %1 rate files processed" ).arg( QString::number( iRateEnumsFromFiles ) ) );
+   // else if (vsUtilRateParseErrors.size() > 0)
+   //    BEMMessageBox( vsUtilRateParseErrors[0].c_str() );
+   // else
+   //    BEMMessageBox( QString( "CMX_DefineUtilityRateEnumsFromFiles() failed" ) );
 
-            QString qsElecErrMsg, qsGasErrMsg;
-            CString sElecRateName = "XH Elec Rate", sGasRateName = "XH Gas Rate";
-            //iReadJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\Dev\\CUAC-testing\\CUAC\\45-CPRrates\\rate.json", "CPR_UtilityRate", (const char*) sRateName, -1, &qsErrMsg );
-            int iReadElecJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\sce-schedule-tou-d-4-9pm.json", "XH_UtilityRate", (const char*) sElecRateName, -1, &qsElecErrMsg,
-                                                                   NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 01/15/26 (dev #689)
-                                                               //  , "PathFileLoadedFrom", (iRateProcGen > 1 ? "EncodedRateName" : NULL) );
-//int  BEMPROC_API __cdecl BEMPX_ReadComponentFromJSONFile( const char* fileName, const char* objType, const char* objName,
-//                                                          int iBEMProcIdx=-1, QString* psMsg=NULL, const char* fileNamePropertyType=NULL,       // SAC 08/15/23
-//                                                          const char* propertyToIncludeInObjName=NULL, bool bRenameReservedBEMProperties=false );    // SAC 12/18/23  // bRenameReservedBEMProperties - SAC 01/15/26 (dev #689)
-            int iReadGasJSONRetVal = BEMPX_ReadComponentFromJSONFile( "C:\\CBECC\\CUAC\\XeroHome-Rates\\pge-gas-schedule-g-1.json", "XH_UtilityRate", (const char*) sGasRateName, -1, &qsGasErrMsg,
-                                                                   NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 05/12/26 (dev #689)
-            BEMMessageBox( QString( "BEMPX_ReadComponentFromJSONFile() -\n  Elec returned: %1 - error msg: %2\n  Gas  returned: %3 - error msg: %4" ).arg( QString::number( iReadElecJSONRetVal ), qsElecErrMsg, QString::number( iReadGasJSONRetVal ), qsGasErrMsg ) );
-
-            // default utility rate objects
-            CMX_EvaluateRuleset( "CUAC_DefaultGenXRates", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
-
-            sDbgFileName = sDbgFileNameRoot + CString(" - aft XH rate.ibd-Detail");
-            BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/, 0 /*iFileType*/,
-                                    false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/ );
-   }
 
 // 	CDocument* pDoc = GetActiveDocument();
 // 	if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))   // SAC 08/16/23
@@ -6461,19 +6507,21 @@ void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
 						{	int iTabCtrlWd, iTabCtrlHt, iBDBClass = eiBDBCID_Proj;
 							VERIFY( GetDialogTabDimensions( iBDBClass, iTabCtrlWd, iTabCtrlHt ) );
 							CString sDialogCaption;
-							GetDialogCaption( iBDBClass, sDialogCaption );   // SAC 1/8/12
+							GetDialogCaption( iBDBClass, sDialogCaption, iTabCtrlWd );   // SAC 1/8/12
 							int iMaxTabs = 0;
 							long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
 							if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", iBDBClass ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
 								iMaxTabs = lNumUIDialogTabs;
 							else
 								iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( iBDBClass, 0 /*iUIMode*/ );
+                     int iSwapFirstTabID = GetReplacementFirstDlgTabID( iBDBClass );   // SAC 06/11/26 (dev #903)
 			            CSACBEMProcDialog td( iBDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
 			                              0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, iMaxTabs,
 			                              (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 													NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 													NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-													ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+													ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,
+                                       FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
 			            if (td.DoModal() == IDOK)
 			            {}
 						}
@@ -6767,13 +6815,15 @@ void CMainFrame::OnFileImportNonResGeometry()    // SAC 2/20/17
 						{	int iTabCtrlWd, iTabCtrlHt, iBDBClass = eiBDBCID_PVArray;
 							VERIFY( GetDialogTabDimensions( iBDBClass, iTabCtrlWd, iTabCtrlHt ) );
 							CString sDialogCaption;
-							GetDialogCaption( iBDBClass, sDialogCaption );   // SAC 1/8/12
+							GetDialogCaption( iBDBClass, sDialogCaption, iTabCtrlWd );   // SAC 1/8/12
+                     int iSwapFirstTabID = GetReplacementFirstDlgTabID( iBDBClass );   // SAC 06/11/26 (dev #903)
 			            CSACBEMProcDialog td( iBDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
 			                              0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( iBDBClass, 0 /*iUIMode*/ ) /*iMaxTabs*/,
 			                              (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 													NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 													NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-													ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+													ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,
+                                       FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
 			            if (td.DoModal() == IDOK)
 			            {}
 						}
@@ -7136,12 +7186,14 @@ void CMainFrame::OnToolsGenerateModel()
 		//GetDialogCaption( iCID_Model, sDialogCaption );   // SAC 1/8/12
 	CString sSaveDataModRulelist = esDataModRulelist;
 	esDataModRulelist = "Default_Model";
+      int iSwapFirstTabID = GetReplacementFirstDlgTabID( iCID_Model );   // SAC 06/11/26 (dev #903)
       CSACBEMProcDialog td( iCID_Model, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd /*this*/,
                         0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( iCID_Model, 0 /*iUIMode*/ ) /*iMaxTabs*/,
                         (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Generate",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist - no effect*/, FALSE /*bPostHelpMessageToParent*/,
-								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );   // SAC 1/19/12
+								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,   // SAC 1/19/12
+                        FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
       bool bGenModel = (td.DoModal() == IDOK);
 	esDataModRulelist = sSaveDataModRulelist;
 
@@ -7577,7 +7629,12 @@ static char BASED_CODE szPerfWthr1[]  = "Weather File '";
 static char BASED_CODE szPerfWthr2[]  = "' Not Found.";
 
 #define  CSV_RESULTSLENGTH  3200
-static char pszCSVResultSummary[ CSV_RESULTSLENGTH ];
+static char pszCSVResultSummary[  CSV_RESULTSLENGTH ];
+static char pszCSVResultSummary2[ CSV_RESULTSLENGTH ];   // added to enable NR analysis to return 4 individual results summaries - SAC 06/10/26 (dev #903)
+static char pszCSVResultSummary3[ CSV_RESULTSLENGTH ];
+static char pszCSVResultSummary4[ CSV_RESULTSLENGTH ];
+#define  CSV_RESULTSARRAYSIZE  4
+static char* pszaCSVResultSummaryArray[] = { pszCSVResultSummary, pszCSVResultSummary2, pszCSVResultSummary3, pszCSVResultSummary4 };
 
 afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 {
@@ -7777,7 +7834,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 			pszAnalOpts = (const char*) sOptionsCSVString;
 
 					EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
-		int iSimResult = CMX_PerformAnalysisCB_CECRes(	esBEMBasePath /*pszBEMBasePathFile*/, NULL /*pszRulesetPath*/,	sCSEPath /*pszCSEEXEPath*/, sWthrPath /*pszCSEWeatherPath*/,    // added esBEMBasePath - SAC 06/03/24 (CUAC)
+		int iSimResult = CMX_PerformAnalysisCB_CECRes( esBEMBasePathFile /*pszBEMBasePathFile*/, esRulesetPathFile /*pszRulesetPath*/,	sCSEPath /*pszCSEEXEPath*/, sWthrPath /*pszCSEWeatherPath*/,    // added esBEMBasePath - SAC 06/03/24 (CUAC)  // SAC 07/07/26 (dev #983)
 																	sT24DHWPath /*pszDHWDLLPath*/, NULL /*pszDHWWeatherPath*/,
 																	sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/, NULL /*pszLogPathFile*/,
 																	sUIVersionString, false /*bLoadModelFile*/, pszAnalOpts, pszAnalysisErr, 2056, true /*bDisplayProgress*/,
@@ -7820,10 +7877,12 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
                // SAC 08/08/23 - 25->26 inserted 2 'Peak Cool' (kWh) columns @ end of list of Proposed Elec enduses (col AC) & same for Std (col CI) (2025)
                // SAC 08/06/24 - appended 4 cols: PV Exports / Prop & Std / kWh/yr & % - request from CEC (26->27)
                // SAC 10/29/25 - major overhaul removing dozens of no-longer-used columns and adding a few more for 2025+ analysis (27->28) (dev #506)
-               int iResSummaryCSVFormatVer = (lEnergyCodeYear < 2025 ? 27 : 28);    // SAC 10/29/25 (dev #506)
+               // 28->29 added three columns to far right - Proposed-Orientation Standard Peak Cooling / Energy, Limit & Margin - SAC 07/08/26 (dev #983)
+               // 29->30 added two columns to far right - proposed battery peak cooling credit / Energy & Credit - SAC 07/08/26 (dev #989)
+               int iResSummaryCSVFormatVer = (lEnergyCodeYear < 2025 ? 27 : 30);    // SAC 10/29/25 (dev #506)  // SAC 07/08/26 (dev #983)  // SAC 07/08/26 (dev #989)
 		   		CString sDfltResFN;  // = "AnalysisResults-v27.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
                sDfltResFN.Format( "AnalysisResults-v%d.csv", iResSummaryCSVFormatVer );
-		   		int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
+               int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
 		   																				iResSummaryCSVFormatVer, sOriginalFileName );
 		   		if (iCSVResVal == 0)
 		   		{
@@ -7989,9 +8048,9 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 		   		if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary object is ALWAYS the active obejct as dialog presented
 		   			BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
 		         int iMaxTabs = 99;  // SAC 4/11/19 - enable C02 Details acces regardless of INI option - was:  (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
-		   		CString sDialogCaption;
-		   		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 		   		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
+		   		CString sDialogCaption;
+		   		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption, iEUSTabCtrlWd );
 
 		   		int iResultsScreenUIMode = 0;		// SAC 4/11/19 - reduced results display for EAA (and non-EDR) analysis (tic #1082)
 		   		long lRunScope=0, lIsAddAlone=0;
@@ -8004,13 +8063,15 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 		   		if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
 		   			iMaxTabs = lNumUIDialogTabs;
 
+               int iSwapFirstTabID = GetReplacementFirstDlgTabID( eiBDBCID_EUseSummary );   // SAC 06/11/26 (dev #903)
 		   		CWnd* pWnd = GetFocus();
 		   		CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*uiMode*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
 		   		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
 		   		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 		   								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 		   								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-		   								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+		   								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,
+                                 FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
 		   		if (BEMPX_GetUIActiveFlag())
 		   			td.DoModal();
 		   	}
@@ -8075,7 +8136,9 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 				}
 				else if (bRptGenOfflineConfirmed && iSimResult == BEMAnal_CECRes_CompRptWriteError)		// don't report error here if only problem was report generator that user was already alerted of
 					sErrResultMsg.Empty();
-				else
+				else if (iSimResult == BEMAnal_CECRes_RptGenPDFExtract)
+					sErrResultMsg.Format( "Error encountered extracting PDF report from server (error code %d).", iSimResult );    // SAC 05/14/26
+            else
 					sErrResultMsg.Format( "Error encountered performing analysis (error code %d).", iSimResult );
 			}
 			if (!sErrResultMsg.IsEmpty())
@@ -8181,7 +8244,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
    for (int iRL=0; (!bHaveSizingPropRL && iRL<iNumRulelists); iRL++)
       bHaveSizingPropRL = (saRulelistNames[iRL].compare( "rl_SIZING_PROPOSED", Qt::CaseInsensitive ) == 0);
 
-	pszCSVResultSummary[0] = '\0';
+	pszCSVResultSummary[0] = pszCSVResultSummary2[0] = pszCSVResultSummary3[0] = pszCSVResultSummary4[0] = '\0';
 	ASSERT( bHaveSizingPropRL );
 	//	if (!bHaveSizingPropRL)
 	//			iSimResult = CMX_PerformAnalysis_CECNonRes_OLD(	NULL /*pszBEMBasePathFile*/, NULL /*pszRulesetPath*/, sWthrPath /*pszSimWeatherPath*/,
@@ -8194,12 +8257,12 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 // ^^^ TEMPORARY ^^^
 // ^^^ TEMPORARY ^^^
 					EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
-			iSimResult = CMX_PerformAnalysis_CECNonRes(	esBEMBasePath /*pszBEMBasePathFile*/, NULL /*pszRulesetPath*/, sWthrPath /*pszSimWeatherPath*/,    // added esBEMBasePath - SAC 10/28/22 (CUAC)
-																		NULL /*pszCompMgrDLLPath -> WAS: sT24DHWPath*/, NULL /*pszDHWWeatherPath*/,
-																		sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/,
-																		NULL /*pszLogPathFile*/, sUIVersionString, false /*bLoadModelFile*/, sOptionsCSVString,
-																		pszAnalysisErr, 2056, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/,
-																		pszCSVResultSummary, CSV_RESULTSLENGTH, 1 /*SecKeyIndex*/, esSecurityKey );   // SAC 1/12/17
+			//iSimResult = CMX_PerformAnalysis_CECNonRes(	esBEMBasePath /*pszBEMBasePathFile*/, NULL /*pszRulesetPath*/, sWthrPath /*pszSimWeatherPath*/,    // added esBEMBasePath - SAC 10/28/22 (CUAC)
+			iSimResult = CMX_PerformAnalysisCB_CECNRMF(	esBEMBasePathFile /*pszBEMBasePathFile*/, esRulesetPathFile /*pszRulesetPath*/, sWthrPath /*pszSimWeatherPath*/,    // added esBEMBasePath - SAC 10/28/22 (CUAC)  // esBEMBasePathFile & esRulesetPathFile - SAC 06/01/26 (dev #903)
+																		NULL /*pszCompMgrDLLPath -> WAS: sT24DHWPath*/, NULL /*pszDHWWeatherPath*/, sProcessingPath /*pszProcessPath*/,
+																		sCurrentFileName /*pszModelPathFile*/, NULL /*pszLogPathFile*/, sUIVersionString, false /*bLoadModelFile*/,
+																		sOptionsCSVString, pszAnalysisErr, 2056, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/,
+																		pszaCSVResultSummaryArray, CSV_RESULTSLENGTH, CSV_RESULTSARRAYSIZE, 1 /*SecKeyIndex*/, esSecurityKey );   // SAC 1/12/17  // SAC 06/10/26
 					EnableWindow( TRUE );
    	lRetVal = iSimResult;
 
@@ -8231,12 +8294,16 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
             }  }
    			const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
    			bool bWroteToLogCSV = false;
-   			if (!sCSVLogFN.IsEmpty())
+
+            int iRunIdx;
+            if (!sCSVLogFN.IsEmpty())
    			{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
    				             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
    								 "(once the file is closed), or \n'Cancel' to abort the %s.", "CSV results log", sCSVLogFN, "writing of results to the file" );
    				if (OKToWriteOrDeleteFile( sCSVLogFN, sMsg, (!BEMPX_GetUIActiveFlag()) ))
-   				{	VERIFY( BEMPX_WriteLogFile( pszCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
+   				{	for (iRunIdx=0; iRunIdx < CSV_RESULTSARRAYSIZE; iRunIdx++)
+                     if (strlen( pszaCSVResultSummaryArray[iRunIdx] ) > 1)
+                        VERIFY( BEMPX_WriteLogFile( pszaCSVResultSummaryArray[iRunIdx], NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
    															false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
    					bWroteToLogCSV = true;
    			}	}
@@ -8268,21 +8335,24 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
             // updated default T24N CSVResultsLog filename to AnalysisResults2-... for code vintages where TDV units switched from kTDV (or kBtu) to $ - SAC 10/25/22
    			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v10.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v10.csv" : (lEnergyCodeYearNum >= 2025 ? "AnalysisResults2-v10.csv" : "AnalysisResults-v10.csv"))); 
    			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
-   			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
+   			for (iRunIdx=0; iRunIdx < CSV_RESULTSARRAYSIZE; iRunIdx++)
+               if (strlen( pszaCSVResultSummaryArray[iRunIdx] ) > 1)
+                  VERIFY( AppendToTextFile( pszaCSVResultSummaryArray[iRunIdx], sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 
-   			// export CSV results for subsequent results sets (when multiple EUseSummary objects present)
-   			int iCSVRetVal = 0;
-   			long lNumResultsSets=0;
-   			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), lNumResultsSets );		// SAC 11/04/19
-   			// check for consistency between lNumResultsSets & number of EUseSummary objects??
-   			for (int iResSet = 1; (iResSet < lNumResultsSets && iCSVRetVal < 1); iResSet++)
-   			{	iCSVRetVal = CMX_PopulateCSVResultSummary_NonRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, sCurrentFileName, sWthrPath, iResSet );		// SAC 11/04/19
-   				if (iCSVRetVal < 1)
-   				{	VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
-   					if (bWroteToLogCSV)
-   						VERIFY( BEMPX_WriteLogFile( pszCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
-   															false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
-   			}	}
+   			// removed following now that analysis routine populates results summary strings for all runs - SAC 06/10/26 (dev #903)
+            // // export CSV results for subsequent results sets (when multiple EUseSummary objects present)
+   			// int iCSVRetVal = 0;
+   			// long lNumResultsSets=0;
+   			// BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), lNumResultsSets );		// SAC 11/04/19
+   			// // check for consistency between lNumResultsSets & number of EUseSummary objects??
+   			// for (int iResSet = 1; (iResSet < lNumResultsSets && iCSVRetVal < 1); iResSet++)
+   			// {	iCSVRetVal = CMX_PopulateCSVResultSummary_NonRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, sCurrentFileName, sWthrPath, iResSet );		// SAC 11/04/19
+   			// 	if (iCSVRetVal < 1)
+   			// 	{	VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
+   			// 		if (bWroteToLogCSV)
+   			// 			VERIFY( BEMPX_WriteLogFile( pszCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
+   			// 												false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
+   			// }	}
    		}
 
          // removed separate dialog to view compliance report - now accessed through button on results screen - SAC 7/28/20
@@ -8355,8 +8425,11 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
    			{	bSimResultsDisplayed = TRUE;
    				//int iTabCtrlWd, iTabCtrlHt;
    				//VERIFY( GetDialogTabDimensions( siQuickCr8Class, iTabCtrlWd, iTabCtrlHt ) );
-   				if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary obejct is ALWAYS the active obejct as dialog presented
-   					BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
+               long iNumEUseSUmObjs = BEMPX_GetNumObjects( eiBDBCID_EUseSummary );
+   				if (iNumEUseSUmObjs > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary obejct is ALWAYS the active obejct as dialog presented
+   				{	BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
+                  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), BEMP_Int, (void*) &iNumEUseSUmObjs, BEMO_User, 0, BEMS_ProgDefault );     // SAC 06/13/26 (dev #903)
+               }
 
    				int iMaxTabs = 0;
    				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
@@ -8366,16 +8439,18 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
    				else
    					iMaxTabs = 99;
 
-   				CString sDialogCaption;
-   				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
    				int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
+   				CString sDialogCaption;
+   				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption, iEUSTabCtrlWd );
+               int iSwapFirstTabID = GetReplacementFirstDlgTabID( eiBDBCID_EUseSummary );   // SAC 06/11/26 (dev #903)
          		CWnd* pWnd = GetFocus();
          		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
          		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
          		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
    										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
    										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-   										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+   										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,
+                                 FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
    				if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent results display when GUI deactivated
       	   		if (td.DoModal() == IDOK)
          			{}
@@ -8457,7 +8532,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 			}	}
 			if (sErrResultMsg.IsEmpty())
 				sErrResultMsg.Format( "Error encountered performing analysis (error code %d).", iSimResult );
-			if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
+         if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
 				AfxMessageBox( sErrResultMsg );
 			else
 				VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
@@ -8494,7 +8569,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 		// SAC 6/25/13 - AFTER restoring original project file, Import EUseSummary objects from temporary files to facilitate subsequent results display
 	// SAC 10/3/14 - mod to store EUseSummary obejcts to project file regardless of whether sim results were displayed
 	//		if (bSimResultsDisplayed && saUniqueEUseSumObjs.GetSize())
-			int iNumEUseSUmObjs = BEMPX_GetNumObjects( eiBDBCID_EUseSummary );
+			long iNumEUseSUmObjs = BEMPX_GetNumObjects( eiBDBCID_EUseSummary );
 			if (saUniqueEUseSumObjs.size() || iNumEUseSUmObjs > 0)
 			{	int iError;
 				if (saUniqueEUseSumObjs.size())
@@ -8505,6 +8580,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 						if (pEUSObj)
 							BEMPX_DeleteObject( pEUSObj );
 					}
+   			iNumEUseSUmObjs = BEMPX_GetNumObjects( eiBDBCID_EUseSummary );
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), BEMP_Int, (void*) &iNumEUseSUmObjs, BEMO_User, 0, BEMS_ProgDefault );     // SAC 06/13/26 (dev #903)
 
 				// ALSO store RunDate to be help verify whether results are "current"
 				ASSERT( lTime > 0);
@@ -8569,7 +8646,7 @@ void CMainFrame::OnPerformAPIAnalysis()
 		CString sRuleFile = ReadProgString( "files", (ebUI_CARES ? "SFamRulesetFile" : "RulesetFile"), "" );			ASSERT( !sRuleFile.IsEmpty() );     // SAC 09/09/25 (gh dev #433)
 		sRulePathFile += sRuleFile;																					ASSERT( FileExists( sRulePathFile ) );
 
-		PreventSystemSleepDuringAnalysis();			// SAC 10/21/20 - setup timer to prevent system sleep during analysis
+      PreventSystemSleepDuringAnalysis();			// SAC 10/21/20 - setup timer to prevent system sleep during analysis
 
 		int iAnalysisResult = 0;
       if (ebUI_CARES)         // single Res/Com app - SAC 08/29/25 (gh dev #433)
@@ -8739,7 +8816,16 @@ void CMainFrame::CUACPostAnalysisPrompt( CString sOriginalFileName )   // SAC 09
       if (!sCUACAnalysisInvalidMsg.isEmpty())
       {  sPTDMsg += "\n   Invalid - ";   sPTDMsg += sCUACAnalysisInvalidMsg.toLocal8Bit().constData();
       }
-		sBtnFile[iNumViewBtns] = sIODetailsCSVFN;   sBtnLabel[iNumViewBtns++] = "Input/Results Details";
+      QString sCUACElecRateExpMsg, sCUACGasRateExpMsg;
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:CPR_ElecUtilityRateExpMsg" ), sCUACElecRateExpMsg );      // SAC 09/10/26 (dev #713)
+      if (!sCUACElecRateExpMsg.isEmpty())
+      {  sPTDMsg += "\n";   sPTDMsg += sCUACElecRateExpMsg.toLocal8Bit().constData();
+      }
+      BEMPX_GetString( BEMPX_GetDatabaseID( "CUAC:CPR_GasUtilityRateExpMsg" ), sCUACGasRateExpMsg );        // SAC 09/10/26 (dev #713)
+      if (!sCUACGasRateExpMsg.isEmpty())
+      {  sPTDMsg += "\n";   sPTDMsg += sCUACGasRateExpMsg.toLocal8Bit().constData();
+      }
+      sBtnFile[iNumViewBtns] = sIODetailsCSVFN;   sBtnLabel[iNumViewBtns++] = "Input/Results Details";
 	}
    if (bHaveSubmitPDF && bHaveDetailsPDF)
    {  sPTDMsg += "\n\nSubmittal and details reports are available for review.";
@@ -8895,9 +8981,9 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
    			BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
 
          int iMaxTabs = 99;  // SAC 4/11/19 - enable C02 Details acces regardless of INI option - was:  (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
-   		CString sDialogCaption;
-   		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
    		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
+   		CString sDialogCaption;
+   		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption, iEUSTabCtrlWd );
 
    		int iResultsScreenUIMode = 0;		// SAC 4/11/19 - reduced results display for EAA (and non-EDR) analysis (tic #1082)
    		long lRunScope=0, lIsAddAlone=0;
@@ -8911,13 +8997,15 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
    		if (lDBID_NumUIDialogTabs > 0 && BEMPX_SetDataInteger( lDBID_NumUIDialogTabs, lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
    			iMaxTabs = lNumUIDialogTabs;
 
+         int iSwapFirstTabID = GetReplacementFirstDlgTabID( eiBDBCID_EUseSummary );   // SAC 06/11/26 (dev #903)
    		CWnd* pWnd = GetFocus();
    		CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
    		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
    		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
    								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
    								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-   								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+   								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,
+                           FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
    		if (td.DoModal() == IDOK)
    		{}
 	}  }
@@ -8951,16 +9039,18 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
    				else
    					iMaxTabs = 99;
 
-   		CString sDialogCaption;
-   		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
    		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
+   		CString sDialogCaption;
+   		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption, iEUSTabCtrlWd );
+         int iSwapFirstTabID = GetReplacementFirstDlgTabID( eiBDBCID_EUseSummary );   // SAC 06/11/26 (dev #903)
    		CWnd* pWnd = GetFocus();
    		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
    		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
    		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
    								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
    								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-   								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+   								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip, 
+                           FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
    		if (td.DoModal() == IDOK)
    		{}
 	}  }
@@ -9941,7 +10031,8 @@ void CMainFrame::CreateBuildingComponent( int i1BDBClass, long lAssignmentDBID, 
 			int iTabCtrlWd, iTabCtrlHt;
 			VERIFY( GetDialogTabDimensions( i1BDBClass, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 			CString sDialogCaption;
-			GetDialogCaption( i1BDBClass, sDialogCaption );   // SAC 1/8/12
+			GetDialogCaption( i1BDBClass, sDialogCaption, iTabCtrlWd );   // SAC 1/8/12
+         int iSwapFirstTabID = GetReplacementFirstDlgTabID( i1BDBClass );   // SAC 06/11/26 (dev #903)
 //         CBEMDialog td( i1BDBClass, pParentWnd );
          CSACBEMProcDialog td( i1BDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pParentWnd,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
@@ -9949,7 +10040,8 @@ void CMainFrame::CreateBuildingComponent( int i1BDBClass, long lAssignmentDBID, 
                            (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 									NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 									NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-									ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );   // SAC 1/19/12
+									ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,    // SAC 1/19/12
+                           FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
          if (td.DoModal() == IDOK)
          {}
       }
@@ -10298,7 +10390,7 @@ void CMainFrame::OnEditComponent()
 			int iTabCtrlWd, iTabCtrlHt;
 			VERIFY( GetDialogTabDimensions( i1SelClassIdx, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 			CString sDialogCaption;
-			GetDialogCaption( i1SelClassIdx, sDialogCaption );   // SAC 1/8/12
+			GetDialogCaption( i1SelClassIdx, sDialogCaption, iTabCtrlWd );   // SAC 1/8/12
 				int iMaxTabs = 0;
 				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
 				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", i1SelClassIdx ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
@@ -10309,6 +10401,7 @@ void CMainFrame::OnEditComponent()
 				if (i1SelClassIdx == eiBDBCID_Proj)
 					AutoSaveAsPrecheck( i1SelClassIdx );	// SAC 9/30/20
 
+         int iSwapFirstTabID = GetReplacementFirstDlgTabID( i1SelClassIdx );   // SAC 06/11/26 (dev #903)
 //         CBEMDialog td( i1SelClassIdx, this );
          CSACBEMProcDialog td( i1SelClassIdx, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
@@ -10316,7 +10409,8 @@ void CMainFrame::OnEditComponent()
                            (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 									NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 									NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-									ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );   // SAC 1/19/12
+									ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,    // SAC 1/19/12
+                           FALSE /*bShowRefreshDefaultsBtn*/, iSwapFirstTabID );
 
 //										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,    // SAC 1/19/12
 //										(elDefaultOptionInp < DefaultOption_Model) );	// SAC 4/18/18

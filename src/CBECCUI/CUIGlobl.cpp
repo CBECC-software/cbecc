@@ -262,6 +262,8 @@ static int dataTypeFontHt;
 CString esProgramPath = "";
 CString esDataPath = "";
 CString esBEMBasePath = "";      // SAC 10/28/22 (CUAC)
+CString esBEMBasePathFile = "";    // SAC 06/01/26 (dev #903)
+CString esRulesetPathFile = "";    // SAC 06/01/26 (dev #903)
 CString esAltWeatherPath = "";	// SAC 6/3/20
 CString esProjectsPath = "";
 CString esProgramFName = "";   // SAC 8/19/11
@@ -2089,7 +2091,8 @@ static BOOL ResetRulesetSymbols()
 
 
 BOOL LoadDataModel(	const char* psBEMProcFileName /*=NULL*/, int iBEMType /*=BEMT_Other*/,
-							const char* psInitLogFileName /*=NULL*/, BOOL bMsgBox /*=TRUE*/ )
+							const char* psInitLogFileName /*=NULL*/, BOOL bMsgBox /*=TRUE*/, 
+                     BOOL bSetupUtilRateEnums /*=FALSE*/ )
 {
 	int iChkDMBin = BEMPX_CheckDataModelBin( psBEMProcFileName );		// SAC 1/3/17
 	if (iChkDMBin > 0)
@@ -2110,8 +2113,14 @@ BOOL LoadDataModel(	const char* psBEMProcFileName /*=NULL*/, int iBEMType /*=BEM
 		}
 	}
 	else
-   {        //BEMMessageBox( QString( "loading BEMBase data model:  %1" ).arg( psBEMProcFileName ) );
-		BEMPX_LoadDataModel( psBEMProcFileName, iBEMType, psInitLogFileName );
+   {  QString qsUtilityRatePath;    // SAC 10/08/26 (dev #689)
+      int iUtilRateGenID = -1;
+      if (bSetupUtilRateEnums)
+      {  qsUtilityRatePath = ReadProgString( "paths", "UtilityRatePath", "UtilityRates\\G3\\", TRUE );
+         iUtilRateGenID    = ReadProgInt(    "options", "UtilityRateGenID", 0 );
+      }
+               //BEMMessageBox( QString( "loading BEMBase data model:  %1" ).arg( psBEMProcFileName ) );
+		BEMPX_LoadDataModel( psBEMProcFileName, iBEMType, psInitLogFileName, qsUtilityRatePath.toLatin1().constData(), iUtilRateGenID );    // SAC 10/08/26 (dev #689)
    }
 	return (iChkDMBin==0);
 }
@@ -2136,9 +2145,11 @@ BOOL LoadRuleset( const char* pszRulesetFileName, BOOL bDeleteAllObjects )
 
    int iError = 0;
    BOOL bLoadDefault = (pszRulesetFileName == NULL);
-   CString sRuleName = ReadProgString( "paths", "RulesetPath", "", TRUE );
+   CString sRulesetPathFile = ReadProgString( "paths", "RulesetPath", "", TRUE );
    CString sINIRulesetFile = ReadProgString( "files", (ebUI_CARES ? "SFamRulesetFile" : "RulesetFile"), "" );     // SAC 09/09/25 (gh dev #433)
    BOOL bLoadFoundDefault = LoadRulesetList( sINIRulesetFile );
+   esBEMBasePathFile.Empty();    // SAC 06/01/26 (dev #903)
+   esRulesetPathFile.Empty();    // SAC 06/01/26 (dev #903)
 
    if (eiNumRulesetsAvailable <= 0)
       // ERROR: No compliance ruleset files are available in the ruleset directory
@@ -2149,13 +2160,13 @@ BOOL LoadRuleset( const char* pszRulesetFileName, BOOL bDeleteAllObjects )
    else
    {
 //      if (bLoadDefault)
-//         sRuleName += sINIRulesetFile;
+//         sRulesetPathFile += sINIRulesetFile;
 //      else
-//         sRuleName += pszRulesetFileName;
+//         sRulesetPathFile += pszRulesetFileName;
       CString sRuleFile = (bLoadDefault ? sINIRulesetFile : pszRulesetFileName);
-      sRuleName += sRuleFile;
+      sRulesetPathFile += sRuleFile;
 
-      if (!FileExists( sRuleName ))
+      if (!FileExists( sRulesetPathFile ))
          iError = 1;
 		else
 		{
@@ -2164,7 +2175,7 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 		//	CString sInitBDBFileName = ReadProgString( "files", "BEMFile", "", TRUE );
 		// SAC 8/15/14 - revised to first check to see if rulest binary includes BEMBase definitions file
 			QString sInitBDBFileName;
-			if (CMX_GetRulesetBEMBaseFile( sRuleName, sInitBDBFileName ) && !sInitBDBFileName.isEmpty())
+			if (CMX_GetRulesetBEMBaseFile( sRulesetPathFile, sInitBDBFileName ) && !sInitBDBFileName.isEmpty())
 			{	CString sRulePN = ReadProgString( "paths", "RulesetPath", "", TRUE );
 				sInitBDBFileName = sRulePN + sInitBDBFileName;												ASSERT( FileExists( sInitBDBFileName ) );
 			}
@@ -2173,7 +2184,7 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 
          if (FileExists( sInitBDBFileName ) &&
              (sInitBDBFileName.lastIndexOf('/') > 0 || sInitBDBFileName.lastIndexOf('\\') > 0))    // SAC 10/28/22 (CUAC)
-         {  esBEMBasePath = sInitBDBFileName.toLatin1().constData();  
+         {  esBEMBasePath = esBEMBasePathFile = sInitBDBFileName.toLatin1().constData();  
             int iLastBEMBaseSlash = std::max( sInitBDBFileName.lastIndexOf('/'), sInitBDBFileName.lastIndexOf('\\') );
             if (iLastBEMBaseSlash > 0)
                esBEMBasePath = esBEMBasePath.Left( iLastBEMBaseSlash+1 );
@@ -2183,13 +2194,13 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 
 			CString sInitLogFileName = ReadProgString( "paths", "ProjectsPath", "", TRUE );
 			sInitLogFileName += "untitled.log";
-			if (!LoadDataModel(	sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName ))
+			if (!LoadDataModel(	sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName, TRUE /*bMsgBox*/, TRUE /*bSetupUtilRateEnums*/ ))
 //			BEMPX_LoadDataModel( sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName );
       	   iError = 4;
-      	else if (!CMX_LoadRuleset( sRuleName, bDeleteAllObjects, sInitBDBFileName.toLatin1().constData() ))  // ruleset file exists, so now try to load it
+      	else if (!CMX_LoadRuleset( sRulesetPathFile, bDeleteAllObjects, sInitBDBFileName.toLatin1().constData() ))  // ruleset file exists, so now try to load it
       	   iError = 2;
       	else
-      	{           //BEMMessageBox( QString( "ruleset loaded:  %1" ).arg( (const char*) sRuleName ) );
+      	{           //BEMMessageBox( QString( "ruleset loaded:  %1" ).arg( (const char*) sRulesetPathFile ) );
             // Ruleset loaded OK, so now reset Ruleset symbols to reflect the ruleset
       	   // files currently available in the Ruleset directory
       	   if (!ResetRulesetSymbols())
@@ -2202,7 +2213,8 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 
       	   // store currently selected ruleset filename (without path)
       	   ssCurrentRuleFile = sRuleFile;
-      	
+            esRulesetPathFile = sRulesetPathFile;    // store full path/file of ruleset binary - SAC 06/01/26 (dev #903)
+
       	   if (bLoadDefault)
       	      // set this string to be the default which will be installed into the next created 'Project' component
       	      BEMPX_SetRulesetFilename( sRuleFile );
@@ -2223,7 +2235,7 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
       if (iError == 3)
       {
          sErr = szNoRule1;
-         sErr += sRuleName;
+         sErr += sRulesetPathFile;
          sErr += szNoRule2;
       }
       else  // == 1 or 2
@@ -2232,7 +2244,7 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
          if (bLoadDefault)
             sErr = szDefErr + sErr;
 
-         sErr += sRuleName;
+         sErr += sRulesetPathFile;
 
          if (iError == 1)
             sErr += szErr1;
@@ -2452,6 +2464,7 @@ int eiBDBCID_DHWSolarSys = 0;		// SAC 1/31/20 (Com tic #3157)  // SAC 1/12/20 (R
 long elDBID_Proj_Name = 0;
 long elDBID_Proj_RunDate = 0;
 long elDBID_Proj_SoftwareVersion = 0;
+long elDBID_Proj_RunTitle = 0;    // SAC 1/8/12
 
 long elDBID_CUAC_ResultsCSVToCombineDir = 0;    // SAC 10/25/24
 
@@ -2666,7 +2679,6 @@ int eiBDBCID_IAQVentRpt = 0;
 long elDBID_Proj_SoftwareVersionDetail = 0;
 long elDBID_Proj_AnalysisType = 0;    // SAC 9/12/11
 long elDBID_Proj_IsMultiFamily = 0;   // SAC 7/29/16
-long elDBID_Proj_RunTitle = 0;    // SAC 1/8/12
 long elDBID_Proj_ElecMETER = 0;			// SAC 6/19/12
 long elDBID_Proj_NatGasMETER = 0;		// SAC 6/19/12
 long elDBID_Proj_OtherFuelMETER = 0;	// SAC 6/19/12
@@ -2890,50 +2902,115 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
    return TRUE;
 }
 
-void GetDialogCaption( int iBDBClass, CString& sDialogCaption )
+void GetDialogCaption( int iBDBClass, CString& sDialogCaption, int iDlgTabCtrlWd /*=-1*/ )
 {
-   if (ebUI_CANRES)    // single Res/Com app - SAC 08/21/25 (gh dev #433)
-   	sDialogCaption = "Building Model Data";
-   else if (ebUI_CARES)    // single Res/Com app - SAC 08/21/25 (gh dev #433)
-   {
-   	sDialogCaption.Empty();
-   	if (iBDBClass <= eiBDBCID_Proj || iBDBClass == eiBDBCID_EUseSummary) // SAC 12/20/18 - revised to use project file naming for EUSummary dialog (per KN request)
-   	{	// first portion of caption = project filename (excluding path & file extension)
-   		CWnd* pMainWnd = AfxGetMainWnd();
-   	   if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CFrameWnd)))
-   		{	CDocument* pDoc = ((CFrameWnd*)pMainWnd)->GetActiveDocument();
-   		   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CDocument)))
-   			{	CString sProjFile = pDoc->GetPathName();
-   				if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('\\') > 0)
-   				{	sProjFile = sProjFile.Right( sProjFile.GetLength() - sProjFile.ReverseFind('\\') - 1 );
-   					if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('.') > 0)
-   						sProjFile = sProjFile.Left( sProjFile.ReverseFind('.') );
-   					sDialogCaption = sProjFile;
-   				}
-   			}
-   		}
-   		// second portion of caption = Proj:RunTitle
-   		CString sRunTitle;
-   	   BEMPX_SetDataString( elDBID_Proj_RunTitle, sRunTitle );
-   		if (!sRunTitle.IsEmpty())
-   		{	if (!sDialogCaption.IsEmpty())
-   				sDialogCaption += " - ";
-   			sDialogCaption += sRunTitle;
-   		}
-   	}
-   	else	// SAC 12/5/18 - revised routine to label non-Proj dialogs using object type and name data
-   	{	int iErr;
-   		BEMClass* pBEMClass = BEMPX_GetClass( iBDBClass, iErr );
-   		if (pBEMClass)
-   		{	QString qsObjName;
-   			VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iBDBClass ), qsObjName, FALSE, 0, -1 ) && !qsObjName.isEmpty() );
-   			sDialogCaption.Format( "%s:  %s", pBEMClass->getLongName().toLatin1().constData(), qsObjName.toLatin1().constData() );
-   	}	}
+   //if (ebUI_CANRES)    // single Res/Com app - SAC 08/21/25 (gh dev #433)
+   //	sDialogCaption = "Building Model Data";
+   //else if (ebUI_CARES)    // single Res/Com app - SAC 08/21/25 (gh dev #433)
+   //{
+   //	sDialogCaption.Empty();
+   //	if (iBDBClass <= eiBDBCID_Proj || iBDBClass == eiBDBCID_EUseSummary) // SAC 12/20/18 - revised to use project file naming for EUSummary dialog (per KN request)
+   //	{	// first portion of caption = project filename (excluding path & file extension)
+   //		CWnd* pMainWnd = AfxGetMainWnd();
+   //	   if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CFrameWnd)))
+   //		{	CDocument* pDoc = ((CFrameWnd*)pMainWnd)->GetActiveDocument();
+   //		   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CDocument)))
+   //			{	CString sProjFile = pDoc->GetPathName();
+   //				if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('\\') > 0)
+   //				{	sProjFile = sProjFile.Right( sProjFile.GetLength() - sProjFile.ReverseFind('\\') - 1 );
+   //					if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('.') > 0)
+   //						sProjFile = sProjFile.Left( sProjFile.ReverseFind('.') );
+   //					sDialogCaption = sProjFile;
+   //				}
+   //			}
+   //		}
+   //		// second portion of caption = Proj:RunTitle
+   //		CString sRunTitle;
+   //	   BEMPX_SetDataString( elDBID_Proj_RunTitle, sRunTitle );
+   //		if (!sRunTitle.IsEmpty())
+   //		{	if (!sDialogCaption.IsEmpty())
+   //				sDialogCaption += " - ";
+   //			sDialogCaption += sRunTitle;
+   //		}
+   //	}
+   //	else	// SAC 12/5/18 - revised routine to label non-Proj dialogs using object type and name data
+   //	{	int iErr;
+   //		BEMClass* pBEMClass = BEMPX_GetClass( iBDBClass, iErr );
+   //		if (pBEMClass)
+   //		{	QString qsObjName;
+   //			VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iBDBClass ), qsObjName, FALSE, 0, -1 ) && !qsObjName.isEmpty() );
+   //			sDialogCaption.Format( "%s:  %s", pBEMClass->getLongName().toLatin1().constData(), qsObjName.toLatin1().constData() );
+   //	}	}
+   //
+   //	// default string if neither project filename nor RunTitle are defined
+   //	if (sDialogCaption.IsEmpty())
+   //		sDialogCaption = "Building Model Data";
+   //}
+   // revisions (from above) to handle dialog captions the same for NRMF & SFam (based on SFam but w/ minor adjustments) - SAC 06/11/26
+   sDialogCaption.Empty();
+   //if (iBDBClass <= eiBDBCID_Proj || iBDBClass == eiBDBCID_EUseSummary) // SAC 12/20/18 - revised to use project file naming for EUSummary dialog (per KN request)
+   //{
+      // first portion of caption = project filename (excluding path & file extension)
+      CWnd* pMainWnd = AfxGetMainWnd();
+      if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CFrameWnd)))
+      {  CDocument* pDoc = ((CFrameWnd*)pMainWnd)->GetActiveDocument();
+         if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CDocument)))
+         {  CString sProjFile = pDoc->GetPathName();
+            if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('\\') > 0)
+            {  sProjFile = sProjFile.Right( sProjFile.GetLength() - sProjFile.ReverseFind('\\') - 1 );
+               if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('.') > 0)
+                  sProjFile = sProjFile.Left( sProjFile.ReverseFind('.') );
+               if (iBDBClass == eiBDBCID_EUseSummary)
+                  sDialogCaption = "Results for  ";
+               sDialogCaption += sProjFile;
+            }
+         }
+      }
+      //if (iBDBClass == eiBDBCID_EUseSummary)
+      if (iBDBClass > eiBDBCID_Proj)
+      {  // second portion of results caption = Proj:RunTitle
+         CString sRunTitle;
+         BEMPX_SetDataString( elDBID_Proj_RunTitle, sRunTitle );
+         if (!sRunTitle.IsEmpty())
+         {  if (sDialogCaption.IsEmpty() && iBDBClass == eiBDBCID_EUseSummary)
+               sDialogCaption = "Results for  ";
+            else
+               sDialogCaption += " - ";
+            sDialogCaption += sRunTitle;
+      }  }
+      if (iBDBClass == eiBDBCID_EUseSummary)
+      {  if (sDialogCaption.IsEmpty())
+            sDialogCaption = "Analysis Results";
+      }
+      else if (iBDBClass <= eiBDBCID_Proj)
+      {  if (sDialogCaption.IsEmpty())
+            sDialogCaption = "Project Data";
+         else
+            sDialogCaption += " | Project Data";
+      }
+      else
+      {  int iErr;   CString sClassLongName;
+         BEMClass* pBEMClass = BEMPX_GetClass( iBDBClass, iErr );
+         if (pBEMClass)
+            sClassLongName.Format( " | %s Data", pBEMClass->getLongName().toLatin1().constData() );
+         if (!sClassLongName.IsEmpty())
+            sDialogCaption += sClassLongName;
+      }
+   //}
 
-   	// default string if neither project filename nor RunTitle are defined
-   	if (sDialogCaption.IsEmpty())
-   		sDialogCaption = "Building Model Data";
+   // default string if not populated above
+   if (sDialogCaption.IsEmpty())
+      sDialogCaption = "Building Model Data";
+}
+
+int GetReplacementFirstDlgTabID( int iBDBClass )      // SAC 06/11/26 (dev #903)
+{  int iRetVal = -1;
+   if (ebUI_CANRES && iBDBClass == eiBDBCID_EUseSummary)
+   {  int iNumEUseSumObjs = BEMPX_GetNumObjects( eiBDBCID_EUseSummary );
+      if (iNumEUseSumObjs == 5)
+         iRetVal = 159;
    }
+   return iRetVal;
 }
 
 void GetObjectConversionInfo( int iBEMClassFrom, int iBEMClassTo, int& iDlgID, int& iDlgWd, int& iDlgHt, CString& sNewNameAppend,
@@ -3202,6 +3279,7 @@ void InitBEMDBIDs()
    elDBID_Proj_Name               = BEMPX_GetDatabaseID( "Name",               eiBDBCID_Proj );
    elDBID_Proj_RunDate            = BEMPX_GetDatabaseID( "RunDate",            eiBDBCID_Proj );
    elDBID_Proj_SoftwareVersion    = BEMPX_GetDatabaseID( "SoftwareVersion",    eiBDBCID_Proj );
+   elDBID_Proj_RunTitle           = BEMPX_GetDatabaseID( "RunTitle",           eiBDBCID_Proj );    // SAC 1/8/12
 
    elDBID_CUAC_ResultsCSVToCombineDir = BEMPX_GetDatabaseID( "ResultsCSVToCombineDir", eiBDBCID_CUAC );  // SAC 10/25/24
 
@@ -3431,7 +3509,6 @@ void InitBEMDBIDs()
    elDBID_Proj_SoftwareVersionDetail = (ebUI_CARES ? BEMPX_GetDatabaseID( "SoftwareVersionDetail", eiBDBCID_Proj ) : 0);
    elDBID_Proj_AnalysisType    = (ebUI_CARES ? BEMPX_GetDatabaseID( "AnalysisType",    eiBDBCID_Proj ) : 0);    // SAC 9/12/11
    elDBID_Proj_IsMultiFamily   = (ebUI_CARES ? BEMPX_GetDatabaseID( "IsMultiFamily",   eiBDBCID_Proj ) : 0);    // SAC 7/29/16
-   elDBID_Proj_RunTitle        = (ebUI_CARES ? BEMPX_GetDatabaseID( "RunTitle",		    eiBDBCID_Proj ) : 0);    // SAC 1/8/12
    elDBID_Proj_ElecMETER       = (ebUI_CARES ? BEMPX_GetDatabaseID( "ElecMETER",		 eiBDBCID_Proj ) : 0);    // SAC 6/19/12
    elDBID_Proj_NatGasMETER     = (ebUI_CARES ? BEMPX_GetDatabaseID( "NatGasMETER",		 eiBDBCID_Proj ) : 0);    // SAC 6/19/12
    elDBID_Proj_OtherFuelMETER  = (ebUI_CARES ? BEMPX_GetDatabaseID( "OtherFuelMETER",	 eiBDBCID_Proj ) : 0);    // SAC 6/19/12

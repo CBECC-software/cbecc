@@ -11344,7 +11344,18 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 	            sErrMsg += sParam;
 	         }
 	         sErrMsg += ')';
-	      }
+
+            if (pEval && pEval->lPrimDBID > BEM_COMP_MULT)     // enhance error msg to include object type & name being processed - SAC 09/10/26 (dev #1086)
+            {  int iError;
+               BEMObject* pErrObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lPrimDBID ), iError, pEval->iPrimObjIdx );
+               if (pErrObj && pErrObj->getClass())
+                  sErrMsg += QString( " on %1 '%2'" ).arg( pErrObj->getClass()->getShortName(), pErrObj->getName() );
+               else
+                  sErrMsg += QString( " (no ErrObj: DBID %1, ObjIdx %2)" ).arg( QString::number( pEval->lPrimDBID ), QString::number( pEval->iPrimObjIdx ) );
+            }
+            else
+               sErrMsg += " (no pEval)";
+         }
 	      ExpSetErr( error, EXP_RuleProc, sErrMsg );
 	   }
 	      
@@ -11505,7 +11516,20 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 					sFullErrMsg += boost::str( boost::format( "%s='%s'" ) % saIndepNames[arg] % saIndepStrings[arg] );
 			}
 			sFullErrMsg += " )";
-			if (sErrMsg.length() > 0)
+
+         if (pEval && pEval->lPrimDBID > BEM_COMP_MULT)     // enhance error msg to include object type & name being processed - SAC 09/10/26 (dev #1086)
+         {  int iObjErr;
+            BEMObject* pErrObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lPrimDBID ), iObjErr, pEval->iPrimObjIdx );
+            if (pErrObj && pErrObj->getClass())
+               sFullErrMsg += boost::str( boost::format( " on %s '%s'" ) % pErrObj->getClass()->getShortName().toLocal8Bit().constData() % pErrObj->getName().toLocal8Bit().constData() );
+            //   sFullErrMsg += QString( " on %1 '%2'" ).arg( pErrObj->getClass()->getShortName(), pErrObj->getName() );
+            //else
+            //   sFullErrMsg += QString( " (no ErrObj: DBID %1, ObjIdx %2)" ).arg( QString::number( pEval->lPrimDBID ), QString::number( pEval->iPrimObjIdx ) );
+         }
+         //else
+         //   sFullErrMsg += " (no pEval)";
+
+         if (sErrMsg.length() > 0)
 			{	sFullErrMsg += "  |  ERROR:  ";
 				sFullErrMsg += sErrMsg;
 			}

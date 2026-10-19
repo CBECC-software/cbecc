@@ -109,7 +109,15 @@ bool BEMPX_SetAllowWindowsUIFlag( bool bFlagVal )     // returns PRIOR AllowWind
 /////////////////////////////////////////////////////////////////////////////
 // 
 /////////////////////////////////////////////////////////////////////////////
-BOOL BEMPX_LoadDataModel( const char* psBEMProcFileName, int iBEMType, const char* psInitLogFileName )
+double DeltaTime( boost::posix_time::ptime& tmStart )
+{	//boost::posix_time::ptime tNow(boost::posix_time::microsec_clock::local_time());
+	//boost::posix_time::time_duration td = tNow - tmStart;
+	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmStart;
+	return ((double) td.total_microseconds()) / 1000000.0;
+}
+
+BOOL BEMPX_LoadDataModel(  const char* psBEMProcFileName, int iBEMType, const char* psInitLogFileName,
+                           const char* psUtilRatePath /*=NULL*/, int iUtilRateGenID /*=0*/ )    // UtilRate* args added - SAC 10/08/26 (dev #689)
 {
    BOOL bRetVal = TRUE;
 
@@ -130,6 +138,30 @@ BOOL BEMPX_LoadDataModel( const char* psBEMProcFileName, int iBEMType, const cha
    bRetVal = eBEMProc.decompileBinBEMProc( psBEMProcFileName );	// SAC 10/10/13 - was: sBEMProcFileName );
    if (!bRetVal)
       BEMMessageBox( "decompileBinBEMProc() Failed.", "BEMProc.dll Error", 3 /*error*/ );
+
+// hold off on Gen3 utility rate JSON read/parse as part of data model loading - SAC 10/14/26 (dev #689)
+//    else if (psUtilRatePath && strlen( psUtilRatePath ) > 3 && iUtilRateGenID >= 0)
+//    {  // SAC 10/08/26 (dev #689)
+//       std::vector<std::string> vsUtilRateParseErrors;
+// 
+//     BEMPX_WriteDataModelExport( BEMDMX_INPMP, "C:\\CBECC\\git-vscode\\CBECC-Dev\\CBECC\\Data\\Rulesets\\UtilityRate_InputModel_b4.txt" );
+//     BEMMessageBox( QString( "about to DefineUtilityRateEnumsFromFiles()..." ) );
+//     boost::posix_time::ptime	tmStartTime = boost::posix_time::microsec_clock::local_time();
+// 
+//       int iRateEnumsFromFiles = DefineUtilityRateEnumsFromFiles( psUtilRatePath, vsUtilRateParseErrors, iUtilRateGenID );
+// 
+//     double dDeltaTime = DeltaTime( tmStartTime );  // seconds elapsed
+// //#ifdef _DEBUG
+//       if (iRateEnumsFromFiles > 0)
+//       {  BEMMessageBox( QString( "DefineUtilityRateEnumsFromFiles() success - %1 rate files processed in %2 seconds" ).arg( QString::number( iRateEnumsFromFiles ), QString::number( dDeltaTime, 'g', 2 ) ) );
+//          BEMPX_WriteDataModelExport( BEMDMX_INPMP, "C:\\CBECC\\git-vscode\\CBECC-Dev\\CBECC\\Data\\Rulesets\\UtilityRate_InputModel_after.txt" );
+//       }
+//       else if (vsUtilRateParseErrors.size() > 0)
+//          BEMMessageBox( vsUtilRateParseErrors[0].c_str() );
+//       else
+//          BEMMessageBox( QString( "DefineUtilityRateEnumsFromFiles() failed" ) );
+// //#endif
+//    }
 
 	eNumBEMProcsLoaded = (bRetVal ? 1 : 0);
 //	blastSecondaryBEMProcs();  - already done inside BEMPX_DeleteAllObjects()
@@ -5179,7 +5211,8 @@ int BEMP_ResolveAllReferences( BEM_ObjType eObjType, QFile* pErrorFile, BOOL bPo
       sMsg += " component references: ";
       sMsg += sErr;
       sMsg += " not found.";
-      BEMPX_WriteLogFile( sMsg, NULL, FALSE, bSupressAllMessageBoxes );  // SAC 4/27/03
+      if (bPostErrors)     // SAC 06/04/26
+         BEMPX_WriteLogFile( sMsg, NULL, FALSE, bSupressAllMessageBoxes );  // SAC 4/27/03
 
 		QString sMsg2;	
 		for (int iEr=0; iEr < (int) saErrantObjRefs.size(); iEr++)
@@ -5187,18 +5220,20 @@ int BEMP_ResolveAllReferences( BEM_ObjType eObjType, QFile* pErrorFile, BOOL bPo
 				sMsg2 = QString( "      '%1' (once)" ).arg( saErrantObjRefs[iEr] );
 			else
 				sMsg2 = QString( "      '%1' (%2 times)" ).arg( saErrantObjRefs[iEr], QString::number(iaErrantObjRefCounts[iEr]) );
-	      BEMPX_WriteLogFile( sMsg2, NULL, FALSE, bSupressAllMessageBoxes );
+         if (bPostErrors)     // SAC 06/04/26
+	         BEMPX_WriteLogFile( sMsg2, NULL, FALSE, bSupressAllMessageBoxes );
 		}
 		if (iNumErrantObjsSkipped > 0)
 		{	sMsg2 = QString( "      (plus %1 other object reference(s))" ).arg( QString::number(iNumErrantObjsSkipped) );
-	      BEMPX_WriteLogFile( sMsg2, NULL, FALSE, bSupressAllMessageBoxes );
+         if (bPostErrors)     // SAC 06/04/26
+	         BEMPX_WriteLogFile( sMsg2, NULL, FALSE, bSupressAllMessageBoxes );
 		}
       if (!bSupressAllMessageBoxes)  // SAC 4/27/03
          BEMMessageBox( sMsg, "Building Database Error", 3 /*error*/ );
    }
 
 	// code to ensure component name uniqueness - and if non-unique components found, ensure that neither is referenced via BEMP_Obj assignments
-   if (iRetVal == 0)
+   if (iRetVal == 0 || !bPostErrors)      // continue processing if we are not posting errors - SAC 06/04/26 (dev #903)
    {  QStringList saDupCompNames, saDupCompNames_Refed;
       // loop over all classes
       for (i1Class=1; i1Class<=pBEMProc->getNumClasses(); i1Class++)
@@ -5276,14 +5311,15 @@ int BEMP_ResolveAllReferences( BEM_ObjType eObjType, QFile* pErrorFile, BOOL bPo
 			{	errMsg += "| ";
 				errMsg += saDupCompNames_Refed[i1Class];
 			}
-         if (pErrorFile != NULL)
-         {  // write message to error file
-            errMsg += "\n\n";
-            pErrorFile->write( errMsg.toLocal8Bit().constData(), errMsg.length() );
-         }
-         else
-            BEMPX_WriteLogFile( errMsg, NULL, FALSE, bSupressAllMessageBoxes );  // SAC 4/27/03
-      }
+         if (bPostErrors)     // SAC 06/04/26
+         {  if (pErrorFile != NULL)
+            {  // write message to error file
+               errMsg += "\n\n";
+               pErrorFile->write( errMsg.toLocal8Bit().constData(), errMsg.length() );
+            }
+            else
+               BEMPX_WriteLogFile( errMsg, NULL, FALSE, bSupressAllMessageBoxes );  // SAC 4/27/03
+      }  }
    }
 
    return iRetVal;

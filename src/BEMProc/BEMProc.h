@@ -310,9 +310,9 @@ bool BEMPROC_API __cdecl BEMPX_SetAllowWindowsUIFlag( bool bFlagVal );     // re
 
 int  BEMPROC_API __cdecl BEMPX_CheckDataModelBin( const char* pszBinFileName );	// 0-OK, >0-error
 BOOL BEMPROC_API __cdecl BEMPX_LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,		// was: BEMPX_InitBEMProc()
-																const char* psInitLogFileName = NULL );
+																const char* psInitLogFileName = NULL, const char* psUtilRatePath = NULL, int iUtilRateGenID=0 );   // UtilRate* args added - SAC 10/08/26 (dev #689)
 
-BOOL BEMPROC_API __cdecl BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE, LPCSTR bemBaseFileName=NULL );      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)   // was: RuleProcRead()
+BOOL BEMPROC_API __cdecl BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE, LPCSTR bemBaseFileName=NULL, QString* psErrMsg=NULL );      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)   // was: RuleProcRead()
 BOOL BEMPROC_API __cdecl BEMPX_ReadRulesetID( LPCSTR fileName, QString& sRuleSetID, QString& sRuleSetVer );		// was: RuleProcReadRulesetID()
 BOOL BEMPROC_API __cdecl BEMPX_ReadBEMBaseFile( LPCSTR fileName, QString& sBEMBaseFile );								// was: RuleProcReadBEMBaseFile()
 void BEMPROC_API __cdecl BEMPX_GetBEMBaseFile( QString& sBEMBaseFile, int iBEMProcIdx=-1 );	// was: BEMPX_GetBEMProcPathFile()
@@ -381,7 +381,8 @@ bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFile
 																			 std::vector<long>* plaClsObjIndices=NULL,		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
 																			 bool bReportInvalidEnums=true ); 		// SAC 5/20/19 - prevent logging errors associated w/ invalid enums (for writing of .ribd##i inputs during analysis)
 
-BEMObject*       __cdecl BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx=-1 );
+BEMObject*       __cdecl BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx=-1, BOOL bPostResolveRefErrors=TRUE,      // bPostResolveRefErrors - SAC 06/03/26 (dev #903)
+                                                      BOOL bSupressAllMessageBoxes=FALSE, BOOL bResolveReferences=TRUE );      // bSupressAllMessageBoxes & bResolveReferences - SAC 06/04/26 (dev #903)
 bool BEMPROC_API __cdecl BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iBEMProcIdx=-1, bool bWriteAllProperties=false,
 																			bool bWritePrimaryDefaultData=false );
 

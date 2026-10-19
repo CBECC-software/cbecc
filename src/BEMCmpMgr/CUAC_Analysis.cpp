@@ -4527,27 +4527,26 @@ int CUAC_PopulateFromDetailsCSV( const char* pszDetailsCSVPathFile, bool bVerbos
                                        BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
             }  }  }
 
-            if (iFileFormatVer >= 8) 
-            {  getline( in, line );       // Sewer bill inputs
-               ParseCSV( line, lines );      assert( lines.size() > 0 );
-               if (lines.size() > 0 && lines[0].size() > 3)
-               {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerRateType" ), BEMP_Str, (void*) lines[0][3].c_str(), 
-                                    BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
-                  if (lines[0].size() > 7 && lines[0][7].length() > 0)
-                  {  dData = std::stod( lines[0][7] );
-                     BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerMonthlyCost" ), BEMP_Flt, (void*) &dData, 
-                                       BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
-            }  }  }
-            else
-            {  dData = 0.0;      std::string sRtType = "Not Paid by Tenant";
-               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerRateType"    ), BEMP_Str, (void*) sRtType.c_str(), 
-                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
-               BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerMonthlyCost" ), BEMP_Flt, (void*) &dData, 
-                                 BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
-            }
-
-            getline( in, line );    // Trash bill inputs
+            getline( in, line );    // Sewer (or possibly Trash) bill inputs   - fix problem where v7 SFam CSV includes Sewer bill record - SAC 08/31/26 (dev #1088)
             ParseCSV( line, lines );      assert( lines.size() > 0 );
+            dData = 0.0;      std::string sSewerRtType = "Not Paid by Tenant";
+            //if (iFileFormatVer >= 8) 
+            if (lines.size() > 0 && lines[0].size() > 1 && lines[0][1].find( "Sewer" ) == 0)
+            {  if (lines.size() > 0 && lines[0].size() > 3)
+               {  sSewerRtType = lines[0][3];
+                  if (lines[0].size() > 7 && lines[0][7].length() > 0)
+                     dData = std::stod( lines[0][7] );
+               }
+               getline( in, line );       // Trash bill inputs
+               ParseCSV( line, lines );      assert( lines.size() > 0 );
+            }
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerRateType"    ), BEMP_Str, (void*) sSewerRtType.c_str(), 
+                              BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+            BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:SewerMonthlyCost" ), BEMP_Flt, (void*) &dData, 
+                              BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
+
+            // getline( in, line );    // Trash bill inputs    - trash record loaded above, whether or not Sewer bill record present and processed - SAC 08/31/26 (dev #1088)
+            //ParseCSV( line, lines );      assert( lines.size() > 0 );
             if (lines.size() > 0 && lines[0].size() > 3)
             {  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CUAC:TrashRateType" ), BEMP_Str, (void*) lines[0][3].c_str(), 
                                  BEMO_User, 0 /*objIdx*/, BEMS_UserDefined, BEMO_User, TRUE, iCUAC_BEMProcIdx );
@@ -6284,3 +6283,4 @@ int CUAC_CombineReports( bool bStoreBEMDetails, bool bSilent, bool bVerbose, cha
 
    return iRetVal;
 }
+

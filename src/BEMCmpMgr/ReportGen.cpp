@@ -1761,10 +1761,13 @@ void CUAC_RateDownload( QString sRateType, int iErrorRetVal, const char* pszUtil
                QString qsErrMsg;
                int iJSONErrorCode = BEMPX_GetJSONFileErrorCode( FileOutName, &qsErrMsg, "EncodedRateName", 512 );    // file has to be >= 512 bytes and include 'EncodedRateName'
                if (iJSONErrorCode > 0 || !qsErrMsg.isEmpty())
-            	{	sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  server returned code %d, %s", sRateType.toLocal8Bit().constData(), iJSONErrorCode, qsErrMsg.toLocal8Bit().constData() );
-		            iRetVal = iErrorRetVal;
-	   	      		if (bVerbose)
-	   	   			   BEMPX_WriteLogFile( QString::asprintf( "    Utility rate server error code %d:  %s", iJSONErrorCode, qsErrMsg.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+            	{	iRetVal = iErrorRetVal;
+                  if (iJSONErrorCode == 410)    // added special ErrMsg for rate data expiration notice - SAC 09/10/26 (dev #713)
+                     sErrMsg = QString::asprintf( "%s utility rate license to '%s' data %s", sRateType.toLocal8Bit().constData(), sEncodedRateName.toLocal8Bit().constData(), qsErrMsg.toLocal8Bit().constData() );
+                  else
+                     sErrMsg = QString::asprintf( "%s Utility Rate Download ERROR:  server returned code %d, %s", sRateType.toLocal8Bit().constData(), iJSONErrorCode, qsErrMsg.toLocal8Bit().constData() );
+                        if (bVerbose)
+	      	   			   BEMPX_WriteLogFile( QString::asprintf( "    %s", sErrMsg.toLocal8Bit().constData() ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	            }
                else
                {  // read/parse rate file data & set reference to new CPR_UtilityRate object

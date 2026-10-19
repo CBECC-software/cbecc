@@ -78,7 +78,7 @@ void BEMCMPMGR_API __cdecl CMX_ExitBEMCmpMgrDLL();
 bool BEMCMPMGR_API __cdecl CMX_GetUIActiveFlag();
 void BEMCMPMGR_API __cdecl CMX_SetUIActiveFlag( bool bActiveUI );
 
-BOOL BEMCMPMGR_API __cdecl CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE, LPCSTR bemBaseFileName=NULL );      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)
+BOOL BEMCMPMGR_API __cdecl CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects=TRUE, LPCSTR bemBaseFileName=NULL, QString* psErrMsg=NULL );      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)
 BOOL BEMCMPMGR_API __cdecl CMX_GetRulesetID( QString& sRuleSetID, QString& sRuleSetVer );
 BOOL BEMCMPMGR_API __cdecl CMX_ReadRulesetID( LPCSTR fileName, QString& sRuleSetID, QString& sRuleSetVer );
 
@@ -111,7 +111,8 @@ BOOL BEMCMPMGR_API __cdecl CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bRepor
 
 int  BEMCMPMGR_API __cdecl CMX_SaveAnalysisResultsToTempFiles( QVector<QString>& saProjEUseSumObjs, QVector<QString>& saUniqueEUseSumObjs, 
 																					QVector<QString>& saTempPathFiles );
-int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QString>& saUniqueEUseSumObjs, QVector<QString>& saTempPathFiles );
+int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QString>& saUniqueEUseSumObjs, QVector<QString>& saTempPathFiles,
+                                                                     bool bDelFilesFollowingRead=true, bool bDelSummaryResultsBeforeRead=true );       // SAC 06/02/26 (dev #903)
 
 
 //		Return Values:		0 =>	SUCCESS

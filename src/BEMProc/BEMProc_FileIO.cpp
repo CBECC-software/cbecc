@@ -30,7 +30,9 @@
  **********************************************************************/
 
 #include "stdafx.h"
+#include <direct.h>           // directory-related system routines
 #include <stdio.h>
+#include <io.h>
 #include <string.h>
 #include <time.h>
 #include <memory>
@@ -43,6 +45,7 @@
 #include "BEMClass.h"
 #include "BEMPropertyType.h"
 #include "BEMProcObject.h"
+#include "BEMSymbols.h"
 #include "expTextIO.h"
 
 #include "boost/date_time/posix_time/posix_time.hpp" //include all types plus i/o
@@ -4286,7 +4289,9 @@ bool  BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iB
 // Imported Function:  BEMPX_()
 //
 /////////////////////////////////////////////////////////////////////////////
-BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx /*=-1*/ )
+BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx /*=-1*/, 
+                                        BOOL bPostResolveRefErrors /*=TRUE*/, BOOL bSupressAllMessageBoxes /*=FALSE*/,       // bPostResolveRefErrors - SAC 06/03/26 (dev #903)  // bSupressAllMessageBoxes - SAC 06/04/26 (dev #903)
+                                        BOOL bResolveReferences /*=TRUE*/ )      // bResolveReferences - SAC 06/04/26 (dev #903)
 {
    BEMObject* pRetVal = NULL;
    BEMObject* pFirstObj = NULL;     // SAC 10/21/21
@@ -4304,7 +4309,7 @@ BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, in
       // read all component definitions contained in the file until the end-of-file marker is found
       do
       {
-         pNewObj = file->ReadComponent( iJunk );
+         pNewObj = file->ReadComponent( iJunk /*iDBIDSetFailureIdx*/, TRUE /*bCreateObj*/, NULL /*psOnlyProp*/, iBEMProcIdx );   // add iBEMProcIdx to call - SAC 06/04/26 (dev #903)
 
          if (pNewObj && pFirstObj == NULL)
             pFirstObj = pNewObj;     // return this first object if the main one not found - CAN HAPPEN when pasting across different programs or versions - SAC 10/21/21 (MFam)
@@ -4320,7 +4325,8 @@ BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, in
       // This function resolves those object names to actual object pointers.
       // This object resolving cannot happen during the reading process, since an object
       // can be assigned PRIOR to its definition in the file.
-      BEMP_ResolveAllReferences( BEMO_User, NULL, TRUE, iBEMProcIdx );
+      if (bResolveReferences)
+         BEMP_ResolveAllReferences( BEMO_User, NULL, bPostResolveRefErrors, iBEMProcIdx, bSupressAllMessageBoxes );
    }
 
    return (pRetVal ? pRetVal : pFirstObj);
@@ -6877,17 +6883,25 @@ long GetFileSize(std::string filename)
 //    3 : main JSON file object missing or invalid
 //    4 : required element missing from JSON file
 //    else : 'Code' from JSON file
+// mods to enable retrieval and reporting of error code/message even for small files - SAC 09/09/26 (dev #713)
 int BEMPX_GetJSONFileErrorCode( const char* fileName, QString* psMsg /*=NULL*/, const char* pszReqdElement /*=NULL*/, long lMinFileSize /*=0*/ )	   // SAC 09/04/23
 {	int iRetVal = 0;
       //	ptime t1(microsec_clock::local_time());  // SAC 10/24/13
-   if (lMinFileSize > 0)
-   {	long lFileSize = GetFileSize( fileName );
-      if (lFileSize < lMinFileSize)
-      {  iRetVal = 1;
-         if (psMsg)
-            *psMsg = QString( "JSON file smaller (%1) than minimum size of %2, file: %3" ).arg( QString::number(lFileSize), QString::number(lMinFileSize), fileName );
-   }  }
-   if (iRetVal == 0)
+   //if (lMinFileSize > 0)
+   //{	long lFileSize = GetFileSize( fileName );
+   //   if (lFileSize < lMinFileSize)
+   //   {  iRetVal = 1;
+   //      if (psMsg)
+   //         *psMsg = QString( "JSON file smaller (%1) than minimum size of %2, file: %3" ).arg( QString::number(lFileSize), QString::number(lMinFileSize), fileName );
+   //}  }
+   //if (iRetVal == 0)
+   long lFileSize = GetFileSize( fileName );
+   if (lFileSize < 5)
+   {  iRetVal = 1;
+      if (psMsg)
+         *psMsg = QString( "JSON file too small (%1), file: %2" ).arg( QString::number(lFileSize), fileName );
+   }
+   else
    {
    	QString sFileName = fileName;
    	QFile file( sFileName );
@@ -6913,21 +6927,37 @@ int BEMPX_GetJSONFileErrorCode( const char* fileName, QString* psMsg /*=NULL*/, 
                   if (psMsg)
                      *psMsg = QString( "error: required element '%1' missing from JSON file: %2" ).arg( pszReqdElement, fileName );
             }  }
-            if (iRetVal == 0)
+
+            if (iRetVal == 0 || iRetVal == 4)
             {  qjVal = obj.value("Code");
+               if (qjVal.isUndefined())      // revised to check for lowercase objects - SAC 09/10/26 (dev #713)
+                  qjVal = obj.value("code");
                if (!qjVal.isUndefined() && !qjVal.isNull())
                {  if (qjVal.isDouble())
                   {  iRetVal = qjVal.toInt();
                      qjVal = obj.value("Message");
+                     if (qjVal.isUndefined())
+                        qjVal = obj.value("message");
                      if (qjVal.isString())
                      {  if (psMsg)
                            *psMsg = qjVal.toString();
                      }
                      else 
-                        iRetVal = 0;  // OK if Code & Message NOT present...?
+                        *psMsg = QString( "JSON file error code %1, file: %2" ).arg( QString::number(iRetVal), fileName );
+                     //   iRetVal = 0;  // OK if Code & Message NOT present...?
                }  }
-   }  }  }  }
-	return iRetVal;
+            }
+
+            if (iRetVal == 4 && lMinFileSize > 0)
+            {	long lFileSize = GetFileSize( fileName );
+               if (lFileSize < lMinFileSize)
+               {  iRetVal = 1;
+                  if (psMsg)
+                     *psMsg = QString( "JSON file smaller (%1) than minimum size of %2, file: %3" ).arg( QString::number(lFileSize), QString::number(lMinFileSize), fileName );
+            }  }
+      }  }
+   }
+   return iRetVal;
 }
 
 ////////////////////////////////////////////////////////////
@@ -7112,3 +7142,383 @@ int BEMPX_WriteComponentsToCSVFile( const char* fileName, const char* objType, i
    }  }
    return iRetVal;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool iequals(const std::string& a, const std::string& b)
+{  return std::equal(a.begin(), a.end(), b.begin(), b.end(),
+                      [](char a, char b) {
+                          return std::tolower(a) == std::tolower(b);
+                      });
+}
+int StrIndex( std::vector<std::string>& vec, std::string str )
+{  int iRetVal = -1;
+   for (size_t i = 0; (i < vec.size() && iRetVal < 0); ++i)
+      iRetVal = (iequals( vec[i], str ) ? (int) i : -1);
+   return iRetVal;
+}
+
+int DefineUtilityRateEnumsFromFiles( std::string sUtilRatePath, std::vector<std::string>& vsUtilRateParseErrors, int iRateGenID /*=0*/ )   // SAC 10/08/26 (dev #689)
+{  int iRetVal = 0;
+   bool bDirExists = false;
+   int iError, iSpecialVal, iNumClassesToDel=0, iDelClassIdx=-1, iNumClasses = BEMPX_GetNumClasses();
+   std::vector<int> viDelClasses;
+   vsUtilRateParseErrors.clear();
+   if (sUtilRatePath.length() < 3)
+      vsUtilRateParseErrors.push_back( "DefineUtilityRateEnumsFromFiles Error: no utility rate file directory specified" );
+   else
+   {  DWORD dwAttrib = GetFileAttributes( sUtilRatePath.c_str() );
+      bDirExists = ( dwAttrib != INVALID_FILE_ATTRIBUTES && 
+                    (dwAttrib & FILE_ATTRIBUTE_DIRECTORY) );
+      if (!bDirExists)
+         vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: utility rate path invalid (directory doesn't exist):  %s" ) % sUtilRatePath ) );
+   }
+
+   if (vsUtilRateParseErrors.size() < 1)
+   {  if (iRateGenID == 0)    // g3 - XeroHome rates
+      {
+         for (int i1Class=1; i1Class<=iNumClasses; i1Class++)
+         {  BEMClass* pClass = BEMPX_GetClass( i1Class, iError );          assert( (iError >= 0 && pClass) );  // Error - getting class pointer
+            if (pClass && pClass->getShortName().indexOf("XH_")==0)
+               viDelClasses.push_back( i1Class );  // store list of class indexes to be deleted following each utility rate read
+         }
+         iNumClassesToDel = (int) viDelClasses.size();
+
+         if (iNumClassesToDel < 1)
+            vsUtilRateParseErrors.push_back( "DefineUtilityRateEnumsFromFiles Error: no 'XH_*' utility rate classes found in data model" );
+         else
+         {  int iDBCID_CUAC = BEMPX_GetClassIndexByLongName( "CalUtilityAllowanceCalc" );
+            long lDBID_CUAC_ElecUtility    = BEMPX_GetDatabaseID( "G3ElecUtility"  , iDBCID_CUAC );
+            long lDBID_CUAC_ElecTariff     = BEMPX_GetDatabaseID( "G3ElecTariff"   , iDBCID_CUAC );
+            //long lDBID_CUAC_ElecTariffFile = BEMPX_GetDatabaseID( "G3ElecTariffFile", iDBCID_CUAC );    // removed *TariffFile enum setting - will be handled via table look-up - SAC 10/14/26 (dev #689)
+            long lDBID_CUAC_ElecRegion     = BEMPX_GetDatabaseID( "G3ElecRegion"   , iDBCID_CUAC );
+            long lDBID_CUAC_ElecNEMType    = BEMPX_GetDatabaseID( "G3ElecNEMType"  , iDBCID_CUAC );
+            long lDBID_CUAC_ElecDiscount   = BEMPX_GetDatabaseID( "G3ElecDiscount" , iDBCID_CUAC );
+            long lDBID_CUAC_ElecDwellType  = BEMPX_GetDatabaseID( "G3ElecDwellType", iDBCID_CUAC );
+            long lDBID_CUAC_ElecHouseType  = BEMPX_GetDatabaseID( "G3ElecHouseType", iDBCID_CUAC );
+            long lDBID_CUAC_Utility=0, lDBID_CUAC_Tariff=0, lEnumVal_Utility=0, lEnumVal_Tariff=0;
+            BEMSymbolList *pEnumList_ElecUtility=NULL, *pEnumList_ElecTariff=NULL, *pEnumList_ElecRegion=NULL, *pEnumList_ElecNEMType=NULL, 
+                          *pEnumList_ElecDiscount=NULL, *pEnumList_ElecDwellType=NULL, *pEnumList_ElecHouseType=NULL, // *pEnumList_ElecTariffFile=NULL,
+                          *pEnumList_GasUtility=NULL, *pEnumList_GasTariff=NULL, *pEnumList_GasRegion=NULL, *pEnumList_GasNEMType=NULL, // *pEnumList_GasTariffFile=NULL, 
+                          *pEnumList_GasDiscount=NULL, *pEnumList_GasDwellType=NULL, *pEnumList_GasHouseType=NULL,
+                          *pEnumList_Region=NULL, *pEnumList_NEMType=NULL, *pEnumList_Discount=NULL, *pEnumList_DwellType=NULL, *pEnumList_HouseType=NULL;
+            BEMSymDependencySet *pEnumDepList_ElecUtility=NULL, *pEnumDepList_ElecTariff=NULL, // *pEnumDepList_ElecTariffFile=NULL,
+                                *pEnumDepList_GasUtility=NULL, *pEnumDepList_GasTariff=NULL, // *pEnumDepList_GasTariffFile=NULL,
+                                *pEnumDepList_Region=NULL, *pEnumDepList_NEMType=NULL, *pEnumDepList_Discount=NULL, *pEnumDepList_DwellType=NULL, *pEnumDepList_HouseType=NULL;
+            long lEnumVal_ElecUtility=0, lEnumVal_ElecTariff=0, lEnumVal_ElecRegion=0, lEnumVal_ElecNEMType=0, 
+                 lEnumVal_ElecDiscount=0, lEnumVal_ElecDwellType=0, lEnumVal_ElecHouseType=0,
+                 lEnumVal_GasUtility=0, lEnumVal_GasTariff=0, lEnumVal_GasRegion=0, lEnumVal_GasNEMType=0, 
+                 lEnumVal_GasDiscount=0, lEnumVal_GasDwellType=0, lEnumVal_GasHouseType=0,
+                 *plEnumVal_Utility=NULL, *plEnumVal_Tariff=NULL, *plEnumVal_Region=NULL, *plEnumVal_NEMType=NULL, 
+                 *plEnumVal_Discount=NULL, *plEnumVal_DwellType=NULL, *plEnumVal_HouseType=NULL;
+            std::vector<std::string> vsElecUtilities, vsGasUtilities;
+            std::vector<BEMSymDependencySet*> vpEnumDepList_ElecTariff, vpEnumDepList_GasTariff;
+
+            int iDBCID_XHUtilRate = BEMPX_GetClassIndexByLongName( "XH_UtilityRate" );
+            long lDBID_XHUtilRate_tariff_ui         = BEMPX_GetDatabaseID( "tariff_ui"     , iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_utility_ui        = BEMPX_GetDatabaseID( "utility_ui"    , iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_fuel_type         = BEMPX_GetDatabaseID( "fuel_type"     , iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_fuel_unit         = BEMPX_GetDatabaseID( "fuel_unit"     , iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_rate_type         = BEMPX_GetDatabaseID( "rate_type"     , iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_dwelling_types    = BEMPX_GetDatabaseID( "dwelling_types", iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_discounts         = BEMPX_GetDatabaseID( "discounts"     , iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_seasons           = BEMPX_GetDatabaseID( "seasons"       , iDBCID_XHUtilRate );
+            long lDBID_XHUtilRate_solar_nem_compatibility = BEMPX_GetDatabaseID( "solar_nem_compatibility", iDBCID_XHUtilRate );
+            QString qsRate_Utility, qsRate_Tariff, qsRate_FuelType;
+            int iArraySize_XHUtilRate_dwelling_types = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_XHUtilRate_dwelling_types );
+            int iArraySize_XHUtilRate_discounts      = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_XHUtilRate_discounts      );
+            int iArraySize_XHUtilRate_seasons        = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_XHUtilRate_seasons        );
+            int iArraySize_XHUtilRate_solar_nem_compatibility = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_XHUtilRate_solar_nem_compatibility );
+
+            BEMObject *pBEMObj, *pBEMObj2, *pBEMObj3;   int iObjArrIdx=0, iObjIdx=0;   QString qsObjName, qsObjName2, qsObjName3;
+            int iDBCID_XH_dwelling_type          = BEMPX_GetClassIndexByLongName( "XH_dwelling_type" );
+            long lDBID_XH_dwelling_type_name_alt = BEMPX_GetDatabaseID( "name_alt", iDBCID_XH_dwelling_type );
+            int iDBCID_XH_discount          = BEMPX_GetClassIndexByLongName( "XH_discount" );
+            long lDBID_XH_discount_name_alt = BEMPX_GetDatabaseID( "name_alt", iDBCID_XH_discount );
+            int iDBCID_XH_season                  = BEMPX_GetClassIndexByLongName( "XH_season" );
+            long lDBID_XH_season_name_alt         = BEMPX_GetDatabaseID( "name_alt", iDBCID_XH_season );
+            long lDBID_XH_season_baseline_regions = BEMPX_GetDatabaseID( "baseline_regions", iDBCID_XH_season );
+            int iDBCID_XH_baseline_region                 = BEMPX_GetClassIndexByLongName( "XH_baseline_region" );
+            long lDBID_XH_baseline_region_name_alt        = BEMPX_GetDatabaseID( "name_alt", iDBCID_XH_baseline_region );
+            long lDBID_XH_baseline_region_household_types = BEMPX_GetDatabaseID( "household_types", iDBCID_XH_baseline_region );
+            int iDBCID_XH_household_type          = BEMPX_GetClassIndexByLongName( "XH_household_type" );
+            long lDBID_XH_household_type_name_alt = BEMPX_GetDatabaseID( "name_alt", iDBCID_XH_household_type );
+            int iArraySize_XH_season_baseline_regions         = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_XH_season_baseline_regions );
+            int iArraySize_XH_baseline_region_household_types = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_XH_baseline_region_household_types );
+
+            FILE *fp_RateCSVTable;
+            int iCSVTblErrorCode;
+            std::string sPathFN, sFN, sRateName = "Utility Rate", sFileFilter = sUtilRatePath + "*.json", sCSVTablePathFile = sUtilRatePath + "CUAC_UtilityRateGen3Data.csv";
+   	      struct _finddata_t c_file;
+   	      try
+    	      {	
+               iCSVTblErrorCode = fopen_s( &fp_RateCSVTable, sCSVTablePathFile.c_str(), "wb" );       // SAC 10/12/26 (dev #689)
+               if (iCSVTblErrorCode != 0 || fp_RateCSVTable == NULL)
+                  iRetVal = -1;
+               else
+               {  // header of CSV look-up table
+                  QDateTime locTime = QDateTime::currentDateTime();
+                  QString timeStamp = locTime.toString("yyyy-MM-dd HH:mm:ss");
+                  // fprintf( fp_RateCSVTable, "BEMProc:%3d   Run: '%s' / '%s'   NumMeters:%3d\n", iBEMProcIdx, pRun->getName(), pRun->getAbbrev(), pRun->getNumMeters() );
+                  fprintf( fp_RateCSVTable, ";,Table of CUAC Gen3 (XH) utility rates and related data\n" );
+                  fprintf( fp_RateCSVTable, ";,%s\n", timeStamp.toLatin1().constData() );   fprintf( fp_RateCSVTable, ";\n" );
+                  fprintf( fp_RateCSVTable, ",TABLE CUAC_UtilityRateGen3Data,\n" );
+                  fprintf( fp_RateCSVTable, ",,Fuel,Utility,Rate,IsDefault,IsTOURate,RateFile,RateDescription,RateUpdYear,RateUpdMonth,RateUpdDay,NumRegions,DefaultRegion,NumDiscounts,DefaultDiscount,NumDwellTypes,DefaultDwellType,NumHouseTypes,DefaultHouseType,NumNEMTypes,Disclaimer,FileHash,\n" );
+
+                  // loop over JSON rate files
+                  intptr_t hFile = _findfirst( sFileFilter.c_str(), &c_file );        // switched from long - SAC 06/10/24
+   	      	   if (hFile != -1L)
+   	      	   {	do
+   	      	   	{	sFN = c_file.name;
+   	      	   		if (sFN.compare(".") && sFN.compare("..") && sFN.length() > 3)
+   	      	   		{  sPathFN = sUtilRatePath + sFN;
+                           QString qsRateErrMsg;
+                           int iReadRateJSONRetVal = BEMPX_ReadComponentFromJSONFile( sPathFN.c_str(), "XH_UtilityRate", sRateName.c_str(), -1, &qsRateErrMsg,
+                                                                                      NULL /*fileNamePropertyType*/, NULL /*propertyToIncludeInObjName*/, true /*bRenameReservedBEMProperties*/ );  // SAC 10/09/26 (dev #689)
+                           if (iReadRateJSONRetVal < 0 || qsRateErrMsg.length() > 0)
+                           {  if (qsRateErrMsg.length() > 0)
+                                 vsUtilRateParseErrors.push_back( boost::str( boost::format( "ReadComponentFromJSONFile Error (%d): %s / on file:  %s" ) % iReadRateJSONRetVal % qsRateErrMsg.toLatin1().constData() % sPathFN.c_str() ) );
+                              else
+                                 vsUtilRateParseErrors.push_back( boost::str( boost::format( "ReadComponentFromJSONFile Error (%d) on file:  %s" ) % iReadRateJSONRetVal % sPathFN.c_str() ) );
+                           }
+                           else
+                           {  char pHashBuffer[65];      bool bHashOK=true;
+                              int iSHA256_RetVal = ComputeSHA256_File( sPathFN.c_str(), pHashBuffer, 65 );
+                              if (iSHA256_RetVal != 0)
+                              {  //sLogMsg = boost::str( boost::format( ",\"%s\",ComputeSHA256_File() error: %d" ) % sChkFile.c_str() % iSHA256_RetVal );
+                                 vsUtilRateParseErrors.push_back( boost::str( boost::format( "ReadComponentFromJSONFile ComputeSHA256_File Error (%d) on file:  %s" ) % iSHA256_RetVal % sPathFN.c_str() ) );
+                                 bHashOK = false;
+                              }
+                              else if (strlen( pHashBuffer ) != 64)
+                              {  //sLogMsg = boost::str( boost::format( ",\"%s\",ComputeSHA256_File() error - return string too short: %d" ) % sChkFile.c_str() % strlen( pHashBuffer ) );
+                                 vsUtilRateParseErrors.push_back( boost::str( boost::format( "ReadComponentFromJSONFile ComputeSHA256_File Error (return string too short) on file:  %s" ) % sPathFN.c_str() ) );
+                                 bHashOK = false;
+                              }
+                              //else
+                              //{  //sLogMsg = boost::str( boost::format( ",\"%s\",\"%s\"" ) % sChkFile.c_str() % pHashBuffer );
+                              //   setFileHash( pHashBuffer );
+                              //}
+
+                              if (pEnumList_ElecUtility == NULL)
+                              {  pEnumList_ElecUtility    = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecUtility   );
+                                    pEnumDepList_ElecUtility = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_ElecUtility, 0, 0, -1.0, 0, -1.0 );
+                                       BEMPX_AddSymbol( (void*) pEnumDepList_ElecUtility, 0, "- select utility -" );
+                                 pEnumList_ElecTariff     = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecTariff    );
+                                 // pEnumList_ElecTariffFile = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecTariffFile );
+                                 pEnumList_ElecRegion     = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecRegion    );
+                                 pEnumList_ElecNEMType    = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecNEMType   );
+                                 pEnumList_ElecDiscount   = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecDiscount  );
+                                 pEnumList_ElecDwellType  = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecDwellType );
+                                 pEnumList_ElecHouseType  = (BEMSymbolList*) BEMPX_OverwriteSymbolList( lDBID_CUAC_ElecHouseType );
+                              }
+
+                              if (BEMPX_GetString( lDBID_XHUtilRate_utility_ui, qsRate_Utility  ) && qsRate_Utility.length() > 0 &&    // SAC 10/10/26 (dev #689)
+                                  BEMPX_GetString( lDBID_XHUtilRate_tariff_ui , qsRate_Tariff   ) && qsRate_Tariff.length() > 0 &&
+                                  BEMPX_GetString( lDBID_XHUtilRate_fuel_type , qsRate_FuelType ) && qsRate_FuelType.length() > 0 )
+                              {  bool bTariffOK=true;
+                                 int iNumRegions=0, iNumDiscounts=0, iNumDwellTypes=0, iNumHouseTypes=0, iNumNEMTypes=0;
+                                 if (qsRate_FuelType.compare( "Elec" ) == 0)
+                                 {  // parse ELECTRIC rate enums
+                                    int iUtilEnumIdx = StrIndex( vsElecUtilities, qsRate_Utility.toLatin1().constData() );
+                                    if (iUtilEnumIdx < 0)
+                                    {  vsElecUtilities.push_back( qsRate_Utility.toLatin1().constData() );
+                                       BEMPX_AddSymbol( (void*) pEnumDepList_ElecUtility, ++lEnumVal_ElecUtility, qsRate_Utility.toLatin1().constData() );
+                                       pEnumDepList_ElecTariff = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_ElecTariff, 0, lDBID_CUAC_ElecUtility, lEnumVal_ElecUtility, 0, -1.0 );
+                                       BEMPX_AddSymbol( (void*) pEnumDepList_ElecTariff, 0, "- select tariff -" );
+                                       vpEnumDepList_ElecTariff.push_back( pEnumDepList_ElecTariff );
+                                       // if (pEnumDepList_ElecTariffFile == NULL)
+                                       // {  pEnumDepList_ElecTariffFile = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_ElecTariffFile, 0, 0, -1.0, 0, -1.0 );
+                                       //    BEMPX_AddSymbol( (void*) pEnumDepList_ElecTariffFile, 0, "- no file -" );
+                                    }  // }
+                                    else
+                                    {  pEnumDepList_ElecTariff = vpEnumDepList_ElecTariff[iUtilEnumIdx];
+                                       // assert( pEnumDepList_ElecTariffFile != NULL );
+                                    }
+                                    BEMPX_AddSymbol( (void*) pEnumDepList_ElecTariff    , ++lEnumVal_ElecTariff, qsRate_Tariff.toLatin1().constData() );
+                                    // BEMPX_AddSymbol( (void*) pEnumDepList_ElecTariffFile,   lEnumVal_ElecTariff, sFN.c_str() );
+
+                                    pEnumList_Region    = pEnumList_ElecRegion;        pEnumList_NEMType   = pEnumList_ElecNEMType;       pEnumList_Discount = pEnumList_ElecDiscount;
+                                    pEnumList_DwellType = pEnumList_ElecDwellType;     pEnumList_HouseType = pEnumList_ElecHouseType;
+
+                                    plEnumVal_Utility  = &lEnumVal_ElecUtility;     plEnumVal_Tariff    = &lEnumVal_ElecTariff;
+                                    plEnumVal_Region   = &lEnumVal_ElecRegion;      plEnumVal_NEMType   = &lEnumVal_ElecNEMType; 
+                                    plEnumVal_Discount = &lEnumVal_ElecDiscount;    plEnumVal_DwellType = &lEnumVal_ElecDwellType;     plEnumVal_HouseType = &lEnumVal_ElecHouseType;
+
+                                    lDBID_CUAC_Utility = lDBID_CUAC_ElecUtility;   lDBID_CUAC_Tariff = lDBID_CUAC_ElecTariff;   lEnumVal_Utility = lEnumVal_ElecUtility;   lEnumVal_Tariff = lEnumVal_ElecTariff;
+                                 }
+                                 else if (qsRate_FuelType.compare( "Gas" ) == 0)
+                                 {  // parse GAS rate enums
+
+
+                                 // TO DO
+
+
+                                    pEnumList_Region    = pEnumList_GasRegion;         pEnumList_NEMType   = pEnumList_GasNEMType;        pEnumList_Discount = pEnumList_GasDiscount;
+                                    pEnumList_DwellType = pEnumList_GasDwellType;      pEnumList_HouseType = pEnumList_GasHouseType;
+
+                                    plEnumVal_Utility  = &lEnumVal_GasUtility;      plEnumVal_Tariff    = &lEnumVal_GasTariff;
+                                    plEnumVal_Region   = &lEnumVal_GasRegion;       plEnumVal_NEMType   = &lEnumVal_GasNEMType; 
+                                    plEnumVal_Discount = &lEnumVal_GasDiscount;     plEnumVal_DwellType = &lEnumVal_GasDwellType;      plEnumVal_HouseType = &lEnumVal_GasHouseType;
+
+                                    lDBID_CUAC_Utility = lDBID_CUAC_ElecUtility;   lDBID_CUAC_Tariff = lDBID_CUAC_ElecTariff;   lEnumVal_Utility = lEnumVal_ElecUtility;   lEnumVal_Tariff = lEnumVal_ElecTariff;
+                                 }
+                                 else
+                                 {  vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: unrecognized fuel type '%s' from file:  %s" ) % qsRate_FuelType.toLatin1().constData() % sPathFN.c_str() ) );
+                                    bTariffOK = false;
+                                 }
+
+                                 if (bTariffOK)
+                                 { // dwelling_types                - SAC 10/11/26 (dev #689)
+                                    pEnumDepList_DwellType = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_DwellType, 0, lDBID_CUAC_Utility, lEnumVal_Utility, lDBID_CUAC_Tariff, lEnumVal_Tariff );
+                                    BEMPX_AddSymbol( (void*) pEnumDepList_DwellType, 0, "- select dwelling type -" );
+                                    for (iObjArrIdx=0; iObjArrIdx < iArraySize_XHUtilRate_dwelling_types; iObjArrIdx++)
+                                    {  pBEMObj = BEMPX_GetObjectPtr( lDBID_XHUtilRate_dwelling_types + iObjArrIdx, iSpecialVal, iError );
+                                       if (pBEMObj && pBEMObj->getClass())
+                                       {  iObjIdx = BEMPX_GetObjectIndex( pBEMObj->getClass(), pBEMObj );
+                                          if (iObjIdx >= 0 && BEMPX_GetString( lDBID_XH_dwelling_type_name_alt, qsObjName, TRUE, 0, -1, iObjIdx ) && qsObjName.length() > 0)
+                                          {  *plEnumVal_DwellType += 1;
+                                             BEMPX_AddSymbol( (void*) pEnumDepList_DwellType, *plEnumVal_DwellType, qsObjName.toLatin1().constData() );     iNumDwellTypes++;
+                                    }  }  }
+                                   // discounts                     - SAC 10/11/26 (dev #689)
+                                    pEnumDepList_Discount = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_Discount, 0, lDBID_CUAC_Utility, lEnumVal_Utility, lDBID_CUAC_Tariff, lEnumVal_Tariff );
+                                    BEMPX_AddSymbol( (void*) pEnumDepList_Discount, 0, "- no discount -" );
+                                    for (iObjArrIdx=0; iObjArrIdx < iArraySize_XHUtilRate_discounts; iObjArrIdx++)
+                                    {  pBEMObj = BEMPX_GetObjectPtr( lDBID_XHUtilRate_discounts + iObjArrIdx, iSpecialVal, iError );
+                                       if (pBEMObj && pBEMObj->getClass())
+                                       {  iObjIdx = BEMPX_GetObjectIndex( pBEMObj->getClass(), pBEMObj );
+                                          if (iObjIdx >= 0 && BEMPX_GetString( lDBID_XH_discount_name_alt, qsObjName, TRUE, 0, -1, iObjIdx ) && qsObjName.length() > 0)
+                                          {  *plEnumVal_Discount += 1;
+                                             BEMPX_AddSymbol( (void*) pEnumDepList_Discount, *plEnumVal_Discount, qsObjName.toLatin1().constData() );    iNumDiscounts++;
+                                    }  }  }
+                                   // solar_nem_compatibility                     - SAC 10/12/26 (dev #689)
+                                    pEnumDepList_NEMType = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_ElecNEMType, 0, lDBID_CUAC_Utility, lEnumVal_Utility, lDBID_CUAC_Tariff, lEnumVal_Tariff );
+                                    BEMPX_AddSymbol( (void*) pEnumDepList_NEMType, 0, "- none -" );
+                                    for (int iArrIdx=0; iArrIdx < iArraySize_XHUtilRate_solar_nem_compatibility; iArrIdx++)
+                                    {  QString qsNEMType;
+                                       if (BEMPX_GetString( lDBID_XHUtilRate_solar_nem_compatibility + iArrIdx, qsNEMType ) && qsNEMType.length() > 0)
+                                       {  int iSymVal = (qsNEMType.indexOf("1") >= 0 ? 1 : (qsNEMType.indexOf("2") >= 0 ? 2 : (qsNEMType.indexOf("3") >= 0 ? 3 : iArrIdx+10)));
+                                          BEMPX_AddSymbol( (void*) pEnumDepList_NEMType, iSymVal, qsNEMType.toLatin1().constData() );    iNumNEMTypes++;
+                                    }  }
+                                   // seasons                       - SAC 10/11/26 (dev #689)
+                                    std::vector<std::string> vsSeasonRegions, vsRegionHouseholdTypes;
+                                    pEnumDepList_Region    = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_Region, 0, lDBID_CUAC_Utility, lEnumVal_Utility, lDBID_CUAC_Tariff, lEnumVal_Tariff );
+                                    BEMPX_AddSymbol( (void*) pEnumDepList_Region, 0, "- select region -" );
+                                    pEnumDepList_HouseType = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_HouseType, 0, lDBID_CUAC_Utility, lEnumVal_Utility, lDBID_CUAC_Tariff, lEnumVal_Tariff );
+                                    BEMPX_AddSymbol( (void*) pEnumDepList_HouseType, 0, "- select household type -" );
+                                    for (iObjArrIdx=0; iObjArrIdx < iArraySize_XHUtilRate_seasons; iObjArrIdx++)
+                                    {  pBEMObj = BEMPX_GetObjectPtr( lDBID_XHUtilRate_seasons + iObjArrIdx, iSpecialVal, iError );
+                                       if (pBEMObj && pBEMObj->getClass())
+                                       {  iObjIdx = BEMPX_GetObjectIndex( pBEMObj->getClass(), pBEMObj );
+                                          if (iObjIdx >= 0 && BEMPX_GetString( lDBID_XH_season_name_alt, qsObjName, TRUE, 0, -1, iObjIdx ) && qsObjName.length() > 0)
+                                          {  // if (pEnumDepList_Discount == NULL)
+                                             // {  pEnumDepList_Discount = (BEMSymDependencySet*) BEMPX_AddSymbolDepList( (void*) pEnumList_Discount, 0, lDBID_CUAC_Utility, lEnumVal_Utility, lDBID_CUAC_Tariff, lEnumVal_Tariff );
+                                             //    BEMPX_AddSymbol( (void*) pEnumDepList_Discount, 0, "- select discount -" );
+                                             // }
+                                             // *plEnumVal_Discount += 1;
+                                             // BEMPX_AddSymbol( (void*) pEnumDepList_Discount, *plEnumVal_Discount, qsObjName.toLatin1().constData() );
+
+                                           // baseline_regions                 - SAC 10/12/26 (dev #689)
+                                             for (int iObjArrIdx2=0; iObjArrIdx2 < iArraySize_XH_season_baseline_regions; iObjArrIdx2++)
+                                             {  pBEMObj2 = BEMPX_GetObjectPtr( lDBID_XH_season_baseline_regions + iObjArrIdx2, iSpecialVal, iError, iObjIdx );
+                                                if (pBEMObj2 && pBEMObj2->getClass())
+                                                {  int iObjIdx2 = BEMPX_GetObjectIndex( pBEMObj2->getClass(), pBEMObj2 );
+                                                   if (iObjIdx2 >= 0 && BEMPX_GetString( lDBID_XH_baseline_region_name_alt, qsObjName2, TRUE, 0, -1, iObjIdx2 ) && qsObjName2.length() > 0)
+                                                   {  int iRegionStrIdx = StrIndex( vsSeasonRegions, qsObjName2.toLatin1().constData() );
+                                                      if (iObjArrIdx == 0 && iRegionStrIdx >= 0)
+                                                      {  vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: duplicate region '%s' found in first season '%s' in rate file:  %s" ) % qsObjName2.toLatin1().constData() % qsObjName.toLatin1().constData() % sPathFN.c_str() ) );
+                                                         bTariffOK = false;
+                                                      }
+                                                      else if (iObjArrIdx > 0 && iRegionStrIdx < 0)
+                                                      {  vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: new region '%s' found in season other than first '%s' in rate file:  %s" ) % qsObjName2.toLatin1().constData() % qsObjName.toLatin1().constData() % sPathFN.c_str() ) );
+                                                         bTariffOK = false;
+                                                      }
+                                                      else if (iRegionStrIdx < 0)
+                                                      {  // new region
+                                                         vsSeasonRegions.push_back( qsObjName2.toLatin1().constData() );
+                                                         *plEnumVal_Region += 1;
+                                                         BEMPX_AddSymbol( (void*) pEnumDepList_Region, *plEnumVal_Region, qsObjName2.toLatin1().constData() );    iNumRegions++;
+
+                                                       // household_types               - SAC 10/12/26 (dev #689)
+                                                         for (int iObjArrIdx3=0; iObjArrIdx3 < iArraySize_XH_baseline_region_household_types; iObjArrIdx3++)
+                                                         {  pBEMObj3 = BEMPX_GetObjectPtr( lDBID_XH_baseline_region_household_types + iObjArrIdx3, iSpecialVal, iError, iObjIdx2 );
+                                                            if (pBEMObj3 && pBEMObj3->getClass())
+                                                            {  int iObjIdx3 = BEMPX_GetObjectIndex( pBEMObj3->getClass(), pBEMObj3 );
+                                                               if (iObjIdx3 >= 0 && BEMPX_GetString( lDBID_XH_household_type_name_alt, qsObjName3, TRUE, 0, -1, iObjIdx3 ) && qsObjName3.length() > 0)
+                                                               {  int iHouseTypeStrIdx = StrIndex( vsRegionHouseholdTypes, qsObjName3.toLatin1().constData() );
+                                                                  if (iObjArrIdx == 0 && iObjArrIdx2 == 0 && iHouseTypeStrIdx >= 0)
+                                                                  {  vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: duplicate household type '%s' found in first season '%s', first region '%s' in rate file:  %s" ) % qsObjName3.toLatin1().constData() % qsObjName.toLatin1().constData() % qsObjName2.toLatin1().constData() % sPathFN.c_str() ) );
+                                                                     bTariffOK = false;
+                                                                  }
+                                                                  else if ((iObjArrIdx > 0 || iObjArrIdx2 > 0) && iHouseTypeStrIdx < 0)
+                                                                  {  vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: new household type '%s' found in (not first) season '%s' & region '%s' in rate file:  %s" ) % qsObjName3.toLatin1().constData() % qsObjName.toLatin1().constData() % qsObjName2.toLatin1().constData() % sPathFN.c_str() ) );
+                                                                     bTariffOK = false;
+                                                                  }
+                                                                  else if (iHouseTypeStrIdx < 0)
+                                                                  {  // new household_type
+                                                                     vsRegionHouseholdTypes.push_back( qsObjName3.toLatin1().constData() );
+                                                                     *plEnumVal_HouseType += 1;
+                                                                     BEMPX_AddSymbol( (void*) pEnumDepList_HouseType, *plEnumVal_HouseType, qsObjName3.toLatin1().constData() );    iNumHouseTypes++;
+                                                                  }
+                                                         }  }  }
+                                                      }
+                                             }  }  }
+                                    }  }  }
+                                 }
+                                 if (bTariffOK)
+                                 {
+                                    QString qsCSVRateType = (qsRate_FuelType.compare( "Elec" ) == 0 ? "Electric" : "Gas");
+                                    QString qsRateType, qsRateDescrip, qsDownloadDate, qsDisclaimer;     long lRateDefault=0;
+                                    BEMPX_GetString(  BEMPX_GetDatabaseID( "rate_type"    , iDBCID_XHUtilRate ), qsRateType     );
+                                    BEMPX_GetString(  BEMPX_GetDatabaseID( "description"  , iDBCID_XHUtilRate ), qsRateDescrip  );
+                                    BEMPX_GetString(  BEMPX_GetDatabaseID( "download_date", iDBCID_XHUtilRate ), qsDownloadDate );
+                                    BEMPX_GetString(  BEMPX_GetDatabaseID( "disclaimer"   , iDBCID_XHUtilRate ), qsDisclaimer   );
+                                    BEMPX_GetInteger( BEMPX_GetDatabaseID( "default_alt"  , iDBCID_XHUtilRate ), lRateDefault   );     // SAC 10/13/26 (dev #689)
+                                    int iIsTOURate = (qsRateType.indexOf( "TOU" ) >= 0 ? 1 : 0);
+                                    long lDownldDateYr = qsDownloadDate.left( 4).toLong();
+                                    long lDownldDateMo = qsDownloadDate.mid(4,2).toLong();
+                                    long lDownldDateDa = qsDownloadDate.mid(6,2).toLong();
+                                    fprintf( fp_RateCSVTable, ",,%s,\"%s\",\"%s\",%d,%d,\"%s\",\"%s\",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,\"%s\",%s\n", qsCSVRateType.toLatin1().constData(), qsRate_Utility.toLatin1().constData(),      // SAC 10/12/26 (dev #689)
+                                                                  qsRate_Tariff.toLatin1().constData(), lRateDefault, iIsTOURate, sFN.c_str(), qsRateDescrip.toLatin1().constData(), lDownldDateYr, lDownldDateMo, lDownldDateDa,
+                                                                  iNumRegions, (iNumRegions    == 1 ? *plEnumVal_Region    : 0), iNumDiscounts,  0, iNumDwellTypes, (iNumDwellTypes == 1 ? *plEnumVal_DwellType : 0),
+                                                                  iNumHouseTypes, (iNumHouseTypes == 1 ? *plEnumVal_HouseType : 0), iNumNEMTypes, qsDisclaimer.toLatin1().constData(), pHashBuffer );
+                                    iRetVal++;
+                                 }
+                              }
+                              else
+                                 vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error retrieving utility, tariff and/or fuel type from file: %s" ) % sPathFN.c_str() ) );
+                           }
+
+                           // delete any XH_* objects created above - SAC 10/09/26 (dev #689)
+                           for (iDelClassIdx = iNumClassesToDel-1; iDelClassIdx >= 0; iDelClassIdx--)
+                           {  BEMClass* pClass = BEMPX_GetClass( viDelClasses[iDelClassIdx], iError );      assert( (iError >= 0 && pClass) );  // Error - getting class pointer
+                              if (pClass && pClass->ObjectCount( BEMO_User ) > 0)
+                              {  pClass->RemoveObjects( BEMO_User );
+                                 pClass->setCurrentParent( NULL );
+                           }  }
+                        }
+                     }  // end of loop over utility rate files
+   	      	   	while ( _findnext( hFile, &c_file ) == 0);
+   	      	   	_findclose( hFile );
+   	      	   }
+
+                  fprintf( fp_RateCSVTable, ",ENDTABLE,\n" );   fprintf( fp_RateCSVTable, "\n" );
+                  fflush( fp_RateCSVTable );
+                  fclose( fp_RateCSVTable );
+               }  // fp_RateCSVTable valid
+   	      }
+            catch(const std::exception& e)
+            {  vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: exception thrown while processing rate files:  %s" ) % e.what() ) );
+               // std::cerr << e.what() << '\n';
+            }
+   	      // catch( ... )
+   	      // {  vsUtilRateParseErrors.push_back( "DefineUtilityRateEnumsFromFiles Error: exception thrown while processing rate files" );
+   	      // }
+         }
+      }
+      else
+         vsUtilRateParseErrors.push_back( boost::str( boost::format( "DefineUtilityRateEnumsFromFiles Error: unrecognized RateGenID %d" ) % iRateGenID ) );
+   }
+   return (vsUtilRateParseErrors.size() > 0 ? (-1 * (int) vsUtilRateParseErrors.size()) : iRetVal);   // <0 # errors / >=0 # rate files processed
+}
+

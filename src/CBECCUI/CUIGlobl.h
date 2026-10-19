@@ -210,6 +210,8 @@ extern int    GetCUIFontHeight( int fontType );
 extern CString esProgramPath;
 extern CString esDataPath;
 extern CString esBEMBasePath;    // SAC 10/28/22 (CUAC)
+extern CString esBEMBasePathFile;    // SAC 06/01/26 (dev #903)
+extern CString esRulesetPathFile;    // SAC 06/01/26 (dev #903)
 extern CString esProjectsPath;
 extern CString esAltWeatherPath;	// SAC 6/3/20
 extern CString esProgramFName;   // SAC 8/19/11
@@ -374,7 +376,8 @@ extern char BASED_CODE eszRulesetSwitch[];
 extern char BASED_CODE eszPostRulesetSwitch[];
 
 extern BOOL LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,
-									const char* psInitLogFileName = NULL, BOOL bMsgBox = TRUE );	// SAC 1/3/17
+									const char* psInitLogFileName = NULL, BOOL bMsgBox = TRUE,  	// SAC 1/3/17
+                           BOOL bSetupUtilRateEnums = FALSE );    // SAC 10/08/26 (dev #689)
 
 extern int eiNumRulesetsAvailable;
 
@@ -563,6 +566,7 @@ extern int eiBDBCID_DHWSolarSys;		// SAC 1/31/20 (Com tic #3157)  // SAC 1/12/20
 extern long elDBID_Proj_Name;
 extern long elDBID_Proj_RunDate;
 extern long elDBID_Proj_SoftwareVersion;
+extern long elDBID_Proj_RunTitle;    // SAC 1/8/12
 
 extern long elDBID_CUAC_ResultsCSVToCombineDir;    // SAC 10/25/24
 
@@ -799,7 +803,6 @@ extern int eiBDBCID_IAQVentRpt;
 extern long elDBID_Proj_SoftwareVersionDetail;	// SAC 2/13/20 (tic #1192)
 extern long elDBID_Proj_AnalysisType;    // SAC 9/12/11
 extern long elDBID_Proj_IsMultiFamily;   // SAC 7/29/16
-extern long elDBID_Proj_RunTitle;    // SAC 1/8/12
 extern long elDBID_Proj_ElecMETER;			// SAC 6/19/12
 extern long elDBID_Proj_NatGasMETER;		// SAC 6/19/12
 extern long elDBID_Proj_OtherFuelMETER;	// SAC 6/19/12
@@ -891,7 +894,9 @@ extern long elDBID_DHWSys_CentralDHWType;	// SAC 1/21/20
 
 extern BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt );   // SAC 8/29/11 - enable class-specific dialog tab dimensions
 
-extern void GetDialogCaption( int iBDBClass, CString& sDialogCaption );  // SAC 1/8/13 - enable application-specific dialog captions
+extern void GetDialogCaption( int iBDBClass, CString& sDialogCaption, int iDlgTabCtrlWd=-1 );  // SAC 1/8/13 - enable application-specific dialog captions  // added iDlgTabCtrlWd - SAC 06/11/26
+
+extern int  GetReplacementFirstDlgTabID( int iBDBClass );
 
 extern void GetObjectConversionInfo( int iBEMClassFrom, int iBEMClassTo, int& iDlgID, int& iDlgWd, int& iDlgHt, CString& sNewNameAppend, 
 													long& lNewObjAssignDBID, long& lNewConsAssmAssignDBID, CString& sDlgCaption, CStringArray& saFromProps, CStringArray& saToProps );  // SAC 10/14/15

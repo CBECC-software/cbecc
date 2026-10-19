@@ -3,7 +3,7 @@ Building energy code compliance analysis tools - developed for and supported by 
 For more information about each program module, refer to the src\README.md file.  
 
 # Supporting Files
-Weather, rule and other analysis files are included in this repository under \bin. These files include CEC Title-24 analysis rules that are maintained on the following GitHub repository: https://github.com/NOR-Codes-Stds/CBECC
+Weather, rule and other analysis files are included in this repository under \bin. These files include CEC Title-24 analysis rules that are maintained on the following GitHub repository: https://github.com/california-energy-commission/CBECC
 As of version 2025.2.0, CBECC-Res has been integrated into CBECC, but analysis rulesets (both source and binaries) remain unique to NRMF (nonresidential/multifamily) and SFam (single-family/duplex) model analysis. Only occasional release versions of CBECC ruleset binaries will be posted to this repository. For the latest rule source, refer to the repository above.
 
 # Supported Compiler and Platform
@@ -19,7 +19,7 @@ We recommend that you read through and download (& unzip) the vendor binaries be
 # Vendor Binaries
 Executable and library files for each of these tools can either be compiled by you, the devloper, or downloaded via the following links. Each of these compressed files are designed to be unzipped into the root repository directory.
 
-*CSE v0.928.0*:  https://drive.google.com/file/d/1bmskv35vA8OYJEZUkEoLXPfmx0Nheq_S/view?usp=sharing (~9.3 MB, updated 4/2/26 for 2025.2.1 release)  
+*CSE v1.0.0*:  https://drive.google.com/file/d/1ftdi236NbTD7npYBZ2pyPW4SHpjjoGCR/view?usp=sharing (~10.4 MB, updated 10/19/26 for 2025.3.0 and 3.0.1 releases)  
 - Project site:  https://github.com/cse-sim 
 
 *OpenStudio / EnergyPlus v25-1*:  https://drive.google.com/file/d/1pjbVf7rDkZ1AXBdzaJZ7mZcTTRDm8VBH/view?usp=sharing (~124 MB, updated 8/14/25)  

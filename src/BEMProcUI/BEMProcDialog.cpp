@@ -133,7 +133,8 @@ CSACBEMProcDialog::CSACBEMProcDialog(int iBEMClass, int iUIMode, BOOL bDisplayAl
                              const char* pszExitingRulelist /*=NULL*/, const char* pszDataModRulelist /*=NULL*/,
                              BOOL bPostHelpMessageToParent /*=FALSE*/,
                              BOOL bIncludeCompParamStrInToolTip /*=FALSE*/, BOOL bIncludeStatusStrInToolTip /*=TRUE*/,    // SAC 1/19/12
-									  BOOL bIncludeLongCompParamStrInToolTip /*=FALSE*/, BOOL bShowRefreshDefaultsBtn /*=FALSE*/ )   // SAC 8/13/13  // SAC 4/18/18
+									  BOOL bIncludeLongCompParamStrInToolTip /*=FALSE*/, BOOL bShowRefreshDefaultsBtn /*=FALSE*/,    // SAC 8/13/13  // SAC 4/18/18
+                             int iSwapFirstTabID /*=-1*/ )	 // SAC 06/11/26 (dev #903)
 	: CDialog(CSACBEMProcDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CSACBEMProcDialog)
@@ -156,6 +157,7 @@ CSACBEMProcDialog::CSACBEMProcDialog(int iBEMClass, int iUIMode, BOOL bDisplayAl
    m_iTabCtrlWd = iTabCtrlWd;   // SAC 8/22/00
    m_iTabCtrlHt = iTabCtrlHt;   // SAC 8/22/00
    m_iMaxTabs   = iMaxTabs;     // SAC 8/22/00
+   m_iSwapFirstTabID = iSwapFirstTabID;   // SAC 06/11/26 (dev #903)
 
    if (pszCaptionText)
       m_sCaptionString = pszCaptionText;   // SAC 8/22/00
@@ -295,7 +297,11 @@ BOOL CSACBEMProcDialog::OnInitDialog()
    int iPg = 0;
    for (int i=0; (i<iNumPages && i<m_iMaxTabs); i++)
    {
-      CBEMPUIPage* pPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, i, m_iUIMode );
+      CBEMPUIPage* pPage;
+      if (i == 0 && m_iSwapFirstTabID > 0)   // SAC 06/11/26 (dev #903)
+         pPage = eScreenData.GetPageByID( m_iSwapFirstTabID );
+      else
+         pPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, i, m_iUIMode );
       if (pPage && (m_bDisplayAllUIControls || eScreenData.PageHasActiveControls( pPage )))
       {
          TabCtrlItem.pszText = pPage->m_sCaption.GetBuffer( 0 );
@@ -326,10 +332,8 @@ BOOL CSACBEMProcDialog::OnInitDialog()
 
    m_BEMProcTabCtrl.SetFocus();
 
-
    BOOL bSetOK = SetWindowContextHelpId( 1000 );
    bSetOK = m_BEMProcTabCtrl.SetWindowContextHelpId( 1000 );
-   
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -604,7 +608,11 @@ BOOL CSACBEMProcDialog::InitControls()
    ASSERT( m_waValidPageIdxs.GetSize() > iPage && iPage >= 0 );
 
    // Create controls for one of the component-specific pages
-   m_pTDPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, m_waValidPageIdxs[ iPage ], m_iUIMode );
+
+   if (iPage == 0 && m_waValidPageIdxs[ iPage ] == 0 && m_iSwapFirstTabID > 0)   // SAC 06/11/26 (dev #903)
+      m_pTDPage = eScreenData.GetPageByID( m_iSwapFirstTabID );
+   else
+      m_pTDPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, m_waValidPageIdxs[ iPage ], m_iUIMode );
    if (m_pTDPage)
    {
       CWaitCursor wait;
@@ -1284,7 +1292,11 @@ BOOL CSACBEMProcDialog::CheckData( CString& sMsg, CArray<long,long>* plErrDBIDs,
    //int iPg = 0;
    for (int i=0; (i<iNumPages && i<m_iMaxTabs); i++)
    {
-      CBEMPUIPage* pPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, i, m_iUIMode );
+      CBEMPUIPage* pPage;
+      if (i == 0 && m_iSwapFirstTabID > 0)   // SAC 06/11/26 (dev #903)
+         pPage = eScreenData.GetPageByID( m_iSwapFirstTabID );
+      else
+         pPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, i, m_iUIMode );
       if (pPage && (m_bDisplayAllUIControls || eScreenData.PageHasActiveControls( pPage )))
       {
          // SAC 6/29/00 - added to provide map from actual tab index to index of tab in screen data.
@@ -1295,7 +1307,10 @@ BOOL CSACBEMProcDialog::CheckData( CString& sMsg, CArray<long,long>* plErrDBIDs,
 
    for( int iTab = 0; iTab < m_iMaxTabs; iTab++ )
    {
-      m_pTDPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, m_waValidPageIdxs[ iTab ], m_iUIMode );
+      if (iTab == 0 && m_waValidPageIdxs[ iTab ] == 0 && m_iSwapFirstTabID > 0)   // SAC 06/11/26 (dev #903)
+         m_pTDPage = eScreenData.GetPageByID( m_iSwapFirstTabID );
+      else
+         m_pTDPage = eScreenData.GetPageByClassAndIndex( m_iBEMClass, m_waValidPageIdxs[ iTab ], m_iUIMode );
       if (m_pTDPage)
       {
          int iNumViolations = 0;

@@ -186,8 +186,8 @@ int main()
                         		   	for (int iO=0; iO<=iMaxCSVOrient; iO++)
                         		   	{	// SAC 08/06/24 - appended 4 cols: PV Exports / Prop & Std / kWh/yr & % - request from CEC (26->27)
                                        // SAC 10/29/25 - major overhaul removing dozens of no-longer-used columns and adding a few more for 2025+ analysis (27->28) (dev #506)
-                                       int iResSummaryCSVFormatVer = (lEnergyCodeYear < 2025 ? 27 : 28);    // SAC 10/29/25 (dev #506)
-                        		   		//CString sDfltResFN;  // = "AnalysisResults-v27.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
+                                       int iResSummaryCSVFormatVer = (lEnergyCodeYear < 2025 ? 27 : 30);    // SAC 10/29/25 (dev #506)  // SAC 07/08/26 (dev #983)  // SAC 07/08/26 (dev #989)
+                                       //CString sDfltResFN;  // = "AnalysisResults-v27.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
                                        //sDfltResFN.Format( "AnalysisResults-v%d.csv", iResSummaryCSVFormatVer );
                         		   		int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
                         		   																				iResSummaryCSVFormatVer, sOriginalFileName );
@@ -328,16 +328,27 @@ int main()
                               //                      processes all files based on contents of qsModelInput (an old-style batch CSV file)
                         CString sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile;      QString qsErrMsg;
                         bool bSFam = (iPrimaryFunction == 5);
-                        if ( !GenerateBatchInput( sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, qsErrMsg, qsLogFileName, qsProcessingPath,
-                                                  qsOptionsCSV, qsModelInputPath, qsBatchRunDefsFile, bSFam, lRunsSpanClimates, iIncludeSubdirs ) ||
-                             sBatchPathFile.IsEmpty() || !FileExists( sBatchPathFile ) )
+                        bool dModelInputIsBatchCSV = false;       // enable batch processing via ModelInput = old batch CSV file - SAC 09/02/26 (dev #1090)
+                        if (!qsModelInput.isEmpty())
+                        {  QString qsModelExt = qsModelInput.right( qsModelInput.length() - (qsModelInput.lastIndexOf( '.' )+1) );
+                           dModelInputIsBatchCSV = (qsModelExt.length() == 3 && (qsModelExt[0] == 'c' || qsModelExt[0] == 'C') && (qsModelExt[1] == 's' || qsModelExt[1] == 'S') && (qsModelExt[2] == 'v' || qsModelExt[2] == 'V'));
+                        }
+
+                        if (dModelInputIsBatchCSV)                // SAC 09/02/26 (dev #1090)
+                        {  sBatchPathFile    =  qsModelInput.toLatin1().constData();
+                           sBatchLogPathFile = qsLogFileName.toLatin1().constData();
+                        }
+                        else if ( !GenerateBatchInput( sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, qsErrMsg, qsLogFileName, qsProcessingPath,
+                                                       qsOptionsCSV, qsModelInputPath, qsBatchRunDefsFile, bSFam, lRunsSpanClimates, iIncludeSubdirs ) ||
+                                  sBatchPathFile.IsEmpty() || !FileExists( sBatchPathFile ) )
                         {  nRetCode = 6;
                            printf("Error generating %s batch input/directives file\n", (bSFam ? "SFam" : "NRMF") );
                            if (!qsErrMsg.isEmpty())
                            {  qsErrMsg += "\n";
                               printf( qsErrMsg.toLatin1().constData() );
                         }  }
-                        else
+
+                        if (nRetCode == 0)
                         {
                             	CString sBEMPathFile  = qsBEMBinFileName.toLatin1().constData();       // ReadProgString( "files", "BEMFile", "", TRUE );
                               CString sRulePathFile = qsRuleBinFileName.toLatin1().constData();      // ReadProgString( "paths", "RulesetPath", "", TRUE );

@@ -248,6 +248,6 @@ extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osR
 															bool bIncludeOutputDiagnostics=false, int iProgressType=0, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
 															QStringList* psaEPlusProcDirsToBeRemoved=NULL, bool bReportAllUMLHZones=false, 	// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
 															QString* sStdDsgnCSEResultsPathFile=NULL, QVector<QString>* psaCopyAcrossModelClassPrefixes=NULL,		// SAC 10/8/20 (tic #3218)   // SAC 11/24/20
-                                             void* pCompRuleDebugInfo=NULL, bool bRptMissingEPFiles=true );    // SAC 04/14/21
+                                             void* pCompRuleDebugInfo=NULL, bool bRptMissingEPFiles=true, QString* psEUseSumResultSetName=NULL );     // SAC 04/14/21  // SAC 06/02/26 (dev #903)
 
 #endif  // _OPENSTUDIOINTERFACE_H

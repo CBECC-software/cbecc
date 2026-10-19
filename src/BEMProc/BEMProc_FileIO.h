@@ -36,6 +36,8 @@
 extern bool FileExists( const char* pszFileName );
 extern BOOL FileCanBeWrittenTo( const char* pszFileName, BOOL bFileMustExist );
 
+extern int  DefineUtilityRateEnumsFromFiles( std::string sUtilRatePath, std::vector<std::string>& vsUtilRateParseErrors, int iRateGenID=0 );   // SAC 10/08/26 (dev #689)
+
 
 // -----------------------------------------------------------------------------
 // File I/O

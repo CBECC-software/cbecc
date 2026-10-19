@@ -118,8 +118,8 @@ void CMX_SetUIActiveFlag( bool bActiveUI )
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-BOOL CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects, LPCSTR bemBaseFileName /*=NULL*/ )      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)
-{	return BEMPX_LoadRuleset( fileName, bDeleteAllObjects, bemBaseFileName );		// was: RuleProcRead( fileName, bDeleteAllObjects );
+BOOL CMX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects, LPCSTR bemBaseFileName /*=NULL*/, QString* psErrMsg /*=NULL*/ )      // added bemBaseFileName argument - SAC 12/19/25 (dev #524)
+{	return BEMPX_LoadRuleset( fileName, bDeleteAllObjects, bemBaseFileName, psErrMsg );		// was: RuleProcRead( fileName, bDeleteAllObjects );
 }
 
 BOOL CMX_GetRulesetBEMBaseFile( LPCSTR fileName, QString& sBEMBaseFN )	// SAC 8/15/14 - added to facilitate dynamic ruleset switching (w/ BEMBase refresh)
@@ -1963,7 +1963,8 @@ int CMX_SaveAnalysisResultsToTempFiles( QVector<QString>& saProjEUseSumObjs, QVe
 	return iRetVal;
 }
 
-int CMX_RestoreAnalysisResultsFromTempFiles( QVector<QString>& saUniqueEUseSumObjs, QVector<QString>& saTempPathFiles )
+int CMX_RestoreAnalysisResultsFromTempFiles( QVector<QString>& saUniqueEUseSumObjs, QVector<QString>& saTempPathFiles,
+                                             bool bDelFilesFollowingRead /*=true*/, bool bDelSummaryResultsBeforeRead /*=true*/ )       // SAC 06/02/26 (dev #903)
 {
 	int iRetVal = 0;
 	int iRS, iError, iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
@@ -1971,22 +1972,26 @@ int CMX_RestoreAnalysisResultsFromTempFiles( QVector<QString>& saUniqueEUseSumOb
 
 		// SAC 6/25/13 - AFTER restoring original project file, Import EUseSummary objects from temporary files to facilitate subsequent results display
 			if (saUniqueEUseSumObjs.size())
-			{	// start by deleting any EUseSummary obejcts that might exist in current project
-				int iNumEUseSumObjs = BEMPX_GetNumObjects( iCID_EUseSummary /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );
-				for (iRS=iNumEUseSumObjs-1; iRS >= 0; iRS--)
-				{	BEMObject* pEUseSumObj = BEMPX_GetObjectByClass( iCID_EUseSummary, iError, iRS /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );		assert( pEUseSumObj );
-					if (pEUseSumObj)
-						BEMPX_DeleteObject( pEUseSumObj /*, int iBEMProcIdx=-1*/ );
-				}
+			{	
+            if (bDelSummaryResultsBeforeRead)      // SAC 06/03/26 (dev #903)
+				{  // start by deleting any EUseSummary obejcts that might exist in current project
+               int iNumEUseSumObjs = BEMPX_GetNumObjects( iCID_EUseSummary /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );
+				   for (iRS=iNumEUseSumObjs-1; iRS >= 0; iRS--)
+				   {	BEMObject* pEUseSumObj = BEMPX_GetObjectByClass( iCID_EUseSummary, iError, iRS /*, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1*/ );		assert( pEUseSumObj );
+				   	if (pEUseSumObj)
+				   		BEMPX_DeleteObject( pEUseSumObj /*, int iBEMProcIdx=-1*/ );
+				}  }
 	         // then read EUseSummary objects from temporary file(s)
 				int iNumResSum = saUniqueEUseSumObjs.size();
 				for (iRS=0; iRS < iNumResSum; iRS++)
-				{	BEMObject* pNewEUseSumObj = BEMPX_ReadProjectComponent( saTempPathFiles[iRS].toLocal8Bit().constData(), iCID_EUseSummary /*, int iBEMProcIdx=-1*/ );    // IMPORT EUseSummary objects from temporary files
-					if (pNewEUseSumObj && !pNewEUseSumObj->getName().isEmpty())
+				{	BEMObject* pNewEUseSumObj = BEMPX_ReadProjectComponent( saTempPathFiles[iRS].toLocal8Bit().constData(), iCID_EUseSummary, -1 /*iBEMProcIdx*/,
+                                                                       FALSE /*bPostResolveRefErrors*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bResolveReferences*/ );    // IMPORT EUseSummary objects from temporary files  // bPostResolveRefErrors - SAC 06/03/26 (dev #903)  // bSupressAllMessageBoxes & bResolveReferences - SAXC 06/04/26 (dev #903)
+               if (pNewEUseSumObj && !pNewEUseSumObj->getName().isEmpty())
 						saNewEUseSumObjs.push_back( pNewEUseSumObj->getName() );
 					else
 						saNewEUseSumObjs.push_back( "" );
-					DeleteFile( saTempPathFiles[iRS].toLocal8Bit().constData() );
+               if (bDelFilesFollowingRead)
+					   DeleteFile( saTempPathFiles[iRS].toLocal8Bit().constData() );
 				}
 				//	// and then store assignments of these objects to Proj component
 				//	QString sNewSumObjName;

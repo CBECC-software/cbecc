@@ -3466,7 +3466,8 @@ void CTreeBDB::OnQuickEdit()
 				int iTabCtrlWd, iTabCtrlHt;
 				VERIFY( GetDialogTabDimensions( iBDBClass, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 				CString sDialogCaption;
-				GetDialogCaption( iBDBClass, sDialogCaption );   // SAC 1/8/12
+				GetDialogCaption( iBDBClass, sDialogCaption, iTabCtrlWd );   // SAC 1/8/12
+            int iSwapFirstTabID = GetReplacementFirstDlgTabID( iBDBClass );   // SAC 06/11/26 (dev #903)
 //            CBEMDialog td( iBDBClass, this );
                   //AfxMessageBox ( "accessing dialog from TreeBDB" );
             CSACBEMProcDialog td( iBDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
@@ -3477,7 +3478,7 @@ void CTreeBDB::OnQuickEdit()
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
 										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,    // SAC 1/19/12
-										(elDefaultOptionInp < DefaultOption_Model) );	// SAC 4/18/18
+										(elDefaultOptionInp < DefaultOption_Model), iSwapFirstTabID );	// SAC 4/18/18
             if (td.DoModal() == IDOK)
             {}
 

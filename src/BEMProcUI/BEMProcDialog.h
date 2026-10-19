@@ -83,7 +83,7 @@ public:
                  const char* pszExitingRulelist=NULL, const char* pszDataModRulelist=NULL,  // SAC 6/17/01
                  BOOL bPostHelpMessageToParent=FALSE,  // SAC 7/6/01
                  BOOL bIncludeCompParamStrInToolTip=FALSE, BOOL bIncludeStatusStrInToolTip=TRUE, BOOL bIncludeLongCompParamStrInToolTip=FALSE,    // SAC 1/19/12
-                 BOOL bShowRefreshDefaultsBtn=FALSE );	// SAC 4/18/18
+                 BOOL bShowRefreshDefaultsBtn=FALSE, int iSwapFirstTabID=-1 );	// SAC 4/18/18   // SAC 06/11/26 (dev #903)
 
 // Dialog Data
 	//{{AFX_DATA(CSACBEMProcDialog)
@@ -112,6 +112,7 @@ public:
    int  m_iTabCtrlWd;   // SAC 8/22/00
    int  m_iTabCtrlHt;   // SAC 8/22/00
    int  m_iMaxTabs;     // SAC 8/22/00
+   int  m_iSwapFirstTabID;    // SAC 06/11/26 (dev #903)
    CString  m_sCaptionString;   // SAC 8/22/00
    CString  m_sCloseBtnString;  // SAC 8/22/00
 
